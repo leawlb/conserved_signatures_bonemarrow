@@ -1,0 +1,19 @@
+name: snakemake_bminterspecies
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - snakemake-minimal=6.15.5
+  - python=3.8.13
+  - pandas=1.5.0
+  - r-base=4.0.0
+  - r-uwot=0.1.11
+  - r-rmarkdown=2.13 
+  - r-tidyverse=1.3.1
+  - bionductor-singlecellexperiment=1.12.0
+  - bioconductor-dropletutils=1.14.2
+  - bioconductor-scran=1.18.7
+  - bioconductor-scater=1.18.6
+  - bioconductor-scdblfinder=1.8.0
+  - bioconductor-dittoseq=1.2.6
+  - pip=22.2.2

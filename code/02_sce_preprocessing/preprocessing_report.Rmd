@@ -1,0 +1,193 @@
+---
+title: "preprocessing_report"
+author: "Amy Danson, Lea Wölbert"
+date: '2022-09-20'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Report QC for all objects.
+Some operations from the scripts must be repeated to generate relevant plots,
+but any new objects cannot be saved from an .Rmd script.
+
+#### Load libraries, source code 
+
+```{r load,  message = FALSE}
+
+library(SingleCellExperiment, quietly = TRUE) 
+library(DropletUtils, quietly = TRUE) 
+library(tidyverse, quietly = TRUE) 
+library(scater, quietly = TRUE) 
+library(scuttle, quietly = TRUE) 
+library(scran, quietly = TRUE) 
+
+```
+
+```{r load_code, message = FALSE}
+
+setwd("/home/l012t/Interspecies_BM/preprocessing")
+source(file = "../code/colors.R")
+
+sce_01 <- readRDS(file = snakemake@input[["sce_01"]])
+sce_02 <- readRDS(file = snakemake@input[["sce_02"]])
+sce_03 <- readRDS(file = snakemake@input[["sce_03"]])
+sce_04 <- readRDS(file = snakemake@input[["sce_04"]])
+sce_05 <- readRDS(file = snakemake@input[["sce_05"]])
+
+# set name for plots
+name_curr <- colData(sce_01)$object_id[1]
+
+```
+
+
+## Step 1: call objects and add metadata
+
+```{r}
+
+print(sce_01)
+print(colData(sce_01))
+
+```
+
+## Step 2: 
+
+### Remove empty droplets
+
+Check that the barcode rank and p value distributions look appropriate.
+Also check if any droplets with low FDR (that are likely cells) were dropped
+
+```{r}
+
+# show barcoded ranks 
+bcrank <- barcodeRanks(counts(sce_01)) #before droplet removal
+uniq_pos <- !duplicated(bcrank$rank)
+
+plot(bcrank$rank[uniq_pos], bcrank$total[uniq_pos], log="xy", 
+     xlab="Rank", ylab="Total UMI count", cex.lab=1.2, main = name_curr)
+  abline(h=metadata(bcrank)$inflection, col = marker1)
+  abline(h=metadata(bcrank)$knee, col = marker2)
+  legend("bottomleft", legend=c("Inflection", "Knee"), 
+         col=c(marker1, marker2), cex=1.2)
+
+# show pval distribution    
+cutoff_umis <- 100 # add cutoff_umis
+out <- emptyDrops(counts(sce_01), lower = cutoff_umis, test.ambient=TRUE)  
+
+hist(out$PValue[out$Total <= cutoff_umis & out$Total > 0],
+     xlab="P-value", main = paste(name_curr, "cutoff", cutoff_umis), col="grey80")  
+
+# show FDR of droplets that were kept or removed
+check <- table(Sig=out$FDR <= 0.001, Limited=out$Limited)
+print(check)
+
+```
+
+### Remove doublets
+
+Check if cells with high doublet scores form conspicuous clusters
+
+```{r}
+
+plotUMAP(sce_05, colour_by = "doublet_score")+ # requires reduced dims
+  ggtitle(name_curr)+
+  theme(legend.key.size = unit(0.3, "cm"), legend.key.width = unit(0.3, "cm"))+
+  theme(legend.spacing = unit(0.06, "cm"), legend.text = element_text(size = 7))
+
+```
+
+## Step 3: Remove outliers
+
+Check the quality of the single cells and if cells were removed appropriately
+
+```{r}
+
+qcdf_02 <- perCellQCMetrics(sce_02) # before outlier removal
+
+# set QC cutoffs below which cells are removed
+sum_out <- qcdf_02$sum < 400 # add cutoff_sum
+det_out <- qcdf_02$sum < 300 # cutoff_detected
+
+# remove all cells to discard and add info to qc
+remove_pos <- sum_out | det_out 
+qcdf_02$removed <- remove_pos
+
+# get mito count just to check
+mito_genes <- grep("mt-", rownames(sce_02))
+qcdf_mitos_02 <- perCellQCMetrics(sce_02, subsets=list(Mito=mito_genes))
+
+qcdf_02$removed <- remove_pos
+qcdf_02$mito_count <- qcdf_mitos_02$subsets_Mito_percent
+
+qcdf_gg <- pivot_longer(data.frame(qcdf_02[,c(1,2,4,5)]), 
+                        names_to = "metric", cols = c(1, 2, 4))
+
+ggplot(qcdf_gg[qcdf_gg$metric == "sum",], aes(y = value, x = metric))+
+  theme_classic()+
+  ggbeeswarm::geom_quasirandom(size = 0.1, aes(color = removed))+
+  geom_boxplot(alpha = 0)+
+  scale_color_manual("Removed", values = c("FALSE" = "grey80", 
+                                           "TRUE" = "orange"))+
+  ylab("Library size")+
+  ggtitle(name_curr)+
+  theme(axis.title.x = element_blank(), axis.text.x = element_blank())+
+  geom_abline(intercept = 300, color = marker1,  slope = 0) # add cutoff_sum
+
+ggplot(qcdf_gg[qcdf_gg$metric == "detected",], aes(y = value, x = metric))+
+  theme_classic()+
+  ggbeeswarm::geom_quasirandom(size = 0.1, aes(color = removed))+
+  geom_boxplot(alpha = 0)+
+  scale_color_manual("Removed", values = c("FALSE" = "grey80", 
+                                           "TRUE" = "orange"))+
+  ylab("Detected genes")+
+  ggtitle(name_curr)+
+  theme(axis.title.x = element_blank(), axis.text.x = element_blank())+
+  geom_abline(intercept = 200, color = marker1, slope = 0) # add cutoff_detected
+
+ggplot(qcdf_gg[qcdf_gg$metric == "mito_count",], aes(y = value, x = metric))+
+  theme_classic()+
+  ggbeeswarm::geom_quasirandom(size = 0.1, aes(color = removed))+
+  geom_boxplot(alpha = 0)+
+  scale_color_manual("Removed", values = c("FALSE" = "grey80", 
+                                           "TRUE" = "orange"))+
+  ylab("Mitochondrial gene percent")+
+  ggtitle(name_curr)+
+  theme(axis.title.x = element_blank(), axis.text.x = element_blank())+
+  geom_abline(intercept = 5, color = marker1, slope = 0) 
+
+```
+
+## Step 4: Normalization
+
+```{r}
+
+# calculate two different size factors for direct comparison
+quick_clust <- quickCluster(sce_03) # before normalization
+sizef_deconv <- calculateSumFactors(sce_03, cluster = quick_clust)
+sizef_lib <- librarySizeFactors(sce_03)
+
+plot(sizef_lib, sizef_deconv, xlab = "Library size factor",
+    ylab = "Deconv. size factor", log = 'xy', pch=16, 
+    main = paste("Library/Deconv", name_curr))
+    abline(a=0, b=1, col="red")
+    
+# distribution of size factors should be close to normal dist
+hist(log10(sizef_deconv), xlab="Log10[Deconv factor]", col='grey80', 
+     main = name_curr)
+    
+# directly compare deconv factors to library size
+qcdf_03 <- perCellQCMetrics(sce_03) # after outlier removal
+plot(sizef_deconv, qcdf_03$sum, log = "xy", ylab = "Library size",
+     xlab = "Deconv. Size factor", main = paste("Deconv/libsize", name_curr))
+
+# print final object
+print(sce_04) # after normalization
+
+```
+
+```{r}
+sessionInfo()
+```
+

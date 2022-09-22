@@ -1,0 +1,9 @@
+paths:
+  data_dir: "/omics/groups/OE0538/internal/users/l012t/Interspecies_BM/data"
+cutoffs:
+  cutoff_umis = 100
+  cutoff_doublets = 1000
+  cutoff_sum = 300
+  cutoff_detected = 200
+  
+

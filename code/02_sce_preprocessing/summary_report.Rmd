@@ -1,0 +1,57 @@
+---
+title: "preprocessing_report"
+author: "Amy Danson, Lea Wölbert"
+date: '2022-09-20'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Summary report QC for all objects at once.
+Some operations from the scripts must be repeated to generate relevant plots,
+but any new objects cannot be saved from an .Rmd script.
+
+#### Load libraries, source code 
+
+```{r load,  message = FALSE}
+
+#library(SingleCellExperiment, quietly = TRUE) 
+library(DropletUtils, quietly = TRUE) 
+#library(tidyverse, quietly = TRUE) 
+#library(scater, quietly = TRUE) 
+#library(scuttle, quietly = TRUE) 
+#library(scran, quietly = TRUE) 
+
+```
+
+```{r load_code, message = FALSE}
+
+#source(file = "../source/colors.R")
+
+sce_01_path <- snakemake@input[["sce_01_path"]]
+sce_02_path <- snakemake@input[["sce_02_path"]]
+sce_03_path <- snakemake@input[["sce_03_path"]]
+sce_04_path <- snakemake@input[["sce_04_path"]]
+sce_05_path <- snakemake@input[["sce_05_path"]]
+
+targets <- snakemake@params[["targets"]]
+print(targets)
+print(sce_01_path)
+
+```
+
+```{r}
+
+object_list_01 <- list()
+
+
+for(i in targets){
+  
+  #object_list_01[i] <- readRDS(file = paste(sce_01_path, targets, sep = "_"))
+  print(paste(sce_01_path, targets, sep = "/"))
+}
+
+```
+

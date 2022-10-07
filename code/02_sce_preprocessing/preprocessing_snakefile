@@ -19,13 +19,14 @@ targets = targets.drop_duplicates()
 targets = targets.squeeze()
 targets = targets.tolist()
 
-# construct paths for all possible outputs 
+# construct paths for all possible outputs, this is required for rule all
 targets_02 = [OUTPUT_BASE_PATH + "/drop/" + "sce_" + x + "-02" for x in targets]
 targets_03 = [OUTPUT_BASE_PATH + "/outl/" + "sce_" + x + "-03" for x in targets]
 targets_04 = [OUTPUT_BASE_PATH + "/norm/" + "sce_" + x + "-04" for x in targets]
 targets_05 = [OUTPUT_BASE_PATH + "/dimr/" + "sce_" + x + "-05" for x in targets]
 
 targets_rp = ["reports/preprocessing_report_"+ x + ".html" for x in targets]
+target_srp = ["reports/summary_report.html"]
 
 # local execution of non-demanding rules
 localrules: remove_outliers, all  
@@ -37,7 +38,8 @@ rule all: # must contain all possible output paths
         targets_03,
         targets_04,
         targets_05,
-        targets_rp
+        targets_rp,
+        target_srp
         
 # remove empty droplets and doublets to retain only single cells
 rule remove_droplets:
@@ -97,4 +99,23 @@ rule make_report:
         cutoff_sum = CUTOFFS["cutoff_sum"],
         cutoff_detected = CUTOFFS["cutoff_detected"]
     script:
-        "scripts/make_report.Rmd"
+        "make_report.Rmd" # .Rmd files should be stored in the snakemake wd
+        
+# make one summary report on all files
+rule make_summary_report:
+    input:
+        sce_01_path = config["paths"]["input_dir"],
+        sce_02_path = OUTPUT_BASE_PATH + "/drop",
+        sce_03_path = OUTPUT_BASE_PATH + "/outl/",
+        sce_04_path = OUTPUT_BASE_PATH + "/norm/",
+        sce_05_path = OUTPUT_BASE_PATH + "/dimr/"
+    output:
+        "reports/summary_report.html"
+    params:
+        cutoff_umis = CUTOFFS["cutoff_umis"],
+        cutoff_doublets = CUTOFFS["cutoff_doublets"],
+        cutoff_sum = CUTOFFS["cutoff_sum"],
+        cutoff_detected = CUTOFFS["cutoff_detected"],
+        targets = targets
+    script:
+        "summary_report.Rmd" # .Rmd files should be stored in the snakemake wd

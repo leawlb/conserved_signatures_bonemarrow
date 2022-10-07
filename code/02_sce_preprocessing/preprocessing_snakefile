@@ -4,11 +4,14 @@
 
 import pandas as pd
 
+# paths from config
 METADATA_PATH = config["metadata"]["raw"]
 OUTPUT_BASE_PATH = config["paths"]["output_dir"]
 
+# objects from config
 IDENTIFIER = config["metadata"]["identifier"]
 METADATA = pd.read_csv(config["metadata"]["raw"])
+CUTOFFS =  config["metadata"]["cutoffs"]
 
 # get all possible wildcards from designated identifier
 targets = METADATA[IDENTIFIER]
@@ -24,9 +27,11 @@ targets_05 = [OUTPUT_BASE_PATH + "/dimr/" + "sce_" + x + "-05" for x in targets]
 
 targets_rp = ["reports/preprocessing_report_"+ x + ".html" for x in targets]
 
-localrules: remove_outliers, all  # local execution of non-demanding rules
+# local execution of non-demanding rules
+localrules: remove_outliers, all  
 
-rule all:
+# define rules
+rule all: # must contain all possible output paths
     input:
         targets_02,
         targets_03,
@@ -34,14 +39,15 @@ rule all:
         targets_05,
         targets_rp
         
-print(config["paths"]["input_dir"])
-
 # remove empty droplets and doublets to retain only single cells
 rule remove_droplets:
     input: 
         sce_01 = config["paths"]["input_dir"] + "{Object_ID}"
     output:
         sce_02 = OUTPUT_BASE_PATH + "/drop/sce_{Object_ID}-02"
+    params:
+        cutoff_umis = CUTOFFS["cutoff_umis"],
+        cutoff_doublets = CUTOFFS["cutoff_doublets"]
     script:
         "scripts/02_remove_droplets.R"
         
@@ -51,6 +57,9 @@ rule remove_outliers:
         sce_02 = OUTPUT_BASE_PATH + "/drop/sce_{Object_ID}-02"
     output:
         sce_03 = OUTPUT_BASE_PATH + "/outl/sce_{Object_ID}-03"
+    params:
+        cutoff_sum = CUTOFFS["cutoff_sum"],
+        cutoff_detected = CUTOFFS["cutoff_detected"]
     script:
         "scripts/03_remove_outliers.R"
         
@@ -82,5 +91,10 @@ rule make_report:
         sce_05 = OUTPUT_BASE_PATH + "/dimr/sce_{Object_ID}-05"
     output:
         "reports/preprocessing_report_{Object_ID}.html"
+    params:
+        cutoff_umis = CUTOFFS["cutoff_umis"],
+        cutoff_doublets = CUTOFFS["cutoff_doublets"],
+        cutoff_sum = CUTOFFS["cutoff_sum"],
+        cutoff_detected = CUTOFFS["cutoff_detected"]
     script:
-        "preprocessing_report.Rmd"
+        "scripts/make_report.Rmd"

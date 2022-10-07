@@ -13,8 +13,11 @@ sce <- readRDS(file = snakemake@input[["sce_02"]])
 qcdf <- perCellQCMetrics(sce)
 
 # set QC cutoffs below which cells are removed
-sum_out <- qcdf$sum < 400 # add cutoff_sum
-det_out <- qcdf$sum < 300 # cutoff_detected
+cutoff_sum <- snakemake@params[["cutoff_sum"]] 
+cutoff_detected <- snakemake@params[["cutoff_detected"]]
+
+sum_out <- qcdf$sum < cutoff_sum 
+det_out <- qcdf$sum < cutoff_detected 
 
 # remove all cells to discard and add info to qc
 remove_pos <- sum_out | det_out 

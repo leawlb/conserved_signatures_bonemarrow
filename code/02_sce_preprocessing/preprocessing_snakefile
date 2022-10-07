@@ -4,86 +4,83 @@
 
 import pandas as pd
 
-metadata = pd.read_csv("../metadata.csv", sep=";")
+METADATA_PATH = config["metadata"]["raw"]
+OUTPUT_BASE_PATH = config["paths"]["output_dir"]
 
-path_data = "../data/preprocessing/"
-# object_ids contain all possible wildcards in correct sequence
-#targets = list(metadata["object_id"]) 
-targets = ["mmus_old_hsc_1.0"] # for testing purpose
+IDENTIFIER = config["metadata"]["identifier"]
+METADATA = pd.read_csv(config["metadata"]["raw"])
 
-# construct paths for all possible outputs by iterating through all targets
-targets_01 = [path_data + "call/" + "sce_" + x + "_01" for x in targets]
-targets_02 = [path_data + "drop/" + "sce_" + x + "_02" for x in targets]
-targets_03 = [path_data + "outl/" + "sce_" + x + "_03" for x in targets]
-targets_04 = [path_data + "norm/" + "sce_" + x + "_04" for x in targets]
-targets_05 = [path_data + "dimr/" + "sce_" + x + "_05" for x in targets]
+# get all possible wildcards from designated identifier
+targets = METADATA[IDENTIFIER]
+targets = targets.drop_duplicates()
+targets = targets.squeeze()
+targets = targets.tolist()
+
+# construct paths for all possible outputs 
+targets_02 = [OUTPUT_BASE_PATH + "/drop/" + "sce_" + x + "-02" for x in targets]
+targets_03 = [OUTPUT_BASE_PATH + "/outl/" + "sce_" + x + "-03" for x in targets]
+targets_04 = [OUTPUT_BASE_PATH + "/norm/" + "sce_" + x + "-04" for x in targets]
+targets_05 = [OUTPUT_BASE_PATH + "/dimr/" + "sce_" + x + "-05" for x in targets]
 
 targets_rp = ["reports/preprocessing_report_"+ x + ".html" for x in targets]
 
+localrules: remove_outliers, all  # local execution of non-demanding rules
+
 rule all:
     input:
-        targets_01,
         targets_02,
         targets_03,
         targets_04,
         targets_05,
         targets_rp
-
-# construct SCE objects from counts matrices found in ../alignment/output/
-#rule call_objects:
-#    input: 
-#        alignment_output = 
-#        "../data/alignment/output_x/{Species}_{Age}_{Fraction}_{Sample}_x/"
-#    output:
-#       sce_01 = path_data + "call/sce_{Species}_{Age}_{Fraction}_{Sample}_01"
-#    script:
-#        "scripts/01_call_objects.R"
         
+print(config["paths"]["input_dir"])
+
 # remove empty droplets and doublets to retain only single cells
 rule remove_droplets:
     input: 
-        sce_01 = path_data + "call/sce_{Species}_{Age}_{Fraction}_{Sample}_01"
+        sce_01 = config["paths"]["input_dir"] + "{Object_ID}"
     output:
-        sce_02 = path_data + "drop/sce_{Species}_{Age}_{Fraction}_{Sample}_02"
+        sce_02 = OUTPUT_BASE_PATH + "/drop/sce_{Object_ID}-02"
     script:
         "scripts/02_remove_droplets.R"
         
 # find outlier cells with low quality and remove them
 rule remove_outliers:
     input: 
-        sce_02 = path_data + "drop/sce_{Species}_{Age}_{Fraction}_{Sample}_02"
+        sce_02 = OUTPUT_BASE_PATH + "/drop/sce_{Object_ID}-02"
     output:
-        sce_03 = path_data + "outl/sce_{Species}_{Age}_{Fraction}_{Sample}_03"
+        sce_03 = OUTPUT_BASE_PATH + "/outl/sce_{Object_ID}-03"
     script:
         "scripts/03_remove_outliers.R"
         
 # normalize expression on sample level
 rule normalize_expr:
     input: 
-        sce_03 = path_data + "outl/sce_{Species}_{Age}_{Fraction}_{Sample}_03"
+        sce_03 = OUTPUT_BASE_PATH + "/outl/sce_{Object_ID}-03"
     output:
-        sce_04 = path_data + "norm/sce_{Species}_{Age}_{Fraction}_{Sample}_04"
+        sce_04 = OUTPUT_BASE_PATH + "/norm/sce_{Object_ID}-04"
     script:
         "scripts/04_normalize_expr.R"
         
 # extract hvgs and reduce dimensions for QC on sample level 
 rule reduce_dims:
     input: 
-        sce_04 = path_data + "norm/sce_{Species}_{Age}_{Fraction}_{Sample}_04"
+        sce_04 = OUTPUT_BASE_PATH + "/norm/sce_{Object_ID}-04"
     output:
-        sce_05 = path_data + "dimr/sce_{Species}_{Age}_{Fraction}_{Sample}_05"
+        sce_05 = OUTPUT_BASE_PATH + "/dimr/sce_{Object_ID}-05"
     script:
         "scripts/05_reduce_dims.R"
 
 # construct report files to monitor QC on sample level
 rule make_report:
     input:
-        sce_01 = path_data + "call/sce_{Species}_{Age}_{Fraction}_{Sample}_01",
-        sce_02 = path_data + "drop/sce_{Species}_{Age}_{Fraction}_{Sample}_02",
-        sce_03 = path_data + "outl/sce_{Species}_{Age}_{Fraction}_{Sample}_03",
-        sce_04 = path_data + "norm/sce_{Species}_{Age}_{Fraction}_{Sample}_04",
-        sce_05 = path_data + "dimr/sce_{Species}_{Age}_{Fraction}_{Sample}_05"
+        sce_01 = config["paths"]["input_dir"] + "{Object_ID}",
+        sce_02 = OUTPUT_BASE_PATH + "/drop/sce_{Object_ID}-02",
+        sce_03 = OUTPUT_BASE_PATH + "/outl/sce_{Object_ID}-03",
+        sce_04 = OUTPUT_BASE_PATH + "/norm/sce_{Object_ID}-04",
+        sce_05 = OUTPUT_BASE_PATH + "/dimr/sce_{Object_ID}-05"
     output:
-        "reports/preprocessing_report_{Species}_{Age}_{Fraction}_{Sample}.html"
+        "reports/preprocessing_report_{Object_ID}.html"
     script:
         "preprocessing_report.Rmd"

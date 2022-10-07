@@ -4,7 +4,7 @@
 # call objects from raw cellranger output matrices and add metadata
 
 # load objects and libraries
-library(SingleCellExperiment, quietly = TRUE) 
+library(DropletUtils) 
 metadata <- read.csv(file = "../metadata.csv", header = TRUE, sep = ";")
 
 # call SCE objects from the cellranger output matrices
@@ -36,12 +36,12 @@ rownames(sce) <- rowData(sce)$Symbol
 saveRDS(sce, file = snakemake@output[["sce_01"]])
 
 # testing purposes
-#sce_01 <- read10xCounts("/omics/odcf/analysis/OE0538_projects/DO-0008/mmus/mmus_old/croutput_files/mmus_OLD1_bm2/outs/raw_feature_bc_matrix", col.names = TRUE, type = "sparse" )
+sce_01 <- read10xCounts("/omics/groups/OE0538/internal/users/l012t/snakemake-cellranger/test/cellranger_count/OE0538_DO-0008_mmus_OLD_2_bonemarrow-02/outs/raw_feature_bc_matrix", col.names = TRUE, type = "sparse" )
 #object_id_curr <- "mmus_old_hsc_1.0"
-name_curr <- "mmus_old_hsc_1.0"
+#name_curr <- "mmus_old_hsc_1.0"
 #sce <- sce_01
 #saveRDS(sce, file = "../data/preprocessing/call/sce_mmus_old_hsc_1.0_01")
-sce_02 <- readRDS(file = "../data/preprocessing/drop/sce_mmus_old_hsc_1.0_02")
+#sce_02 <- readRDS(file = "../data/preprocessing/drop/sce_mmus_old_hsc_1.0_02")
 #setwd("~/Interspecies_BM/preprocessing")  
   
   

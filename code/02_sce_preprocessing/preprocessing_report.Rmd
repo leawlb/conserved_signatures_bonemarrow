@@ -28,8 +28,7 @@ library(scran, quietly = TRUE)
 
 ```{r load_code, message = FALSE}
 
-setwd("/home/l012t/Interspecies_BM/preprocessing")
-source(file = "../code/colors.R")
+source(file = "../source/colors.R")
 
 sce_01 <- readRDS(file = snakemake@input[["sce_01"]])
 sce_02 <- readRDS(file = snakemake@input[["sce_02"]])

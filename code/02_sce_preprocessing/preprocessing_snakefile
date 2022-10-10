@@ -101,14 +101,15 @@ rule make_report:
     script:
         "make_report.Rmd" # .Rmd files should be stored in the snakemake wd
         
+print(OUTPUT_BASE_PATH + "/drop/")        
 # make one summary report on all files
 rule make_summary_report:
     input:
-        sce_01_path = config["paths"]["input_dir"],
+        #sce_01_path = config["paths"]["input_dir"],
         sce_02_path = OUTPUT_BASE_PATH + "/drop",
-        sce_03_path = OUTPUT_BASE_PATH + "/outl/",
-        sce_04_path = OUTPUT_BASE_PATH + "/norm/",
-        sce_05_path = OUTPUT_BASE_PATH + "/dimr/"
+        sce_03_path = OUTPUT_BASE_PATH + "/outl",
+        sce_04_path = OUTPUT_BASE_PATH + "/norm",
+        sce_05_path = OUTPUT_BASE_PATH + "/dimr"
     output:
         "reports/summary_report.html"
     params:

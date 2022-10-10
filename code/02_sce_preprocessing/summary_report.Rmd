@@ -17,12 +17,12 @@ but any new objects cannot be saved from an .Rmd script.
 
 ```{r load,  message = FALSE}
 
-#library(SingleCellExperiment, quietly = TRUE) 
+library(SingleCellExperiment, quietly = TRUE) 
 library(DropletUtils, quietly = TRUE) 
-#library(tidyverse, quietly = TRUE) 
-#library(scater, quietly = TRUE) 
-#library(scuttle, quietly = TRUE) 
-#library(scran, quietly = TRUE) 
+library(tidyverse, quietly = TRUE) 
+library(scater, quietly = TRUE) 
+library(scuttle, quietly = TRUE) 
+library(scran, quietly = TRUE) 
 
 ```
 
@@ -30,28 +30,51 @@ library(DropletUtils, quietly = TRUE)
 
 #source(file = "../source/colors.R")
 
-sce_01_path <- snakemake@input[["sce_01_path"]]
 sce_02_path <- snakemake@input[["sce_02_path"]]
 sce_03_path <- snakemake@input[["sce_03_path"]]
 sce_04_path <- snakemake@input[["sce_04_path"]]
 sce_05_path <- snakemake@input[["sce_05_path"]]
 
 targets <- snakemake@params[["targets"]]
-print(targets)
-print(sce_01_path)
 
 ```
 
 ```{r}
 
-object_list_01 <- list()
-
+sce_list_02 <- list()
+#print(paste0(sce_02_path, "/sce_", targets[1]))
 
 for(i in targets){
-  
-  #object_list_01[i] <- readRDS(file = paste(sce_01_path, targets, sep = "_"))
-  print(paste(sce_01_path, targets, sep = "/"))
+  sce_list_02[[i]] <- readRDS(file = paste0(sce_02_path, "/sce_", i, "-02"))
 }
+
+qcdf_list_02 <- lapply(sce_list_02, function(sce){
+  qcdf <- perCellQCMetrics(sce)
+  qcdf$Object_ID <- sce$Object_ID
+  qcdf$Species <- sce$Species
+  qcdf$Age <- sce$Age
+  qcdf$Batch_exp_day <- sce$Batch_exp_day
+  qcdf$Batch_sequencing <- sce$Batch_sequencing
+  
+  return(qcdf)
+})
+
+qcdf_gg <- DataFrame()
+
+#bblub <- rbind(qcdf_gg, qcdf_list_02[[1]], qcdf_list_02[[2]])
+
+for(i in qcdf_list_02){
+  
+  qcdf_gg <- rbind(qcdf_gg, i)
+
+}
+
+print(qcdf_gg)
+#print(qcdf_gg)
+#qcdf_gg <- pivot_longer(data.frame(qcdf_02[,c(1,2,4,5)]), 
+#                        names_to = "metric", cols = c(1, 2, 4))
+
+
 
 ```
 

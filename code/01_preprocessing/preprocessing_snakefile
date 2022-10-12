@@ -6,7 +6,7 @@ import pandas as pd
 
 # paths from config
 METADATA_PATH = config["metadata"]["raw"]
-OUTPUT_BASE_PATH = config["paths"]["output_dir"]
+OUTPUT_BASE_PATH = config["paths"]["preprocessing"]
 
 # objects from config
 IDENTIFIER = config["metadata"]["identifier"]
@@ -28,7 +28,7 @@ targets_05 = [OUTPUT_BASE_PATH + "/dimr/" + "sce_" + x + "-05" for x in targets]
 targets_rp = ["reports/preprocessing_report_"+ x + ".html" for x in targets]
 target_srp = ["reports/summary_report.html"]
 
-if config["run_report"]: # only run summary_report if necessary
+if config["run_preprocessing_summary"]: # only run summary_report if necessary
   targets_rp = targets_rp + target_srp
 
 # local execution of non-demanding rules
@@ -46,7 +46,7 @@ rule all: # must contain all possible output paths
 # remove empty droplets and doublets to retain only single cells
 rule remove_droplets:
     input: 
-        sce_01 = config["paths"]["input_dir"] + "{Object_ID}"
+        sce_01 = config["paths"]["cellranger_output"] + "{Object_ID}"
     output:
         sce_02 = OUTPUT_BASE_PATH + "/drop/sce_{Object_ID}-02"
     params:
@@ -90,13 +90,13 @@ rule reduce_dims:
 # construct report files to monitor QC on sample level
 rule make_report:
     input:
-        sce_01 = config["paths"]["input_dir"] + "{Object_ID}",
+        sce_01 = config["paths"]["cellranger_output"] + "{Object_ID}",
         sce_02 = rules.remove_droplets.output,
         sce_03 = rules.remove_outliers.output,
         sce_04 = rules.normalize_expr.output,
         sce_05 = rules.reduce_dims.output
     output:
-        "reports/preprocessing_report_{Object_ID}.html"
+        "reports/preprocessing_sample_report_{Object_ID}.html"
     params:
         cutoff_umis = VALUES["cutoff_umis"],
         cutoff_doublets = VALUES["cutoff_doublets"],
@@ -104,28 +104,21 @@ rule make_report:
         cutoff_detected = VALUES["cutoff_detected"],
         nr_hvgs = VALUES["nr_hvgs"]
     script:
-        "make_report.Rmd" # .Rmd files should be stored in the snakemake wd
+        "preprocessing_sample_reports.Rmd" # .Rmd files should be stored in the snakemake wd
         
 # make one summary report on all files
 # because this rule is dependend on previous output but this is not reflected
 # in input, it can be turned off in config to avoid premature job submission
-print(config["run_report"])
-if config["run_report"]:
+print(paste("Run proprocessing summary: ", config["run_preprocessing_summary"])
+if config["run_preprocessing_summary"]:
   rule make_summary_report:
       input:
-          #sce_01_path = config["paths"]["input_dir"],
           sce_02_path = OUTPUT_BASE_PATH + "/drop",
-          sce_03_path = OUTPUT_BASE_PATH + "/outl",
-          sce_04_path = OUTPUT_BASE_PATH + "/norm",
-          sce_05_path = OUTPUT_BASE_PATH + "/dimr"
       output:
-          "reports/summary_report.html"
+          "reports/preprocessing_summary.html"
       params:
-          cutoff_umis = VALUES["cutoff_umis"],
-          cutoff_doublets = VALUES["cutoff_doublets"],
           cutoff_sum = VALUES["cutoff_sum"],
           cutoff_detected = VALUES["cutoff_detected"],
-          nr_hvgs = VALUES["nr_hvgs"],
           targets = targets
       script:
-          "summary_report.Rmd" # .Rmd files should be stored in the snakemake wd
+          "preprocessing_summary.Rmd" # .Rmd files should be stored in the snakemake wd

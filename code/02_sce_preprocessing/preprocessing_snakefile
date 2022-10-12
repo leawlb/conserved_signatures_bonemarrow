@@ -11,7 +11,7 @@ OUTPUT_BASE_PATH = config["paths"]["output_dir"]
 # objects from config
 IDENTIFIER = config["metadata"]["identifier"]
 METADATA = pd.read_csv(config["metadata"]["raw"])
-CUTOFFS =  config["metadata"]["cutoffs"]
+VALUES =  config["metadata"]["values"]
 
 # get all possible wildcards from designated identifier
 targets = METADATA[IDENTIFIER]
@@ -28,6 +28,9 @@ targets_05 = [OUTPUT_BASE_PATH + "/dimr/" + "sce_" + x + "-05" for x in targets]
 targets_rp = ["reports/preprocessing_report_"+ x + ".html" for x in targets]
 target_srp = ["reports/summary_report.html"]
 
+if config["run_report"]: # only run summary_report if necessary
+  targets_rp = targets_rp + target_srp
+
 # local execution of non-demanding rules
 localrules: remove_outliers, all  
 
@@ -38,9 +41,8 @@ rule all: # must contain all possible output paths
         targets_03,
         targets_04,
         targets_05,
-        targets_rp,
-        target_srp
-        
+        targets_rp
+
 # remove empty droplets and doublets to retain only single cells
 rule remove_droplets:
     input: 
@@ -48,27 +50,27 @@ rule remove_droplets:
     output:
         sce_02 = OUTPUT_BASE_PATH + "/drop/sce_{Object_ID}-02"
     params:
-        cutoff_umis = CUTOFFS["cutoff_umis"],
-        cutoff_doublets = CUTOFFS["cutoff_doublets"]
+        cutoff_umis = VALUES["cutoff_umis"],
+        cutoff_doublets = VALUES["cutoff_doublets"]
     script:
         "scripts/02_remove_droplets.R"
         
 # find outlier cells with low quality and remove them
 rule remove_outliers:
     input: 
-        sce_02 = OUTPUT_BASE_PATH + "/drop/sce_{Object_ID}-02"
+        sce_02 = rules.remove_droplets.output
     output:
         sce_03 = OUTPUT_BASE_PATH + "/outl/sce_{Object_ID}-03"
     params:
-        cutoff_sum = CUTOFFS["cutoff_sum"],
-        cutoff_detected = CUTOFFS["cutoff_detected"]
+        cutoff_sum = VALUES["cutoff_sum"],
+        cutoff_detected = VALUES["cutoff_detected"]
     script:
         "scripts/03_remove_outliers.R"
         
 # normalize expression on sample level
 rule normalize_expr:
     input: 
-        sce_03 = OUTPUT_BASE_PATH + "/outl/sce_{Object_ID}-03"
+        sce_03 = rules.remove_outliers.output
     output:
         sce_04 = OUTPUT_BASE_PATH + "/norm/sce_{Object_ID}-04"
     script:
@@ -77,9 +79,11 @@ rule normalize_expr:
 # extract hvgs and reduce dimensions for QC on sample level 
 rule reduce_dims:
     input: 
-        sce_04 = OUTPUT_BASE_PATH + "/norm/sce_{Object_ID}-04"
+        sce_04 = rules.normalize_expr.output
     output:
         sce_05 = OUTPUT_BASE_PATH + "/dimr/sce_{Object_ID}-05"
+    params:
+        nr_hvgs = VALUES["nr_hvgs"]
     script:
         "scripts/05_reduce_dims.R"
 
@@ -87,36 +91,41 @@ rule reduce_dims:
 rule make_report:
     input:
         sce_01 = config["paths"]["input_dir"] + "{Object_ID}",
-        sce_02 = OUTPUT_BASE_PATH + "/drop/sce_{Object_ID}-02",
-        sce_03 = OUTPUT_BASE_PATH + "/outl/sce_{Object_ID}-03",
-        sce_04 = OUTPUT_BASE_PATH + "/norm/sce_{Object_ID}-04",
-        sce_05 = OUTPUT_BASE_PATH + "/dimr/sce_{Object_ID}-05"
+        sce_02 = rules.remove_droplets.output,
+        sce_03 = rules.remove_outliers.output,
+        sce_04 = rules.normalize_expr.output,
+        sce_05 = rules.reduce_dims.output
     output:
         "reports/preprocessing_report_{Object_ID}.html"
     params:
-        cutoff_umis = CUTOFFS["cutoff_umis"],
-        cutoff_doublets = CUTOFFS["cutoff_doublets"],
-        cutoff_sum = CUTOFFS["cutoff_sum"],
-        cutoff_detected = CUTOFFS["cutoff_detected"]
+        cutoff_umis = VALUES["cutoff_umis"],
+        cutoff_doublets = VALUES["cutoff_doublets"],
+        cutoff_sum = VALUES["cutoff_sum"],
+        cutoff_detected = VALUES["cutoff_detected"],
+        nr_hvgs = VALUES["nr_hvgs"]
     script:
         "make_report.Rmd" # .Rmd files should be stored in the snakemake wd
         
-print(OUTPUT_BASE_PATH + "/drop/")        
 # make one summary report on all files
-rule make_summary_report:
-    input:
-        #sce_01_path = config["paths"]["input_dir"],
-        sce_02_path = OUTPUT_BASE_PATH + "/drop",
-        sce_03_path = OUTPUT_BASE_PATH + "/outl",
-        sce_04_path = OUTPUT_BASE_PATH + "/norm",
-        sce_05_path = OUTPUT_BASE_PATH + "/dimr"
-    output:
-        "reports/summary_report.html"
-    params:
-        cutoff_umis = CUTOFFS["cutoff_umis"],
-        cutoff_doublets = CUTOFFS["cutoff_doublets"],
-        cutoff_sum = CUTOFFS["cutoff_sum"],
-        cutoff_detected = CUTOFFS["cutoff_detected"],
-        targets = targets
-    script:
-        "summary_report.Rmd" # .Rmd files should be stored in the snakemake wd
+# because this rule is dependend on previous output but this is not reflected
+# in input, it can be turned off in config to avoid premature job submission
+print(config["run_report"])
+if config["run_report"]:
+  rule make_summary_report:
+      input:
+          #sce_01_path = config["paths"]["input_dir"],
+          sce_02_path = OUTPUT_BASE_PATH + "/drop",
+          sce_03_path = OUTPUT_BASE_PATH + "/outl",
+          sce_04_path = OUTPUT_BASE_PATH + "/norm",
+          sce_05_path = OUTPUT_BASE_PATH + "/dimr"
+      output:
+          "reports/summary_report.html"
+      params:
+          cutoff_umis = VALUES["cutoff_umis"],
+          cutoff_doublets = VALUES["cutoff_doublets"],
+          cutoff_sum = VALUES["cutoff_sum"],
+          cutoff_detected = VALUES["cutoff_detected"],
+          nr_hvgs = VALUES["nr_hvgs"],
+          targets = targets
+      script:
+          "summary_report.Rmd" # .Rmd files should be stored in the snakemake wd

@@ -29,14 +29,23 @@ for(i in colnames(metadata_curr)){
   colData(sce)[i] <- rep(metadata_curr[,i], ncol(sce))
 }
 
+#-------------------------------------------------------------------------------
+# space for specific modifications
+
 # change rownames to Symbols for better readability
 rownames(sce) <- rowData(sce)$Symbol
+
+# change date format of Date_collected to allow correct order
+sce$Date_collected  <- as.Date(sce$Date_collected, format="%d.%m.%Y")
+sce$Date_collected  <- as.character(sce$Date_collected)
+
+#-------------------------------------------------------------------------------
 
 # save as new object
 saveRDS(sce, file = snakemake@output[["sce_01"]])
 
 # testing purposes
-sce_01 <- read10xCounts("/omics/groups/OE0538/internal/users/l012t/snakemake-cellranger/test/cellranger_count/OE0538_DO-0008_mmus_OLD_2_bonemarrow-02/outs/raw_feature_bc_matrix", col.names = TRUE, type = "sparse" )
+#sce_01 <- read10xCounts("/omics/groups/OE0538/internal/users/l012t/snakemake-cellranger/test/cellranger_count/OE0538_DO-0008_mmus_OLD_2_bonemarrow-02/outs/raw_feature_bc_matrix", col.names = TRUE, type = "sparse" )
 #object_id_curr <- "mmus_old_hsc_1.0"
 #name_curr <- "mmus_old_hsc_1.0"
 #sce <- sce_01

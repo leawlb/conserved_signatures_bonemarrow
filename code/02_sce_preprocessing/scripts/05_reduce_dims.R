@@ -7,10 +7,11 @@ library(scater, quietly = TRUE)
 library(scran, quietly = TRUE) 
 
 sce <- readRDS(file = snakemake@input[["sce_04"]])
+nr_hvgs <- snakemake@params[["nr_hvgs"]]
 
 # extract hvgs for subsequent dimensionality reduction at sample level
 genevar <- modelGeneVar(sce)
-hvg <- getTopHVGs(genevar, n=2000)
+hvg <- getTopHVGs(genevar, n=nr_hvgs)
 
 # reduce dimensions
 sce <- runPCA(sce, ncomponents=25, subset_row = hvg) 

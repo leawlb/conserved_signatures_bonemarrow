@@ -28,16 +28,24 @@ library(scran, quietly = TRUE)
 
 ```{r load_code, message = FALSE}
 
-#source(file = "../source/colors.R")
+source(file = "../source/colors.R")
 
 sce_02_path <- snakemake@input[["sce_02_path"]]
-sce_03_path <- snakemake@input[["sce_03_path"]]
+#sce_03_path <- snakemake@input[["sce_03_path"]]
 sce_04_path <- snakemake@input[["sce_04_path"]]
-sce_05_path <- snakemake@input[["sce_05_path"]]
+#sce_05_path <- snakemake@input[["sce_05_path"]]
 
 targets <- snakemake@params[["targets"]]
 
+nr_hvgs <- snakemake@params[["nr_hvgs"]]
+cutoff_sum <- snakemake@params[["cutoff_sum"]]
+cutoff_detected <- snakemake@params[["cutoff_detected"]]
+
 ```
+
+# QC
+
+Check Quality per sample.
 
 ```{r}
 
@@ -59,9 +67,7 @@ qcdf_list_02 <- lapply(sce_list_02, function(sce){
   qcdf$Date_collected <- sce$Date_collected
   qcdf$Species <- sce$Species
   qcdf$Fraction <- sce$Fraction
- 
-  qcdf$Date_collected  <- as.Date(qcdf$Date_collected, format="%d.%m.%Y")
-  qcdf$Date_collected  <- as.character(qcdf$Date_collected)
+
 return(qcdf)
 })
 
@@ -194,15 +200,166 @@ ggplot(qcdf_gg, aes(x = Date_collected, y = detected))+
 
 ```
 
+# Merging
+
+Merge the objects WITHOUT any normalization and/or correction steps, 
+re-calculate PCA, HVGs and UMAP to visualize basic overlap of samples.
+
+```{r}
+
+sce_list_04 <- list()
+
+for(i in targets){
+  sce_list_04[[i]] <- readRDS(file = paste0(sce_04_path, "/sce_", i, "-04"))
+}
+
+# get genes shared by all objects
+rownames_list <- lapply(sce_list_04, function(sce){
+  rownames <- rownames(sce)
+  return(rownames)
+})
+shared_genes <- Reduce(intersect, rownames_list)
+
+# subset all objects by shared_genes
+sce_list_04 <- lapply(sce_list_04, function(sce){
+  sce <- sce[rownames(sce) %in% shared_genes,]
+  return(sce)
+})
+
+# add individual sample name to barcodes to avoid random doublets
+sce_list_04 <- lapply(sce_list_04, function(sce){
+  colnames(sce) <- paste0(colnames(sce), "_", sce$Object_ID)
+  return(sce)
+})
+
+sce_list_04
+
+```
+
+
+```{r}
+
+# cbind to merge multiple objects
+for(i in 1:length(sce_list_04)){
+  if(i == 1){
+    sce_all <- sce_list_04[[i]]
+  }else{
+    sce_all <- cbind(sce_all, sce_list_04[[i]])
+  }
+}
+
+# mcar
+#targets_mcar <- targets[grep("mcar", targets)] # other species for later
+
+#mcas
+#targets_mcas <- targets[grep("mcas", targets)]
+
+# mmus
+targets_mmus <- targets[grep("mmus", targets)]
+sce_list_mmus <- sce_list_04[targets_mmus]
+for(i in 1:length(sce_list_mmus)){
+  if(i == 1){
+    sce_mmus <- sce_list_mmus[[i]]
+  }else{
+    sce_mmus <- cbind(sce_mmus, sce_list_mmus[[i]])
+  }
+} 
+
+#mspr
+#targets_mspr <- targets[grep("mspr", targets)]
+
+merged_list <- list(sce_all, sce_mmus)
+
+merged_list
+
+```
+
+```{r}
+
+merged_list <- lapply(merged_list, function(sce){
+  genevar <- modelGeneVar(sce)
+  hvg <- getTopHVGs(genevar, n=nr_hvgs)
+
+  # reduce dimensions
+  sce <- runPCA(sce, ncomponents=25, subset_row = hvg) 
+  sce <- runUMAP(sce, dimred = 'PCA', external_neighbors=TRUE,  
+                 subset_row = hvg)
+    
+  return(sce)
+
+})
+
+merged_list
+
+```
+
+```{r}
+
+make_plots <- function(sce, title){
+  
+  plot_1 <- plotUMAP(sce, colour_by = "Object_ID")+ 
+    ggtitle(title)+
+    theme(legend.key.size = unit(0.3, "cm"), legend.key.width = unit(0.3, "cm"))+
+    theme(legend.spacing = unit(0.06, "cm"), legend.text = element_text(size = 7))
+
+  plot_2 <- plotUMAP(sce, colour_by = "Species_ID")+ 
+    ggtitle(title)+
+    theme(legend.key.size = unit(0.3, "cm"), legend.key.width = unit(0.3, "cm"))+
+    theme(legend.spacing = unit(0.06, "cm"), legend.text = element_text(size = 7))
+
+  plot_3 <- plotUMAP(sce, colour_by = "Age")+ 
+    ggtitle(title)+
+    theme(legend.key.size = unit(0.3, "cm"), legend.key.width = unit(0.3, "cm"))+
+    theme(legend.spacing = unit(0.06, "cm"), legend.text = element_text(size = 7))
+
+  plot_4 <- plotUMAP(sce, colour_by = "Fraction")+ 
+    ggtitle(title)+
+    theme(legend.key.size = unit(0.3, "cm"), legend.key.width = unit(0.3, "cm"))+
+    theme(legend.spacing = unit(0.06, "cm"), legend.text = element_text(size = 7))
+  
+  plot_5 <- plotUMAP(sce, colour_by = "Batch_exp_day")+ 
+    ggtitle(title)+
+    theme(legend.key.size = unit(0.3, "cm"), legend.key.width = unit(0.3, "cm"))+
+    theme(legend.spacing = unit(0.06, "cm"), legend.text = element_text(size = 7))
+
+  plot_6 <- plotUMAP(sce, colour_by = "Batch_sequencing")+ 
+    ggtitle(title)+
+    theme(legend.key.size = unit(0.3, "cm"), legend.key.width = unit(0.3, "cm"))+
+    theme(legend.spacing = unit(0.06, "cm"), legend.text = element_text(size = 7))
+  
+  plot_7 <- plotUMAP(sce, colour_by = "Date_collected")+ 
+    ggtitle(title)+
+    theme(legend.key.size = unit(0.3, "cm"), legend.key.width = unit(0.3, "cm"))+
+    theme(legend.spacing = unit(0.06, "cm"), legend.text = element_text(size = 7))
+
+  return(list(plot_1, plot_2, plot_3, plot_4, plot_5, plot_6, plot_7))
+  
+}
+
+plot_list_all <- make_plots(merged_list[[1]], title = "all merged")
+plot_list_mmus <- make_plots(merged_list[[2]],title = "mmus merged")
+
+```
+
+```{r}
+plot_list_all 
+```
+
+```{r}
+plot_list_mmus
+```
+
+
 ```{r}
 
 # testing purposes
 
-#sce_02_path <- "/omics/groups/OE0538/internal/users/l012t/Interspecies_BM_phd/data/02_preprocessing/drop"
+#sce_05_path <- "/omics/groups/OE0538/internal/users/l012t/Interspecies_BM_phd/data/02_preprocessing/dimr"
 #targets <- c("mmus_old_hsc_1_0", "mmus_old_hsc_2_0", "mmus_old_str_2_0", "mmus_old_str_1_0")
 
 #cutoff_detected = 300
 #cutoff_sum = 400
+#nr_hvgs = 2000
 #marker1 = "dodgerblue3"
 
 ```

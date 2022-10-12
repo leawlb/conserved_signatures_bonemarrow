@@ -5,10 +5,12 @@ metadata:
   raw: "/omics/groups/OE0538/internal/users/l012t/Interspecies_BM_phd/data/metadata_full.csv"
   identifier: 
     - Object_ID
-  cutoffs:
+  values:
     cutoff_umis: 100 # below which droplets are discarded
     cutoff_doublets: 1000 # above which likely doublets are discarded
     cutoff_sum: 400 # below which cells are discarded
     cutoff_detected: 300 # below which cells are discarded
+    nr_hvgs: 2000 # nr of top hvgs 
+run_report: False
   
 

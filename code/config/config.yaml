@@ -5,6 +5,7 @@ paths:
 metadata:
   raw: "/omics/groups/OE0538/internal/users/l012t/Interspecies_BM_phd/data/metadata_full.csv"
   identifiers: 
+  # should be the same as in https://github.com/odomlab2/snakemake-cellranger
     - Species_ID
     - Age_ID
     - Fraction_ID
@@ -16,5 +17,5 @@ metadata:
     cutoff_detected: 300 # below which cells are discarded
     nr_hvgs: 2000 # nr of top hvgs 
 run_preprocessing_summary: False
-  
+run_sce_all: True
 

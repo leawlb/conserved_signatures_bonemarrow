@@ -14,7 +14,7 @@ METADATA = pd.read_csv(config["metadata"]["raw"])
 VALUES =  config["metadata"]["values"]
 
 # get all possible wildcards from designated identifier(s)
-# see snakemake-cellranger github repository https://github.com/odomlab2/snakemake-cellranger
+# see snakemake-cellranger https://github.com/odomlab2/snakemake-cellranger
 if not "individual" in METADATA.columns: 
     print('establishing "individual" column') 
     for i in IDENTIFIERS:
@@ -36,8 +36,8 @@ targets_03 = [OUTPUT_BASE_PATH + "/outl/" + "sce_" + x + "-03" for x in targets]
 targets_04 = [OUTPUT_BASE_PATH + "/norm/" + "sce_" + x + "-04" for x in targets]
 targets_05 = [OUTPUT_BASE_PATH + "/dimr/" + "sce_" + x + "-05" for x in targets]
 
-targets_rp = ["reports/preprocessing_report_"+ x + ".html" for x in targets]
-target_srp = ["reports/summary_report.html"]
+targets_rp = ["reports/preprocessing_sample_report_"+ x + ".html" for x in targets]
+target_srp = ["reports/preprocessing_summary.html"]
 
 if config["run_preprocessing_summary"]: # only run summary_report if necessary
   targets_rp = targets_rp + target_srp
@@ -45,8 +45,10 @@ if config["run_preprocessing_summary"]: # only run summary_report if necessary
 # local execution of non-demanding rules
 localrules: remove_outliers, all  
 
+#-------------------------------------------------------------------------------
+
 # define rules
-rule all: # must contain all possible output paths
+rule all: # must contain all possible output paths from all rules
     input:
         targets_02,
         targets_03,
@@ -57,9 +59,9 @@ rule all: # must contain all possible output paths
 # remove empty droplets and doublets to retain only single cells
 rule remove_droplets:
     input: 
-        sce_01 = config["paths"]["cellranger_output"] + "{Object_ID}"
+        sce_01 = config["paths"]["cellranger_output"] + "{individual}"
     output:
-        sce_02 = OUTPUT_BASE_PATH + "/drop/sce_{Object_ID}-02"
+        sce_02 = OUTPUT_BASE_PATH + "/drop/sce_{individual}-02"
     params:
         cutoff_umis = VALUES["cutoff_umis"],
         cutoff_doublets = VALUES["cutoff_doublets"]
@@ -71,7 +73,7 @@ rule remove_outliers:
     input: 
         sce_02 = rules.remove_droplets.output
     output:
-        sce_03 = OUTPUT_BASE_PATH + "/outl/sce_{Object_ID}-03"
+        sce_03 = OUTPUT_BASE_PATH + "/outl/sce_{individual}-03"
     params:
         cutoff_sum = VALUES["cutoff_sum"],
         cutoff_detected = VALUES["cutoff_detected"]
@@ -83,7 +85,7 @@ rule normalize_expr:
     input: 
         sce_03 = rules.remove_outliers.output
     output:
-        sce_04 = OUTPUT_BASE_PATH + "/norm/sce_{Object_ID}-04"
+        sce_04 = OUTPUT_BASE_PATH + "/norm/sce_{individual}-04"
     script:
         "scripts/04_normalize_expr.R"
         
@@ -92,7 +94,7 @@ rule reduce_dims:
     input: 
         sce_04 = rules.normalize_expr.output
     output:
-        sce_05 = OUTPUT_BASE_PATH + "/dimr/sce_{Object_ID}-05"
+        sce_05 = OUTPUT_BASE_PATH + "/dimr/sce_{individual}-05"
     params:
         nr_hvgs = VALUES["nr_hvgs"]
     script:
@@ -101,13 +103,13 @@ rule reduce_dims:
 # construct report files to monitor QC on sample level
 rule make_report:
     input:
-        sce_01 = config["paths"]["cellranger_output"] + "{Object_ID}",
+        sce_01 = config["paths"]["cellranger_output"] + "{individual}",
         sce_02 = rules.remove_droplets.output,
         sce_03 = rules.remove_outliers.output,
         sce_04 = rules.normalize_expr.output,
         sce_05 = rules.reduce_dims.output
     output:
-        "reports/preprocessing_sample_report_{Object_ID}.html"
+        "reports/preprocessing_sample_report_{individual}.html"
     params:
         cutoff_umis = VALUES["cutoff_umis"],
         cutoff_doublets = VALUES["cutoff_doublets"],
@@ -115,11 +117,14 @@ rule make_report:
         cutoff_detected = VALUES["cutoff_detected"],
         nr_hvgs = VALUES["nr_hvgs"]
     script:
-        "preprocessing_sample_reports.Rmd" # .Rmd files should be stored in the snakemake wd
+        # .Rmd files should be stored in snakefile working directory
+        "preprocessing_sample_reports.Rmd" 
         
 # make one summary report on all files
-# because this rule is dependend on previous output but this is not reflected
-# in input, it can be turned off in config to avoid premature job submission
+"""
+Because this rule is dependend on previous outputs but this is not reflected
+in input, it's generally turned off in config to avoid premature job submission
+"""
 print(config["run_preprocessing_summary"])
 if config["run_preprocessing_summary"]:
   rule make_summary_report:
@@ -132,4 +137,4 @@ if config["run_preprocessing_summary"]:
           cutoff_detected = VALUES["cutoff_detected"],
           targets = targets
       script:
-          "preprocessing_summary.Rmd" # .Rmd files should be stored in the snakemake wd
+          "preprocessing_summary.Rmd" 

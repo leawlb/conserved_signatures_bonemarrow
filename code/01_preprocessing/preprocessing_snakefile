@@ -9,15 +9,26 @@ METADATA_PATH = config["metadata"]["raw"]
 OUTPUT_BASE_PATH = config["paths"]["preprocessing"]
 
 # objects from config
-IDENTIFIER = config["metadata"]["identifier"]
+IDENTIFIERS = config["metadata"]["identifiers"]
 METADATA = pd.read_csv(config["metadata"]["raw"])
 VALUES =  config["metadata"]["values"]
 
-# get all possible wildcards from designated identifier
-targets = METADATA[IDENTIFIER]
+# get all possible wildcards from designated identifier(s)
+# see snakemake-cellranger github repository https://github.com/odomlab2/snakemake-cellranger
+if not "individual" in METADATA.columns: 
+    print('establishing "individual" column') 
+    for i in IDENTIFIERS:
+        if i == IDENTIFIERS[0]:
+            METADATA["individual"] = METADATA[i].map(str)
+        else: 
+            METADATA["individual"] = METADATA["individual"] + '_' + METADATA[i].map(str)
+
+# get unique targets
+targets = METADATA["individual"]
 targets = targets.drop_duplicates()
 targets = targets.squeeze()
 targets = targets.tolist()
+print(targets)
 
 # construct paths for all possible outputs, this is required for rule all
 targets_02 = [OUTPUT_BASE_PATH + "/drop/" + "sce_" + x + "-02" for x in targets]
@@ -109,7 +120,7 @@ rule make_report:
 # make one summary report on all files
 # because this rule is dependend on previous output but this is not reflected
 # in input, it can be turned off in config to avoid premature job submission
-print(paste("Run proprocessing summary: ", config["run_preprocessing_summary"])
+print(config["run_preprocessing_summary"])
 if config["run_preprocessing_summary"]:
   rule make_summary_report:
       input:

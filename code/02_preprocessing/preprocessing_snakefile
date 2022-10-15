@@ -6,7 +6,7 @@ import pandas as pd
 
 # paths from config
 METADATA_PATH = config["metadata"]["raw"]
-OUTPUT_BASE_PATH = config["paths"]["preprocessing"]
+OUTPUT_BASE_PATH = config["paths"]["output_dir"]
 
 # objects from config
 IDENTIFIERS = config["metadata"]["identifiers"]
@@ -31,10 +31,10 @@ targets = targets.tolist()
 print(targets)
 
 # construct paths for all possible outputs, this is required for rule all
-targets_02 = [OUTPUT_BASE_PATH + "/drop/" + "sce_" + x + "-02" for x in targets]
-targets_03 = [OUTPUT_BASE_PATH + "/outl/" + "sce_" + x + "-03" for x in targets]
-targets_04 = [OUTPUT_BASE_PATH + "/norm/" + "sce_" + x + "-04" for x in targets]
-targets_05 = [OUTPUT_BASE_PATH + "/dimr/" + "sce_" + x + "-05" for x in targets]
+targets_02 = [OUTPUT_BASE_PATH + "/02_drop/" + "sce_" + x + "-02" for x in targets]
+targets_03 = [OUTPUT_BASE_PATH + "/03_outl/" + "sce_" + x + "-03" for x in targets]
+targets_04 = [OUTPUT_BASE_PATH + "/04_norm/" + "sce_" + x + "-04" for x in targets]
+targets_05 = [OUTPUT_BASE_PATH + "/05_dimr/" + "sce_" + x + "-05" for x in targets]
 
 targets_rp = ["reports/preprocessing_sample_report_"+ x + ".html" for x in targets]
 target_srp = ["reports/preprocessing_summary.html"]
@@ -43,7 +43,7 @@ if config["run_preprocessing_summary"]: # only run summary_report if necessary
   targets_rp = targets_rp + target_srp
 
 # local execution of non-demanding rules
-localrules: remove_outliers, all  
+localrules: all  
 
 #-------------------------------------------------------------------------------
 
@@ -59,9 +59,9 @@ rule all: # must contain all possible output paths from all rules
 # remove empty droplets and doublets to retain only single cells
 rule remove_droplets:
     input: 
-        sce_01 = config["paths"]["cellranger_output"] + "{individual}"
+        sce_01 = config["paths"]["cellranger_output"] + "sce_{individual}-01"
     output:
-        sce_02 = OUTPUT_BASE_PATH + "/drop/sce_{individual}-02"
+        sce_02 = OUTPUT_BASE_PATH + "/02_drop/sce_{individual}-02"
     params:
         cutoff_umis = VALUES["cutoff_umis"],
         cutoff_doublets = VALUES["cutoff_doublets"]
@@ -73,10 +73,11 @@ rule remove_outliers:
     input: 
         sce_02 = rules.remove_droplets.output
     output:
-        sce_03 = OUTPUT_BASE_PATH + "/outl/sce_{individual}-03"
+        sce_03 = OUTPUT_BASE_PATH + "/03_outl/sce_{individual}-03"
     params:
         cutoff_sum = VALUES["cutoff_sum"],
-        cutoff_detected = VALUES["cutoff_detected"]
+        cutoff_detected = VALUES["cutoff_detected"],
+        cutoff_mitos = VALUES["cutoff_mitos"]
     script:
         "scripts/03_remove_outliers.R"
         
@@ -85,7 +86,7 @@ rule normalize_expr:
     input: 
         sce_03 = rules.remove_outliers.output
     output:
-        sce_04 = OUTPUT_BASE_PATH + "/norm/sce_{individual}-04"
+        sce_04 = OUTPUT_BASE_PATH + "/04_norm/sce_{individual}-04"
     script:
         "scripts/04_normalize_expr.R"
         
@@ -94,7 +95,7 @@ rule reduce_dims:
     input: 
         sce_04 = rules.normalize_expr.output
     output:
-        sce_05 = OUTPUT_BASE_PATH + "/dimr/sce_{individual}-05"
+        sce_05 = OUTPUT_BASE_PATH + "/05_dimr/sce_{individual}-05"
     params:
         nr_hvgs = VALUES["nr_hvgs"]
     script:
@@ -115,6 +116,7 @@ rule make_report:
         cutoff_doublets = VALUES["cutoff_doublets"],
         cutoff_sum = VALUES["cutoff_sum"],
         cutoff_detected = VALUES["cutoff_detected"],
+        cutoff_mitos = VALUES["cutoff_mitos"],
         nr_hvgs = VALUES["nr_hvgs"]
     script:
         # .Rmd files should be stored in snakefile working directory
@@ -123,18 +125,19 @@ rule make_report:
 # make one summary report on all files
 """
 Because this rule is dependend on previous outputs but this is not reflected
-in input, it's generally turned off in config to avoid premature job submission
+in input:, it's generally turned off in config to avoid premature job submission
 """
 print(config["run_preprocessing_summary"])
 if config["run_preprocessing_summary"]:
   rule make_summary_report:
       input:
-          sce_02_path = OUTPUT_BASE_PATH + "/drop",
+          sce_02_path = OUTPUT_BASE_PATH + "/02_drop",
       output:
           "reports/preprocessing_summary.html"
       params:
           cutoff_sum = VALUES["cutoff_sum"],
           cutoff_detected = VALUES["cutoff_detected"],
+          cutoff_mitos = VALUES["cutoff_mitos"]
           targets = targets
       script:
           "preprocessing_summary.Rmd" 

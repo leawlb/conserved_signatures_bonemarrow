@@ -1,9 +1,10 @@
 paths:
-  cellranger_output: "/omics/groups/OE0538/internal/users/l012t/snakemake-cellranger/data/sce_objects/" 
-  preprocessing: "/omics/groups/OE0538/internal/users/l012t/Interspecies_BM_phd/data/01_preprocessing"
-  integration: "/omics/groups/OE0538/internal/users/l012t/Interspecies_BM_phd/data/02_integration"
+  output_dir: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/"
+  cellranger_output: "/01_cellranger_output" 
+  preprocessing: "/02_preprocessing"
+  integration: "/03_integration"
 metadata:
-  raw: "/omics/groups/OE0538/internal/users/l012t/Interspecies_BM_phd/data/metadata_full.csv"
+  raw: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/OE0538_DO-0008_metadata_combined.csv"
   identifiers: 
   # should be the same as in https://github.com/odomlab2/snakemake-cellranger
     - Species_ID
@@ -13,9 +14,19 @@ metadata:
   values:
     cutoff_umis: 100 # below which droplets are discarded
     cutoff_doublets: 1000 # above which likely doublets are discarded
+    cutoff_mitos: 5 # percentage of mito genes above which cells are discarded
     cutoff_sum: 400 # below which cells are discarded
     cutoff_detected: 300 # below which cells are discarded
     nr_hvgs: 2000 # nr of top hvgs 
+  batches: 
+    - individual
+    - Batch_exp_day
+    - Batch_sequencing
+  batch_use: 
+    - individual
 run_preprocessing_summary: False
-run_sce_all: True
+run_mnncorrect: True
+run_scmerge: True
+run_scmerge: True
+hvgs_for_batch_correction: False
 

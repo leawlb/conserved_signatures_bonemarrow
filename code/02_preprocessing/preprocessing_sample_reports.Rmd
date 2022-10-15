@@ -48,6 +48,7 @@ cutoff_umis <- snakemake@params[["cutoff_umis"]]
 cutoff_doublets <- snakemake@params[["cutoff_doublets"]] 
 cutoff_sum <- snakemake@params[["cutoff_sum"]] 
 cutoff_detected <- snakemake@params[["cutoff_detected"]]
+cutoff_mitos <- snakemake@params[["cutoff_mitos"]]
 
 ```
 
@@ -114,25 +115,23 @@ Check the quality of the single cells and if cells were removed appropriately
 
 ```{r}
 
-qcdf_02 <- perCellQCMetrics(sce_02) # before outlier removal
+# get mito count just to check
+mito_genes <- grep("mt-", rownames(sce_02))
+qcdf_02 <- perCellQCMetrics(sce_02, subsets=list(Mito=mito_genes)) # before outlier removal
 
 # set QC cutoffs below which cells are removed
 sum_out <- qcdf_02$sum < cutoff_sum 
-det_out <- qcdf_02$sum < cutoff_detected 
+det_out <- qcdf_02$detected < cutoff_detected 
+mito_out <- qcdf_02$subsets_Mito_percent > cutoff_mitos
 
 # remove all cells to discard and add info to qc
-remove_pos <- sum_out | det_out 
+remove_pos <- sum_out | det_out | mito_out
 qcdf_02$removed <- remove_pos
 
-# get mito count just to check
-mito_genes <- grep("mt-", rownames(sce_02))
-qcdf_mitos_02 <- perCellQCMetrics(sce_02, subsets=list(Mito=mito_genes))
+qcdf_gg <- as.data.frame(qcdf_02[,c(1,2,5,7)])
 
-qcdf_02$removed <- remove_pos
-qcdf_02$mito_count <- qcdf_mitos_02$subsets_Mito_percent
-
-qcdf_gg <- pivot_longer(data.frame(qcdf_02[,c(1,2,4,5)]), 
-                        names_to = "metric", cols = c(1, 2, 4))
+qcdf_gg <- pivot_longer(qcdf_gg, 
+                        names_to = "metric", cols = c(1, 2, 3))
 
 ggplot(qcdf_gg[qcdf_gg$metric == "sum",], aes(y = value, x = metric))+
   theme_classic()+
@@ -156,7 +155,8 @@ ggplot(qcdf_gg[qcdf_gg$metric == "detected",], aes(y = value, x = metric))+
   theme(axis.title.x = element_blank(), axis.text.x = element_blank())+
   geom_abline(intercept = cutoff_detected, color = marker1, slope = 0) 
 
-ggplot(qcdf_gg[qcdf_gg$metric == "mito_count",], aes(y = value, x = metric))+
+ggplot(qcdf_gg[qcdf_gg$metric == "subsets_Mito_percent",], 
+       aes(y = value, x = metric))+
   theme_classic()+
   ggbeeswarm::geom_quasirandom(size = 0.1, aes(color = removed))+
   geom_boxplot(alpha = 0)+
@@ -165,7 +165,7 @@ ggplot(qcdf_gg[qcdf_gg$metric == "mito_count",], aes(y = value, x = metric))+
   ylab("Mitochondrial gene percent")+
   ggtitle(name_curr)+
   theme(axis.title.x = element_blank(), axis.text.x = element_blank())+
-  geom_abline(intercept = 5, color = marker1, slope = 0) 
+  geom_abline(intercept = cutoff_mitos, color = marker1, slope = 0) 
 
 ```
 

@@ -31,20 +31,21 @@ def get_list(metadata, column):
   return(values)
 
 Species_ID = get_list(metadata = METADATA, column = "Species_ID")
-targets = get_list(metadata = METADATA, column = "individual")
-print(targets)
+individual = get_list(metadata = METADATA, column = "individual")
 
-# construct paths for all possible outputs, this is required for rule all
-targets_02 = [OUTPUT_BASE_PATH + "/02_drop/" + y + "/sce_" + x + "-02" for x in targets for y in Species_ID]
-targets_03 = [OUTPUT_BASE_PATH + "/03_outl/" + y + "/sce_" + x + "-03" for x in targets for y in Species_ID]
-targets_04 = [OUTPUT_BASE_PATH + "/04_norm/" + y + "/sce_" + x + "-04" for x in targets for y in Species_ID]
-targets_05 = [OUTPUT_BASE_PATH + "/05_dimr/" + y + "/sce_" + x + "-05" for x in targets for y in Species_ID]
-
-targets_rp = [OUTPUT_BASE_PATH + "/reports/preprocessing/preprocessing_sample_report_" + x + ".html" for x in targets]
-target_srp = [OUTPUT_BASE_PATH + "/reports/preprocessing/preprocessing_summary.html"]
-
-if config["run_preprocessing_summary"]: # only run summary_report if necessary
-  targets_rp = targets_rp + target_srp
+# construct paths for all possible outputs/targets, required for rule all
+targets = []
+for species in Species_ID:
+  for ind in individual:
+    if species in ind:
+      targets = targets + [OUTPUT_BASE_PATH + "/02_drop/" + species + "/sce_" + ind + "-02"]
+      targets = targets + [OUTPUT_BASE_PATH + "/03_outl/" + species + "/sce_" + ind + "-03"]
+      targets = targets + [OUTPUT_BASE_PATH + "/04_norm/" + species + "/sce_" + ind + "-04"]
+      targets = targets + [OUTPUT_BASE_PATH + "/05_dimr/" + species + "/sce_" + ind + "-05"]
+      targets = targets + [OUTPUT_BASE_PATH + "/reports/preprocessing/" + species + "/preprocessing_sample_report_" + ind + ".html"]
+      
+      if config["run_preprocessing_summary"]:
+        targets = targets + [OUTPUT_BASE_PATH + "/reports/preprocessing/preprocessing_summary.html"]
 
 # local execution of non-demanding rules
 localrules: all  
@@ -54,11 +55,7 @@ localrules: all
 # define rules
 rule all: # must contain all possible output paths from all rules
     input:
-        targets_02,
-        targets_03,
-        targets_04,
-        targets_05,
-        targets_rp
+        targets
 
 # remove empty droplets and doublets to retain only single cells
 rule remove_droplets:
@@ -108,13 +105,13 @@ rule reduce_dims:
 # construct report files to monitor QC on sample level
 rule make_report:
     input:
-        sce_01 = OUTPUT_BASE_PATH + config["paths"]["cellranger_output"] + "/sce_{individual}-01",
+        sce_01 = OUTPUT_BASE_PATH + config["paths"]["cellranger_output"] + "/{species}/sce_{individual}-01",
         sce_02 = rules.remove_droplets.output,
         sce_03 = rules.remove_outliers.output,
         sce_04 = rules.normalize_expr.output,
         sce_05 = rules.reduce_dims.output
     output:
-        OUTPUT_BASE_PATH + "/reports/preprocessing/preprocessing_sample_report_{individual}.html"
+        OUTPUT_BASE_PATH + "/reports/preprocessing/{species}/preprocessing_sample_report_{individual}.html"
     params:
         cutoff_umis = VALUES["cutoff_umis"],
         cutoff_doublets = VALUES["cutoff_doublets"],

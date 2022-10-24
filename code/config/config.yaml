@@ -1,5 +1,5 @@
 paths:
-  output_dir: "/omics/odcf/analysis/OE0538_projects/DO-0008/test/sce_objects"
+  output_dir: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects"
   cellranger_output: "/01_cellranger_output" 
   preprocessing: "/02_preprocessing"
   integration: "/03_integration"

@@ -15,13 +15,6 @@ VALUES =  config["metadata"]["values"]
 
 # get all possible wildcards from designated identifier(s)
 # see snakemake-cellranger https://github.com/odomlab2/snakemake-cellranger
-if not "individual" in METADATA.columns: 
-    print('establishing "individual" column') 
-    for i in IDENTIFIERS:
-        if i == IDENTIFIERS[0]:
-            METADATA["individual"] = METADATA[i].map(str)
-        else: 
-            METADATA["individual"] = METADATA["individual"] + '_' + METADATA[i].map(str)
 
 def get_list(metadata, column):
   values = METADATA[column]
@@ -31,12 +24,12 @@ def get_list(metadata, column):
   return(values)
 
 Species_ID = get_list(metadata = METADATA, column = "Species_ID")
-individual = get_list(metadata = METADATA, column = "individual")
+individuals = get_list(metadata = METADATA, column = "Object_ID")
 
 # construct paths for all possible outputs/targets, required for rule all
 targets = []
 for species in Species_ID:
-  for ind in individual:
+  for ind in individuals:
     if species in ind:
       targets = targets + [OUTPUT_BASE_PATH + "/02_drop/" + species + "/sce_" + ind + "-02"]
       targets = targets + [OUTPUT_BASE_PATH + "/03_outl/" + species + "/sce_" + ind + "-03"]
@@ -124,6 +117,7 @@ rule make_report:
         "preprocessing_sample_reports.Rmd" 
         
 # make one summary report on all files
+# TODO I might be able to use expand here, not sure how it works with scripts
 """
 Because this rule is dependend on previous outputs but this is not reflected
 in input:, it's generally turned off in config to avoid premature job submission
@@ -132,14 +126,14 @@ print(config["run_preprocessing_summary"])
 if config["run_preprocessing_summary"]:
   rule make_summary_report:
       input:
-          sce_02_path = OUTPUT_BASE_PATH + "/{species}/02_drop",
+          sce_02_path = OUTPUT_BASE_PATH + "/02_drop",
       output:
           OUTPUT_BASE_PATH + "/reports/preprocessing/preprocessing_summary.html"
       params:
           cutoff_sum = VALUES["cutoff_sum"],
           cutoff_detected = VALUES["cutoff_detected"],
           cutoff_mitos = VALUES["cutoff_mitos"],
-          targets = targets,
+          individuals = individuals,
           metadata = config["metadata"]["raw"]
       script:
           "preprocessing_summary.Rmd" 

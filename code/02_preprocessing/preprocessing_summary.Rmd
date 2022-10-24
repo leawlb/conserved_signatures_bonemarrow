@@ -43,11 +43,12 @@ metadata <- read.csv(file = snakemake@params[["metadata"]],
                      as.is=TRUE, 
                      colClasses = "character")
 
-targets <- snakemake@params[["targets"]]
+individuals <- snakemake@params[["individuals"]]
 
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
 cutoff_sum <- snakemake@params[["cutoff_sum"]]
 cutoff_detected <- snakemake@params[["cutoff_detected"]]
+cutoff_mitos <- snakemake@params[["cutoff_mitos"]]
 
 ```
 
@@ -55,26 +56,28 @@ cutoff_detected <- snakemake@params[["cutoff_detected"]]
 
 Check Quality per sample.
 
-```{r}
+```{r fig.width = 14}
 
 sce_list_02 <- list()
 #print(paste0(sce_02_path, "/sce_", targets[1]))
 
-for(i in targets){
-  #print(paste0(sce_02_path, "/sce_", i, "-02"))
-  sce_list_02[[i]] <- readRDS(file = paste0(sce_02_path, "/sce_", i, "-02"))
+species <- c("mmus", "mspr", "mcas", "mcar")
 
+
+  #print(paste0(sce_02_path, "/sce_", i, "-02"))
+for(s in species){
+  for(i in individuals){
+    if(grepl(s, i) == TRUE){
+      sce_list_02[[i]] <- readRDS(file = paste0(sce_02_path, "/", s, "/sce_", i, "-02"))
+    }
+  }
 }
 
 qcdf_list_02 <- lapply(sce_list_02, function(sce){
   
-  sce$Keep_sample <- rep("TRUE", ncol(sce))
-  
-  if(metadata$Keep_sample[which(metadata$Object_ID == sce$Object_ID[1])[1]] == FALSE){
-    sce$Keep_sample <- rep("FALSE", ncol(sce))
-  }
-  
-  qcdf <- perCellQCMetrics(sce)
+  mito_genes <- grep("mt-", rownames(sce))
+
+  qcdf <- perCellQCMetrics(sce, subsets=list(Mito=mito_genes))
   qcdf$Object_ID <- sce$Object_ID
   qcdf$Species_ID <- sce$Species_ID
   qcdf$Age <- sce$Age
@@ -85,7 +88,14 @@ qcdf_list_02 <- lapply(sce_list_02, function(sce){
   qcdf$Fraction <- sce$Fraction
   qcdf$Keep_sample <- sce$Keep_sample
 
-return(qcdf)
+  sum_out <- qcdf$sum < cutoff_sum 
+  det_out <- qcdf$detected < cutoff_detected 
+  mito_out <- qcdf$subsets_Mito_percent > cutoff_mitos
+  
+  remove_pos <- sum_out | det_out | mito_out
+  qcdf$removed <- remove_pos
+  
+  return(qcdf)
 })
 
 qcdf_gg <- DataFrame()
@@ -96,124 +106,140 @@ for(i in qcdf_list_02){
 qcdf_gg <- data.frame(qcdf_gg)
 
 # by Sample
-ggplot(qcdf_gg, aes(x = Object_ID, y = sum, color = Keep_sample))+
-  ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
+ggplot(qcdf_gg, aes(x = Object_ID, y = sum, color = removed, alpha = Keep_sample))+
+  ggbeeswarm::geom_quasirandom(size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 100000))+
-  geom_abline(intercept = cutoff_sum, color = marker1,  slope = 0)+
-  ggtitle(paste("cutoff sum = ", cutoff_sum)) 
+  ylim(limits = c(0, 120000))+
+  ggtitle(paste("cutoff sum = ", cutoff_sum))+ 
+  scale_y_log10()+
+  scale_alpha_discrete("Samples to keep", range = c("FALSE" = 0.02, "TRUE" = 0.7))+
+  scale_color_manual("Cells to remove", values = c("TRUE" = "black", "FALSE" = "grey80"))
   
 
-ggplot(qcdf_gg, aes(x = Object_ID, y = detected, color = Keep_sample))+
-  ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
+ggplot(qcdf_gg, aes(x = Object_ID, y = detected, color = removed, alpha = Keep_sample))+
+  ggbeeswarm::geom_quasirandom(size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 15000))+
-  geom_abline(intercept = cutoff_detected, color = marker1, slope = 0)+
-  ggtitle(paste("cutoff detected = ", cutoff_detected)) 
+  ylim(limits = c(0, 10000))+
+  ggtitle(paste("cutoff detected = ", cutoff_detected))+ 
+  scale_y_log10()+
+  scale_alpha_discrete("Samples to keep", range = c("FALSE" = 0.02, "TRUE" = 0.7))+
+  scale_color_manual("Cells to remove", values = c("TRUE" = "black", "FALSE" = "grey80"))
 
 # by Species_ID
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Species_ID, y = sum,))+
+ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Species_ID, y = sum, color = removed))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 100000))+
-  geom_abline(intercept = cutoff_sum, color = marker1,  slope = 0)+
-  ggtitle(paste("cutoff sum = ", cutoff_sum)) 
+  ylim(limits = c(0, 120000))+
+  ggtitle(paste("cutoff sum = ", cutoff_sum))+ 
+  scale_y_log10() +
+  scale_color_manual("Cells to remove", values = c("TRUE" = "black", "FALSE" = "grey80"))
 
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Species_ID, y = detected,))+
+ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Species_ID, y = detected, color = removed))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 15000))+
-  geom_abline(intercept = cutoff_detected, color = marker1, slope = 0)+
-  ggtitle(paste("cutoff detected = ", cutoff_detected)) 
+  ylim(limits = c(0, 10000))+
+  ggtitle(paste("cutoff detected = ", cutoff_detected))+ 
+  scale_y_log10()+
+  scale_color_manual("Cells to remove", values = c("TRUE" = "black", "FALSE" = "grey80"))
 
 # by Age
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Age, y = sum,))+
+ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Age, y = sum, color = removed))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 100000))+
-  geom_abline(intercept = cutoff_sum, color = marker1,  slope = 0)+
-  ggtitle(paste("cutoff sum = ", cutoff_sum)) 
+  ylim(limits = c(0, 120000))+
+  ggtitle(paste("cutoff sum = ", cutoff_sum))+ 
+  scale_y_log10()+
+  scale_color_manual("Cells to remove", values = c("TRUE" = "black", "FALSE" = "grey80")) 
 
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Age, y = detected,))+
+ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Age, y = detected, color = removed))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 15000))+
-  geom_abline(intercept = cutoff_detected, color = marker1, slope = 0)+
-  ggtitle(paste("cutoff detected = ", cutoff_detected)) 
+  ylim(limits = c(0, 10000))+
+  ggtitle(paste("cutoff detected = ", cutoff_detected))+ 
+  scale_y_log10() +
+  scale_color_manual("Cells to remove", values = c("TRUE" = "black", "FALSE" = "grey80"))
 
 # by Fraction
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Fraction, y = sum,))+
+ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Fraction, y = sum, color = removed))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 100000))+
-  geom_abline(intercept = cutoff_sum, color = marker1,  slope = 0)+
-  ggtitle(paste("cutoff sum = ", cutoff_sum)) 
+  ylim(limits = c(0, 120000))+
+  ggtitle(paste("cutoff sum = ", cutoff_sum))+ 
+  scale_y_log10() +
+  scale_color_manual("Cells to remove", values = c("TRUE" = "black", "FALSE" = "grey80"))
 
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Fraction, y = detected,))+
+ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Fraction, y = detected, color = removed))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 15000))+
-  geom_abline(intercept = cutoff_detected, color = marker1, slope = 0)+
-  ggtitle(paste("cutoff detected = ", cutoff_detected)) 
+  ylim(limits = c(0, 10000))+
+  ggtitle(paste("cutoff detected = ", cutoff_detected))+ 
+  scale_y_log10() +
+  scale_color_manual("Cells to remove", values = c("TRUE" = "black", "FALSE" = "grey80"))
 
 # by Batch_exp_day
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Batch_exp_day, y = sum,))+
+ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Batch_exp_day, y = sum, color = removed))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 100000))+
-  geom_abline(intercept = cutoff_sum, color = marker1,  slope = 0)+
-  ggtitle(paste("cutoff sum = ", cutoff_sum)) 
+  ylim(limits = c(0, 120000))+
+  ggtitle(paste("cutoff sum = ", cutoff_sum)) + 
+  scale_y_log10() +
+  scale_color_manual("Cells to remove", values = c("TRUE" = "black", "FALSE" = "grey80"))
 
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Batch_exp_day, y = detected,))+
+ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Batch_exp_day, y = detected, color = removed))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 15000))+
-  geom_abline(intercept = cutoff_detected, color = marker1, slope = 0)+
-  ggtitle(paste("cutoff detected = ", cutoff_detected))
+  ylim(limits = c(0, 10000))+
+  ggtitle(paste("cutoff detected = ", cutoff_detected))+ 
+  scale_y_log10() +
+  scale_color_manual("Cells to remove", values = c("TRUE" = "black", "FALSE" = "grey80"))
 
 # by Batch_sequencing
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Batch_sequencing, y = sum,))+
+ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Batch_sequencing, y = sum, color = removed))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 100000))+
-  geom_abline(intercept = cutoff_sum, color = marker1,  slope = 0)+
-  ggtitle(paste("cutoff sum = ", cutoff_sum)) 
+  ylim(limits = c(0, 120000))+
+  ggtitle(paste("cutoff sum = ", cutoff_sum))+ 
+  scale_y_log10()+
+  scale_color_manual("Cells to remove", values = c("TRUE" = "black", "FALSE" = "grey80")) 
 
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Batch_sequencing, y = detected,))+
+ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Batch_sequencing, y = detected, color = removed))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 15000))+
-  geom_abline(intercept = cutoff_detected, color = marker1, slope = 0)+
-  ggtitle(paste("cutoff detected = ", cutoff_detected))
+  ylim(limits = c(0, 10000))+
+  ggtitle(paste("cutoff detected = ", cutoff_detected))+ 
+  scale_y_log10() +
+  scale_color_manual("Cells to remove", values = c("TRUE" = "black", "FALSE" = "grey80"))
 
 # by Date_collected
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Date_collected, y = sum,))+
+ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Date_collected, y = sum, color = removed))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 100000))+
-  geom_abline(intercept = cutoff_sum, color = marker1,  slope = 0)+
-  ggtitle(paste("cutoff sum = ", cutoff_sum)) 
+  ylim(limits = c(0, 120000))+
+  ggtitle(paste("cutoff sum = ", cutoff_sum))+ 
+  scale_y_log10()+
+  scale_color_manual("Cells to remove", values = c("TRUE" = "black", "FALSE" = "grey80")) 
 
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Date_collected, y = detected,))+
+ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Date_collected, y = detected, color = removed))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 15000))+
-  geom_abline(intercept = cutoff_detected, color = marker1, slope = 0)+
-  ggtitle(paste("cutoff detected = ", cutoff_detected))
+  ylim(limits = c(0, 10000))+
+  ggtitle(paste("cutoff detected = ", cutoff_detected))+ 
+  scale_y_log10() +
+  scale_color_manual("Cells to remove", values = c("TRUE" = "black", "FALSE" = "grey80"))
 
 ```
 

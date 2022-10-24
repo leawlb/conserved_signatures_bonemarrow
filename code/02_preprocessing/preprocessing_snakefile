@@ -23,21 +23,25 @@ if not "individual" in METADATA.columns:
         else: 
             METADATA["individual"] = METADATA["individual"] + '_' + METADATA[i].map(str)
 
-# get unique targets
-targets = METADATA["individual"]
-targets = targets.drop_duplicates()
-targets = targets.squeeze()
-targets = targets.tolist()
+def get_list(metadata, column):
+  values = METADATA[column]
+  values = values.drop_duplicates()
+  values = values.squeeze()
+  values = values.tolist()
+  return(values)
+
+Species_ID = get_list(metadata = METADATA, column = "Species_ID")
+targets = get_list(metadata = METADATA, column = "individual")
 print(targets)
 
 # construct paths for all possible outputs, this is required for rule all
-targets_02 = [OUTPUT_BASE_PATH + "/02_drop/" + "sce_" + x + "-02" for x in targets]
-targets_03 = [OUTPUT_BASE_PATH + "/03_outl/" + "sce_" + x + "-03" for x in targets]
-targets_04 = [OUTPUT_BASE_PATH + "/04_norm/" + "sce_" + x + "-04" for x in targets]
-targets_05 = [OUTPUT_BASE_PATH + "/05_dimr/" + "sce_" + x + "-05" for x in targets]
+targets_02 = [OUTPUT_BASE_PATH + "/02_drop/" + y + "/sce_" + x + "-02" for x in targets for y in Species_ID]
+targets_03 = [OUTPUT_BASE_PATH + "/03_outl/" + y + "/sce_" + x + "-03" for x in targets for y in Species_ID]
+targets_04 = [OUTPUT_BASE_PATH + "/04_norm/" + y + "/sce_" + x + "-04" for x in targets for y in Species_ID]
+targets_05 = [OUTPUT_BASE_PATH + "/05_dimr/" + y + "/sce_" + x + "-05" for x in targets for y in Species_ID]
 
-targets_rp = ["reports/preprocessing_sample_report_"+ x + ".html" for x in targets]
-target_srp = ["reports/preprocessing_summary.html"]
+targets_rp = [OUTPUT_BASE_PATH + "/reports/preprocessing/preprocessing_sample_report_" + x + ".html" for x in targets]
+target_srp = [OUTPUT_BASE_PATH + "/reports/preprocessing/preprocessing_summary.html"]
 
 if config["run_preprocessing_summary"]: # only run summary_report if necessary
   targets_rp = targets_rp + target_srp
@@ -59,9 +63,9 @@ rule all: # must contain all possible output paths from all rules
 # remove empty droplets and doublets to retain only single cells
 rule remove_droplets:
     input: 
-        sce_01 = config["paths"]["cellranger_output"] + "sce_{individual}-01"
+        sce_01 = OUTPUT_BASE_PATH + config["paths"]["cellranger_output"] + "/{species}/sce_{individual}-01"
     output:
-        sce_02 = OUTPUT_BASE_PATH + "/02_drop/sce_{individual}-02"
+        sce_02 = OUTPUT_BASE_PATH + "/02_drop/{species}/sce_{individual}-02"
     params:
         cutoff_umis = VALUES["cutoff_umis"],
         cutoff_doublets = VALUES["cutoff_doublets"]
@@ -73,7 +77,7 @@ rule remove_outliers:
     input: 
         sce_02 = rules.remove_droplets.output
     output:
-        sce_03 = OUTPUT_BASE_PATH + "/03_outl/sce_{individual}-03"
+        sce_03 = OUTPUT_BASE_PATH + "/03_outl/{species}/sce_{individual}-03"
     params:
         cutoff_sum = VALUES["cutoff_sum"],
         cutoff_detected = VALUES["cutoff_detected"],
@@ -86,7 +90,7 @@ rule normalize_expr:
     input: 
         sce_03 = rules.remove_outliers.output
     output:
-        sce_04 = OUTPUT_BASE_PATH + "/04_norm/sce_{individual}-04"
+        sce_04 = OUTPUT_BASE_PATH + "/04_norm/{species}/sce_{individual}-04"
     script:
         "scripts/04_normalize_expr.R"
         
@@ -95,7 +99,7 @@ rule reduce_dims:
     input: 
         sce_04 = rules.normalize_expr.output
     output:
-        sce_05 = OUTPUT_BASE_PATH + "/05_dimr/sce_{individual}-05"
+        sce_05 = OUTPUT_BASE_PATH + "/05_dimr/{species}/sce_{individual}-05"
     params:
         nr_hvgs = VALUES["nr_hvgs"]
     script:
@@ -104,13 +108,13 @@ rule reduce_dims:
 # construct report files to monitor QC on sample level
 rule make_report:
     input:
-        sce_01 = config["paths"]["cellranger_output"] + "{individual}",
+        sce_01 = OUTPUT_BASE_PATH + config["paths"]["cellranger_output"] + "/sce_{individual}-01",
         sce_02 = rules.remove_droplets.output,
         sce_03 = rules.remove_outliers.output,
         sce_04 = rules.normalize_expr.output,
         sce_05 = rules.reduce_dims.output
     output:
-        "reports/preprocessing_sample_report_{individual}.html"
+        OUTPUT_BASE_PATH + "/reports/preprocessing/preprocessing_sample_report_{individual}.html"
     params:
         cutoff_umis = VALUES["cutoff_umis"],
         cutoff_doublets = VALUES["cutoff_doublets"],
@@ -131,13 +135,14 @@ print(config["run_preprocessing_summary"])
 if config["run_preprocessing_summary"]:
   rule make_summary_report:
       input:
-          sce_02_path = OUTPUT_BASE_PATH + "/02_drop",
+          sce_02_path = OUTPUT_BASE_PATH + "/{species}/02_drop",
       output:
-          "reports/preprocessing_summary.html"
+          OUTPUT_BASE_PATH + "/reports/preprocessing/preprocessing_summary.html"
       params:
           cutoff_sum = VALUES["cutoff_sum"],
           cutoff_detected = VALUES["cutoff_detected"],
-          cutoff_mitos = VALUES["cutoff_mitos"]
-          targets = targets
+          cutoff_mitos = VALUES["cutoff_mitos"],
+          targets = targets,
+          metadata = config["metadata"]["raw"]
       script:
           "preprocessing_summary.Rmd" 

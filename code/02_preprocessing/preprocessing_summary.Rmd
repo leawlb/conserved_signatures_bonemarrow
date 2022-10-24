@@ -35,6 +35,14 @@ sce_02_path <- snakemake@input[["sce_02_path"]]
 #sce_04_path <- snakemake@input[["sce_04_path"]]
 #sce_05_path <- snakemake@input[["sce_05_path"]]
 
+metadata <- read.csv(file = snakemake@params[["metadata"]], 
+                     head = TRUE, 
+                     sep = ",", 
+                     check.names=FALSE, 
+                     stringsAsFactors=FALSE, 
+                     as.is=TRUE, 
+                     colClasses = "character")
+
 targets <- snakemake@params[["targets"]]
 
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
@@ -55,9 +63,17 @@ sce_list_02 <- list()
 for(i in targets){
   #print(paste0(sce_02_path, "/sce_", i, "-02"))
   sce_list_02[[i]] <- readRDS(file = paste0(sce_02_path, "/sce_", i, "-02"))
+
 }
 
 qcdf_list_02 <- lapply(sce_list_02, function(sce){
+  
+  sce$Keep_sample <- rep("TRUE", ncol(sce))
+  
+  if(metadata$Keep_sample[which(metadata$Object_ID == sce$Object_ID[1])[1]] == FALSE){
+    sce$Keep_sample <- rep("FALSE", ncol(sce))
+  }
+  
   qcdf <- perCellQCMetrics(sce)
   qcdf$Object_ID <- sce$Object_ID
   qcdf$Species_ID <- sce$Species_ID
@@ -84,7 +100,7 @@ ggplot(qcdf_gg, aes(x = Object_ID, y = sum, color = Keep_sample))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 80000))+
+  ylim(limits = c(0, 100000))+
   geom_abline(intercept = cutoff_sum, color = marker1,  slope = 0)+
   ggtitle(paste("cutoff sum = ", cutoff_sum)) 
   
@@ -93,126 +109,111 @@ ggplot(qcdf_gg, aes(x = Object_ID, y = detected, color = Keep_sample))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 40000))+
+  ylim(limits = c(0, 15000))+
   geom_abline(intercept = cutoff_detected, color = marker1, slope = 0)+
   ggtitle(paste("cutoff detected = ", cutoff_detected)) 
 
 # by Species_ID
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Species_ID, y = sum, color = Keep_sample))+
+ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Species_ID, y = sum,))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 80000))+
+  ylim(limits = c(0, 100000))+
   geom_abline(intercept = cutoff_sum, color = marker1,  slope = 0)+
   ggtitle(paste("cutoff sum = ", cutoff_sum)) 
 
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Species_ID, y = detected, color = Keep_sample))+
+ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Species_ID, y = detected,))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 40000))+
+  ylim(limits = c(0, 15000))+
   geom_abline(intercept = cutoff_detected, color = marker1, slope = 0)+
   ggtitle(paste("cutoff detected = ", cutoff_detected)) 
 
 # by Age
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Age, y = sum, color = Keep_sample))+
+ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Age, y = sum,))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 80000))+
+  ylim(limits = c(0, 100000))+
   geom_abline(intercept = cutoff_sum, color = marker1,  slope = 0)+
   ggtitle(paste("cutoff sum = ", cutoff_sum)) 
 
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Age, y = detected, color = Keep_sample))+
+ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Age, y = detected,))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 40000))+
+  ylim(limits = c(0, 15000))+
   geom_abline(intercept = cutoff_detected, color = marker1, slope = 0)+
   ggtitle(paste("cutoff detected = ", cutoff_detected)) 
 
 # by Fraction
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Fraction, y = sum, color = Keep_sample))+
+ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Fraction, y = sum,))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 80000))+
+  ylim(limits = c(0, 100000))+
   geom_abline(intercept = cutoff_sum, color = marker1,  slope = 0)+
   ggtitle(paste("cutoff sum = ", cutoff_sum)) 
 
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Fraction, y = detected, color = Keep_sample))+
+ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Fraction, y = detected,))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 40000))+
+  ylim(limits = c(0, 15000))+
   geom_abline(intercept = cutoff_detected, color = marker1, slope = 0)+
   ggtitle(paste("cutoff detected = ", cutoff_detected)) 
 
 # by Batch_exp_day
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Batch_exp_day, y = sum, color = Keep_sample))+
+ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Batch_exp_day, y = sum,))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 80000))+
+  ylim(limits = c(0, 100000))+
   geom_abline(intercept = cutoff_sum, color = marker1,  slope = 0)+
   ggtitle(paste("cutoff sum = ", cutoff_sum)) 
 
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Batch_exp_day, y = detected, color = Keep_sample))+
+ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Batch_exp_day, y = detected,))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 40000))+
+  ylim(limits = c(0, 15000))+
   geom_abline(intercept = cutoff_detected, color = marker1, slope = 0)+
   ggtitle(paste("cutoff detected = ", cutoff_detected))
 
 # by Batch_sequencing
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Batch_sequencing, y = sum, color = Keep_sample))+
+ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Batch_sequencing, y = sum,))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 80000))+
+  ylim(limits = c(0, 100000))+
   geom_abline(intercept = cutoff_sum, color = marker1,  slope = 0)+
   ggtitle(paste("cutoff sum = ", cutoff_sum)) 
 
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Batch_sequencing, y = detected, color = Keep_sample))+
+ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Batch_sequencing, y = detected,))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 40000))+
+  ylim(limits = c(0, 15000))+
   geom_abline(intercept = cutoff_detected, color = marker1, slope = 0)+
   ggtitle(paste("cutoff detected = ", cutoff_detected))
 
 # by Date_collected
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Date_collected, y = sum, color = Keep_sample))+
+ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Date_collected, y = sum,))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 80000))+
+  ylim(limits = c(0, 100000))+
   geom_abline(intercept = cutoff_sum, color = marker1,  slope = 0)+
   ggtitle(paste("cutoff sum = ", cutoff_sum)) 
 
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Date_collected, y = detected, color = Keep_sample))+
+ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Date_collected, y = detected,))+
   ggbeeswarm::geom_quasirandom(alpha = 0.5, size = 0.1)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 40000))+
+  ylim(limits = c(0, 15000))+
   geom_abline(intercept = cutoff_detected, color = marker1, slope = 0)+
   ggtitle(paste("cutoff detected = ", cutoff_detected))
-
-```
-
-
-```{r}
-
-# testing purposes
-
-#sce_04_path <- "/omics/groups/OE0538/internal/users/l012t/Interspecies_BM_phd/data/02_preprocessing/norm"
-#targets <- c("mmus_old_hsc_1_0", "mmus_old_hsc_2_0", "mmus_old_str_2_0", "mmus_old_str_1_0")
-
-#cutoff_detected = 300
-#cutoff_sum = 400
-#nr_hvgs = 2000
-#marker1 = "dodgerblue3"
 
 ```
 

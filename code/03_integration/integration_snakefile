@@ -1,0 +1,224 @@
+#!/bin/python 
+
+"""
+Info in batch correction methods from:
+Luecken et al. "Benchmarking atlas-level data integration in single-cell genomics", Nat Met 2022
+Tran, Ang, Chevrier, Zhang et al. "A benchmark of batch effect correction methods for songle-cell RNA sequencing data", Genome Biologz 2020
+"""
+#-------------------------------------------------------------------------------
+
+import pandas as pd
+import numpy as np
+import sys 
+
+# paths from config
+METADATA_PATH = config["metadata"]["raw"]
+OUTPUT_BASE_PATH = config["paths"]["output_dir"]
+
+# objects from config
+IDENTIFIERS = config["metadata"]["identifiers"]
+METADATA = pd.read_csv(config["metadata"]["raw"])
+VALUES =  config["metadata"]["values"]
+BATCH_USE = config["metadata"]["batch_use"] # which SCE col to use as batch
+
+
+#-------------------------------------------------------------------------------
+
+def get_list(metadata, column):
+  values = METADATA[column]
+  values = values.drop_duplicates()
+  values = values.squeeze()
+  values = values.tolist()
+  return(values)
+  
+Species_ID = get_list(metadata = METADATA, column = "Species_ID")
+Age_ID = get_list(metadata = METADATA, column = "Age_ID")
+Fraction_ID = get_list(metadata = METADATA, column = "Fraction_ID")
+Sample_NR = get_list(metadata = METADATA, column = "Sample_NR")
+Object_ID = get_list(metadata = METADATA, column = "Object_ID")
+
+individual = [x[5:] for x in Object_ID]
+individual = list(set(individual))
+
+targets_06 = [OUTPUT_BASE_PATH + "/06_mrge/" + "sce_" + x + "-06" for x in Species_ID]
+#targets_07 = [OUTPUT_BASE_PATH + "/07_rnrm/" + "sce_" + x + "-07" for x in targets]
+#targets_07_hvg = [OUTPUT_BASE_PATH + "/07_rnrm/" + "hvg_" + x + "-07" for x in targets]
+# construct specific targets for each used batch and each used method only if method is to be used
+#targets_08a = [OUTPUT_BASE_PATH + "/08_mnncorrect/" + "sce_" + x + "_correctedby_" + BATCH_USE + "-08" for x in targets] if run_mnncorrect else []
+#targets_08b = [OUTPUT_BASE_PATH + "/08_seurat3/" + "sce_" + x + "_correctedby_" + BATCH_USE + "-08" for x in targets] if run_seurat3 else []
+#targets_08c = [OUTPUT_BASE_PATH + "/08_scmerge/" + "sce_" + x + "_correctedby_" + BATCH_USE + "-08" for x in targets] if run_scmerge else []
+#print(targets_07)
+#
+#if run_mnncorrect:
+#  targets_07 = targets_07 + targets_08a + targets_08b + targets_08c
+
+#-------------------------------------------------------------------------------
+
+#localrules: all  
+#
+rule all:
+    input:
+        targets_06
+        
+
+"""
+Merge all datasets into one big dataset, and four species-specific SCE objects
+Input data is located in 02_preprocessing/04_norm/
+"""
+#rule merge_datasets_all:
+#    input:
+#        sce_04_path = OUTPUT_BASE_PATH + "/04_norm/", 
+#    output:
+#        sce_06_path = OUTPUT_BASE_PATH + "/06_mrge/" # rest is specified in script
+#    params:
+#        targets = targets
+#    script:
+#        if "all" in input:
+#        "scripts/06_merge_datasets.R" 
+        
+next_input_mcar = list(filter(lambda x:'mcar' in x, Object_ID))
+next_input_mcar = [x[5:] for x in next_input_mcar]
+
+next_input_mcas = list(filter(lambda x:'mcas' in x, Object_ID))
+next_input_mcas = [x[5:] for x in next_input_mcas]
+
+next_input_mmus = list(filter(lambda x:'mmus' in x, Object_ID))
+next_input_mmus = [x[5:] for x in next_input_mmus]
+
+next_input_mspr = list(filter(lambda x:'mspr' in x, Object_ID))
+next_input_mspr = [x[5:] for x in next_input_mspr]
+
+#next_input_mmus = [OUTPUT_BASE_PATH + "/04_norm/" + "sce_" + x + "-04" for x in next_input_mmus]
+input_list = next_input_mcar + next_input_mcas + next_input_mmus + next_input_mspr
+
+species_list_mcar = list(np.repeat("mcar", len(next_input_mcar)))
+#print(species_list_mcar)
+
+species_list_mcas = list(np.repeat("mcas", len(next_input_mcas)))
+#print(species_list_mcas)
+
+species_list_mmus = list(np.repeat("mmus", len(next_input_mmus)))
+#print(species_list_mmus)
+
+species_list_mspr = list(np.repeat("mspr", len(next_input_mspr)))
+#print(species_list_mspr)
+
+#print(type(species_list_mcar))
+species_list = species_list_mcar + species_list_mcas + species_list_mmus + species_list_mspr
+#print(species_list)
+
+inputs = expand(OUTPUT_BASE_PATH + "/04_norm/sce_{species}_{inp}-04", zip, species =  species_list, inp = input_list, allow_missing=True)
+#print(inputs)
+
+test =  glob_wildcards(OUTPUT_BASE_PATH + "/04_norm/sce_mmus_{ind}")
+print(test)
+
+
+
+#test2 = [OUTPUT_BASE_PATH + x for x in test] 
+#print(test2)
+
+rule merge_datasets_species:
+    input: 
+        sce_04 = inputs 
+    output:
+        sce_06 = OUTPUT_BASE_PATH + "/06_mrge/sce_{species}-06"
+    wildcard_constraints:
+        species = "[a-z]+"
+    script:
+        "scripts/testing_purposes.R" 
+ #       
+#def mcar(wildcards):
+#    return expand(
+#        OUTPUT_BASE_PATH + "{species}_old_hsc_1_2",
+#        sample=config['conditions'][wildcards.condition]['tumor'])
+
+#def condition2normalsamples(wildcards):
+#    return expand(
+#        "mapped_reads/merged_samples/{sample}.sorted.dup.reca.bam",
+#        sample=config['conditions'][wildcards.condition]['normal'])
+
+#rule gatk_RealignerTargetCreator:
+##    input:
+#        tumor = condition2tumorsamples,
+#        normal = condition2normalsamples,    
+#    output:
+#        "mapped_reads/merged_samples/{condition}.realign.intervals"
+    # remainder of the rule here...
+    
+#rule_merge_datasets:
+  
+        
+"""
+# quick and basic renormalization, scaling, HVG calculation
+
+Scaling improves batch effect removal but worsens bioconservation
+HVG selection improves performance but restricts analysis
+"""
+# quick and basic renormalization, scaling, HVG calculation
+#rule renormalize:
+#    input:
+#        sce_06 = rules.merge_datasets.output + ["sce_{species}-06"]
+#    output:
+#        sce_07 = OUTPUT_BASE_PATH + "/07_rnrm/sce_{species}-07",
+#        hvgs = OUTPUT_BASE_PATH + "/07_rnrm/hvg_{species}-07"
+#    params:
+#        batch_use = BATCH_USE
+#    script:
+#        "scripts/07_renormalize.R"
+
+"""
+batch correct using MNNcorrect
+
+MNNcorrect is good at recovering DEGs from batch corrected data and bioconservation,
+but slow and does not perform well on batch correction 
+Requires shared cell types between batches but no labels
+(fastMNN) seems to balance vatch effect removal and bioconservation
+"""
+#if config["run_mnncorrect"]:
+#    rule renormalize:
+#        input:
+#            sce_07 = rules.renormalize.output 
+#        output:
+#            sce_08 = OUTPUT_BASE_PATH + "/08_mnncorrect/sce_{species}_correctedby_" + BATCH_USE + "-08"
+#        params:
+#            hvgs_for_batch_correction = config["hvgs_for_batch_correction"]
+#        script:
+#            "scripts/08_mnncorrect.R"
+
+"""
+batch correct using Seurat3
+
+Seurat3 is good at batch corection and among best for multiple batch integration
+but not great at recovering DEGs from batch corrected data
+unbalanced towards stronger batch effect removal, but successful at removing species batch effects
+Requires shared cell types between batches but no labels, scaling little effect
+"""
+#if config["run_seurat3"]:
+#    rule renormalize:
+#        input:
+#            sce_07 = rules.renormalize.output 
+#        output:
+#            sce_08 = OUTPUT_BASE_PATH + "/08_seurat3/sce_{species}_correctedby_" + BATCH_USE + "-08"
+#        params:
+#            hvgs_for_batch_correction = config["hvgs_for_batch_correction"]
+#        script:
+#            "scripts/08_seurat3.R"
+
+"""
+batch correct using scMerge
+
+scMerge and among best for multiple batch integration,
+is ok but not great at batch corection and recovering DEGs
+seems balanced but is also slow
+"""
+#if config["run_scmerge"]:
+#    rule renormalize:
+#        input:
+#            sce_07 = rule.renormalize.output 
+#        output:
+#            sce_08 = OUTPUT_BASE_PATH + "/08_scmerge/sce_{species}_correctedby_" + BATCH_USE + "-08"
+#        params:
+#            hvgs_for_batch_correction = config["hvgs_for_batch_correction"]
+#        script:
+#            "scripts/08_scmerge.R"

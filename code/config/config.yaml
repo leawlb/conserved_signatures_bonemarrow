@@ -1,5 +1,5 @@
 paths:
-  output_dir: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/"
+  output_dir: "/omics/odcf/analysis/OE0538_projects/DO-0008/test/sce_objects"
   cellranger_output: "/01_cellranger_output" 
   preprocessing: "/02_preprocessing"
   integration: "/03_integration"
@@ -13,7 +13,7 @@ metadata:
     - Sample_NR
   values:
     cutoff_umis: 100 # below which droplets are discarded
-    cutoff_doublets: 1000 # above which likely doublets are discarded
+    cutoff_doublets: 7.5 # above which likely doublets are discarded
     cutoff_mitos: 5 # percentage of mito genes above which cells are discarded
     cutoff_sum: 400 # below which cells are discarded
     cutoff_detected: 300 # below which cells are discarded
@@ -25,8 +25,8 @@ metadata:
   batch_use: 
     - individual
 run_preprocessing_summary: False
-run_mnncorrect: True
-run_scmerge: True
-run_scmerge: True
+run_mnncorrect: False
+run_seurat3: False
+run_scmerge: False
 hvgs_for_batch_correction: False
 

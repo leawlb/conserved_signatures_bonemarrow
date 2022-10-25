@@ -37,8 +37,8 @@ for species in Species_ID:
       targets = targets + [OUTPUT_BASE_PATH + "/05_dimr/" + species + "/sce_" + ind + "-05"]
       targets = targets + [OUTPUT_BASE_PATH + "/reports/preprocessing/" + species + "/preprocessing_sample_report_" + ind + ".html"]
       
-      if config["run_preprocessing_summary"]:
-        targets = targets + [OUTPUT_BASE_PATH + "/reports/preprocessing/preprocessing_summary.html"]
+if config["run_preprocessing_summary"]:
+  targets = targets + [OUTPUT_BASE_PATH + "/reports/preprocessing/preprocessing_summary.html"]
 
 # local execution of non-demanding rules
 localrules: all  

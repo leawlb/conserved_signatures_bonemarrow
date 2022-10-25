@@ -18,15 +18,24 @@ metadata:
     cutoff_sum: 400 # below which cells are discarded
     cutoff_detected: 300 # below which cells are discarded
     nr_hvgs: 2000 # nr of top hvgs 
+    nr_hvgs_batch_correction: 5000
+batch_correction:  
   batches: 
-    - individual
+    - Object_ID
     - Batch_exp_day
     - Batch_sequencing
-  batch_use: 
-    - individual
+  batch_use: "Batch_exp_day"
+  mnns:
+    - ClassicMnnParam()
+    - FastMnnParam()
+  mnn_use: "FastMnnParam()"
+# For conditions use caps if used in R  
 run_preprocessing_summary: False
-run_mnncorrect: False
+run_integration_summary: True
+run_mnncorrect: True
+mnn_use_fast: TRUE
 run_seurat3: False
 run_scmerge: False
-hvgs_for_batch_correction: False
+hvgs_for_batch_correction: FALSE 
+rescale_for_batch_correction: FALSE # Rescaling assumes that the cell composition in all batches is the same 
 

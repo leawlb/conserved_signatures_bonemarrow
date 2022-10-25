@@ -12,15 +12,12 @@ import numpy as np
 import sys 
 
 # paths from config
-METADATA_PATH = config["metadata"]["raw"]
 OUTPUT_BASE_PATH = config["paths"]["output_dir"]
 
 # objects from config
-IDENTIFIERS = config["metadata"]["identifiers"]
 METADATA = pd.read_csv(config["metadata"]["raw"])
-VALUES =  config["metadata"]["values"]
-BATCH_USE = config["metadata"]["batch_use"] # which SCE col to use as batch
-
+BATCH_USE = config["batch_correction"]["batch_use"] # which SCE col to use as batch
+print(OUTPUT_BASE_PATH)
 #-------------------------------------------------------------------------------
 
 def get_list(metadata, column):
@@ -30,15 +27,20 @@ def get_list(metadata, column):
   values = values.tolist()
   return(values)
   
-Species_ID = get_list(metadata = METADATA, column = "Species_ID")
+species = get_list(metadata = METADATA, column = "Species_ID")
+species_all = species + ["all"]
+individuals = get_list(metadata = METADATA, column = "Object_ID")
 
 # construct paths for all possible outputs/targets, required for rule all
-targets = []
-for species in Species_ID:
-  targets = targets + [OUTPUT_BASE_PATH + "/06_mrge/sce_" + species + "-06"]
-
-print(targets)
-
+targets =[OUTPUT_BASE_PATH + "/06_mrge/sce_" + s + "-06" for s in species]
+ 
+for s in species_all:
+  targets = targets + [OUTPUT_BASE_PATH + "/07_rnrm/sce_" + s + "-07"]
+  targets = targets + [OUTPUT_BASE_PATH + "/08_mnncorrect/sce_" + s + "_correctedby_" + BATCH_USE +"-08"]
+  
+if config["run_integration_summary"]:
+  targets = targets + [OUTPUT_BASE_PATH + "/reports/integration/integration_summary.html"]
+  
 #-------------------------------------------------------------------------------
 
 localrules: all  
@@ -49,30 +51,34 @@ rule all: # must contain all possible output paths from all rules
         targets
         
 """
-Merge all datasets into one big dataset, and four species-specific SCE objects
+Merge all datasets of one species into one species dataset
 Input data is located in 02_preprocessing/04_norm/
 """
-#rule merge_datasets_all:
-#    input:
-#        sce_04_path = OUTPUT_BASE_PATH + "/04_norm/", 
-#    output:
-#        sce_06_path = OUTPUT_BASE_PATH + "/06_mrge/" # rest is specified in script
-#    params:
-#        targets = targets
-#    script:
-#        if "all" in input:
-#        "scripts/06_merge_datasets.R" 
-
 rule merge_datasets_species:
     input: 
         sce_04 = OUTPUT_BASE_PATH + "/04_norm/{species}/"
     output:
         sce_06 = OUTPUT_BASE_PATH + "/06_mrge/sce_{species}-06"
+    params:
+        individuals = individuals
     wildcard_constraints:
         species = "[a-z]+"
     script:
-        "scripts/testing_purposes.R" 
+        "scripts/06_merge_datasets.R" 
   
+"""
+Merge all datasets into one big dataset using the same script
+"""
+rule merge_datasets_all:
+    input: 
+        sce_04 = expand(OUTPUT_BASE_PATH + "/04_norm/{s}/", s = species)
+    output:
+        sce_06 = OUTPUT_BASE_PATH + "/06_mrge/sce_all-06"
+    params:
+        individuals = individuals,
+        species = species
+    script:
+        "scripts/06_merge_datasets.R" 
         
 """
 # quick and basic renormalization, scaling, HVG calculation
@@ -80,17 +86,19 @@ rule merge_datasets_species:
 Scaling improves batch effect removal but worsens bioconservation
 HVG selection improves performance but restricts analysis
 """
-# quick and basic renormalization, scaling, HVG calculation
-#rule renormalize:
-#    input:
-#        sce_06 = rules.merge_datasets.output + ["sce_{species}-06"]
-#    output:
-#        sce_07 = OUTPUT_BASE_PATH + "/07_rnrm/sce_{species}-07",
-#        hvgs = OUTPUT_BASE_PATH + "/07_rnrm/hvg_{species}-07"
-#    params:
-#        batch_use = BATCH_USE
-#    script:
-#        "scripts/07_renormalize.R"
+#print([rules.merge_datasets_species.output, rules.merge_datasets_all.output])
+rule renormalize:
+    input:
+        sce_06 = OUTPUT_BASE_PATH + "/06_mrge/sce_{species}-06"
+    output:
+        sce_07 = OUTPUT_BASE_PATH + "/07_rnrm/sce_{species}-07",
+        hvgs = OUTPUT_BASE_PATH + "/07_rnrm/hvg_{species}-07"
+    params:
+        batch_use = BATCH_USE,
+        rescale = config["rescale_for_batch_correction"],
+        nr_hvgs = config["metadata"]["values"]["nr_hvgs_batch_correction"]
+    script:
+        "scripts/07_renormalize.R"
 
 """
 batch correct using MNNcorrect
@@ -100,16 +108,20 @@ but slow and does not perform well on batch correction
 Requires shared cell types between batches but no labels
 (fastMNN) seems to balance vatch effect removal and bioconservation
 """
-#if config["run_mnncorrect"]:
-#    rule renormalize:
-#        input:
-#            sce_07 = rules.renormalize.output 
-#        output:
-#            sce_08 = OUTPUT_BASE_PATH + "/08_mnncorrect/sce_{species}_correctedby_" + BATCH_USE + "-08"
-#        params:
-#            hvgs_for_batch_correction = config["hvgs_for_batch_correction"]
-#        script:
-#            "scripts/08_mnncorrect.R"
+if config["run_mnncorrect"]:
+  print(config["run_mnncorrect"])
+  rule run_mnncorrect:
+      input:
+          sce_07 = rules.renormalize.output 
+      output:
+          sce_08 = OUTPUT_BASE_PATH + "/08_mnncorrect/sce_{species}_correctedby_" + BATCH_USE + "-08"
+      params:
+          batch_use = BATCH_USE,
+          rescale = config["rescale_for_batch_correction"],
+          hvgs_for_batch_correction = config["hvgs_for_batch_correction"],
+          mnn_fast = config["mnn_use_fast"]
+      script:
+          "scripts/08_mnncorrect.R"
 
 """
 batch correct using Seurat3
@@ -147,3 +159,21 @@ seems balanced but is also slow
 #            hvgs_for_batch_correction = config["hvgs_for_batch_correction"]
 #        script:
 #            "scripts/08_scmerge.R"
+
+print(config["batch_correction"]["batches"])
+
+if config["run_integration_summary"]:
+  rule make_summary_report:
+      input:
+          sce_06_path = OUTPUT_BASE_PATH + "/06_mrge",
+          sce_07_path = OUTPUT_BASE_PATH + "/07_rnrm",
+          sce_08_path = OUTPUT_BASE_PATH + "/08_mnncorrect"
+      output:
+          OUTPUT_BASE_PATH + "/reports/integration/integration_summary.html"
+      params:
+          nr_hvgs = config["metadata"]["values"]["nr_hvgs"],
+          species_all = species_all,
+          batches = config["batch_correction"]["batches"]
+      script:
+          #"integration_summary.Rmd" 
+          "scripts/testing_purposes.R"

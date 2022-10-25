@@ -28,8 +28,8 @@ library(tidyverse, quietly = TRUE)
 source(file = "../source/colors.R")
 
 sce_06_path <- snakemake@input[["sce_06_path"]] # before renormalization
-sce_07_path <- snakemake@input[["sce_07_path"]] # after renormalization, before correction
-sce_08mnn_path <- snakemake@input[["sce_08mnn_path"]] # after correctMNN correction
+sce_07_path <- snakemake@input[["sce_07_path"]] # before correction
+sce_08mnn_path <- snakemake@input[["sce_08mnn_path"]] # after correction
 
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
 species_all <- snakemake@params[["species_all"]]
@@ -47,14 +47,16 @@ print(batches)
 
 sce_list_06 <- list()
 for(s in species_all){
-  sce_list_06[[s]] <- readRDS(file = paste0(sce_06_path, "/sce_", s, "-06"))
+  sce_list_06[[s]] <- readRDS(file = paste0(sce_06_path, 
+                                            "/sce_", s, "-06"))
 }
 print(sce_list_06)
 
 sce_list_07 <- list()
 for(b in batches){
   for(s in species_all){
-    sce_list_07[[b]][[s]] <- readRDS(file = paste0(sce_07_path, "/sce_", s, "_", b, "-07"))
+    sce_list_07[[b]][[s]] <- readRDS(file = paste0(sce_07_path, 
+                                                   "/sce_", s, "_", b, "-07"))
   }
 }  
 print(sce_list_07)
@@ -62,9 +64,11 @@ print(sce_list_07)
 sce_list_08mnn <- list()
 for(b in batches){
   for(s in species_all){
-    sce_list_08mnn[[b]][[s]] <- readRDS(file = paste0(sce_08mnn_path, "/sce_", s, "_", b, "-08"))
+    sce_list_08mnn[[b]][[s]] <- readRDS(file = paste0(sce_08mnn_path,
+                                                      "/sce_", s, "_", b, 
+                                                      "-08"))
   }
-}  
+}   
 print(sce_list_08mnn)
 
 ```
@@ -73,22 +77,23 @@ print(sce_list_08mnn)
 
 reduce_dims_all <- function(sce){
   
-  # hvgs first
   hvgs <- modelGeneVar(sce)
   hvgs <- getTopHVGs(hvgs, n=nr_hvgs)
   
   if(!"corrected" %in% reducedDimNames(sce)){ # corrected doesn't need PCs
     sce <- runPCA(sce, ncomponents=25, subset_row = hvgs) 
+    sce <- runUMAP(sce, dimred = 'PCA',
+                   external_neighbors=TRUE, subset_row = hvgs)
+  }else{
+    sce <- runUMAP(sce, dimred = 'corrected', 
+                   external_neighbors=TRUE, subset_row = hvgs) 
   }
-  
-  sce <- runUMAP(sce, dimred = 'PCA', external_neighbors=TRUE, subset_row = hvgs)
-
   return(sce)  
 }
 
-sce_list_06 <- reduce_dims_all(sce_list_06)
-sce_list_07 <- reduce_dims_all(sce_list_07)
-sce_list_08mnn <- reduce_dims_all(sce_list_08mnn)
+sce_list_06 <- lapply(sce_list_06, reduce_dims_all)
+sce_list_07_1 <- lapply(sce_list_07[[batches[1]]], reduce_dims_all)
+sce_list_08mnn_1 <- lapply(sce_list_08mnn[[batches[1]]], reduce_dims_all)
 
 ```
 
@@ -105,37 +110,47 @@ make_plots <- function(sce){
     ggtitle(paste("Corrected by:", batch_use, 
                   ", Rescaled:", rescaled, 
                   ", Method used:", correction_method))+
-    theme(legend.key.size = unit(0.3, "cm"), legend.key.width = unit(0.3, "cm"))+
-    theme(legend.spacing = unit(0.06, "cm"), legend.text = element_text(size = 7))
+    theme(legend.key.size = unit(0.3, "cm"), 
+          legend.key.width = unit(0.3, "cm"))+
+    theme(legend.spacing = unit(0.06, "cm"), 
+          legend.text = element_text(size = 7))
   
   plot_1b <- plotUMAP(sce, colour_by = "Batch_sequencing")+ 
     ggtitle(paste("Corrected by:", batch_use, 
                   ", Rescaled:", rescaled, 
                   ", Method used:", correction_method))+
-    theme(legend.key.size = unit(0.3, "cm"), legend.key.width = unit(0.3, "cm"))+
-    theme(legend.spacing = unit(0.06, "cm"), legend.text = element_text(size = 7))
+    theme(legend.key.size = unit(0.3, "cm"), 
+          legend.key.width = unit(0.3, "cm"))+
+    theme(legend.spacing = unit(0.06, "cm"), 
+          legend.text = element_text(size = 7))
   
   plot_1c <- plotUMAP(sce, colour_by = "Object_ID")+ 
     ggtitle(paste("Corrected by:", batch_use, 
                   ", Rescaled:", rescaled, 
                   ", Method used:", correction_method))+
-    theme(legend.key.size = unit(0.3, "cm"), legend.key.width = unit(0.3, "cm"))+
-    theme(legend.spacing = unit(0.06, "cm"), legend.text = element_text(size = 7))
+    theme(legend.key.size = unit(0.3, "cm"), 
+          legend.key.width = unit(0.3, "cm"))+
+    theme(legend.spacing = unit(0.06, "cm"), 
+          legend.text = element_text(size = 7))
   
   # check some other QC metrics
   plot_2 <- plotUMAP(sce, colour_by = "Keep_sample")+ 
     ggtitle(paste("Corrected by:", batch_use, 
                   ", Rescaled:", rescaled, 
                   ", Method used:", correction_method))+
-    theme(legend.key.size = unit(0.3, "cm"), legend.key.width = unit(0.3, "cm"))+
-    theme(legend.spacing = unit(0.06, "cm"), legend.text = element_text(size = 7))
+    theme(legend.key.size = unit(0.3, "cm"), 
+          legend.key.width = unit(0.3, "cm"))+
+    theme(legend.spacing = unit(0.06, "cm"), 
+          legend.text = element_text(size = 7))
  
   plot_3 <- plotUMAP(sce, colour_by = "doublet_score")+ 
     ggtitle(paste("Corrected by:", batch_use, 
                   ", Rescaled:", rescaled, 
                   ", Method used:", correction_method))+
-    theme(legend.key.size = unit(0.3, "cm"), legend.key.width = unit(0.3, "cm"))+
-    theme(legend.spacing = unit(0.06, "cm"), legend.text = element_text(size = 7))
+    theme(legend.key.size = unit(0.3, "cm"),
+          legend.key.width = unit(0.3, "cm"))+
+    theme(legend.spacing = unit(0.06, "cm"), 
+          legend.text = element_text(size = 7))
   
   # check everything else
   
@@ -143,46 +158,56 @@ make_plots <- function(sce){
     ggtitle(paste("Corrected by:", batch_use, 
                   ", Rescaled:", rescaled, 
                   ", Method used:", correction_method))+
-    theme(legend.key.size = unit(0.3, "cm"), legend.key.width = unit(0.3, "cm"))+
-    theme(legend.spacing = unit(0.06, "cm"), legend.text = element_text(size = 7))
+    theme(legend.key.size = unit(0.3, "cm"), 
+          legend.key.width = unit(0.3, "cm"))+
+    theme(legend.spacing = unit(0.06, "cm"), 
+          legend.text = element_text(size = 7))
   
   plot_5 <- plotUMAP(sce, colour_by = "Age")+ 
     ggtitle(paste("Corrected by:", batch_use, 
                   ", Rescaled:", rescaled, 
                   ", Method used:", correction_method))+
-    theme(legend.key.size = unit(0.3, "cm"), legend.key.width = unit(0.3, "cm"))+
-    theme(legend.spacing = unit(0.06, "cm"), legend.text = element_text(size = 7))
+    theme(legend.key.size = unit(0.3, "cm"), 
+          legend.key.width = unit(0.3, "cm"))+
+    theme(legend.spacing = unit(0.06, "cm"), 
+          legend.text = element_text(size = 7))
   
   plot_6 <- plotUMAP(sce, colour_by = "Fraction")+ 
     ggtitle(paste("Corrected by:", batch_use, 
                   ", Rescaled:", rescaled, 
                   ", Method used:", correction_method))+
-    theme(legend.key.size = unit(0.3, "cm"), legend.key.width = unit(0.3, "cm"))+
-    theme(legend.spacing = unit(0.06, "cm"), legend.text = element_text(size = 7))
+    theme(legend.key.size = unit(0.3, "cm"), 
+          legend.key.width = unit(0.3, "cm"))+
+    theme(legend.spacing = unit(0.06, "cm"), 
+          legend.text = element_text(size = 7))
 
   plot_7 <- plotUMAP(sce, colour_by = "Antibody_combination")+ 
     ggtitle(paste("Corrected by:", batch_use, 
                   ", Rescaled:", rescaled, 
                   ", Method used:", correction_method))+
-    theme(legend.key.size = unit(0.3, "cm"), legend.key.width = unit(0.3, "cm"))+
-    theme(legend.spacing = unit(0.06, "cm"), legend.text = element_text(size = 7))
+    theme(legend.key.size = unit(0.3, "cm"), 
+          legend.key.width = unit(0.3, "cm"))+
+    theme(legend.spacing = unit(0.06, "cm"), 
+          legend.text = element_text(size = 7))
 
   plot_8 <- plotUMAP(sce, colour_by = "Date_collected")+ 
     ggtitle(paste("Corrected by:", batch_use, 
                   ", Rescaled:", rescaled, 
                   ", Method used:", correction_method))+
-    theme(legend.key.size = unit(0.3, "cm"), legend.key.width = unit(0.3, "cm"))+
-    theme(legend.spacing = unit(0.06, "cm"), legend.text = element_text(size = 7))
+    theme(legend.key.size = unit(0.3, "cm"), 
+          legend.key.width = unit(0.3, "cm"))+
+    theme(legend.spacing = unit(0.06, "cm"), 
+          legend.text = element_text(size = 7))
   
   plot_list <- list(plot_1a, plot_1b, plot_1c, plot_2, plot_3, plot_4,
-                    plot_5, plot_6, plot_7, plot_8,)
+                    plot_5, plot_6, plot_7, plot_8)
   
   return(plot_list)
 }
 
-plot_list_06 <- make_plots(sce_list_06)
-plot_list_07_1 <- make_plots(sce_list_07[[batches[1]]])
-plot_list_08mnn_1 <- make_plots(sce_list_08mnn[[batches[1]]])
+plot_list_06 <-lapply(sce_list_06, make_plots)
+plot_list_07_1 <-lapply(sce_list_07_1, make_plots)
+plot_list_08mnn_1 <- lapply(sce_list_08mnn_1, make_plots)
 
 ```
 
@@ -191,11 +216,11 @@ plot_list_06
 ```
 
 ```{r}
-plot_list_07
+plot_list_07_1
 ```
 
 ```{r}
-plot_list_08mnn
+plot_list_08mnn_1
 ```
 
 ```{r}

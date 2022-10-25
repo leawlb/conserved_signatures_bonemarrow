@@ -19,6 +19,8 @@ metadata:
     cutoff_detected: 300 # below which cells are discarded
     nr_hvgs: 2000 # nr of top hvgs 
     nr_hvgs_batch_correction: 5000
+  reference_lipka: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/PBMC_SCE_short"
+  reference_baccin: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/Baccin_seurat"
 batch_correction:  
   batches: 
   # only add batched for which objects were already created

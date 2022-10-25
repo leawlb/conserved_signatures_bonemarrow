@@ -79,6 +79,17 @@ rule merge_datasets_all:
         species = species
     script:
         "scripts/06_merge_datasets.R" 
+
+# for preliminary overview and help during batch correction evaluation
+rule cell_type_annotation: 
+    input: 
+        sce_06 = OUTPUT_BASE_PATH + "/06_mrge/sce_{species}-06"
+    output:
+        sce_07 = OUTPUT_BASE_PATH + "/07_ctyp/sce_{species}-07"
+    params:
+        ref_seurat = config["metadata"]["reference_baccin"],
+    script:
+        "scripts/07_cell_type_annotation.R"  
         
 """
 # quick and basic renormalization, scaling, HVG calculation
@@ -99,7 +110,7 @@ rule renormalize:
         nr_hvgs = config["metadata"]["values"]["nr_hvgs_batch_correction"]
     script:
         "scripts/07_renormalize.R"
-
+        
 """
 batch correct using MNNcorrect
 
@@ -109,7 +120,7 @@ Requires shared cell types between batches but no labels
 (fastMNN) seems to balance batch effect removal and bioconservation
 """
 if config["run_mnncorrect"]:
-  print(config["run_mnncorrect"])
+  print("run_mnncorrect")
   rule run_mnncorrect:
       input:
           sce_07 = rules.renormalize.output 
@@ -160,14 +171,13 @@ seems balanced but is also slow
 #        script:
 #            "scripts/08_scmerge.R"
 
-print(config["batch_correction"]["batches"])
-
 if config["run_integration_summary"]:
+  print("run_integration_summary")
   rule make_summary_report:
       input:
           sce_06_path = OUTPUT_BASE_PATH + "/06_mrge",
           sce_07_path = OUTPUT_BASE_PATH + "/07_rnrm",
-          sce_08_path = OUTPUT_BASE_PATH + "/08_mnncorrect"
+          sce_08mnn_path = OUTPUT_BASE_PATH + "/08_mnncorrect"
       output:
           OUTPUT_BASE_PATH + "/reports/integration/integration_summary.html"
       params:

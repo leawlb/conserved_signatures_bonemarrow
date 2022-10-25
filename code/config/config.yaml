@@ -21,17 +21,18 @@ metadata:
     nr_hvgs_batch_correction: 5000
 batch_correction:  
   batches: 
-    - Object_ID
+  # only add batched for which objects were already created
     - Batch_exp_day
-    - Batch_sequencing
-  batch_use: "Batch_exp_day"
+    #- Object_ID
+    #- Batch_sequencing
+  batch_use: "Batch_exp_day" # if changed, run ENTIRE integration_snakefile
   mnns:
     - ClassicMnnParam()
     - FastMnnParam()
   mnn_use: "FastMnnParam()"
 # For conditions use caps if used in R  
 run_preprocessing_summary: False
-run_integration_summary: True
+run_integration_summary: False
 run_mnncorrect: True
 mnn_use_fast: TRUE
 run_seurat3: False

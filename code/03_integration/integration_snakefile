@@ -35,8 +35,8 @@ individuals = get_list(metadata = METADATA, column = "Object_ID")
 targets =[OUTPUT_BASE_PATH + "/06_mrge/sce_" + s + "-06" for s in species]
  
 for s in species_all:
-  targets = targets + [OUTPUT_BASE_PATH + "/07_rnrm/sce_" + s + "-07"]
-  targets = targets + [OUTPUT_BASE_PATH + "/08_mnncorrect/sce_" + s + "_correctedby_" + BATCH_USE +"-08"]
+  targets = targets + [OUTPUT_BASE_PATH + "/07_rnrm/sce_" + s + "_" + BATCH_USE + "-07"]
+  targets = targets + [OUTPUT_BASE_PATH + "/08_mnncorrect/sce_" + s + "_" + BATCH_USE +"-08"]
   
 if config["run_integration_summary"]:
   targets = targets + [OUTPUT_BASE_PATH + "/reports/integration/integration_summary.html"]
@@ -91,8 +91,8 @@ rule renormalize:
     input:
         sce_06 = OUTPUT_BASE_PATH + "/06_mrge/sce_{species}-06"
     output:
-        sce_07 = OUTPUT_BASE_PATH + "/07_rnrm/sce_{species}-07",
-        hvgs = OUTPUT_BASE_PATH + "/07_rnrm/hvg_{species}-07"
+        sce_07 = OUTPUT_BASE_PATH + "/07_rnrm/sce_{species}_" + BATCH_USE + "-07",
+        hvgs = OUTPUT_BASE_PATH + "/07_rnrm/hvg_{species}_" + BATCH_USE + "-07"
     params:
         batch_use = BATCH_USE,
         rescale = config["rescale_for_batch_correction"],
@@ -106,7 +106,7 @@ batch correct using MNNcorrect
 MNNcorrect is good at recovering DEGs from batch corrected data and bioconservation,
 but slow and does not perform well on batch correction 
 Requires shared cell types between batches but no labels
-(fastMNN) seems to balance vatch effect removal and bioconservation
+(fastMNN) seems to balance batch effect removal and bioconservation
 """
 if config["run_mnncorrect"]:
   print(config["run_mnncorrect"])
@@ -114,7 +114,7 @@ if config["run_mnncorrect"]:
       input:
           sce_07 = rules.renormalize.output 
       output:
-          sce_08 = OUTPUT_BASE_PATH + "/08_mnncorrect/sce_{species}_correctedby_" + BATCH_USE + "-08"
+          sce_08 = OUTPUT_BASE_PATH + "/08_mnncorrect/sce_{species}_" + BATCH_USE + "-08"
       params:
           batch_use = BATCH_USE,
           rescale = config["rescale_for_batch_correction"],
@@ -175,5 +175,5 @@ if config["run_integration_summary"]:
           species_all = species_all,
           batches = config["batch_correction"]["batches"]
       script:
-          #"integration_summary.Rmd" 
-          "scripts/testing_purposes.R"
+          "integration_summary.Rmd" 
+          #"scripts/testing_purposes.R"

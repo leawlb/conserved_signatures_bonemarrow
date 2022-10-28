@@ -35,8 +35,9 @@ individuals = get_list(metadata = METADATA, column = "Object_ID")
 targets =[OUTPUT_BASE_PATH + "/06_mrge/sce_" + s + "-06" for s in species]
  
 for s in species_all:
-  targets = targets + [OUTPUT_BASE_PATH + "/07_rnrm/sce_" + s + "_" + BATCH_USE + "-07"]
-  targets = targets + [OUTPUT_BASE_PATH + "/08_mnncorrect/sce_" + s + "_" + BATCH_USE +"-08"]
+  targets = targets + [OUTPUT_BASE_PATH + "/07_ctyp/sce_" + s + "-07"]
+  targets = targets + [OUTPUT_BASE_PATH + "/08_rnrm/sce_" + s + "_" + BATCH_USE + "-08"]
+  targets = targets + [OUTPUT_BASE_PATH + "/09_mnncorrect/sce_" + s + "_" + BATCH_USE +"-09"]
   
 if config["run_integration_summary"]:
   targets = targets + [OUTPUT_BASE_PATH + "/reports/integration/integration_summary.html"]
@@ -81,13 +82,17 @@ rule merge_datasets_all:
         "scripts/06_merge_datasets.R" 
 
 # for preliminary overview and help during batch correction evaluation
+# this takes very long
 rule cell_type_annotation: 
     input: 
         sce_06 = OUTPUT_BASE_PATH + "/06_mrge/sce_{species}-06"
     output:
         sce_07 = OUTPUT_BASE_PATH + "/07_ctyp/sce_{species}-07"
     params:
-        ref_seurat = config["metadata"]["reference_baccin"],
+        ref_baccin_sce = config["metadata"]["ref_baccin_sce"],
+        ref_dahlin_sce = config["metadata"]["ref_dahlin_sce"],
+        ref_dolgalev_sce = config["metadata"]["ref_dolgalev_sce"],
+        ref_lipka_sce = config["metadata"]["ref_lipka_sce"]
     script:
         "scripts/07_cell_type_annotation.R"  
         
@@ -96,20 +101,21 @@ rule cell_type_annotation:
 
 Scaling improves batch effect removal but worsens bioconservation
 HVG selection improves performance but restricts analysis
+Scaling requires identical composition in all batches
 """
 #print([rules.merge_datasets_species.output, rules.merge_datasets_all.output])
 rule renormalize:
     input:
-        sce_06 = OUTPUT_BASE_PATH + "/06_mrge/sce_{species}-06"
+        sce_07 = rules.cell_type_annotation.output
     output:
-        sce_07 = OUTPUT_BASE_PATH + "/07_rnrm/sce_{species}_" + BATCH_USE + "-07",
-        hvgs = OUTPUT_BASE_PATH + "/07_rnrm/hvg_{species}_" + BATCH_USE + "-07"
+        sce_08 = OUTPUT_BASE_PATH + "/08_rnrm/sce_{species}_" + BATCH_USE + "-08",
+        hvgs = OUTPUT_BASE_PATH + "/08_rnrm/hvg_{species}_" + BATCH_USE + "-08"
     params:
         batch_use = BATCH_USE,
         rescale = config["rescale_for_batch_correction"],
         nr_hvgs = config["metadata"]["values"]["nr_hvgs_batch_correction"]
     script:
-        "scripts/07_renormalize.R"
+        "scripts/08_renormalize.R"
         
 """
 batch correct using MNNcorrect
@@ -123,16 +129,16 @@ if config["run_mnncorrect"]:
   print("run_mnncorrect")
   rule run_mnncorrect:
       input:
-          sce_07 = rules.renormalize.output 
+          sce_08 = rules.renormalize.output 
       output:
-          sce_08 = OUTPUT_BASE_PATH + "/08_mnncorrect/sce_{species}_" + BATCH_USE + "-08"
+          sce_09 = OUTPUT_BASE_PATH + "/09_mnncorrect/sce_{species}_" + BATCH_USE + "-09"
       params:
           batch_use = BATCH_USE,
           rescale = config["rescale_for_batch_correction"],
           hvgs_for_batch_correction = config["hvgs_for_batch_correction"],
           mnn_fast = config["mnn_use_fast"]
       script:
-          "scripts/08_mnncorrect.R"
+          "scripts/09_mnncorrect.R"
 
 """
 batch correct using Seurat3
@@ -171,13 +177,32 @@ seems balanced but is also slow
 #        script:
 #            "scripts/08_scmerge.R"
 
+"""
+Make batch correction reports for each species including all, each method
+and each used Batch type
+"""
+#rule make_reports:
+#    input:
+#        sce_07 = rules.cell_type_annotation.output,
+#        sce_08 = rules.renormalize.output,
+#        sce_09mnn = rules.run_mnncorrect.output
+#    output:
+#        OUTPUT_BASE_PATH + "/reports/integration/{species}/integration_sample_method_report_{species}_" + BATCH_USE + ".html""
+#    params:
+#        nr_hvgs = config["metadata"]["values"]["nr_hvgs"],
+#        species_all = species_all,
+#        batches = config["batch_correction"]["batches"]
+#    script:
+#        #"integration_species_method_reports.Rmd" 
+#        "scripts/testing_purposes.R"
+
 if config["run_integration_summary"]:
   print("run_integration_summary")
   rule make_summary_report:
       input:
-          sce_06_path = OUTPUT_BASE_PATH + "/06_mrge",
-          sce_07_path = OUTPUT_BASE_PATH + "/07_rnrm",
-          sce_08mnn_path = OUTPUT_BASE_PATH + "/08_mnncorrect"
+          sce_07_path = OUTPUT_BASE_PATH + "/07_ctyp",
+          sce_08_path = OUTPUT_BASE_PATH + "/08_rnrm",
+          sce_09mnn_path = OUTPUT_BASE_PATH + "/09_mnncorrect"
       output:
           OUTPUT_BASE_PATH + "/reports/integration/integration_summary.html"
       params:

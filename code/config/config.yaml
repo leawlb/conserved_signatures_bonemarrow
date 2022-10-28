@@ -18,25 +18,31 @@ metadata:
     cutoff_sum: 400 # below which cells are discarded
     cutoff_detected: 300 # below which cells are discarded
     nr_hvgs: 2000 # nr of top hvgs 
-    nr_hvgs_batch_correction: 5000
-  reference_lipka: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/PBMC_SCE_short"
-  reference_baccin: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/Baccin_seurat"
+    nr_hvgs_batch_correction: 5000 # nr of top hvgs to be used for bc subsetting  
+  ref_baccin_sce: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/ref_baccin_sce"
+  ref_dahlin_sce: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/ref_dahlin_sce"
+  ref_dolgalev_sce: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/ref_dolgalev_sce"
+  ref_lipka_sce: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/ref_lipka_sce"
+  colors:
+    colors_celltypes: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/color_tables/colors_celltypes.csv"
+    colors_species: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/color_tables/colors_species.csv"
+    colors_annotations: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/color_tables/colors_annotations.csv"
 batch_correction:  
   batches: 
   # only add batched for which objects were already created
     - Batch_exp_day
-    #- Object_ID
     #- Batch_sequencing
+    #- Object_ID # cannot be used with MNNcorrect
   batch_use: "Batch_exp_day" # if changed, run ENTIRE integration_snakefile
-  mnns:
-    - ClassicMnnParam()
-    - FastMnnParam()
-  mnn_use: "FastMnnParam()"
+
+
+
+# RULES  
 # For conditions use caps if used in R  
 run_preprocessing_summary: False
 run_integration_summary: False
 run_mnncorrect: True
-mnn_use_fast: TRUE
+mnn_use_fast: FALSE
 run_seurat3: False
 run_scmerge: False
 hvgs_for_batch_correction: FALSE 

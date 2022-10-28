@@ -4,7 +4,7 @@ library(DropletUtils, quietly = TRUE)
 library(batchelor, quietly = TRUE)
 library(scran)
 
-sce <- readRDS(file = snakemake@input[["sce_06"]])
+sce <- readRDS(file = snakemake@input[["sce_07"]])
 
 batch_use <- snakemake@params[["batch_use"]]
 rescale <- snakemake@params[["rescale"]]
@@ -46,5 +46,5 @@ print(prepd_sce)
 hvgs <- modelGeneVar(prepd_sce)
 hvgs <- getTopHVGs(hvgs, n=nr_hvgs)
 
-saveRDS(prepd_sce, file = snakemake@output[["sce_07"]])
+saveRDS(prepd_sce, file = snakemake@output[["sce_08"]])
 saveRDS(hvgs, file = snakemake@output[["hvgs"]])

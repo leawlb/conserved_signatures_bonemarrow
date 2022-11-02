@@ -30,26 +30,21 @@ source(file = "../source/imaging.R")
 source(file = "../source/sce_functions.R")
 ```
 
-
 ```{r}
 
 sce_07 <- snakemake@input[["sce_07"]]
 sce_08 <- snakemake@input[["sce_08"]]
 sce_09mnn <- snakemake@input[["sce_09mnn"]]
 
-```
-
-```{r}
-
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
-species_all <- snakemake@params[["species_all"]]
+species_build <- snakemake@params[["species_build"]]
 batches <- snakemake@params[["batches"]]
 
 ```
 
 # Preliminary Cell types 
 
-### Sample level
+## Sample level
 
 UMAPS of the preliminary celltypes to get an overview/idea of the data.
 
@@ -65,7 +60,6 @@ individual_sce_list <- lapply(individual_sce_list, reduce_dims) # own function
 
 ```
 
-
 ```{r}
 
 identity_plots <- function(sce, title, identifier){
@@ -76,7 +70,7 @@ identity_plots <- function(sce, title, identifier){
   col_cts_fraction <- col_cts[names(col_cts) %in% sce$Identity_ref_fraction]
   
   plot_1 <- umap_base(sce, color_by = "Identity_ref_all")+ # own function
-    ggtitle(paste0(Object_ID, title))+
+    ggtitle(paste0(id_1, title))+
     scale_color_manual("Identity1", values = col_cts_all)
   
   plot_1l <- umap_legend(sce, color_by = "Identity_ref_all")+
@@ -85,64 +79,53 @@ identity_plots <- function(sce, title, identifier){
 
     
   plot_2 <- umap_base(sce, color_by = "Identity_ref_fraction")+
-    ggtitle(paste0(Object_ID, title))+
+    ggtitle(paste0(id_1, title))+
     scale_color_manual("Identity2", col_cts_fraction)
   
   plot_2l <- umap_legend(sce, color_by = "Identity_ref_fraction")+
     scale_color_manual("Identity2", col_cts_fraction)
   legend_2 <- get_legend(plot_2l)
 
-  PLOT_1 <- ggarrange(
-    plot_1,
-    legend_1
-  )
-  PLOT_2 <- ggarrange(
-    plot_2a,
-    legend_2
-  )
+  PLOT_1 <- ggarrange(plot_1, legend_1)
+  PLOT_2 <- ggarrange(plot_2, legend_2)
   
   return(list(PLOT_1, PLOT_2))
 }
 
 ```
 
-```{r fig.width=10, fig.height=5}
+```{r}
 
 identity_individual_plots <- lapply(individual_sce_list, 
                                     identity_plots, 
                                     identifier = "Object_ID",
                                     title = "")
 
-identity_individual_plots
-
-```
-
-More Info on preliminary cell types.
-
-```{r}
-
 lapply(individual_sce_list, function(sce){
   
   print(sce$Object_ID[1])
   print(table(sce$Identity_ref_all))
   print(table(sce$Identity_ref_fraction))
-  
 })
 
 ```
 
-### Species level
+```{r fig.width=10, fig.height=5}
+identity_individual_plots
+```
+
+## Species level
+
+### After merging
 
 ```{r}
 
 # generic dimensionality reduction
 sce_07 <- reduce_dims(sce_07)
 
-identity_species_plots <- identity_plots(sce_07, 
-                                         title = ", merged only",
-                                         identifier = "Species_ID")
-
-identity_species_plots
+identity_species_plots_07 <- identity_plots(sce_07, 
+                                            title = ", after merging",
+                                            identifier = "Species_ID")
 
 print(sce_07$Species_ID[1])
 print(table(sce_07$Identity_ref_all))
@@ -150,362 +133,329 @@ print(table(sce_07$Identity_ref_fraction))
 
 ```
 
-# All metrics
+```{r fig.width=10, fig.height=5}
+identity_species_plots_07
+```
+
+### After renormalization
 
 ```{r}
 
-make_single_plots <- function(sce){
+# generic dimensionality reduction
+sce_08 <- reduce_dims(sce_08)
+
+identity_species_plots_08 <- identity_plots(sce_08, 
+                                            title = ", after renormalization",
+                                            identifier = "Species_ID")
+
+```
+
+```{r fig.width=10, fig.height=5}
+identity_species_plots_08
+```
+
+### After batch correction
+
+```{r}
+
+# does not need PCA calculation 
+sce_09mnn <- reduce_dims(sce_09mnn)
+
+hvgs <- modelGeneVar(sce_09mnn)
+hvgs <- getTopHVGs(hvgs, n=nr_hvgs)
+
+sce_09mnn <- runUMAP(sce_09mnn, dimred = "corrected",
+                     external_neighbors=TRUE, subset_row = hvgs)
+
+identity_species_plots_09 <- identity_plots(sce_09mnn, 
+                                            title = ", after batch correction",
+                                            identifier = "Species_ID")
+
+```
+
+```{r fig.width=10, fig.height=5}
+identity_species_plots_09
+```
+
+# All QC metrics
+
+```{r}
+
+qc_plots <- function(sce, title){
   
   species <- sce$Species_ID[1]
-  
-  plot_1 <- ggplot(data.frame(reducedDims(sce)[["UMAP"]]),
-                    aes(x = X1, y = X2, color = sce$Object_ID))+
-    geom_point(size = 0.01)+
-    theme_classic()+
-    ylab("UMAP 2")+
-    xlab("UMAP 1")+
-    theme(axis.text = element_blank())+
-    theme(legend.key.size = unit(0.3, "cm"), 
-          legend.key.width = unit(0.3, "cm"),
-          legend.spacing = unit(0.06, "cm"), 
-          legend.text = element_text(size = 7))+ 
-    ggtitle(paste0(species, ", merged only"))
-  
-   plot_2 <- ggplot(data.frame(reducedDims(sce)[["UMAP"]]),
-                    aes(x = X1, y = X2, color = sce$Batch_sequencing))+
-    geom_point(size = 0.01)+
-    theme_classic()+
-    ylab("UMAP 2")+
-    xlab("UMAP 1")+
-    theme(axis.text = element_blank())+
-    theme(legend.key.size = unit(0.3, "cm"), 
-          legend.key.width = unit(0.3, "cm"),
-          legend.spacing = unit(0.06, "cm"), 
-          legend.text = element_text(size = 7))+ 
-    ggtitle(paste0(species, ", merged only"))
- 
-   plot_3 <- ggplot(data.frame(reducedDims(sce)[["UMAP"]]),
-                    aes(x = X1, y = X2, color = sce$Batch_exp_day))+
-    geom_point(size = 0.01)+
-    theme_classic()+
-    ylab("UMAP 2")+
-    xlab("UMAP 1")+
-    theme(axis.text = element_blank())+
-    theme(legend.key.size = unit(0.3, "cm"), 
-          legend.key.width = unit(0.3, "cm"),
-          legend.spacing = unit(0.06, "cm"), 
-          legend.text = element_text(size = 7))+ 
-    ggtitle(paste0(species, ", merged only"))
-  
-  plot_4 <- ggplot(data.frame(reducedDims(sce)[["UMAP"]]),
-                    aes(x = X1, y = X2, color = sce$Date_collected))+
-    geom_point(size = 0.01)+
-    theme_classic()+
-    ylab("UMAP 2")+
-    xlab("UMAP 1")+
-    theme(axis.text = element_blank())+
-    theme(legend.key.size = unit(0.3, "cm"), 
-          legend.key.width = unit(0.3, "cm"),
-          legend.spacing = unit(0.06, "cm"), 
-          legend.text = element_text(size = 7))+ 
-    ggtitle(paste0(species, ", merged only"))
 
+  plot_1 <- umap_base(sce, color_by = "Object_ID")+ # own function
+    ggtitle(paste0(species, title))
+  plot_1l <- umap_legend(sce, color_by = "Object_ID")
+  legend_1 <- get_legend(plot_1l)
+  
+  col_batch_seq <- col_num[names(col_num) %in% sce$Batch_sequencing]
+  plot_2 <- umap_base(sce, color_by = "Batch_sequencing")+
+    scale_color_manual("Batch_sequencing", col_batch_seq)+
+    ggtitle(paste0(species, title))
+  plot_2l <- umap_legend(sce, color_by = "Batch_sequencing")+
+    scale_color_manual("Batch_sequencing", col_batch_seq)
+  legend_2 <- get_legend(plot_2l)
+  
+  col_batch_exp_day <- col_alp[names(col_alp) %in% sce$Batch_exp_day]
+  plot_3 <- umap_base(sce, color_by = "Batch_exp_day")+ 
+    scale_color_manual("Batch_experimental_day", col_batch_exp_day)+
+    ggtitle(paste0(species, title))
+  plot_3l <- umap_legend(sce, color_by = "Batch_exp_day")+
+    scale_color_manual("Batch_experimental_day", col_batch_exp_day)
+  legend_3 <- get_legend(plot_3l)
+  
+  plot_4 <- umap_base(sce, color_by = "Date_collected")+ 
+    ggtitle(paste0(species, title))
+  plot_4l <- umap_legend(sce, color_by = "Date_collected")+
+  legend_4 <- get_legend(plot_4l)
+  
   # check everything else
-  plot_5 <- ggplot(data.frame(reducedDims(sce)[["UMAP"]]),
-                    aes(x = X1, y = X2, color = sce$Species_ID))+
-    geom_point(size = 0.01)+
-    theme_classic()+
-    ylab("UMAP 2")+
-    xlab("UMAP 1")+
-    theme(axis.text = element_blank())+
-    theme(legend.key.size = unit(0.3, "cm"), 
-          legend.key.width = unit(0.3, "cm"),
-          legend.spacing = unit(0.06, "cm"), 
-          legend.text = element_text(size = 7))+ 
-    ggtitle(paste0(species, ", merged only"))+
-    scale_color_manual("Species", values = col_spc)
+  col_species <- col_spc[names(col_spc) %in% sce$Species_ID]
+  plot_5 <- umap_base(sce, color_by = "Species_ID")+ 
+    scale_color_manual("Species", col_species)+
+    ggtitle(paste0(species, title))
+  plot_5l <- umap_legend(sce, color_by = "Species_ID")+
+    scale_color_manual("Species", col_species)+
+  legend_5 <- get_legend(plot_5l)
   
-  plot_6 <- ggplot(data.frame(reducedDims(sce)[["UMAP"]]),
-                    aes(x = X1, y = X2, color = sce$Age))+
-    geom_point(size = 0.01)+
-    theme_classic()+
-    ylab("UMAP 2")+
-    xlab("UMAP 1")+
-    theme(axis.text = element_blank())+
-    theme(legend.key.size = unit(0.3, "cm"), 
-          legend.key.width = unit(0.3, "cm"),
-          legend.spacing = unit(0.06, "cm"), 
-          legend.text = element_text(size = 7))+ 
-    ggtitle(paste0(species, ", merged only"))+
-    scale_color_manual("Age", values = col_age)
+  col_ages <- col_ann[names(col_ann) %in% sce$Age]
+  plot_6 <- umap_base(sce, color_by = "Age")+ 
+    scale_color_manual("Age", col_ages)+
+    ggtitle(paste0(species, title))
+  plot_6l <- umap_legend(sce, color_by = "Age")+
+    scale_color_manual("Age", col_ages)+
+  legend_6 <- get_legend(plot_6l) 
+  
+  col_fractions <- col_ann[names(col_ann) %in% sce$Fraction]
+  plot_7 <- umap_base(sce, color_by = "Fraction")+ 
+    scale_color_manual("Fraction", col_fractions)+
+    ggtitle(paste0(species, title))
+  plot_7l <- umap_legend(sce, color_by = "Fraction")+
+    scale_color_manual("Fraction", col_fractions)+
+  legend_7 <- get_legend(plot_7l) 
  
-  plot_7 <- ggplot(data.frame(reducedDims(sce)[["UMAP"]]),
-                    aes(x = X1, y = X2, color = sce$Fraction))+
-    geom_point(size = 0.01)+
-    theme_classic()+
-    ylab("UMAP 2")+
-    xlab("UMAP 1")+
-    theme(axis.text = element_blank())+
-    theme(legend.key.size = unit(0.3, "cm"), 
-          legend.key.width = unit(0.3, "cm"),
-          legend.spacing = unit(0.06, "cm"), 
-          legend.text = element_text(size = 7))+ 
-    ggtitle(paste0(species, ", merged only"))+
-    scale_color_manual("Fraction", values = col_frc)
+  plot_8 <- umap_base(sce, color_by = "Antibody_combination")+ 
+    ggtitle(paste0(species, title))
+  plot_8l <- umap_legend(sce, color_by = "Antibody_combination")+
+  legend_8 <- get_legend(plot_8l)
   
-  plot_8 <- ggplot(data.frame(reducedDims(sce)[["UMAP"]]),
-                    aes(x = X1, y = X2, color = sce$Antibody_combination))+
-    geom_point(size = 0.01)+
-    theme_classic()+
-    ylab("UMAP 2")+
-    xlab("UMAP 1")+
-    theme(axis.text = element_blank())+
-    theme(legend.key.size = unit(0.3, "cm"), 
-          legend.key.width = unit(0.3, "cm"),
-          legend.spacing = unit(0.06, "cm"), 
-          legend.text = element_text(size = 7))+ 
-    ggtitle(paste0(species, ", merged only"))
- 
-  plot_9 <- ggplot(data.frame(reducedDims(sce)[["UMAP"]]),
-                    aes(x = X1, y = X2, color = sce$doublet_score))+
-    geom_point(size = 0.01)+
-    theme_classic()+
-    ylab("UMAP 2")+
-    xlab("UMAP 1")+
-    theme(axis.text = element_blank())+
-    theme(legend.key.size = unit(0.3, "cm"), 
-          legend.key.width = unit(0.3, "cm"),
-          legend.spacing = unit(0.06, "cm"), 
-          legend.text = element_text(size = 7))+ 
-    ggtitle(paste0(species, ", merged only"))
+  plot_9 <- umap_base(sce, color_by = "doublet_score")+ 
+    ggtitle(paste0(species, title))
+  plot_9l <- umap_legend(sce, color_by = "doublet_score")+
+  legend_9 <- get_legend(plot_9l)
   
-   plot_10 <- ggplot(data.frame(reducedDims(sce)[["UMAP"]]),
-                    aes(x = X1, y = X2, color = sce$Keep_sample))+
-    geom_point(size = 0.01)+
-    theme_classic()+
-    ylab("UMAP 2")+
-    xlab("UMAP 1")+
-    theme(axis.text = element_blank())+
-    theme(legend.key.size = unit(0.3, "cm"), 
-          legend.key.width = unit(0.3, "cm"),
-          legend.spacing = unit(0.06, "cm"), 
-          legend.text = element_text(size = 7))+ 
-    ggtitle(paste0(species, ", merged only"))
+  plot_10 <- umap_base(sce, color_by = "Keep_sample")+ 
+    ggtitle(paste0(species, title))
+  plot_10l <- umap_legend(sce, color_by = "Keep_sample")+
+  legend_10 <- get_legend(plot_10l)
   
-  plot_11 <- ggplot(data.frame(reducedDims(sce)[["UMAP"]]),
-                    aes(x = X1, y = X2, color = sce$Identity))+
-    geom_point(size = 0.01)+
-    theme_classic()+
-    ylab("UMAP 2")+
-    xlab("UMAP 1")+
-    theme(axis.text = element_blank())+
-    theme(legend.key.size = unit(0.3, "cm"), 
-          legend.key.width = unit(0.3, "cm"),
-          legend.spacing = unit(0.06, "cm"), 
-          legend.text = element_text(size = 7))+ 
-    ggtitle(paste0(species, ", merged only"))+
-    scale_color_manual("REF Identity", values = col_cts_all[names(col_cts_all) %in% mspr2$Identity])
+  PLOT_1 <- ggarrange(plot_1, legend_1)
+  PLOT_2 <- ggarrange(plot_2, legend_2)
+  PLOT_3 <- ggarrange(plot_3, legend_3)
+  PLOT_4 <- ggarrange(plot_4, legend_4)
+  PLOT_5 <- ggarrange(plot_5, legend_5)
+  PLOT_6 <- ggarrange(plot_6, legend_6)
+  PLOT_7 <- ggarrange(plot_7, legend_7)
+  PLOT_8 <- ggarrange(plot_8, legend_8)
+  PLOT_9 <- ggarrange(plot_9, legend_9)
+  PLOT_10 <- ggarrange(plot_10, legend_10)
 
-  plot_list <- list(plot_1, plot_2, plot_3, plot_4, plot_5, plot_6, plot_7,
-                    plot_8, plot_9, plot_10, plot_11)
-  
+  plot_list <- list(PLOT_1, PLOT_2, PLOT_3, PLOT_4, PLOT_5, PLOT_6, PLOT_7,
+                    PLOT_8, PLOT_9, PLOT_10)
   return(plot_list)
   
 }
 
-single_plot_list_007 <- make_single_plots(sce_07)
-test <- make_single_plots(mspr2)
+qc_plots_species_07 <- qc_plots(sce_07, title = ", after merging",)
+qc_plots_species_08 <- qc_plots(sce_08, title = ", after renormalization")
+qc_plots_species_09 <- qc_plots(sce_09mnn, title = ", after batch correction",)
 
 ```
 
-```{r fig.width = 10}
-single_plot_list_007
+### After merging
+
+```{r fig.width=10, fig.height=5}
+qc_plots_species_07
 ```
 
-### Facet grid UMAPs
+### After renormalization
+
+```{r fig.width=10, fig.height=5}
+qc_plots_species_08
+```
+
+### After batch correction
+
+```{r fig.width=10, fig.height=5}
+qc_plots_species_09
+```
+
+## Facet grid UMAPs
 
 To merge across ages and fractions using MNNcorrect, every age and fraction 
 should have at least one overlapping BATCH.
 Per definition, this is not the case for Object_ID as possible batch.
 
-Check Fraction:
-
 ```{r}
 
-ggplot(data.frame(reducedDims(mspr2)[["UMAP"]]),
-                 aes(x = X1, y = X2, color = mspr2$Batch_exp_day))+
-  geom_point(size = 0.01)+
-  theme_classic()+
-  ylab("UMAP 2")+
-  xlab("UMAP 1")+
-  theme(axis.text = element_blank())+
-  theme(legend.key.size = unit(0.3, "cm"), 
-        legend.key.width = unit(0.3, "cm"),
-        legend.spacing = unit(0.06, "cm"), 
-        legend.text = element_text(size = 7))+ 
-  ggtitle(paste0(species, ", merged only"))+
-  facet_grid(cols = vars(mspr2$Fraction_ID))
+facet_plots <- function(sce, title){
+  
+  # Check Fraction
+  species <- sce$Species_ID[1]
+  
+  plot_1 <- umap_base(sce, color_by = "Object_ID")+ 
+    ggtitle(paste0(species, title))+
+    facet_grid(cols = vars(sce$Fraction))
+  plot_1l <- umap_legend(sce, color_by = "Object_ID")
+  legend_1 <- get_legend(plot_1l)
+  
+  col_batch_seq <- col_num[names(col_num) %in% sce$Batch_sequencing]
+  plot_2 <- umap_base(sce, color_by = "Batch_sequencing")+
+    scale_color_manual("Batch_sequencing", col_batch_seq)+
+    ggtitle(paste0(species, title))+
+    facet_grid(cols = vars(sce$Fraction))
+  plot_2l <- umap_legend(sce, color_by = "Batch_sequencing")+
+    scale_color_manual("Batch_sequencing", col_batch_seq)
+  legend_2 <- get_legend(plot_2l)
+  
+  col_batch_exp_day <- col_alp[names(col_alp) %in% sce$Batch_exp_day]
+  plot_3 <- umap_base(sce, color_by = "Batch_exp_day")+
+    scale_color_manual("Batch_experimental_day", col_batch_exp_day)+
+    ggtitle(paste0(species, title))+
+    facet_grid(cols = vars(sce$Fraction))
+  plot_3l <- umap_legend(sce, color_by = "Batch_exp_day")+
+    scale_color_manual("Batch_experimental_day", col_batch_exp_day)
+  legend_3 <- get_legend(plot_3l)
 
+  # check age
+  plot_4 <- umap_base(sce, color_by = "Object_ID")+ 
+    ggtitle(paste0(species, title))+
+    facet_grid(cols = vars(sce$Age))
+  plot_4l <- umap_legend(sce, color_by = "Object_ID")
+  legend_4 <- get_legend(plot_4l)
+  
+  plot_5 <- umap_base(sce, color_by = "Batch_sequencing")+
+    scale_color_manual("Batch_sequencing", col_batch_seq)+
+    ggtitle(paste0(species, title))+
+    facet_grid(cols = vars(sce$Age))
+  plot_5l <- umap_legend(sce, color_by = "Batch_sequencing")+
+    scale_color_manual("Batch_sequencing", col_batch_seq)
+  legend_5 <- get_legend(plot_5l)
+  
+  plot_6 <- umap_base(sce, color_by = "Batch_exp_day")+
+    scale_color_manual("Batch_experimental_day", col_batch_exp_day)+
+    ggtitle(paste0(species, title))+
+    facet_grid(cols = vars(sce$Age))
+  plot_6l <- umap_legend(sce, color_by = "Batch_exp_day")+
+    scale_color_manual("Batch_experimental_day", col_batch_exp_day)
+  legend_6 <- get_legend(plot_6l)
+  
+  plot_6 <- umap_base(sce, color_by = "Batch_exp_day")+
+    scale_color_manual("Batch_experimental_day", col_batch_exp_day)+
+    ggtitle(paste0(species, title))+
+    facet_grid(cols = vars(sce$Age))
+  plot_6l <- umap_legend(sce, color_by = "Batch_exp_day")+
+    scale_color_manual("Batch_experimental_day", col_batch_exp_day)
+  legend_6 <- get_legend(plot_6l)
+  
+  # Identities
+  col_cts_all <- col_cts[names(col_cts) %in% sce$Identity_ref_all]
+  col_cts_fraction <- col_cts[names(col_cts) %in% sce$Identity_ref_fraction]
+ 
+  plot_7 <- umap_base(sce, color_by = "Identity_ref_all")+
+    scale_color_manual("Identity1", col_cts_all)+
+    ggtitle(paste0(species, title))+
+    facet_grid(cols = vars(sce$Fraction))
+  plot_7l <- umap_legend(sce, color_by = "Identity_ref_all")+
+    scale_color_manual("Identity1", col_cts_all)
+  legend_idrefall <- get_legend(plot_7l)
+  
+  plot_8 <- umap_base(sce, color_by = "Identity_ref_fraction")+
+    scale_color_manual("Identity2", col_cts_fraction)+
+    ggtitle(paste0(species, title))+
+    facet_grid(cols = vars(sce$Fraction))
+  plot_8l <- umap_legend(sce, color_by = "Identity_ref_fraction")+
+    scale_color_manual("Identity2", col_cts_fraction)
+  legend_idreffrac <- get_legend(plot_8l)
+  
+  plot_9 <- umap_base(sce, color_by = "Identity_ref_all")+
+    scale_color_manual("Identity1", col_cts_all)+
+    ggtitle(paste0(species, title))+
+    facet_grid(cols = vars(sce$Age))
+  
+  plot_10 <- umap_base(sce, color_by = "Identity_ref_fraction")+
+    scale_color_manual("Identity2", col_cts_fraction)+
+    ggtitle(paste0(species, title))+
+    facet_grid(cols = vars(sce$Age))
+  
+  plot_11 <- umap_base(sce, color_by = "Identity_ref_all")+
+    scale_color_manual("Identity1", col_cts_all)+
+    ggtitle(paste0(species, title))+
+    facet_grid(cols = vars(sce$Batch_sequencing))
+  
+  plot_12 <- umap_base(sce, color_by = "Identity_ref_fraction")+
+    scale_color_manual("Identity2", col_cts_fraction)+
+    ggtitle(paste0(species, title))+
+    facet_grid(cols = vars(sce$Batch_sequencing))
+  
+  plot_13 <- umap_base(sce, color_by = "Identity_ref_all")+
+    scale_color_manual("Identity1", col_cts_all)+
+    ggtitle(paste0(species, title))+
+    facet_grid(cols = vars(sce$Batch_exp_day))
+  
+  plot_14 <- umap_base(sce, color_by = "Identity_ref_fraction")+
+    scale_color_manual("Identity2", col_cts_fraction)+
+    ggtitle(paste0(species, title))+
+    facet_grid(cols = vars(sce$Batch_exp_day))
+ 
+  PLOT_1 <- ggarrange(plot_1, legend_1)
+  PLOT_2 <- ggarrange(plot_2, legend_2)
+  PLOT_3 <- ggarrange(plot_3, legend_3)
+  PLOT_4 <- ggarrange(plot_4, legend_4)
+  PLOT_5 <- ggarrange(plot_5, legend_5)
+  PLOT_6 <- ggarrange(plot_6, legend_6)
+  PLOT_7 <- ggarrange(plot_7, legend_idrefall)
+  PLOT_8 <- ggarrange(plot_8, legend_idreffrac)
+  PLOT_9 <- ggarrange(plot_9, legend_idrefall)
+  PLOT_10 <- ggarrange(plot_10, legend_idreffrac)
+  PLOT_11 <- ggarrange(plot_11, legend_idrefall)
+  PLOT_12 <- ggarrange(plot_12, legend_idreffrac)
+  PLOT_13 <- ggarrange(plot_13, legend_idrefall)
+  PLOT_14 <- ggarrange(plot_14, legend_idreffrac)
+  
+  plot_list <- list(PLOT_1, PLOT_2, PLOT_3, PLOT_4, PLOT_5, PLOT_6, PLOT_7,
+                    PLOT_8, PLOT_9, PLOT_10, PLOT_11, PLOT_12, PLOT_13, PLOT_14)
+  
+  return(plot_list)
+}
 
-ggplot(data.frame(reducedDims(mspr2)[["UMAP"]]),
-                 aes(x = X1, y = X2, color = mspr2$Batch_sequencing))+
-  geom_point(size = 0.01)+
-  theme_classic()+
-  ylab("UMAP 2")+
-  xlab("UMAP 1")+
-  theme(axis.text = element_blank())+
-  theme(legend.key.size = unit(0.3, "cm"), 
-        legend.key.width = unit(0.3, "cm"),
-        legend.spacing = unit(0.06, "cm"), 
-        legend.text = element_text(size = 7))+ 
-  ggtitle(paste0(species, ", merged only"))+
-  facet_grid(cols = vars(mspr2$Fraction_ID))
-
-ggplot(data.frame(reducedDims(mspr2)[["UMAP"]]),
-                 aes(x = X1, y = X2, color = mspr2$Object_ID))+
-  geom_point(size = 0.01)+
-  theme_classic()+
-  ylab("UMAP 2")+
-  xlab("UMAP 1")+
-  theme(axis.text = element_blank())+
-  theme(legend.key.size = unit(0.3, "cm"), 
-        legend.key.width = unit(0.3, "cm"),
-        legend.spacing = unit(0.06, "cm"), 
-        legend.text = element_text(size = 7))+ 
-  ggtitle(paste0(species, ", merged only"))+
-  facet_wrap(vars(mspr2$Fraction_ID))
+facet_plots_species_07 <- facet_plots(sce_07, title = ", after merging",)
+facet_plots_species_08 <- facet_plots(sce_08, title = ", after renormalization")
+facet_plots_species_09 <- facet_plots(sce_09mnn,
+                                      title = ", after batch correction",)
 
 ```
 
-Check Age:
+### After merging
+
+```{r fig.width=10, fig.height=5}
+facet_plots_species_07
+```
+
+### After renormalization
+
+```{r fig.width=10, fig.height=5}
+facet_plots_species_08
+```
+
+### After batch correction
+
+```{r fig.width=10, fig.height=5}
+facet_plots_species_09
+```
 
 ```{r}
-
-ggplot(data.frame(reducedDims(mspr2)[["UMAP"]]),
-                 aes(x = X1, y = X2, color = mspr2$Batch_exp_day))+
-  geom_point(size = 0.01)+
-  theme_classic()+
-  ylab("UMAP 2")+
-  xlab("UMAP 1")+
-  theme(axis.text = element_blank())+
-  theme(legend.key.size = unit(0.3, "cm"), 
-        legend.key.width = unit(0.3, "cm"),
-        legend.spacing = unit(0.06, "cm"), 
-        legend.text = element_text(size = 7))+ 
-  ggtitle(paste0(species, ", merged only"))+
-  facet_grid(cols = vars(mspr2$Age_ID))
-
-ggplot(data.frame(reducedDims(mspr2)[["UMAP"]]),
-                 aes(x = X1, y = X2, color = mspr2$Batch_sequencing))+
-  geom_point(size = 0.01)+
-  theme_classic()+
-  ylab("UMAP 2")+
-  xlab("UMAP 1")+
-  theme(axis.text = element_blank())+
-  theme(legend.key.size = unit(0.3, "cm"), 
-        legend.key.width = unit(0.3, "cm"),
-        legend.spacing = unit(0.06, "cm"), 
-        legend.text = element_text(size = 7))+ 
-  ggtitle(paste0(species, ", merged only"))+
-  facet_grid(cols = vars(mspr2$Age_ID))
-
-ggplot(data.frame(reducedDims(mspr2)[["UMAP"]]),
-                 aes(x = X1, y = X2, color = mspr2$Object_ID))+
-  geom_point(size = 0.01)+
-  theme_classic()+
-  ylab("UMAP 2")+
-  xlab("UMAP 1")+
-  theme(axis.text = element_blank())+
-  theme(legend.key.size = unit(0.3, "cm"), 
-        legend.key.width = unit(0.3, "cm"),
-        legend.spacing = unit(0.06, "cm"), 
-        legend.text = element_text(size = 7))+ 
-  ggtitle(paste0(species, ", merged only"))+
-  facet_wrap( vars(mspr2$Age_ID))
-
+sessionInfo()
 ```
-
-Check preliminary cell types
-
-```{r}
-
-ggplot(data.frame(reducedDims(mspr2)[["UMAP"]]),
-                 aes(x = X1, y = X2, color = mspr2$Identity_ref))+
-  geom_point(size = 0.01)+
-  theme_classic()+
-  ylab("UMAP 2")+
-  xlab("UMAP 1")+
-  theme(axis.text = element_blank())+
-  theme(legend.key.size = unit(0.3, "cm"), 
-        legend.key.width = unit(0.3, "cm"),
-        legend.spacing = unit(0.06, "cm"), 
-        legend.text = element_text(size = 7))+ 
-  ggtitle(paste0(species, ", merged only"))+
-  facet_grid(cols = vars(mspr2$Fraction))
-
-ggplot(data.frame(reducedDims(mspr2)[["UMAP"]]),
-                 aes(x = X1, y = X2, color = mspr2$Identity_ref))+
-  geom_point(size = 0.01)+
-  theme_classic()+
-  ylab("UMAP 2")+
-  xlab("UMAP 1")+
-  theme(axis.text = element_blank())+
-  theme(legend.key.size = unit(0.3, "cm"), 
-        legend.key.width = unit(0.3, "cm"),
-        legend.spacing = unit(0.06, "cm"), 
-        legend.text = element_text(size = 7))+ 
-  ggtitle(paste0(species, ", merged only"))+
-  facet_grid(cols = vars(mspr2$Age))
-
-ggplot(data.frame(reducedDims(mspr2)[["UMAP"]]),
-                 aes(x = X1, y = X2, color = mspr2$Identity_ref))+
-  geom_point(size = 0.01)+
-  theme_classic()+
-  ylab("UMAP 2")+
-  xlab("UMAP 1")+
-  theme(axis.text = element_blank())+
-  theme(legend.key.size = unit(0.3, "cm"), 
-        legend.key.width = unit(0.3, "cm"),
-        legend.spacing = unit(0.06, "cm"), 
-        legend.text = element_text(size = 7))+ 
-  ggtitle(paste0(species, " merged"))+
-  facet_grid(cols = vars(mspr2$Batch_exp_day))
-
-ggplot(data.frame(reducedDims(mspr2)[["UMAP"]]),
-                 aes(x = X1, y = X2, color = mspr2$Identity_ref))+
-  geom_point(size = 0.01)+
-  theme_classic()+
-  ylab("UMAP 2")+
-  xlab("UMAP 1")+
-  theme(axis.text = element_blank())+
-  theme(legend.key.size = unit(0.3, "cm"), 
-        legend.key.width = unit(0.3, "cm"),
-        legend.spacing = unit(0.06, "cm"), 
-        legend.text = element_text(size = 7))+ 
-  ggtitle(paste0(species, ", merged only"))+
-  facet_grid(cols = vars(mspr2$Batch_sequencing))
-
-```
-
-
-```{r fig.width = 10, fig.height= 10}
-
-ggplot(data.frame(reducedDims(mspr2)[["UMAP"]]),
-                 aes(x = X1, y = X2, color = mspr2$Identity))+
-  geom_point(size = 0.01)+
-  theme_classic()+
-  ylab("UMAP 2")+
-  xlab("UMAP 1")+
-  theme(axis.text = element_blank())+
-  theme(legend.key.size = unit(0.3, "cm"), 
-        legend.key.width = unit(0.3, "cm"),
-        legend.spacing = unit(0.06, "cm"), 
-        legend.text = element_text(size = 7))+ 
-  ggtitle(paste0(species, ", merged only"))+
-  facet_wrap(vars(mspr2$Object_ID))+
-    scale_color_manual("REF Identity", values = col_cts_all[names(col_cts_all) %in% mspr2$Identity])
-
-names(col_cts_all)
-unique(mspr2$Identity_ref)
-```
-

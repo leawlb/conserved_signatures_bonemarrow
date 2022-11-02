@@ -33,8 +33,14 @@ individuals = get_list(metadata = METADATA, column = "Object_ID")
 
 # construct paths for all possible outputs/targets, required for rule all
 targets =[OUTPUT_BASE_PATH + "/06_mrge/sce_" + s + "-06" for s in species]
- 
-for s in species_all:
+
+if config["merge_all"]:
+  species_build = species_all
+else:
+  species_build = species
+  
+print(species_build)
+for s in species_build:
   targets = targets + [OUTPUT_BASE_PATH + "/07_ctyp/sce_" + s + "-07"]
   targets = targets + [OUTPUT_BASE_PATH + "/08_rnrm/sce_" + s + "_" + BATCH_USE + "-08"]
   targets = targets + [OUTPUT_BASE_PATH + "/09_mnncorrect/sce_" + s + "_" + BATCH_USE +"-09"]
@@ -70,16 +76,18 @@ rule merge_datasets_species:
 """
 Merge all datasets into one big dataset using the same script
 """
-rule merge_datasets_all:
-    input: 
-        sce_04 = expand(OUTPUT_BASE_PATH + "/04_norm/{s}/", s = species)
-    output:
-        sce_06 = OUTPUT_BASE_PATH + "/06_mrge/sce_all-06"
-    params:
-        individuals = individuals,
-        species = species
-    script:
-        "scripts/06_merge_datasets.R" 
+if config["merge_all"]:
+  print("Merge all = True")
+  rule merge_datasets_all:
+      input: 
+          sce_04 = expand(OUTPUT_BASE_PATH + "/04_norm/{s}/", s = species)
+      output:
+          sce_06 = OUTPUT_BASE_PATH + "/06_mrge/sce_all-06"
+      params:
+          individuals = individuals,
+          species = species
+      script:
+          "scripts/06_merge_datasets.R" 
 
 # for preliminary overview and help during batch correction evaluation
 # this takes very long

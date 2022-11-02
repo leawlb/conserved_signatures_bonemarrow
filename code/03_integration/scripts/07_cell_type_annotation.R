@@ -9,6 +9,10 @@ ref_all <- readRDS(file = snakemake@params[["ref_baccin_sce"]])
 ref_hsc <- readRDS(file = snakemake@params[["ref_dahlin_sce"]])
 ref_str <- readRDS(file = snakemake@params[["ref_dolgalev_sce"]])
 
+print(paste0("ref_all: ", unique(ref_all$identity_ref)))
+print(paste0("ref_hsc: ", unique(ref_hsc$identity_ref)))
+print(paste0("ref_str: ", unique(ref_str$identity_ref)))
+
 # separate and fraction-specific annotation
 sce_hsc <- sce[,sce$Fraction_ID == "hsc"]
 sce_str <- sce[,sce$Fraction_ID == "str"]

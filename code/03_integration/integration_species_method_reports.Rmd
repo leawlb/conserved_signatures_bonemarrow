@@ -26,7 +26,7 @@ library(cowplot, quietly = TRUE)
 
 ```{r}
 source(file = "../source/colors.R")
-source(file = "../source/imaging.R")
+source(file = "../source/plotting.R")
 source(file = "../source/sce_functions.R")
 ```
 

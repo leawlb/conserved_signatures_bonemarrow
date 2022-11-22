@@ -20,8 +20,8 @@ marker2 <- "darkgreen"
 #-------------------------------------------------------------------------------
 
 # SAMPLES/CLUSTER
-col_num <- c(dittoColors()[2:21])
-names(col_num) <- as.character(c(1:20))
+col_num <- c(dittoColors()[2:26])
+names(col_num) <- as.character(c(1:25))
 
 col_alp <- c(dittoColors()[12:19])
 names(col_alp) <- c("a", "b", "c", "d", "e", "f", "g")
@@ -30,15 +30,15 @@ names(col_alp) <- c("a", "b", "c", "d", "e", "f", "g")
 
 # CELL TYPES
 col_cts <- colors_celltypes[,2]
-names(col_cts) <- col_cts[,1]
+names(col_cts) <- colors_celltypes[,1]
 
 # SPECIES
 col_spc <- colors_species[,2]
-names(col_spc) <- colors_celltypes[,1]
+names(col_spc) <- colors_species[,1]
 
 # OTHER ANNOTATIONS
 col_ann <- colors_annotations[,2]
-names(col_ann) <- colors_celltypes[,1]
+names(col_ann) <- colors_annotations[,1]
 
 #-------------------------------------------------------------------------------
 

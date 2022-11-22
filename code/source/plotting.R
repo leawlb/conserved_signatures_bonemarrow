@@ -19,7 +19,7 @@ reduce_dims <- function(sce, nr_hvgs){
 umap_base <- function(sce, color_by){
   
   base <- ggplot(data.frame(reducedDims(sce)[["UMAP"]]),
-                 aes(x = X1, y = X2, color = color_by))+
+                 aes(x = X1, y = X2, color = colData(sce)[,colnames(colData(sce)) == color_by]))+
     geom_point(size = 0.01)+
     theme_classic()+
     theme(legend.position = "none", axis.text = element_blank())+
@@ -35,9 +35,9 @@ umap_base <- function(sce, color_by){
 umap_legend <- function(sce, color_by){
   
   base <- ggplot(data.frame(reducedDims(sce)[["UMAP"]]),
-                 aes(x = X1, y = X2, color = sce$Identity_ref_all))+
+                 aes(x = X1, y = X2, color = colData(sce)[,colnames(colData(sce)) == color_by]))+
     geom_point(size = 2)+
-    theme_classic+
+    theme_classic()+
     theme(legend.key.size = unit(0.3, "cm"), 
           legend.key.width = unit(0.3, "cm"),
           legend.spacing = unit(0.06, "cm"), 

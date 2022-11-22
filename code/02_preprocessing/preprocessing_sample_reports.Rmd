@@ -172,7 +172,6 @@ ggplot(qcdf_gg[qcdf_gg$metric == "subsets_Mito_percent",],
 ## Step 4: Normalization
 
 ```{r}
-
 # calculate two different size factors for direct comparison
 quick_clust <- quickCluster(sce_03) # before normalization
 sizef_deconv <- calculateSumFactors(sce_03, cluster = quick_clust)
@@ -191,10 +190,17 @@ hist(log10(sizef_deconv), xlab="Log10[Deconv factor]", col='grey80',
 qcdf_03 <- perCellQCMetrics(sce_03) # after outlier removal
 plot(sizef_deconv, qcdf_03$sum, log = "xy", ylab = "Library size",
      xlab = "Deconv. Size factor", main = paste("Deconv/libsize", name_curr))
+```
+
+
+```{r}
 
 # print final object
+print(name_curr)
 print(sce_04) # after normalization
 
+print(colData(sce_04))
+print(ncol(sce_04))
 ```
 
 ```{r}

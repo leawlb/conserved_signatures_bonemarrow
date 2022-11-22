@@ -38,6 +38,7 @@ batch_correction:
 # RULES  
 # For conditions use caps if used in R  
 run_preprocessing_summary: False
+run_annotaion_summary: False
 run_integration_summary: False
 run_mnncorrect: True
 mnn_use_fast: TRUE

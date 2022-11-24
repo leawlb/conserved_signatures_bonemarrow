@@ -3,8 +3,9 @@ paths:
   cellranger_output: "/01_cellranger_output" 
   preprocessing: "/02_preprocessing"
   integration: "/03_integration"
-metadata:
+metadata: 
   raw: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/OE0538_DO-0008_metadata_combined.csv"
+  color_tables: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/color_tables"
   identifiers: 
   # should be the same as in https://github.com/odomlab2/snakemake-cellranger
     - Species_ID
@@ -47,3 +48,15 @@ run_scmerge: False
 hvgs_for_batch_correction: FALSE 
 rescale_for_batch_correction: FALSE # Rescaling assumes that the cell composition in all batches is the same 
 merge_all: False
+
+samples_to_remove:
+  - mcar_old_str_3_1
+  - mcar_old_str_3_2
+  - mcas_old_hsc_2_0
+  - mcas_old_hsc_4_0
+  - mcas_yng_hsc_4_0
+  - mcas_old_str_4_0
+  - mcas_yng_str_6_0
+  - mmus_old_str_1_0
+  - mspr_old_hsc_1_0
+  - mspr_yng_str_3_1

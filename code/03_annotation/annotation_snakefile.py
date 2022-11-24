@@ -1,10 +1,5 @@
 #!/bin/python 
 
-"""
-Info in batch correction methods from:
-Luecken et al. "Benchmarking atlas-level data integration in single-cell genomics", Nat Met 2022
-Tran, Ang, Chevrier, Zhang et al. "A benchmark of batch effect correction methods for songle-cell RNA sequencing data", Genome Biologz 2020
-"""
 #-------------------------------------------------------------------------------
 
 import pandas as pd
@@ -13,6 +8,7 @@ import sys
 
 # paths from config
 OUTPUT_BASE_PATH = config["paths"]["output_dir"]
+TABLES_PATH = config["metadata"]["color_tables"]
 
 # objects from config
 METADATA = pd.read_csv(config["metadata"]["raw"])
@@ -29,23 +25,26 @@ def get_list(metadata, column):
   
 species = get_list(metadata = METADATA, column = "Species_ID")
 individuals = get_list(metadata = METADATA, column = "Object_ID")
+individuals.remove("mcas_yng_hsc_2_0")
 
-print(species)
+print(individuals)
+
 # construct paths for all possible outputs/targets, required for rule all
 targets = []
 for s in species:
   for i in individuals:
     if s in i:
       targets = targets + [OUTPUT_BASE_PATH + "/06_sglr/" + s + "/sce_" + i + "-06"]
-      #targets = targets + [OUTPUT_BASE_PATH + "/07_mrge/sce_" + s + "-07"]
+      targets = targets + [OUTPUT_BASE_PATH + "/07_mrge/sce_" + s + "-07"]
       #targets = targets + [OUTPUT_BASE_PATH + "/reports/03_annotation/annotation_species_report_" + s + ".html"]
-  
-if config["run_annotaion_summary"]:
-  targets = targets + [OUTPUT_BASE_PATH + "/reports/03_annotation/annotation_summary.html"]
+      targets = targets + [OUTPUT_BASE_PATH + "/reports/03_annotation/" + s + "/annotation_sample_report_" + i + ".html"]
+
+#if config["run_annotaion_summary"]:
+targets = targets + [OUTPUT_BASE_PATH + "/reports/03_annotation/annotation_summary.html"]
   
 #-------------------------------------------------------------------------------
 
-#localrules: all  
+localrules: all  
 
 # define rules
 rule all: # must contain all possible output paths from all rules
@@ -69,22 +68,45 @@ rule cell_type_annotation:
         ref_lipka_sce = config["metadata"]["ref_lipka_sce"],
     script:
         "scripts/06_annotation_singleR.R"  
-  
       
 """
 Merge all datasets of one species into one species dataset
 Input data is located in 02_preprocessing/04_norm/
 """
-"""
+
 rule merge_datasets_species:
     input: 
         sce_06 = OUTPUT_BASE_PATH + "/06_sglr/{species}/"
     output:
         sce_07 = OUTPUT_BASE_PATH + "/07_mrge/sce_{species}-07"
     params:
-        individuals = individuals
+        individuals = individuals,
+        samples_to_remove = config["samples_to_remove"]
     wildcard_constraints:
         species = "[a-z]+"
     script:
         "scripts/07_merge_datasets.R" 
-"""  
+        
+rule make_samples_report:
+    input: 
+        sce_06 = rules.cell_type_annotation.output
+    output:
+        OUTPUT_BASE_PATH + "/reports/03_annotation/{species}/annotation_sample_report_{individual}.html"
+    params:
+        nr_hvgs = config["metadata"]["values"]["nr_hvgs"],
+        color_tables = TABLES_PATH
+    script:
+        "annotation_samples_report.Rmd" 
+
+
+rule make_summary_report:
+    input:
+        sce_06_path = OUTPUT_BASE_PATH + "/06_sglr/",
+    output:
+        OUTPUT_BASE_PATH + "/reports/03_annotation/annotation_summary.html"
+    params:
+        samples_to_remove = config["samples_to_remove"],
+        color_tables = TABLES_PATH,
+        individuals = individuals
+    script:
+        "annotation_summary_report.Rmd" 

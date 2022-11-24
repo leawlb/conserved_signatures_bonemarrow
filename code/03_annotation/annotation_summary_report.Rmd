@@ -1,0 +1,99 @@
+---
+title: "preprocessing_report"
+author: "Amy Danson, Lea Wölbert"
+date: '2022-09-20'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Summary report QC for all objects at once.
+Some operations from the scripts must be repeated to generate relevant plots,
+but any new objects cannot be saved from an .Rmd script.
+
+#### Load libraries, source code 
+
+```{r load,  message = FALSE}
+
+library(SingleCellExperiment, quietly = TRUE) 
+library(DropletUtils, quietly = TRUE) 
+library(tidyverse, quietly = TRUE) 
+library(scater, quietly = TRUE) 
+library(scuttle, quietly = TRUE) 
+library(scran, quietly = TRUE) 
+
+```
+
+```{r load_code, message = FALSE}
+
+sce_06_path <- snakemake@input[["sce_06_path"]]
+samples_to_remove <- snakemake@params[["samples_to_remove"]] # samples to remove from merging
+individuals <- snakemake@params[["individuals"]]
+
+```
+
+# QC
+
+Check Quality per sample.
+
+```{r fig.width = 14}
+
+sce_list_06 <- list()
+#print(paste0(sce_02_path, "/sce_", targets[1]))
+
+species <- c("mmus", "mspr", "mcas", "mcar")
+
+print(paste0(sce_06_path, "/", "species", "/sce_", "individual", "-06"))
+for(s in species){
+  for(i in individuals){
+    if(grepl(s, i) == TRUE){
+      sce_list_06[[i]] <- readRDS(file = paste0(sce_06_path, "/", s, "/sce_", i, "-06"))
+    }
+  }
+}
+
+sce_list_06 <- sce_list_06[names(sce_list_06)[!names(sce_list_06) %in% samples_to_remove]]
+
+qcdf_list_06 <- lapply(sce_list_06, function(sce){
+  
+  qcdf <- perCellQCMetrics(sce)
+  qcdf$Object_ID <- sce$Object_ID
+  qcdf$Species_ID <- sce$Species_ID
+  qcdf$Age <- sce$Age
+  qcdf$Batch_exp_day <- sce$Batch_exp_day
+  qcdf$Batch_sequencing <- sce$Batch_sequencing
+  qcdf$Date_collected <- sce$Date_collected
+  qcdf$Species <- sce$Species
+  qcdf$Fraction <- sce$Fraction
+
+  return(qcdf)
+})
+
+qcdf_gg <- DataFrame()
+
+for(i in qcdf_list_06){
+  qcdf_gg <- rbind(qcdf_gg, i)
+}
+qcdf_gg <- data.frame(qcdf_gg)
+
+# by Sample
+ggplot(qcdf_gg, aes(x = Object_ID, y = sum))+
+  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 120000))+
+  scale_y_log10()
+
+# by Sample
+ggplot(qcdf_gg, aes(x = Age, y = sum))+
+  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 120000))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg$Species))
+
+```
+

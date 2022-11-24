@@ -4,11 +4,11 @@ library(dittoSeq)
 
 #-------------------------------------------------------------------------------
 
-colors_celltypes <- read.csv(config["metadata"]["colors"]["celltypes"],
+colors_celltypes <- read.csv(paste0(color_tables, "/colors_celltypes.csv"),
                              sep = ",")
-colors_species <- read.csv(config["metadata"]["colors"]["species"],
+colors_species <- read.csv(paste0(color_tables, "/colors_species.csv"),
                            sep = ",")
-colors_annotations <- read.csv(config["metadata"]["colors"]["annotations"],
+colors_annotations <- read.csv(paste0(color_tables, "/colors_annotations.csv"),
                                sep = ",")
 
 #-------------------------------------------------------------------------------
@@ -29,8 +29,8 @@ names(col_alp) <- c("a", "b", "c", "d", "e", "f", "g")
 #-------------------------------------------------------------------------------
 
 # CELL TYPES
-col_cts <- colors_celltypes[,2]
-names(col_cts) <- colors_celltypes[,1]
+col_cts <- colors_celltypes[,3]
+names(col_cts) <- colors_celltypes[,2]
 
 # SPECIES
 col_spc <- colors_species[,2]
@@ -43,7 +43,7 @@ names(col_ann) <- colors_annotations[,1]
 #-------------------------------------------------------------------------------
 
 col_list <- list(
-  "Age" = col_age,
+  "Age" = col_ann,
   "Cluster" = col_num,
   "Species" = col_spc,
   #"Interaction Type" = col_itp,

@@ -13,9 +13,6 @@ IDENTIFIERS = config["metadata"]["identifiers"]
 METADATA = pd.read_csv(config["metadata"]["raw"])
 VALUES =  config["metadata"]["values"]
 
-# get all possible wildcards from designated identifier(s)
-# see snakemake-cellranger https://github.com/odomlab2/snakemake-cellranger
-
 def get_list(metadata, column):
   values = METADATA[column]
   values = values.drop_duplicates()

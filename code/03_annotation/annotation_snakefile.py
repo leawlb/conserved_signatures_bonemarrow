@@ -25,7 +25,6 @@ def get_list(metadata, column):
   
 species = get_list(metadata = METADATA, column = "Species_ID")
 individuals = get_list(metadata = METADATA, column = "Object_ID")
-individuals.remove("mcas_yng_hsc_2_0")
 
 print(individuals)
 
@@ -107,6 +106,7 @@ rule make_summary_report:
     params:
         samples_to_remove = config["samples_to_remove"],
         color_tables = TABLES_PATH,
-        individuals = individuals
+        individuals = individuals,
+        species = species
     script:
         "annotation_summary_report.Rmd" 

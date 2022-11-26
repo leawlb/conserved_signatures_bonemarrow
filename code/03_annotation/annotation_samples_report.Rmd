@@ -44,6 +44,7 @@ name_curr <- colData(sce)$Object_ID[1] # choose name to display in plots
 
 source(file = "../source/colors.R")
 source(file = "../source/plotting.R")
+source(file = "../source/sce_functions.R")
 
 col_cts_all <- col_cts[names(col_cts) %in% sce$Identity_ref_all]
 col_cts_fraction1 <- col_cts[names(col_cts) %in% sce$Identity_ref_fraction1]
@@ -103,73 +104,30 @@ stromal and hematopoetic cell types in a single dataset.
 
 ```{r}
 
-hsc_cts <- c(
-  "B cell",
-  "Dendritic cells",
-  "Eo/Baso prog.",
-  "Ery prog.",
-  "Ery/Mk prog.",
-  "Erythroblasts",
-  "Gran/Mono prog.",
-  "LMPPs",
-  "Mk prog.",
-  "Mono prog.",
-  "Monocytes",
-  "NK cells",
-  "Neutro prog.",
-  "Neutrophils",
-  "T cells",
-  "large pre-B.",
-  "pro-B",
-  "small pre-B."
-)
-
-str_cts <- c(
-  "Adipo-CAR",
-  "Arteriolar ECs",
-  "Arteriolar fibro.",
-  "Chondrocytes",
-  "Endosteal fibro.",
-  "Fibro/Chondro p.",
-  "Myofibroblasts",
-  "Ng2+ MSCs",
-  "Osteo-CAR",
-  "Osteoblasts",
-  "Schwann cells",
-  "Sinusoidal ECs",
-  "Smooth muscle",
-  "Stromal fibro."
-)
-
-# add to sce objects
-sce$right_fraction <- rep("TRUE", n = ncol(sce))
+# find contamination in sce objects
 
 if(grepl("str", name_curr)){
-  
-  wrong_pos <- which(sce$Identity_ref_all %in% hsc_cts)
-  sce$right_fraction[wrong_pos] <- "FALSE"
-
+  sce <- find_contamination_ref_all(sce, input = "stromal") # own function
 }else if(grepl("hsc", name_curr)){
-  
-  wrong_pos <- which(sce$Identity_ref_all %in% str_cts)
-  sce$right_fraction[wrong_pos] <- "FALSE"
-  
+  sce <- find_contamination_ref_all(sce, input = "hsc") # own function
 }
 
 ```
 
 ```{r fig.width=8}
 
-plot_4 <- umap_base(sce, color_by = "right_fraction")+
-  scale_color_manual("Correct fraction", values = c("TRUE" = "black", 
-                                                    "FALSE" = "orange"))
-plot_4l <- umap_legend(sce, color_by = "right_fraction")+
-  scale_color_manual("Correct fraction", values = c("TRUE" = "black", 
-                                                    "FALSE" = "orange"))
-legend_4 <- get_legend(plot_4l)
+if(grepl("TRUE", sce$right_fraction)){
+  plot_4 <- umap_base(sce, color_by = "right_fraction")+
+    scale_color_manual("Correct fraction", values = c("TRUE" = "black", 
+                                                      "FALSE" = "orange"))
+  plot_4l <- umap_legend(sce, color_by = "right_fraction")+
+    scale_color_manual("Correct fraction", values = c("TRUE" = "black", 
+                                                      "FALSE" = "orange"))
+  legend_4 <- get_legend(plot_4l)
 
-PLOT_4 <- ggarrange(plot_4, legend_4)
-PLOT_4
+  PLOT_4 <- ggarrange(plot_4, legend_4)
+  PLOT_4
+}
 
 ```
 
@@ -182,11 +140,13 @@ sce$detected <- qcdf$detected
 plot_5 <- umap_base(sce, color_by = "detected")+
   scale_color_gradientn("Number of detected genes", 
                          limits = c(0, 10000),
-                         colors = c("black", "darkorange3", "orange", "lightgoldenrod"))+
+                         colors = c("black", "darkorange3", 
+                                    "orange", "lightgoldenrod"))+
   ggtitle("With contaminants")
 plot_5l <- umap_legend(sce, color_by = "detected")+
   scale_color_gradientn("Number of detected genes", 
                          limits = c(0, 10000),
+                        
                          colors = c("black", "darkorange3", "orange", "lightgoldenrod"))
 legend_5 <- get_legend(plot_5l)
 
@@ -196,7 +156,8 @@ PLOT_5
 plot_6 <- umap_base(sce, color_by = "sum")+
   scale_color_gradientn("Library size", 
                          limits = c(0, 100000),
-                         colors = c("black", "darkorange4", "darkorange3", "darkorange1",
+                         colors = c("black", "darkorange4", 
+                                    "darkorange3", "darkorange1",
                                     "orange", "orange", "gold1", "gold",
                                     "lightgoldenrod", "lightgoldenrod", 
                                     "lightgoldenrod", "lightgoldenrod", 
@@ -205,7 +166,8 @@ plot_6 <- umap_base(sce, color_by = "sum")+
 plot_6l <- umap_legend(sce, color_by = "sum")+
   scale_color_gradientn("Library size", 
                          limits = c(0, 1000000),
-                          colors = c("black", "darkorange4", "darkorange3", "darkorange1",
+                          colors = c("black", "darkorange4", 
+                                     "darkorange3", "darkorange1",
                                     "orange", "orange", "gold1", "gold",
                                     "lightgoldenrod", "lightgoldenrod", 
                                     "lightgoldenrod", "lightgoldenrod", 
@@ -220,47 +182,53 @@ PLOT_6
 
 ```{r fig.width=8}
 
-sce_wo <- sce[,sce$right_fraction == TRUE]
+if(grepl("TRUE", sce$right_fraction)){
+  sce_wo <- sce[,sce$right_fraction == TRUE]
 
-qcdf_wo <- perCellQCMetrics(sce_wo)
-sce_wo$sum <- qcdf_wo$sum
-sce_wo$detected <- qcdf_wo$detected
+  qcdf_wo <- perCellQCMetrics(sce_wo)
+  sce_wo$sum <- qcdf_wo$sum
+  sce_wo$detected <- qcdf_wo$detected
 
-plot_7 <- umap_base(sce_wo, color_by = "detected")+
-  scale_color_gradientn("Number of detected genes", 
-                         limits = c(0, 10000),
-                         colors = c("black", "darkorange3", "orange", "lightgoldenrod"))+
+  plot_7 <- umap_base(sce_wo, color_by = "detected")+
+    scale_color_gradientn("Number of detected genes", 
+                           limits = c(0, 10000),
+                           colors = c("black", "darkorange3", 
+                                      "orange", "lightgoldenrod"))+
   ggtitle("Without contaminants")
-plot_7l <- umap_legend(sce_wo, color_by = "detected")+
-  scale_color_gradientn("Number of detected genes", 
-                         limits = c(0, 10000),
-                         colors = c("black", "darkorange3", "orange", "lightgoldenrod"))
-legend_7 <- get_legend(plot_7l)
+  plot_7l <- umap_legend(sce_wo, color_by = "detected")+
+    scale_color_gradientn("Number of detected genes", 
+                           limits = c(0, 10000),
+                           colors = c("black", "darkorange3",
+                                      "orange", "lightgoldenrod"))
+  legend_7 <- get_legend(plot_7l)
 
-PLOT_7 <- ggarrange(plot_7, legend_7)
-PLOT_7
+  PLOT_7 <- ggarrange(plot_7, legend_7)
+  PLOT_7
+  
+  plot_8 <- umap_base(sce_wo, color_by = "sum")+
+    scale_color_gradientn("Library size", 
+                           limits = c(0, 100000),
+                           colors = c("black", "darkorange4",
+                                      "darkorange3", "darkorange1",
+                                      "orange", "orange", "gold1", "gold",
+                                      "lightgoldenrod", "lightgoldenrod", 
+                                      "lightgoldenrod", "lightgoldenrod", 
+                                      "lightgoldenrod", "lightgoldenrod"))+
+    ggtitle("Without contaminants")
+  plot_8l <- umap_legend(sce_wo, color_by = "sum")+
+    scale_color_gradientn("Library size", 
+                           limits = c(0, 1000000),
+                            colors = c("black", "darkorange4",
+                                       "darkorange3", "darkorange1",
+                                       "orange", "orange", "gold1", "gold",
+                                       "lightgoldenrod", "lightgoldenrod", 
+                                       "lightgoldenrod", "lightgoldenrod", 
+                                       "lightgoldenrod", "lightgoldenrod"))
+  legend_8 <- get_legend(plot_8l)
 
-plot_8 <- umap_base(sce_wo, color_by = "sum")+
-  scale_color_gradientn("Library size", 
-                         limits = c(0, 100000),
-                         colors = c("black", "darkorange4", "darkorange3", "darkorange1",
-                                    "orange", "orange", "gold1", "gold",
-                                    "lightgoldenrod", "lightgoldenrod", 
-                                    "lightgoldenrod", "lightgoldenrod", 
-                                    "lightgoldenrod", "lightgoldenrod"))+
-  ggtitle("Without contaminants")
-plot_8l <- umap_legend(sce_wo, color_by = "sum")+
-  scale_color_gradientn("Library size", 
-                         limits = c(0, 1000000),
-                          colors = c("black", "darkorange4", "darkorange3", "darkorange1",
-                                    "orange", "orange", "gold1", "gold",
-                                    "lightgoldenrod", "lightgoldenrod", 
-                                    "lightgoldenrod", "lightgoldenrod", 
-                                    "lightgoldenrod", "lightgoldenrod"))
-legend_8 <- get_legend(plot_8l)
-
-PLOT_8 <- ggarrange(plot_8, legend_8)
-PLOT_8
+  PLOT_8 <- ggarrange(plot_8, legend_8)
+  PLOT_8
+}
 
 ```
 
@@ -268,31 +236,18 @@ PLOT_8
 
 ```{r}
 
-hsc_mature_cts <- c(
-  "B cell",
-  "Dendritic cells",
-  "Monocytes",
-  "small pre-B.",
-  "T cells",
-  "NK cells",
-  "Neutrophils",
-  "large pre-B"
-)
-
-sce$mature_cells <- rep("FALSE", n = ncol(sce))
-
-sce$mature_cells[sce$Identity_ref_all %in% hsc_mature_cts] <- "TRUE"
+sce <- get_mature_cts_all(sce) # own function 
 
 ```
 
 ```{r fig.width=8}
 
 plot_4 <- umap_base(sce, color_by = "mature_cells")+
-  scale_color_manual("Correct fraction", values = c("TRUE" = "black", 
-                                                    "FALSE" = "orange"))
+  scale_color_manual("Correct fraction", values = c("FALSE" = "black", 
+                                                    "TRUE" = "orange"))
 plot_4l <- umap_legend(sce, color_by = "mature_cells")+
-  scale_color_manual("Correct fraction", values = c("TRUE" = "black", 
-                                                    "FALSE" = "orange"))
+  scale_color_manual("Correct fraction", values = c("FALSE" = "black", 
+                                                    "TRUE" = "orange"))
 legend_4 <- get_legend(plot_4l)
 
 PLOT_4 <- ggarrange(plot_4, legend_4)
@@ -309,12 +264,14 @@ sce$detected <- qcdf$detected
 plot_5 <- umap_base(sce, color_by = "detected")+
   scale_color_gradientn("Number of detected genes", 
                          limits = c(0, 10000),
-                         colors = c("black", "darkorange3", "orange", "lightgoldenrod"))+
+                         colors = c("black", "darkorange3", 
+                                    "orange", "lightgoldenrod"))+
   ggtitle("With mature cell types")
 plot_5l <- umap_legend(sce, color_by = "detected")+
   scale_color_gradientn("Number of detected genes", 
                          limits = c(0, 10000),
-                         colors = c("black", "darkorange3", "orange", "lightgoldenrod"))
+                         colors = c("black", "darkorange3", 
+                                    "orange", "lightgoldenrod"))
 legend_5 <- get_legend(plot_5l)
 
 PLOT_5 <- ggarrange(plot_5, legend_5)
@@ -323,7 +280,8 @@ PLOT_5
 plot_6 <- umap_base(sce, color_by = "sum")+
   scale_color_gradientn("Library size", 
                          limits = c(0, 100000),
-                         colors = c("black", "darkorange4", "darkorange3", "darkorange1",
+                         colors = c("black", "darkorange4", 
+                                    "darkorange3", "darkorange1",
                                     "orange", "orange", "gold1", "gold",
                                     "lightgoldenrod", "lightgoldenrod", 
                                     "lightgoldenrod", "lightgoldenrod", 
@@ -356,13 +314,15 @@ sce_wo$detected <- qcdf_wo$detected
 plot_7 <- umap_base(sce_wo, color_by = "detected")+
   scale_color_gradientn("Number of detected genes", 
                          limits = c(0, 10000),
-                         colors = c("black", "darkorange3", "orange", "lightgoldenrod"))+
+                         colors = c("black", "darkorange3", 
+                                    "orange", "lightgoldenrod"))+
   ggtitle("Without contaminants")
 plot_7l <- umap_legend(sce_wo, color_by = "detected")+
   scale_color_gradientn("Number of detected genes", 
                          limits = c(0, 10000),
-                         colors = c("black", "darkorange3", "orange", "lightgoldenrod"))
-legend_5 <- get_legend(plot_7l)
+                         colors = c("black", "darkorange3", 
+                                    "orange", "lightgoldenrod"))
+legend_7 <- get_legend(plot_7l)
 
 PLOT_7 <- ggarrange(plot_7, legend_7)
 PLOT_7
@@ -370,7 +330,8 @@ PLOT_7
 plot_8 <- umap_base(sce_wo, color_by = "sum")+
   scale_color_gradientn("Library size", 
                          limits = c(0, 100000),
-                         colors = c("black", "darkorange4", "darkorange3", "darkorange1",
+                         colors = c("black", "darkorange4", 
+                                    "darkorange3", "darkorange1",
                                     "orange", "orange", "gold1", "gold",
                                     "lightgoldenrod", "lightgoldenrod", 
                                     "lightgoldenrod", "lightgoldenrod", 
@@ -379,11 +340,12 @@ plot_8 <- umap_base(sce_wo, color_by = "sum")+
 plot_8l <- umap_legend(sce_wo, color_by = "sum")+
   scale_color_gradientn("Library size", 
                          limits = c(0, 1000000),
-                          colors = c("black", "darkorange4", "darkorange3", "darkorange1",
-                                    "orange", "orange", "gold1", "gold",
-                                    "lightgoldenrod", "lightgoldenrod", 
-                                    "lightgoldenrod", "lightgoldenrod", 
-                                    "lightgoldenrod", "lightgoldenrod"))
+                          colors = c("black", "darkorange4", 
+                                     "darkorange3", "darkorange1",
+                                     "orange", "orange", "gold1", "gold",
+                                     "lightgoldenrod", "lightgoldenrod", 
+                                     "lightgoldenrod", "lightgoldenrod", 
+                                     "lightgoldenrod", "lightgoldenrod"))
 legend_8 <- get_legend(plot_8l)
 
 PLOT_8 <- ggarrange(plot_8, legend_8)
@@ -407,10 +369,13 @@ Without contamination
 
 ```{r}
 
-table(sce[,sce$right_fraction == TRUE]$Identity_ref_all)
-table(sce[,sce$right_fraction == TRUE]$Identity_ref_fraction1)
-table(sce[,sce$right_fraction == TRUE]$Identity_ref_fraction2)
-
+if(grepl("TRUE", sce$right_fraction)){
+  table(sce[,sce$right_fraction == TRUE]$Identity_ref_all)
+  table(sce[,sce$right_fraction == TRUE]$Identity_ref_fraction1)
+  table(sce[,sce$right_fraction == TRUE]$Identity_ref_fraction2)
+}else{
+  print("only contaminants")
+}
 ```
 
 Only contamination
@@ -431,7 +396,11 @@ identity with another dataset.
 
 ```{r fig.width=10}
 
-sce <- sce[,sce$right_fraction == TRUE]
+if(grepl("TRUE", sce$right_fraction)){
+  sce <- sce[,sce$right_fraction == TRUE]
+}else{
+  print("only contaminants")
+}
 
 celltypes1 <- unique(sce$Identity_ref_all)
 

@@ -23,8 +23,6 @@ library(tidyverse, quietly = TRUE)
 library(scater, quietly = TRUE) 
 library(scuttle, quietly = TRUE) 
 library(scran, quietly = TRUE) 
-library(cowplot, quietly = TRUE) 
-library(ggpubr, quietly = TRUE) 
 
 ```
 

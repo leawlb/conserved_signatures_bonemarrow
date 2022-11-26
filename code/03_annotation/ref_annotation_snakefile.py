@@ -35,11 +35,10 @@ for s in species:
     if s in i:
       targets = targets + [OUTPUT_BASE_PATH + "/06_sglr/" + s + "/sce_" + i + "-06"]
       targets = targets + [OUTPUT_BASE_PATH + "/07_mrge/sce_" + s + "-07"]
-      #targets = targets + [OUTPUT_BASE_PATH + "/reports/03_annotation/annotation_species_report_" + s + ".html"]
-      targets = targets + [OUTPUT_BASE_PATH + "/reports/03_annotation/" + s + "/annotation_sample_report_" + i + ".html"]
+      targets = targets + [OUTPUT_BASE_PATH + "/reports/03_annotation/" + s + "/ref_annotation_sample_report_" + i + ".html"]
 
 #if config["run_annotaion_summary"]:
-targets = targets + [OUTPUT_BASE_PATH + "/reports/03_annotation/annotation_summary.html"]
+targets = targets + [OUTPUT_BASE_PATH + "/reports/03_annotation/ref_annotation_summary.html"]
   
 #-------------------------------------------------------------------------------
 
@@ -86,27 +85,27 @@ rule merge_datasets_species:
     script:
         "scripts/07_merge_datasets.R" 
         
-rule make_samples_report:
+rule make_sample_reports:
     input: 
         sce_06 = rules.cell_type_annotation.output
     output:
-        OUTPUT_BASE_PATH + "/reports/03_annotation/{species}/annotation_sample_report_{individual}.html"
+        OUTPUT_BASE_PATH + "/reports/03_annotation/{species}/ref_annotation_sample_report_{individual}.html"
     params:
         nr_hvgs = config["metadata"]["values"]["nr_hvgs"],
         color_tables = TABLES_PATH
     script:
-        "annotation_samples_report.Rmd" 
+        "ref_annotation_sample_reports.Rmd" 
 
 
 rule make_summary_report:
     input:
         sce_06_path = OUTPUT_BASE_PATH + "/06_sglr/",
     output:
-        OUTPUT_BASE_PATH + "/reports/03_annotation/annotation_summary.html"
+        OUTPUT_BASE_PATH + "/reports/03_annotation/ref_annotation_summary.html"
     params:
         samples_to_remove = config["samples_to_remove"],
         color_tables = TABLES_PATH,
         individuals = individuals,
         species = species
     script:
-        "annotation_summary_report.Rmd" 
+        "ref_annotation_summary.Rmd" 

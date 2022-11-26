@@ -2,6 +2,12 @@
 # Functions to make my life regarding plots easier
 #-------------------------------------------------------------------------------
 
+library(cowplot, quietly = TRUE) 
+library(ggpubr, quietly = TRUE) 
+
+
+#-------------------------------------------------------------------------------
+
 # generic dimensionality reduction for quick UMAP visualisation of SCE objects
 reduce_dims <- function(sce, nr_hvgs){
   

@@ -25,6 +25,7 @@ def get_list(metadata, column):
   
 species = get_list(metadata = METADATA, column = "Species_ID")
 individuals = get_list(metadata = METADATA, column = "Object_ID")
+species = ["mmus"]
 
 print(individuals)
 
@@ -33,12 +34,13 @@ targets = []
 for s in species:
   for i in individuals:
     if s in i:
-      targets = targets + [OUTPUT_BASE_PATH + "/06_sglr/" + s + "/sce_" + i + "-06"]
-      targets = targets + [OUTPUT_BASE_PATH + "/07_mrge/sce_" + s + "-07"]
-      targets = targets + [OUTPUT_BASE_PATH + "/reports/03_annotation/" + s + "/ref_annotation_sample_report_" + i + ".html"]
+      targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/06_sglr/" + s + "/sce_" + i + "-06"]
+      targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/07_mrge/sce_" + s + "-07"]
+      targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/03_annotation/" + s + "/ref_annotation_sample_report_" + i + ".html"]
+      targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/08_anmf/sce_" + s + "-08"]
 
 #if config["run_annotaion_summary"]:
-targets = targets + [OUTPUT_BASE_PATH + "/reports/03_annotation/ref_annotation_summary.html"]
+targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/03_annotation/ref_annotation_summary.html"]
   
 #-------------------------------------------------------------------------------
 
@@ -56,14 +58,14 @@ To get an overview of approx. cell type numbers and fravtion contamination.
 """
 rule cell_type_annotation: 
     input: 
-        sce_04 = OUTPUT_BASE_PATH + "/04_norm/{species}/sce_{individual}-04"
+        sce_04 = OUTPUT_BASE_PATH + "/sce_objects/04_norm/{species}/sce_{individual}-04"
     output:
-        sce_06 = OUTPUT_BASE_PATH + "/06_sglr/{species}/sce_{individual}-06"
+        sce_06 = OUTPUT_BASE_PATH + "/sce_objects/06_sglr/{species}/sce_{individual}-06"
     params:
         ref_baccin_sce = config["metadata"]["ref_baccin_sce"],
         ref_dahlin_sce = config["metadata"]["ref_dahlin_sce"],
         ref_dolgalev_sce = config["metadata"]["ref_dolgalev_sce"],
-        ref_lipka_sce = config["metadata"]["ref_lipka_sce"],
+        ref_lipka_sce = config["metadata"]["ref_lipka_sce"]
     script:
         "scripts/06_annotation_singleR.R"  
       
@@ -74,9 +76,9 @@ Input data is located in 02_preprocessing/04_norm/
 
 rule merge_datasets_species:
     input: 
-        sce_06 = OUTPUT_BASE_PATH + "/06_sglr/{species}/"
+        sce_06 = OUTPUT_BASE_PATH + "/sce_objects/06_sglr/{species}/"
     output:
-        sce_07 = OUTPUT_BASE_PATH + "/07_mrge/sce_{species}-07"
+        sce_07 = OUTPUT_BASE_PATH + "/sce_objects/07_mrge/sce_{species}-07"
     params:
         individuals = individuals,
         samples_to_remove = config["samples_to_remove"]
@@ -89,19 +91,18 @@ rule make_sample_reports:
     input: 
         sce_06 = rules.cell_type_annotation.output
     output:
-        OUTPUT_BASE_PATH + "/reports/03_annotation/{species}/ref_annotation_sample_report_{individual}.html"
+        OUTPUT_BASE_PATH + "/sce_objects/reports/03_annotation/{species}/ref_annotation_sample_report_{individual}.html"
     params:
         nr_hvgs = config["metadata"]["values"]["nr_hvgs"],
         color_tables = TABLES_PATH
     script:
         "ref_annotation_sample_reports.Rmd" 
 
-
 rule make_summary_report:
     input:
-        sce_06_path = OUTPUT_BASE_PATH + "/06_sglr/",
+        sce_06_path = OUTPUT_BASE_PATH + "/sce_objects/06_sglr/",
     output:
-        OUTPUT_BASE_PATH + "/reports/03_annotation/ref_annotation_summary.html"
+        OUTPUT_BASE_PATH + "/sce_objects/reports/03_annotation/ref_annotation_summary.html"
     params:
         samples_to_remove = config["samples_to_remove"],
         color_tables = TABLES_PATH,
@@ -109,3 +110,23 @@ rule make_summary_report:
         species = species
     script:
         "ref_annotation_summary.Rmd" 
+        
+"""
+NMF objects provided by Adrien Jolly in folder OUTPUT_BASE_PATH + "/nmf_objects"
+"""
+fractions = ["hsc", "str"]
+types = ["usages", "scores"]
+rule add_nfm_objects:
+    input:
+        sce_07 = rules.merge_datasets_species.output,
+        nmf = expand(OUTPUT_BASE_PATH + "/nmf_objects/{{species}}/nmf_{{species}}_{f}_{t}.txt", f = fractions, t = types)
+    output:
+        sce_08 =  OUTPUT_BASE_PATH + "/sce_objects/08_anmf/sce_{species}-08"
+    params:
+        nr_hvgs = config["metadata"]["values"]["nr_hvgs"],
+        sce_functions = "../source/sce_functions.R"
+    script:
+        "scripts/08_add_nmf_objects.R"
+    
+    
+    

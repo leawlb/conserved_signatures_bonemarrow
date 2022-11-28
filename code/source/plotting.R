@@ -5,21 +5,6 @@
 library(cowplot, quietly = TRUE) 
 library(ggpubr, quietly = TRUE) 
 
-
-#-------------------------------------------------------------------------------
-
-# generic dimensionality reduction for quick UMAP visualisation of SCE objects
-reduce_dims <- function(sce, nr_hvgs){
-  
-  hvgs <- modelGeneVar(sce)
-  hvgs <- getTopHVGs(hvgs, n=nr_hvgs)
-  
-  sce <- runPCA(sce, ncomponents=25, subset_row = hvgs) 
-  sce <- runUMAP(sce, dimred = 'PCA',
-                 external_neighbors=TRUE, subset_row = hvgs)
-  return(sce)  
-}
-
 #-------------------------------------------------------------------------------
 # basic UMAP, must contain a Dimred called "UMAP", must specify Factor for color
 umap_base <- function(sce, color_by){

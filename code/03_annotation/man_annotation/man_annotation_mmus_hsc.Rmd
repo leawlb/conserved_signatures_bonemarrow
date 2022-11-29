@@ -1,0 +1,840 @@
+---
+title: "man_annotation_mmus_HSC"
+author: "Lea Wölbert, Adrien Jolly"
+date: '2022-11-29'
+output: html_document
+---
+
+# MMUS_HSC ANNOTATION
+
+Manually annotate cell types by using NMF, reference data sets and various
+other data.
+General plots are found in reports (.../data/sce_objects/reports/03_annotation).
+This cannot be automated and must be done manually for each seperate data set.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load libraries, source code 
+
+```{r load,  message = FALSE}
+
+library(SingleCellExperiment, quietly = TRUE) 
+library(DropletUtils, quietly = TRUE) 
+library(tidyverse, quietly = TRUE) 
+#library(scater, quietly = TRUE) 
+#library(scuttle, quietly = TRUE) 
+#library(scran, quietly = TRUE) 
+library(pheatmap)
+library("config")
+
+```
+
+```{r}
+sce <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_anmf/sce_mmus-08")
+sce <- sce[,sce$Fraction_ID == "hsc"]
+```
+
+```{r}
+
+config <- config::get(file = "../../config/config.yaml")
+color_tables <- config$color_tables
+
+source(file = "../../source/colors.R")
+source(file = "../../source/plotting.R")
+source(file = "../../source/sce_functions.R")
+
+col_cts_all <- col_cts[names(col_cts) %in% sce$Identity_ref_all]
+col_cts_fraction1 <- col_cts[names(col_cts) %in% sce$Identity_ref_fraction1]
+col_cts_fraction2 <- col_cts[names(col_cts) %in% sce$Identity_ref_fraction2]
+col_batch_exp_day <- col_alp[names(col_alp) %in% sce$Batch_exp_day]
+col_batch_seq <- col_num[names(col_num) %in% sce$Batch_sequencing]
+col_ann_age <- col_ann[names(col_ann) %in% sce$Age_ID]
+col_ann_fraction <- col_ann[names(col_ann) %in% sce$Fraction_ID]
+
+```
+
+# hsc_program 1
+
+```{r}
+
+print(table(sce$hsc_program_1 > 0))
+print(table(sce$hsc_program_1 > 1))
+print(table(sce$hsc_program_1 > 2))
+
+```
+
+```{r}
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_1, 
+                                     x = sce$Identity_ref_all, 
+                                     color = sce$Identity_ref_all))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity1", values = col_cts_all)
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_1, 
+                                     x = sce$Identity_ref_fraction1, 
+                                     color = sce$Identity_ref_fraction1))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity2", values = col_cts_fraction1)
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_1, 
+                                     x = sce$Identity_ref_fraction2, 
+                                     color = sce$Identity_ref_fraction2))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity3", values = col_cts_fraction2)
+
+```
+
+```{r}
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_1, 
+                                     x = sce$Batch_exp_day, 
+                                     color = sce$Batch_exp_day))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot( outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Experimental day", values = col_batch_exp_day)
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_1, 
+                                     x = sce$Batch_sequencing, 
+                                     color = sce$Batch_sequencing))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Batch_sequencing", values = col_batch_seq)
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_1, 
+                                     x = sce$Age_ID, 
+                                     color = sce$Age_ID))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Age", values = col_ann_age)
+
+```
+
+Looks like possible TC/NK cell or mature cell program
+
+```{r}
+
+program_1_genes <- data.frame(
+  genes = rownames(metadata(sce)$Genescores_NMF_hsc),
+  scores = metadata(sce)$Genescores_NMF_hsc$hsc_program_1)
+
+program_1_genes <- program_1_genes[order(program_1_genes$scores, 
+                                         decreasing = TRUE),]
+program_1_genes[1:50,]
+
+```
+
+Trbc1, Tcf7, Tcrg.C1, Tox ... associated with TCs.
+Bcl11b associated with B cell lymphoma.
+Gata3 associated with erythropoesis.
+
+Mostly TC associated but I guess generally differentiation related.
+Would say contamination/mature cell related.
+Could also be apoptosis related (Bcl2, Pdcd1)
+
+```{r}
+
+sce <- get_mature_cts_all(sce) # own function 
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_1, 
+                                     x = sce$mature_cells, 
+                                     color = sce$mature_cells))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Mature cells", values = c("FALSE" = "black",
+                                                "TRUE" ="orange"))
+
+sce <- find_contamination_ref_all(sce, input = "hsc") # own function
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_1, 
+                                     x = sce$right_fraction, 
+                                     color = sce$right_fraction))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Mature cells", values = c("TRUE" = "black",
+                                                "FALSE" ="orange"))
+
+```
+
+Is indeed enriched in mature cells, but still over half of mature cells
+have a usage of 0.
+
+Check if its low quality cells associated with apoptosis.
+
+```{r}
+
+sce$is_p1_quick <- rep("FALSE", nrow(colData(sce)))
+sce$is_p1_quick[sce$hsc_program_1 >1] <- "TRUE"
+
+qcdf <- perCellQCMetrics(sce)
+
+sce$sum <- qcdf$sum
+sce$detected <- qcdf$detected
+
+ggplot(data.frame(colData(sce)), aes(y = sce$sum, 
+                                     x = sce$is_p1_quick, 
+                                     color = sce$is_p1_quick))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Mature cells", values = c("TRUE" = "black",
+                                                "FALSE" ="orange"))
+
+ggplot(data.frame(colData(sce)), aes(y = sce$detected, 
+                                     x = sce$is_p1_quick, 
+                                     color = sce$is_p1_quick))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Mature cells", values = c("TRUE" = "black",
+                                                "FALSE" ="orange"))
+
+ggplot(data.frame(colData(sce)), aes(y = sce$detected, 
+                                     x = sce$Identity_ref_fraction2, 
+                                     color = sce$Identity_ref_fraction2))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity3", values = col_cts_fraction2)+
+  facet_grid(cols = vars(sce$is_p1_quick))
+
+
+```
+
+Quality is not significantly different I would say, or probably even a little 
+better in cells with program_1 usage >1.
+
+# Program 2
+
+```{r}
+
+print(table(sce$hsc_program_2 > 0))
+print(table(sce$hsc_program_2 > 1))
+print(table(sce$hsc_program_2 > 2))
+
+```
+
+```{r}
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_2, 
+                                     x = sce$Identity_ref_all, 
+                                     color = sce$Identity_ref_all))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity1", values = col_cts_all)
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_2, 
+                                     x = sce$Identity_ref_fraction1, 
+                                     color = sce$Identity_ref_fraction1))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity2", values = col_cts_fraction1)
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_2, 
+                                     x = sce$Identity_ref_fraction2, 
+                                     color = sce$Identity_ref_fraction2))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity3", values = col_cts_fraction2)
+
+```
+
+These seems to be an "immature" signature, in contrast to program 1.
+The "low-prog2" cells that still count as immature may be mostly Ery progs.
+
+```{r}
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_2, 
+                                     x = sce$mature_cells, 
+                                     color = sce$mature_cells))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Mature cells", values = c("FALSE" = "black",
+                                                "TRUE" ="orange"))
+
+```
+
+```{r}
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_2,
+                                     x = sce$hsc_program_1))+
+  geom_bin2d()+
+  theme_classic()
+
+gg_df <- data.frame(colData(sce)) 
+gg_df <- gg_df[-which(gg_df$hsc_program_1 == 0 | gg_df$hsc_program_2 == 0),]
+
+ggplot(gg_df, aes(y = hsc_program_2, x = hsc_program_1))+
+  geom_bin2d()+
+  theme_classic()
+
+```
+
+It doesn't appear like Program 1 and 2 are necessarily strictly exclusive
+of each other. 
+There are high-program 1 cells that are high, and some that are low in 
+program 2 usage.
+
+```{r}
+
+program_2_genes <- data.frame(
+  genes = rownames(metadata(sce)$Genescores_NMF_hsc),
+  scores = metadata(sce)$Genescores_NMF_hsc$hsc_program_2)
+
+program_2_genes <- program_2_genes[order(program_2_genes$scores, 
+                                         decreasing = TRUE),]
+program_2_genes[1:50,]
+
+```
+
+Ribosomal and mitochondrial gene expression suggest that it's a proliferation
+or activity signature.
+Makes sense that it's not found in mature cells.
+But these are also the genes where batch effect would be found.
+
+```{r}
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_2, 
+                                     x = sce$Batch_exp_day, 
+                                     color = sce$Batch_exp_day))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot( outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Experimental day", values = col_batch_exp_day)
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_2, 
+                                     x = sce$Batch_sequencing, 
+                                     color = sce$Batch_sequencing))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Batch_sequencing", values = col_batch_seq)
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_2, 
+                                     x = sce$Age_ID, 
+                                     color = sce$Age_ID))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Age", values = col_ann_age)
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_2, 
+                                     x = sce$Object_ID, 
+                                     color = sce$Object_ID))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")
+
+```
+
+this program is clearly enriched in old cells, but of the old objects,
+it is especially enriched in two objects.
+
+```{r}
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_2, 
+                                     x = sce$Identity_ref_all, 
+                                     color = sce$Identity_ref_all))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity1", values = col_cts_all)+
+  facet_grid(cols = vars(sce$Age_ID))
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_2, 
+                                     x = sce$Identity_ref_fraction1, 
+                                     color = sce$Identity_ref_fraction1))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity2", values = col_cts_fraction1)+
+  facet_grid(cols = vars(sce$Age_ID))
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_2, 
+                                     x = sce$Identity_ref_fraction2, 
+                                     color = sce$Identity_ref_fraction2))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity3", values = col_cts_fraction2)+
+  facet_grid(cols = vars(sce$Age_ID))
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_2, 
+                                     x = sce$Object_ID, 
+                                     color = sce$Object_ID))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  facet_grid(cols = vars(sce$Batch_exp_day))
+
+```
+
+```{r fig.height = 10}
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_2, 
+                                     x = sce$Identity_ref_fraction2, 
+                                     color = sce$Identity_ref_fraction2))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity3", values = col_cts_fraction2)+
+  facet_grid(rows = vars(sce$Batch_exp_day))
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_2, 
+                                     x = sce$Identity_ref_all, 
+                                     color = sce$Identity_ref_all))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity3", values = col_cts_all)+
+  facet_grid(rows = vars(sce$Object_ID))
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_2, 
+                                     x = sce$Identity_ref_fraction1, 
+                                     color = sce$Identity_ref_fraction1))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity3", values = col_cts_fraction1)+
+  facet_grid(rows = vars(sce$Object_ID))
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_2, 
+                                     x = sce$Identity_ref_fraction2, 
+                                     color = sce$Identity_ref_fraction2))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity3", values = col_cts_fraction2)+
+  facet_grid(rows = vars(sce$Object_ID))
+
+```
+
+It is not enriched in old because one celltype is more abundant in old.
+It is enriched in almost every old cell type compared to the same young cell 
+type.
+It is especially more enriched in old Ery progenitors in the two outlier batches.
+
+After looking at the species report I am inclined to believe that this is
+possibly a batch effect or possibly related to age.
+Maybe an old ery signature? But it is also enriched in othe cells.
+
+# Program 3
+
+```{r}
+
+print(table(sce$hsc_program_3 > 0))
+print(table(sce$hsc_program_3 > 1))
+print(table(sce$hsc_program_3 > 2))
+
+```
+
+```{r}
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_3, 
+                                     x = sce$Identity_ref_all, 
+                                     color = sce$Identity_ref_all))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity1", values = col_cts_all)
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_3, 
+                                     x = sce$Identity_ref_fraction1, 
+                                     color = sce$Identity_ref_fraction1))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity2", values = col_cts_fraction1)
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_3, 
+                                     x = sce$Identity_ref_fraction2, 
+                                     color = sce$Identity_ref_fraction2))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity3", values = col_cts_fraction2)
+
+```
+
+Looks like a mature myeloid cell signature.
+But also includes some other mature lymphoid cells.
+
+```{r}
+
+program_3_genes <- data.frame(
+  genes = rownames(metadata(sce)$Genescores_NMF_hsc),
+  scores = metadata(sce)$Genescores_NMF_hsc$hsc_program_3)
+
+program_3_genes <- program_3_genes[order(program_3_genes$scores, 
+                                         decreasing = TRUE),]
+program_3_genes[1:50,]
+
+```
+
+Ngp, Lcn2, neutrphil related
+Camp, Chil3, S100a8 Immune system related
+
+Could be inflammatory/immune system program/mature immune cell program?
+
+```{r}
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_3, 
+                                     x = sce$Batch_exp_day, 
+                                     color = sce$Batch_exp_day))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot( outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Experimental day", values = col_batch_exp_day)
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_3, 
+                                     x = sce$Batch_sequencing, 
+                                     color = sce$Batch_sequencing))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Batch_sequencing", values = col_batch_seq)
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_3, 
+                                     x = sce$Age_ID, 
+                                     color = sce$Age_ID))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Age", values = col_ann_age)
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_3, 
+                                     x = sce$Object_ID, 
+                                     color = sce$Object_ID))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")
+
+```
+
+Not specifically enriched in any batch or age.
+
+# Program 4
+
+```{r}
+
+print(table(sce$hsc_program_4 > 0))
+print(table(sce$hsc_program_4 > 1))
+print(table(sce$hsc_program_4 > 2))
+
+```
+
+```{r}
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_4, 
+                                     x = sce$Identity_ref_all, 
+                                     color = sce$Identity_ref_all))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity1", values = col_cts_all)
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_4, 
+                                     x = sce$Identity_ref_fraction1, 
+                                     color = sce$Identity_ref_fraction1))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity2", values = col_cts_fraction1)
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_4, 
+                                     x = sce$Identity_ref_fraction2, 
+                                     color = sce$Identity_ref_fraction2))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity3", values = col_cts_fraction2)
+
+```
+
+This seems monocyte/dendritic skewed but generally also lymphoid.
+
+```{r}
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_3,
+                                     x = sce$hsc_program_4))+
+  geom_bin2d()+
+  theme_classic()
+
+gg_df <- data.frame(colData(sce)) 
+gg_df <- gg_df[-which(gg_df$hsc_program_3 == 0 | gg_df$hsc_program_4 == 0),]
+
+ggplot(gg_df, aes(y = hsc_program_3, x = hsc_program_4))+
+  geom_bin2d()+
+  theme_classic()
+
+gg_df <- data.frame(colData(sce)) 
+gg_df <- gg_df[-which(gg_df$hsc_program_3 <1 | gg_df$hsc_program_4 <1 ),]
+
+ggplot(gg_df, aes(y = hsc_program_3, x = hsc_program_4))+
+  geom_bin2d()+
+  theme_classic()
+
+```
+
+Seems like one clearly separated population of program 3 high cells that
+does not overlap with program 4 high cells (and vice versa).
+
+```{r}
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_4, 
+                                     x = sce$Batch_exp_day, 
+                                     color = sce$Batch_exp_day))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot( outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Experimental day", values = col_batch_exp_day)
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_4, 
+                                     x = sce$Batch_sequencing, 
+                                     color = sce$Batch_sequencing))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Batch_sequencing", values = col_batch_seq)
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_4, 
+                                     x = sce$Age_ID, 
+                                     color = sce$Age_ID))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Age", values = col_ann_age)
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_4, 
+                                     x = sce$Object_ID, 
+                                     color = sce$Object_ID))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")
+
+```
+
+Clearly enriched in Batch d
+
+```{r}
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_4, 
+                                     x = sce$Object_ID, 
+                                     color = sce$Object_ID))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  facet_grid(cols = vars(sce$Batch_exp_day))
+
+```
+
+```{r fig.height = 12}
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_4, 
+                                     x = sce$Identity_ref_all, 
+                                     color = sce$Identity_ref_all))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity1", values = col_cts_all)+
+  facet_grid(rows = vars(sce$Batch_exp_day))
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_4, 
+                                     x = sce$Identity_ref_fraction1, 
+                                     color = sce$Identity_ref_fraction1))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity2", values = col_cts_fraction1)+
+  facet_grid(rows = vars(sce$Batch_exp_day))
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_4, 
+                                     x = sce$Identity_ref_fraction2, 
+                                     color = sce$Identity_ref_fraction2))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity3", values = col_cts_fraction2)+
+  facet_grid(rows = vars(sce$Batch_exp_day))
+
+```
+
+The enrichment in Batch d is not cell-type specific, this is therefore most
+likely a batch effect program specifically for batch d.
+
+```{r}
+
+program_4_genes <- data.frame(
+  genes = rownames(metadata(sce)$Genescores_NMF_hsc),
+  scores = metadata(sce)$Genescores_NMF_hsc$hsc_program_4)
+
+program_4_genes <- program_4_genes[order(program_4_genes$scores, 
+                                         decreasing = TRUE),]
+program_4_genes[1:50,]
+
+```
+
+
+
+# Program 5
+
+```{r}
+
+print(table(sce$hsc_program_5 > 0))
+print(table(sce$hsc_program_5 > 1))
+print(table(sce$hsc_program_5 > 2))
+
+```
+
+```{r}
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_5, 
+                                     x = sce$Identity_ref_all, 
+                                     color = sce$Identity_ref_all))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity1", values = col_cts_all)
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_5, 
+                                     x = sce$Identity_ref_fraction1, 
+                                     color = sce$Identity_ref_fraction1))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity2", values = col_cts_fraction1)
+
+ggplot(data.frame(colData(sce)), aes(y = sce$hsc_program_5, 
+                                     x = sce$Identity_ref_fraction2, 
+                                     color = sce$Identity_ref_fraction2))+
+  ggbeeswarm::geom_quasirandom(size = 0.7)+
+  geom_boxplot(outlier.alpha = 0, color = "black", alpha = 0)+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        legend.position = "none")+
+  scale_color_manual("Identity3", values = col_cts_fraction2)
+
+```
+
+Probably a lymphoid cell program.
+
+```{r}
+
+program_5_genes <- data.frame(
+  genes = rownames(metadata(sce)$Genescores_NMF_hsc),
+  scores = metadata(sce)$Genescores_NMF_hsc$hsc_program_5)
+
+program_5_genes <- program_5_genes[order(program_5_genes$scores, 
+                                         decreasing = TRUE),]
+program_5_genes[1:50,]
+
+```
+
+

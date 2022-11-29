@@ -38,10 +38,10 @@ for s in species:
       targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/07_mrge/sce_" + s + "-07"]
       targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/03_annotation/" + s + "/ref_annotation_sample_report_" + i + ".html"]
       targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/08_anmf/sce_" + s + "-08"]
+      targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/03_annotation/" + s + "/nmf_annotation_species_report_" + s + ".html"]
 
-#if config["run_annotaion_summary"]:
 targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/03_annotation/ref_annotation_summary.html"]
-  
+
 #-------------------------------------------------------------------------------
 
 localrules: all  
@@ -87,7 +87,7 @@ rule merge_datasets_species:
     script:
         "scripts/07_merge_datasets.R" 
         
-rule make_sample_reports:
+rule make_ref_sample_reports:
     input: 
         sce_06 = rules.cell_type_annotation.output
     output:
@@ -98,7 +98,7 @@ rule make_sample_reports:
     script:
         "ref_annotation_sample_reports.Rmd" 
 
-rule make_summary_report:
+rule make_ref_summary_report:
     input:
         sce_06_path = OUTPUT_BASE_PATH + "/sce_objects/06_sglr/",
     output:
@@ -128,5 +128,13 @@ rule add_nfm_objects:
     script:
         "scripts/08_add_nmf_objects.R"
     
-    
+rule make_nmf_species_reports:
+    input:
+        sce_08 = rules.add_nfm_objects.output,
+    output:
+        OUTPUT_BASE_PATH + "/sce_objects/reports/03_annotation/{species}/nmf_annotation_species_report_{species}.html"
+    params:
+        color_tables = TABLES_PATH
+    script:
+        "nmf_annotation_species_reports.Rmd"    
     

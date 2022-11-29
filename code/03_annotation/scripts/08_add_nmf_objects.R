@@ -82,7 +82,7 @@ colData(sce_07) <- cbind(colData(sce_07), str_prog[match(
   rownames(colData(sce_07)), rownames(str_prog)),])
 
 #-------------------------------------------------------------------------------
-# dimensionality reduction to include in the saved objects
+# dimensionality reduction to add to the saved objects
 sce_07 <- reduce_dims(sce_07, nr_hvgs = nr_hvgs) # own function
 print(sce_07)
 

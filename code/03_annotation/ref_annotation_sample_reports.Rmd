@@ -9,10 +9,6 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Report QC for all objects separately.
-Some operations from the scripts must be repeated to generate relevant plots,
-but any new objects cannot be saved from an .Rmd script.
-
 #### Load libraries, source code 
 
 ```{r load,  message = FALSE}

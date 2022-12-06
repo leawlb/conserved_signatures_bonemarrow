@@ -34,11 +34,10 @@ for s in species:
   for i in individuals:
     if s in i:
       targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/06_sglr/" + s + "/sce_" + i + "-06"]
-      targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/07_mrge/sce_" + s + "-07"]
-      targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/03_annotation/" + s + "/ref_annotation_sample_report_" + i + ".html"]
-      targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/03_annotation/" + s + "/ref_annotation_species_report_" + s + ".html"]
-      targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/08_hclt/sce_" + s + "_" + f + "-08" for f in ["hsc", "str"]]
-targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/03_annotation/ref_annotation_summary.html"]
+      targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/03_reference_annotation/" + s + "/ref_annotation_sample_report_" + i + ".html"]
+
+if config["run_ref_annotation_summary"]:
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/03_reference_annotation/ref_annotation_summary.html"]
 
 #-------------------------------------------------------------------------------
 
@@ -52,7 +51,7 @@ rule all: # must contain all possible output paths from all rules
 """
 Preliminary cell type annotation using multiple reference datasets and
 SingleR.
-To get an overview of approx. cell type numbers and fravtion contamination.
+To get an overview of approx. cell type numbers and fraction contamination.
 """
 rule cell_type_annotation: 
     input: 
@@ -67,41 +66,6 @@ rule cell_type_annotation:
     script:
         "scripts/06_annotation_singleR.R"  
       
-"""
-Merge all datasets of one species into one species dataset
-Input data is located in 02_preprocessing/04_norm/
-"""
-
-rule merge_datasets_species:
-    input: 
-        sce_06 = OUTPUT_BASE_PATH + "/sce_objects/06_sglr/{species}/"
-    output:
-        sce_07 = OUTPUT_BASE_PATH + "/sce_objects/07_mrge/sce_{species}-07"
-    params:
-        individuals = individuals,
-        samples_to_remove = config["samples_to_remove"],
-        sce_functions = "../source/sce_functions.R", # this is the working directory, not /scripts
-        nr_hvgs = config["metadata"]["values"]["nr_hvgs"]
-    wildcard_constraints:
-        species = "[a-z]+"
-    script:
-        "scripts/07_merge_datasets.R" 
-
-"""
-Calculate hierarchical clustering for each dataset in parallel.
-After evaluating the tree in cls_annotation_report_species, the tree
-will be cut by species-specific and fraction-specific values.
-"""
-rule hierarchical_clustering:
-    input:
-        sce_07 = rules.merge_datasets_species.output
-    output:
-        sce_08 = expand(OUTPUT_BASE_PATH + "/sce_objects/08_hclt/sce_{{species}}_{fraction}-08", fraction = ["hsc", "str"]) 
-    #params:
-    #    cut_tree: config["metadata"]["values"]["cut_mmus_hsc"]
-    script: 
-        "scripts/08_hierarchical_clustering.R" 
-   
 #-------------------------------------------------------------------------------
 # reports
      
@@ -109,18 +73,20 @@ rule make_ref_sample_reports:
     input: 
         sce_06 = rules.cell_type_annotation.output
     output:
-        OUTPUT_BASE_PATH + "/sce_objects/reports/03_annotation/{species}/ref_annotation_sample_report_{individual}.html"
+        OUTPUT_BASE_PATH + "/sce_objects/reports/03_reference_annotation/{species}/ref_annotation_sample_report_{individual}.html"
     params:
         nr_hvgs = config["metadata"]["values"]["nr_hvgs"],
         color_tables = TABLES_PATH
     script:
         "ref_annotation_sample_reports.Rmd" 
-        
+  
+if config["run_ref_annotation_summary"]:
+  print("run_ref_annotation_summary")      
 rule make_ref_summary_report:
     input:
         sce_06_path = OUTPUT_BASE_PATH + "/sce_objects/06_sglr/",
     output:
-        OUTPUT_BASE_PATH + "/sce_objects/reports/03_annotation/ref_annotation_summary.html"
+        OUTPUT_BASE_PATH + "/sce_objects/reports/03_reference_annotation/ref_annotation_summary.html"
     params:
         samples_to_remove = config["samples_to_remove"],
         color_tables = TABLES_PATH,
@@ -128,15 +94,3 @@ rule make_ref_summary_report:
         species = species
     script:
         "ref_annotation_summary.Rmd" 
-        
-rule make_ref_species_reports:
-    input:
-        sce_07 = rules.merge_datasets_species.output
-    output:
-        OUTPUT_BASE_PATH + "/sce_objects/reports/03_annotation/{species}/ref_annotation_species_report_{species}.html"
-    params:
-        color_tables = TABLES_PATH
-    script:
-        "ref_annotation_species_reports.Rmd"  
-
-    

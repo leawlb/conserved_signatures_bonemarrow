@@ -8,6 +8,11 @@ sce_07_path <- snakemake@output[["sce_07"]] # correct merging output
 individuals <- snakemake@params[["individuals"]] # all objects to merge
 samples_to_remove <- snakemake@params[["samples_to_remove"]] # samples to remove from merging
 print(samples_to_remove)  
+print(individuals)
+
+# only keep objects that are not to be removed
+individuals <- individuals[!individuals %in% samples_to_remove]
+print(individuals)
 
 species_curr <- snakemake@wildcards[["species"]]
 source(file = snakemake@params[["sce_functions"]])
@@ -37,8 +42,7 @@ if(is.null(species_curr)){ # if no wildcard was used (merge all)
   }
 }
 
-# only keep objects that are not to be removed
-#print(names(sce_list)[names(sce_list) %in% samples_to_remove])
+# only keep objects that are not to be removed (failsave)
 sce_list <- sce_list[names(sce_list)[!names(sce_list) %in% samples_to_remove]]
 
 #-------------------------------------------------------------------------------

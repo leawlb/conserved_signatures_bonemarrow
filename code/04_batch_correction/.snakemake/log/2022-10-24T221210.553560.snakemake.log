@@ -1,0 +1,88 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 4
+Rules claiming more threads will be scaled down.
+Job stats:
+job                       count    min threads    max threads
+----------------------  -------  -------------  -------------
+all                           1              1              1
+merge_datasets_species        4              1              1
+total                         5              1              1
+
+Select jobs to execute...
+
+[Mon Oct 24 22:12:13 2022]
+rule merge_datasets_species:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/04_norm/mcar
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mcar-06
+    jobid: 1
+    wildcards: species=mcar
+    resources: tmpdir=/tmp
+
+[Mon Oct 24 22:12:13 2022]
+rule merge_datasets_species:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/04_norm/mcas
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mcas-06
+    jobid: 2
+    wildcards: species=mcas
+    resources: tmpdir=/tmp
+
+[Mon Oct 24 22:12:13 2022]
+rule merge_datasets_species:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/04_norm/mspr
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mspr-06
+    jobid: 4
+    wildcards: species=mspr
+    resources: tmpdir=/tmp
+
+[Mon Oct 24 22:12:13 2022]
+rule merge_datasets_species:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/04_norm/mmus
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mmus-06
+    jobid: 3
+    wildcards: species=mmus
+    resources: tmpdir=/tmp
+
+[Mon Oct 24 22:13:01 2022]
+Error in rule merge_datasets_species:
+    jobid: 4
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mspr-06
+
+RuleException:
+CalledProcessError in line 66 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
+Command 'set -euo pipefail;  Rscript --vanilla /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/.snakemake/scripts/tmp6_z2mv8f.06_merge_datasets.R' returned non-zero exit status 1.
+  File "/home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile", line 66, in __rule_merge_datasets_species
+  File "/home/l012t/micromamba/envs/snakemake-tutorial/lib/python3.8/concurrent/futures/thread.py", line 57, in run
+[Mon Oct 24 22:13:11 2022]
+Error in rule merge_datasets_species:
+    jobid: 2
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mcas-06
+
+RuleException:
+CalledProcessError in line 66 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
+Command 'set -euo pipefail;  Rscript --vanilla /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/.snakemake/scripts/tmputtf9q26.06_merge_datasets.R' returned non-zero exit status 1.
+  File "/home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile", line 66, in __rule_merge_datasets_species
+  File "/home/l012t/micromamba/envs/snakemake-tutorial/lib/python3.8/concurrent/futures/thread.py", line 57, in run
+[Mon Oct 24 22:13:12 2022]
+Error in rule merge_datasets_species:
+    jobid: 3
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mmus-06
+
+RuleException:
+CalledProcessError in line 66 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
+Command 'set -euo pipefail;  Rscript --vanilla /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/.snakemake/scripts/tmpnxld2yr4.06_merge_datasets.R' returned non-zero exit status 1.
+  File "/home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile", line 66, in __rule_merge_datasets_species
+  File "/home/l012t/micromamba/envs/snakemake-tutorial/lib/python3.8/concurrent/futures/thread.py", line 57, in run
+[Mon Oct 24 22:13:20 2022]
+Error in rule merge_datasets_species:
+    jobid: 1
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mcar-06
+
+RuleException:
+CalledProcessError in line 66 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
+Command 'set -euo pipefail;  Rscript --vanilla /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/.snakemake/scripts/tmpojf6mc9e.06_merge_datasets.R' returned non-zero exit status 1.
+  File "/home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile", line 66, in __rule_merge_datasets_species
+  File "/home/l012t/micromamba/envs/snakemake-tutorial/lib/python3.8/concurrent/futures/thread.py", line 57, in run
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+Complete log: /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/.snakemake/log/2022-10-24T221210.553560.snakemake.log

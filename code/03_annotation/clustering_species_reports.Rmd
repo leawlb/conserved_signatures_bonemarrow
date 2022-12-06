@@ -1,0 +1,13 @@
+
+
+
+
+mat_hsc <- reducedDim(sce_hsc, "PCA")
+mat_hsc <- scale(mat_hsc)
+dist_hsc <- dist(mat_hsc, method = 'euclidean')
+ward_hsc <- hclust(dist_hsc, method = "ward.D2")
+
+plot(ward, labels = FALSE, main = "ward.D2")
+
+umap_base(sce, color_by = "hclust")
+

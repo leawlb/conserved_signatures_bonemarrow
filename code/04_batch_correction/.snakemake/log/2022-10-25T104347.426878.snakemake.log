@@ -1,0 +1,78 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cluster nodes: 4
+Job stats:
+job                   count    min threads    max threads
+------------------  -------  -------------  -------------
+all                       1              1              1
+merge_datasets_all        1              1              1
+renormalize               5              1              1
+total                     7              1              1
+
+Select jobs to execute...
+
+[Tue Oct 25 10:43:50 2022]
+rule renormalize:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mcar-06
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mcar-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/hvg_mcar-07
+    jobid: 5
+    wildcards: species=mcar
+    resources: tmpdir=/tmp
+
+Submitted job 5 with external jobid 'Job <16936413> is submitted to queue <verylong>.'.
+
+[Tue Oct 25 10:43:50 2022]
+rule renormalize:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mcas-06
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mcas-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/hvg_mcas-07
+    jobid: 6
+    wildcards: species=mcas
+    resources: tmpdir=/tmp
+
+Submitted job 6 with external jobid 'Job <16936414> is submitted to queue <verylong>.'.
+
+[Tue Oct 25 10:43:50 2022]
+rule renormalize:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mmus-06
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mmus-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/hvg_mmus-07
+    jobid: 7
+    wildcards: species=mmus
+    resources: tmpdir=/tmp
+
+Submitted job 7 with external jobid 'Job <16936415> is submitted to queue <verylong>.'.
+
+[Tue Oct 25 10:43:51 2022]
+rule merge_datasets_all:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/04_norm/mcar, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/04_norm/mcas, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/04_norm/mmus, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/04_norm/mspr
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_all-06
+    jobid: 10
+    resources: tmpdir=/tmp
+
+Submitted job 10 with external jobid 'Job <16936416> is submitted to queue <verylong>.'.
+[Tue Oct 25 10:45:30 2022]
+Error in rule renormalize:
+    jobid: 5
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mcar-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/hvg_mcar-07
+    cluster_jobid: Job <16936413> is submitted to queue <verylong>.
+
+Error executing rule renormalize on cluster (jobid: 5, external: Job <16936413> is submitted to queue <verylong>., jobscript: /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/.snakemake/tmp.866kr7bv/snakejob.renormalize.5.sh). For error details see the cluster log and the log files of the involved rule(s).
+[Tue Oct 25 10:45:30 2022]
+Error in rule renormalize:
+    jobid: 6
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mcas-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/hvg_mcas-07
+    cluster_jobid: Job <16936414> is submitted to queue <verylong>.
+
+Error executing rule renormalize on cluster (jobid: 6, external: Job <16936414> is submitted to queue <verylong>., jobscript: /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/.snakemake/tmp.866kr7bv/snakejob.renormalize.6.sh). For error details see the cluster log and the log files of the involved rule(s).
+[Tue Oct 25 10:47:10 2022]
+Error in rule renormalize:
+    jobid: 7
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mmus-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/hvg_mmus-07
+    cluster_jobid: Job <16936415> is submitted to queue <verylong>.
+
+Error executing rule renormalize on cluster (jobid: 7, external: Job <16936415> is submitted to queue <verylong>., jobscript: /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/.snakemake/tmp.866kr7bv/snakejob.renormalize.7.sh). For error details see the cluster log and the log files of the involved rule(s).
+[Tue Oct 25 11:45:54 2022]
+Finished job 10.
+1 of 7 steps (14%) done
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+Complete log: /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/.snakemake/log/2022-10-25T104347.426878.snakemake.log

@@ -1,0 +1,99 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cluster nodes: 5
+Job stats:
+job               count    min threads    max threads
+--------------  -------  -------------  -------------
+all                   1              1              1
+run_mnncorrect        5              1              1
+total                 6              1              1
+
+Select jobs to execute...
+
+[Tue Oct 25 15:26:55 2022]
+rule run_mnncorrect:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mcar-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/hvg_mcar-07
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect/sce_mcar_correctedby_Batch_exp_day-08
+    jobid: 6
+    wildcards: species=mcar
+    resources: tmpdir=/tmp
+
+Submitted job 6 with external jobid 'Job <16937350> is submitted to queue <verylong>.'.
+
+[Tue Oct 25 15:26:56 2022]
+rule run_mnncorrect:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_all-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/hvg_all-07
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect/sce_all_correctedby_Batch_exp_day-08
+    jobid: 15
+    wildcards: species=all
+    resources: tmpdir=/tmp
+
+Submitted job 15 with external jobid 'Job <16937351> is submitted to queue <verylong>.'.
+
+[Tue Oct 25 15:26:56 2022]
+rule run_mnncorrect:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mcas-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/hvg_mcas-07
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect/sce_mcas_correctedby_Batch_exp_day-08
+    jobid: 8
+    wildcards: species=mcas
+    resources: tmpdir=/tmp
+
+Submitted job 8 with external jobid 'Job <16937352> is submitted to queue <verylong>.'.
+
+[Tue Oct 25 15:26:56 2022]
+rule run_mnncorrect:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mmus-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/hvg_mmus-07
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect/sce_mmus_correctedby_Batch_exp_day-08
+    jobid: 10
+    wildcards: species=mmus
+    resources: tmpdir=/tmp
+
+Submitted job 10 with external jobid 'Job <16937353> is submitted to queue <verylong>.'.
+
+[Tue Oct 25 15:26:56 2022]
+rule run_mnncorrect:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mspr-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/hvg_mspr-07
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect/sce_mspr_correctedby_Batch_exp_day-08
+    jobid: 12
+    wildcards: species=mspr
+    resources: tmpdir=/tmp
+
+Submitted job 12 with external jobid 'Job <16937354> is submitted to queue <verylong>.'.
+[Tue Oct 25 15:27:35 2022]
+Error in rule run_mnncorrect:
+    jobid: 8
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect/sce_mcas_correctedby_Batch_exp_day-08
+    cluster_jobid: Job <16937352> is submitted to queue <verylong>.
+
+Error executing rule run_mnncorrect on cluster (jobid: 8, external: Job <16937352> is submitted to queue <verylong>., jobscript: /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/.snakemake/tmp.rcniorzg/snakejob.run_mnncorrect.8.sh). For error details see the cluster log and the log files of the involved rule(s).
+[Tue Oct 25 15:27:45 2022]
+Error in rule run_mnncorrect:
+    jobid: 6
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect/sce_mcar_correctedby_Batch_exp_day-08
+    cluster_jobid: Job <16937350> is submitted to queue <verylong>.
+
+Error executing rule run_mnncorrect on cluster (jobid: 6, external: Job <16937350> is submitted to queue <verylong>., jobscript: /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/.snakemake/tmp.rcniorzg/snakejob.run_mnncorrect.6.sh). For error details see the cluster log and the log files of the involved rule(s).
+[Tue Oct 25 15:27:45 2022]
+Error in rule run_mnncorrect:
+    jobid: 10
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect/sce_mmus_correctedby_Batch_exp_day-08
+    cluster_jobid: Job <16937353> is submitted to queue <verylong>.
+
+Error executing rule run_mnncorrect on cluster (jobid: 10, external: Job <16937353> is submitted to queue <verylong>., jobscript: /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/.snakemake/tmp.rcniorzg/snakejob.run_mnncorrect.10.sh). For error details see the cluster log and the log files of the involved rule(s).
+[Tue Oct 25 15:27:45 2022]
+Error in rule run_mnncorrect:
+    jobid: 12
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect/sce_mspr_correctedby_Batch_exp_day-08
+    cluster_jobid: Job <16937354> is submitted to queue <verylong>.
+
+Error executing rule run_mnncorrect on cluster (jobid: 12, external: Job <16937354> is submitted to queue <verylong>., jobscript: /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/.snakemake/tmp.rcniorzg/snakejob.run_mnncorrect.12.sh). For error details see the cluster log and the log files of the involved rule(s).
+[Tue Oct 25 15:28:15 2022]
+Error in rule run_mnncorrect:
+    jobid: 15
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect/sce_all_correctedby_Batch_exp_day-08
+    cluster_jobid: Job <16937351> is submitted to queue <verylong>.
+
+Error executing rule run_mnncorrect on cluster (jobid: 15, external: Job <16937351> is submitted to queue <verylong>., jobscript: /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/.snakemake/tmp.rcniorzg/snakejob.run_mnncorrect.15.sh). For error details see the cluster log and the log files of the involved rule(s).
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+Complete log: /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/.snakemake/log/2022-10-25T152651.534632.snakemake.log

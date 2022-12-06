@@ -1,0 +1,4 @@
+Building DAG of jobs...
+MissingInputException in line 58 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
+Missing input files for rule merge_datasets:
+/02_preprocessing/norm

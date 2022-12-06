@@ -465,3 +465,30 @@ for(i in celltypes2){
 
 ```
 
+General cell type distribution per sample.
+
+
+```{r}
+
+ggdf <- data.frame(colData(sce))
+
+ggplot(ggdf, aes(x="", y=i, fill=Identity_ref_all))+
+  geom_col()+
+  theme_classic()+
+  coord_polar(theta = "y")+
+  scale_fill_manual("Identity1", values = col_cts_all)
+
+ggplot(ggdf, aes(x="", y=i, fill=Identity_ref_fraction1))+
+  geom_col()+
+  theme_classic()+
+  coord_polar(theta = "y")+
+  scale_fill_manual("Identity2", values = col_cts_fraction1)
+  
+ggplot(ggdf, aes(x="", y=i, fill=Identity_ref_fraction2))+
+  geom_col()+
+  theme_classic()+
+  coord_polar(theta = "y")+
+  scale_fill_manual("Identity3", values = col_cts_fraction2)
+
+```
+

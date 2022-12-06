@@ -1,0 +1,125 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cluster nodes: 12
+Job stats:
+job                     count    min threads    max threads
+--------------------  -------  -------------  -------------
+all                         1              1              1
+cell_type_annotation        5              1              1
+renormalize                 5              1              1
+run_mnncorrect              5              1              1
+total                      16              1              1
+
+Select jobs to execute...
+
+[Wed Oct 26 09:24:41 2022]
+rule cell_type_annotation:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_all-06
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_ctyp/sce_all-07
+    jobid: 17
+    wildcards: species=all
+    resources: tmpdir=/tmp
+
+Submitted job 17 with external jobid 'Job <16944328> is submitted to queue <verylong>.'.
+
+[Wed Oct 26 09:24:41 2022]
+rule cell_type_annotation:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mmus-06
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_ctyp/sce_mmus-07
+    jobid: 11
+    wildcards: species=mmus
+    resources: tmpdir=/tmp
+
+Submitted job 11 with external jobid 'Job <16944329> is submitted to queue <verylong>.'.
+
+[Wed Oct 26 09:24:41 2022]
+rule cell_type_annotation:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mspr-06
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_ctyp/sce_mspr-07
+    jobid: 14
+    wildcards: species=mspr
+    resources: tmpdir=/tmp
+
+Submitted job 14 with external jobid 'Job <16944330> is submitted to queue <verylong>.'.
+
+[Wed Oct 26 09:24:41 2022]
+rule cell_type_annotation:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mcar-06
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_ctyp/sce_mcar-07
+    jobid: 5
+    wildcards: species=mcar
+    resources: tmpdir=/tmp
+
+Submitted job 5 with external jobid 'Job <16944331> is submitted to queue <verylong>.'.
+
+[Wed Oct 26 09:24:41 2022]
+rule cell_type_annotation:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mcas-06
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_ctyp/sce_mcas-07
+    jobid: 8
+    wildcards: species=mcas
+    resources: tmpdir=/tmp
+
+Submitted job 8 with external jobid 'Job <16944332> is submitted to queue <verylong>.'.
+[Wed Oct 26 10:27:24 2022]
+Finished job 14.
+1 of 16 steps (6%) done
+Select jobs to execute...
+
+[Wed Oct 26 10:27:24 2022]
+rule renormalize:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_ctyp/sce_mspr-07
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_rnrm/sce_mspr_Batch_exp_day-08, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_rnrm/hvg_mspr_Batch_exp_day-08
+    jobid: 15
+    wildcards: species=mspr
+    resources: tmpdir=/tmp
+
+Submitted job 15 with external jobid 'Job <16944845> is submitted to queue <verylong>.'.
+[Wed Oct 26 10:31:04 2022]
+Finished job 15.
+2 of 16 steps (12%) done
+Select jobs to execute...
+
+[Wed Oct 26 10:31:04 2022]
+rule run_mnncorrect:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_rnrm/sce_mspr_Batch_exp_day-08, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_rnrm/hvg_mspr_Batch_exp_day-08
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/09_mnncorrect/sce_mspr_Batch_exp_day-09
+    jobid: 16
+    wildcards: species=mspr
+    resources: tmpdir=/tmp
+
+Submitted job 16 with external jobid 'Job <16944890> is submitted to queue <verylong>.'.
+[Wed Oct 26 10:35:04 2022]
+Finished job 16.
+3 of 16 steps (19%) done
+[Wed Oct 26 11:29:09 2022]
+Finished job 5.
+4 of 16 steps (25%) done
+Select jobs to execute...
+
+[Wed Oct 26 11:29:09 2022]
+rule renormalize:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_ctyp/sce_mcar-07
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_rnrm/sce_mcar_Batch_exp_day-08, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_rnrm/hvg_mcar_Batch_exp_day-08
+    jobid: 6
+    wildcards: species=mcar
+    resources: tmpdir=/tmp
+
+Submitted job 6 with external jobid 'Job <16945190> is submitted to queue <verylong>.'.
+[Wed Oct 26 11:33:49 2022]
+Finished job 6.
+5 of 16 steps (31%) done
+Select jobs to execute...
+
+[Wed Oct 26 11:33:49 2022]
+rule run_mnncorrect:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_rnrm/sce_mcar_Batch_exp_day-08, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_rnrm/hvg_mcar_Batch_exp_day-08
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/09_mnncorrect/sce_mcar_Batch_exp_day-09
+    jobid: 7
+    wildcards: species=mcar
+    resources: tmpdir=/tmp
+
+Submitted job 7 with external jobid 'Job <16945326> is submitted to queue <verylong>.'.
+[Wed Oct 26 11:39:49 2022]
+Finished job 7.
+6 of 16 steps (38%) done

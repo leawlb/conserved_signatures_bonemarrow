@@ -1,0 +1,89 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cluster nodes: 4
+Job stats:
+job            count    min threads    max threads
+-----------  -------  -------------  -------------
+all                1              1              1
+renormalize        5              1              1
+total              6              1              1
+
+Select jobs to execute...
+
+[Tue Oct 25 14:02:13 2022]
+rule renormalize:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mcar-06
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mcar-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/hvg_mcar-07
+    jobid: 5
+    wildcards: species=mcar
+    resources: tmpdir=/tmp
+
+Submitted job 5 with external jobid 'Job <16937161> is submitted to queue <verylong>.'.
+
+[Tue Oct 25 14:02:13 2022]
+rule renormalize:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mcas-06
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mcas-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/hvg_mcas-07
+    jobid: 6
+    wildcards: species=mcas
+    resources: tmpdir=/tmp
+
+Submitted job 6 with external jobid 'Job <16937162> is submitted to queue <verylong>.'.
+
+[Tue Oct 25 14:02:13 2022]
+rule renormalize:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mmus-06
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mmus-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/hvg_mmus-07
+    jobid: 7
+    wildcards: species=mmus
+    resources: tmpdir=/tmp
+
+Submitted job 7 with external jobid 'Job <16937163> is submitted to queue <verylong>.'.
+
+[Tue Oct 25 14:02:13 2022]
+rule renormalize:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_all-06
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_all-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/hvg_all-07
+    jobid: 9
+    wildcards: species=all
+    resources: tmpdir=/tmp
+
+Submitted job 9 with external jobid 'Job <16937164> is submitted to queue <verylong>.'.
+[Tue Oct 25 14:06:53 2022]
+Finished job 5.
+1 of 6 steps (17%) done
+Select jobs to execute...
+
+[Tue Oct 25 14:06:53 2022]
+rule renormalize:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mspr-06
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mspr-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/hvg_mspr-07
+    jobid: 8
+    wildcards: species=mspr
+    resources: tmpdir=/tmp
+
+Submitted job 8 with external jobid 'Job <16937172> is submitted to queue <verylong>.'.
+[Tue Oct 25 14:09:33 2022]
+Finished job 6.
+2 of 6 steps (33%) done
+[Tue Oct 25 14:09:34 2022]
+Finished job 7.
+3 of 6 steps (50%) done
+[Tue Oct 25 14:09:34 2022]
+Finished job 8.
+4 of 6 steps (67%) done
+[Tue Oct 25 14:28:05 2022]
+Finished job 9.
+5 of 6 steps (83%) done
+Select jobs to execute...
+
+[Tue Oct 25 14:28:05 2022]
+localrule all:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mcar-06, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mcas-06, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mmus-06, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mspr-06, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mcar-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mcas-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mmus-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mspr-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_all-07
+    jobid: 0
+    resources: tmpdir=/tmp
+
+[Tue Oct 25 14:28:05 2022]
+Finished job 0.
+6 of 6 steps (100%) done
+Complete log: /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/.snakemake/log/2022-10-25T140209.655678.snakemake.log

@@ -1,0 +1,3 @@
+UFuncTypeError in line 93 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
+ufunc 'add' did not contain a loop with signature matching types (dtype('<U4'), dtype('<U4')) -> None
+  File "/home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile", line 93, in <module>

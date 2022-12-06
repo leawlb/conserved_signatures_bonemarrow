@@ -1,0 +1,3 @@
+TypeError in line 86 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
+can only concatenate str (not "list") to str
+  File "/home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile", line 86, in <module>

@@ -10,6 +10,7 @@ samples_to_remove <- snakemake@params[["samples_to_remove"]] # samples to remove
 print(samples_to_remove)  
 
 species_curr <- snakemake@wildcards[["species"]]
+source(file = snakemake@params[["sce_functions"]])
 
 sce_list <- list()
 
@@ -85,5 +86,10 @@ for(i in 1:length(sce_list)){
   }
 }
 print(nrow(sce_merged))
+
+#-------------------------------------------------------------------------------
+# dimensionality reduction
+
+sce_merged <- reduce_dims(sce_merged, nr_hvgs = snakemake@params[["nr_hvgs"]])
 
 saveRDS(sce_merged, file = sce_07_path)

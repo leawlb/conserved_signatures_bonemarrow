@@ -1,0 +1,3 @@
+WildcardError in line 84 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
+No values given for wildcard 'species'.
+  File "/home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile", line 84, in <module>

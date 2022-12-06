@@ -1,0 +1,3 @@
+KeyError in line 97 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
+'rescale_for_batch_correction'
+  File "/home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile", line 97, in <module>

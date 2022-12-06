@@ -1,0 +1,33 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 4
+Rules claiming more threads will be scaled down.
+Job stats:
+job                    count    min threads    max threads
+-------------------  -------  -------------  -------------
+all                        1              1              1
+make_summary_report        1              1              1
+total                      2              1              1
+
+Select jobs to execute...
+
+[Tue Oct 25 17:58:37 2022]
+rule make_summary_report:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/reports/integration/integration_summary.html
+    jobid: 16
+    resources: tmpdir=/tmp
+
+[Tue Oct 25 17:58:54 2022]
+Error in rule make_summary_report:
+    jobid: 16
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/reports/integration/integration_summary.html
+
+RuleException:
+CalledProcessError in line 178 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
+Command 'set -euo pipefail;  Rscript --vanilla /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/.snakemake/scripts/tmpoyifv5py.testing_purposes.R' returned non-zero exit status 1.
+  File "/home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile", line 178, in __rule_make_summary_report
+  File "/home/l012t/micromamba/envs/snakemake-tutorial/lib/python3.8/concurrent/futures/thread.py", line 57, in run
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+Complete log: /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/.snakemake/log/2022-10-25T175834.777404.snakemake.log

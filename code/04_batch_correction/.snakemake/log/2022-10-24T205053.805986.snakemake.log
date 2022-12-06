@@ -1,0 +1,28 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 4
+Rules claiming more threads will be scaled down.
+Job stats:
+job                   count    min threads    max threads
+------------------  -------  -------------  -------------
+merge_datasets_all        1              1              1
+total                     1              1              1
+
+Select jobs to execute...
+
+[Mon Oct 24 20:50:56 2022]
+rule merge_datasets_all:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/04_norm/mcar, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/04_norm/mcas, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/04_norm/mmus, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/04_norm/mspr
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_all-06
+    jobid: 0
+    resources: tmpdir=/tmp
+
+Waiting at most 5 seconds for missing files.
+MissingOutputException in line 71 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
+Job Missing files after 5 seconds:
+/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_all-06
+This might be due to filesystem latency. If that is the case, consider to increase the wait time with --latency-wait.
+Job id: 0 completed successfully, but some output files are missing. 0
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+Complete log: /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/.snakemake/log/2022-10-24T205053.805986.snakemake.log

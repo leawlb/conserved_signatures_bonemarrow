@@ -1,0 +1,3 @@
+KeyError in line 113 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
+'run_seurat3'
+  File "/home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile", line 113, in <module>

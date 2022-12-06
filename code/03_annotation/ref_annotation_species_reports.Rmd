@@ -1,0 +1,764 @@
+---
+title: "man_annotation_report"
+author: "Lea Wölbert, Adrien Jolly"
+date: '2022-11-29'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load libraries, source code 
+
+```{r load,  message = FALSE}
+
+library(SingleCellExperiment, quietly = TRUE) 
+library(DropletUtils, quietly = TRUE) 
+library(tidyverse, quietly = TRUE) 
+#library(scater, quietly = TRUE) 
+#library(scuttle, quietly = TRUE) 
+#library(scran, quietly = TRUE) 
+library(pheatmap)
+library(GOfuncR)
+
+```
+
+```{r load_object, message = FALSE}
+
+sce <- readRDS(file = snakemake@input[["sce_07"]])
+color_tables <- snakemake@params[["color_tables"]]
+
+# set name for plots
+spec_curr <- colData(sce)$Species[1] # choose name to display in plots
+
+```
+
+```{r load_code, message = FALSE}
+
+source(file = "../source/colors.R")
+source(file = "../source/plotting.R")
+source(file = "../source/sce_functions.R")
+
+col_cts_all <- col_cts[names(col_cts) %in% sce$Identity_ref_all]
+col_cts_fraction1 <- col_cts[names(col_cts) %in% sce$Identity_ref_fraction1]
+col_cts_fraction2 <- col_cts[names(col_cts) %in% sce$Identity_ref_fraction2]
+col_batch_exp_day <- col_alp[names(col_alp) %in% sce$Batch_exp_day]
+col_batch_seq <- col_num[names(col_num) %in% sce$Batch_sequencing]
+col_ann_age <- col_ann[names(col_ann) %in% sce$Age_ID]
+col_ann_fraction <- col_ann[names(col_ann) %in% sce$Fraction_ID]
+
+```
+
+# Merged QC
+
+## Identities
+
+```{r fig.width=11}
+
+plot_1 <- umap_base(sce, color_by = "Identity_ref_all")+ # own function
+  scale_color_manual("Identity1", values = col_cts_all)
+plot_1l <- umap_legend(sce, color_by = "Identity_ref_all")+
+  scale_color_manual("Identity1", values = col_cts_all)
+legend_1 <- get_legend(plot_1l)
+
+plot_2 <- umap_base(sce, color_by = "Identity_ref_fraction1")+ 
+  scale_color_manual("Identity2", values = col_cts_fraction1)
+plot_2l <- umap_legend(sce, color_by = "Identity_ref_fraction1")+
+  scale_color_manual("Identity2", values = col_cts_fraction1)
+legend_2 <- get_legend(plot_2l)
+
+plot_3 <- umap_base(sce, color_by = "Identity_ref_fraction2")+ 
+  scale_color_manual("Identity3", values = col_cts_fraction2)
+plot_3l <- umap_legend(sce, color_by = "Identity_ref_fraction2")+
+  scale_color_manual("Identity3", values = col_cts_fraction2)
+legend_3 <- get_legend(plot_3l)
+
+PLOT_1 <- ggarrange(plot_1, legend_1)
+PLOT_2 <- ggarrange(plot_2, legend_2)
+PLOT_3 <- ggarrange(plot_3, legend_3)
+
+PLOT_1+ggtitle(spec_curr)
+PLOT_2+ggtitle(spec_curr)
+PLOT_3+ggtitle(spec_curr)
+
+```
+
+### Contamination
+
+Use only Baccin et al dataset because it's the only one containing both
+stromal and hematopoetic cell types in a single dataset.
+
+```{r}
+
+# find contamination in sce objects
+sce_str <- sce[,sce$Fraction_ID == "str"]
+sce_hsc <- sce[,sce$Fraction_ID == "hsc"]
+
+sce_str <- find_contamination_ref_all(sce_str, input = "stromal") # own function
+sce_hsc <- find_contamination_ref_all(sce_hsc, input = "hsc") # own function
+
+```
+
+```{r fig.width=11}
+
+if(grepl("TRUE", sce_str$right_fraction)){
+  plot_4 <- umap_base(sce_str, color_by = "right_fraction")+
+    scale_color_manual("Correct fraction", values = c("TRUE" = "black", 
+                                                      "FALSE" = "orange"))
+  plot_4l <- umap_legend(sce_str, color_by = "right_fraction")+
+    scale_color_manual("Correct fraction", values = c("TRUE" = "black", 
+                                                      "FALSE" = "orange"))
+  legend_4 <- get_legend(plot_4l)
+
+  PLOT_4 <- ggarrange(plot_4, legend_4)
+  PLOT_4+ggtitle("Stromal")
+}
+
+if(grepl("TRUE", sce_hsc$right_fraction)){
+  plot_4 <- umap_base(sce_hsc, color_by = "right_fraction")+
+    scale_color_manual("Correct fraction", values = c("TRUE" = "black", 
+                                                      "FALSE" = "orange"))
+  plot_4l <- umap_legend(sce_hsc, color_by = "right_fraction")+
+    scale_color_manual("Correct fraction", values = c("TRUE" = "black", 
+                                                      "FALSE" = "orange"))
+  legend_4 <- get_legend(plot_4l)
+
+  PLOT_4 <- ggarrange(plot_4, legend_4)
+  PLOT_4+ggtitle("HSPCs")
+}
+
+```
+
+### Mature cell types
+
+```{r}
+sce <- get_mature_cts_all(sce) # own function 
+```
+
+```{r fig.width=8}
+
+plot_4 <- umap_base(sce, color_by = "mature_cells")+
+  scale_color_manual("Mature cell types", values = c("FALSE" = "black", 
+                                                    "TRUE" = "orange"))
+plot_4l <- umap_legend(sce, color_by = "mature_cells")+
+  scale_color_manual("Mature cell types", values = c("FALSE" = "black", 
+                                                    "TRUE" = "orange"))
+legend_4 <- get_legend(plot_4l)
+
+PLOT_4 <- ggarrange(plot_4, legend_4)
+PLOT_4+ggtitle(spec_curr)
+
+```
+
+## QC Metrics
+
+```{r fig.width=8}
+
+plot_1 <- umap_base(sce, color_by = "Batch_exp_day")+ # own function
+  scale_color_manual("Experimental day", values = col_batch_exp_day)
+plot_1l <- umap_legend(sce, color_by = "Batch_exp_day")+
+  scale_color_manual("Experimental day", values = col_batch_exp_day)
+legend_1 <- get_legend(plot_1l)
+
+plot_2 <- umap_base(sce, color_by = "Batch_sequencing")+
+  scale_color_manual("Sequencing day", values = col_batch_seq)
+plot_2l <- umap_legend(sce, color_by = "Batch_sequencing")+
+  scale_color_manual("Sequencing day", values = col_batch_seq)
+legend_2 <- get_legend(plot_2l)
+
+plot_3 <- umap_base(sce, color_by = "Object_ID")
+plot_3l <- umap_legend(sce, color_by = "Object_ID")
+legend_3 <- get_legend(plot_3l)
+
+plot_4 <- umap_base(sce, color_by = "Age_ID")+
+  scale_color_manual("Age", values = col_ann_age)
+plot_4l <- umap_legend(sce, color_by = "Age_ID")+
+  scale_color_manual("Age", values = col_ann_age)
+legend_4 <- get_legend(plot_4l)
+
+plot_5 <- umap_base(sce, color_by = "Fraction_ID")+
+  scale_color_manual("Fraction", values = col_ann_fraction)
+plot_5l <- umap_legend(sce, color_by = "Fraction_ID")+
+  scale_color_manual("Fraction", values = col_ann_fraction)
+legend_5 <- get_legend(plot_5l)
+
+PLOT_1 <- ggarrange(plot_1, legend_1)
+PLOT_2 <- ggarrange(plot_2, legend_2)
+PLOT_3 <- ggarrange(plot_3, legend_3)
+PLOT_4 <- ggarrange(plot_4, legend_4)
+PLOT_5 <- ggarrange(plot_5, legend_5)
+
+PLOT_1+ggtitle(spec_curr)
+PLOT_2+ggtitle(spec_curr)
+PLOT_3+ggtitle(spec_curr)
+PLOT_4+ggtitle(spec_curr)
+PLOT_5+ggtitle(spec_curr)
+
+```
+
+```{r fig.width=11}
+
+plot_1 <- umap_base(sce, color_by = "Batch_exp_day")+
+  scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)+
+  ggtitle(spec_curr)+
+  facet_grid(cols = vars(sce$Fraction))
+plot_1l <- umap_legend(sce, color_by = "Batch_exp_day")+
+  scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)
+legend_1 <- get_legend(plot_1l)
+
+plot_2 <- umap_base(sce, color_by = "Batch_sequencing")+
+  scale_color_manual("Batch_sequencing", values = col_batch_seq)+
+  ggtitle(spec_curr)+
+  facet_grid(cols = vars(sce$Fraction))
+plot_2l <- umap_legend(sce, color_by = "Batch_sequencing")+
+  scale_color_manual("Batch_sequencing", values = col_batch_seq)
+legend_2 <- get_legend(plot_2l)
+
+plot_3 <- umap_base(sce, color_by = "Object_ID")+ 
+  ggtitle(spec_curr)+
+  facet_grid(cols = vars(sce$Fraction))
+plot_3l <- umap_legend(sce, color_by = "Object_ID")
+legend_3 <- get_legend(plot_3l)
+
+# check age
+plot_4 <- umap_base(sce, color_by = "Object_ID")+ 
+  ggtitle(spec_curr)+
+  facet_grid(cols = vars(sce$Age))
+plot_4l <- umap_legend(sce, color_by = "Object_ID")
+legend_4 <- get_legend(plot_4l)
+
+plot_5 <- umap_base(sce, color_by = "Batch_sequencing")+
+  scale_color_manual("Batch_sequencing", values = col_batch_seq)+
+  ggtitle(spec_curr)+
+  facet_grid(cols = vars(sce$Age))
+plot_5l <- umap_legend(sce, color_by = "Batch_sequencing")+
+  scale_color_manual("Batch_sequencing", values = col_batch_seq)
+legend_5 <- get_legend(plot_5l)
+
+plot_6 <- umap_base(sce, color_by = "Batch_exp_day")+
+  scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)+
+  ggtitle(spec_curr)+
+  facet_grid(cols = vars(sce$Age))
+plot_6l <- umap_legend(sce, color_by = "Batch_exp_day")+
+  scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)
+legend_6 <- get_legend(plot_6l)
+
+plot_6 <- umap_base(sce, color_by = "Batch_exp_day")+
+  scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)+
+  ggtitle(spec_curr)+
+  facet_grid(cols = vars(sce$Age))
+plot_6l <- umap_legend(sce, color_by = "Batch_exp_day")+
+  scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)
+legend_6 <- get_legend(plot_6l)
+
+plot_7 <- umap_base(sce, color_by = "Identity_ref_all")+
+  scale_color_manual("Identity1", values = col_cts_all)+
+  ggtitle(spec_curr)+
+  facet_grid(cols = vars(sce$Fraction))
+plot_7l <- umap_legend(sce, color_by = "Identity_ref_all")+
+  scale_color_manual("Identity1", values = col_cts_all)
+legend_idrefall <- get_legend(plot_7l)
+
+plot_8 <- umap_base(sce, color_by = "Identity_ref_fraction1")+
+  scale_color_manual("Identity2", values = col_cts_fraction1)+
+  ggtitle(spec_curr)+
+  facet_grid(cols = vars(sce$Fraction))
+plot_8l <- umap_legend(sce, color_by = "Identity_ref_fraction1")+
+  scale_color_manual("Identity2", values = col_cts_fraction1)
+legend_idreffrac1 <- get_legend(plot_8l)
+
+plot_9 <- umap_base(sce, color_by = "Identity_ref_fraction2")+
+  scale_color_manual("Identity3", values = col_cts_fraction2)+
+  ggtitle(spec_curr)+
+  facet_grid(cols = vars(sce$Fraction))
+plot_9l <- umap_legend(sce, color_by = "Identity_ref_fraction2")+
+  scale_color_manual("Identity3", values = col_cts_fraction2)
+legend_idreffrac2 <- get_legend(plot_9l)
+
+plot_10 <- umap_base(sce, color_by = "Identity_ref_all")+
+  scale_color_manual("Identity1", values = col_cts_all)+
+  ggtitle(spec_curr)+
+  facet_grid(cols = vars(sce$Age))
+
+plot_11 <- umap_base(sce, color_by = "Identity_ref_fraction1")+
+  scale_color_manual("Identity2", values = col_cts_fraction1)+
+  ggtitle(spec_curr)+
+  facet_grid(cols = vars(sce$Age))
+
+plot_12 <- umap_base(sce, color_by = "Identity_ref_fraction2")+
+  scale_color_manual("Identity3", values = col_cts_fraction2)+
+  ggtitle(spec_curr)+
+  facet_grid(cols = vars(sce$Age))
+
+plot_13 <- umap_base(sce, color_by = "Identity_ref_all")+
+  scale_color_manual("Identity1", values = col_cts_all)+
+  ggtitle(spec_curr)+
+  facet_grid(cols = vars(sce$Batch_sequencing))
+
+plot_14 <- umap_base(sce, color_by = "Identity_ref_fraction1")+
+  scale_color_manual("Identity2", values = col_cts_fraction1)+
+  ggtitle(spec_curr)+
+  facet_grid(cols = vars(sce$Batch_sequencing))
+
+plot_15 <- umap_base(sce, color_by = "Identity_ref_fraction2")+
+  scale_color_manual("Identity3", values = col_cts_fraction2)+
+  ggtitle(spec_curr)+
+  facet_grid(cols = vars(sce$Batch_sequencing))
+
+plot_16 <- umap_base(sce, color_by = "Identity_ref_all")+
+  scale_color_manual("Identity1", values = col_cts_all)+
+  ggtitle(spec_curr)+
+  facet_grid(cols = vars(sce$Batch_exp_day))
+
+plot_17 <- umap_base(sce, color_by = "Identity_ref_fraction1")+
+  scale_color_manual("Identity2", values = col_cts_fraction1)+
+  ggtitle(spec_curr)+
+  facet_grid(cols = vars(sce$Batch_exp_day))
+
+plot_18 <- umap_base(sce, color_by = "Identity_ref_fraction2")+
+  scale_color_manual("Identity3", values = col_cts_fraction2)+
+  ggtitle(spec_curr)+
+  facet_grid(cols = vars(sce$Batch_exp_day)) 
+
+PLOT_1 <- ggarrange(plot_1, legend_1)
+PLOT_2 <- ggarrange(plot_2, legend_2)
+PLOT_3 <- ggarrange(plot_3, legend_3)
+PLOT_4 <- ggarrange(plot_4, legend_4)
+PLOT_5 <- ggarrange(plot_5, legend_5)
+PLOT_6 <- ggarrange(plot_6, legend_6)
+PLOT_7 <- ggarrange(plot_7, legend_idrefall)
+PLOT_8 <- ggarrange(plot_8, legend_idreffrac1)
+PLOT_9 <- ggarrange(plot_9, legend_idreffrac2)
+PLOT_10 <- ggarrange(plot_10, legend_idrefall)
+PLOT_11 <- ggarrange(plot_11, legend_idreffrac1)
+PLOT_12 <- ggarrange(plot_12, legend_idreffrac2)
+PLOT_13 <- ggarrange(plot_13, legend_idrefall)
+PLOT_14 <- ggarrange(plot_14, legend_idreffrac1)
+PLOT_15 <- ggarrange(plot_14, legend_idreffrac2)
+PLOT_16 <- ggarrange(plot_14, legend_idrefall)
+PLOT_17 <- ggarrange(plot_14, legend_idreffrac1)
+PLOT_18 <- ggarrange(plot_14, legend_idreffrac2)
+
+PLOT_1
+PLOT_2
+PLOT_3
+PLOT_4
+PLOT_5
+PLOT_6
+PLOT_7
+PLOT_8
+PLOT_9
+PLOT_10
+PLOT_11
+PLOT_12
+PLOT_13
+PLOT_14
+PLOT_15
+PLOT_16
+PLOT_17
+PLOT_18
+
+```
+
+# Cell type proportions
+
+## Per Sample
+
+```{r}
+
+ggdf <- data.frame(colData(sce))
+
+plot1 <- ggplot(ggdf, aes(x = Object_ID, y=Identity_ref_all,
+                          fill=Identity_ref_all, color = Identity_ref_all))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Identity1", values = col_cts_all)+
+  scale_color_manual(values = col_cts_all)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+
+plot_all_leg <- ggplot(ggdf, aes(x = Object_ID, y=Identity_ref_all,
+                                 fill=Identity_ref_all))+
+  geom_col()+
+  scale_fill_manual("Identity1", values = col_cts_all)
+legend_all <- get_legend(plot_all_leg)
+
+plot2 <- ggplot(ggdf, aes(x = Object_ID, fill=Identity_ref_all, color = Identity_ref_all))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual("Identity1", values = col_cts_all)+
+  scale_color_manual(values = col_cts_all)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+
+plot3 <- ggplot(ggdf, aes(x = Object_ID, y=Identity_ref_fraction1,
+                          fill=Identity_ref_fraction1,
+                          color = Identity_ref_fraction1))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Identity2", values = col_cts_fraction1)+
+  scale_color_manual(values = col_cts_fraction1)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+
+plot_frc1_leg <- ggplot(ggdf, aes(x = Object_ID, y=Identity_ref_fraction1,
+                                  fill=Identity_ref_fraction1))+
+  geom_col()+
+  scale_fill_manual("Identity2", values = col_cts_fraction1)
+legend_frc1 <- get_legend(plot_frc1_leg)
+                    
+plot4 <- ggplot(ggdf, aes(x = Object_ID, fill=Identity_ref_fraction1, 
+                          color = Identity_ref_fraction1))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual("Identity2", values = col_cts_fraction1)+
+  scale_color_manual(values = col_cts_fraction1)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+
+plot5 <- ggplot(ggdf, aes(x = Object_ID, y=Identity_ref_fraction2,
+                          fill=Identity_ref_fraction2,
+                          color = Identity_ref_fraction2))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Identity3", values = col_cts_fraction2)+
+  scale_color_manual(values = col_cts_fraction2)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+
+plot_frc2_leg <- ggplot(ggdf, aes(x = Object_ID, y=Identity_ref_fraction2,
+                                  fill=Identity_ref_fraction2))+
+  geom_col()+
+  scale_fill_manual("Identity3", values = col_cts_fraction2)
+legend_frc2 <- get_legend(plot_frc2_leg)
+   
+plot6 <- ggplot(ggdf, aes(x = Object_ID, fill=Identity_ref_fraction2, 
+                          color = Identity_ref_fraction2))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual("Identity3", values = col_cts_fraction2)+
+  scale_color_manual(values = col_cts_fraction2)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+
+PLOT1 <- ggarrange(plot1, legend_all)
+PLOT2 <- ggarrange(plot2, legend_all)
+PLOT3 <- ggarrange(plot3, legend_frc1, ncol = 1)
+PLOT4 <- ggarrange(plot4, legend_frc1, ncol = 1)
+PLOT5 <- ggarrange(plot5, legend_frc2, ncol = 1)
+PLOT6 <- ggarrange(plot6, legend_frc2, ncol = 1)
+
+PLOT1
+PLOT2
+
+```
+
+```{r fig.width=10, fig.height = 11}
+
+PLOT3
+PLOT4
+PLOT5
+PLOT6
+
+```
+
+## Per Batch
+
+```{r}
+
+plot1 <- ggplot(ggdf, aes(x = Batch_exp_day, y=Identity_ref_all,
+                          fill=Identity_ref_all, color = Identity_ref_all))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Identity1", values = col_cts_all)+
+  scale_color_manual(values = col_cts_all)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+
+plot2 <- ggplot(ggdf, aes(x = Batch_exp_day, fill=Identity_ref_all, color = Identity_ref_all))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual("Identity1", values = col_cts_all)+
+  scale_color_manual(values = col_cts_all)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+
+plot3 <- ggplot(ggdf, aes(x = Batch_exp_day, y=Identity_ref_fraction1,
+                          fill=Identity_ref_fraction1,
+                          color = Identity_ref_fraction1))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Identity2", values = col_cts_fraction1)+
+  scale_color_manual(values = col_cts_fraction1)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+                    
+plot4 <- ggplot(ggdf, aes(x = Batch_exp_day, fill=Identity_ref_fraction1, 
+                          color = Identity_ref_fraction1))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual("Identity2", values = col_cts_fraction1)+
+  scale_color_manual(values = col_cts_fraction1)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+
+plot5 <- ggplot(ggdf, aes(x = Batch_exp_day, y=Identity_ref_fraction2,
+                          fill=Identity_ref_fraction2,
+                          color = Identity_ref_fraction2))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Identity3", values = col_cts_fraction2)+
+  scale_color_manual(values = col_cts_fraction2)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+
+plot6 <- ggplot(ggdf, aes(x = Batch_exp_day, fill=Identity_ref_fraction2, 
+                          color = Identity_ref_fraction2))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual("Identity3", values = col_cts_fraction2)+
+  scale_color_manual(values = col_cts_fraction2)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+
+PLOT1 <- ggarrange(plot1, legend_all)
+PLOT2 <- ggarrange(plot2, legend_all)
+PLOT3 <- ggarrange(plot3, legend_frc1, ncol = 1)
+PLOT4 <- ggarrange(plot4, legend_frc1, ncol = 1)
+PLOT5 <- ggarrange(plot5, legend_frc2, ncol = 1)
+PLOT6 <- ggarrange(plot6, legend_frc2, ncol = 1)
+
+PLOT1
+PLOT2
+```
+
+```{r fig.width=10, fig.height=11}
+
+PLOT3
+PLOT4
+PLOT5
+PLOT6
+
+```
+
+```{r}
+
+ggdf_str <- data.frame(colData(sce)[sce$Fraction_ID == "str",])
+
+plot1 <- ggplot(ggdf_str, aes(x = Batch_exp_day, y=Identity_ref_all,
+                          fill=Identity_ref_all, color = Identity_ref_all))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Identity1", values = col_cts_all)+
+  scale_color_manual(values = col_cts_all)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+
+plot2 <- ggplot(ggdf_str, aes(x = Batch_exp_day, fill=Identity_ref_all, color = Identity_ref_all))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual("Identity1", values = col_cts_all)+
+  scale_color_manual(values = col_cts_all)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+
+plot3 <- ggplot(ggdf_str, aes(x = Batch_exp_day, y=Identity_ref_fraction1,
+                          fill=Identity_ref_fraction1,
+                          color = Identity_ref_fraction1))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Identity2", values = col_cts_fraction1)+
+  scale_color_manual(values = col_cts_fraction1)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+                    
+plot4 <- ggplot(ggdf_str, aes(x = Batch_exp_day, fill=Identity_ref_fraction1, 
+                          color = Identity_ref_fraction1))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual("Identity2", values = col_cts_fraction1)+
+  scale_color_manual(values = col_cts_fraction1)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+
+plot5 <- ggplot(ggdf_str, aes(x = Batch_exp_day, y=Identity_ref_fraction2,
+                          fill=Identity_ref_fraction2,
+                          color = Identity_ref_fraction2))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Identity3", values = col_cts_fraction2)+
+  scale_color_manual(values = col_cts_fraction2)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+
+plot6 <- ggplot(ggdf_str, aes(x = Batch_exp_day, fill=Identity_ref_fraction2, 
+                          color = Identity_ref_fraction2))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual("Identity3", values = col_cts_fraction2)+
+  scale_color_manual(values = col_cts_fraction2)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+
+PLOT1 <- ggarrange(plot1, legend_all)
+PLOT2 <- ggarrange(plot2, legend_all)
+PLOT3 <- ggarrange(plot3, legend_frc1, ncol = 1)
+PLOT4 <- ggarrange(plot4, legend_frc1, ncol = 1)
+PLOT5 <- ggarrange(plot5, legend_frc2, ncol = 1)
+PLOT6 <- ggarrange(plot6, legend_frc2, ncol = 1)
+
+PLOT1
+PLOT2
+```
+
+```{r fig.width=10, fig.height=11}
+
+PLOT3
+PLOT4
+PLOT5
+PLOT6
+
+```
+
+```{r}
+
+ggdf_hsc <- data.frame(colData(sce)[sce$Fraction_ID == "hsc",])
+
+plot1 <- ggplot(ggdf_hsc, aes(x = Batch_exp_day, y=Identity_ref_all,
+                          fill=Identity_ref_all, color = Identity_ref_all))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Identity1", values = col_cts_all)+
+  scale_color_manual(values = col_cts_all)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+
+plot2 <- ggplot(ggdf_hsc, aes(x = Batch_exp_day, fill=Identity_ref_all, color = Identity_ref_all))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual("Identity1", values = col_cts_all)+
+  scale_color_manual(values = col_cts_all)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+
+plot3 <- ggplot(ggdf_hsc, aes(x = Batch_exp_day, y=Identity_ref_fraction1,
+                          fill=Identity_ref_fraction1,
+                          color = Identity_ref_fraction1))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Identity2", values = col_cts_fraction1)+
+  scale_color_manual(values = col_cts_fraction1)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+                    
+plot4 <- ggplot(ggdf_hsc, aes(x = Batch_exp_day, fill=Identity_ref_fraction1, 
+                          color = Identity_ref_fraction1))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual("Identity2", values = col_cts_fraction1)+
+  scale_color_manual(values = col_cts_fraction1)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+
+plot5 <- ggplot(ggdf_hsc, aes(x = Batch_exp_day, y=Identity_ref_fraction2,
+                          fill=Identity_ref_fraction2,
+                          color = Identity_ref_fraction2))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Identity3", values = col_cts_fraction2)+
+  scale_color_manual(values = col_cts_fraction2)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+
+plot6 <- ggplot(ggdf_hsc, aes(x = Batch_exp_day, fill=Identity_ref_fraction2, 
+                          color = Identity_ref_fraction2))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual("Identity3", values = col_cts_fraction2)+
+  scale_color_manual(values = col_cts_fraction2)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+
+PLOT1 <- ggarrange(plot1, legend_all)
+PLOT2 <- ggarrange(plot2, legend_all)
+PLOT3 <- ggarrange(plot3, legend_frc1, ncol = 1)
+PLOT4 <- ggarrange(plot4, legend_frc1, ncol = 1)
+PLOT5 <- ggarrange(plot5, legend_frc2, ncol = 1)
+PLOT6 <- ggarrange(plot6, legend_frc2, ncol = 1)
+
+PLOT1
+PLOT2
+```
+
+```{r fig.width=10, fig.height=11}
+
+PLOT3
+PLOT4
+PLOT5
+PLOT6
+
+```
+
+## Per species
+
+```{r}
+
+plot1 <- ggplot(ggdf, aes(x = Fraction_ID, y=Identity_ref_all,
+                          fill=Identity_ref_all, color = Identity_ref_all))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Identity1", values = col_cts_all)+
+  scale_color_manual(values = col_cts_all)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+
+plot3 <- ggplot(ggdf, aes(x = Fraction_ID, y=Identity_ref_fraction1,
+                          fill=Identity_ref_fraction1,
+                          color = Identity_ref_fraction1))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Identity2", values = col_cts_fraction1)+
+  scale_color_manual(values = col_cts_fraction1)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+
+plot5 <- ggplot(ggdf, aes(x = Fraction_ID, y=Identity_ref_fraction2,
+                          fill=Identity_ref_fraction2,
+                          color = Identity_ref_fraction2))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Identity3", values = col_cts_fraction2)+
+  scale_color_manual(values = col_cts_fraction2)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(spec_curr)
+
+PLOT1 <- ggarrange(plot1, legend_all)
+PLOT3 <- ggarrange(plot3, legend_frc1, ncol = 1)
+PLOT5 <- ggarrange(plot5, legend_frc2, ncol = 1)
+
+PLOT1
+
+```
+
+```{r fig.width=10, fig.height=11}
+
+PLOT3
+PLOT5
+
+```

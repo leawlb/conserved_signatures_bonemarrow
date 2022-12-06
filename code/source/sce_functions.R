@@ -70,12 +70,9 @@ find_contamination_ref_all <- function(sce, input){
 
 hsc_mature_cts_all <- c(
   "B cell",
-  "Dendritic cells",
-  "Monocytes",
   "small pre-B.",
   "T cells",
   "NK cells",
-  "Neutrophils",
   "large pre-B."
 )
 

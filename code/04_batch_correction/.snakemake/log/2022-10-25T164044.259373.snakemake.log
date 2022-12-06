@@ -1,0 +1,103 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cluster nodes: 5
+Job stats:
+job               count    min threads    max threads
+--------------  -------  -------------  -------------
+all                   1              1              1
+renormalize           1              1              1
+run_mnncorrect        5              1              1
+total                 7              1              1
+
+Select jobs to execute...
+
+[Tue Oct 25 16:40:46 2022]
+rule run_mnncorrect:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_all_Batch_exp_day-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/hvg_all_Batch_exp_day-07
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect/sce_all_Batch_exp_day-08
+    jobid: 15
+    wildcards: species=all
+    resources: tmpdir=/tmp
+
+Submitted job 15 with external jobid 'Job <16937763> is submitted to queue <verylong>.'.
+
+[Tue Oct 25 16:40:47 2022]
+rule renormalize:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mcar-06
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mcar_Batch_exp_day-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/hvg_mcar_Batch_exp_day-07
+    jobid: 5
+    wildcards: species=mcar
+    resources: tmpdir=/tmp
+
+Submitted job 5 with external jobid 'Job <16937764> is submitted to queue <verylong>.'.
+
+[Tue Oct 25 16:40:47 2022]
+rule run_mnncorrect:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mcas_Batch_exp_day-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/hvg_mcas_Batch_exp_day-07
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect/sce_mcas_Batch_exp_day-08
+    jobid: 8
+    wildcards: species=mcas
+    resources: tmpdir=/tmp
+
+Submitted job 8 with external jobid 'Job <16937765> is submitted to queue <verylong>.'.
+
+[Tue Oct 25 16:40:47 2022]
+rule run_mnncorrect:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mmus_Batch_exp_day-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/hvg_mmus_Batch_exp_day-07
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect/sce_mmus_Batch_exp_day-08
+    jobid: 10
+    wildcards: species=mmus
+    resources: tmpdir=/tmp
+
+Submitted job 10 with external jobid 'Job <16937766> is submitted to queue <verylong>.'.
+
+[Tue Oct 25 16:40:47 2022]
+rule run_mnncorrect:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mspr_Batch_exp_day-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/hvg_mspr_Batch_exp_day-07
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect/sce_mspr_Batch_exp_day-08
+    jobid: 12
+    wildcards: species=mspr
+    resources: tmpdir=/tmp
+
+Submitted job 12 with external jobid 'Job <16937767> is submitted to queue <verylong>.'.
+[Tue Oct 25 16:45:27 2022]
+Finished job 5.
+1 of 7 steps (14%) done
+Select jobs to execute...
+
+[Tue Oct 25 16:45:27 2022]
+rule run_mnncorrect:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mcar_Batch_exp_day-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/hvg_mcar_Batch_exp_day-07
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect/sce_mcar_Batch_exp_day-08
+    jobid: 6
+    wildcards: species=mcar
+    resources: tmpdir=/tmp
+
+Submitted job 6 with external jobid 'Job <16937772> is submitted to queue <verylong>.'.
+[Tue Oct 25 16:49:07 2022]
+Finished job 12.
+2 of 7 steps (29%) done
+[Tue Oct 25 16:51:47 2022]
+Finished job 6.
+3 of 7 steps (43%) done
+[Tue Oct 25 16:52:17 2022]
+Finished job 8.
+4 of 7 steps (57%) done
+[Tue Oct 25 16:52:57 2022]
+Finished job 10.
+5 of 7 steps (71%) done
+[Tue Oct 25 17:01:28 2022]
+Finished job 15.
+6 of 7 steps (86%) done
+Select jobs to execute...
+
+[Tue Oct 25 17:01:28 2022]
+localrule all:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mcar-06, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mcas-06, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mmus-06, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mspr-06, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mcar_Batch_exp_day-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect/sce_mcar_Batch_exp_day-08, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mcas_Batch_exp_day-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect/sce_mcas_Batch_exp_day-08, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mmus_Batch_exp_day-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect/sce_mmus_Batch_exp_day-08, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mspr_Batch_exp_day-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect/sce_mspr_Batch_exp_day-08, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_all_Batch_exp_day-07, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect/sce_all_Batch_exp_day-08
+    jobid: 0
+    resources: tmpdir=/tmp
+
+[Tue Oct 25 17:01:28 2022]
+Finished job 0.
+7 of 7 steps (100%) done
+Complete log: /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/.snakemake/log/2022-10-25T164044.259373.snakemake.log

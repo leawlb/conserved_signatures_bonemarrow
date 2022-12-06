@@ -1,0 +1,24 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cluster nodes: 4
+Job stats:
+job                    count    min threads    max threads
+-------------------  -------  -------------  -------------
+all                        1              1              1
+make_summary_report        1              1              1
+total                      2              1              1
+
+Select jobs to execute...
+
+[Tue Oct 25 19:29:13 2022]
+rule make_summary_report:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/reports/integration/integration_summary.html
+    jobid: 16
+    resources: tmpdir=/tmp
+
+Submitted job 16 with external jobid 'Job <16939022> is submitted to queue <verylong>.'.
+[Tue Oct 25 20:36:58 2022]
+Finished job 16.
+1 of 2 steps (50%) done
+Select jobs to execute...

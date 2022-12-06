@@ -1,0 +1,3 @@
+NameError in line 38 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
+name 'individual' is not defined
+  File "/home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile", line 38, in <module>

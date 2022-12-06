@@ -1,0 +1,13 @@
+Building DAG of jobs...
+MissingInputException in line 49 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
+Missing input files for rule all:
+/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_msprBatch_exp_day-07
+/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mcarBatch_exp_day-07
+/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_allBatch_exp_day-07
+/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mcasBatch_exp_day-07
+/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect/sce_msprBatch_exp_day-08
+/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect/sce_mcarBatch_exp_day-08
+/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect/sce_allBatch_exp_day-08
+/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect/sce_mcasBatch_exp_day-08
+/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/08_mnncorrect/sce_mmusBatch_exp_day-08
+/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mmusBatch_exp_day-07

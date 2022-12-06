@@ -1,0 +1,32 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 4
+Rules claiming more threads will be scaled down.
+Job stats:
+job                   count    min threads    max threads
+------------------  -------  -------------  -------------
+merge_datasets_all        1              1              1
+total                     1              1              1
+
+Select jobs to execute...
+
+[Mon Oct 24 21:02:28 2022]
+rule merge_datasets_all:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/04_norm/mcar, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/04_norm/mcas, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/04_norm/mmus, /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/04_norm/mspr
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_all-06
+    jobid: 5
+    resources: tmpdir=/tmp
+
+[Mon Oct 24 21:02:29 2022]
+Error in rule merge_datasets_all:
+    jobid: 5
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_all-06
+
+RuleException:
+CalledProcessError in line 80 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
+Command 'set -euo pipefail;  Rscript --vanilla /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/.snakemake/scripts/tmpfpaas4lb.06_merge_datasets.R' returned non-zero exit status 1.
+  File "/home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile", line 80, in __rule_merge_datasets_all
+  File "/home/l012t/micromamba/envs/snakemake-tutorial/lib/python3.8/concurrent/futures/thread.py", line 57, in run
+Shutting down, this might take some time.
+Exiting because a job execution failed. Look above for error message
+Complete log: /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/.snakemake/log/2022-10-24T210225.656652.snakemake.log

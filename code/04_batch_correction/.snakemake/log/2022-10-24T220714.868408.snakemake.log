@@ -1,0 +1,56 @@
+Building DAG of jobs...
+Using shell: /usr/bin/bash
+Provided cores: 4
+Rules claiming more threads will be scaled down.
+Job stats:
+job                       count    min threads    max threads
+----------------------  -------  -------------  -------------
+all                           1              1              1
+merge_datasets_species        4              1              1
+total                         5              1              1
+
+Select jobs to execute...
+
+[Mon Oct 24 22:07:18 2022]
+rule merge_datasets_species:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/04_norm/mcar
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mcar-06
+    jobid: 1
+    wildcards: species=mcar
+    resources: tmpdir=/tmp
+
+[Mon Oct 24 22:07:18 2022]
+rule merge_datasets_species:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/04_norm/mcas
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mcas-06
+    jobid: 2
+    wildcards: species=mcas
+    resources: tmpdir=/tmp
+
+[Mon Oct 24 22:07:18 2022]
+rule merge_datasets_species:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/04_norm/mspr
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mspr-06
+    jobid: 4
+    wildcards: species=mspr
+    resources: tmpdir=/tmp
+
+[Mon Oct 24 22:07:18 2022]
+rule merge_datasets_species:
+    input: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/04_norm/mmus
+    output: /omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_mrge/sce_mmus-06
+    jobid: 3
+    wildcards: species=mmus
+    resources: tmpdir=/tmp
+
+[Mon Oct 24 22:08:16 2022]
+Finished job 4.
+1 of 5 steps (20%) done
+[Mon Oct 24 22:08:41 2022]
+Finished job 3.
+2 of 5 steps (40%) done
+[Mon Oct 24 22:08:41 2022]
+Finished job 2.
+3 of 5 steps (60%) done
+Terminating processes on user request, this might take some time.
+Complete log: /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/.snakemake/log/2022-10-24T220714.868408.snakemake.log

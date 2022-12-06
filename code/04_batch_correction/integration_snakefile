@@ -1,0 +1,222 @@
+#!/bin/python 
+
+"""
+Info in batch correction methods from:
+Luecken et al. "Benchmarking atlas-level data integration in single-cell genomics", Nat Met 2022
+Tran, Ang, Chevrier, Zhang et al. "A benchmark of batch effect correction methods for songle-cell RNA sequencing data", Genome Biologz 2020
+"""
+#-------------------------------------------------------------------------------
+
+import pandas as pd
+import numpy as np
+import sys 
+
+# paths from config
+OUTPUT_BASE_PATH = config["paths"]["output_dir"]
+
+# objects from config
+METADATA = pd.read_csv(config["metadata"]["raw"])
+BATCH_USE = config["batch_correction"]["batch_use"] # which SCE col to use as batch
+print(OUTPUT_BASE_PATH)
+#-------------------------------------------------------------------------------
+
+def get_list(metadata, column):
+  values = METADATA[column]
+  values = values.drop_duplicates()
+  values = values.squeeze()
+  values = values.tolist()
+  return(values)
+  
+species = get_list(metadata = METADATA, column = "Species_ID")
+species_all = species + ["all"]
+individuals = get_list(metadata = METADATA, column = "Object_ID")
+
+# construct paths for all possible outputs/targets, required for rule all
+targets =[OUTPUT_BASE_PATH + "/06_mrge/sce_" + s + "-06" for s in species]
+
+if config["merge_all"]:
+  species_build = species_all
+else:
+  species_build = species
+  
+print(species_build)
+for s in species_build:
+  targets = targets + [OUTPUT_BASE_PATH + "/07_ctyp/sce_" + s + "-07"]
+  targets = targets + [OUTPUT_BASE_PATH + "/08_rnrm/sce_" + s + "_" + BATCH_USE + "-08"]
+  targets = targets + [OUTPUT_BASE_PATH + "/09_mnncorrect/sce_" + s + "_" + BATCH_USE +"-09"]
+  
+if config["run_integration_summary"]:
+  targets = targets + [OUTPUT_BASE_PATH + "/reports/integration/integration_summary.html"]
+  
+#-------------------------------------------------------------------------------
+
+localrules: all  
+#
+# define rules
+rule all: # must contain all possible output paths from all rules
+    input:
+        targets
+        
+"""
+Merge all datasets of one species into one species dataset
+Input data is located in 02_preprocessing/04_norm/
+"""
+rule merge_datasets_species:
+    input: 
+        sce_04 = OUTPUT_BASE_PATH + "/04_norm/{species}/"
+    output:
+        sce_06 = OUTPUT_BASE_PATH + "/06_mrge/sce_{species}-06"
+    params:
+        individuals = individuals
+    wildcard_constraints:
+        species = "[a-z]+"
+    script:
+        "scripts/06_merge_datasets.R" 
+  
+"""
+Merge all datasets into one big dataset using the same script
+"""
+if config["merge_all"]:
+  print("Merge all = True")
+  rule merge_datasets_all:
+      input: 
+          sce_04 = expand(OUTPUT_BASE_PATH + "/04_norm/{s}/", s = species)
+      output:
+          sce_06 = OUTPUT_BASE_PATH + "/06_mrge/sce_all-06"
+      params:
+          individuals = individuals,
+          species = species
+      script:
+          "scripts/06_merge_datasets.R" 
+
+# for preliminary overview and help during batch correction evaluation
+# this takes very long
+rule cell_type_annotation: 
+    input: 
+        sce_06 = OUTPUT_BASE_PATH + "/06_mrge/sce_{species}-06"
+    output:
+        sce_07 = OUTPUT_BASE_PATH + "/07_ctyp/sce_{species}-07"
+    params:
+        ref_baccin_sce = config["metadata"]["ref_baccin_sce"],
+        ref_dahlin_sce = config["metadata"]["ref_dahlin_sce"],
+        ref_dolgalev_sce = config["metadata"]["ref_dolgalev_sce"],
+        ref_lipka_sce = config["metadata"]["ref_lipka_sce"]
+    script:
+        "scripts/07_cell_type_annotation.R"  
+        
+"""
+# quick and basic renormalization, scaling, HVG calculation
+
+Scaling improves batch effect removal but worsens bioconservation
+HVG selection improves performance but restricts analysis
+Scaling requires identical composition in all batches
+"""
+#print([rules.merge_datasets_species.output, rules.merge_datasets_all.output])
+rule renormalize:
+    input:
+        sce_07 = rules.cell_type_annotation.output
+    output:
+        sce_08 = OUTPUT_BASE_PATH + "/08_rnrm/sce_{species}_" + BATCH_USE + "-08",
+        hvgs = OUTPUT_BASE_PATH + "/08_rnrm/hvg_{species}_" + BATCH_USE + "-08"
+    params:
+        batch_use = BATCH_USE,
+        rescale = config["rescale_for_batch_correction"],
+        nr_hvgs = config["metadata"]["values"]["nr_hvgs_batch_correction"]
+    script:
+        "scripts/08_renormalize.R"
+        
+"""
+batch correct using MNNcorrect
+
+MNNcorrect is good at recovering DEGs from batch corrected data and bioconservation,
+but slow and does not perform well on batch correction 
+Requires shared cell types between batches but no labels
+(fastMNN) seems to balance batch effect removal and bioconservation
+"""
+if config["run_mnncorrect"]:
+  print("run_mnncorrect")
+  rule run_mnncorrect:
+      input:
+          sce_08 = rules.renormalize.output 
+      output:
+          sce_09 = OUTPUT_BASE_PATH + "/09_mnncorrect/sce_{species}_" + BATCH_USE + "-09"
+      params:
+          batch_use = BATCH_USE,
+          rescale = config["rescale_for_batch_correction"],
+          hvgs_for_batch_correction = config["hvgs_for_batch_correction"],
+          mnn_fast = config["mnn_use_fast"]
+      script:
+          "scripts/09_mnncorrect.R"
+
+"""
+batch correct using Seurat3
+
+Seurat3 is good at batch corection and among best for multiple batch integration
+but not great at recovering DEGs from batch corrected data
+unbalanced towards stronger batch effect removal, but successful at removing species batch effects
+Requires shared cell types between batches but no labels, scaling little effect
+"""
+#if config["run_seurat3"]:
+#    rule renormalize:
+#        input:
+#            sce_07 = rules.renormalize.output 
+#        output:
+#            sce_08 = OUTPUT_BASE_PATH + "/08_seurat3/sce_{species}_correctedby_" + BATCH_USE + "-08"
+#        params:
+#            hvgs_for_batch_correction = config["hvgs_for_batch_correction"]
+#        script:
+#            "scripts/08_seurat3.R"
+
+"""
+batch correct using scMerge
+
+scMerge and among best for multiple batch integration,
+is ok but not great at batch corection and recovering DEGs
+seems balanced but is also slow
+"""
+#if config["run_scmerge"]:
+#    rule renormalize:
+#        input:
+#            sce_07 = rule.renormalize.output 
+#        output:
+#            sce_08 = OUTPUT_BASE_PATH + "/08_scmerge/sce_{species}_correctedby_" + BATCH_USE + "-08"
+#        params:
+#            hvgs_for_batch_correction = config["hvgs_for_batch_correction"]
+#        script:
+#            "scripts/08_scmerge.R"
+
+"""
+Make batch correction reports for each species including all, each method
+and each used Batch type
+"""
+#rule make_reports:
+#    input:
+#        sce_07 = rules.cell_type_annotation.output,
+#        sce_08 = rules.renormalize.output,
+#        sce_09mnn = rules.run_mnncorrect.output
+#    output:
+#        OUTPUT_BASE_PATH + "/reports/integration/{species}/integration_sample_method_report_{species}_" + BATCH_USE + ".html""
+#    params:
+#        nr_hvgs = config["metadata"]["values"]["nr_hvgs"],
+#        species_all = species_all,
+#        batches = config["batch_correction"]["batches"]
+#    script:
+#        #"integration_species_method_reports.Rmd" 
+#        "scripts/testing_purposes.R"
+
+if config["run_integration_summary"]:
+  print("run_integration_summary")
+  rule make_summary_report:
+      input:
+          sce_07_path = OUTPUT_BASE_PATH + "/07_ctyp",
+          sce_08_path = OUTPUT_BASE_PATH + "/08_rnrm",
+          sce_09mnn_path = OUTPUT_BASE_PATH + "/09_mnncorrect"
+      output:
+          OUTPUT_BASE_PATH + "/reports/integration/integration_summary.html"
+      params:
+          nr_hvgs = config["metadata"]["values"]["nr_hvgs"],
+          species_all = species_all,
+          batches = config["batch_correction"]["batches"]
+      script:
+          "integration_summary.Rmd" 
+          #"scripts/testing_purposes.R"

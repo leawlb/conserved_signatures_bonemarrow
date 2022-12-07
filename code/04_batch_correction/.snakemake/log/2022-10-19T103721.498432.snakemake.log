@@ -1,3 +1,0 @@
-AttributeError in line 39 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
-'list' object has no attribute 'drop_duplicates'
-  File "/home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile", line 39, in <module>

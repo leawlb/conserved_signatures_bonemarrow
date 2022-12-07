@@ -1,3 +1,0 @@
-NameError in line 34 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
-name 'species_all' is not defined
-  File "/home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile", line 34, in <module>

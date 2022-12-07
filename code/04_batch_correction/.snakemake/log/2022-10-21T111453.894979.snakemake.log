@@ -1,4 +1,0 @@
-TypeError in line 94 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
-expected str, bytes or os.PathLike object, not list
-  File "/home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile", line 94, in <module>
-  File "/home/l012t/micromamba/envs/snakemake-tutorial/lib/python3.8/posixpath.py", line 336, in normpath

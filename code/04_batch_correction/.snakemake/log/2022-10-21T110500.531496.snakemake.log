@@ -1,7 +1,0 @@
-Building DAG of jobs...
-MissingInputException in line 96 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
-Missing input files for rule merge_datasets_species:
-/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/04_norm/sce_mcar_['yng_hsc_1_0', 'old_str_1_0', 'old_str_2_0', 'old_hsc_3_0', 'old_hsc_1_0', 'old_hsc_2_0', 'old_str_3_1', 'old_str_3_2', 'yng_str_1_0', 'old_hsc_4_0', 'old_hsc_5_0', 'yng_hsc_3_0', 'yng_str_2_2', 'yng_str_2_1', 'yng_hsc_2_0', 'yng_str_2_3']-04
-/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/04_norm/sce_mcar_['old_str_2_0', 'old_hsc_1_0', 'old_str_1_0', 'old_hsc_2_0', 'old_hsc_3_0', 'old_str_3_0', 'old_hsc_4_0', 'old_str_5_0', 'old_str_4_0', 'old_hsc_5_0', 'yng_str_1_0', 'yng_hsc_2_0', 'yng_str_3_2', 'yng_hsc_3_0', 'yng_str_3_1']-04
-/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/04_norm/sce_mcar_['old_hsc_1_0', 'old_hsc_3_0', 'old_str_1_0', 'old_hsc_2_0', 'old_str_2_0', 'old_str_3_0', 'yng_hsc_1_0', 'yng_str_1_0', 'yng_str_2_0', 'yng_hsc_2_0', 'yng_hsc_3_0', 'yng_str_3_0', 'yng_hsc_4_0', 'old_hsc_5_0', 'old_hsc_4_0', 'old_str_4_0', 'old_str_5_0', 'yng_str_6_0', 'yng_hsc_5_0', 'yng_hsc_6_0']-04
-/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/04_norm/sce_mcar_['old_hsc_3_0', 'old_hsc_1_0', 'old_str_2_0', 'old_str_3_0', 'old_str_1_0', 'old_hsc_2_0', 'yng_hsc_1_0', 'yng_str_1_0', 'yng_hsc_2_0', 'yng_str_2_0', 'yng_str_3_0', 'yng_hsc_3_0', 'old_hsc_4_0']-04

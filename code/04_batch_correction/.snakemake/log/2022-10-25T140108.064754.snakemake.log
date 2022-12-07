@@ -1,3 +1,0 @@
-TypeError in line 108 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
-can only concatenate str (not "bool") to str
-  File "/home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile", line 108, in <module>

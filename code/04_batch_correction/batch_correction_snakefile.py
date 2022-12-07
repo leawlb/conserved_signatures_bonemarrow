@@ -140,21 +140,23 @@ if config["run_mnncorrect"]:
 """
 batch correct using Seurat3
 
-Seurat3 is good at batch corection and among best for multiple batch integration
+Seurat3 is good at batch correction and among best for multiple batch integration
 but not great at recovering DEGs from batch corrected data
 unbalanced towards stronger batch effect removal, but successful at removing species batch effects
 Requires shared cell types between batches but no labels, scaling little effect
+It is easiest to use HVGs and Renormalize by seurat means.
 """
-#if config["run_seurat3"]:
-#    rule run_seurat3:
-#        input:
-#            sce_07 = rules.renormalize.output 
-#        output:
-#            sce_08 = OUTPUT_BASE_PATH + "/08_seurat3/sce_{species}_correctedby_" + BATCH_USE + "-08"
-#        params:
-#            hvgs_for_batch_correction = config["hvgs_for_batch_correction"]
-#        script:
-#            "scripts/08_seurat3.R"
+if config["run_seurat3"]:
+    rule run_seurat3:
+        input:
+            sce_07 = rules.merge_datasets_species.output 
+        output:
+            sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_seurat3/sce_{species}_" + BATCH_USE + "-09"
+        params:
+            batch_use = BATCH_USE,
+            hvgs_for_batch_correction = config["hvgs_for_batch_correction"]
+        script:
+            "scripts/09_seurat.R"
 
 """
 batch correct using scMerge
@@ -177,7 +179,7 @@ seems balanced but is also slow
 #-------------------------------------------------------------------------------
 
 """
-Make batch correction reports for each species including all, each method
+Make batch correction reports for each species including "all", each method
 and each used Batch type
 """
 rule make_reports:

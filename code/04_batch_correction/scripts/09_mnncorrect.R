@@ -4,6 +4,7 @@ library(DropletUtils, quietly = TRUE)
 library(batchelor, quietly = TRUE)
 
 # load object and prepare batch vector for correctExperiments()
+print(snakemake@input[["sce_08"]])
 sce <- readRDS(file = snakemake@input[[1]])
 batch_use <- snakemake@params[["batch_use"]]
 batch_pos <- which(colnames(colData(sce)) == batch_use)

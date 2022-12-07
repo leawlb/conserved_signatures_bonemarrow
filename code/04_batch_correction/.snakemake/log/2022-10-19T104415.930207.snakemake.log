@@ -1,4 +1,0 @@
-Building DAG of jobs...
-WildcardError in line 78 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
-Wildcards in input files cannot be determined from output files:
-'individual'

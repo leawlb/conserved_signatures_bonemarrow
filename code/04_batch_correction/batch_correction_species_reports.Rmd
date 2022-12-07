@@ -34,9 +34,37 @@ nr_hvgs <- snakemake@params[["nr_hvgs"]]
 species_build <- snakemake@params[["species_build"]]
 batches <- snakemake@params[["batches"]]
 color_tables <- snakemake@params[["color_tables"]]
+mnn_fast <- snakemake@params[["mnn_fast"]]
+species_curr <- sce_07$Species_ID[1]
 species_curr <- sce_07$Species_ID[1]
 
 ```
+
+```{r}
+
+sce_08 <- reduce_dims(sce_08, nr_hvgs = snakemake@params[["nr_hvgs"]])
+
+if(mnn_fast){
+  
+  gene_var <- modelGeneVar(sce_09mnn, assay.type = "reconstructed")
+  hvgs <- getTopHVGs(hvgs, n=gene_var)
+  
+  sce_09mnn <- runUMAP(sce_09mnn, dimred = "corrected",
+                     external_neighbors=TRUE, subset_row = hvgs)
+
+}else{
+  
+  gene_var <- modelGeneVar(sce_09mnn, assay.type = )
+  hvgs <- getTopHVGs(hvgs, n=gene_var)
+  
+  sce_09mnn <- runPCA(sce_09mnn, ncomponents=25, subset_row = hvgs,
+                      assay.type = )
+  
+  sce_09mnn <- runUMAP(sce_09mnn, dimred = "PCA",
+                     external_neighbors=TRUE, subset_row = hvgs)
+}
+```
+
 
 ```{r}
 source(file = "../source/colors.R")
@@ -136,13 +164,6 @@ identity_species_plots_08
 ### After batch correction
 
 ```{r}
-
-# does not need PCA calculation 
-hvgs <- modelGeneVar(sce_09mnn)
-hvgs <- getTopHVGs(hvgs, n=nr_hvgs)
-
-sce_09mnn <- runUMAP(sce_09mnn, dimred = "corrected",
-                     external_neighbors=TRUE, subset_row = hvgs)
 
 identity_species_plots_09 <- identity_plots(sce_09mnn, 
                                             title = ", after batch correction",
@@ -540,7 +561,8 @@ plot_all_leg <- ggplot(ggdf, aes(x = Object_ID, y=Identity_ref_all,
   scale_fill_manual("Identity1", values = col_cts_all)
 legend_all <- get_legend(plot_all_leg)
 
-plot2 <- ggplot(ggdf, aes(x = Object_ID, fill=Identity_ref_all, color = Identity_ref_all))+
+plot2 <- ggplot(ggdf, aes(x = Object_ID, fill=Identity_ref_all, 
+                          color = Identity_ref_all))+
   geom_bar(position = "fill") + 
   theme_classic()+
   scale_fill_manual("Identity1", values = col_cts_all)+

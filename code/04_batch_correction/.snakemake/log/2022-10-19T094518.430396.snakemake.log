@@ -1,3 +1,0 @@
-AttributeError in line 120 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
-'Rules' object has no attribute 'merge_datasets'
-  File "/home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile", line 120, in <module>

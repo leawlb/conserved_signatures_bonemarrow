@@ -1,3 +1,0 @@
-NameError in line 77 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
-name 'rule' is not defined
-  File "/home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile", line 77, in <module>

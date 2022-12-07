@@ -1,6 +1,9 @@
 
 snakemake --cluster "bsub -q verylong -R rusage[mem=100GB]" -p -j5 -c4 -s batch_correction_snakefile.py --configfile ../config/config.yaml -n
 
+snakemake --cluster "bsub -q verylong -R rusage[mem=100GB]" -p -j5 -c20 -s batch_correction_snakefile.py --configfile ../config/config.yaml -n
+
+
 snakemake --cores 5 -s batch_correction_snakefile.py --configfile ../config/config.yaml  -n
 
 snakemake --cores 2 -s batch_correction_snakefile.py --configfile ../config/config.yaml  -n

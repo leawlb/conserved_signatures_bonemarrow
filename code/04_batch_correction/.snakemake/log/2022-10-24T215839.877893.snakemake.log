@@ -1,8 +1,0 @@
-Building DAG of jobs...
-MissingInputException in line 48 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
-Missing input files for rule all:
-/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_all-07
-/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mspr-07
-/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mmus-07
-/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mcas-07
-/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_rnrm/sce_mcar-07

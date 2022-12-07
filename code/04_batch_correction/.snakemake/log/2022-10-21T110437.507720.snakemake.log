@@ -1,3 +1,0 @@
-NameError in line 93 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
-name 'inputs' is not defined
-  File "/home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile", line 93, in <module>

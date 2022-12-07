@@ -1,5 +1,5 @@
 
-mcar <- readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_ctyp/sce_mcar-07")
+mcar <- readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_mrge/sce_mcar-07")
 mcas <- readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_ctyp/sce_mcas-07")
 mmus <- readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_ctyp/sce_mmus-07")
 mspr <- readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/07_ctyp/sce_mspr-07")

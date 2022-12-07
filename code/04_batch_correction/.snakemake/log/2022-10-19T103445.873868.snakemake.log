@@ -1,3 +1,0 @@
-NameError in line 40 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
-name 'mmus_old_hsc_1_0' is not defined
-  File "/home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile", line 40, in <module>

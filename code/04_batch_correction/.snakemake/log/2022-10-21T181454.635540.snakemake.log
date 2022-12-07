@@ -1,3 +1,0 @@
-NameError in line 35 of /home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile:
-name 'get_list' is not defined
-  File "/home/l012t/repositories/Interspecies_BM_phd/code/03_integration/integration_snakefile", line 35, in <module>

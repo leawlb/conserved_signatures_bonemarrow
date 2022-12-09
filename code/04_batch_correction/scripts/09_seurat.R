@@ -8,7 +8,10 @@ library(Seurat)
 sce <- readRDS(file = snakemake@input[["sce_07"]]) # doesn't need renormalization
 batch_use <- snakemake@params[["batch_use"]]
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
-  
+print(sce)
+print(batch_use)
+print(nr_hvgs)
+
 seurat <- as.Seurat(sce[unique(rownames(sce)),],
                     counts = "counts", data = "logcounts")
 
@@ -22,11 +25,12 @@ for (i in 1:length(seurat_list)) {
 }
 
 seurat_anchors <- FindIntegrationAnchors(object.list = seurat_list, dims = 1:30)
+print("starting IntegrateData")
 seurat_integrated <- IntegrateData(anchorset = seurat_anchors, dims = 1:30)
 
 sce <- as.SingleCellExperiment(seurat_integrated)
 
-saveRDS(sce, file = snakemake@outpur[["sce_09"]]) 
+saveRDS(sce, file = snakemake@output[["sce_09"]]) 
 # this has 40 removed rows because of duplication compared to other means of BC
 
 

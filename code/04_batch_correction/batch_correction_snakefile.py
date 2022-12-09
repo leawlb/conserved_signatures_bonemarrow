@@ -41,6 +41,8 @@ targets =[OUTPUT_BASE_PATH + "/sce_objects/07_mrge/sce_" + s + "-07" for s in sp
 for s in species_build:
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/08_rnrm/sce_" + s + "_" + BATCH_USE + "-08"]
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/09_mnncorrect/sce_" + s + "_" + BATCH_USE +"-09"]
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/09_seurat3/sce_" + s + "_" + BATCH_USE +"-09"]
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/04_batch_correction/" + s + "/batch_correction_species_report_" + s + "_" + BATCH_USE + ".html"]
   
 if config["run_batch_correction_summary"]:
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/04_batch_correction/batch_correction_species_summary.html"]
@@ -154,7 +156,7 @@ if config["run_seurat3"]:
             sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_seurat3/sce_{species}_" + BATCH_USE + "-09"
         params:
             batch_use = BATCH_USE,
-            hvgs_for_batch_correction = config["hvgs_for_batch_correction"]
+            nr_hvgs = config["hvgs_for_batch_correction"]
         script:
             "scripts/09_seurat.R"
 
@@ -205,10 +207,10 @@ if config["run_batch_correction_summary"]:
           sce_08_path = OUTPUT_BASE_PATH + "/08_rnrm",
           sce_09mnn_path = OUTPUT_BASE_PATH + "/09_mnncorrect"
       output:
-          OUTPUT_BASE_PATH + "/reports/integration/integration_summary.html"
+          OUTPUT_BASE_PATH + "/reports/04_batch_correction/batch_correction_summary.html"
       params:
           nr_hvgs = config["metadata"]["values"]["nr_hvgs"],
-          species_all = species_all,
+          species_build = species_build,
           batches = config["batch_correction"]["batches"]
       script:
           "integration_summary.Rmd" 

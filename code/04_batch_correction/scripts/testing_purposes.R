@@ -170,3 +170,22 @@ celltype_df_fraction <- rownames_to_column(celltype_df_fraction, var = "celltype
 
 write_csv(celltype_df_bac, "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/celltypenrs_refbaccin.csv")
 write_csv(celltype_df_fraction, "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/celltypenrs_refdolgalev_dahlin.csv")
+
+
+
+
+
+mspr <- readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/09_seurat3/sce_mspr_Batch_exp_day-09")
+mmus <- readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/09_seurat3/sce_mmus_Batch_exp_day-09")
+mcar <- readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/09_seurat3/sce_mcar_Batch_exp_day-09")
+mcas <- readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/09_seurat3/sce_mcas_Batch_exp_day-09")
+mspr <- reduce_dims(mspr, nr_hvgs = 2000)
+mmus <- reduce_dims(mmus, nr_hvgs = 2000)
+mcar <- reduce_dims(mcar, nr_hvgs = 2000)
+mcas <- reduce_dims(mcas, nr_hvgs = 2000)
+
+umap_base(mspr, color_by = "Batch_exp_day")
+umap_base(mmus, color_by = "Batch_exp_day")
+umap_base(mcar, color_by = "Batch_exp_day")
+umap_base(mcas, color_by = "Batch_exp_day")
+

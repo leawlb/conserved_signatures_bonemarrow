@@ -28,7 +28,7 @@ library(cowplot, quietly = TRUE)
 
 sce_07 <- snakemake@input[["sce_07"]]
 sce_08 <- snakemake@input[["sce_08"]]
-sce_09mnn <- snakemake@input[["sce_09mnn"]]
+#sce_09mnn <- snakemake@input[["sce_09mnn"]]
 
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
 species_build <- snakemake@params[["species_build"]]
@@ -43,6 +43,8 @@ species_curr <- sce_07$Species_ID[1]
 ```{r}
 
 sce_08 <- reduce_dims(sce_08, nr_hvgs = snakemake@params[["nr_hvgs"]])
+sce_09mnn <- sce_08
+```
 
 if(mnn_fast){
   
@@ -63,7 +65,7 @@ if(mnn_fast){
   sce_09mnn <- runUMAP(sce_09mnn, dimred = "PCA",
                      external_neighbors=TRUE, subset_row = hvgs)
 }
-```
+
 
 
 ```{r}

@@ -25,6 +25,7 @@ if(sce$Rescaled[1] == TRUE){
   assay_use <- "logcounts"
 }
 
+print("starting MNN")
 # run MNNfunction depending on specified method
 mnn_fast <- snakemake@params[["mnn_fast"]]
 if(mnn_fast == TRUE){

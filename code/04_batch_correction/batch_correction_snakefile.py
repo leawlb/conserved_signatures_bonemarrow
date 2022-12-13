@@ -75,7 +75,7 @@ rule merge_datasets_species:
         species = "[a-z]+"
     script:
         "scripts/07_merge_datasets.R"
-        
+      
 """       
 Merge all datasets into one big dataset using the same script
 """
@@ -135,7 +135,9 @@ if config["run_mnncorrect"]:
           batch_use = BATCH_USE,
           rescale = config["rescale_for_batch_correction"],
           hvgs_for_batch_correction = config["hvgs_for_batch_correction"],
-          mnn_fast = config["mnn_use_fast"]
+          mnn_fast = config["mnn_use_fast"],
+          nr_hvgs = config["metadata"]["values"]["nr_hvgs"],
+          sce_functions = "../source/sce_functions.R" # this is the working dir
       script:
           "scripts/09_mnncorrect.R"
 
@@ -156,7 +158,9 @@ if config["run_seurat3"]:
             sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_seurat3/sce_{species}_" + BATCH_USE + "-09"
         params:
             batch_use = BATCH_USE,
-            nr_hvgs = config["hvgs_for_batch_correction"]
+            hvgs_for_batch_correction = config["hvgs_for_batch_correction"],
+            nr_hvgs = config["metadata"]["values"]["nr_hvgs"],
+            sce_functions = "../source/sce_functions.R" # this is the working dir
         script:
             "scripts/09_seurat.R"
 
@@ -194,7 +198,8 @@ rule make_reports:
     params:
         nr_hvgs = config["metadata"]["values"]["nr_hvgs"],
         species_build = species_build,
-        batches = config["batch_correction"]["batches"]
+        batches = config["batch_correction"]["batches"],
+        hvgs_for_batch_correction = config["hvgs_for_batch_correction"],
     script:
         "batch_correction_species_reports.Rmd" 
         #"scripts/testing_purposes.R"

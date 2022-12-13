@@ -24,7 +24,9 @@ library(scran, quietly = TRUE)
 
 ```{r load_object, message = FALSE}
 
-sce <- readRDS(file = snakemake@input[["sce_06"]])
+print(snakemake@input[[1]])
+sce <- readRDS(file = snakemake@input[[1]])
+print("blub")
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
 color_tables <- snakemake@params[["color_tables"]]
 
@@ -41,21 +43,11 @@ source(file = "../source/plotting.R")
 source(file = "../source/sce_functions.R")
 
 col_cts_all <- col_cts[names(col_cts) %in% sce$Identity_ref_all]
-col_cts_fraction1 <- col_cts[names(col_cts) %in% sce$Identity_ref_fraction1]
-col_cts_fraction2 <- col_cts[names(col_cts) %in% sce$Identity_ref_fraction2]
+col_cts_fraction <- col_cts[names(col_cts) %in% sce$Identity_ref_fraction]
 
 ```
 
 ## Cell types
-
-### Reduce dimensions
-
-```{r}
-
-sce <- reduce_dims(sce, nr_hvgs = nr_hvgs) # own function
-
-```
-
 
 ### All Identities
 
@@ -68,27 +60,18 @@ plot_1l <- umap_legend(sce, color_by = "Identity_ref_all")+
   scale_color_manual("Identity1", values = col_cts_all)
 legend_1 <- get_legend(plot_1l)
 
-plot_2 <- umap_base(sce, color_by = "Identity_ref_fraction1")+ 
+plot_2 <- umap_base(sce, color_by = "Identity_ref_fraction")+ 
   ggtitle(name_curr)+
-  scale_color_manual("Identity2", values = col_cts_fraction1)
-plot_2l <- umap_legend(sce, color_by = "Identity_ref_fraction1")+
-  scale_color_manual("Identity2", values = col_cts_fraction1)
+  scale_color_manual("Identity2", values = col_cts_fraction)
+plot_2l <- umap_legend(sce, color_by = "Identity_ref_fraction")+
+  scale_color_manual("Identity2", values = col_cts_fraction)
 legend_2 <- get_legend(plot_2l)
-
-plot_3 <- umap_base(sce, color_by = "Identity_ref_fraction2")+ 
-  ggtitle(name_curr)+
-  scale_color_manual("Identity3", values = col_cts_fraction2)
-plot_3l <- umap_legend(sce, color_by = "Identity_ref_fraction2")+
-  scale_color_manual("Identity3", values = col_cts_fraction2)
-legend_3 <- get_legend(plot_3l)
 
 PLOT_1 <- ggarrange(plot_1, legend_1)
 PLOT_2 <- ggarrange(plot_2, legend_2)
-PLOT_3 <- ggarrange(plot_3, legend_3)
 
 PLOT_1
 PLOT_2
-PLOT_3
 
 ```
 
@@ -368,8 +351,7 @@ All cells
 ```{r}
 
 table(sce$Identity_ref_all)
-table(sce$Identity_ref_fraction1)
-table(sce$Identity_ref_fraction2)
+table(sce$Identity_ref_fraction)
 
 ```
 
@@ -379,8 +361,7 @@ Without contamination
 
 if(grepl("TRUE", sce$right_fraction)){
   table(sce[,sce$right_fraction == TRUE]$Identity_ref_all)
-  table(sce[,sce$right_fraction == TRUE]$Identity_ref_fraction1)
-  table(sce[,sce$right_fraction == TRUE]$Identity_ref_fraction2)
+  table(sce[,sce$right_fraction == TRUE]$Identity_ref_fraction)
 }else{
   print("only contaminants")
 }
@@ -391,8 +372,7 @@ Only contamination
 ```{r}
 
 table(sce[,sce$right_fraction == FALSE]$Identity_ref_all)
-table(sce[,sce$right_fraction == FALSE]$Identity_ref_fraction1)
-table(sce[,sce$right_fraction == FALSE]$Identity_ref_fraction2)
+table(sce[,sce$right_fraction == FALSE]$Identity_ref_fraction)
 
 ```
 
@@ -408,83 +388,51 @@ identity with another dataset.
 
 ggdf <- data.frame(colData(sce))
 
-plot1a <- ggplot(ggdf, aes(x = Identity_ref_all, y=Identity_ref_fraction1,
-                           fill=Identity_ref_fraction1, 
-                           color = Identity_ref_fraction1))+
+plot1a <- ggplot(ggdf, aes(x = Identity_ref_all, y=Identity_ref_fraction,
+                           fill=Identity_ref_fraction, 
+                           color = Identity_ref_fraction))+
   geom_col()+
   theme_classic()+
-  scale_fill_manual("Identity2", values = col_cts_fraction1)+
-  scale_color_manual(values = col_cts_fraction1)+
+  scale_fill_manual("Identity2", values = col_cts_fraction)+
+  scale_color_manual(values = col_cts_fraction)+
   theme(legend.position = "none", axis.text.y = element_blank(),
         axis.text.x = element_text(angle = 90))+
   ggtitle(name_curr)+
   xlab("Identity1")
 
-plot_frc1 <- ggplot(ggdf, aes(x = Identity_ref_all, y=Identity_ref_fraction1,
-                                 fill=Identity_ref_fraction1))+
+plot_frc1 <- ggplot(ggdf, aes(x = Identity_ref_all, y=Identity_ref_fraction,
+                                 fill=Identity_ref_fraction))+
   geom_col()+
-  scale_fill_manual("Identity2", values = col_cts_fraction1)
+  scale_fill_manual("Identity2", values = col_cts_fraction)
 legend_frc1 <- get_legend(plot_frc1)
 
 plot1b <- ggplot(ggdf, aes(x = Identity_ref_all,
-                           fill=Identity_ref_fraction1, 
-                           color = Identity_ref_fraction1))+
+                           fill=Identity_ref_fraction, 
+                           color = Identity_ref_fraction))+
   geom_bar(position = "fill") + 
   theme_classic()+
-  scale_fill_manual("Identity2", values = col_cts_fraction1)+
-  scale_color_manual(values = col_cts_fraction1)+
+  scale_fill_manual("Identity2", values = col_cts_fraction)+
+  scale_color_manual(values = col_cts_fraction)+
   theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
   ggtitle(name_curr)+
   xlab("Identity1")
 
-plot2a <- ggplot(ggdf, aes(x = Identity_ref_all, y=Identity_ref_fraction2,
-                          fill=Identity_ref_fraction2, 
-                          color = Identity_ref_fraction2))+
-  geom_col()+
-  theme_classic()+
-  scale_fill_manual("Identity3", values = col_cts_fraction2)+
-  scale_color_manual(values = col_cts_fraction2)+
-  theme(legend.position = "none", axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 90))+
-  ggtitle(name_curr)+
-  xlab("Identity1")
-
-plot2b <- ggplot(ggdf, aes(x = Identity_ref_all,
-                           fill=Identity_ref_fraction2, 
-                           color = Identity_ref_fraction2))+
-  geom_bar(position = "fill") + 
-  theme_classic()+
-  scale_fill_manual("Identity3", values = col_cts_fraction2)+
-  scale_color_manual(values = col_cts_fraction2)+
-  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(name_curr)+
-  xlab("Identity1")
-
-plot_frc2 <- ggplot(ggdf, aes(x = Identity_ref_all, y=Identity_ref_fraction2,
-                                 fill=Identity_ref_fraction2))+
-  geom_col()+
-  scale_fill_manual("Identity3", values = col_cts_fraction2)
-legend_frc2 <- get_legend(plot_frc2)
 
 PLOT1a <- ggarrange(plot1a, legend_frc1, ncol = 1)
 PLOT1b <- ggarrange(plot1b, legend_frc1, ncol = 1)
-PLOT2a <- ggarrange(plot2a, legend_frc2, ncol = 1)
-PLOT2b <- ggarrange(plot2b, legend_frc2, ncol = 1)
 
 ```
 
 ```{r fig.width=10, fig.height = 11}
 PLOT1a
 PLOT1b
-PLOT2a
-PLOT2b
 ```
 
 #### In Identity 2
 
 ```{r}
 
-plot1a <- ggplot(ggdf, aes(x = Identity_ref_fraction1, y=Identity_ref_all,
+plot1a <- ggplot(ggdf, aes(x = Identity_ref_fraction, y=Identity_ref_all,
                            fill=Identity_ref_all, 
                            color = Identity_ref_all))+
   geom_col()+
@@ -496,7 +444,7 @@ plot1a <- ggplot(ggdf, aes(x = Identity_ref_fraction1, y=Identity_ref_all,
   ggtitle(name_curr)+
   xlab("Identity2")
 
-plot1b <- ggplot(ggdf, aes(x = Identity_ref_fraction1, 
+plot1b <- ggplot(ggdf, aes(x = Identity_ref_fraction, 
                            fill=Identity_ref_all, 
                            color = Identity_ref_all))+
   geom_bar(position = "fill") + 
@@ -507,115 +455,21 @@ plot1b <- ggplot(ggdf, aes(x = Identity_ref_fraction1,
   ggtitle(name_curr)+
   xlab("Identity2")
 
-plot_all <- ggplot(ggdf, aes(x = Identity_ref_fraction1, y=Identity_ref_all,
+plot_all <- ggplot(ggdf, aes(x = Identity_ref_fraction, y=Identity_ref_all,
                                  fill=Identity_ref_all))+
   geom_col()+
   scale_fill_manual("Identity1", values = col_cts_all)
 legend_all <- get_legend(plot_all)
 
-
-plot2a <- ggplot(ggdf, aes(x = Identity_ref_fraction1, y=Identity_ref_fraction2,
-                           fill=Identity_ref_fraction2, 
-                           color = Identity_ref_fraction2))+
-  geom_col()+
-  theme_classic()+
-  scale_fill_manual("Identity3", values = col_cts_fraction2)+
-  scale_color_manual(values = col_cts_fraction2)+
-  theme(legend.position = "none", axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 90))+
-  ggtitle(name_curr)+
-  xlab("Identity2")
-
-plot2b <- ggplot(ggdf, aes(x = Identity_ref_fraction1,
-                           fill=Identity_ref_fraction2, 
-                           color = Identity_ref_fraction2))+
-  geom_bar(position = "fill") + 
-  theme_classic()+
-  scale_fill_manual("Identity3", values = col_cts_fraction2)+
-  scale_color_manual(values = col_cts_fraction2)+
-  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(name_curr)+
-  xlab("Identity2")
-
 PLOT1a <- ggarrange(plot1a, legend_all, ncol = 1)
 PLOT1b <- ggarrange(plot1b, legend_all, ncol = 1)
-PLOT2a <- ggarrange(plot2a, legend_frc2, ncol = 1)
-PLOT2b <- ggarrange(plot2b, legend_frc2, ncol = 1)
-
 ```
 
 ```{r fig.width=10, fig.height = 11}
 PLOT1a
 PLOT1b
-PLOT2a
-PLOT2b
-```
-
-#### In Identity 3
-
-```{r}
-
-plot1a <- ggplot(ggdf, aes(x = Identity_ref_fraction2, y=Identity_ref_all,
-                           fill=Identity_ref_all, 
-                           color = Identity_ref_all))+
-  geom_col()+
-  theme_classic()+
-  scale_fill_manual("Identity1", values = col_cts_all)+
-  scale_color_manual(values = col_cts_all)+
-  theme(legend.position = "none", axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 90))+
-  ggtitle(name_curr)+
-  xlab("Identity3")
-
-plot1b <- ggplot(ggdf, aes(x = Identity_ref_fraction2,
-                           fill=Identity_ref_all, 
-                           color = Identity_ref_all))+
-  geom_bar(position = "fill") + 
-  theme_classic()+
-  scale_fill_manual("Identity1", values = col_cts_all)+
-  scale_color_manual(values = col_cts_all)+
-  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(name_curr)+
-  xlab("Identity3")
-
-plot2a <- ggplot(ggdf, aes(x = Identity_ref_fraction2, y=Identity_ref_fraction1,
-                           fill=Identity_ref_fraction1, 
-                           color = Identity_ref_fraction1))+
-  geom_col()+
-  theme_classic()+
-  scale_fill_manual("Identity2", values = col_cts_fraction1)+
-  scale_color_manual(values = col_cts_fraction1)+
-  theme(legend.position = "none", axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 90))+
-  ggtitle(name_curr)+
-  xlab("Identity3")
-
-plot2b <- ggplot(ggdf, aes(x = Identity_ref_fraction2, 
-                           fill=Identity_ref_fraction1, 
-                           color = Identity_ref_fraction1))+
-  geom_bar(position = "fill") + 
-  theme_classic()+
-  scale_fill_manual("Identity2", values = col_cts_fraction1)+
-  scale_color_manual(values = col_cts_fraction1)+
-  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(name_curr)+
-  xlab("Identity3")
-
-PLOT1a <- ggarrange(plot1a, legend_all, ncol = 1)
-PLOT1b <- ggarrange(plot1b, legend_all, ncol = 1)
-PLOT2a <- ggarrange(plot2a, legend_frc1, ncol = 1)
-PLOT2b <- ggarrange(plot2b, legend_frc1, ncol = 1)
-
-```
-
-```{r fig.width=10, fig.height = 11}
-PLOT1a
-PLOT1b
-PLOT2a
-PLOT2b
 ```
 
 ```{r}
 sessionInfo()
 ```
-

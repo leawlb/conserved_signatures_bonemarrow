@@ -7,12 +7,15 @@ sce_06_path <- snakemake@input[["sce_06"]] # correct cell annotation output
 sce_07_path <- snakemake@output[["sce_07"]] # correct merging output
 individuals <- snakemake@params[["individuals"]] # all objects to merge
 samples_to_remove <- snakemake@params[["samples_to_remove"]] # samples to remove from merging
-print(samples_to_remove)  
-print(individuals)
+#print(samples_to_remove)  
+#print(individuals)
 
 # only keep objects that are not to be removed
 individuals <- individuals[!individuals %in% samples_to_remove]
 print(individuals)
+
+# only load SCE objects (as this folder contains pred objects, too)
+print(sce_06_path)
 
 species_curr <- snakemake@wildcards[["species"]]
 source(file = snakemake@params[["sce_functions"]])
@@ -23,6 +26,7 @@ if(!is.null(species_curr)){ # if species wildcard was used (merge_species)
   print(species_curr)
   for(i in individuals){
     if(grepl(species_curr, i) == TRUE){
+      print(paste0(sce_06_path, "/sce_", i, "-06"))
       sce_list[[i]] <- readRDS(file = paste0(sce_06_path, "/sce_", i, "-06"))
     }
   }
@@ -95,5 +99,7 @@ print(nrow(sce_merged))
 # dimensionality reduction
 
 sce_merged <- reduce_dims(sce_merged, nr_hvgs = snakemake@params[["nr_hvgs"]])
+sce_merged
+
 
 saveRDS(sce_merged, file = sce_07_path)

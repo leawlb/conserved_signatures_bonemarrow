@@ -13,6 +13,9 @@ sce <- readRDS(file = snakemake@input[["sce_01"]])
 
 # change rownames to Symbols for better readability
 rownames(sce) <- rowData(sce)$Symbol
+# remove duplicated rows
+sce <- sce[!duplicated(rownames(sce)),]
+
 
 # set a cutoff of minimum UMI codes required for a barcode to count as a cell
 # evaluate in report.Rmd

@@ -8,9 +8,16 @@ print(snakemake@input[["sce_08"]])
 sce <- readRDS(file = snakemake@input[[1]])
 batch_use <- snakemake@params[["batch_use"]]
 batch_pos <- which(colnames(colData(sce)) == batch_use)
+nr_hvgs <- snakemake@params[["nr_hvgs"]]
+hvgs_for_batch_correction <- snakemake@params[["hvgs_for_batch_correction"]]
+
+source(file = snakemake@params[["sce_functions"]])
+
+# rename the already existent Reduced Dimensions
+reducedDimNames(sce)[grep("PCA", reducedDimNames(sce))] <- "PCA_before"
+reducedDimNames(sce)[grep("UMAP", reducedDimNames(sce))] <- "UMAP_before"
 
 # load hvgs if needed, otherwise keep NULL
-hvgs_for_batch_correction <- snakemake@params[["hvgs_for_batch_correction"]]
 if(hvgs_for_batch_correction == TRUE){
   hvgs <- readRDS(file = snakemake@input[[2]])
   print(hvgs[1:10])
@@ -43,6 +50,9 @@ if(mnn_fast == TRUE){
                                assay.type = assay_use)
   sce_bc$Correction_method <- rep("Classic_MNN", ncol(sce_bc))
 }
+
+# Reduce dimensions
+sce <- reduce_dims(sce, nr_hvgs = nr_hvgs)
 
 print(sce_bc)
 

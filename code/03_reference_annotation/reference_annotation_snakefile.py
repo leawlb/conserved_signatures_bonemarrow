@@ -34,6 +34,9 @@ for s in species:
   for i in individuals:
     if s in i:
       targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/06_sglr/" + s + "/sce_" + i + "-06"]
+      targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/06_sglr/" + s + "/preds/pred_all_" + i + "-06"]
+      targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/06_sglr/" + s + "/preds/pred_hsc_" + i + "-06"]
+      targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/06_sglr/" + s + "/preds/pred_str_" + i + "-06"]
       targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/03_reference_annotation/" + s + "/ref_annotation_sample_report_" + i + ".html"]
 
 if config["run_ref_annotation_summary"]:
@@ -55,14 +58,16 @@ To get an overview of approx. cell type numbers and fraction contamination.
 """
 rule cell_type_annotation: 
     input: 
-        sce_04 = OUTPUT_BASE_PATH + "/sce_objects/04_norm/{species}/sce_{individual}-04"
+        sce_05 = OUTPUT_BASE_PATH + "/sce_objects/05_dimr/{species}/sce_{individual}-05"
     output:
-        sce_06 = OUTPUT_BASE_PATH + "/sce_objects/06_sglr/{species}/sce_{individual}-06"
+        sce_06 = OUTPUT_BASE_PATH + "/sce_objects/06_sglr/{species}/sce_{individual}-06",
+        pred_hsc = OUTPUT_BASE_PATH + "/sce_objects/06_sglr/{species}/preds/pred_hsc_{individual}-06",
+        pred_str = OUTPUT_BASE_PATH + "/sce_objects/06_sglr/{species}/preds/pred_str_{individual}-06",
+        pred_all = OUTPUT_BASE_PATH + "/sce_objects/06_sglr/{species}/preds/pred_all_{individual}-06",
     params:
         ref_baccin_sce = config["metadata"]["ref_baccin_sce"],
         ref_dahlin_sce = config["metadata"]["ref_dahlin_sce"],
-        ref_dolgalev_sce = config["metadata"]["ref_dolgalev_sce"],
-        ref_lipka_sce = config["metadata"]["ref_lipka_sce"]
+        ref_dolgalev_sce = config["metadata"]["ref_dolgalev_sce"]
     script:
         "scripts/06_annotation_singleR.R"  
       
@@ -71,7 +76,7 @@ rule cell_type_annotation:
      
 rule make_ref_sample_reports:
     input: 
-        sce_06 = rules.cell_type_annotation.output
+        rules.cell_type_annotation.output
     output:
         OUTPUT_BASE_PATH + "/sce_objects/reports/03_reference_annotation/{species}/ref_annotation_sample_report_{individual}.html"
     params:

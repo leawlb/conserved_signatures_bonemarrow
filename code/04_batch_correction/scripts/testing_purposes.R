@@ -189,3 +189,14 @@ umap_base(mmus, color_by = "Batch_exp_day")
 umap_base(mcar, color_by = "Batch_exp_day")
 umap_base(mcas, color_by = "Batch_exp_day")
 
+
+
+
+mspr_mnn <- readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/09_mnncorrect/sce_mspr_Batch_exp_day-09")
+mcar_mnn <- readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/09_mnncorrect/sce_mcar_Batch_exp_day-09")
+
+
+sce <- readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/06_sglr/mmus/sce_mmus_old_hsc_2_0-06")
+
+
+mspr

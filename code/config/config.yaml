@@ -3,7 +3,7 @@ default:
   color_tables: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/color_tables"
 paths:
   output_dir: "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
-  cellranger_output: "/01_cellranger_output" 
+  cellranger_output: "/sce_objects/01_cellranger_output" 
   preprocessing: "/02_preprocessing"
   integration: "/03_integration"
 metadata: 
@@ -42,7 +42,7 @@ batch_correction:
 # RULES  
 # For conditions use caps if used in R  
 run_preprocessing_summary: False
-run_ref_annotation_summary: True
+run_ref_annotation_summary: False
 run_batch_correction_summary: False
 run_mnncorrect: True
 mnn_use_fast: FALSE

@@ -26,9 +26,9 @@ library(scran, quietly = TRUE)
 
 ```
 
-```{r load_code, message = FALSE}
 
-source(file = "../source/colors.R")
+
+```{r load_snakemake, message = FALSE}
 
 sce_02_path <- snakemake@input[["sce_02_path"]]
 #sce_03_path <- snakemake@input[["sce_03_path"]]
@@ -49,7 +49,12 @@ nr_hvgs <- snakemake@params[["nr_hvgs"]]
 cutoff_sum <- snakemake@params[["cutoff_sum"]]
 cutoff_detected <- snakemake@params[["cutoff_detected"]]
 cutoff_mitos <- snakemake@params[["cutoff_mitos"]]
+color_tables <- snakemake@params[["color_tables"]]
 
+```
+
+```{r}
+source(file = "../source/colors.R")
 ```
 
 # QC

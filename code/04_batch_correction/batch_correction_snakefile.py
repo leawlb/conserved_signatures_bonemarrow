@@ -13,6 +13,7 @@ import sys
 
 # paths from config
 OUTPUT_BASE_PATH = config["paths"]["output_dir"]
+TABLES_PATH = config["metadata"]["color_tables"]
 
 # objects from config
 METADATA = pd.read_csv(config["metadata"]["raw"])
@@ -107,12 +108,10 @@ rule renormalize:
     input:
         sce_07 = rules.merge_datasets_species.output
     output:
-        sce_08 = OUTPUT_BASE_PATH + "/sce_objects/08_rnrm/sce_{species}_" + BATCH_USE + "-08",
-        hvgs = OUTPUT_BASE_PATH + "/sce_objects/08_rnrm/hvg_{species}_" + BATCH_USE + "-08"
+        sce_08 = OUTPUT_BASE_PATH + "/sce_objects/08_rnrm/sce_{species}_" + BATCH_USE + "-08"
     params:
         batch_use = BATCH_USE,
-        rescale = config["rescale_for_batch_correction"],
-        nr_hvgs = config["metadata"]["values"]["nr_hvgs_batch_correction"]
+        rescale = config["rescale_for_batch_correction"]
     script:
         "scripts/08_renormalize.R"
         
@@ -133,10 +132,11 @@ if config["run_mnncorrect"]:
           sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_mnncorrect/sce_{species}_" + BATCH_USE + "-09"
       params:
           batch_use = BATCH_USE,
-          rescale = config["rescale_for_batch_correction"],
-          hvgs_for_batch_correction = config["hvgs_for_batch_correction"],
-          mnn_fast = config["mnn_use_fast"],
-          nr_hvgs = config["metadata"]["values"]["nr_hvgs"],
+          rescale = config["rescale_for_batch_correction"], # rule
+          hvgs_for_batch_correction = config["hvgs_for_batch_correction"], # rule
+          mnn_fast = config["mnn_use_fast"], # rule
+          nr_hvgs = config["metadata"]["values"]["nr_hvgs"], # number
+          nr_hvgs_batch_correction = config["metadata"]["values"]["nr_hvgs_batch_correction"], # number
           sce_functions = "../source/sce_functions.R" # this is the working dir
       script:
           "scripts/09_mnncorrect.R"
@@ -158,7 +158,7 @@ if config["run_seurat3"]:
             sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_seurat3/sce_{species}_" + BATCH_USE + "-09"
         params:
             batch_use = BATCH_USE,
-            hvgs_for_batch_correction = config["hvgs_for_batch_correction"],
+            nr_hvgs_batch_correction = config["metadata"]["values"]["nr_hvgs_batch_correction"], # number
             nr_hvgs = config["metadata"]["values"]["nr_hvgs"],
             sce_functions = "../source/sce_functions.R" # this is the working dir
         script:
@@ -192,7 +192,8 @@ rule make_reports:
     input:
         sce_07 = rules.merge_datasets_species.output,
         sce_08 = rules.renormalize.output,
-        sce_09mnn = rules.run_mnncorrect.output
+        sce_09mnn = rules.run_mnncorrect.output,
+        sce_09seurat = rules.run_seurat3.output
     output:
         OUTPUT_BASE_PATH + "/sce_objects/reports/04_batch_correction/{species}/batch_correction_species_report_{species}_" + BATCH_USE + ".html"
     params:
@@ -200,6 +201,7 @@ rule make_reports:
         species_build = species_build,
         batches = config["batch_correction"]["batches"],
         hvgs_for_batch_correction = config["hvgs_for_batch_correction"],
+        color_tables = TABLES_PATH
     script:
         "batch_correction_species_reports.Rmd" 
         #"scripts/testing_purposes.R"

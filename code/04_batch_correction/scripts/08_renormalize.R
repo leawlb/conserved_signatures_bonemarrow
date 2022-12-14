@@ -8,7 +8,6 @@ sce <- readRDS(file = snakemake@input[["sce_07"]])
 
 batch_use <- snakemake@params[["batch_use"]]
 rescale <- snakemake@params[["rescale"]]
-nr_hvgs <- snakemake@params[["nr_hvgs"]]
 
 # take SCE apart into individuals for quick renormalization
 batch_pos <- which(colnames(colData(sce)) == batch_use)
@@ -42,9 +41,4 @@ if(rescale == TRUE){
 }
 print(prepd_sce)
 
-# get hvgs from logcounts only (rescale returns counts in "corrected")
-hvgs <- modelGeneVar(prepd_sce)
-hvgs <- getTopHVGs(hvgs, n=nr_hvgs)
-
 saveRDS(prepd_sce, file = snakemake@output[["sce_08"]])
-saveRDS(hvgs, file = snakemake@output[["hvgs"]])

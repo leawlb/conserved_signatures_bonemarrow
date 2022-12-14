@@ -45,7 +45,7 @@ run_preprocessing_summary: False
 run_ref_annotation_summary: False
 run_batch_correction_summary: False
 run_mnncorrect: True
-mnn_use_fast: FALSE
+mnn_use_fast: TRUE
 run_seurat3: True
 run_scmerge: False
 hvgs_for_batch_correction: FALSE 

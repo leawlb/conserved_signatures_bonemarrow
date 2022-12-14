@@ -26,10 +26,10 @@ library(cowplot, quietly = TRUE)
 
 ```{r}
 
-sce_07 <- snakemake@input[["sce_07"]]
-sce_08 <- snakemake@input[["sce_08"]]
-sce_09mnn <- snakemake@input[["sce_09mnn"]]
-sce_00ser <- snakemake@input[["sce_09seurat"]]
+sce_07 <- readRDS(file = snakemake@input[["sce_07"]])
+sce_08 <- readRDS(file = snakemake@input[["sce_08"]])
+sce_09mnn <- readRDS(file = snakemake@input[["sce_09mnn"]])
+sce_09ser <- readRDS(file = snakemake@input[["sce_09seurat"]])
 
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
 hvgs_for_batch_correction <- snakemake@params[["hvgs_for_batch_correction"]]
@@ -42,26 +42,16 @@ species_curr <- sce_07$Species_ID[1]
 ```
 
 ```{r}
-
-# redo dimensionality reduction for renormalized and possiblz fastmnn corrected
-sce_08 <- reduce_dims(sce_08, nr_hvgs = snakemake@params[["nr_hvgs"]])
-
-if(mnn_fast){
-  
-  gene_var <- modelGeneVar(sce_09mnn, assay.type = "reconstructed")
-  hvgs <- getTopHVGs(hvgs, n=gene_var)
-  
-  sce_09mnn <- runUMAP(sce_09mnn, dimred = "corrected",
-                     external_neighbors=TRUE, subset_row = hvgs)
-
-}
-
-```
-
-```{r}
 source(file = "../source/colors.R")
 source(file = "../source/plotting.R")
 source(file = "../source/sce_functions.R")
+```
+
+```{r}
+
+# redo dimensionality reduction for renormalized and for mnn corrected
+sce_08 <- reduce_dims(sce_08, nr_hvgs = snakemake@params[["nr_hvgs"]])
+
 ```
 
 ```{r}
@@ -99,7 +89,7 @@ identity_plots <- function(sce, title){
     scale_color_manual("Identity2", values = col_cts_fraction)
   legend_2 <- get_legend(plot_2l)
   
-  PLOT_1 <- ggarrange(plot_1, legend_1, ncol = 1)
+  PLOT_1 <- ggarrange(plot_1, legend_1)
   PLOT_2 <- ggarrange(plot_2, legend_2, ncol = 1)
 
   return(list(PLOT_1, PLOT_2))
@@ -121,8 +111,12 @@ print(table(sce_07$Identity_ref_fraction))
 
 ```
 
-```{r fig.width=8, fig.height=8}
-identity_plots_07
+```{r fig.width=8, fig.height=4}
+identity_plots_07[[1]]
+```
+
+```{r fig.width=4, fig.height=8}
+identity_plots_07[[2]]
 ```
 
 ### After renormalization
@@ -133,8 +127,12 @@ identity_plots_08 <- identity_plots(sce_08, title = ", after renormalization")
 
 ```
 
-```{r fig.width=10, fig.height=5}
-identity_plots_08
+```{r fig.width=8, fig.height=4}
+identity_plots_08[[1]]
+```
+
+```{r fig.width=4, fig.height=8}
+identity_plots_08[[2]]
 ```
 
 ### After batch correction
@@ -146,8 +144,12 @@ identity_plots_09mnn <- identity_plots(sce_09mnn,
 
 ```
 
-```{r fig.width=10, fig.height=5}
-identity_plots_09mnn
+```{r fig.width=8, fig.height=4}
+identity_plots_09mnn[[1]]
+```
+
+```{r fig.width=4, fig.height=8}
+identity_plots_09mnn[[2]]
 ```
 
 ```{r}
@@ -157,8 +159,12 @@ identity_plots_09ser <- identity_plots(sce_09ser,
 
 ```
 
-```{r fig.width=10, fig.height=5}
-identity_plots_09ser
+```{r fig.width=8, fig.height=4}
+identity_plots_09ser[[1]]
+```
+
+```{r fig.width=4, fig.height=8}
+identity_plots_09ser[[2]]
 ```
 
 ## Contamination and mature cell types
@@ -178,8 +184,7 @@ find_contamination_mature <- function(sce, title){
   sce_str <- find_contamination_ref_all(sce_str, input = "stromal") 
   sce_hsc <- find_contamination_ref_all(sce_hsc, input = "hsc") # own function
 
-  if(grepl("TRUE", sce_str$right_fraction)){
-    plot_4 <- umap_base(sce_str, color_by = "right_fraction")+
+  plot_4 <- umap_base(sce_str, color_by = "right_fraction")+
       scale_color_manual("Correct fraction", values = c("TRUE" = "black", 
                                                         "FALSE" = "orange"))
     plot_4l <- umap_legend(sce_str, color_by = "right_fraction")+
@@ -190,10 +195,8 @@ find_contamination_mature <- function(sce, title){
     PLOT_4 <- ggarrange(plot_4 + ggtitle(paste0(species_curr, 
                                                 title, ", stromal contamination")), 
                         legend_4)
-  }
 
-  if(grepl("TRUE", sce_hsc$right_fraction)){
-    plot_5 <- umap_base(sce_hsc, color_by = "right_fraction")+
+  plot_5 <- umap_base(sce_hsc, color_by = "right_fraction")+
       scale_color_manual("Correct fraction", values = c("TRUE" = "black", 
                                                         "FALSE" = "orange"))
     plot_5l <- umap_legend(sce_hsc, color_by = "right_fraction")+
@@ -204,7 +207,6 @@ find_contamination_mature <- function(sce, title){
     PLOT_5 <- ggarrange(plot_5 + ggtitle(paste0(species_curr, 
                                                 title, ", HSPC contamination")), 
                         legend_5)
-  }
   
   sce <- get_mature_cts_all(sce) # own function 
 
@@ -494,19 +496,19 @@ facet_plots <- function(sce, title){
     ggtitle(paste0(species_curr, title))+
     facet_grid(cols = vars(sce$Batch_exp_day))
  
-  PLOT_1 <- ggarrange(plot_1, legend_1)
-  PLOT_2 <- ggarrange(plot_2, legend_2)
-  PLOT_3 <- ggarrange(plot_3, legend_3)
-  PLOT_4 <- ggarrange(plot_4, legend_4)
-  PLOT_5 <- ggarrange(plot_5, legend_5)
-  PLOT_6 <- ggarrange(plot_6, legend_6)
-  PLOT_7 <- ggarrange(plot_7, legend_idrefall)
+  PLOT_1 <- ggarrange(plot_1, legend_1, widths = c(2, 1))
+  PLOT_2 <- ggarrange(plot_2, legend_2, widths = c(2, 1))
+  PLOT_3 <- ggarrange(plot_3, legend_3, widths = c(2, 1))
+  PLOT_4 <- ggarrange(plot_4, legend_4, widths = c(2, 1))
+  PLOT_5 <- ggarrange(plot_5, legend_5, widths = c(2, 1))
+  PLOT_6 <- ggarrange(plot_6, legend_6, widths = c(2, 1))
+  PLOT_7 <- ggarrange(plot_7, legend_idrefall, widths = c(2, 1))
   PLOT_8 <- ggarrange(plot_8, legend_idreffrac, ncol = 1)
-  PLOT_9 <- ggarrange(plot_9, legend_idrefall)
+  PLOT_9 <- ggarrange(plot_9, legend_idrefall, widths = c(2, 1))
   PLOT_10 <- ggarrange(plot_10, legend_idreffrac, ncol = 1)
-  PLOT_11 <- ggarrange(plot_11, legend_idrefall)
+  PLOT_11 <- ggarrange(plot_11, legend_idrefall, widths = c(2, 1))
   PLOT_12 <- ggarrange(plot_12, legend_idreffrac, ncol = 1)
-  PLOT_13 <- ggarrange(plot_13, legend_idrefall)
+  PLOT_13 <- ggarrange(plot_13, legend_idrefall, widths = c(2, 1))
   PLOT_14 <- ggarrange(plot_14, legend_idreffrac, ncol = 1)
   
   plot_list <- list(PLOT_1, PLOT_2, PLOT_3, PLOT_4, PLOT_5, PLOT_6, PLOT_7,
@@ -526,24 +528,56 @@ facet_plots_species_09ser <- facet_plots(sce_09ser,
 
 ### After merging
 
-```{r fig.width=10, fig.height=5}
-facet_plots_species_07
+```{r fig.width=10, fig.height=4}
+facet_plots_species_07[c(1:7, 9, 11, 13)]
+```
+
+```{r fig.width=8, fig.height=8}
+facet_plots_species_07[c(8, 10)]
+```
+
+```{r fig.width=10, fig.height=8}
+facet_plots_species_07[c(12, 14)]
 ```
 
 ### After renormalization
 
-```{r fig.width=10, fig.height=5}
-facet_plots_species_08
+```{r fig.width=10, fig.height=4}
+facet_plots_species_08[c(1:7, 9, 11, 13)]
+```
+
+```{r fig.width=8, fig.height=8}
+facet_plots_species_08[c(8, 10)]
+```
+
+```{r fig.width=10, fig.height=8}
+facet_plots_species_08[c(12, 14)]
 ```
 
 ### After batch correction
 
-```{r fig.width=10, fig.height=5}
-facet_plots_species_09mnn
+```{r fig.width=10, fig.height=4}
+facet_plots_species_09mnn[c(1:7, 9, 11, 13)]
 ```
 
-```{r fig.width=10, fig.height=5}
-facet_plots_species_09ser
+```{r fig.width=8, fig.height=8}
+facet_plots_species_09mnn[c(8, 10)]
+```
+
+```{r fig.width=10, fig.height=8}
+facet_plots_species_09mnn[c(12, 14)]
+```
+
+```{r fig.width=10, fig.height=4}
+facet_plots_species_09ser[c(1:7, 9, 11, 13)]
+```
+
+```{r fig.width=8, fig.height=8}
+facet_plots_species_09ser[c(8, 10)]
+```
+
+```{r fig.width=10, fig.height=8}
+facet_plots_species_09ser[c(12, 14)]
 ```
 
 ## PCAs
@@ -551,7 +585,21 @@ facet_plots_species_09ser
 ```{r}
 
 make_qc_pcas2 <- function(sce, title){
-    
+  
+  plot_a <- pca_base2(sce, color_by = "Identity_ref_all")+ # own function
+    ggtitle(paste0(species_curr, title))+
+    scale_color_manual("Identity1", values = col_cts_all)
+  plot_al <- pca_legend(sce, color_by = "Identity_ref_all")+
+    scale_color_manual("Identity1", values = col_cts_all)
+  legend_a <- get_legend(plot_al)
+
+  plot_b <- pca_base2(sce, color_by = "Identity_ref_fraction")+
+    ggtitle(paste0(species_curr, title))+
+    scale_color_manual("Identity2", values = col_cts_fraction)
+  plot_bl <- pca_legend(sce, color_by = "Identity_ref_fraction")+
+    scale_color_manual("Identity2", values = col_cts_fraction)
+  legend_b <- get_legend(plot_bl)
+  
   plot_1 <- pca_base2(sce, color_by = "Object_ID")+ # own function
     ggtitle(paste0(species_curr, title))
   plot_1l <- pca_legend(sce, color_by = "Object_ID")+
@@ -618,6 +666,8 @@ make_qc_pcas2 <- function(sce, title){
     scale_color_discrete("Keep_sample")
   legend_10 <- get_legend(plot_10l)
   
+  PLOT_A <- ggarrange(plot_a, legend_a)
+  PLOT_B <- ggarrange(plot_b, legend_b, ncol =1)
   PLOT_1 <- ggarrange(plot_1, legend_1)
   PLOT_2 <- ggarrange(plot_2, legend_2)
   PLOT_3 <- ggarrange(plot_3, legend_3)
@@ -630,7 +680,7 @@ make_qc_pcas2 <- function(sce, title){
   PLOT_10 <- ggarrange(plot_10, legend_10)
 
   plot_list <- list(PLOT_1, PLOT_2, PLOT_3, PLOT_4, PLOT_5, PLOT_6, PLOT_7,
-                    PLOT_8, PLOT_9, PLOT_10)
+                    PLOT_8, PLOT_9, PLOT_10, PLOT_A, PLOT_B)
   return(plot_list)
   
 }
@@ -647,28 +697,58 @@ qc_pcas_species_09ser <- make_qc_pcas2(sce_09ser,
 ### After merging
 
 ```{r fig.width=10, fig.height=5}
-qc_pcas_species_07
+qc_pcas_species_07[c(1:11)]
+```
+
+```{r fig.width=5, fig.height=10}
+qc_pcas_species_07[[12]]
 ```
 
 ### After renormalization
 
 ```{r fig.width=10, fig.height=5}
-qc_pcas_species_08
+qc_pcas_species_08[c(1:11)]
+```
+
+```{r fig.width=5, fig.height=10}
+qc_pcas_species_08[[12]]
 ```
 
 ### After batch correction
 
 ```{r fig.width=10, fig.height=5}
-qc_pcas_species_09mnn
+qc_pcas_species_09mnn[c(1:11)]
+```
+
+```{r fig.width=5, fig.height=10}
+qc_pcas_species_09mnn[[12]]
 ```
 
 ```{r fig.width=10, fig.height=5}
-qc_pcas_species_09ser
+qc_pcas_species_09ser[c(1:11)]
+```
+
+```{r fig.width=5, fig.height=10}
+qc_pcas_species_09ser[[12]]
 ```
 
 ```{r}
 
 make_qc_pcas3 <- function(sce, title){
+  
+  plot_a <- pca_base3(sce, color_by = "Identity_ref_all")+ # own function
+    ggtitle(paste0(species_curr, title))+
+    scale_color_manual("Identity1", values = col_cts_all)
+  plot_al <- pca_legend(sce, color_by = "Identity_ref_all")+
+    scale_color_manual("Identity1", values = col_cts_all)
+  legend_a <- get_legend(plot_al)
+
+  plot_b <- pca_base3(sce, color_by = "Identity_ref_fraction")+
+    ggtitle(paste0(species_curr, title))+
+    scale_color_manual("Identity2", values = col_cts_fraction)
+  plot_bl <- pca_legend(sce, color_by = "Identity_ref_fraction")+
+    scale_color_manual("Identity2", values = col_cts_fraction)
+  legend_b <- get_legend(plot_bl)
     
   plot_1 <- pca_base3(sce, color_by = "Object_ID")+ # own function
     ggtitle(paste0(species_curr, title))
@@ -736,6 +816,8 @@ make_qc_pcas3 <- function(sce, title){
     scale_color_discrete("Keep_sample")
   legend_10 <- get_legend(plot_10l)
   
+  PLOT_A <- ggarrange(plot_a, legend_a)
+  PLOT_B <- ggarrange(plot_b, legend_b, ncol =1)
   PLOT_1 <- ggarrange(plot_1, legend_1)
   PLOT_2 <- ggarrange(plot_2, legend_2)
   PLOT_3 <- ggarrange(plot_3, legend_3)
@@ -748,7 +830,7 @@ make_qc_pcas3 <- function(sce, title){
   PLOT_10 <- ggarrange(plot_10, legend_10)
 
   plot_list <- list(PLOT_1, PLOT_2, PLOT_3, PLOT_4, PLOT_5, PLOT_6, PLOT_7,
-                    PLOT_8, PLOT_9, PLOT_10)
+                    PLOT_8, PLOT_9, PLOT_10, PLOT_A, PLOT_B)
   return(plot_list)
   
 }
@@ -765,23 +847,39 @@ qc_pcas_species_09ser <- make_qc_pcas3(sce_09ser,
 ### After merging
 
 ```{r fig.width=10, fig.height=5}
-qc_pcas_species_07
+qc_pcas_species_07[c(1:11)]
+```
+
+```{r fig.width=5, fig.height=10}
+qc_pcas_species_07[[12]]
 ```
 
 ### After renormalization
 
 ```{r fig.width=10, fig.height=5}
-qc_pcas_species_08
+qc_pcas_species_08[c(1:11)]
+```
+
+```{r fig.width=5, fig.height=10}
+qc_pcas_species_08[[12]]
 ```
 
 ### After batch correction
 
 ```{r fig.width=10, fig.height=5}
-qc_pcas_species_09mnn
+qc_pcas_species_09mnn[c(1:11)]
+```
+
+```{r fig.width=5, fig.height=10}
+qc_pcas_species_09mnn[[12]]
 ```
 
 ```{r fig.width=10, fig.height=5}
-qc_pcas_species_09ser
+qc_pcas_species_09ser[c(1:11)]
+```
+
+```{r fig.width=5, fig.height=10}
+qc_pcas_species_09ser[[12]]
 ```
 
 # Cell type proportions

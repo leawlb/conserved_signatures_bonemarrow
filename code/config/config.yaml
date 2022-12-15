@@ -22,7 +22,7 @@ metadata:
     cutoff_sum: 400 # below which cells are discarded
     cutoff_detected: 300 # below which cells are discarded
     nr_hvgs: 2000 # nr of top hvgs 
-    nr_hvgs_batch_correction: 5000 # nr of top hvgs to be used for bc subsetting  
+    nr_hvgs_batch_correction: 15000 # nr of top hvgs to be used for bc subsetting  
   ref_baccin_sce: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/ref_baccin_sce"
   ref_dahlin_sce: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/ref_dahlin_sce"
   ref_dolgalev_sce: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/ref_dolgalev_sce"

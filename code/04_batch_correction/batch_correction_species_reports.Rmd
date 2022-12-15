@@ -21,6 +21,7 @@ library(scuttle, quietly = TRUE)
 library(scran, quietly = TRUE) 
 library(tidyverse, quietly = TRUE) 
 library(cowplot, quietly = TRUE) 
+library(CellMixS, quietly = TRUE) 
 
 ```
 
@@ -38,7 +39,6 @@ batches <- snakemake@params[["batches"]]
 color_tables <- snakemake@params[["color_tables"]]
 mnn_fast <- snakemake@params[["mnn_fast"]]
 species_curr <- sce_07$Species_ID[1]
-
 ```
 
 ```{r}
@@ -73,7 +73,7 @@ Make one plotting wrapper for all objects.
 identity_plots <- function(sce, title){
   
   plot_1 <- umap_base(sce, color_by = "Identity_ref_all")+ # own function
-    ggtitle(paste0(species_curr, title))+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
     scale_color_manual("Identity1", values = col_cts_all)
   
   plot_1l <- umap_legend(sce, color_by = "Identity_ref_all")+
@@ -82,7 +82,7 @@ identity_plots <- function(sce, title){
 
     
   plot_2 <- umap_base(sce, color_by = "Identity_ref_fraction")+
-    ggtitle(paste0(species_curr, title))+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
     scale_color_manual("Identity2", values = col_cts_fraction)
   
   plot_2l <- umap_legend(sce, color_by = "Identity_ref_fraction")+
@@ -192,7 +192,7 @@ find_contamination_mature <- function(sce, title){
                                                         "FALSE" = "orange"))
     legend_4 <- get_legend(plot_4l)
 
-    PLOT_4 <- ggarrange(plot_4 + ggtitle(paste0(species_curr, 
+    PLOT_4 <- ggarrange(plot_4 + ggtitle(paste0(species_curr, nrow(sce), 
                                                 title, ", stromal contamination")), 
                         legend_4)
 
@@ -204,7 +204,7 @@ find_contamination_mature <- function(sce, title){
                                                         "FALSE" = "orange"))
     legend_5 <- get_legend(plot_5l)
   
-    PLOT_5 <- ggarrange(plot_5 + ggtitle(paste0(species_curr, 
+    PLOT_5 <- ggarrange(plot_5 + ggtitle(paste0(species_curr, nrow(sce), 
                                                 title, ", HSPC contamination")), 
                         legend_5)
   
@@ -218,7 +218,7 @@ find_contamination_mature <- function(sce, title){
                                                     "TRUE" = "orange"))
   legend_6 <- get_legend(plot_6l)
 
-  PLOT_6 <- ggarrange(plot_6 + ggtitle(paste0(species_curr, 
+  PLOT_6 <- ggarrange(plot_6 + ggtitle(paste0(species_curr, nrow(sce), 
                                               title, ", mature HSPCs")),
                       legend_6)
   
@@ -228,14 +228,11 @@ find_contamination_mature <- function(sce, title){
 cont_plots_species_07 <- find_contamination_mature(sce_07, 
                                                    title = ", after merging")
 cont_plots_species_08 <- find_contamination_mature(sce_08, 
-                                                   title = ", 
-                                                   after renormalization")
+                                                   title = ",  after renormalization")
 cont_plots_species_09mnn <- find_contamination_mature(sce_09mnn, 
-                                                      title = ", 
-                                                      MNN batch correction")
+                                                      title = ", MNN batch correction")
 cont_plots_species_09ser <- find_contamination_mature(sce_09ser, 
-                                                      title = ", 
-                                                      Seurat batch correction")
+                                                      title = ", Seurat batch correction")
 
 ```
 
@@ -268,27 +265,27 @@ cont_plots_species_09ser
 qc_plots <- function(sce, title){
   
   plot_1 <- umap_base(sce, color_by = "Object_ID")+ # own function
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_1l <- umap_legend(sce, color_by = "Object_ID")+
     scale_color_discrete("Object_ID")
   legend_1 <- get_legend(plot_1l)
   
   plot_2 <- umap_base(sce, color_by = "Batch_sequencing")+
     scale_color_manual("Batch_sequencing", values = col_batch_seq)+
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_2l <- umap_legend(sce, color_by = "Batch_sequencing")+
     scale_color_manual("Batch_sequencing", values = col_batch_seq)
   legend_2 <- get_legend(plot_2l)
   
   plot_3 <- umap_base(sce, color_by = "Batch_exp_day")+ 
     scale_color_manual("Batch_experimental_day",values =  col_batch_exp_day)+
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_3l <- umap_legend(sce, color_by = "Batch_exp_day")+
     scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)
   legend_3 <- get_legend(plot_3l)
   
   plot_4 <- umap_base(sce, color_by = "Date_collected")+ 
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_4l <- umap_legend(sce, color_by = "Date_collected")+
     scale_color_discrete("Date of collection")
   legend_4 <- get_legend(plot_4l)
@@ -296,39 +293,39 @@ qc_plots <- function(sce, title){
   # check everything else
   plot_5 <- umap_base(sce, color_by = "Species_ID")+ 
     scale_color_manual("Species", values = col_species)+
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_5l <- umap_legend(sce, color_by = "Species_ID")+
     scale_color_manual("Species", values = col_species)
   legend_5 <- get_legend(plot_5l)
   
   plot_6 <- umap_base(sce, color_by = "Age_ID")+ 
     scale_color_manual("Age", values = col_ann_age)+
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_6l <- umap_legend(sce, color_by = "Age_ID")+
     scale_color_manual("Age", values = col_ann_age)
   legend_6 <- get_legend(plot_6l) 
   
   plot_7 <- umap_base(sce, color_by = "Fraction_ID")+ 
     scale_color_manual("Fraction", values = col_ann_fraction)+
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_7l <- umap_legend(sce, color_by = "Fraction_ID")+
     scale_color_manual("Fraction", values = col_ann_fraction)
   legend_7 <- get_legend(plot_7l) 
  
   plot_8 <- umap_base(sce, color_by = "Antibody_combination")+ 
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_8l <- umap_legend(sce, color_by = "Antibody_combination")+
     scale_color_discrete("Antibody combination")
   legend_8 <- get_legend(plot_8l)
   
   plot_9 <- umap_base(sce, color_by = "doublet_score")+ 
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_9l <- umap_legend(sce, color_by = "doublet_score")+
     scale_color_continuous("Doublet score")
   legend_9 <- get_legend(plot_9l)
   
   plot_10 <- umap_base(sce, color_by = "Keep_sample")+ 
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_10l <- umap_legend(sce, color_by = "Keep_sample")+
     scale_color_discrete("Keep_sample")
   legend_10 <- get_legend(plot_10l)
@@ -392,7 +389,7 @@ Per definition, this is not the case for Object_ID as possible batch.
 facet_plots <- function(sce, title){
 
   plot_1 <- umap_base(sce, color_by = "Object_ID")+ 
-    ggtitle(paste0(species_curr, title))+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
     facet_grid(cols = vars(sce$Fraction))
   plot_1l <- umap_legend(sce, color_by = "Object_ID")+
     scale_color_discrete("Object_ID")
@@ -400,7 +397,7 @@ facet_plots <- function(sce, title){
   
   plot_2 <- umap_base(sce, color_by = "Batch_sequencing")+
     scale_color_manual("Batch_sequencing", values = col_batch_seq)+
-    ggtitle(paste0(species_curr, title))+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
     facet_grid(cols = vars(sce$Fraction))
   plot_2l <- umap_legend(sce, color_by = "Batch_sequencing")+
     scale_color_manual("Batch_sequencing", values = col_batch_seq)
@@ -408,7 +405,7 @@ facet_plots <- function(sce, title){
   
   plot_3 <- umap_base(sce, color_by = "Batch_exp_day")+
     scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)+
-    ggtitle(paste0(species_curr, title))+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
     facet_grid(cols = vars(sce$Fraction))
   plot_3l <- umap_legend(sce, color_by = "Batch_exp_day")+
     scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)
@@ -416,7 +413,7 @@ facet_plots <- function(sce, title){
 
   # check age
   plot_4 <- umap_base(sce, color_by = "Object_ID")+ 
-    ggtitle(paste0(species_curr, title))+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
     facet_grid(cols = vars(sce$Age))
   plot_4l <- umap_legend(sce, color_by = "Object_ID")+
     scale_color_discrete("Object_ID")
@@ -424,7 +421,7 @@ facet_plots <- function(sce, title){
   
   plot_5 <- umap_base(sce, color_by = "Batch_sequencing")+
     scale_color_manual("Batch_sequencing", values = col_batch_seq)+
-    ggtitle(paste0(species_curr, title))+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
     facet_grid(cols = vars(sce$Age))
   plot_5l <- umap_legend(sce, color_by = "Batch_sequencing")+
     scale_color_manual("Batch_sequencing", values = col_batch_seq)
@@ -432,7 +429,7 @@ facet_plots <- function(sce, title){
   
   plot_6 <- umap_base(sce, color_by = "Batch_exp_day")+
     scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)+
-    ggtitle(paste0(species_curr, title))+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
     facet_grid(cols = vars(sce$Age))
   plot_6l <- umap_legend(sce, color_by = "Batch_exp_day")+
     scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)
@@ -440,7 +437,7 @@ facet_plots <- function(sce, title){
   
   plot_6 <- umap_base(sce, color_by = "Batch_exp_day")+
     scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)+
-    ggtitle(paste0(species_curr, title))+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
     facet_grid(cols = vars(sce$Age))
   plot_6l <- umap_legend(sce, color_by = "Batch_exp_day")+
     scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)
@@ -452,7 +449,7 @@ facet_plots <- function(sce, title){
  
   plot_7 <- umap_base(sce, color_by = "Identity_ref_all")+
     scale_color_manual("Identity1", values = col_cts_all)+
-    ggtitle(paste0(species_curr, title))+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
     facet_grid(cols = vars(sce$Fraction))
   plot_7l <- umap_legend(sce, color_by = "Identity_ref_all")+
     scale_color_manual("Identity1", values = col_cts_all)
@@ -460,7 +457,7 @@ facet_plots <- function(sce, title){
   
   plot_8 <- umap_base(sce, color_by = "Identity_ref_fraction")+
     scale_color_manual("Identity2", values = col_cts_fraction)+
-    ggtitle(paste0(species_curr, title))+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
     facet_grid(cols = vars(sce$Fraction))
   plot_8l <- umap_legend(sce, color_by = "Identity_ref_fraction")+
     scale_color_manual("Identity2", values = col_cts_fraction)
@@ -468,32 +465,32 @@ facet_plots <- function(sce, title){
   
   plot_9 <- umap_base(sce, color_by = "Identity_ref_all")+
     scale_color_manual("Identity1", values = col_cts_all)+
-    ggtitle(paste0(species_curr, title))+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
     facet_grid(cols = vars(sce$Age))
   
   plot_10 <- umap_base(sce, color_by = "Identity_ref_fraction")+
     scale_color_manual("Identity2", values = col_cts_fraction)+
-    ggtitle(paste0(species_curr, title))+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
     facet_grid(cols = vars(sce$Age))
   
   plot_11 <- umap_base(sce, color_by = "Identity_ref_all")+
     scale_color_manual("Identity1", values = col_cts_all)+
-    ggtitle(paste0(species_curr, title))+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
     facet_grid(cols = vars(sce$Batch_sequencing))
   
   plot_12 <- umap_base(sce, color_by = "Identity_ref_fraction")+
     scale_color_manual("Identity2", values = col_cts_fraction)+
-    ggtitle(paste0(species_curr, title))+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
     facet_grid(cols = vars(sce$Batch_sequencing))
   
   plot_13 <- umap_base(sce, color_by = "Identity_ref_all")+
     scale_color_manual("Identity1", values = col_cts_all)+
-    ggtitle(paste0(species_curr, title))+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
     facet_grid(cols = vars(sce$Batch_exp_day))
   
   plot_14 <- umap_base(sce, color_by = "Identity_ref_fraction")+
     scale_color_manual("Identity2", values = col_cts_fraction)+
-    ggtitle(paste0(species_curr, title))+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
     facet_grid(cols = vars(sce$Batch_exp_day))
  
   PLOT_1 <- ggarrange(plot_1, legend_1, widths = c(2, 1))
@@ -587,41 +584,41 @@ facet_plots_species_09ser[c(12, 14)]
 make_qc_pcas2 <- function(sce, title){
   
   plot_a <- pca_base2(sce, color_by = "Identity_ref_all")+ # own function
-    ggtitle(paste0(species_curr, title))+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
     scale_color_manual("Identity1", values = col_cts_all)
   plot_al <- pca_legend(sce, color_by = "Identity_ref_all")+
     scale_color_manual("Identity1", values = col_cts_all)
   legend_a <- get_legend(plot_al)
 
   plot_b <- pca_base2(sce, color_by = "Identity_ref_fraction")+
-    ggtitle(paste0(species_curr, title))+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
     scale_color_manual("Identity2", values = col_cts_fraction)
   plot_bl <- pca_legend(sce, color_by = "Identity_ref_fraction")+
     scale_color_manual("Identity2", values = col_cts_fraction)
   legend_b <- get_legend(plot_bl)
   
   plot_1 <- pca_base2(sce, color_by = "Object_ID")+ # own function
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_1l <- pca_legend(sce, color_by = "Object_ID")+
     scale_color_discrete("Object_ID")
   legend_1 <- get_legend(plot_1l)
   
   plot_2 <- pca_base2(sce, color_by = "Batch_sequencing")+
     scale_color_manual("Batch_sequencing", values = col_batch_seq)+
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_2l <- pca_legend(sce, color_by = "Batch_sequencing")+
     scale_color_manual("Batch_sequencing", values = col_batch_seq)
   legend_2 <- get_legend(plot_2l)
   
   plot_3 <- pca_base2(sce, color_by = "Batch_exp_day")+ 
     scale_color_manual("Batch_experimental_day",values =  col_batch_exp_day)+
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_3l <- pca_legend(sce, color_by = "Batch_exp_day")+
     scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)
   legend_3 <- get_legend(plot_3l)
   
   plot_4 <- pca_base2(sce, color_by = "Date_collected")+ 
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_4l <- pca_legend(sce, color_by = "Date_collected")+
     scale_color_discrete("Date of collection")
   legend_4 <- get_legend(plot_4l)
@@ -629,39 +626,39 @@ make_qc_pcas2 <- function(sce, title){
   # check everything else
   plot_5 <- pca_base2(sce, color_by = "Species_ID")+ 
     scale_color_manual("Species", values = col_species)+
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_5l <- pca_legend(sce, color_by = "Species_ID")+
     scale_color_manual("Species", values = col_species)
   legend_5 <- get_legend(plot_5l)
   
   plot_6 <- pca_base2(sce, color_by = "Age_ID")+ 
     scale_color_manual("Age", values = col_ann_age)+
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_6l <- pca_legend(sce, color_by = "Age_ID")+
     scale_color_manual("Age", values = col_ann_age)
   legend_6 <- get_legend(plot_6l) 
   
   plot_7 <- pca_base2(sce, color_by = "Fraction_ID")+ 
     scale_color_manual("Fraction", values = col_ann_fraction)+
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_7l <- pca_legend(sce, color_by = "Fraction_ID")+
     scale_color_manual("Fraction", values = col_ann_fraction)
   legend_7 <- get_legend(plot_7l) 
  
   plot_8 <- pca_base2(sce, color_by = "Antibody_combination")+ 
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_8l <- pca_legend(sce, color_by = "Antibody_combination")+
     scale_color_discrete("Antibody combination")
   legend_8 <- get_legend(plot_8l)
   
   plot_9 <- pca_base2(sce, color_by = "doublet_score")+ 
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_9l <- pca_legend(sce, color_by = "doublet_score")+
     scale_color_continuous("Doublet score")
   legend_9 <- get_legend(plot_9l)
   
   plot_10 <- pca_base2(sce, color_by = "Keep_sample")+ 
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_10l <- pca_legend(sce, color_by = "Keep_sample")+
     scale_color_discrete("Keep_sample")
   legend_10 <- get_legend(plot_10l)
@@ -737,41 +734,41 @@ qc_pcas_species_09ser[[12]]
 make_qc_pcas3 <- function(sce, title){
   
   plot_a <- pca_base3(sce, color_by = "Identity_ref_all")+ # own function
-    ggtitle(paste0(species_curr, title))+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
     scale_color_manual("Identity1", values = col_cts_all)
   plot_al <- pca_legend(sce, color_by = "Identity_ref_all")+
     scale_color_manual("Identity1", values = col_cts_all)
   legend_a <- get_legend(plot_al)
 
   plot_b <- pca_base3(sce, color_by = "Identity_ref_fraction")+
-    ggtitle(paste0(species_curr, title))+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
     scale_color_manual("Identity2", values = col_cts_fraction)
   plot_bl <- pca_legend(sce, color_by = "Identity_ref_fraction")+
     scale_color_manual("Identity2", values = col_cts_fraction)
   legend_b <- get_legend(plot_bl)
     
   plot_1 <- pca_base3(sce, color_by = "Object_ID")+ # own function
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_1l <- pca_legend(sce, color_by = "Object_ID")+
     scale_color_discrete("Object_ID")
   legend_1 <- get_legend(plot_1l)
   
   plot_2 <- pca_base3(sce, color_by = "Batch_sequencing")+
     scale_color_manual("Batch_sequencing", values = col_batch_seq)+
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_2l <- pca_legend(sce, color_by = "Batch_sequencing")+
     scale_color_manual("Batch_sequencing", values = col_batch_seq)
   legend_2 <- get_legend(plot_2l)
   
   plot_3 <- pca_base3(sce, color_by = "Batch_exp_day")+ 
     scale_color_manual("Batch_experimental_day",values =  col_batch_exp_day)+
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_3l <- pca_legend(sce, color_by = "Batch_exp_day")+
     scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)
   legend_3 <- get_legend(plot_3l)
   
   plot_4 <- pca_base3(sce, color_by = "Date_collected")+ 
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_4l <- pca_legend(sce, color_by = "Date_collected")+
     scale_color_discrete("Date of collection")
   legend_4 <- get_legend(plot_4l)
@@ -779,39 +776,39 @@ make_qc_pcas3 <- function(sce, title){
   # check everything else
   plot_5 <- pca_base3(sce, color_by = "Species_ID")+ 
     scale_color_manual("Species", values = col_species)+
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_5l <- pca_legend(sce, color_by = "Species_ID")+
     scale_color_manual("Species", values = col_species)
   legend_5 <- get_legend(plot_5l)
   
   plot_6 <- pca_base3(sce, color_by = "Age_ID")+ 
     scale_color_manual("Age", values = col_ann_age)+
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_6l <- pca_legend(sce, color_by = "Age_ID")+
     scale_color_manual("Age", values = col_ann_age)
   legend_6 <- get_legend(plot_6l) 
   
   plot_7 <- pca_base3(sce, color_by = "Fraction_ID")+ 
     scale_color_manual("Fraction", values = col_ann_fraction)+
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_7l <- pca_legend(sce, color_by = "Fraction_ID")+
     scale_color_manual("Fraction", values = col_ann_fraction)
   legend_7 <- get_legend(plot_7l) 
  
   plot_8 <- pca_base3(sce, color_by = "Antibody_combination")+ 
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_8l <- pca_legend(sce, color_by = "Antibody_combination")+
     scale_color_discrete("Antibody combination")
   legend_8 <- get_legend(plot_8l)
   
   plot_9 <- pca_base3(sce, color_by = "doublet_score")+ 
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_9l <- pca_legend(sce, color_by = "doublet_score")+
     scale_color_continuous("Doublet score")
   legend_9 <- get_legend(plot_9l)
   
   plot_10 <- pca_base3(sce, color_by = "Keep_sample")+ 
-    ggtitle(paste0(species_curr, title))
+    ggtitle(paste0(species_curr, title, nrow(sce)))
   plot_10l <- pca_legend(sce, color_by = "Keep_sample")+
     scale_color_discrete("Keep_sample")
   legend_10 <- get_legend(plot_10l)
@@ -1167,6 +1164,40 @@ PLOT1
 
 ```{r fig.width=10, fig.height=11}
 PLOT3
+```
+
+# Cell Mixing Score
+
+Evaluates how well cells are mixed
+(https://bioconductor.org/packages/release/bioc/vignettes/CellMixS/inst/doc/CellMixS.html#cellspecific-mixing-scores)
+and https://www.life-science-alliance.org/content/4/6/e202001004
+This takes quite long.
+
+```{r}
+
+sce_07 <- cms(sce_07, group = "Batch_exp_day", k = 30,
+              assay_name = "logcounts", res_name = "Logcounts")
+
+sce_09mnn <- cms(sce_09mnn, group = "Batch_exp_day", k = 30,
+                 dim_red = "PCA", res_name = "MNN")
+
+sce_09ser <- cms(sce_09ser, group = "Batch_exp_day", k = 30, 
+                 dim_red = "PCA", res_name = paste0("Seurat ", nrow(sce_09ser)))
+
+```
+
+The p-val distribution should be even.
+
+```{r}
+visHist(sce_07)
+```
+
+```{r}
+visHist(sce_09mnn)
+```
+
+```{r}
+visHist(sce_09ser)
 ```
 
 ```{r}

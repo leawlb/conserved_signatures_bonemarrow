@@ -22,6 +22,7 @@ library(scran, quietly = TRUE)
 library(tidyverse, quietly = TRUE) 
 library(cowplot, quietly = TRUE) 
 library(CellMixS, quietly = TRUE) 
+library(lisi)
 
 ```
 
@@ -1179,26 +1180,84 @@ sce_07 <- cms(sce_07, group = "Batch_exp_day", k = 30,
               assay_name = "logcounts", res_name = "Logcounts")
 
 sce_09mnn <- cms(sce_09mnn, group = "Batch_exp_day", k = 30,
-                 dim_red = "PCA", res_name = "MNN")
+                 assay_name = "reconstructed", res_name = "MNN")
 
 sce_09ser <- cms(sce_09ser, group = "Batch_exp_day", k = 30, 
-                 dim_red = "PCA", res_name = paste0("Seurat ", nrow(sce_09ser)))
+                 assay_name = "logcounts", res_name = paste0("Seurat ", nrow(sce_09ser)))
 
 ```
 
 The p-val distribution should be even.
 
 ```{r}
-visHist(sce_07)
+visHist(sce_07, n_col = 3)
 ```
 
 ```{r}
-visHist(sce_09mnn)
+visHist(sce_09mnn, n_col = 3)
 ```
 
 ```{r}
-visHist(sce_09ser)
+visHist(sce_09ser, n_col = 3)
 ```
+# Lisi
+
+https://github.com/immunogenomics/LISI
+and
+https://www.nature.com/articles/s41592-019-0619-0
+
+```{r}
+
+batches <- c("Object_ID", "Batch_exp_day", "Batch_sequencing")
+
+max_obj <- length(unique(sce_07$Object_ID))
+max_bed <- length(unique(sce_07$Batch_exp_day))
+max_bsq <- length(unique(sce_07$Batch_sequencing))
+
+```
+
+```{r}
+
+plot_lisi <- function(sce, title){
+  
+  batches <- c("Object_ID", "Batch_exp_day", "Batch_sequencing")
+  
+  mat <- reducedDim(sce, type = "PCA")
+  meta_data <- colData(sce)[,colnames(colData(sce)) %in% batches]
+  res <- compute_lisi(mat, meta_data, batches)
+
+  plot_a <- ggplot(res, aes(x = Object_ID,))+
+    geom_histogram()+
+    theme_classic()+
+    ggtitle(paste(spec_curr, title, nrow(sce), "Features, max nr category:", max_obj), " ")
+
+  plot_b <- ggplot(res, aes(x = Batch_exp_day,))+
+    geom_histogram()+
+    theme_classic()+
+    ggtitle(paste(spec_curr, title, nrow(sce),"Features, max nr category:", max_bed), " ")
+
+  plot_c <- ggplot(res, aes(x = Batch_sequencing,))+
+    geom_histogram()+
+    theme_classic()+
+    ggtitle(paste(spec_curr, title, nrow(sce), "Features, max nr category:",max_bsq), " ")
+
+  return(list(plot_a, plot_b, plot_c))
+  
+}
+
+lisi_07 <- plot_lisi(sce_07, title = "after merging")
+lisi_09mnn <- plot_lisi(sce_09mnn, title = "MNN Batch correction")
+lisi_09ser <- plot_lisi(sce_09ser, title = "Seurat Batch correction")
+  
+lisi_07
+lisi_09mnn
+lisi_09ser
+
+```
+
+Should be closer to the maximum number of categories per variable.
+Due to the observed imbalance in certain cell types per batch, perfect LISI 
+scores will not be possible.
 
 ```{r}
 sessionInfo()

@@ -80,7 +80,7 @@ rule make_ref_sample_reports:
     output:
         OUTPUT_BASE_PATH + "/sce_objects/reports/03_reference_annotation/{species}/ref_annotation_sample_report_{individual}.html"
     params:
-        nr_hvgs = config["metadata"]["values"]["nr_hvgs"],
+        nr_hvgs = config["values"]["preprocessing"]["nr_hvgs"],
         color_tables = TABLES_PATH
     script:
         "ref_annotation_sample_reports.Rmd" 
@@ -96,6 +96,7 @@ rule make_ref_summary_report:
         samples_to_remove = config["samples_to_remove"],
         color_tables = TABLES_PATH,
         individuals = individuals,
-        species = species
+        species = species,
+        sce_functions = "../source/sce_functions.R" # this is the working dir
     script:
         "ref_annotation_summary.Rmd" 

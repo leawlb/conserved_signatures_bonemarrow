@@ -2,29 +2,31 @@
 
 library(DropletUtils, quietly = TRUE)
 library(batchelor, quietly = TRUE)
+source(file = snakemake@params[["sce_functions"]])
 
-# load object and prepare batch vector for correctExperiments()
+#-------------------------------------------------------------------------------
+
+# load object and prepare batch vector for correctExperiments() + preparation
 print(snakemake@input[["sce_08"]])
 sce <- readRDS(file = snakemake@input[[1]])
-# use hvgs?
-hvgs_for_batch_correction <- snakemake@params[["hvgs_for_batch_correction"]]
-# which batch?
-batch_use <- snakemake@params[["batch_use"]]
-batch_pos <- which(colnames(colData(sce)) == batch_use)
-# how many hvgs for what purpose?
-nr_hvgs <- snakemake@params[["nr_hvgs"]]
-nr_hvgs_batch_correction <- snakemake@params[["nr_hvgs_batch_correction"]]
 
-source(file = snakemake@params[["sce_functions"]])
+batch_use <- snakemake@params[["batch_use"]] # which batch?
+batch_pos <- which(colnames(colData(sce)) == batch_use)
+nr_hvgs <- snakemake@params[["nr_hvgs"]] # how many hvgs 
+nr_hvgs_batch_correction <- snakemake@params[["nr_hvgs_batch_correction"]] 
+hvgs_for_batch_correction <- snakemake@params[["hvgs_for_batch_correction"]] # use hvgs?
 
 # rename the already existent Reduced Dimensions
 reducedDimNames(sce)[grep("PCA", reducedDimNames(sce))] <- "PCA_before"
 reducedDimNames(sce)[grep("UMAP", reducedDimNames(sce))] <- "UMAP_before"
 
+#-------------------------------------------------------------------------------
+
 # calculate hvgs if needed, otherwise keep NULL
 if(hvgs_for_batch_correction == TRUE){
   hvgs_for_batch_correction <- modelGeneVar(sce)
-  hvgs_for_batch_correction <- getTopHVGs(hvgs_for_batch_correction, n=nr_hvgs_batch_correction)
+  hvgs_for_batch_correction <- getTopHVGs(hvgs_for_batch_correction, 
+                                          n=nr_hvgs_batch_correction)
   print(hvgs_for_batch_correction[1:5])
 }else{
   hvgs_for_batch_correction <- NULL  
@@ -37,6 +39,8 @@ if(sce$Rescaled[1] == TRUE){
 }else{
   assay_use <- "logcounts"
 }
+
+#-------------------------------------------------------------------------------
 
 print("starting MNN")
 # run MNNfunction depending on specified method
@@ -76,5 +80,4 @@ if(mnn_fast == TRUE){
 }
 
 print(sce_bc)
-
 saveRDS(sce_bc, file = snakemake@output[["sce_09"]])

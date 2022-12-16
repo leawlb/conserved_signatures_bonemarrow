@@ -9,28 +9,25 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Summary report on cell type annotation and quality for all objects at once.
+Summary report on quality for all objects at once.
 
-#### Load libraries, source code 
+#### Load libraries, source code, objects
 
 ```{r load,  message = FALSE}
-
 library(SingleCellExperiment, quietly = TRUE) 
 library(DropletUtils, quietly = TRUE) 
 library(tidyverse, quietly = TRUE) 
 library(scater, quietly = TRUE) 
 library(scuttle, quietly = TRUE) 
 library(scran, quietly = TRUE) 
-
+source(file = snakemake@params[["sce_functions"]])
 ```
 
 ```{r load_code, message = FALSE}
-
 sce_06_path <- snakemake@input[["sce_06_path"]]
 samples_to_remove <- snakemake@params[["samples_to_remove"]] # samples to exclude from merging
 individuals <- snakemake@params[["individuals"]]
 species <- snakemake@params[["species"]]
-
 ```
 
 # QC
@@ -51,89 +48,33 @@ for(s in species){
 }
 
 sce_list_06 <- sce_list_06[names(sce_list_06)[!names(sce_list_06) %in% samples_to_remove]]
+print(blub)
 
 ```
 
+Get contamination.
 Use only Baccin et al dataset because it's the only one containing both
 stromal and hematopoetic cell types in a single dataset.
 
 ```{r}
-
-hsc_cts <- c(
-  "B cell",
-  "Dendritic cells",
-  "Eo/Baso prog.",
-  "Ery prog.",
-  "Ery/Mk prog.",
-  "Erythroblasts",
-  "Gran/Mono prog.",
-  "LMPPs",
-  "Mk prog.",
-  "Mono prog.",
-  "Monocytes",
-  "NK cells",
-  "Neutro prog.",
-  "Neutrophils",
-  "T cells",
-  "large pre-B.",
-  "pro-B",
-  "small pre-B."
-)
-
-str_cts <- c(
-  "Adipo-CAR",
-  "Arteriolar ECs",
-  "Arteriolar fibro.",
-  "Chondrocytes",
-  "Endosteal fibro.",
-  "Fibro/Chondro p.",
-  "Myofibroblasts",
-  "Ng2+ MSCs",
-  "Osteo-CAR",
-  "Osteoblasts",
-  "Schwann cells",
-  "Sinusoidal ECs",
-  "Smooth muscle",
-  "Stromal fibro."
-)
-
-# add to sce objects
 sce_list_06 <- lapply(sce_list_06, function(sce){
-  sce$right_fraction <- rep("TRUE", n = ncol(sce))
-  name_curr <- colData(sce)$Object_ID[1] 
   
-  if(grepl("str", name_curr)){
-    wrong_pos <- which(sce$Identity_ref_all %in% hsc_cts)
-    sce$right_fraction[wrong_pos] <- "FALSE"
-  }else if(grepl("hsc", name_curr)){
-    wrong_pos <- which(sce$Identity_ref_all %in% str_cts)
-    sce$right_fraction[wrong_pos] <- "FALSE"
-  }  
+  sce_hsc <- sce[,sce$Fraction_ID == "hsc"]
+  sce_str <- sce[,sce$Fraction_ID == "str"]
+  
+  sce_hsc <- find_contamination_ref_all(sce_hsc, input = "hsc")
+  sce_str <- find_contamination_ref_all(sce_str, input = "stromal")
+  
+  sce <- cbind(sce_hsc, sce_str)
   return(sce)
 })
-
 ```
 
 Identify all mature cells.
 
 ```{r}
 
-hsc_mature_cts <- c(
-  "B cell",
-  "Dendritic cells",
-  "Monocytes",
-  "small pre-B.",
-  "T cells",
-  "NK cells",
-  "Neutrophils",
-  "large pre-B"
-)
-
-sce_list_06 <- lapply(sce_list_06, function(sce){
-  sce$mature_cells <- rep("FALSE", n = ncol(sce))
-  sce$mature_cells[sce$Identity_ref_all %in% hsc_mature_cts] <- "TRUE"
-  return(sce)
-})
+sce_list_06 <- lapply(sce_list_06, get_mature_cts_all)
 
 ```
 
@@ -157,9 +98,8 @@ qcdf_list_06 <- lapply(sce_list_06, function(sce){
   qcdf$right_fraction <- sce$right_fraction
   qcdf$mature_cells <- sce$mature_cells
   qcdf$Identity_ref_all <- sce$Identity_ref_all
-  qcdf$Identity_ref_fraction1 <- sce$Identity_ref_fraction1
-  qcdf$Identity_ref_fraction2 <- sce$Identity_ref_fraction2
-  
+  qcdf$Identity_ref_fraction <- sce$Identity_ref_fraction
+
   return(qcdf)
 })
 
@@ -398,38 +338,23 @@ ggplot(qcdf_gg, aes(x = Identity_ref_all, y = detected))+
   ylim(limits = c(0, 10000))+
   scale_y_log10()
 
-ggplot(qcdf_gg, aes(x = Identity_ref_fraction1, y = sum))+
+ggplot(qcdf_gg, aes(x = Identity_ref_fraction, y = sum))+
   ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
   ylim(limits = c(0, 120000))+
   scale_y_log10()
 
-ggplot(qcdf_gg, aes(x = Identity_ref_fraction1, y = detected))+
+ggplot(qcdf_gg, aes(x = Identity_ref_fraction, y = detected))+
   ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
   ylim(limits = c(0, 10000))+
   scale_y_log10()
-
-ggplot(qcdf_gg, aes(x = Identity_ref_fraction2, y = sum))+
-  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 120000))+
-  scale_y_log10()
-
-ggplot(qcdf_gg, aes(x = Identity_ref_fraction2, y = detected))+
-  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 10000))+
-  scale_y_log10()
-
 
 # per species
 ggplot(qcdf_gg[qcdf_gg$Species == "mcar",], 
-       aes(x = Identity_ref_fraction2, y = sum))+
+       aes(x = Identity_ref_fraction, y = sum))+
   ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
@@ -438,7 +363,7 @@ ggplot(qcdf_gg[qcdf_gg$Species == "mcar",],
   ggtitle("mcar")
 
 ggplot(qcdf_gg[qcdf_gg$Species == "mcar",], 
-       aes(x = Identity_ref_fraction2, y = detected))+
+       aes(x = Identity_ref_fraction, y = detected))+
   ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
@@ -447,7 +372,7 @@ ggplot(qcdf_gg[qcdf_gg$Species == "mcar",],
   ggtitle("mcar")
 
 ggplot(qcdf_gg[qcdf_gg$Species == "mcas",], 
-       aes(x = Identity_ref_fraction2, y = sum))+
+       aes(x = Identity_ref_fraction, y = sum))+
   ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
@@ -456,7 +381,7 @@ ggplot(qcdf_gg[qcdf_gg$Species == "mcas",],
   ggtitle("mcas")
 
 ggplot(qcdf_gg[qcdf_gg$Species == "mcas",], 
-       aes(x = Identity_ref_fraction2, y = detected))+
+       aes(x = Identity_ref_fraction, y = detected))+
   ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
@@ -465,7 +390,7 @@ ggplot(qcdf_gg[qcdf_gg$Species == "mcas",],
   ggtitle("mcas")
 
 ggplot(qcdf_gg[qcdf_gg$Species == "mmus",], 
-       aes(x = Identity_ref_fraction2, y = sum))+
+       aes(x = Identity_ref_fraction, y = sum))+
   ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
@@ -474,7 +399,7 @@ ggplot(qcdf_gg[qcdf_gg$Species == "mmus",],
   ggtitle("mmus")
 
 ggplot(qcdf_gg[qcdf_gg$Species == "mmus",], 
-       aes(x = Identity_ref_fraction2, y = detected))+
+       aes(x = Identity_ref_fraction, y = detected))+
   ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
@@ -483,7 +408,7 @@ ggplot(qcdf_gg[qcdf_gg$Species == "mmus",],
   ggtitle("mmus")
 
 ggplot(qcdf_gg[qcdf_gg$Species == "mspr",], 
-       aes(x = Identity_ref_fraction2, y = sum))+
+       aes(x = Identity_ref_fraction, y = sum))+
   ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
@@ -492,7 +417,7 @@ ggplot(qcdf_gg[qcdf_gg$Species == "mspr",],
   ggtitle("mspr")
 
 ggplot(qcdf_gg[qcdf_gg$Species == "mspr",], 
-       aes(x = Identity_ref_fraction2, y = detected))+
+       aes(x = Identity_ref_fraction, y = detected))+
   ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
@@ -500,6 +425,8 @@ ggplot(qcdf_gg[qcdf_gg$Species == "mspr",],
   scale_y_log10()+
   ggtitle("mspr")
 
-
 ```
 
+```{r}
+sessionInfo()
+```

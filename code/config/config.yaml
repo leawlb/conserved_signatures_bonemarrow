@@ -15,44 +15,13 @@ metadata:
     - Age_ID
     - Fraction_ID
     - Sample_NR
-  values:
-    cutoff_umis: 100 # below which droplets are discarded
-    cutoff_doublets: 7.5 # above which likely doublets are discarded
-    cutoff_mitos: 5 # percentage of mito genes above which cells are discarded
-    cutoff_sum: 400 # below which cells are discarded
-    cutoff_detected: 300 # below which cells are discarded
-    nr_hvgs: 2000 # nr of top hvgs 
-    nr_hvgs_batch_correction: 32245 # nr of top hvgs to be used for bc subsetting  
   ref_baccin_sce: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/ref_baccin_sce"
   ref_dahlin_sce: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/ref_dahlin_sce"
   ref_dolgalev_sce: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/ref_dolgalev_sce"
-  ref_lipka_sce: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/ref_lipka_sce"
   colors:
     colors_celltypes: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/color_tables/colors_celltypes.csv"
     colors_species: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/color_tables/colors_species.csv"
     colors_annotations: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/color_tables/colors_annotations.csv"
-batch_correction:  
-  batches: 
-  # only add batched for which objects were already created
-    - Batch_exp_day
-    #- Batch_sequencing
-    #- Object_ID # cannot be used with MNNcorrect
-  batch_use: "Batch_exp_day" # if changed, run ENTIRE integration_snakefile
-
-# RULES  
-# For conditions use caps if used in R  
-run_preprocessing_summary: False
-run_ref_annotation_summary: False
-run_batch_correction_summary: False
-run_mnncorrect: True
-mnn_use_fast: TRUE
-run_seurat3: True
-run_scmerge: False
-hvgs_for_batch_correction: FALSE 
-rescale_for_batch_correction: FALSE # Rescaling assumes that the cell composition in all batches is the same 
-merge_all: False
-run_manual_annotation_summary: True
-
 samples_to_remove:
   - mcar_old_str_3_1
   - mcar_old_str_3_2
@@ -64,3 +33,47 @@ samples_to_remove:
   - mmus_old_str_1_0
   - mspr_old_hsc_1_0
   - mspr_yng_str_3_1
+values:
+  preprocessing:
+    cutoff_umis: 100 # below which droplets are discarded
+    cutoff_doublets: 7.5 # above which likely doublets are discarded
+    cutoff_mitos: 5 # percentage of mito genes above which cells are discarded
+    cutoff_sum: 400 # below which cells are discarded
+    cutoff_detected: 300 # below which cells are discarded
+    nr_hvgs: 2000 # nr of top hvgs 
+  batch_correction:  
+    nr_hvgs_batch_correction: 32245 # nr of top hvgs to be used for bc subsetting  
+    batch_use: "Batch_exp_day" # if changed run ENTIRE batch_correction_snakefile
+  clustering:
+    number_k: 
+    # adjust according to clustering reports
+      mcar:
+        hsc: 18 
+        str: 18
+      mcas:
+        hsc: 18
+        str: 18
+      mmus:
+        hsc: 18
+        str: 18
+      mspr:
+        hsc: 18
+        str: 18
+      
+# RULES  
+# in caps if used in R, only first letter capitalized for use in Snakefile
+run_preprocessing_summary: False
+run_ref_annotation_summary: False
+run_batch_correction_summary: False
+run_manual_annotation_summary: False
+
+merge_all: False
+run_mnncorrect: True
+mnn_use_fast: TRUE
+run_seurat3: True
+hvgs_for_batch_correction: FALSE 
+rescale_for_batch_correction: FALSE # Rescaling assumes that the cell composition in all batches is the same 
+
+remove_mature_cells_clustering: TRUE
+
+

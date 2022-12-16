@@ -2,8 +2,10 @@
 
 """
 Info in batch correction methods from:
-Luecken et al. "Benchmarking atlas-level data integration in single-cell genomics", Nat Met 2022
-Tran, Ang, Chevrier, Zhang et al. "A benchmark of batch effect correction methods for songle-cell RNA sequencing data", Genome Biologz 2020
+Luecken et al. "Benchmarking atlas-level data integration in single-cell 
+genomics", Nat Met 2022
+Tran, Ang, Chevrier, Zhang et al. "A benchmark of batch effect correction 
+methods for single-cell RNA sequencing data", Genome Biology 2020
 """
 #-------------------------------------------------------------------------------
 
@@ -92,7 +94,7 @@ if config["merge_all"]:
           samples_to_remove = config["samples_to_remove"],
           sce_functions = "../source/sce_functions.R", # this is the working dir
           species = species,
-          nr_hvgs = config["metadata"]["values"]["nr_hvgs"]
+          nr_hvgs = config["values"]["preprocessing"]["nr_hvgs"]
       script:
           "scripts/07_merge_datasets.R" 
 
@@ -114,12 +116,14 @@ rule renormalize:
         rescale = config["rescale_for_batch_correction"]
     script:
         "scripts/08_renormalize.R"
-        
+
+#-------------------------------------------------------------------------------
+    
 """
 batch correct using MNNcorrect:
 
-MNNcorrect is good at recovering DEGs from batch corrected data and bioconservation,
-but slow and does not perform well on batch correction 
+MNNcorrect is good at recovering DEGs from batch corrected data and 
+bioconservation, but slow and does not perform well on batch correction 
 Requires shared cell types between batches but no labels
 (fastMNN) seems to balance batch effect removal and bioconservation
 """
@@ -133,10 +137,10 @@ if config["run_mnncorrect"]:
       params:
           batch_use = BATCH_USE,
           rescale = config["rescale_for_batch_correction"], # rule
-          hvgs_for_batch_correction = config["hvgs_for_batch_correction"], # rule
+          hvgs_for_batch_correction = config["hvgs_for_batch_correction"],# rule
           mnn_fast = config["mnn_use_fast"], # rule
-          nr_hvgs = config["metadata"]["values"]["nr_hvgs"], # number
-          nr_hvgs_batch_correction = config["metadata"]["values"]["nr_hvgs_batch_correction"], # number
+          nr_hvgs = config["values"]["preprocessing"]["nr_hvgs"],
+          nr_hvgs_batch_correction = config["values"]["batch_correction"]["nr_hvgs_batch_correction"], # number
           sce_functions = "../source/sce_functions.R" # this is the working dir
       script:
           "scripts/09_mnncorrect.R"
@@ -158,35 +162,17 @@ if config["run_seurat3"]:
             sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_seurat3/sce_{species}_" + BATCH_USE + "-09"
         params:
             batch_use = BATCH_USE,
-            nr_hvgs_batch_correction = config["metadata"]["values"]["nr_hvgs_batch_correction"], # number
-            nr_hvgs = config["metadata"]["values"]["nr_hvgs"],
+            nr_hvgs_batch_correction = config["values"]["batch_correction"]["nr_hvgs_batch_correction"], # number
+            nr_hvgs = config["values"]["preprocessing"]["nr_hvgs"],
             sce_functions = "../source/sce_functions.R" # this is the working dir
         script:
             "scripts/09_seurat.R"
 
-"""
-batch correct using scMerge
-
-scMerge and among best for multiple batch integration,
-is ok but not great at batch corection and recovering DEGs
-seems balanced but is also slow
-"""
-#if config["run_scmerge"]:
-#    rule run_scmerge:
-#        input:
-#            sce_07 = rule.renormalize.output 
-#        output:
-#            sce_08 = OUTPUT_BASE_PATH + "/08_scmerge/sce_{species}_correctedby_" + BATCH_USE + "-08"
-#        params:
-#            hvgs_for_batch_correction = config["hvgs_for_batch_correction"]
-#        script:
-#            "scripts/08_scmerge.R"
-
 #-------------------------------------------------------------------------------
 
 """
-Make batch correction reports for each species including "all", each method
-and each used Batch type
+Make batch correction reports for each species and each method
+due to multiple runs, different reports are stored in 04_correction_COLLECTION
 """
 rule make_reports:
     input:
@@ -197,29 +183,8 @@ rule make_reports:
     output:
         OUTPUT_BASE_PATH + "/sce_objects/reports/04_batch_correction/{species}/batch_correction_species_report_{species}_" + BATCH_USE + ".html"
     params:
-        nr_hvgs = config["metadata"]["values"]["nr_hvgs"],
+        nr_hvgs = config["values"]["preprocessing"]["nr_hvgs"],
         species_build = species_build,
-        batches = config["batch_correction"]["batches"],
-        hvgs_for_batch_correction = config["hvgs_for_batch_correction"],
         color_tables = TABLES_PATH
     script:
         "batch_correction_species_reports.Rmd" 
-        #"scripts/testing_purposes.R"
-
-if config["run_batch_correction_summary"]:
-  print("run_batch_correction_summary")
-  rule make_summary_report:
-      input:
-          sce_07_path = OUTPUT_BASE_PATH + "/07_ctyp",
-          sce_08_path = OUTPUT_BASE_PATH + "/08_rnrm",
-          sce_09mnn_path = OUTPUT_BASE_PATH + "/09_mnncorrect"
-      output:
-          OUTPUT_BASE_PATH + "/reports/04_batch_correction/batch_correction_summary.html"
-      params:
-          nr_hvgs = config["metadata"]["values"]["nr_hvgs"],
-          species_build = species_build,
-          batches = config["batch_correction"]["batches"]
-      script:
-          "integration_summary.Rmd" 
-          #"scripts/testing_purposes.R"
-

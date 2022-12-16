@@ -33,7 +33,6 @@ sce_09mnn <- readRDS(file = snakemake@input[["sce_09mnn"]])
 sce_09ser <- readRDS(file = snakemake@input[["sce_09seurat"]])
 
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
-hvgs_for_batch_correction <- snakemake@params[["hvgs_for_batch_correction"]]
 species_build <- snakemake@params[["species_build"]]
 batches <- snakemake@params[["batches"]]
 color_tables <- snakemake@params[["color_tables"]]

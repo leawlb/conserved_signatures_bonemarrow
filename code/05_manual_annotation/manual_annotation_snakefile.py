@@ -24,7 +24,7 @@ def get_list(metadata, column):
   return(values)
   
 species = get_list(metadata = METADATA, column = "Species_ID")
-print(species) # no need for object of all merged species
+print(species) 
 
 
 

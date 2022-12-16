@@ -1,6 +1,6 @@
 ---
-title: "batch_correction_sample_reports"
-author: "Amy Danson, Lea Wölbert"
+title: "batch_correction_species_reports"
+author: "Lea Wölbert"
 date: '2022-12-06'
 output: html_document
 ---
@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Summary report for data integration.
+Summary report for data integration and batch correction.
 
 #### Load libraries, source code 
 
@@ -27,7 +27,6 @@ library(lisi)
 ```
 
 ```{r}
-
 sce_07 <- readRDS(file = snakemake@input[["sce_07"]])
 sce_08 <- readRDS(file = snakemake@input[["sce_08"]])
 sce_09mnn <- readRDS(file = snakemake@input[["sce_09mnn"]])
@@ -49,10 +48,8 @@ source(file = "../source/sce_functions.R")
 ```
 
 ```{r}
-
-# redo dimensionality reduction for renormalized and for mnn corrected
+# redo dimensionality reduction for renormalized objects
 sce_08 <- reduce_dims(sce_08, nr_hvgs = snakemake@params[["nr_hvgs"]])
-
 ```
 
 ```{r}
@@ -65,9 +62,25 @@ col_ann_fraction <- col_ann[names(col_ann) %in% sce_07$Fraction_ID]
 col_species <- col_spc[names(col_spc) %in% sce_07$Species_ID]
 ```
 
+```{r}
+sce_07
+```
+
+```{r}
+sce_08
+```
+
+```{r}
+sce_09mnn
+```
+
+```{r}
+sce_09ser
+```
+
 # Reference cell types 
 
-Make one plotting wrapper for all objects.
+Cells were annotated with SingleR and three reference datasets.
 
 ```{r}
 
@@ -98,18 +111,16 @@ identity_plots <- function(sce, title){
 
 ```
 
-## Species level
+```{r}
+print(sce_07$Species_ID[1])
+print(table(sce_07$Identity_ref_all))
+print(table(sce_07$Identity_ref_fraction))
+```
 
 ### After merging
 
 ```{r}
-
 identity_plots_07 <- identity_plots(sce_07, title = ", after merging")
-
-print(sce_07$Species_ID[1])
-print(table(sce_07$Identity_ref_all))
-print(table(sce_07$Identity_ref_fraction))
-
 ```
 
 ```{r fig.width=8, fig.height=4}
@@ -123,9 +134,7 @@ identity_plots_07[[2]]
 ### After renormalization
 
 ```{r}
-
 identity_plots_08 <- identity_plots(sce_08, title = ", after renormalization")
-
 ```
 
 ```{r fig.width=8, fig.height=4}
@@ -138,11 +147,11 @@ identity_plots_08[[2]]
 
 ### After batch correction
 
-```{r}
+#### MNNCorrect
 
+```{r}
 identity_plots_09mnn <- identity_plots(sce_09mnn, 
                                        title = ", MNN batch correction")
-
 ```
 
 ```{r fig.width=8, fig.height=4}
@@ -153,11 +162,11 @@ identity_plots_09mnn[[1]]
 identity_plots_09mnn[[2]]
 ```
 
-```{r}
+#### Seurat
 
+```{r}
 identity_plots_09ser <- identity_plots(sce_09ser, 
                                        title = ", Seurat batch correction")
-
 ```
 
 ```{r fig.width=8, fig.height=4}
@@ -171,7 +180,10 @@ identity_plots_09ser[[2]]
 ## Contamination and mature cell types
 
 Use only Baccin et al dataset because it's the only one containing both
-stromal and hematopoetic cell types in a single dataset.
+stromal and hematopoetic cell types in a single data set.
+Contamination: cells that were annotated as reference cell types from the
+incorrect fraction, i.e. B cells in the stromal fraction.
+Mature cell types have been defined in code/source/sce_functions.R
 
 ```{r}
 
@@ -249,11 +261,15 @@ cont_plots_species_07
 cont_plots_species_08
 ```
 
-### After merging
+### After Batch correction
+
+#### MNNCorrect
 
 ```{r fig.width=10, fig.height=5}
 cont_plots_species_09mnn
 ```
+
+#### Seurat
 
 ```{r fig.width=10, fig.height=5}
 cont_plots_species_09ser
@@ -371,9 +387,13 @@ qc_plots_species_08
 
 ### After batch correction
 
+#### MNNCorrect
+
 ```{r fig.width=10, fig.height=5}
 qc_plots_species_09mnn
 ```
+
+#### Seurat
 
 ```{r fig.width=10, fig.height=5}
 qc_plots_species_09ser
@@ -384,6 +404,9 @@ qc_plots_species_09ser
 To merge across ages and fractions using MNNcorrect, every age and fraction 
 should have at least one overlapping BATCH.
 Per definition, this is not the case for Object_ID as possible batch.
+
+Also, batches should have overlapping cell types for use of MNNCorrect or
+Seurat.
 
 ```{r}
 
@@ -554,6 +577,8 @@ facet_plots_species_08[c(12, 14)]
 
 ### After batch correction
 
+#### MNNCorrect
+
 ```{r fig.width=10, fig.height=4}
 facet_plots_species_09mnn[c(1:7, 9, 11, 13)]
 ```
@@ -565,6 +590,8 @@ facet_plots_species_09mnn[c(8, 10)]
 ```{r fig.width=10, fig.height=8}
 facet_plots_species_09mnn[c(12, 14)]
 ```
+
+#### Seurat
 
 ```{r fig.width=10, fig.height=4}
 facet_plots_species_09ser[c(1:7, 9, 11, 13)]
@@ -714,6 +741,8 @@ qc_pcas_species_08[[12]]
 
 ### After batch correction
 
+#### MNNCorrect
+
 ```{r fig.width=10, fig.height=5}
 qc_pcas_species_09mnn[c(1:11)]
 ```
@@ -721,6 +750,8 @@ qc_pcas_species_09mnn[c(1:11)]
 ```{r fig.width=5, fig.height=10}
 qc_pcas_species_09mnn[[12]]
 ```
+
+#### Seurat
 
 ```{r fig.width=10, fig.height=5}
 qc_pcas_species_09ser[c(1:11)]
@@ -864,6 +895,8 @@ qc_pcas_species_08[[12]]
 
 ### After batch correction
 
+#### MNNCorrect
+
 ```{r fig.width=10, fig.height=5}
 qc_pcas_species_09mnn[c(1:11)]
 ```
@@ -871,6 +904,8 @@ qc_pcas_species_09mnn[c(1:11)]
 ```{r fig.width=5, fig.height=10}
 qc_pcas_species_09mnn[[12]]
 ```
+
+#### Seurat
 
 ```{r fig.width=10, fig.height=5}
 qc_pcas_species_09ser[c(1:11)]
@@ -880,9 +915,111 @@ qc_pcas_species_09ser[c(1:11)]
 qc_pcas_species_09ser[[12]]
 ```
 
+
+# Cell Mixing Score
+
+Evaluates how well cells are mixed
+(https://bioconductor.org/packages/release/bioc/vignettes/CellMixS/inst/doc/CellMixS.html#cellspecific-mixing-scores)
+and https://www.life-science-alliance.org/content/4/6/e202001004
+This takes quite long.
+
+```{r}
+
+sce_07 <- cms(sce_07, group = "Batch_exp_day", k = 30,
+              assay_name = "logcounts", res_name = "Logcounts")
+
+sce_09mnn <- cms(sce_09mnn, group = "Batch_exp_day", k = 30,
+                 assay_name = "reconstructed", 
+                 res_name = paste0("MNN", nrow(sce_09mnn)))
+
+sce_09ser <- cms(sce_09ser, group = "Batch_exp_day", k = 30, 
+                 assay_name = "corrected", 
+                 res_name = paste0("Seurat ", nrow(sce_09ser)))
+
+```
+
+The p-val distribution should be relatively even for good batch mixing.
+Due to cell type imbalance (see below) it is unlikely that the results
+will be great.
+
+```{r}
+visHist(sce_07, n_col = 3)
+```
+
+```{r}
+visHist(sce_09mnn, n_col = 3)
+```
+
+```{r}
+visHist(sce_09ser, n_col = 3)
+```
+
+# Lisi
+
+The majority of values hould be closer to the maximum number of categories 
+per variable.
+Due to the observed imbalance in certain cell types per batch (see below), 
+perfect LISI scores are unlikely.
+
+https://github.com/immunogenomics/LISI
+and
+https://www.nature.com/articles/s41592-019-0619-0
+
+```{r}
+
+batches <- c("Object_ID", "Batch_exp_day", "Batch_sequencing")
+
+max_obj <- length(unique(sce_07$Object_ID))
+max_bed <- length(unique(sce_07$Batch_exp_day))
+max_bsq <- length(unique(sce_07$Batch_sequencing))
+
+```
+
+```{r}
+
+plot_lisi <- function(sce, title){
+  
+  batches <- c("Object_ID", "Batch_exp_day", "Batch_sequencing")
+  
+  mat <- reducedDim(sce, type = "PCA")
+  meta_data <- colData(sce)[,colnames(colData(sce)) %in% batches]
+  res <- compute_lisi(mat, meta_data, batches)
+
+  plot_a <- ggplot(res, aes(x = Object_ID,))+
+    geom_histogram()+
+    theme_classic()+
+    ggtitle(paste(species_curr, title, nrow(sce), "Features, max nr category:", max_obj), " ")
+
+  plot_b <- ggplot(res, aes(x = Batch_exp_day,))+
+    geom_histogram()+
+    theme_classic()+
+    ggtitle(paste(species_curr, title, nrow(sce),"Features, max nr category:", max_bed), " ")
+
+  plot_c <- ggplot(res, aes(x = Batch_sequencing,))+
+    geom_histogram()+
+    theme_classic()+
+    ggtitle(paste(species_curr, title, nrow(sce), "Features, max nr category:",max_bsq), " ")
+
+  return(list(plot_a, plot_b, plot_c))
+  
+}
+
+lisi_07 <- plot_lisi(sce_07, title = "after merging")
+lisi_09mnn <- plot_lisi(sce_09mnn, title = "MNN Batch correction")
+lisi_09ser <- plot_lisi(sce_09ser, title = "Seurat Batch correction")
+  
+lisi_07
+lisi_09mnn
+lisi_09ser
+
+```
+
 # Cell type proportions
 
-Using only one object is enough for this
+To get an idea of cell numbers (according to refernce dataset).
+Also helps understand balance of cell types in batches.
+
+Using only one object is enough for this.
 
 ```{r}
 sce <- sce_07
@@ -1166,98 +1303,6 @@ PLOT1
 ```{r fig.width=10, fig.height=11}
 PLOT3
 ```
-
-# Cell Mixing Score
-
-Evaluates how well cells are mixed
-(https://bioconductor.org/packages/release/bioc/vignettes/CellMixS/inst/doc/CellMixS.html#cellspecific-mixing-scores)
-and https://www.life-science-alliance.org/content/4/6/e202001004
-This takes quite long.
-
-```{r}
-
-sce_07 <- cms(sce_07, group = "Batch_exp_day", k = 30,
-              assay_name = "logcounts", res_name = "Logcounts")
-
-sce_09mnn <- cms(sce_09mnn, group = "Batch_exp_day", k = 30,
-                 assay_name = "reconstructed", res_name = "MNN")
-
-sce_09ser <- cms(sce_09ser, group = "Batch_exp_day", k = 30, 
-                 assay_name = "logcounts", res_name = paste0("Seurat ", nrow(sce_09ser)))
-
-```
-
-The p-val distribution should be even.
-
-```{r}
-visHist(sce_07, n_col = 3)
-```
-
-```{r}
-visHist(sce_09mnn, n_col = 3)
-```
-
-```{r}
-visHist(sce_09ser, n_col = 3)
-```
-# Lisi
-
-https://github.com/immunogenomics/LISI
-and
-https://www.nature.com/articles/s41592-019-0619-0
-
-```{r}
-
-batches <- c("Object_ID", "Batch_exp_day", "Batch_sequencing")
-
-max_obj <- length(unique(sce_07$Object_ID))
-max_bed <- length(unique(sce_07$Batch_exp_day))
-max_bsq <- length(unique(sce_07$Batch_sequencing))
-
-```
-
-```{r}
-
-plot_lisi <- function(sce, title){
-  
-  batches <- c("Object_ID", "Batch_exp_day", "Batch_sequencing")
-  
-  mat <- reducedDim(sce, type = "PCA")
-  meta_data <- colData(sce)[,colnames(colData(sce)) %in% batches]
-  res <- compute_lisi(mat, meta_data, batches)
-
-  plot_a <- ggplot(res, aes(x = Object_ID,))+
-    geom_histogram()+
-    theme_classic()+
-    ggtitle(paste(spec_curr, title, nrow(sce), "Features, max nr category:", max_obj), " ")
-
-  plot_b <- ggplot(res, aes(x = Batch_exp_day,))+
-    geom_histogram()+
-    theme_classic()+
-    ggtitle(paste(spec_curr, title, nrow(sce),"Features, max nr category:", max_bed), " ")
-
-  plot_c <- ggplot(res, aes(x = Batch_sequencing,))+
-    geom_histogram()+
-    theme_classic()+
-    ggtitle(paste(spec_curr, title, nrow(sce), "Features, max nr category:",max_bsq), " ")
-
-  return(list(plot_a, plot_b, plot_c))
-  
-}
-
-lisi_07 <- plot_lisi(sce_07, title = "after merging")
-lisi_09mnn <- plot_lisi(sce_09mnn, title = "MNN Batch correction")
-lisi_09ser <- plot_lisi(sce_09ser, title = "Seurat Batch correction")
-  
-lisi_07
-lisi_09mnn
-lisi_09ser
-
-```
-
-Should be closer to the maximum number of categories per variable.
-Due to the observed imbalance in certain cell types per batch, perfect LISI 
-scores will not be possible.
 
 ```{r}
 sessionInfo()

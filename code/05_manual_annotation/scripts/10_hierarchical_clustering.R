@@ -10,7 +10,7 @@ sce <- readRDS(file = snakemake@input[["sce_07"]])
 number_k <- snakemake@params[["number_k"]]
 print(number_k)
 
-# remove mature cells carfully (TCs and BCs only) based on ref annotations
+# remove mature cells carefully (TCs and BCs only) based on ref annotations
 sce <- get_mature_cts_all(sce)
 sce <- sce[,sce$mature_cells == "FALSE"]
 
@@ -36,28 +36,33 @@ number_k_str = number_k["str" %in% number_k]
 
 #-------------------------------------------------------------------------------
 
-# HSC clustering
-mat_hsc <- reducedDim(sce_hsc, "PCA")
-mat_hsc <- scale(mat_hsc)
-dist_hsc <- dist(mat_hsc, method = 'euclidean')
-ward_hsc <- hclust(dist_hsc, method = "ward.D2")
+if(separate_fractions_clustering){
+  print("separated fractions")
+  # HSC clustering
+  mat_hsc <- reducedDim(sce_hsc, "PCA")
+  mat_hsc <- scale(mat_hsc)
+  dist_hsc <- dist(mat_hsc, method = 'euclidean')
+  ward_hsc <- hclust(dist_hsc, method = "ward.D2")
 
-cut_hsc <- cutree(ward_hsc, k = number_k_hsc)
-sce_hsc$hclust <- cut_hsc
+  cut_hsc <- cutree(ward_hsc, k = number_k_hsc)
+  sce_hsc$hclust <- cut_hsc
 
-# Stromal clustering
-mat_str <- reducedDim(sce_str, "PCA")
-mat_str <- scale(mat_str)
-dist_str <- dist(mat_str, method = 'euclidean')
-ward_str <- hclust(dist_str, method = "ward.D2")
+  # Stromal clustering
+  mat_str <- reducedDim(sce_str, "PCA")
+  mat_str <- scale(mat_str)
+  dist_str <- dist(mat_str, method = 'euclidean')
+  ward_str <- hclust(dist_str, method = "ward.D2")
 
-cut_str <- cutree(ward_str, k = number_k_str)
-sce_str$hclust <- cut_str
+  cut_str <- cutree(ward_str, k = number_k_str)
+  sce_str$hclust <- cut_str
 
-sce_str$hclust <- sce_str$hclust + number_k_hsc
+  # add together
+  sce_str$hclust <- sce_str$hclust + number_k_hsc
+  sce <- cbind(sce_hsc, sce_str)
 
-sce <- cbind(sce_hsc, sce_str)
-
+}else{
+  
+}
 
 sce$hclust <- factor(sce$hclust, levels = unique(sce$hclust))
 

@@ -37,9 +37,19 @@ seurat_anchors <- FindIntegrationAnchors(object.list = seurat_list, dims = 1:30,
 print("starting IntegrateData")
 seurat_integrated <- IntegrateData(anchorset = seurat_anchors, dims = 1:30)
 
-sce <- as.SingleCellExperiment(seurat_integrated)
+#sce <- as.SingleCellExperiment(seurat_integrated)
+sce_seu <- as.SingleCellExperiment(seurat_integrated)
 
-sce <- reduce_dims(sce, nr_hvgs = nr_hvgs) # new values stored in logcounts
-
+# subset SCE to remaining genes and add corrected values
+sce <- sce[rownames(sce) %in% rownames(sce_seu),]
+assays(sce, withDimnames=FALSE)$corrected <- assays(sce_seu)$logcounts
+# calculate new PC and UMAP coordinates based on corrected values
+#sce <- reduce_dims(sce, nr_hvgs = nr_hvgs) # new values stored in logcounts
+hvgs <- modelGeneVar(sce, assay.type = "corrected")
+hvgs <- getTopHVGs(hvgs, n=nr_hvgs)
+sce <- runPCA(sce, ncomponents=25, subset_row = hvgs, 
+              exprs_values = "corrected") 
+sce <- runUMAP(sce, dimred = 'PCA', exprs_values = "corrected",
+               external_neighbors=TRUE, subset_row = hvgs)
 saveRDS(sce, file = snakemake@output[["sce_09"]]) 
 

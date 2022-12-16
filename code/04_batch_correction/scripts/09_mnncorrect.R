@@ -23,10 +23,12 @@ reducedDimNames(sce)[grep("UMAP", reducedDimNames(sce))] <- "UMAP_before"
 
 # calculate hvgs if needed, otherwise keep NULL
 if(hvgs_for_batch_correction == TRUE){
-  hvgs_for_batch_correction <- modelGeneVar(sce_bc)
-  hvgs <- getTopHVGs(hvgs_for_batch_correction, n=nr_hvgs_batch_correction)
+  hvgs_for_batch_correction <- modelGeneVar(sce)
+  hvgs_for_batch_correction <- getTopHVGs(hvgs_for_batch_correction, n=nr_hvgs_batch_correction)
+  print(hvgs_for_batch_correction[1:5])
 }else{
   hvgs_for_batch_correction <- NULL  
+  print("no hvgs")
 }
 
 # determine which assay to use based on Rescaling

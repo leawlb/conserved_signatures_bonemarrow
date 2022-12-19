@@ -47,7 +47,9 @@ sce_seu <- as.SingleCellExperiment(seurat_integrated)
 
 # subset SCE to remaining genes and add corrected values
 sce <- sce[rownames(sce) %in% rownames(sce_seu),]
-assays(sce, withDimnames=FALSE)$corrected <- assays(sce_seu)$logcounts
+assays(sce)$corrected <- assays(sce_seu)$logcounts[
+  match(rownames(assays(sce)$logcounts), rownames(assays(sce_seu)$logcounts)),
+  match(colnames(assays(sce)$logcounts), colnames(assays(sce_seu)$logcounts))]
 
 # calculate new PC and UMAP coordinates based on corrected values
 hvgs <- modelGeneVar(sce, assay.type = "corrected")

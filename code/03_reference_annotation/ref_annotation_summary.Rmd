@@ -48,7 +48,6 @@ for(s in species){
 }
 
 sce_list_06 <- sce_list_06[names(sce_list_06)[!names(sce_list_06) %in% samples_to_remove]]
-print(blub)
 
 ```
 
@@ -57,17 +56,18 @@ Use only Baccin et al dataset because it's the only one containing both
 stromal and hematopoetic cell types in a single dataset.
 
 ```{r}
+
 sce_list_06 <- lapply(sce_list_06, function(sce){
+
+  if("hsc" %in% sce$Fraction_ID){
+    sce <- find_contamination_ref_all(sce, input = "hsc")
+  }else if("str" %in% sce$Fraction_ID){
+    sce <- find_contamination_ref_all(sce, input = "stromal")
+  }
   
-  sce_hsc <- sce[,sce$Fraction_ID == "hsc"]
-  sce_str <- sce[,sce$Fraction_ID == "str"]
-  
-  sce_hsc <- find_contamination_ref_all(sce_hsc, input = "hsc")
-  sce_str <- find_contamination_ref_all(sce_str, input = "stromal")
-  
-  sce <- cbind(sce_hsc, sce_str)
   return(sce)
 })
+
 ```
 
 Identify all mature cells.

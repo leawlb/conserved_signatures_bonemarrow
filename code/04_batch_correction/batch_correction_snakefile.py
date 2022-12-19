@@ -19,7 +19,7 @@ TABLES_PATH = config["metadata"]["color_tables"]
 
 # objects from config
 METADATA = pd.read_csv(config["metadata"]["raw"])
-BATCH_USE = config["batch_correction"]["batch_use"] # which SCE col to use as batch
+BATCH_USE = config["values"]["batch_correction"]["batch_use"] # which SCE col to use as batch
 
 #-------------------------------------------------------------------------------
 
@@ -73,7 +73,7 @@ rule merge_datasets_species:
         individuals = individuals,
         samples_to_remove = config["samples_to_remove"],
         sce_functions = "../source/sce_functions.R", # this is the working dir
-        nr_hvgs = config["metadata"]["values"]["nr_hvgs"]
+        nr_hvgs = config["values"]["preprocessing"]["nr_hvgs"]
     wildcard_constraints:
         species = "[a-z]+"
     script:

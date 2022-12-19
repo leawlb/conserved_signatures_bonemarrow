@@ -59,5 +59,7 @@ sce <- runPCA(sce, ncomponents=25, subset_row = hvgs,
 sce <- runUMAP(sce, dimred = 'PCA', exprs_values = "corrected",
                external_neighbors=TRUE, subset_row = hvgs)
 
+colData(sce)$Correction_method <- "Seurat"
+
 print(sce)
 saveRDS(sce, file = snakemake@output[["sce_09"]]) 

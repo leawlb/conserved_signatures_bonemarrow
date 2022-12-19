@@ -26,7 +26,63 @@ def get_list(metadata, column):
 species = get_list(metadata = METADATA, column = "Species_ID")
 print(species) 
 
+# construct paths for all possible outputs/targets, required for rule all
+targets =[OUTPUT_BASE_PATH + "/sce_objects/10_hcls/sce_" + s + "-10" for s in species]
+  
+for s in species:
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/11_scls/sce_" + s + "-11"]
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/05_manual_annotation/clustering/" + s + "/clustering_species_report_" + s +".html"]
+  
+if config["run_annotation_summary"]:
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/05_manual_annotation/manual_annotation_species_summary.html"]
+  
+#-------------------------------------------------------------------------------
 
+localrules: all  
 
+# define rules
+rule all: # must contain all possible output paths from all rules
+    input:
+        targets
+
+#-------------------------------------------------------------------------------
+# CLUSTERING (try two different methods)
+
+rule hierarchical_clustering:
+    input: 
+        sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_seurat3/sce_{species}_Batch_exp_day-09"
+    output:
+        sce_10 = OUTPUT_BASE_PATH + "/sce_objects/10_hcls/sce_{species}-10"
+    params:
+        remove_mature_cells_clustering = config["remove_mature_cells_clustering"],
+        number_k = config["values"]["clustering"]["number_k"],
+        sce_functions = "../source/sce_functions.R", # this is the working dir
+    script:
+        "scripts/10_hierarchical_clustering.R"
+        
+rule seurat_clustering:
+    input: 
+        sce_10 = rules.hierarchical_clustering.output
+    output:
+        sce_11 = OUTPUT_BASE_PATH + "/sce_objects/11_scls/sce_{species}-11"
+    params:
+        remove_mature_cells_clustering = config["remove_mature_cells_clustering"],
+        separate_fractions_clustering = config["separate_fractions_clustering"],
+        sce_functions = "../source/sce_functions.R", # this is the working dir
+    script:
+        "scripts/10_seurat_clustering.R"
+
+"""        
+rule make_clustering_species_report:
+    input:
+        sce_11 = rules.seurat_clustering.output
+    output:
+        OUTPUT_BASE_PATH + "/sce_objects/reports/05_manual_annotation/clustering/{species}/clustering_species_report_{species}.html"
+    script:
+        "clustering:species_reports.Rmd"
+"""
+
+#-------------------------------------------------------------------------------
+# SUPPORT VECTOR MACHINES 
 
 

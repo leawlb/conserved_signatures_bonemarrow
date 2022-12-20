@@ -2,6 +2,7 @@
 
 library(DropletUtils)
 library(Seurat)
+source(file = snakemake@params[["sce_functions"]])
 
 #-------------------------------------------------------------------------------
 

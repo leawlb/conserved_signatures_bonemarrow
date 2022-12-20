@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Summary report for data integration and batch correction.
+Report for data integration and batch correction.
 
 #### Load libraries, source code 
 

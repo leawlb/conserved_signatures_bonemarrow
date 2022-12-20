@@ -1,5 +1,5 @@
 
-snakemake --cluster "bsub -q verylong -R rusage[mem=100GB]" -p -j5 -c4 -s batch_correction_snakefile.py --configfile ../config/config.yaml -n
+snakemake --cluster "bsub -q verylong -n20 -R rusage[mem=200GB]" -p -j5 -c40 -s batch_correction_snakefile.py --configfile ../config/config.yaml -n
 
 snakemake --cluster "bsub -n20 -q verylong -R rusage[mem=200GB]" -p -j15 -c40 -s batch_correction_snakefile.py --configfile ../config/config.yaml -R merge_datasets_species -n
 
@@ -7,7 +7,7 @@ snakemake --cluster "bsub -n20 -q verylong -R rusage[mem=100GB]" -p -j8 -c40 -s 
 
 snakemake --cores 2 -s batch_correction_snakefile.py --configfile ../config/config.yaml  -n
 
-snakemake --cores 2 -s batch_correction_snakefile.py --configfile ../config/config.yaml --config run_batch_correction_summary=True -n
+snakemake --cores 2 -s batch_correction_snakefile.py --configfile ../config/config.yaml --config run_batch_correction_summary=True -R make_summary_report -n
 
 snakemake --cluster "bsub -n20 -q verylong -R rusage[mem=200GB]" -p -j8 -c40 -s batch_correction_snakefile.py --configfile ../config/config.yaml -R run_mnncorrect -n
 

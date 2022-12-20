@@ -188,3 +188,12 @@ rule make_reports:
         color_tables = TABLES_PATH
     script:
         "batch_correction_species_reports.Rmd" 
+        
+if config["run_batch_correction_summary"]:
+  rule make_summary_report:
+      input:
+          sce_09_path = OUTPUT_BASE_PATH + "/sce_objects/09_seurat3"
+      output:
+          OUTPUT_BASE_PATH + "/sce_objects/reports/04_batch_correction/batch_correction.html"
+      script:
+          "batch_correction_summary.Rmd" 

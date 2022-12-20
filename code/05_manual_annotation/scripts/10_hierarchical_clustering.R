@@ -6,10 +6,10 @@ source(file = snakemake@params[["sce_functions"]])
 
 #-------------------------------------------------------------------------------
 
+
 sce <- readRDS(file = snakemake@input[["sce_09"]])
 remove_mature_cells_clustering <- snakemake@params[["remove_mature_cells_clustering"]]
 number_k <- snakemake@params[["number_k"]]
-print(number_k)
 
 # remove mature cells carefully (TCs and BCs only) based on ref annotations
 sce <- get_mature_cts_all(sce)
@@ -30,11 +30,10 @@ sce_str <- find_contamination_ref_all(sce_str, input = "stromal")
 #-------------------------------------------------------------------------------
 
 # extract correct number of ks used for cutting the dendrogram
-species_curr <- sce$Species[1]
-number_k_spec = number_k[species_curr %in% number_k]
+species_curr <- sce$Species_ID[1]
 
-number_k_hsc = number_k_spec["hsc" %in% number_k_spec]
-number_k_str = number_k_spec["str" %in% number_k_spec]
+number_k_hsc <- number_k[[species_curr]]$hsc
+number_k_str <- number_k[[species_curr]]$str
 print(number_k_hsc)
 print(number_k_str)
 

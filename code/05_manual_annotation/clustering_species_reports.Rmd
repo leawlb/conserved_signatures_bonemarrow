@@ -1,13 +1,263 @@
+---
+title: "clustering_species_reports"
+author: "Lea Wölbert"
+date: '2022-12-19'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Report for clustering as part of manual annotation
+
+#### Load libraries, source code 
+
+```{r load,  message = FALSE}
+library(DropletUtils, quietly = TRUE) 
+library(scater, quietly = TRUE) 
+library(scuttle, quietly = TRUE) 
+library(scran, quietly = TRUE) 
+library(tidyverse, quietly = TRUE) 
+library(dendextend, quietly = TRUE) 
+library(factoextra, quietly = TRUE) 
+```
+
+```{r}
+sce_09 <- readRDS(file = snakemake@input[["sce_09"]])
+sce_10 <- readRDS(file = snakemake@input[["sce_10"]])
+sce_11 <- readRDS(file = snakemake@input[["sce_11"]])
+
+remove_mature_cells_clustering <- snakemake@params[["remove_mature_cells_clustering"]]
+number_k <- snakemake@params[["number_k"]]
+separate_fractions_clustering <- snakemake@params[["separate_fractions_clustering"]]
+color_tables <- snakemake@params[["color_tables"]]
+
+species_curr <- sce_09$Species_ID[1]
+```
+
+```{r}
+source(file = "../source/colors.R")
+source(file = "../source/plotting.R")
+source(file = "../source/sce_functions.R")
+```
+
+```{r}
+col_cts_all <- col_cts[names(col_cts) %in% sce_10$Identity_ref_all]
+col_cts_fraction <- col_cts[names(col_cts) %in% sce_10$Identity_ref_fraction]
+col_batch_exp_day <- col_alp[names(col_alp) %in% sce_10$Batch_exp_day]
+col_batch_seq <- col_num[names(col_num) %in% sce_10$Batch_sequencing]
+col_ann_age <- col_ann[names(col_ann) %in% sce_10$Age_ID]
+col_ann_fraction <- col_ann[names(col_ann) %in% sce_10$Fraction_ID]
+col_species <- col_spc[names(col_spc) %in% sce_10$Species_ID]
+col_clust_h <- col_num[names(col_num) %in% sce_10$cluster_hierarchical]
+col_clust_s <- col_num[names(col_num) %in% sce_11$cluster_seurat]
+```
+
+Annotations for reference.
+
+```{r}
+
+identity_plots <- function(sce, title){
+  
+  plot_1 <- umap_base(sce, color_by = "Identity_ref_all")+ # own function
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
+    scale_color_manual("Identity1", values = col_cts_all)
+  
+  plot_1l <- umap_legend(sce, color_by = "Identity_ref_all")+
+    scale_color_manual("Identity1", values = col_cts_all)
+  legend_1 <- get_legend(plot_1l)
+
+    
+  plot_2 <- umap_base(sce, color_by = "Identity_ref_fraction")+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
+    scale_color_manual("Identity2", values = col_cts_fraction)
+  
+  plot_2l <- umap_legend(sce, color_by = "Identity_ref_fraction")+
+    scale_color_manual("Identity2", values = col_cts_fraction)
+  legend_2 <- get_legend(plot_2l)
+  
+  PLOT_1 <- ggarrange(plot_1, legend_1)
+  PLOT_2 <- ggarrange(plot_2, legend_2, ncol = 1)
+
+  return(list(PLOT_1, PLOT_2))
+}
+
+identity_plots_09 <- identity_plots(sce_09, title = " ")
+
+```
+
+```{r fig.width=8, fig.height=4}
+identity_plots_09[[1]]
+```
+
+```{r fig.width=4, fig.height=8}
+identity_plots_09[[2]]
+```
+
+# Hierarchical clustering
+
+```{r}
+print(table(sce_10$cluster_hierarchical))
+```
+
+```{r}
+
+plot_1 <- umap_base(sce_10, color_by = "cluster_hierarchical")+ # own function
+  ggtitle(paste0(species_curr))+
+  scale_color_manual("cluster (hierarchical)", values = col_clust_h)
+plot_1l <- umap_legend(sce_10, color_by = "cluster_hierarchical")+
+  scale_color_manual("cluster (hierarchical)", values = col_clust_h)
+legend_1 <- get_legend(plot_1l)
 
 
+plot_2 <- pca_base2(sce_10, color_by = "cluster_hierarchical")+ # own function
+  ggtitle(paste0(species_curr))+
+  scale_color_manual("cluster (hierarchical)", values = col_clust_h)
+plot_2l <- pca_legend(sce_10, color_by = "cluster_hierarchical")+
+  scale_color_manual("cluster (hierarchical)", values = col_clust_h)
+legend_2 <- get_legend(plot_2l)
 
 
-mat_hsc <- reducedDim(sce_hsc, "PCA")
+plot_3 <- pca_base3(sce_10, color_by = "cluster_hierarchical")+ # own function
+  ggtitle(paste0(species_curr))+
+  scale_color_manual("cluster (hierarchical)", values = col_clust_h)
+plot_3l <- pca_legend(sce_10, color_by = "cluster_hierarchical")+
+  scale_color_manual("cluster (hierarchical)", values = col_clust_h)
+legend_3 <- get_legend(plot_3l)
+
+PLOT_1 <- ggarrange(plot_1, legend_1)
+PLOT_2 <- ggarrange(plot_2, legend_2)
+PLOT_3 <- ggarrange(plot_3, legend_3)
+  
+PLOT_1
+PLOT_2
+PLOT_3
+```
+
+Look at specific clustering of HSCs and Stromal cells.
+
+```{r}
+
+sce_hsc <- sce_09[,sce_09$Fraction_ID == "hsc"]
+sce_str <- sce_09[,sce_09$Fraction_ID == "str"]
+
+number_k_hsc <- number_k[[species_curr]]$hsc
+number_k_str <- number_k[[species_curr]]$str
+
+# HSC clustering
+mat_hsc <- reducedDim(sce_hsc, "PCA") # PCA is batch corrected
 mat_hsc <- scale(mat_hsc)
 dist_hsc <- dist(mat_hsc, method = 'euclidean')
 ward_hsc <- hclust(dist_hsc, method = "ward.D2")
 
-plot(ward, labels = FALSE, main = "ward.D2")
+cut_hsc <- cutree(ward_hsc, k = number_k_hsc)
 
-umap_base(sce, color_by = "hclust")
+# Stromal clustering
+mat_str <- reducedDim(sce_str, "PCA")
+mat_str <- scale(mat_str)
+dist_str <- dist(mat_str, method = 'euclidean')
+ward_str <- hclust(dist_str, method = "ward.D2")
+
+cut_str <- cutree(ward_str, k = number_k_str)
+
+```
+
+### HSCs
+
+```{r}
+
+dend_hsc <- as.dendrogram(ward_hsc)
+col_dend_hsc <- color_branches(dend_hsc, k = (number_k_hsc-1), 
+                               groupLabels = FALSE, col = col_clust_h)
+plot(col_dend_hsc, main = paste0(species_curr, 
+                                 " HSCs, ward.D2, k=", (number_k_hsc-1)))
+
+col_dend_hsc <- color_branches(dend_hsc, k = number_k_hsc, 
+                               groupLabels = FALSE, col = col_clust_h)
+plot(col_dend_hsc, main = paste0(species_curr, 
+                                 " HSCs, ward.D2, used k=", number_k_hsc))
+
+col_dend_hsc <- color_branches(dend_hsc, k = (number_k_hsc+1), 
+                               groupLabels = FALSE, col = col_clust_h)
+plot(col_dend_hsc, main = paste0(species_curr, 
+                                 " HSCs, ward.D2, k=", (number_k_hsc+1)))
+
+```
+
+```{r}
+
+fviz_nbclust(mat_hsc, FUN = hcut, method = "wss", k.max = 20)
+
+fviz_nbclust(mat_hsc, FUN = hcut, method = "silhouette", k.max = 20)
+
+```
+
+### Stromal
+
+```{r}
+
+dend_str <- as.dendrogram(ward_str)
+col_dend_str <- color_branches(dend_str, k = (number_k_str-1), 
+                               groupLabels = FALSE, col = col_clust_h)
+plot(col_dend_str, main = paste0(species_curr, 
+                                 " Stromal, ward.D2, k=", (number_k_str-1)))
+
+col_dend_str <- color_branches(dend_str, k = number_k_str, 
+                               groupLabels = FALSE, col = col_clust_h)
+plot(col_dend_str, main = paste0(species_curr, 
+                                 " Stromal, ward.D2, used k=", number_k_str))
+
+col_dend_str <- color_branches(dend_str, k = (number_k_str+1), 
+                               groupLabels = FALSE, col = col_clust_h)
+plot(col_dend_str, main = paste0(species_curr, 
+                                 " Stromal, ward.D2, k=", (number_k_str+1)))
+
+```
+
+## Silhouette widths
+
+```{r}
+
+fviz_nbclust(mat_str, FUN = hcut, method = "wss", k.max = 20)
+
+fviz_nbclust(mat_str, FUN = hcut, method = "silhouette", k.max = 20)
+
+```
+
+# Seurat clustering
+
+```{r}
+
+plot_1 <- umap_base(sce_11, color_by = "cluster_seurat")+ # own function
+  ggtitle(paste0(species_curr))+
+  scale_color_manual("cluster (seurat)", values = col_clust_s)
+plot_1l <- umap_legend(sce_11, color_by = "cluster_seurat")+
+  scale_color_manual("cluster (seurat)", values = col_clust_s)
+legend_1 <- get_legend(plot_1l)
+
+
+plot_2 <- pca_base2(sce_11, color_by = "cluster_seurat")+ # own function
+  ggtitle(paste0(species_curr))+
+  scale_color_manual("cluster (seurat)", values = col_clust_s)
+plot_2l <- pca_legend(sce_11, color_by = "cluster_seurat")+
+  scale_color_manual("cluster (seurat)", values = col_clust_s)
+legend_2 <- get_legend(plot_2l)
+
+
+plot_3 <- pca_base3(sce_11, color_by = "cluster_seurat")+ # own function
+  ggtitle(paste0(species_curr))+
+  scale_color_manual("cluster (seurat)", values = col_clust_s)
+plot_3l <- pca_legend(sce_11, color_by = "cluster_seurat")+
+  scale_color_manual("cluster (seurat)", values = col_clust_s)
+legend_3 <- get_legend(plot_3l)
+
+PLOT_1 <- ggarrange(plot_1, legend_1)
+PLOT_2 <- ggarrange(plot_2, legend_2)
+PLOT_3 <- ggarrange(plot_3, legend_3)
+  
+PLOT_1
+PLOT_2
+PLOT_3
+```
 

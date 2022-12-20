@@ -1,0 +1,68 @@
+---
+title: "batch_correction_summary"
+author: "Lea Wölbert"
+date: '2022-12-20'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Summary report after Batch correction to see how well the top 10000 genes
+overlap between species.
+
+#### Load libraries, source code 
+
+```{r load,  message = FALSE}
+library(SingleCellExperiment, quietly = TRUE) 
+library(DropletUtils, quietly = TRUE) 
+library(tidyverse, quietly = TRUE) 
+library(ComplexUpset, quietly = TRUE)
+```
+
+```{r load_snakemake, message = FALSE}
+
+sce_09_path <- snakemake@input[["sce_09_path"]]
+species <- snakemake@params[["species"]]
+
+print(sce_09_path)
+sce_list_09 <- list()
+for(s in species){
+  sce_list_09[[s]] <- readRDS(file = paste0(sce_09_path, "/sce_", s, "-09"))
+}
+
+print(sce_list_09)
+```
+
+```{r}
+
+df_overlap <- data.frame(
+ row.names = unique(c(rownames(sce_list_09$mcar),
+                      rownames(sce_list_09$mcas),
+                      rownames(sce_list_09$mmus),
+                      rownames(sce_list_09$mspr)))
+)
+
+df_overlap$mcar <- vector(length = nrow(df_overlap))
+df_overlap$mcas <- vector(length = nrow(df_overlap))
+df_overlap$mmus <- vector(length = nrow(df_overlap))
+df_overlap$mspr <- vector(length = nrow(df_overlap))
+
+df_overlap$mcar[rownames(df_overlap) %in% rownames(sce_list_09$mcar)] <- TRUE
+df_overlap$mcas[rownames(df_overlap) %in% rownames(sce_list_09$mcas)] <- TRUE
+df_overlap$mmus[rownames(df_overlap) %in% rownames(sce_list_09$mmus)] <- TRUE
+df_overlap$mspr[rownames(df_overlap) %in% rownames(sce_list_09$mspr)] <- TRUE
+
+plot <- ComplexUpset::upset(df_overlap, 
+              intersect = colnames(df_overlap),
+              sort_intersections_by = c("cardinality", "ratio"),
+              min_size = 5,
+              name = NULL
+)
+
+plot
+
+```
+
+

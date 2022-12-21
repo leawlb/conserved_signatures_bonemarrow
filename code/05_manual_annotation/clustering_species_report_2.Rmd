@@ -1,0 +1,64 @@
+---
+title: "clustering_species_reports2"
+author: "Lea Wölbert"
+date: '2022-12-21'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Report for clustering as part of manual annotation
+
+#### Load libraries, source code 
+
+```{r load,  message = FALSE}
+library(DropletUtils, quietly = TRUE) 
+library(scater, quietly = TRUE) 
+library(scuttle, quietly = TRUE) 
+library(scran, quietly = TRUE) 
+library(tidyverse, quietly = TRUE) 
+library(dendextend, quietly = TRUE) 
+library(factoextra, quietly = TRUE) 
+```
+
+```{r}
+sce_09 <- readRDS(file = snakemake@input[["sce_09"]])
+
+species_curr <- sce_09$Species_ID[1]
+```
+
+```{r}
+
+sce_hsc <- sce_09[,sce_09$Fraction_ID == "hsc"]
+sce_str <- sce_09[,sce_09$Fraction_ID == "str"]
+
+# HSC clustering
+mat_hsc <- reducedDim(sce_hsc, "PCA") # PCA is batch corrected
+mat_hsc <- scale(mat_hsc)
+
+# Stromal clustering
+mat_str <- reducedDim(sce_str, "PCA")
+mat_str <- scale(mat_str)
+```
+
+```{r}
+
+fviz_nbclust(mat_hsc, FUN = hcut, method = "wss", k.max = 20)+
+  ggtitle(species_curr)
+
+fviz_nbclust(mat_hsc, FUN = hcut, method = "silhouette", k.max = 20)+
+  ggtitle(species_curr)
+
+```
+
+```{r}
+
+fviz_nbclust(mat_str, FUN = hcut, method = "wss", k.max = 20)+
+  ggtitle(species_curr)
+
+fviz_nbclust(mat_str, FUN = hcut, method = "silhouette", k.max = 20)+
+  ggtitle(species_curr)
+
+```

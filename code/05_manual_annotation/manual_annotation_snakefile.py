@@ -32,7 +32,8 @@ print(targets)
 
 for s in species:
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/11_scls/sce_" + s + "-11"]
-  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/05_manual_annotation/clustering/" + s + "/clustering_species_report_" + s +".html"]
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/05_manual_annotation/clustering/" + s + "/clustering_species_report1_" + s +".html"]
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/05_manual_annotation/clustering/" + s + "/clustering_species_report2_" + s +".html"]
   
 if config["run_manual_annotation_summary"]:
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/05_manual_annotation/manual_annotation_species_summary.html"]
@@ -74,7 +75,7 @@ rule seurat_clustering:
         "scripts/11_seurat_clustering.R"
 
 
-rule make_clustering_species_report:
+rule make_clustering_species_report1:
     input:
         sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_seurat3/sce_{species}_Batch_exp_day-09",
         sce_10 = rules.hierarchical_clustering.output,
@@ -83,9 +84,17 @@ rule make_clustering_species_report:
         color_tables = TABLES_PATH,
         number_k = config["values"]["clustering"]["number_k"]
     output:
-        OUTPUT_BASE_PATH + "/sce_objects/reports/05_manual_annotation/clustering/{species}/clustering_species_report_{species}.html"
+        OUTPUT_BASE_PATH + "/sce_objects/reports/05_manual_annotation/clustering/{species}/clustering_species_report1_{species}.html"
     script:
-        "clustering_species_reports.Rmd"
+        "clustering_species_report_1.Rmd"
+        
+rule make_clustering_species_report2:
+    input:
+        sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_seurat3/sce_{species}_Batch_exp_day-09",
+    output:
+        OUTPUT_BASE_PATH + "/sce_objects/reports/05_manual_annotation/clustering/{species}/clustering_species_report2_{species}.html"
+    script:
+        "clustering_species_report_2.Rmd"
 
 
 #-------------------------------------------------------------------------------

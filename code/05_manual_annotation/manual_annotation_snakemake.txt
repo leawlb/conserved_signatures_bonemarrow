@@ -1,0 +1,6 @@
+
+snakemake --cluster "bsub -n20 -q verylong -R rusage[mem=200GB]" -p -j15 -c40 -s manual_annotation_snakefile.py --configfile ../config/config.yaml -n
+
+snakemake --cores 2 -s manual_annotation_snakefile.py --configfile ../config/config.yaml  -n
+
+snakemake --cluster "bsub -n40 -q verylong -R rusage[mem=200GB]" -p -j15 -c40 -s manual_annotation_snakefile.py --configfile ../config/config.yaml -R hierarchical_clustering -n

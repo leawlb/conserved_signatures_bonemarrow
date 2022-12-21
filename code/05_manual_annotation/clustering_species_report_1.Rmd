@@ -1,0 +1,796 @@
+---
+title: "clustering_species_reports1"
+author: "Lea Wölbert"
+date: '2022-12-19'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Report for clustering as part of manual annotation
+
+#### Load libraries, source code 
+
+```{r load,  message = FALSE}
+library(DropletUtils, quietly = TRUE) 
+library(scater, quietly = TRUE) 
+library(scuttle, quietly = TRUE) 
+library(scran, quietly = TRUE) 
+library(tidyverse, quietly = TRUE) 
+library(dendextend, quietly = TRUE) 
+library(factoextra, quietly = TRUE) 
+library(pheatmap, quietly = TRUE) 
+library(bluster)
+library(pheatmap)
+```
+
+```{r}
+sce_09 <- readRDS(file = snakemake@input[["sce_09"]])
+sce_10 <- readRDS(file = snakemake@input[["sce_10"]])
+sce_11 <- readRDS(file = snakemake@input[["sce_11"]])
+
+remove_mature_cells_clustering <- snakemake@params[["remove_mature_cells_clustering"]]
+number_k <- snakemake@params[["number_k"]]
+separate_fractions_clustering <- snakemake@params[["separate_fractions_clustering"]]
+color_tables <- snakemake@params[["color_tables"]]
+
+species_curr <- sce_09$Species_ID[1]
+```
+
+```{r}
+source(file = "../source/colors.R")
+source(file = "../source/plotting.R")
+source(file = "../source/sce_functions.R")
+```
+
+```{r}
+col_cts_all <- col_cts[names(col_cts) %in% sce_10$Identity_ref_all]
+col_cts_fraction <- col_cts[names(col_cts) %in% sce_10$Identity_ref_fraction]
+col_batch_exp_day <- col_alp[names(col_alp) %in% sce_10$Batch_exp_day]
+col_batch_seq <- col_num[names(col_num) %in% sce_10$Batch_sequencing]
+col_ann_age <- col_ann[names(col_ann) %in% sce_10$Age_ID]
+col_ann_fraction <- col_ann[names(col_ann) %in% sce_10$Fraction_ID]
+col_species <- col_spc[names(col_spc) %in% sce_10$Species_ID]
+col_clust_h <- col_num[names(col_num) %in% sce_10$cluster_hierarchical]
+col_clust_s <- col_num[names(col_num) %in% sce_11$cluster_seurat]
+```
+
+Annotations for reference.
+
+```{r}
+
+identity_plots <- function(sce, title){
+  
+  plot_1 <- umap_base(sce, color_by = "Identity_ref_all")+ # own function
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
+    scale_color_manual("Identity1", values = col_cts_all)
+  
+  plot_1l <- umap_legend(sce, color_by = "Identity_ref_all")+
+    scale_color_manual("Identity1", values = col_cts_all)
+  legend_1 <- get_legend(plot_1l)
+
+    
+  plot_2 <- umap_base(sce, color_by = "Identity_ref_fraction")+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
+    scale_color_manual("Identity2", values = col_cts_fraction)
+  
+  plot_2l <- umap_legend(sce, color_by = "Identity_ref_fraction")+
+    scale_color_manual("Identity2", values = col_cts_fraction)
+  legend_2 <- get_legend(plot_2l)
+  
+  PLOT_1 <- ggarrange(plot_1, legend_1)
+  PLOT_2 <- ggarrange(plot_2, legend_2, ncol = 1)
+
+  return(list(PLOT_1, PLOT_2))
+}
+
+identity_plots_09 <- identity_plots(sce_09, title = " ")
+
+```
+
+```{r fig.width=8, fig.height=4}
+identity_plots_09[[1]]
+```
+
+```{r fig.width=4, fig.height=8}
+identity_plots_09[[2]]
+rm(identity_plots_09)
+```
+
+# Hierarchical clustering
+
+```{r}
+print(table(sce_10$cluster_hierarchical))
+```
+
+## CLusters
+
+```{r}
+
+plot_1 <- umap_base(sce_10, color_by = "cluster_hierarchical")+ # own function
+  ggtitle(paste0(species_curr))+
+  scale_color_manual("cluster (hierarchical)", values = col_clust_h)
+plot_1l <- umap_legend(sce_10, color_by = "cluster_hierarchical")+
+  scale_color_manual("cluster (hierarchical)", values = col_clust_h)
+legend_1 <- get_legend(plot_1l)
+
+plot_2 <- pca_base2(sce_10, color_by = "cluster_hierarchical")+ # own function
+  ggtitle(paste0(species_curr))+
+  scale_color_manual("cluster (hierarchical)", values = col_clust_h)
+plot_2l <- pca_legend(sce_10, color_by = "cluster_hierarchical")+
+  scale_color_manual("cluster (hierarchical)", values = col_clust_h)
+legend_2 <- get_legend(plot_2l)
+
+plot_3 <- pca_base3(sce_10, color_by = "cluster_hierarchical")+ # own function
+  ggtitle(paste0(species_curr))+
+  scale_color_manual("cluster (hierarchical)", values = col_clust_h)
+plot_3l <- pca_legend(sce_10, color_by = "cluster_hierarchical")+
+  scale_color_manual("cluster (hierarchical)", values = col_clust_h)
+legend_3 <- get_legend(plot_3l)
+
+PLOT_1 <- ggarrange(plot_1, legend_1)
+PLOT_2 <- ggarrange(plot_2, legend_2)
+PLOT_3 <- ggarrange(plot_3, legend_3)
+  
+PLOT_1
+PLOT_2
+PLOT_3
+
+rm(PLOT_1, PLOT_2, PLOT_3, plot_1, plot_2, plot_3, legend_1, legend_2, legend_3)
+```
+
+## QC
+
+```{r}
+
+ggdf <- data.frame(colData(sce_10))
+
+plot1a <- ggplot(ggdf, aes(x = cluster_hierarchical, y=Batch_exp_day,
+                          fill=Batch_exp_day, color = Batch_exp_day))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Experimental day", values = col_batch_exp_day)+
+  scale_color_manual(values = col_batch_exp_day)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(species_curr)
+
+plot1b <- ggplot(ggdf, aes(x = cluster_hierarchical, fill=Batch_exp_day, 
+                          color = Batch_exp_day))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual("Experimental day", values = col_batch_exp_day)+
+  scale_color_manual(values = col_batch_exp_day)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(species_curr)
+
+plot2a <- ggplot(ggdf, aes(x = Batch_exp_day, y=cluster_hierarchical,
+                          fill=cluster_hierarchical, 
+                          color = cluster_hierarchical))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Cluster (seurat)", values = col_clust_h)+
+  scale_color_manual(values = col_clust_h)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(species_curr)+
+  facet_grid(cols = vars(ggdf$Fraction))
+
+plot2b <- ggplot(ggdf, aes(x = Batch_exp_day, fill=cluster_hierarchical, 
+                          color = cluster_hierarchical))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual("Cluster (seurat)", values = col_clust_h)+
+  scale_color_manual(values = col_clust_h)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(species_curr)+
+  facet_grid(cols = vars(ggdf$Fraction))
+
+plot3a <- ggplot(ggdf, aes(x = cluster_hierarchical, y=Age_ID,
+                          fill=Age_ID, color = Age_ID))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Age", values = col_ann_age)+
+  scale_color_manual(values = col_ann_age)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(species_curr)
+
+plot3b <- ggplot(ggdf, aes(x = cluster_hierarchical, fill=Age_ID, 
+                          color = Age_ID))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual("Age", values = col_ann_age)+
+  scale_color_manual(values = col_ann_age)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(species_curr)
+
+plot4 <- ggplot(ggdf, aes(x = Age_ID, y=cluster_hierarchical,
+                          fill=cluster_hierarchical, 
+                          color = cluster_hierarchical))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Cluster (seurat)", values = col_clust_h)+
+  scale_color_manual(values = col_clust_h)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(species_curr)
+
+plot5a <- ggplot(ggdf, aes(x = cluster_hierarchical, y=Identity_ref_all,
+                          fill=Identity_ref_all, 
+                          color = Identity_ref_all))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Identity 1", values = col_cts_all)+
+  scale_color_manual(values = col_cts_all)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(species_curr)
+
+plot5b <- ggplot(ggdf, aes(x = cluster_hierarchical, fill=Identity_ref_all, 
+                          color = Identity_ref_all))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual("Identity 1", values = col_cts_all)+
+  scale_color_manual(values = col_cts_all)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(species_curr)
+
+plot6a <- ggplot(ggdf, aes(x = cluster_hierarchical, y=Identity_ref_fraction,
+                          fill=Identity_ref_fraction, 
+                          color = Identity_ref_fraction))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Identity s", values = col_cts_fraction)+
+  scale_color_manual(values = col_cts_fraction)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(species_curr)
+
+plot6b <- ggplot(ggdf, aes(x = cluster_hierarchical, fill=Identity_ref_fraction, 
+                          color = Identity_ref_fraction))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual("Identity 2", values = col_cts_fraction)+
+  scale_color_manual(values = col_cts_fraction)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(species_curr)
+
+plot_all_leg <- ggplot(ggdf, aes(x = cluster_hierarchical, y=Identity_ref_all,
+                                 fill=Identity_ref_all))+
+  geom_col()+
+  scale_fill_manual("Identity1", values = col_cts_all)
+legend_all <- get_legend(plot_all_leg)
+plot_frc_leg <- ggplot(ggdf, aes(x = Object_ID, y=Identity_ref_fraction,
+                                  fill=Identity_ref_fraction))+
+  geom_col()+
+  scale_fill_manual("Identity2", values = col_cts_fraction)
+legend_frc <- get_legend(plot_frc_leg)
+ 
+plot1a
+plot1b
+plot2a
+plot2b
+plot3a
+plot3b
+plot4
+
+PLOT5a <- ggarrange(plot5a, legend_all)
+PLOT5b <- ggarrange(plot5b, legend_all)
+PLOT6a <- ggarrange(plot6a, legend_frc, ncol = 1)
+PLOT6b <- ggarrange(plot6b, legend_frc, ncol = 1)
+
+PLOT5a
+PLOT5b
+```
+
+```{r fig.width=10, fig.height = 11}
+PLOT6a
+PLOT6b
+rm(plot1a, plot1b, plot2a, plot2b, plot3a, plot3b, plot4, PLOT5a, PLOT5b,
+   PLOT6a, PLOT6b)
+```
+
+## Silhouette and Purity
+
+From http://bioconductor.org/books/3.16/OSCA.advanced/clustering-redux.html
+
+```{r}
+
+# Silhouette 
+sil_approx <- approxSilhouette(reducedDim(sce_10, "PCA"), 
+                               clusters = sce_10$cluster_hierarchical)
+
+sil_data <- as.data.frame(sil_approx)
+sil_data$closest <- factor(ifelse(sil_data$width > 0, 
+                                  sce_10$cluster_hierarchical, 
+                                  sil_data$other))
+sil_data$cluster <- sce_10$cluster_hierarchical
+
+ggplot(sil_data, aes(x=cluster, y=width, colour=closest))+
+  ggbeeswarm::geom_quasirandom(size = 0.1)+
+  theme_classic()+
+  ggtitle(paste0(species_curr))+
+  facet_grid(cols = vars(sce_10$Fraction_ID))+
+  scale_color_manual("cluster (hierarchical)", values = col_clust_h)
+
+# Purity
+pure_sce <- neighborPurity(reducedDim(sce_10, "PCA"), sce_10$cluster_hierarchical)
+pure_data <- as.data.frame(pure_sce)
+pure_data$maximum <- factor(pure_data$maximum)
+pure_data$cluster <- sce_10$cluster_hierarchical
+
+ggplot(pure_data, aes(x=cluster, y=purity, colour=maximum)) +
+  ggbeeswarm::geom_quasirandom(size = 0.1)+
+  theme_classic()+
+  ggtitle(paste0(species_curr))+
+  facet_grid(cols = vars(sce_10$Fraction_ID))+
+  scale_color_manual("cluster (hierarchical)", values = col_clust_h)
+
+ggplot(pure_data, aes(x=cluster, y=purity, color=cluster)) +
+  geom_boxplot(outlier.size = 0.1)+
+  ggtitle(paste0(species_curr))+
+  theme_classic()+
+  scale_fill_manual("cluster (hierarchical)", values = col_clust_h)
+
+rm(pure_data)
+rm(pure_sce)
+rm(sil_approx)
+rm(sil_sce)
+```
+
+## Fraction-specific
+
+Look at specific clustering of HSCs and Stromal cells.
+
+```{r}
+
+sce_hsc <- sce_09[,sce_09$Fraction_ID == "hsc"]
+sce_str <- sce_09[,sce_09$Fraction_ID == "str"]
+
+number_k_hsc <- number_k[[species_curr]]$hsc
+number_k_str <- number_k[[species_curr]]$str
+
+# HSC clustering
+mat_hsc <- reducedDim(sce_hsc, "PCA") # PCA is batch corrected
+mat_hsc <- scale(mat_hsc)
+dist_hsc <- dist(mat_hsc, method = 'euclidean')
+ward_hsc <- hclust(dist_hsc, method = "ward.D2")
+
+# Stromal clustering
+mat_str <- reducedDim(sce_str, "PCA")
+mat_str <- scale(mat_str)
+dist_str <- dist(mat_str, method = 'euclidean')
+ward_str <- hclust(dist_str, method = "ward.D2")
+
+```
+
+### HSCs
+
+```{r}
+
+dend_hsc <- as.dendrogram(ward_hsc)
+col_dend_hsc <- color_branches(dend_hsc, k = (number_k_hsc-1), 
+                               groupLabels = FALSE, col = col_clust_h)
+plot(col_dend_hsc, main = paste0(species_curr, 
+                                 " HSCs, ward.D2, k=", (number_k_hsc-1)))
+
+col_dend_hsc <- color_branches(dend_hsc, k = number_k_hsc, 
+                               groupLabels = FALSE, col = col_clust_h)
+plot(col_dend_hsc, main = paste0(species_curr, 
+                                 " HSCs, ward.D2, used k=", number_k_hsc))
+
+col_dend_hsc <- color_branches(dend_hsc, k = (number_k_hsc+1), 
+                               groupLabels = FALSE, col = col_clust_h)
+plot(col_dend_hsc, main = paste0(species_curr, 
+                                 " HSCs, ward.D2, k=", (number_k_hsc+1)))
+
+```
+
+### Stromal
+
+```{r}
+
+dend_str <- as.dendrogram(ward_str)
+col_dend_str <- color_branches(dend_str, k = (number_k_str-1), 
+                               groupLabels = FALSE, col = col_clust_h)
+plot(col_dend_str, main = paste0(species_curr, 
+                                 " Stromal, ward.D2, k=", (number_k_str-1)))
+
+col_dend_str <- color_branches(dend_str, k = number_k_str, 
+                               groupLabels = FALSE, col = col_clust_h)
+plot(col_dend_str, main = paste0(species_curr, 
+                                 " Stromal, ward.D2, used k=", number_k_str))
+
+col_dend_str <- color_branches(dend_str, k = (number_k_str+1), 
+                               groupLabels = FALSE, col = col_clust_h)
+plot(col_dend_str, main = paste0(species_curr, 
+                                 " Stromal, ward.D2, k=", (number_k_str+1)))
+
+```
+
+# Seurat clustering
+
+## Clusters
+
+```{r}
+
+plot_1 <- umap_base(sce_11, color_by = "cluster_seurat")+ # own function
+  ggtitle(paste0(species_curr))+
+  scale_color_manual("cluster (seurat)", values = col_clust_s)
+plot_1l <- umap_legend(sce_11, color_by = "cluster_seurat")+
+  scale_color_manual("cluster (seurat)", values = col_clust_s)
+legend_1 <- get_legend(plot_1l)
+
+plot_2 <- pca_base2(sce_11, color_by = "cluster_seurat")+ # own function
+  ggtitle(paste0(species_curr))+
+  scale_color_manual("cluster (seurat)", values = col_clust_s)
+plot_2l <- pca_legend(sce_11, color_by = "cluster_seurat")+
+  scale_color_manual("cluster (seurat)", values = col_clust_s)
+legend_2 <- get_legend(plot_2l)
+
+plot_3 <- pca_base3(sce_11, color_by = "cluster_seurat")+ # own function
+  ggtitle(paste0(species_curr))+
+  scale_color_manual("cluster (seurat)", values = col_clust_s)
+plot_3l <- pca_legend(sce_11, color_by = "cluster_seurat")+
+  scale_color_manual("cluster (seurat)", values = col_clust_s)
+legend_3 <- get_legend(plot_3l)
+
+PLOT_1 <- ggarrange(plot_1, legend_1)
+PLOT_2 <- ggarrange(plot_2, legend_2)
+PLOT_3 <- ggarrange(plot_3, legend_3)
+  
+PLOT_1
+PLOT_2
+PLOT_3
+```
+
+## QC
+
+```{r}
+
+ggdf <- data.frame(colData(sce_11))
+
+plot1a <- ggplot(ggdf, aes(x = cluster_seurat, y=Batch_exp_day,
+                          fill=Batch_exp_day, color = Batch_exp_day))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Experimental day", values = col_batch_exp_day)+
+  scale_color_manual(values = col_batch_exp_day)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(species_curr)
+
+plot1b <- ggplot(ggdf, aes(x = cluster_seurat, fill=Batch_exp_day, 
+                          color = Batch_exp_day))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual("Experimental day", values = col_batch_exp_day)+
+  scale_color_manual(values = col_batch_exp_day)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(species_curr)
+
+plot2a <- ggplot(ggdf, aes(x = Batch_exp_day, y=cluster_seurat,
+                          fill=cluster_seurat, color = cluster_seurat))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Cluster (seurat)", values = col_clust_s)+
+  scale_color_manual(values = col_clust_s)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(species_curr)+
+  facet_grid(cols = vars(ggdf$Fraction))
+
+plot2b <- ggplot(ggdf, aes(x = Batch_exp_day, fill=cluster_seurat, 
+                          color = cluster_seurat))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual("Cluster (seurat)", values = col_clust_s)+
+  scale_color_manual(values = col_clust_s)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(species_curr)+
+  facet_grid(cols = vars(ggdf$Fraction))
+
+plot3a <- ggplot(ggdf, aes(x = cluster_seurat, y=Age_ID,
+                          fill=Age_ID, color = Age_ID))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Age", values = col_ann_age)+
+  scale_color_manual(values = col_ann_age)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(species_curr)
+
+plot3b <- ggplot(ggdf, aes(x = cluster_seurat, fill=Age_ID, 
+                          color = Age_ID))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual("Age", values = col_ann_age)+
+  scale_color_manual(values = col_ann_age)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(species_curr)
+
+plot4 <- ggplot(ggdf, aes(x = Age_ID, y=cluster_seurat,
+                          fill=cluster_seurat, color = cluster_seurat))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Cluster (seurat)", values = col_clust_s)+
+  scale_color_manual(values = col_clust_s)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(species_curr)
+
+plot5a <- ggplot(ggdf, aes(x = cluster_seurat, y=Identity_ref_all,
+                          fill=Identity_ref_all, 
+                          color = Identity_ref_all))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Identity 1", values = col_cts_all)+
+  scale_color_manual(values = col_cts_all)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(species_curr)
+
+plot5b <- ggplot(ggdf, aes(x = cluster_seurat, fill=Identity_ref_all, 
+                          color = Identity_ref_all))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual("Identity 1", values = col_cts_all)+
+  scale_color_manual(values = col_cts_all)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(species_curr)
+
+plot6a <- ggplot(ggdf, aes(x = cluster_seurat, y=Identity_ref_fraction,
+                          fill=Identity_ref_fraction, 
+                          color = Identity_ref_fraction))+
+  geom_col()+
+  theme_classic()+
+  scale_fill_manual("Identity s", values = col_cts_fraction)+
+  scale_color_manual(values = col_cts_fraction)+
+  theme(legend.position = "none", axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(species_curr)
+
+plot6b <- ggplot(ggdf, aes(x = cluster_seurat, fill=Identity_ref_fraction, 
+                          color = Identity_ref_fraction))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual("Identity 2", values = col_cts_fraction)+
+  scale_color_manual(values = col_cts_fraction)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(species_curr)
+
+
+plot1a
+plot1b
+plot2a
+plot2b
+plot3a
+plot3b
+plot4
+
+PLOT5a <- ggarrange(plot5a, legend_all)
+PLOT5b <- ggarrange(plot5b, legend_all)
+PLOT6a <- ggarrange(plot6a, legend_frc, ncol = 1)
+PLOT6b <- ggarrange(plot6b, legend_frc, ncol = 1)
+
+PLOT5a
+PLOT5b
+```
+
+```{r fig.width=10, fig.height = 11}
+PLOT6a
+PLOT6b
+```
+
+## Silhouette and Purity
+
+```{r}
+
+# Silhouette
+sil.approx <- approxSilhouette(reducedDim(sce_11, "PCA"), 
+                               clusters = sce_11$cluster_seurat)
+sil.data <- as.data.frame(sil.approx)
+sil.data$closest <- factor(ifelse(sil.data$width > 0, 
+                                  sce_11$cluster_seurat, 
+                                  sil.data$other))
+sil.data$cluster <- sce_11$cluster_seurat
+
+ggplot(sil.data, aes(x=cluster, y=width, colour=closest))+
+  ggbeeswarm::geom_quasirandom(size = 0.1)+
+  theme_classic()+
+  ggtitle(paste0(species_curr, sce_11$seurat_mode[1]))+
+  facet_grid(cols = vars(sce_11$Fraction_ID))+
+  scale_color_manual("cluster (hierarchical)", values = col_clust_h)
+
+# Purity
+pure_sce <- neighborPurity(reducedDim(sce_11, "PCA"), sce_11$cluster_seurat)
+pure_data <- as.data.frame(pure_sce)
+pure_data$maximum <- factor(pure_data$maximum)
+pure_data$cluster <- sce_11$cluster_seurat
+
+ggplot(pure_data, aes(x=cluster, y=purity, colour=maximum))+
+  ggbeeswarm::geom_quasirandom(size = 0.1)+
+  theme_classic()+
+  ggtitle(paste0(species_curr, sce_11$seurat_mode[1]))+
+  facet_grid(cols = vars(sce_11$Fraction_ID))+
+  scale_color_manual("cluster (hierarchical)", values = col_clust_h)
+
+ggplot(pure_data, aes(x=cluster, y=purity, color=cluster))+
+  geom_boxplot(outlier.size = 0.1)+
+  theme_classic()+
+  ggtitle(paste0(species_curr, sce_11$seurat_mode[1]))+
+  scale_fill_manual("cluster (hierarchical)", values = col_clust_h)
+
+```
+
+# Comparison of labels
+
+```{r fig.height = 10}
+
+sce_temp <- sce_11
+sce_temp$cluster_hierarchical <- paste0(sce_temp$cluster_hierarchical,
+                                        "_hierarchical")
+sce_temp$cluster_seurat <- paste0(sce_temp$cluster_seurat, "_seurat")
+
+mat1 <- matrix(nrow = length(unique(sce_temp$cluster_hierarchical)),
+               ncol = length(unique(sce_temp$cluster_seurat)))
+
+rownames(mat1) <- unique(sce_temp$cluster_hierarchical)
+colnames(mat1) <- unique(sce_temp$cluster_seurat)
+
+for(i in 1:nrow(mat1)){
+  for(j in 1:ncol(mat1)){
+    mat1[i,j] <- length(which(!is.na(match(
+      colnames(sce_temp)[which(
+        sce_temp$cluster_hierarchical == rownames(mat1)[i])],
+      colnames(sce_temp)[which(
+        sce_temp$cluster_seurat == colnames(mat1)[j])]
+      )
+      )
+      )
+      )/length(which(sce_temp$cluster_seurat == colnames(mat1)[j]))
+  } 
+}
+
+pheatmap(t(mat1), main = species_curr)
+
+mat2 <- matrix(nrow = length(unique(sce_temp$cluster_hierarchical)),
+               ncol = length(unique(sce_temp$cluster_seurat)))
+
+rownames(mat2) <- unique(sce_temp$cluster_hierarchical)
+colnames(mat2) <- unique(sce_temp$cluster_seurat)
+
+for(i in 1:nrow(mat2)){
+  for(j in 1:ncol(mat2)){
+    mat2[i,j] <- length(which(!is.na(match(
+      colnames(sce_temp)[which(
+        sce_temp$cluster_hierarchical == rownames(mat2)[i])],
+      colnames(sce_temp)[which(
+        sce_temp$cluster_seurat == colnames(mat2)[j])]
+      )
+      )
+      )
+      )/length(which(sce_temp$cluster_hierarchical == rownames(mat2)[i]))
+  } 
+}
+
+
+pheatmap(mat2, main = species_curr)
+
+```
+
+
+
+```{r fig.height = 10}
+
+sce_temp <- sce_11
+sce_temp$cluster_hierarchical <- paste0(sce_temp$cluster_hierarchical,
+                                        "_hierarchical")
+
+mat1 <- matrix(nrow = length(unique(sce_temp$cluster_hierarchical)),
+               ncol = length(unique(sce_temp$Identity_ref_fraction)))
+
+rownames(mat1) <- unique(sce_temp$cluster_hierarchical)
+colnames(mat1) <- unique(sce_temp$Identity_ref_fraction)
+
+for(i in 1:nrow(mat1)){
+  for(j in 1:ncol(mat1)){
+    mat1[i,j] <- length(which(!is.na(match(
+      colnames(sce_temp)[which(
+        sce_temp$cluster_hierarchical == rownames(mat1)[i])],
+      colnames(sce_temp)[which(
+        sce_temp$Identity_ref_fraction == colnames(mat1)[j])]
+      )
+      )
+      )
+      )/length(which(sce_temp$Identity_ref_fraction == colnames(mat1)[j]))
+  } 
+}
+
+pheatmap(t(mat1), main = species_curr)
+
+mat2 <- matrix(nrow = length(unique(sce_temp$cluster_hierarchical)),
+               ncol = length(unique(sce_temp$Identity_ref_fraction)))
+
+rownames(mat2) <- unique(sce_temp$cluster_hierarchical)
+colnames(mat2) <- unique(sce_temp$Identity_ref_fraction)
+
+for(i in 1:nrow(mat2)){
+  for(j in 1:ncol(mat2)){
+    mat2[i,j] <- length(which(!is.na(match(
+      colnames(sce_temp)[which(
+        sce_temp$cluster_hierarchical == rownames(mat2)[i])],
+      colnames(sce_temp)[which(
+        sce_temp$Identity_ref_fraction == colnames(mat2)[j])]
+      )
+      )
+      )
+      )/length(which(sce_temp$cluster_hierarchical == rownames(mat2)[i]))
+  } 
+}
+
+pheatmap(mat2, main = species_curr)
+
+```
+
+
+
+```{r fig.height = 10}
+
+sce_temp <- sce_11
+sce_temp$cluster_seurat <- paste0(sce_temp$cluster_seurat, "_seurat")
+
+mat1 <- matrix(nrow = length(unique(sce_temp$Identity_ref_fraction)),
+               ncol = length(unique(sce_temp$cluster_seurat)))
+
+rownames(mat1) <- unique(sce_temp$Identity_ref_fraction)
+colnames(mat1) <- unique(sce_temp$cluster_seurat)
+
+for(i in 1:nrow(mat1)){
+  for(j in 1:ncol(mat1)){
+    mat1[i,j] <- length(which(!is.na(match(
+      colnames(sce_temp)[which(
+        sce_temp$Identity_ref_fraction == rownames(mat1)[i])],
+      colnames(sce_temp)[which(
+        sce_temp$cluster_seurat == colnames(mat1)[j])]
+      )
+      )
+      )
+      )/length(which(sce_temp$cluster_seurat == colnames(mat1)[j]))
+  } 
+}
+
+pheatmap(t(mat1), main = species_curr)
+
+mat2 <- matrix(nrow = length(unique(sce_temp$Identity_ref_fraction)),
+               ncol = length(unique(sce_temp$cluster_seurat)))
+
+rownames(mat2) <- unique(sce_temp$Identity_ref_fraction)
+colnames(mat2) <- unique(sce_temp$cluster_seurat)
+
+for(i in 1:nrow(mat2)){
+  for(j in 1:ncol(mat2)){
+    mat2[i,j] <- length(which(!is.na(match(
+      colnames(sce_temp)[which(
+        sce_temp$Identity_ref_fraction == rownames(mat2)[i])],
+      colnames(sce_temp)[which(
+        sce_temp$cluster_seurat == colnames(mat2)[j])]
+      )
+      )
+      )
+      )/length(which(sce_temp$Identity_ref_fraction == rownames(mat2)[i]))
+  } 
+}
+
+pheatmap(mat2, main = species_curr)
+
+```
+
+
+
+```{r}
+sessionInfo()
+```

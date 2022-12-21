@@ -20,8 +20,8 @@ marker2 <- "darkgreen"
 #-------------------------------------------------------------------------------
 
 # SAMPLES/CLUSTER
-col_num <- c(dittoColors()[2:26])
-names(col_num) <- as.character(c(1:25))
+col_num <- c(dittoColors()[2:35])
+names(col_num) <- as.character(c(1:34))
 
 col_alp <- c(dittoColors()[12:19])
 names(col_alp) <- c("a", "b", "c", "d", "e", "f", "g")

@@ -1,0 +1,9 @@
+snakemake --cluster "bsub -n2 -q long -R rusage[mem=10GB]" -p -j66 -c20 -s preprocessing_snakefile.py --configfile ../config/config.yaml -R remove_droplets -n
+
+snakemake --cluster "bsub -n2 -q long -R rusage[mem=10GB]" -p -j66 -c20 -s preprocessing_snakefile.py --configfile ../config/config.yaml -n
+
+snakemake --cluster "bsub -n2 -q long -R rusage[mem=10GB]" -p -j66 -c20 -s preprocessing_snakefile.py --configfile  ../config/config.yaml --config run_preprocessing_summary=True -n
+
+snakemake --cluster "bsub -n2 -q long -R rusage[mem=100GB]" -p -j66 -c20 -s preprocessing_snakefile.py --configfile  ../config/config.yaml --config run_preprocessing_summary=True -R make_summary_report -n
+
+snakemake -c1 -s preprocessing_snakefile.py --configfile  ../config/config.yaml --config run_preprocessing_summary=True -R make_summary_report -n

@@ -48,16 +48,16 @@ values:
     number_k: 
     # adjust according to clustering reports
       mcar:
-        hsc: 17 
-        str: 14
+        hsc: 11 
+        str: 13
       mcas:
-        hsc: 16
-        str: 15
+        hsc: 10
+        str: 14
       mmus:
-        hsc: 16
+        hsc: 11
         str: 15
       mspr:
-        hsc: 16
+        hsc: 10
         str: 15
       
 # RULES  

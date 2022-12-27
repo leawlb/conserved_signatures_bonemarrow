@@ -30,6 +30,7 @@ library(pheatmap)
 sce_09 <- readRDS(file = snakemake@input[["sce_09"]])
 sce_10 <- readRDS(file = snakemake@input[["sce_10"]])
 sce_11 <- readRDS(file = snakemake@input[["sce_11"]])
+sce_12 <- readRDS(file = snakemake@input[["sce_12"]])
 
 remove_mature_cells_clustering <- snakemake@params[["remove_mature_cells_clustering"]]
 number_k <- snakemake@params[["number_k"]]
@@ -55,6 +56,10 @@ col_ann_fraction <- col_ann[names(col_ann) %in% sce_10$Fraction_ID]
 col_species <- col_spc[names(col_spc) %in% sce_10$Species_ID]
 col_clust_h <- col_num[names(col_num) %in% sce_10$cluster_hierarchical]
 col_clust_s <- col_num[names(col_num) %in% sce_11$cluster_seurat]
+
+col_cts_cluster_baccin <- col_cts[names(col_cts) %in% sce_12$cluster_ref_baccin]
+col_cts_cluster_dahlin <- col_cts[names(col_cts) %in% sce_12$cluster_ref_dahlin]
+col_cts_cluster_dolgalev <- col_cts[names(col_cts) %in% sce_12$cluster_ref_dolgalev]
 ```
 
 Annotations for reference.
@@ -97,6 +102,83 @@ identity_plots_09[[1]]
 ```{r fig.width=4, fig.height=8}
 identity_plots_09[[2]]
 rm(identity_plots_09)
+```
+
+# Annotated clusters
+
+```{r}
+print(table(sce_12$cluster_ref_baccin))
+```
+
+```{r}
+print(table(sce_12$cluster_ref_dahlin))
+```
+
+```{r}
+print(table(sce_12$cluster_ref_dolgalev))
+```
+
+```{r}
+
+identity_plots <- function(sce, title){
+  
+  plot_1a <- umap_base(sce, color_by = "cluster_ref_baccin")+ # own function
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
+  scale_color_manual("Baccin reference clusters", values = col_cts_cluster_baccin)
+  plot_1al <- umap_legend(sce, color_by = "cluster_ref_baccin")+
+    scale_color_manual("Baccin reference clusters", values = col_cts_cluster_baccin)
+  legend_1a <- get_legend(plot_1al)
+
+  plot_1b <- umap_base(sce, color_by = "cluster_ref_baccin_similarities")+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
+    scale_colour_gradient(low = "black", high = "gold")
+  plot_1bl <- umap_legend(sce, color_by = "cluster_ref_baccin_similarities")+
+    scale_colour_gradient(low = "black", high = "gold", name = "Baccin reference cluster similarity")
+  legend_1b <- get_legend(plot_1bl)
+
+  plot_2a <- umap_base(sce, color_by = "cluster_ref_dahlin")+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
+  scale_color_manual("Dahlin reference clusters", values = col_cts_cluster_dahlin)
+  plot_2al <- umap_legend(sce, color_by = "cluster_ref_dahlin")+
+    scale_color_manual("Dahlin reference clusters", values = col_cts_cluster_dahlin)
+  legend_2a <- get_legend(plot_2al)
+  
+  plot_2b <- umap_base(sce, color_by = "cluster_ref_dahlin_similarities")+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
+    scale_colour_gradient(low = "black", high = "gold")
+  plot_2bl <- umap_legend(sce, color_by = "cluster_ref_dahlin_similarities")+
+    scale_colour_gradient(low = "black", high = "gold", name = "Dahlin reference cluster similarity")
+  legend_2b <- get_legend(plot_2bl)
+  
+   plot_3a <- umap_base(sce, color_by = "cluster_ref_dolgalev")+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
+  scale_color_manual("Dolgalev reference clusters", values = col_cts_cluster_dolgalev)
+  plot_3al <- umap_legend(sce, color_by = "cluster_ref_dolgalev")+
+    scale_color_manual("Dolgalev reference clusters", values = col_cts_cluster_dolgalev)
+  legend_3a <- get_legend(plot_3al)
+  
+  plot_3b <- umap_base(sce, color_by = "cluster_ref_dolgalev_similarities")+
+    ggtitle(paste0(species_curr, title, nrow(sce)))+
+    scale_colour_gradient(low = "black", high = "gold")
+  plot_3bl <- umap_legend(sce, color_by = "cluster_ref_dolgalev_similarities")+
+    scale_colour_gradient(low = "black", high = "gold", name = "Dolgalev reference cluster similarity")
+  legend_3b <- get_legend(plot_3bl)
+  
+  PLOT_1a <- ggarrange(plot_1a, legend_1a)
+  PLOT_1b <- ggarrange(plot_1b, legend_1b)
+  PLOT_2a <- ggarrange(plot_2a, legend_2a)
+  PLOT_2b <- ggarrange(plot_2b, legend_2b)
+  PLOT_3a <- ggarrange(plot_3a, legend_3a)
+  PLOT_3b <- ggarrange(plot_3b, legend_3b)
+  return(list(PLOT_1a, PLOT_1b, PLOT_2a, PLOT_2b, PLOT_3a, PLOT_3b))
+}
+
+cluster_plots_12 <- identity_plots(sce_12, title = " ")
+
+```
+
+```{r fig.width=8, fig.height=4}
+cluster_plots_12
 ```
 
 # Hierarchical clustering

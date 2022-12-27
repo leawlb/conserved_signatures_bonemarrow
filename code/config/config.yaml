@@ -50,15 +50,19 @@ values:
       mcar:
         hsc: 11 
         str: 13
+        both: 20
       mcas:
         hsc: 10
         str: 14
+        both: 20
       mmus:
-        hsc: 11
-        str: 15
+        hsc: 9
+        str: 14
+        both: 20
       mspr:
         hsc: 10
         str: 15
+        both: 20
       
 # RULES  
 # in caps if used in R, only first letter capitalized for use in Snakefile
@@ -75,6 +79,6 @@ hvgs_for_batch_correction: FALSE
 rescale_for_batch_correction: FALSE # Rescaling assumes that the cell composition in all batches is the same 
 
 remove_mature_cells_clustering: FALSE
-separate_fractions_clustering: TRUE
+separate_fractions_clustering: FALSE
 
 

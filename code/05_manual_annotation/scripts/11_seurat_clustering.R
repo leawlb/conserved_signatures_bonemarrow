@@ -7,28 +7,18 @@ source(file = snakemake@params[["sce_functions"]])
 #-------------------------------------------------------------------------------
 
 sce <- readRDS(file = snakemake@input[["sce_10"]])
-remove_mature_cells_clustering <- snakemake@params[["remove_mature_cells_clustering"]]
 separate_fractions_clustering <- snakemake@params[["separate_fractions_clustering"]]
-
-# prepare SCE
-sce <- get_mature_cts_all(sce)
-if(remove_mature_cells_clustering){
-  sce <- sce[,sce$mature_cells == "FALSE"]
-}
-
-# separate fractions for separate clustering 
-sce_hsc <- sce[,sce$Fraction_ID == "hsc"]
-sce_str <- sce[,sce$Fraction_ID == "str"]
-
-# find contamination but do not remove it (save it for later)
-sce_hsc <- find_contamination_ref_all(sce_hsc, input = "hsc")
-sce_str <- find_contamination_ref_all(sce_str, input = "stromal")
 
 #-------------------------------------------------------------------------------
 # Clustering
 
 if(separate_fractions_clustering){
   print("separated fractions")
+  
+  # separate fractions for separate clustering 
+  sce_hsc <- sce[,sce$Fraction_ID == "hsc"]
+  sce_str <- sce[,sce$Fraction_ID == "str"]
+  
   # convert so seurat objects
   if(colData(sce)$Correction_method[1] == "Seurat"){ # if seurat was used for BC
     seurat_hsc <- as.Seurat(sce_hsc, counts = "counts", data = "corrected")
@@ -57,10 +47,10 @@ if(separate_fractions_clustering){
   sce$seurat_mode <- rep("fractions_separated", ncol(sce))
   
 }else{
-  sce <- cbind(sce_hsc, sce_str)
-  if(bc_use == "seurat3"){ # if seurat was used for BC
+  
+  if(sce$Correction_method[1] == "Seurat"){ # if seurat was used for BC
     seurat <- as.Seurat(sce, counts = "counts", data = "corrected")
-  }else if(bc_use == "mnncorrect"){ # if mnncorrect was used
+  }else if(sce$Correction_method[1] == "FastMNN"){ # if mnncorrect was used
     seurat <- as.Seurat(sce, counts = "counts", data = "reconstructed")
   }
 

@@ -34,13 +34,27 @@ species_curr <- sce_09$Species_ID[1]
 sce_hsc <- sce_09[,sce_09$Fraction_ID == "hsc"]
 sce_str <- sce_09[,sce_09$Fraction_ID == "str"]
 
+# clustering both fractions together
+mat <- reducedDim(sce_09, "PCA") # PCA is batch corrected
+mat <- scale(mat)
+
 # HSC clustering
-mat_hsc <- reducedDim(sce_hsc, "PCA") # PCA is batch corrected
+mat_hsc <- reducedDim(sce_hsc, "PCA") 
 mat_hsc <- scale(mat_hsc)
 
 # Stromal clustering
 mat_str <- reducedDim(sce_str, "PCA")
 mat_str <- scale(mat_str)
+```
+
+```{r}
+
+fviz_nbclust(mat, FUN = hcut, method = "wss", k.max = 20)+
+  ggtitle(species_curr)
+
+fviz_nbclust(mat, FUN = hcut, method = "silhouette", k.max = 20)+
+  ggtitle(species_curr)
+
 ```
 
 ```{r}

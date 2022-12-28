@@ -2,6 +2,7 @@
 
 library(DropletUtils)
 library(scran)
+library(bluster)
 
 #-------------------------------------------------------------------------------
 

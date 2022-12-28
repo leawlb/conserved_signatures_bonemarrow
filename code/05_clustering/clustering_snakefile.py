@@ -50,7 +50,6 @@ rule all: # must contain all possible output paths from all rules
         targets
 
 #-------------------------------------------------------------------------------
-# CLUSTERING (try two different methods)
 
 rule hierarchical_clustering:
     input: 

@@ -45,34 +45,38 @@ mat_hsc <- scale(mat_hsc)
 # Stromal clustering
 mat_str <- reducedDim(sce_str, "PCA")
 mat_str <- scale(mat_str)
+
+rm(sce_str, sce_hsc, sce_09)
 ```
 
 ```{r}
 
-fviz_nbclust(mat, FUN = hcut, method = "wss", k.max = 20)+
-  ggtitle(species_curr)
+fviz_nbclust(mat, FUN = hcut, method = "wss", k.max = 28)+
+  ggtitle(paste0(species_curr, " BOTH"))
 
-fviz_nbclust(mat, FUN = hcut, method = "silhouette", k.max = 20)+
-  ggtitle(species_curr)
+fviz_nbclust(mat, FUN = hcut, method = "silhouette", k.max = 28)+
+  ggtitle(paste0(species_curr, " BOTH"))
 
+rm(mat)
 ```
 
 ```{r}
 
-fviz_nbclust(mat_hsc, FUN = hcut, method = "wss", k.max = 20)+
-  ggtitle(species_curr)
+fviz_nbclust(mat_hsc, FUN = hcut, method = "wss", k.max = 16)+
+  ggtitle(paste0(species_curr, " HSC"))
 
-fviz_nbclust(mat_hsc, FUN = hcut, method = "silhouette", k.max = 20)+
-  ggtitle(species_curr)
+fviz_nbclust(mat_hsc, FUN = hcut, method = "silhouette", k.max = 16)+
+  ggtitle(paste0(species_curr, " HSC"))
 
+rm(mat_hsc)
 ```
 
 ```{r}
 
-fviz_nbclust(mat_str, FUN = hcut, method = "wss", k.max = 20)+
-  ggtitle(species_curr)
+fviz_nbclust(mat_str, FUN = hcut, method = "wss", k.max = 16)+
+  ggtitle(paste0(species_curr, " Stromal"))
 
-fviz_nbclust(mat_str, FUN = hcut, method = "silhouette", k.max = 20)+
-  ggtitle(species_curr)
+fviz_nbclust(mat_str, FUN = hcut, method = "silhouette", k.max = 16)+
+  ggtitle(paste0(species_curr, " Stromal"))
 
 ```

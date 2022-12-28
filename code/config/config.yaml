@@ -50,19 +50,19 @@ values:
       mcar:
         hsc: 11 
         str: 13
-        both: 20
+        both: 25
       mcas:
         hsc: 10
         str: 14
-        both: 20
+        both: 25
       mmus:
         hsc: 9
         str: 14
-        both: 20
+        both: 25
       mspr:
         hsc: 10
         str: 15
-        both: 20
+        both: 25
       
 # RULES  
 # in caps if used in R, only first letter capitalized for use in Snakefile

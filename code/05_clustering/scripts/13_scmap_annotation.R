@@ -5,7 +5,7 @@ library(scmap)
 
 # From https://bioconductor.org/packages/release/bioc/vignettes/scmap/inst/doc/scmap.html
 
-sce <- readRDS(file = snakemake@input[["sce_11"]])
+sce <- readRDS(file = snakemake@input[["sce_12"]])
 
 ref_baccin <- readRDS(file = snakemake@params[["ref_baccin_sce"]])
 ref_dahlin <- readRDS(file = snakemake@params[["ref_dahlin_sce"]])
@@ -55,4 +55,4 @@ sce$cluster_ref_dolgalev <- results$combined_labs
 sce$cluster_ref_dolgalev_similarities <- results$scmap_cluster_siml
 
 print(sce)
-saveRDS(sce, file = snakemake@output[["sce_12"]])
+saveRDS(sce, file = snakemake@output[["sce_13"]])

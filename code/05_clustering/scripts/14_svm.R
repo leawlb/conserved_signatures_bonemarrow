@@ -32,11 +32,10 @@ data_test <- as.data.frame(reducedDim(sce_test, type = "PCA"))
 data_test$cluster_hierarchical <- sce_test$cluster_hierarchical
 
 pred <- predict(bestmod, data_test)
-sce_train$prediction_hierarchical <- pred
+sce_test$prediction_hierarchical <- pred
 
-saveRDS(tune_out, file = snakemake@output[["tune_hierarchical"]])
-saveRDS(pred, file = snakemake@output[["pred_hierarchical"]])
-saveRDS(sce_train, file = snakemake@output[["sce_train_hierarchical"]])
+object_list <- list(tune_out, pred)
+saveRDS(object_list, file = snakemake@output[["objects_hierarchical"]])
 
 #-------------------------------------------------------------------------------
 
@@ -55,11 +54,10 @@ data_test <- as.data.frame(reducedDim(sce_test, type = "PCA"))
 data_test$cluster_seurat <- sce_test$cluster_seurat
 
 pred <- predict(bestmod, data_test)
-sce_train$prediction_seurat <- pred
+sce_test$prediction_seurat <- pred
 
-saveRDS(tune_out, file = snakemake@output[["tune_seurat"]])
-saveRDS(pred, file = snakemake@output[["pred_seurat"]])
-saveRDS(sce_train, file = snakemake@output[["sce_train_seurat"]])
+object_list <- list(tune_out, pred)
+saveRDS(object_list, file = snakemake@output[["objects_seurat"]])
 
 #-------------------------------------------------------------------------------
 
@@ -78,8 +76,9 @@ data_test <- as.data.frame(reducedDim(sce_test, type = "PCA"))
 data_test$cluster_louvain <- sce_test$cluster_louvain
 
 pred <- predict(bestmod, data_test)
-sce_train$prediction_louvain <- pred
+sce_test$prediction_louvain <- pred
 
-saveRDS(tune_out, file = snakemake@output[["tune_louvain"]])
-saveRDS(pred, file = snakemake@output[["pred_louvain"]])
-saveRDS(sce_train, file = snakemake@output[["sce_train_louvain"]])
+object_list <- list(tune_out, pred)
+saveRDS(object_list, file = snakemake@output[["objects_louvain"]])
+
+saveRDS(sce_test, file = snakemake@output[["sce_test"]])

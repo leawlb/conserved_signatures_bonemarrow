@@ -1,5 +1,5 @@
 ---
-title: "clustering_species_reports2"
+title: "clustering_species_reports_k"
 author: "Lea Wölbert"
 date: '2022-12-21'
 output: html_document
@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Report for clustering as part of manual annotation
+Report for best ks as part of clustering 
 
 #### Load libraries, source code 
 

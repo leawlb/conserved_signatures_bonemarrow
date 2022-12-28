@@ -1,10 +1,11 @@
 #-------------------------------------------------------------------------------
 
 library(DropletUtils)
-library(e1071)
-# Gareth James Daniela Witten Trevor Hastie Robert Tibshirani An Introduction to Statistical Learning
 library(caret)
 # https://rstudio-pubs-static.s3.amazonaws.com/506713_93765c6d66074ed392e12c3339959cbf.html
+library(e1071)
+# Gareth James Daniela Witten Trevor Hastie Robert Tibshirani An Introduction to Statistical Learning
+
 #-------------------------------------------------------------------------------
 
 sce <- readRDS(file = snakemake@input[["sce_11"]])

@@ -121,7 +121,7 @@ identity_plots <- function(sce, title){
   
   plot_1a <- umap_base(sce, color_by = "cluster_ref_baccin")+ # own function
     ggtitle(paste0(species_curr, title, nrow(sce)))+
-  scale_color_manual("Baccin reference clusters", values = col_cts_cluster_baccin)
+    scale_color_manual("Baccin reference clusters", values = col_cts_cluster_baccin)
   plot_1al <- umap_legend(sce, color_by = "cluster_ref_baccin")+
     scale_color_manual("Baccin reference clusters", values = col_cts_cluster_baccin)
   legend_1a <- get_legend(plot_1al)
@@ -149,7 +149,7 @@ identity_plots <- function(sce, title){
   
    plot_3a <- umap_base(sce, color_by = "cluster_ref_dolgalev")+
     ggtitle(paste0(species_curr, title, nrow(sce)))+
-  scale_color_manual("Dolgalev reference clusters", values = col_cts_cluster_dolgalev)
+    scale_color_manual("Dolgalev reference clusters", values = col_cts_cluster_dolgalev)
   plot_3al <- umap_legend(sce, color_by = "cluster_ref_dolgalev")+
     scale_color_manual("Dolgalev reference clusters", values = col_cts_cluster_dolgalev)
   legend_3a <- get_legend(plot_3al)
@@ -234,7 +234,7 @@ plot1a <- ggplot(ggdf, aes(x = cluster_hierarchical, y=Batch_exp_day,
   scale_color_manual(values = col_batch_exp_day)+
   theme(axis.text.y = element_blank(),
         axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", ggdf$hierarchical_mode[1]))+
+  ggtitle(paste0(species_curr, " ", ggdf$hierarchical_mode[1]))
 
 plot1b <- ggplot(ggdf, aes(x = cluster_hierarchical, fill=Batch_exp_day, 
                           color = Batch_exp_day))+
@@ -243,7 +243,7 @@ plot1b <- ggplot(ggdf, aes(x = cluster_hierarchical, fill=Batch_exp_day,
   scale_fill_manual("Experimental day", values = col_batch_exp_day)+
   scale_color_manual(values = col_batch_exp_day)+
   theme(axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", ggdf$hierarchical_mode[1]))+
+  ggtitle(paste0(species_curr, " ", ggdf$hierarchical_mode[1]))
 
 plot2a <- ggplot(ggdf, aes(x = Batch_exp_day, y=cluster_hierarchical,
                           fill=cluster_hierarchical, 
@@ -275,7 +275,7 @@ plot3a <- ggplot(ggdf, aes(x = cluster_hierarchical, y=Age_ID,
   scale_color_manual(values = col_ann_age)+
   theme(axis.text.y = element_blank(),
         axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", ggdf$hierarchical_mode[1]))+
+  ggtitle(paste0(species_curr, " ", ggdf$hierarchical_mode[1]))
 
 plot3b <- ggplot(ggdf, aes(x = cluster_hierarchical, fill=Age_ID, 
                           color = Age_ID))+
@@ -284,7 +284,7 @@ plot3b <- ggplot(ggdf, aes(x = cluster_hierarchical, fill=Age_ID,
   scale_fill_manual("Age", values = col_ann_age)+
   scale_color_manual(values = col_ann_age)+
   theme(axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", ggdf$hierarchical_mode[1]))+
+  ggtitle(paste0(species_curr, " ", ggdf$hierarchical_mode[1]))
 
 plot4 <- ggplot(ggdf, aes(x = Age_ID, y=cluster_hierarchical,
                           fill=cluster_hierarchical, 
@@ -295,7 +295,7 @@ plot4 <- ggplot(ggdf, aes(x = Age_ID, y=cluster_hierarchical,
   scale_color_manual(values = col_clust_h)+
   theme(axis.text.y = element_blank(),
         axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", ggdf$hierarchical_mode[1]))+
+  ggtitle(paste0(species_curr, " ", ggdf$hierarchical_mode[1]))
 
 plot5a <- ggplot(ggdf, aes(x = cluster_hierarchical, y=Identity_ref_all,
                           fill=Identity_ref_all, 
@@ -306,7 +306,7 @@ plot5a <- ggplot(ggdf, aes(x = cluster_hierarchical, y=Identity_ref_all,
   scale_color_manual(values = col_cts_all)+
   theme(legend.position = "none", axis.text.y = element_blank(),
         axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", ggdf$hierarchical_mode[1]))+
+  ggtitle(paste0(species_curr, " ", ggdf$hierarchical_mode[1]))
 
 plot5b <- ggplot(ggdf, aes(x = cluster_hierarchical, fill=Identity_ref_all, 
                           color = Identity_ref_all))+
@@ -315,7 +315,7 @@ plot5b <- ggplot(ggdf, aes(x = cluster_hierarchical, fill=Identity_ref_all,
   scale_fill_manual("Identity 1", values = col_cts_all)+
   scale_color_manual(values = col_cts_all)+
   theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", ggdf$hierarchical_mode[1]))+
+  ggtitle(paste0(species_curr, " ", ggdf$hierarchical_mode[1]))
 
 plot6a <- ggplot(ggdf, aes(x = cluster_hierarchical, y=Identity_ref_fraction,
                           fill=Identity_ref_fraction, 
@@ -326,7 +326,7 @@ plot6a <- ggplot(ggdf, aes(x = cluster_hierarchical, y=Identity_ref_fraction,
   scale_color_manual(values = col_cts_fraction)+
   theme(legend.position = "none", axis.text.y = element_blank(),
         axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", ggdf$hierarchical_mode[1]))+
+  ggtitle(paste0(species_curr, " ", ggdf$hierarchical_mode[1]))
 
 plot6b <- ggplot(ggdf, aes(x = cluster_hierarchical, fill=Identity_ref_fraction, 
                           color = Identity_ref_fraction))+
@@ -335,7 +335,7 @@ plot6b <- ggplot(ggdf, aes(x = cluster_hierarchical, fill=Identity_ref_fraction,
   scale_fill_manual("Identity 2", values = col_cts_fraction)+
   scale_color_manual(values = col_cts_fraction)+
   theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", ggdf$hierarchical_mode[1]))+
+  ggtitle(paste0(species_curr, " ", ggdf$hierarchical_mode[1]))
 
 plot_all_leg <- ggplot(ggdf, aes(x = cluster_hierarchical, y=Identity_ref_all,
                                  fill=Identity_ref_all))+
@@ -343,7 +343,7 @@ plot_all_leg <- ggplot(ggdf, aes(x = cluster_hierarchical, y=Identity_ref_all,
   scale_fill_manual("Identity1", values = col_cts_all)
 legend_all <- get_legend(plot_all_leg)
 plot_frc_leg <- ggplot(ggdf, aes(x = Object_ID, y=Identity_ref_fraction,
-                                  fill=Identity_ref_fraction))+
+                                  fill=Identity_ref_fraction))
   geom_col()+
   scale_fill_manual("Identity2", values = col_cts_fraction)
 legend_frc <- get_legend(plot_frc_leg)
@@ -401,14 +401,14 @@ pure_data <- as.data.frame(pure_sce)
 pure_data$maximum <- factor(pure_data$maximum)
 pure_data$cluster <- sce_13$cluster_hierarchical
 
-ggplot(pure_data, aes(x=cluster, y=purity, colour=maximum)) +
+ggplot(pure_data, aes(x=cluster, y=purity, colour=maximum))+
   ggbeeswarm::geom_quasirandom(size = 0.1)+
   theme_classic()+
   ggtitle(paste0(species_curr, " ", sce_13$hierarchical_mode[1]))+
   facet_grid(cols = vars(sce_13$Fraction_ID))+
   scale_color_manual("cluster (hierarchical)", values = col_clust_h)
 
-ggplot(pure_data, aes(x=cluster, y=purity, color=cluster)) +
+ggplot(pure_data, aes(x=cluster, y=purity, color=cluster))+
   geom_boxplot(outlier.size = 0.1)+
   ggtitle(paste0(species_curr, " ", sce_13$hierarchical_mode[1]))+
   theme_classic()+
@@ -544,7 +544,7 @@ plot1a <- ggplot(ggdf, aes(x = cluster_seurat, y=Batch_exp_day,
   scale_color_manual(values = col_batch_exp_day)+
   theme(axis.text.y = element_blank(),
         axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", sce_13$seurat_mode[1]))+
+  ggtitle(paste0(species_curr, " ", sce_13$seurat_mode[1]))
 
 plot1b <- ggplot(ggdf, aes(x = cluster_seurat, fill=Batch_exp_day, 
                           color = Batch_exp_day))+
@@ -553,7 +553,7 @@ plot1b <- ggplot(ggdf, aes(x = cluster_seurat, fill=Batch_exp_day,
   scale_fill_manual("Experimental day", values = col_batch_exp_day)+
   scale_color_manual(values = col_batch_exp_day)+
   theme(axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", sce_13$seurat_mode[1]))+
+  ggtitle(paste0(species_curr, " ", sce_13$seurat_mode[1]))
 
 plot2a <- ggplot(ggdf, aes(x = Batch_exp_day, y=cluster_seurat,
                           fill=cluster_seurat, color = cluster_seurat))+
@@ -584,7 +584,7 @@ plot3a <- ggplot(ggdf, aes(x = cluster_seurat, y=Age_ID,
   scale_color_manual(values = col_ann_age)+
   theme(axis.text.y = element_blank(),
         axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", sce_13$seurat_mode[1]))+
+  ggtitle(paste0(species_curr, " ", sce_13$seurat_mode[1]))
 
 plot3b <- ggplot(ggdf, aes(x = cluster_seurat, fill=Age_ID, 
                           color = Age_ID))+
@@ -593,7 +593,7 @@ plot3b <- ggplot(ggdf, aes(x = cluster_seurat, fill=Age_ID,
   scale_fill_manual("Age", values = col_ann_age)+
   scale_color_manual(values = col_ann_age)+
   theme(axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", sce_13$seurat_mode[1]))+
+  ggtitle(paste0(species_curr, " ", sce_13$seurat_mode[1]))
 
 plot4 <- ggplot(ggdf, aes(x = Age_ID, y=cluster_seurat,
                           fill=cluster_seurat, color = cluster_seurat))+
@@ -603,7 +603,7 @@ plot4 <- ggplot(ggdf, aes(x = Age_ID, y=cluster_seurat,
   scale_color_manual(values = col_clust_s)+
   theme(axis.text.y = element_blank(),
         axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", sce_13$seurat_mode[1]))+
+  ggtitle(paste0(species_curr, " ", sce_13$seurat_mode[1]))
 
 plot5a <- ggplot(ggdf, aes(x = cluster_seurat, y=Identity_ref_all,
                           fill=Identity_ref_all, 
@@ -614,7 +614,7 @@ plot5a <- ggplot(ggdf, aes(x = cluster_seurat, y=Identity_ref_all,
   scale_color_manual(values = col_cts_all)+
   theme(legend.position = "none", axis.text.y = element_blank(),
         axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", sce_13$seurat_mode[1]))+
+  ggtitle(paste0(species_curr, " ", sce_13$seurat_mode[1]))
 
 plot5b <- ggplot(ggdf, aes(x = cluster_seurat, fill=Identity_ref_all, 
                           color = Identity_ref_all))+
@@ -623,7 +623,7 @@ plot5b <- ggplot(ggdf, aes(x = cluster_seurat, fill=Identity_ref_all,
   scale_fill_manual("Identity 1", values = col_cts_all)+
   scale_color_manual(values = col_cts_all)+
   theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", sce_13$seurat_mode[1]))+
+  ggtitle(paste0(species_curr, " ", sce_13$seurat_mode[1]))
 
 plot6a <- ggplot(ggdf, aes(x = cluster_seurat, y=Identity_ref_fraction,
                           fill=Identity_ref_fraction, 
@@ -634,7 +634,7 @@ plot6a <- ggplot(ggdf, aes(x = cluster_seurat, y=Identity_ref_fraction,
   scale_color_manual(values = col_cts_fraction)+
   theme(legend.position = "none", axis.text.y = element_blank(),
         axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", sce_13$seurat_mode[1]))+
+  ggtitle(paste0(species_curr, " ", sce_13$seurat_mode[1]))
 
 plot6b <- ggplot(ggdf, aes(x = cluster_seurat, fill=Identity_ref_fraction, 
                           color = Identity_ref_fraction))+
@@ -643,7 +643,7 @@ plot6b <- ggplot(ggdf, aes(x = cluster_seurat, fill=Identity_ref_fraction,
   scale_fill_manual("Identity 2", values = col_cts_fraction)+
   scale_color_manual(values = col_cts_fraction)+
   theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", sce_13$seurat_mode[1]))+
+  ggtitle(paste0(species_curr, " ", sce_13$seurat_mode[1]))
 
 
 plot1a
@@ -763,7 +763,7 @@ plot1a <- ggplot(ggdf, aes(x = cluster_louvain, y=Batch_exp_day,
   scale_color_manual(values = col_batch_exp_day)+
   theme(axis.text.y = element_blank(),
         axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", sce_13$louvain_mode[1]))+
+  ggtitle(paste0(species_curr, " ", sce_13$louvain_mode[1]))
 
 plot1b <- ggplot(ggdf, aes(x = cluster_louvain, fill=Batch_exp_day, 
                           color = Batch_exp_day))+
@@ -772,7 +772,7 @@ plot1b <- ggplot(ggdf, aes(x = cluster_louvain, fill=Batch_exp_day,
   scale_fill_manual("Experimental day", values = col_batch_exp_day)+
   scale_color_manual(values = col_batch_exp_day)+
   theme(axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", sce_13$louvain_mode[1]))+
+  ggtitle(paste0(species_curr, " ", sce_13$louvain_mode[1]))
 
 plot2a <- ggplot(ggdf, aes(x = Batch_exp_day, y=cluster_louvain,
                           fill=cluster_louvain, color = cluster_louvain))+
@@ -782,7 +782,7 @@ plot2a <- ggplot(ggdf, aes(x = Batch_exp_day, y=cluster_louvain,
   scale_color_manual(values = col_clust_l)+
   theme(axis.text.y = element_blank(),
         axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", sce_13$louvain_mode[1]))+
+  ggtitle(paste0(species_curr, " ", sce_13$louvain_mode[1]))
   facet_grid(cols = vars(ggdf$Fraction))
 
 plot2b <- ggplot(ggdf, aes(x = Batch_exp_day, fill=cluster_louvain, 
@@ -803,7 +803,7 @@ plot3a <- ggplot(ggdf, aes(x = cluster_louvain, y=Age_ID,
   scale_color_manual(values = col_ann_age)+
   theme(axis.text.y = element_blank(),
         axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", sce_13$louvain_mode[1]))+
+  ggtitle(paste0(species_curr, " ", sce_13$louvain_mode[1]))
 
 plot3b <- ggplot(ggdf, aes(x = cluster_louvain, fill=Age_ID, 
                           color = Age_ID))+
@@ -812,7 +812,7 @@ plot3b <- ggplot(ggdf, aes(x = cluster_louvain, fill=Age_ID,
   scale_fill_manual("Age", values = col_ann_age)+
   scale_color_manual(values = col_ann_age)+
   theme(axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", sce_13$louvain_mode[1]))+
+  ggtitle(paste0(species_curr, " ", sce_13$louvain_mode[1]))
 
 plot4 <- ggplot(ggdf, aes(x = Age_ID, y=cluster_louvain,
                           fill=cluster_louvain, color = cluster_louvain))+
@@ -822,7 +822,7 @@ plot4 <- ggplot(ggdf, aes(x = Age_ID, y=cluster_louvain,
   scale_color_manual(values = col_clust_l)+
   theme(axis.text.y = element_blank(),
         axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", sce_13$louvain_mode[1]))+
+  ggtitle(paste0(species_curr, " ", sce_13$louvain_mode[1]))
 
 plot5a <- ggplot(ggdf, aes(x = cluster_louvain, y=Identity_ref_all,
                           fill=Identity_ref_all, 
@@ -833,7 +833,7 @@ plot5a <- ggplot(ggdf, aes(x = cluster_louvain, y=Identity_ref_all,
   scale_color_manual(values = col_cts_all)+
   theme(legend.position = "none", axis.text.y = element_blank(),
         axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", sce_13$louvain_mode[1]))+
+  ggtitle(paste0(species_curr, " ", sce_13$louvain_mode[1]))
 
 plot5b <- ggplot(ggdf, aes(x = cluster_louvain, fill=Identity_ref_all, 
                           color = Identity_ref_all))+
@@ -842,7 +842,7 @@ plot5b <- ggplot(ggdf, aes(x = cluster_louvain, fill=Identity_ref_all,
   scale_fill_manual("Identity 1", values = col_cts_all)+
   scale_color_manual(values = col_cts_all)+
   theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", sce_13$louvain_mode[1]))+
+  ggtitle(paste0(species_curr, " ", sce_13$louvain_mode[1]))
 
 plot6a <- ggplot(ggdf, aes(x = cluster_louvain, y=Identity_ref_fraction,
                           fill=Identity_ref_fraction, 
@@ -853,7 +853,7 @@ plot6a <- ggplot(ggdf, aes(x = cluster_louvain, y=Identity_ref_fraction,
   scale_color_manual(values = col_cts_fraction)+
   theme(legend.position = "none", axis.text.y = element_blank(),
         axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", sce_13$louvain_mode[1]))+
+  ggtitle(paste0(species_curr, " ", sce_13$louvain_mode[1]))
 
 plot6b <- ggplot(ggdf, aes(x = cluster_louvain, fill=Identity_ref_fraction, 
                           color = Identity_ref_fraction))+
@@ -862,7 +862,7 @@ plot6b <- ggplot(ggdf, aes(x = cluster_louvain, fill=Identity_ref_fraction,
   scale_fill_manual("Identity 2", values = col_cts_fraction)+
   scale_color_manual(values = col_cts_fraction)+
   theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(species_curr, " ", sce_13$louvain_mode[1]))+
+  ggtitle(paste0(species_curr, " ", sce_13$louvain_mode[1]))
 
 
 plot1a

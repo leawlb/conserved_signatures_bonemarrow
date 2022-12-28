@@ -37,11 +37,9 @@ for s in species:
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/14_svms/objects_hierarchical/objects_" + s]
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/14_svms/objects_seurat/objects_" + s]
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/14_svms/objects_louvain/objects_" + s]
-  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/05_clustering/" + s + "/clustering_species_report_k" + s +".html"]
-  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/05_clustering/" + s + "/clustering_species_report_full" + s +".html"]
-
-
-        objects_hierarchical = OUTPUT_BASE_PATH + "/sce_objects/14_svms/objects_hierarchical/objects_species}"
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/05_clustering/" + s + "/clustering_species_report_k_" + s +".html"]
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/05_clustering/" + s + "/clustering_species_report_full_" + s +".html"]
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/05_clustering/" + s + "/clustering_species_report_svm_" + s +".html"]
 
 if config["run_manual_annotation_summary"]:
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/05_clustering/clustering_species_summary.html"]
@@ -66,6 +64,7 @@ rule hierarchical_clustering:
         remove_mature_cells_clustering = config["remove_mature_cells_clustering"],
         number_k = config["values"]["clustering"]["number_k"],
         sce_functions = "../source/sce_functions.R", # this is the working dir
+        separate_fractions_clustering = config["separate_fractions_clustering"]
     script:
         "scripts/10_hierarchical_clustering.R"
         
@@ -104,10 +103,10 @@ rule cluster_ref_annotation:
 rule run_svm_all:
     input: 
         sce_13 = rules.cluster_ref_annotation.output
-    output
-        sce_test = OUTPUT_BASE_PATH + "/sce_objects/14_svms/sce_test/sce_test_{species}"
-        objects_hierarchical = OUTPUT_BASE_PATH + "/sce_objects/14_svms/objects_hierarchical/objects_{species}"
-        objects_seurat = OUTPUT_BASE_PATH + "/sce_objects/14_svms/objects_seurat/objects_{species}"
+    output:
+        sce_test = OUTPUT_BASE_PATH + "/sce_objects/14_svms/sce_test/sce_test_{species}",
+        objects_hierarchical = OUTPUT_BASE_PATH + "/sce_objects/14_svms/objects_hierarchical/objects_{species}",
+        objects_seurat = OUTPUT_BASE_PATH + "/sce_objects/14_svms/objects_seurat/objects_{species}",
         objects_louvain = OUTPUT_BASE_PATH + "/sce_objects/14_svms/objects_louvain/objects_{species}"
     params:
         color_tables = TABLES_PATH

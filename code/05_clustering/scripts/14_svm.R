@@ -8,7 +8,7 @@ library(e1071)
 
 #-------------------------------------------------------------------------------
 
-sce <- readRDS(file = snakemake@input[["sce_11"]])
+sce <- readRDS(file = snakemake@input[["sce_13"]])
 
 sample_numbers <- sample(1:ncol(sce), as.integer(ncol(sce)*0.8))
 sce_train <- sce[,sample_numbers]

@@ -60,7 +60,7 @@ values:
         str: 14
         both: 25
       mspr:
-        hsc: 9
+        hsc: 10
         str: 15
         both: 25
       

@@ -110,6 +110,8 @@ rule run_svm_all:
         objects_louvain = OUTPUT_BASE_PATH + "/sce_objects/14_svms/objects_louvain/objects_{species}"
     params:
         color_tables = TABLES_PATH
+    threads:
+        20
     script:
         "scripts/14_svm.R"
         
@@ -120,6 +122,8 @@ rule make_clustering_species_report_k:
         sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_seurat3/sce_{species}_Batch_exp_day-09",
     output:
         OUTPUT_BASE_PATH + "/sce_objects/reports/05_clustering/{species}/clustering_species_report_k_{species}.html"
+    threads:
+        20
     script:
         "clustering_species_report_k.Rmd"
 

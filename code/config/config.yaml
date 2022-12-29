@@ -63,7 +63,7 @@ values:
         hsc: 10
         str: 15
         both: 25
-    use_svm_kernel: "linear"
+    use_svm_kernel: "radial" # linear or radial
       
 # RULES  
 # in caps if used in R, only first letter capitalized for use in Snakefile

@@ -109,7 +109,7 @@ rule run_svm_all:
         objects_seurat = OUTPUT_BASE_PATH + "/sce_objects/14_svms/objects_seurat/objects_{species}",
         objects_louvain = OUTPUT_BASE_PATH + "/sce_objects/14_svms/objects_louvain/objects_{species}"
     params:
-        color_tables = TABLES_PATH
+        use_kernel = config["values"]["clustering"]["use_svm_kernel"]
     threads:
         20
     script:

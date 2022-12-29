@@ -63,6 +63,7 @@ values:
         hsc: 10
         str: 15
         both: 25
+    use_svm_kernel: "linear"
       
 # RULES  
 # in caps if used in R, only first letter capitalized for use in Snakefile

@@ -13,6 +13,14 @@ sce <- readRDS(file = snakemake@input[["sce_13"]])
 sample_numbers <- sample(1:ncol(sce), as.integer(ncol(sce)*0.8))
 sce_train <- sce[,sample_numbers]
 sce_test <- sce[,-sample_numbers]
+use_kernel <- snakemake@params[["use_kernel"]]
+
+if(use_kernel == "linear"){
+  ranges_list <- list(cost =c(0.001, 0.01, 0.1, 1,5,10,100))
+}else if(use_kernel == "radial"){
+  ranges_list <- list(cost =c(0.001, 0.01, 0.1, 1,5,10,100),
+                      gamma = c(0.5,1,2,3,4))
+}
 
 set.seed(1234)
 
@@ -24,9 +32,8 @@ data_train$cluster_hierarchical <- sce_train$cluster_hierarchical
 
 # tune includes 10-fold cross validation of cost, gamma and chooses the best model
 tune_out <- tune(svm, factor(cluster_hierarchical) ~ ., 
-                 data = data_train, kernel="radial",
-                 ranges = list(cost =c(0.001, 0.01, 0.1, 1,5,10,100),
-                               gamma = c(0.5,1,2,3,4)))
+                 data = data_train, kernel=use_kernel,
+                 ranges = ranges_list)
 bestmod <- tune_out$best.model
 
 data_test <- as.data.frame(reducedDim(sce_test, type = "PCA"))
@@ -45,9 +52,8 @@ data_train <- as.data.frame(reducedDim(sce_train, type = "PCA"))
 data_train$cluster_seurat <- sce_train$cluster_seurat
 
 tune_out <- tune(svm, factor(cluster_seurat) ~ ., 
-                 data = data_train, kernel="radial",
-                 ranges = list(cost =c(0.001, 0.01, 0.1, 1,5,10,100),
-                               gamma = c(0.5,1,2,3,4)))
+                 data = data_train, kernel=use_kernel,
+                 ranges = ranges_list)
 
 bestmod <- tune_out$best.model
 
@@ -67,9 +73,8 @@ data_train <- as.data.frame(reducedDim(sce_train, type = "PCA"))
 data_train$cluster_louvain <- sce_train$cluster_louvain
 
 tune_out <- tune(svm, factor(cluster_louvain) ~ ., 
-                 data = data_train, kernel="radial",
-                 ranges = list(cost =c(0.001, 0.01, 0.1, 1,5,10,100),
-                               gamma = c(0.5,1,2,3,4)))
+                 data = data_train, kernel=use_kernel,
+                 ranges = ranges_list)
 
 bestmod <- tune_out$best.model
 

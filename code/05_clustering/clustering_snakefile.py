@@ -141,7 +141,10 @@ rule make_clustering_species_report_full:
   
 rule make_clustering_species_report_svms:
     input:
-        rules.run_svm_all.output
+        sce_test = rules.run_svm_all.output.sce_test,
+        objects_hierarchical = rules.run_svm_all.output.objects_hierarchical,
+        objects_seurat = rules.run_svm_all.output.objects_seurat,
+        objects_louvain = rules.run_svm_all.output.objects_louvain
     output:
         OUTPUT_BASE_PATH + "/sce_objects/reports/05_clustering/{species}/clustering_species_report_svm_{species}.html"
     script:

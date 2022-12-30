@@ -41,6 +41,7 @@ if(separate_fractions_clustering){
   sce_str$cluster_seurat <- as.numeric(sce_str$cluster_seurat) + 
     length(unique(sce_hsc$cluster_seurat))
   sce <- cbind(sce_hsc, sce_str)
+  sce$cluster_seurat <- sce$cluster_seurat + 1
   sce$cluster_seurat <- factor(sce$cluster_seurat, 
                                levels = sort(unique(sce$cluster_seurat)))
   sce$seurat_mode <- rep("fractions_separated", ncol(sce))
@@ -56,6 +57,10 @@ if(separate_fractions_clustering){
   seurat <- FindNeighbors(seurat, dims = 1:10, reduction = "PCA")
   seurat <- FindClusters(seurat, resolution = 0.5)
   sce$cluster_seurat <- Idents(seurat)
+  sce$cluster_seurat <- as.numeric(unfactor(sce$cluster_seurat))
+  sce$cluster_seurat <- sce$cluster_seurat + 1
+  sce$cluster_seurat <- factor(sce$cluster_seurat, 
+                               levels = sort(unique(sce$cluster_seurat))) 
   sce$seurat_mode <- rep("fractions_together", ncol(sce))
   
 }

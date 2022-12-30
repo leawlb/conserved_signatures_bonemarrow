@@ -50,20 +50,20 @@ values:
       mcar:
         hsc: 11 
         str: 13
-        both: 25
+        both: 18
       mcas:
         hsc: 10
         str: 14
-        both: 25
+        both: 20
       mmus:
         hsc: 9
         str: 14
-        both: 25
+        both: 18
       mspr:
-        hsc: 10
+        hsc: 9
         str: 15
-        both: 25
-    use_svm_kernel: "radial" # linear or radial
+        both: 22
+    use_svm_kernel: "linear" # linear or radial
       
 # RULES  
 # in caps if used in R, only first letter capitalized for use in Snakefile

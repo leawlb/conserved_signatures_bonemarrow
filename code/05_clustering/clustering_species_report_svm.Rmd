@@ -19,43 +19,18 @@ library(scater, quietly = TRUE)
 library(scuttle, quietly = TRUE) 
 library(scran, quietly = TRUE) 
 library(tidyverse, quietly = TRUE) 
+library(pheatmap, quietly = TRUE) 
 ```
 
 ```{r}
-color_tables <- snakemake@params[["color_tables"]]
 
-input <- readRDS(file = snakemake@input)
-
-sce_test <- input[["sce_test"]]
-objects_hir <- input[["objects_hierarchical"]]
-objects_ser <- input[["objects_seurat"]]
-objects_lou <- input[["objects_louvain"]]
+sce_test <- readRDS(file = snakemake@input[["sce_test"]])
+objects_hir <- readRDS(file = snakemake@input[["objects_hierarchical"]])
+objects_ser <- readRDS(file = snakemake@input[["objects_seurat"]])
+objects_lou <- readRDS(file = snakemake@input[["objects_louvain"]])
 
 species_curr <- sce_test$Species_ID[1]
 
-```
-
-```{r}
-source(file = "../source/colors.R")
-source(file = "../source/plotting.R")
-source(file = "../source/sce_functions.R")
-```
-
-```{r}
-col_cts_all <- col_cts[names(col_cts) %in% sce_13$Identity_ref_all]
-col_cts_fraction <- col_cts[names(col_cts) %in% sce_13$Identity_ref_fraction]
-col_batch_exp_day <- col_alp[names(col_alp) %in% sce_13$Batch_exp_day]
-col_batch_seq <- col_num[names(col_num) %in% sce_13$Batch_sequencing]
-col_ann_age <- col_ann[names(col_ann) %in% sce_13$Age_ID]
-col_ann_fraction <- col_ann[names(col_ann) %in% sce_13$Fraction_ID]
-col_species <- col_spc[names(col_spc) %in% sce_13$Species_ID]
-col_clust_h <- col_num[names(col_num) %in% sce_13$cluster_hierarchical]
-col_clust_s <- col_num[names(col_num) %in% sce_13$cluster_seurat]
-col_clust_l <- col_num[names(col_num) %in% sce_13$cluster_louvain]
-
-col_cts_cluster_baccin <- col_cts[names(col_cts) %in% sce_13$cluster_ref_baccin]
-col_cts_cluster_dahlin <- col_cts[names(col_cts) %in% sce_13$cluster_ref_dahlin]
-col_cts_cluster_dolgalev <- col_cts[names(col_cts) %in% sce_13$cluster_ref_dolgalev]
 ```
 
 # SVM on hierarchical clustering
@@ -67,6 +42,11 @@ pred_hir <- objects_hir[[2]]
 
 ```{r}
 summary(tune_out_hir)
+```
+
+```{r}
+tune_out_hir$best.parameters
+tune_out_hir$performances
 ```
 
 ```{r}
@@ -113,6 +93,11 @@ summary(tune_out_ser)
 ```
 
 ```{r}
+tune_out_ser$best.parameters
+tune_out_ser$performances
+```
+
+```{r}
 mat_comp <- as.matrix(table(as.numeric(unfactor(sce_test$cluster_seurat)),
                             as.numeric(pred_ser)))
 
@@ -153,6 +138,11 @@ pred_lou <- objects_lou[[2]]
 
 ```{r}
 summary(tune_out_lou)
+```
+
+```{r}
+tune_out_lou$best.parameters
+tune_out_lou$performances
 ```
 
 ```{r}

@@ -186,7 +186,7 @@ print(table(sce_13$cluster_hierarchical))
 
 ## Clusters
 
-```{r}
+```{r fig.width=8, fig.height=4}
 
 plot_1 <- umap_base(sce_13, color_by = "cluster_hierarchical")+ # own function
   ggtitle(paste0(species_curr, " ", sce_13$hierarchical_mode[1]))+
@@ -222,7 +222,7 @@ rm(PLOT_1, PLOT_2, PLOT_3, plot_1, plot_2, plot_3, legend_1, legend_2, legend_3)
 
 ## QC
 
-```{r}
+```{r fig.width=8, fig.height=4}
 
 ggdf <- data.frame(colData(sce_13))
 
@@ -376,7 +376,7 @@ rm(plot1a, plot1b, plot2a, plot2b, plot3a, plot3b, plot4, PLOT5a, PLOT5b,
 
 From http://bioconductor.org/books/3.16/OSCA.advanced/clustering-redux.html
 
-```{r}
+```{r fig.width=8, fig.height=4}
 
 # Silhouette 
 sil_approx <- approxSilhouette(reducedDim(sce_13, "PCA"), 
@@ -490,6 +490,35 @@ plot(col_dend_str, main = paste0(species_curr,
 
 ```
 
+### BOTH
+
+```{r}
+
+number_k_both <- number_k[[species_curr]]$both
+
+mat <- reducedDim(sce_09, "PCA") # PCA is batch corrected
+mat <- scale(mat)
+dist <- dist(mat, method = 'euclidean')
+ward <- hclust(dist, method = "ward.D2")
+dend <- as.dendrogram(ward)
+
+col_dend <- color_branches(dend, k = (number_k_both-1), 
+                               groupLabels = FALSE)#, col = col_clust_h)
+plot(col_dend, main = paste0(species_curr, 
+                                 " BOTH, ward.D2, k=", (number_k_both-1)))
+
+col_dend <- color_branches(dend, k = number_k_both, 
+                               groupLabels = FALSE, col = col_clust_h)
+plot(col_dend, main = paste0(species_curr, 
+                                 " BOTH, ward.D2, used k=", number_k_both))
+
+col_dend <- color_branches(dend, k = (number_k_both+1), 
+                               groupLabels = FALSE, col = col_clust_h)
+plot(col_dend, main = paste0(species_curr, 
+                                 " BOTH, ward.D2, k=", (number_k_both+1)))
+
+```
+
 # Seurat clustering
 
 ```{r}
@@ -498,7 +527,7 @@ print(table(sce_13$cluster_seurat))
 
 ## Clusters
 
-```{r}
+```{r fig.width=8, fig.height=4}
 
 plot_1 <- umap_base(sce_13, color_by = "cluster_seurat")+ # own function
   ggtitle(paste0(species_curr, " ", sce_13$seurat_mode[1]))+
@@ -532,7 +561,7 @@ PLOT_3
 
 ## QC
 
-```{r}
+```{r fig.width=8, fig.height=4}
 
 ggdf <- data.frame(colData(sce_13))
 
@@ -717,7 +746,7 @@ print(table(sce_13$cluster_louvain))
 
 ## Clusters
 
-```{r}
+```{r fig.width=8, fig.height=4}
 
 plot_1 <- umap_base(sce_13, color_by = "cluster_louvain")+ # own function
   ggtitle(paste0(species_curr, " ", sce_13$louvain_mode[1]))+
@@ -751,7 +780,7 @@ PLOT_3
 
 ## QC
 
-```{r}
+```{r fig.width=8, fig.height=4}
 
 ggdf <- data.frame(colData(sce_13))
 

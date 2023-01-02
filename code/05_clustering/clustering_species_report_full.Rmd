@@ -171,7 +171,7 @@ identity_plots <- function(sce){
   return(list(PLOT_1a, PLOT_1b, PLOT_2a, PLOT_2b, PLOT_3a, PLOT_3b))
 }
 
-cluster_plots_13 <- identity_plots(sce_13, title = " ")
+cluster_plots_13 <- identity_plots(sce_13)
 
 ```
 
@@ -404,7 +404,7 @@ rm(plot1a, plot1b, plot2a, plot2b, plot3a, plot3b, plot4, PLOT5a, PLOT5b,
 
 From http://bioconductor.org/books/3.16/OSCA.advanced/clustering-redux.html
 
-```{r fig.width=8, fig.height=4}
+```{r}
 
 # Silhouette 
 sil_approx <- approxSilhouette(reducedDim(sce_13, "PCA"), 

@@ -48,25 +48,25 @@ values:
     number_k: 
     # adjust according to clustering reports
       mcar:
-        hsc: 11 
-        str: 13
-        both: 18
+        hsc: 7     # 7 ... 11
+        str: 13    # just 13
+        both: 24   # 18 ... 24
       mcas:
-        hsc: 10
-        str: 14
-        both: 20
+        hsc: 8     # 8 ... 10
+        str: 14    # just 14
+        both: 21   # 20 ... 21
       mmus:
-        hsc: 9
-        str: 14
-        both: 18
+        hsc: 9     # 9 ... 10
+        str: 14    # just 14
+        both: 25   # 18 ... 23 ... 25
       mspr:
-        hsc: 9
-        str: 15
-        both: 22
+        hsc: 9     # 9 ... 10
+        str: 15    # just 15
+        both: 25   # 22 ...25
     use_svm_kernel: "linear" # linear or radial
       
 # RULES  
-# in caps if used in R, only first letter capitalized for use in Snakefile
+# in caps for use in R, only first letter capitalized for use in Snakefile
 run_preprocessing_summary: False
 run_ref_annotation_summary: False
 run_batch_correction_summary: False

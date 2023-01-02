@@ -66,7 +66,7 @@ mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0),
                      which(colMeans(mat_comp) > 0)]
 
 for(i in 1:nrow(mat_comp)){
-  mat_comp[i,] <- mat_comp[i,]/max(mat_comp[i,])
+  mat_comp[i,] <- mat_comp[i,]/sum(mat_comp[i,])
 }
 rownames(mat_comp) <- factor(as.numeric(rownames(mat_comp)), 
                              levels = as.numeric(rownames(mat_comp)))
@@ -77,7 +77,8 @@ rownames(mat_comp) <- paste0(rownames(mat_comp), "_cluster_hierarchical")
 colnames(mat_comp) <- paste0(colnames(mat_comp), "_predicted")
 
 pheatmap(mat_comp, cluster_cols = FALSE, cluster_rows = FALSE, 
-         main = paste0(species_curr, " hierarchical ", sce_test$hierarchical_mode[1]))
+         main = paste0(species_curr, " hierarchical ",
+                       sce_test$hierarchical_mode[1]))
 
 ```
 
@@ -114,7 +115,7 @@ mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0),
                      which(colMeans(mat_comp) > 0)]
 
 for(i in 1:nrow(mat_comp)){
-  mat_comp[i,] <- mat_comp[i,]/max(mat_comp[i,])
+  mat_comp[i,] <- mat_comp[i,]/sum(mat_comp[i,])
 }
 rownames(mat_comp) <- factor(as.numeric(rownames(mat_comp)), 
                              levels = as.numeric(rownames(mat_comp)))
@@ -162,7 +163,7 @@ mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0),
                      which(colMeans(mat_comp) > 0)]
 
 for(i in 1:nrow(mat_comp)){
-  mat_comp[i,] <- mat_comp[i,]/max(mat_comp[i,])
+  mat_comp[i,] <- mat_comp[i,]/sum(mat_comp[i,])
 }
 rownames(mat_comp) <- factor(as.numeric(rownames(mat_comp)), 
                              levels = as.numeric(rownames(mat_comp)))

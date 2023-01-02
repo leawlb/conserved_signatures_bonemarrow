@@ -123,44 +123,53 @@ identity_plots <- function(sce){
   
   plot_1a <- umap_base(sce, color_by = "cluster_ref_baccin")+ # own function
     ggtitle(paste0(species_curr))+
-    scale_color_manual("Baccin reference clusters", values = col_cts_cluster_baccin)
+    scale_color_manual("Baccin reference clusters", 
+                       values = col_cts_cluster_baccin)
   plot_1al <- umap_legend(sce, color_by = "cluster_ref_baccin")+
-    scale_color_manual("Baccin reference clusters", values = col_cts_cluster_baccin)
+    scale_color_manual("Baccin reference clusters", 
+                       values = col_cts_cluster_baccin)
   legend_1a <- get_legend(plot_1al)
 
   plot_1b <- umap_base(sce, color_by = "cluster_ref_baccin_similarities")+
     ggtitle(paste0(species_curr))+
     scale_colour_gradient(low = "black", high = "gold")
   plot_1bl <- umap_legend(sce, color_by = "cluster_ref_baccin_similarities")+
-    scale_colour_gradient(low = "black", high = "gold", name = "Baccin reference cluster similarity")
+    scale_colour_gradient(low = "black", high = "gold",
+                          name = "Baccin reference cluster similarity")
   legend_1b <- get_legend(plot_1bl)
 
   plot_2a <- umap_base(sce, color_by = "cluster_ref_dahlin")+
     ggtitle(paste0(species_curr))+
-  scale_color_manual("Dahlin reference clusters", values = col_cts_cluster_dahlin)
+  scale_color_manual("Dahlin reference clusters", 
+                     values = col_cts_cluster_dahlin)
   plot_2al <- umap_legend(sce, color_by = "cluster_ref_dahlin")+
-    scale_color_manual("Dahlin reference clusters", values = col_cts_cluster_dahlin)
+    scale_color_manual("Dahlin reference clusters", 
+                       values = col_cts_cluster_dahlin)
   legend_2a <- get_legend(plot_2al)
   
   plot_2b <- umap_base(sce, color_by = "cluster_ref_dahlin_similarities")+
     ggtitle(paste0(species_curr))+
     scale_colour_gradient(low = "black", high = "gold")
   plot_2bl <- umap_legend(sce, color_by = "cluster_ref_dahlin_similarities")+
-    scale_colour_gradient(low = "black", high = "gold", name = "Dahlin reference cluster similarity")
+    scale_colour_gradient(low = "black", high = "gold",
+                          name = "Dahlin reference cluster similarity")
   legend_2b <- get_legend(plot_2bl)
   
    plot_3a <- umap_base(sce, color_by = "cluster_ref_dolgalev")+
     ggtitle(paste0(species_curr))+
-    scale_color_manual("Dolgalev reference clusters", values = col_cts_cluster_dolgalev)
+    scale_color_manual("Dolgalev reference clusters",
+                       values = col_cts_cluster_dolgalev)
   plot_3al <- umap_legend(sce, color_by = "cluster_ref_dolgalev")+
-    scale_color_manual("Dolgalev reference clusters", values = col_cts_cluster_dolgalev)
+    scale_color_manual("Dolgalev reference clusters",
+                       values = col_cts_cluster_dolgalev)
   legend_3a <- get_legend(plot_3al)
   
   plot_3b <- umap_base(sce, color_by = "cluster_ref_dolgalev_similarities")+
     ggtitle(paste0(species_curr))+
     scale_colour_gradient(low = "black", high = "gold")
   plot_3bl <- umap_legend(sce, color_by = "cluster_ref_dolgalev_similarities")+
-    scale_colour_gradient(low = "black", high = "gold", name = "Dolgalev reference cluster similarity")
+    scale_colour_gradient(low = "black", high = "gold", 
+                          name = "Dolgalev reference cluster similarity")
   legend_3b <- get_legend(plot_3bl)
   
   PLOT_1a <- ggarrange(plot_1a, legend_1a)
@@ -439,7 +448,8 @@ ggplot(sil_data, aes(x=cluster, y=width, colour=closest))+
   ylab("Silhouette width")
 
 # Purity
-pure_sce <- neighborPurity(reducedDim(sce_13, "PCA"), sce_13$cluster_hierarchical)
+pure_sce <- neighborPurity(reducedDim(sce_13, "PCA"), 
+                           sce_13$cluster_hierarchical)
 pure_data <- as.data.frame(pure_sce)
 pure_data$maximum <- factor(pure_data$maximum)
 pure_data$cluster <- sce_13$cluster_hierarchical
@@ -1510,206 +1520,6 @@ for(i in 1:nrow(mat2)){
 pheatmap(mat2, main = paste0(species_curr, " louvain ", 
                              sce_13$louvain_mode[1]),
          color = col_palette)
-
-```
-
-# Trajectories
-
-Separate objects by cell type (hematopoietic or stromal)
-Not by fraction because mcar and mcas stromal fractions contain many 
-hematopoietic cells.
-Use Baccin reference to separate.
-
-```{r}
-
-hsc_cells <- c(
-  "Dendritic cells",
-  "Monocytes",
-  "Mk prog.",
-  "large pre-B.",
-  "Mono prog.",
-  "Erythroblasts",
-  "Ery prog.",
-  "small pre-B.",
-  "pro-B",
-  "Neutrophils",
-  "Eo/Baso prog.",
-  "Gran/Mono prog.",
-  "LMPPs",
-  "Ery/Mk prog.",
-  "Neutro prog.",
-  "NK cells",
-  "B cell",
-  "T cells" 
-)
-
-
-str_cells <- c(
-  "Sinusoidal ECs",
-  "Arteriolar fibro.",
-  "Endosteal fibro.",
-  "Adipo-CAR",
-  "Osteo-CAR",
-  "Myofibroblasts",
-  "Arteriolar ECs",
-  "Fibro/Chondro p.",
-  "Stromal fibro.",
-  "Ng2+ MSCs",
-  "Smooth muscle",
-  "Osteoblasts",
-  "Chondrocytes",
-  "Schwann cells" 
-)
-
-sce_hsc <- sce[,sce$Identity_ref_all %in% hsc_cells]
-sce_str <- sce[,sce$Identity_ref_all %in% str_cells]
-
-sce_list <- list(sce_hsc, sce_str)
-
-```
-
-```{r}
-
-pres_list <- lapply(sce_list, function(sce){
-  print(sce)
-  pres <- phate(data = as.data.frame(assays(sce, type = "corrected")), knn = 5)
-  return(pres)
-})
-
-pres_list
-
-```
-
-```{r}
-
-for(i in 1:length(pres_list)){
-  
-  sce <- sce_list[[i]]
-  pres <- pres_list5[[i]]
-  
-  plot1 <- ggplot(pres, aes(x = PHATE1, y = PHATE2,
-                                 color = sce$Identity_ref_all))+
-    geom_point()+
-    theme_classic()+
-    scale_color_manual("Identity 1", values = col_cts_all)+
-    theme(legend.position = "none")+
-    ggtitle(species_curr)
-  
-  plot2 <- ggplot(pres, aes(x = PHATE1, y = PHATE2, 
-                              color = sce$Identity_ref_fractions))+
-    geom_point()+
-    theme_classic()+
-    scale_color_manual("Identity 2", values = col_cts_fraction)+
-    theme(legend.position = "none")+
-    ggtitle(species_curr)
-  
- plot3 <- ggplot(pres, aes(x = PHATE1, y = PHATE2, 
-                              color = sce$cluster_hierarchical))+
-    geom_point()+
-    theme_classic()+
-    scale_color_manual("cluster (hierarchical)", values = col_clust_h)+
-    ggtitle(names(pres_list)[i])
- 
-  plot4 <- ggplot(pres, aes(x = PHATE1, y = PHATE2, 
-                                color = sce$cluster_seurat))+
-    geom_point()+
-    theme_classic()+
-    scale_color_manual("cluster (seurat)", values = col_clust_s)+
-    ggtitle(names(pres_list)[i])
-   
-  plot5 <- ggplot(pres, aes(x = PHATE1, y = PHATE3, 
-                                color = sce$cluster_louvain))+
-    geom_point()+
-    theme_classic()+
-    scale_color_manual("cluster (louvain)", values = col_clust_l)+
-    ggtitle(names(pres_list)[i])
-  
-  
-  plot6 <- ggplot(pres, aes(x = PHATE1, y = PHATE3,
-                                 color = sce$Identity_ref_all))+
-    geom_point()+
-    theme_classic()+
-    scale_color_manual("Identity 1", values = col_cts_all)+
-    theme(legend.position = "none")+
-    ggtitle(species_curr)
-  
-  plot7 <- ggplot(pres, aes(x = PHATE1, y = PHATE3, 
-                              color = sce$Identity_ref_fractions))+
-    geom_point()+
-    theme_classic()+
-    scale_color_manual("Identity 2", values = col_cts_fraction)+
-    theme(legend.position = "none")+
-    ggtitle(species_curr)
-  
- plot8 <- ggplot(pres, aes(x = PHATE1, y = PHATE3, 
-                              color = sce$cluster_hierarchical))+
-    geom_point()+
-    theme_classic()+
-    scale_color_manual("cluster (hierarchical)", values = col_clust_h)+
-    ggtitle(species_curr)
- 
-  plot9 <- ggplot(pres, aes(x = PHATE1, y = PHATE3, 
-                                color = sce$cluster_seurat))+
-    geom_point()+
-    theme_classic()+
-    scale_color_manual("cluster (seurat)", values = col_clust_s)+
-    ggtitle(species_curr)
-   
-  plot10 <- ggplot(pres, aes(x = PHATE1, y = PHATE3, 
-                                color = sce$cluster_louvain))+
-    geom_point()+
-    theme_classic()+
-    scale_color_manual("cluster (louvain)", values = col_clust_l)+
-    ggtitle(species_curr)
-  
-  plot11 <- ggplot(pres, aes(x = PHATE1, y = PHATE2, 
-                                color = sce$cluster_ref_baccin))+
-    geom_point()+
-    theme_classic()+
-    scale_color_manual("Baccin reference cluster", values = col_cts_all)+
-    ggtitle(species_curr)
-  
-  plot12 <- ggplot(pres, aes(x = PHATE1, y = PHATE2, 
-                                color = sce$cluster_ref_baccin_similarities))+
-    geom_point()+
-    theme_classic()+
-    scale_color_manual("Baccin reference cluster similarities")+
-    scale_colour_gradient(low = "black", high = "gold", 
-                          name = "Dolgalev reference cluster similarity")+
-    ggtitle(species_curr)
-    
-  plot13 <- ggplot(pres, aes(x = PHATE1, y = PHATE3, 
-                                color = sce$cluster_ref_baccin))+
-    geom_point()+
-    theme_classic()+
-    scale_color_manual("Baccin reference cluster", values = col_cts_all)+
-    ggtitle(species_curr)
-  
-  plot14 <- ggplot(pres, aes(x = PHATE1, y = PHATE3, 
-                                color = sce$cluster_ref_baccin_similarities))+
-    geom_point()+
-    theme_classic()+
-    scale_color_manual("Baccin reference cluster similarities")+
-    scale_colour_gradient(low = "black", high = "gold", 
-                          name = "Dolgalev reference cluster similarity")+
-    ggtitle(species_curr)
-  
-  print(plot1)
-  print(plot2)
-  print(plot3)
-  print(plot4)  
-  print(plot5)  
-  print(plot6)  
-  print(plot7)  
-  print(plot8)  
-  print(plot9)  
-  print(plot10)  
-  print(plot11)  
-  print(plot12)  
-  print(plot13)  
-  print(plot14)  
-
-}
 
 ```
 

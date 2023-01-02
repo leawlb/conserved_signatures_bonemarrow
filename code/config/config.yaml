@@ -50,19 +50,19 @@ values:
       mcar:
         hsc: 7     # 7 ... 11
         str: 13    # just 13
-        both: 24   # 18 ... 24
+        both: 18   # 18 ... 24
       mcas:
         hsc: 8     # 8 ... 10
         str: 14    # just 14
-        both: 21   # 20 ... 21
+        both: 20   # 20 ... 21
       mmus:
         hsc: 9     # 9 ... 10
         str: 14    # just 14
-        both: 25   # 18 ... 23 ... 25
+        both: 18   # 18 ... 23 ... 25
       mspr:
         hsc: 9     # 9 ... 10
         str: 15    # just 15
-        both: 25   # 22 ...25
+        both: 22   # 22 ...25
     use_svm_kernel: "linear" # linear or radial
       
 # RULES  

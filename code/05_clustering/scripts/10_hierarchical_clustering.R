@@ -3,6 +3,7 @@
 library(DropletUtils)
 library(bluster)
 source(file = snakemake@params[["sce_functions"]])
+set.seed(37)
 
 #-------------------------------------------------------------------------------
 

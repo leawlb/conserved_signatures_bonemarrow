@@ -23,7 +23,7 @@ library(tidyverse, quietly = TRUE)
 library(cowplot, quietly = TRUE) 
 library(CellMixS, quietly = TRUE) 
 library(lisi)
-
+set.seed(37)
 ```
 
 ```{r}
@@ -48,6 +48,7 @@ source(file = "../source/sce_functions.R")
 
 ```{r}
 # redo dimensionality reduction for renormalized objects
+set.seed(37)
 sce_08 <- reduce_dims(sce_08, nr_hvgs = snakemake@params[["nr_hvgs"]])
 ```
 

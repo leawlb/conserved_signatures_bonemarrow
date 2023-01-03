@@ -26,6 +26,7 @@ library(bluster, quietly = TRUE)
 library(pheatmap, quietly = TRUE)
 library(RColorBrewer, quietly = TRUE)
 library(phateR, quietly = TRUE)
+set.seed(37)
 ```
 
 ```{r}

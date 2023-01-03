@@ -3,6 +3,7 @@
 library(DropletUtils)
 library(scran)
 library(bluster)
+set.seed(37)
 
 #-------------------------------------------------------------------------------
 

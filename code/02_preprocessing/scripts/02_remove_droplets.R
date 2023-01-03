@@ -21,6 +21,7 @@ sce <- sce[!duplicated(rownames(sce)),]
 # evaluate in report.Rmd
 cutoff_umis <- snakemake@params[["cutoff_umis"]]
 
+set.seed(37)
 # remove barcodes that are likely empty
 out  <- emptyDrops(counts(sce), lower = cutoff_umis)
 sce <- sce[,which(out$FDR <= 0.001)]
@@ -31,6 +32,7 @@ colData(sce)$doublet_score <- computeDoubletDensity(sce)
 # set a doublet_score limit above which possible doublets are excluded
 # evaluate in report.Rmd
 # setting a very high limit so no barcodes are accidentally removed
+set.seed(37)
 cutoff_doublets <-  snakemake@params[["cutoff_doublets"]] 
 sce <- sce[,which(sce$doublet_score <= cutoff_doublets)]
 

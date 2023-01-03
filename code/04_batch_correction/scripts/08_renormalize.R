@@ -3,6 +3,7 @@
 library(DropletUtils, quietly = TRUE)
 library(batchelor, quietly = TRUE)
 library(scran)
+set.seed(37)
 
 sce <- readRDS(file = snakemake@input[["sce_07"]])
 

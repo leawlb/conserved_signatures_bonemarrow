@@ -3,6 +3,7 @@
 library(DropletUtils, quietly = TRUE)
 library(batchelor, quietly = TRUE)
 source(file = snakemake@params[["sce_functions"]])
+set.seed(37)
 
 #-------------------------------------------------------------------------------
 
@@ -75,6 +76,7 @@ if(mnn_fast == TRUE){
   sce_bc$Correction_method <- rep("Classic_MNN", ncol(sce_bc))
 
   # Reduce dimensions
+  set.seed(37)
   sce_bc <- reduce_dims(sce_bc, nr_hvgs = nr_hvgs)
   
 }

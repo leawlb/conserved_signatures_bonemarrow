@@ -20,6 +20,7 @@ library(scuttle, quietly = TRUE)
 library(scran, quietly = TRUE) 
 library(tidyverse, quietly = TRUE) 
 library(pheatmap, quietly = TRUE) 
+set.seed(37)
 ```
 
 ```{r}

@@ -21,6 +21,7 @@ library(scater, quietly = TRUE)
 library(scuttle, quietly = TRUE) 
 library(scran, quietly = TRUE) 
 source(file = snakemake@params[["sce_functions"]])
+set.seed(37)
 ```
 
 ```{r load_code, message = FALSE}

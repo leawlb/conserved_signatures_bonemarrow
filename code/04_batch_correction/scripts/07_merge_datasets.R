@@ -2,6 +2,7 @@
 
 library(stringr)
 library(DropletUtils)
+set.seed(37)
 
 sce_06_path <- snakemake@input[["sce_06"]] # correct cell annotation output
 sce_07_path <- snakemake@output[["sce_07"]] # correct merging output
@@ -98,6 +99,7 @@ print(nrow(sce_merged))
 #-------------------------------------------------------------------------------
 # dimensionality reduction
 
+set.seed(37)
 sce_merged <- reduce_dims(sce_merged, nr_hvgs = snakemake@params[["nr_hvgs"]])
 sce_merged
 

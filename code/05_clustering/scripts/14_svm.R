@@ -13,9 +13,9 @@ print(sce$Species_ID[[1]])
 print(sce)
 
 # Reproducible random numbers (https://bookdown.org/rdpeng/rprogdatascience/parallel-computation.html#example-bootstrapping-a-statistic)
-RNGkind("L'Ecuyer-CMRG")
-set.seed(1)
-sample_numbers <- lapply(1, function(i){
+RNGkind("L'Ecuyer-CMRG") # for random number generation
+set.seed(37)
+sample_numbers <- lapply(1, function(i){ # in case of parallelization
   sample_numbers <- sample(1:ncol(sce), as.integer(ncol(sce)*0.8))
   return(sample_numbers)
 })

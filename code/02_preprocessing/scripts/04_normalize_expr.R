@@ -6,6 +6,7 @@
 
 library(SingleCellExperiment, quietly = TRUE) 
 library(scran, quietly = TRUE) 
+set.seed(37)
 
 sce <- readRDS(file = snakemake@input[["sce_03"]])
 

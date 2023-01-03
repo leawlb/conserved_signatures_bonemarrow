@@ -2,6 +2,7 @@
 
 library(DropletUtils)
 library(scmap)
+set.seed(37)
 
 # From https://bioconductor.org/packages/release/bioc/vignettes/scmap/inst/doc/scmap.html
 

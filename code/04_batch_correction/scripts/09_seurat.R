@@ -5,6 +5,7 @@
 library(DropletUtils, quietly = TRUE)
 library(Seurat)
 source(file = snakemake@params[["sce_functions"]])
+set.seed(37)
 
 #-------------------------------------------------------------------------------
 

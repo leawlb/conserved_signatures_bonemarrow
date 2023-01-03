@@ -23,6 +23,7 @@ library(tidyverse, quietly = TRUE)
 library(scater, quietly = TRUE) 
 library(scuttle, quietly = TRUE) 
 library(scran, quietly = TRUE) 
+set.seed(37)
 
 ```
 

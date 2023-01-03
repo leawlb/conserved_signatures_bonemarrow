@@ -21,6 +21,7 @@ library(scran, quietly = TRUE)
 library(tidyverse, quietly = TRUE) 
 library(dendextend, quietly = TRUE) 
 library(factoextra, quietly = TRUE) 
+set.seed(37)
 ```
 
 ```{r}

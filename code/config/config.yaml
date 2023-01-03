@@ -71,6 +71,7 @@ run_preprocessing_summary: False
 run_ref_annotation_summary: False
 run_batch_correction_summary: False
 run_manual_annotation_summary: False
+run_clustering_summary: False
 
 merge_all: False
 run_mnncorrect: True
@@ -80,6 +81,6 @@ hvgs_for_batch_correction: FALSE
 rescale_for_batch_correction: FALSE # Rescaling assumes that the cell composition in all batches is the same 
 
 remove_mature_cells_clustering: FALSE
-separate_fractions_clustering: TRUE
+separate_fractions_clustering: FALSE
 
 

@@ -33,15 +33,15 @@ print(targets)
 for s in species:
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/11_scls/sce_" + s + "-11"]
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/12_lcls/sce_" + s + "-12"]
-  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/14_svms/objects_hierarchical/objects_" + s]
-  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/14_svms/objects_seurat/objects_" + s]
-  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/14_svms/objects_louvain/objects_" + s]
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/13_svms/objects_hierarchical/objects_" + s]
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/13_svms/objects_seurat/objects_" + s]
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/13_svms/objects_louvain/objects_" + s]
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/05_clustering/" + s + "/clustering_species_report_k_" + s +".html"]
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/05_clustering/" + s + "/clustering_species_report_full_" + s +".html"]
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/05_clustering/" + s + "/clustering_species_report_svm_" + s +".html"]
 
 if config["run_manual_annotation_summary"]:
-  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/05_clustering/clustering_species_summary.html"]
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/05_clustering/clustering_summary.html"]
   
 #-------------------------------------------------------------------------------
 
@@ -91,16 +91,16 @@ rule run_svm_all:
     input: 
         sce_12 = rules.louvain_clustering.output
     output:
-        sce_test = OUTPUT_BASE_PATH + "/sce_objects/14_svms/sce_test/sce_test_{species}",
-        objects_hierarchical = OUTPUT_BASE_PATH + "/sce_objects/14_svms/objects_hierarchical/objects_{species}",
-        objects_seurat = OUTPUT_BASE_PATH + "/sce_objects/14_svms/objects_seurat/objects_{species}",
-        objects_louvain = OUTPUT_BASE_PATH + "/sce_objects/14_svms/objects_louvain/objects_{species}"
+        sce_test = OUTPUT_BASE_PATH + "/sce_objects/13_svms/sce_test/sce_test_{species}",
+        objects_hierarchical = OUTPUT_BASE_PATH + "/sce_objects/13_svms/objects_hierarchical/objects_{species}",
+        objects_seurat = OUTPUT_BASE_PATH + "/sce_objects/13_svms/objects_seurat/objects_{species}",
+        objects_louvain = OUTPUT_BASE_PATH + "/sce_objects/13_svms/objects_louvain/objects_{species}"
     params:
         use_kernel = config["values"]["clustering"]["use_svm_kernel"]
     threads:
         20
     script:
-        "scripts/14_svm.R"
+        "scripts/13_svm.R"
         
 #-------------------------------------------------------------------------------   
         
@@ -117,7 +117,7 @@ rule make_clustering_species_report_k:
 rule make_clustering_species_report_full:
     input:
         sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_seurat3/sce_{species}_Batch_exp_day-09",
-        sce_12 = rules.cluster_ref_annotation.output
+        sce_12 = rules.louvain_clustering.output
     params:
         color_tables = TABLES_PATH,
         number_k = config["values"]["clustering"]["number_k"]
@@ -136,3 +136,15 @@ rule make_clustering_species_report_svms:
         OUTPUT_BASE_PATH + "/sce_objects/reports/05_clustering/{species}/clustering_species_report_svm_{species}.html"
     script:
         "clustering_species_report_svm.Rmd"      
+
+if config["run_clustering_summary"]:
+  rule make_summary_report:
+      input:
+          sce_12_path = OUTPUT_BASE_PATH + "/sce_objects/12_lcls",
+          objects_13_path = OUTPUT_BASE_PATH + "/sce_objects/13_svms"
+      params:
+          species = species
+      output:
+          OUTPUT_BASE_PATH + "/sce_objects/reports/05_clustering/clustering_summary.html"
+      script:
+          "clustering_summary.Rmd" 

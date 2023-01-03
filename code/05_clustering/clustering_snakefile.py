@@ -33,7 +33,6 @@ print(targets)
 for s in species:
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/11_scls/sce_" + s + "-11"]
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/12_lcls/sce_" + s + "-12"]
-  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/13_scmp/sce_" + s + "-13"]
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/14_svms/objects_hierarchical/objects_" + s]
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/14_svms/objects_seurat/objects_" + s]
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/14_svms/objects_louvain/objects_" + s]
@@ -87,22 +86,10 @@ rule louvain_clustering:
         separate_fractions_clustering = config["separate_fractions_clustering"]
     script:
         "scripts/12_louvain_clustering.R"
-        
-rule cluster_ref_annotation:
-    input: 
-        sce_12 = rules.louvain_clustering.output
-    output:
-        sce_13 = OUTPUT_BASE_PATH + "/sce_objects/13_scmp/sce_{species}-13"
-    params:
-        ref_baccin_sce = config["metadata"]["ref_baccin_sce"],
-        ref_dahlin_sce = config["metadata"]["ref_dahlin_sce"],
-        ref_dolgalev_sce = config["metadata"]["ref_dolgalev_sce"]
-    script:
-        "scripts/13_scmap_annotation.R"
    
 rule run_svm_all:
     input: 
-        sce_13 = rules.cluster_ref_annotation.output
+        sce_12 = rules.louvain_clustering.output
     output:
         sce_test = OUTPUT_BASE_PATH + "/sce_objects/14_svms/sce_test/sce_test_{species}",
         objects_hierarchical = OUTPUT_BASE_PATH + "/sce_objects/14_svms/objects_hierarchical/objects_{species}",
@@ -130,7 +117,7 @@ rule make_clustering_species_report_k:
 rule make_clustering_species_report_full:
     input:
         sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_seurat3/sce_{species}_Batch_exp_day-09",
-        sce_13 = rules.cluster_ref_annotation.output
+        sce_12 = rules.cluster_ref_annotation.output
     params:
         color_tables = TABLES_PATH,
         number_k = config["values"]["clustering"]["number_k"]

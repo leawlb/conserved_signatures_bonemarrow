@@ -8,7 +8,7 @@ library(e1071)
 
 #-------------------------------------------------------------------------------
 
-sce <- readRDS(file = snakemake@input[["sce_13"]])
+sce <- readRDS(file = snakemake@input[["sce_12"]])
 print(sce$Species_ID[[1]])
 print(sce)
 

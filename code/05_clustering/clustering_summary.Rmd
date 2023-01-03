@@ -1,0 +1,126 @@
+---
+title: "clustering_summary"
+author: "Lea Wölbert"
+date: '2022-12-21'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Report for clustering overlap between species
+
+#### Load libraries, source code 
+
+```{r load,  message = FALSE}
+library(DropletUtils, quietly = TRUE) 
+library(scater, quietly = TRUE) 
+library(scuttle, quietly = TRUE) 
+library(scran, quietly = TRUE) 
+library(tidyverse, quietly = TRUE) 
+library(pheatmap, quietly = TRUE) 
+set.seed(37)
+```
+
+```{r}
+
+sce_path <- snakemake@input[["sce_12_path"]]
+objects_path <- snakemake@input[["objects_13_path"]]
+species <- snakemake@params[["species"]]
+
+print(sce_path)
+sce_list <- list()
+for(s in species){
+  sce_list[[s]] <- readRDS(file = paste0(sce_path, "/sce_", s, "-12"))
+}
+
+print(objects_path)
+object_hir_list <- list()
+object_ser_list <- list()
+object_lou_list <- list()
+for(s in species){
+  object_hir_list[[s]] <- readRDS(file = paste0(objects_path, "/objects_hierarchical/objects_", s))
+  object_ser_list[[s]] <- readRDS(file = paste0(objects_path, "/objects_seurat/objects_", s))
+  object_lou_list[[s]] <- readRDS(file = paste0(objects_path, "/objects_louvain/objects_", s))
+}
+
+```
+
+# Transfer with SVM
+
+Use the saved best_model of MMUS to transfer to other species.
+
+## Hierarchical
+
+```{r}
+
+data_test_mcar <- as.data.frame(reducedDim(sce_list[["mcar"]], type = "PCA"))
+data_test_mcas <- as.data.frame(reducedDim(sce_list[["mcas"]], type = "PCA"))
+data_test_mspr <- as.data.frame(reducedDim(sce_list[["mspr"]], type = "PCA"))
+
+```
+
+```{r}
+data_test_mcar$species <- sce_list[["mcar"]]$Species_ID
+data_test_mcas$species <- sce_list[["mcas"]]$Species_ID
+data_test_mspr$species <- sce_list[["mspr"]]$Species_ID
+```
+
+## Hierarchical
+
+```{r}
+tune_out_hir_mmus <- object_hir_list[["mmus"]][[1]]
+bestmod_hir_mmus <- tune_out_hir_mmus$best.model
+```
+
+```{r}
+data_test_mcar$cluster_hierarchical <- sce_list[["mcar"]]$cluster_hierarchical
+data_test_mcas$cluster_hierarchical <- sce_list[["mcas"]]$cluster_hierarchical
+data_test_mspr$cluster_hierarchical <- sce_list[["mspr"]]$cluster_hierarchical
+```
+
+
+```{r}
+
+pred_hir_mcar <- predict(bestmod_hir_mmus, data_test_mcar)
+pred_hir_mcas <- predict(bestmod_hir_mmus, data_test_mcas)
+pred_hir_mspr <- predict(bestmod_hir_mmus, data_test_mspr)
+
+data_test_mcar$prediction_hierarchical <- pred_hir_mcar
+data_test_mcas$prediction_hierarchical <- pred_hir_mcas
+data_test_mspr$prediction_hierarchical <- pred_hir_mspr
+
+```
+
+```{r}
+
+get_heatmap <- function(data_test, pred_hir){
+  
+  mat_comp <- as.matrix(table(as.numeric(unfactor(data_test$cluster_hierarchical)),
+                              as.numeric(pred_hir)))
+  mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
+                       which(colMeans(mat_comp) > 0)]
+
+  for(i in 1:nrow(mat_comp)){
+    mat_comp[i,] <- mat_comp[i,]/sum(mat_comp[i,])
+  }
+  rownames(mat_comp) <- factor(as.numeric(rownames(mat_comp)), 
+                               levels = as.numeric(rownames(mat_comp)))
+  colnames(mat_comp) <- factor(as.numeric(colnames(mat_comp)), 
+                               levels = as.numeric(colnames(mat_comp)))
+  
+  rownames(mat_comp) <- paste0(rownames(mat_comp), "_cluster_hierarchical")
+  colnames(mat_comp) <- paste0(colnames(mat_comp), "_predicted")
+  
+  pheatmap(mat_comp, cluster_cols = FALSE, cluster_rows = FALSE, 
+           main = paste0("mmus and ", data_test$species[1], " hierarchical"))
+}
+
+get_heatmap(data_test_mcar, pred_hir_mcar)
+get_heatmap(data_test_mcas, pred_hir_mcas)
+get_heatmap(data_test_mspr, pred_hir_mspr)
+
+```
+
+

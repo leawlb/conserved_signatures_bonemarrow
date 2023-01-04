@@ -9,7 +9,7 @@ snakemake --cluster "bsub -n20 -q verylong -R rusage[mem=50GB]" -p -j15 -c20 -s 
 
 snakemake --cluster "bsub -n20 -q verylong -R rusage[mem=100GB]" -p -j15 -c20 -s clustering_snakefile.py --configfile ../config/config.yaml -n
 
-snakemake --cluster "bsub -n20 -q verylong -R rusage[mem=100GB]" -p -j15 -c20 -s clustering_snakefile.py --configfile ../config/config.yaml -R hierarchical_clustering -n
+snakemake --cluster "bsub -n20 -q verylong -R rusage[mem=100GB]" -p -j15 -c20 -s clustering_snakefile.py --configfile ../config/config.yaml -R run_svm_all -n
 
 snakemake --cluster "bsub -n20 -q highmem -R rusage[mem=400GB]" -p -j15 -c20 -s clustering_snakefile.py --configfile ../config/config.yaml -n
 

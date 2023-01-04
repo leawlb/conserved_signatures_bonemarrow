@@ -20,6 +20,7 @@ library(scuttle, quietly = TRUE)
 library(scran, quietly = TRUE) 
 library(tidyverse, quietly = TRUE) 
 library(pheatmap, quietly = TRUE) 
+library(e1071, quietly = TRUE)
 set.seed(37)
 ```
 
@@ -54,11 +55,9 @@ Use the saved best_model of MMUS to transfer to other species.
 ## Hierarchical
 
 ```{r}
-
 data_test_mcar <- as.data.frame(reducedDim(sce_list[["mcar"]], type = "PCA"))
 data_test_mcas <- as.data.frame(reducedDim(sce_list[["mcas"]], type = "PCA"))
 data_test_mspr <- as.data.frame(reducedDim(sce_list[["mspr"]], type = "PCA"))
-
 ```
 
 ```{r}
@@ -66,8 +65,6 @@ data_test_mcar$species <- sce_list[["mcar"]]$Species_ID
 data_test_mcas$species <- sce_list[["mcas"]]$Species_ID
 data_test_mspr$species <- sce_list[["mspr"]]$Species_ID
 ```
-
-## Hierarchical
 
 ```{r}
 tune_out_hir_mmus <- object_hir_list[["mmus"]][[1]]
@@ -79,7 +76,6 @@ data_test_mcar$cluster_hierarchical <- sce_list[["mcar"]]$cluster_hierarchical
 data_test_mcas$cluster_hierarchical <- sce_list[["mcas"]]$cluster_hierarchical
 data_test_mspr$cluster_hierarchical <- sce_list[["mspr"]]$cluster_hierarchical
 ```
-
 
 ```{r}
 
@@ -113,8 +109,27 @@ get_heatmap <- function(data_test, pred_hir){
   rownames(mat_comp) <- paste0(rownames(mat_comp), "_cluster_hierarchical")
   colnames(mat_comp) <- paste0(colnames(mat_comp), "_predicted")
   
-  pheatmap(mat_comp, cluster_cols = FALSE, cluster_rows = FALSE, 
-           main = paste0("mmus and ", data_test$species[1], " hierarchical"))
+  pheatmap(mat_comp,
+           main = paste0(data_test$species[1], ", predicted hierarchical clusters (model=mmus)"))
+  
+  mat_comp <- as.matrix(table(as.numeric(pred_hir),
+                              as.numeric(unfactor(data_test$cluster_hierarchical))))
+  mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
+                       which(colMeans(mat_comp) > 0)]
+
+  for(i in 1:nrow(mat_comp)){
+    mat_comp[i,] <- mat_comp[i,]/sum(mat_comp[i,])
+  }
+  rownames(mat_comp) <- factor(as.numeric(rownames(mat_comp)), 
+                               levels = as.numeric(rownames(mat_comp)))
+  colnames(mat_comp) <- factor(as.numeric(colnames(mat_comp)), 
+                               levels = as.numeric(colnames(mat_comp)))
+  
+  rownames(mat_comp) <- paste0(rownames(mat_comp), "_predicted")
+  colnames(mat_comp) <- paste0(colnames(mat_comp), "_cluster_hierarchical")
+  
+  pheatmap(mat_comp,
+           main = paste0(data_test$species[1], ", predicted hierarchical clusters (model=mmus)"))
 }
 
 get_heatmap(data_test_mcar, pred_hir_mcar)
@@ -123,4 +138,177 @@ get_heatmap(data_test_mspr, pred_hir_mspr)
 
 ```
 
+## Seurat
 
+```{r}
+data_test_mcar <- as.data.frame(reducedDim(sce_list[["mcar"]], type = "PCA"))
+data_test_mcas <- as.data.frame(reducedDim(sce_list[["mcas"]], type = "PCA"))
+data_test_mspr <- as.data.frame(reducedDim(sce_list[["mspr"]], type = "PCA"))
+```
+
+```{r}
+data_test_mcar$species <- sce_list[["mcar"]]$Species_ID
+data_test_mcas$species <- sce_list[["mcas"]]$Species_ID
+data_test_mspr$species <- sce_list[["mspr"]]$Species_ID
+```
+
+```{r}
+tune_out_ser_mmus <- object_ser_list[["mmus"]][[1]]
+bestmod_ser_mmus <- tune_out_ser_mmus$best.model
+```
+
+```{r}
+data_test_mcar$cluster_seurat <- sce_list[["mcar"]]$cluster_seurat
+data_test_mcas$cluster_seurat <- sce_list[["mcas"]]$cluster_seurat
+data_test_mspr$cluster_seurat <- sce_list[["mspr"]]$cluster_seurat
+```
+
+```{r}
+
+pred_ser_mcar <- predict(bestmod_ser_mmus, data_test_mcar)
+pred_ser_mcas <- predict(bestmod_ser_mmus, data_test_mcas)
+pred_ser_mspr <- predict(bestmod_ser_mmus, data_test_mspr)
+
+data_test_mcar$prediction_seurat <- pred_ser_mcar
+data_test_mcas$prediction_seurat <- pred_ser_mcas
+data_test_mspr$prediction_seurat <- pred_ser_mspr
+
+```
+
+```{r}
+
+get_heatmap <- function(data_test, pred_ser){
+  
+  mat_comp <- as.matrix(table(as.numeric(unfactor(data_test$cluster_seurat)),
+                              as.numeric(pred_ser)))
+  mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
+                       which(colMeans(mat_comp) > 0)]
+
+  for(i in 1:nrow(mat_comp)){
+    mat_comp[i,] <- mat_comp[i,]/sum(mat_comp[i,])
+  }
+  rownames(mat_comp) <- factor(as.numeric(rownames(mat_comp)), 
+                               levels = as.numeric(rownames(mat_comp)))
+  colnames(mat_comp) <- factor(as.numeric(colnames(mat_comp)), 
+                               levels = as.numeric(colnames(mat_comp)))
+  
+  rownames(mat_comp) <- paste0(rownames(mat_comp), "_cluster_seurat")
+  colnames(mat_comp) <- paste0(colnames(mat_comp), "_predicted")
+  
+  pheatmap(mat_comp,
+           main = paste0(data_test$species[1], ", predicted seurat clusters (model=mmus)"))
+  
+  mat_comp <- as.matrix(table(as.numeric(pred_ser),
+                              as.numeric(unfactor(data_test$cluster_seurat))))
+  mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
+                       which(colMeans(mat_comp) > 0)]
+
+  for(i in 1:nrow(mat_comp)){
+    mat_comp[i,] <- mat_comp[i,]/sum(mat_comp[i,])
+  }
+  rownames(mat_comp) <- factor(as.numeric(rownames(mat_comp)), 
+                               levels = as.numeric(rownames(mat_comp)))
+  colnames(mat_comp) <- factor(as.numeric(colnames(mat_comp)), 
+                               levels = as.numeric(colnames(mat_comp)))
+  
+  rownames(mat_comp) <- paste0(rownames(mat_comp), "_predicted")
+  colnames(mat_comp) <- paste0(colnames(mat_comp), "_cluster_seurat")
+  
+  pheatmap(mat_comp,
+           main = paste0(data_test$species[1], ", predicted seurat clusters (model=mmus)"))
+}
+
+get_heatmap(data_test_mcar, pred_ser_mcar)
+get_heatmap(data_test_mcas, pred_ser_mcas)
+get_heatmap(data_test_mspr, pred_ser_mspr)
+
+
+```
+
+## Louvain
+
+```{r}
+
+data_test_mcar <- as.data.frame(reducedDim(sce_list[["mcar"]], type = "PCA"))
+data_test_mcas <- as.data.frame(reducedDim(sce_list[["mcas"]], type = "PCA"))
+data_test_mspr <- as.data.frame(reducedDim(sce_list[["mspr"]], type = "PCA"))
+
+```
+
+```{r}
+data_test_mcar$species <- sce_list[["mcar"]]$Species_ID
+data_test_mcas$species <- sce_list[["mcas"]]$Species_ID
+data_test_mspr$species <- sce_list[["mspr"]]$Species_ID
+```
+
+```{r}
+tune_out_lou_mmus <- object_lou_list[["mmus"]][[1]]
+bestmod_lou_mmus <- tune_out_lou_mmus$best.model
+```
+
+```{r}
+data_test_mcar$cluster_louvain <- sce_list[["mcar"]]$cluster_louvain
+data_test_mcas$cluster_louvain <- sce_list[["mcas"]]$cluster_louvain
+data_test_mspr$cluster_louvain <- sce_list[["mspr"]]$cluster_louvain
+```
+
+```{r}
+
+pred_lou_mcar <- predict(bestmod_lou_mmus, data_test_mcar)
+pred_lou_mcas <- predict(bestmod_lou_mmus, data_test_mcas)
+pred_lou_mspr <- predict(bestmod_lou_mmus, data_test_mspr)
+
+data_test_mcar$prediction_louvain <- pred_lou_mcar
+data_test_mcas$prediction_louvain <- pred_lou_mcas
+data_test_mspr$prediction_louvain <- pred_lou_mspr
+
+```
+
+```{r}
+
+get_heatmap <- function(data_test, pred_lou){
+  
+  mat_comp <- as.matrix(table(as.numeric(unfactor(data_test$cluster_louvain)),
+                              as.numeric(pred_lou)))
+  mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
+                       which(colMeans(mat_comp) > 0)]
+
+  for(i in 1:nrow(mat_comp)){
+    mat_comp[i,] <- mat_comp[i,]/sum(mat_comp[i,])
+  }
+  rownames(mat_comp) <- factor(as.numeric(rownames(mat_comp)), 
+                               levels = as.numeric(rownames(mat_comp)))
+  colnames(mat_comp) <- factor(as.numeric(colnames(mat_comp)), 
+                               levels = as.numeric(colnames(mat_comp)))
+  
+  rownames(mat_comp) <- paste0(rownames(mat_comp), "_cluster_louvain")
+  colnames(mat_comp) <- paste0(colnames(mat_comp), "_predicted")
+  
+  pheatmap(mat_comp,
+           main = paste0(data_test$species[1], ", predicted louvain clusters (model=mmus)"))
+  
+  mat_comp <- as.matrix(table(as.numeric(pred_lou),
+                              as.numeric(unfactor(data_test$cluster_louvain))))
+  mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
+                       which(colMeans(mat_comp) > 0)]
+
+  for(i in 1:nrow(mat_comp)){
+    mat_comp[i,] <- mat_comp[i,]/sum(mat_comp[i,])
+  }
+  rownames(mat_comp) <- factor(as.numeric(rownames(mat_comp)), 
+                               levels = as.numeric(rownames(mat_comp)))
+  colnames(mat_comp) <- factor(as.numeric(colnames(mat_comp)), 
+                               levels = as.numeric(colnames(mat_comp)))
+  
+  rownames(mat_comp) <- paste0(rownames(mat_comp), "_predicted")
+  colnames(mat_comp) <- paste0(colnames(mat_comp), "_cluster_louvain")
+  
+  pheatmap(mat_comp,
+           main = paste0(data_test$species[1], ", predicted louvain clusters (model=mmus)"))
+}
+
+get_heatmap(data_test_mcar, pred_lou_mcar)
+get_heatmap(data_test_mcas, pred_lou_mcas)
+get_heatmap(data_test_mspr, pred_lou_mspr)
+
+```

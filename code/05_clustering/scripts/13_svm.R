@@ -92,6 +92,10 @@ print(sce_test)
 #-------------------------------------------------------------------------------
 
 # Seurat clustering
+# make new "clean" training data so train data can fit test data later
+data_train <- as.data.frame(reducedDim(sce_train, type = "PCA"))
+data_test <- as.data.frame(reducedDim(sce_test, type = "PCA"))
+
 data_train$cluster_seurat <- sce_train$cluster_seurat
 data_test$cluster_seurat <- sce_test$cluster_seurat
 
@@ -101,7 +105,6 @@ tune_out_ser <- tune(svm, factor(cluster_seurat) ~ .,
                      class.weights = weight_s)
    
 bestmod_ser <- tune_out_ser$best.model
-
 
 pred_ser <- predict(bestmod_ser, data_test)
 sce_test$prediction_seurat <- pred_ser
@@ -113,6 +116,9 @@ print(sce_test)
 #-------------------------------------------------------------------------------
 
 # Louvain clustering
+data_train <- as.data.frame(reducedDim(sce_train, type = "PCA"))
+data_test <- as.data.frame(reducedDim(sce_test, type = "PCA"))
+
 data_train$cluster_louvain <- sce_train$cluster_louvain
 data_test$cluster_louvain <- sce_test$cluster_louvain
 

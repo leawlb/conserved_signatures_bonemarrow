@@ -48,15 +48,15 @@ values:
     number_k: 
     # adjust according to clustering reports
       mcar:
-        hsc: 11     # 7 ... 11
+        hsc: 11    # 7 ... 11
         str: 13    # just 13
         both: 18   # 18 ... 24
       mcas:
-        hsc: 10     # 8 ... 10
+        hsc: 10    # 8 ... 10
         str: 14    # just 14
         both: 20   # 20 ... 21
       mmus:
-        hsc: 10     # 9 ... 10
+        hsc: 10    # 9 ... 10
         str: 14    # just 14
         both: 18   # 18 ... 23 ... 25
       mspr:

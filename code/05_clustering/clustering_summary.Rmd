@@ -387,6 +387,69 @@ sce_list <- lapply(sce_list, get_reference_clusters)
 print(sce_list)
 ```
 
+```{r}
+
+plot_list <- lapply(sce_list, function(x){
+
+  gg_df <- as.data.frame(colData(x))
+  
+  gg_df$cluster_hierarchical_predicted <- factor(gg_df$cluster_hierarchical_predicted, 
+                                                 levels = c(sort(as.numeric(cluster_hierarchical_predicted)), "unassigned"))
+  
+  gg_df$cluster_seurat_predicted <- factor(gg_df$cluster_seurat_predicted, 
+                                                 levels = c(sort(as.numeric(cluster_seurat_predicted)), "unassigned"))
+  
+  gg_df$cluster_louvain_predicted <- factor(gg_df$cluster_louvain_predicted, 
+                                                 levels = c(sort(as.numeric(cluster_louvain_predicted)), "unassigned"))
+  
+  plot1 <- ggplot(gg_df, aes(x = cluster_hierarchical, 
+                    y = cluster_hierarchical_predicted_similarities))+
+    ggbeeswarm::geom_quasirandom(size = 0.3)+
+    theme_classic()+
+    ggtitle(x$Species_ID[1])
+  
+  plot2 <- ggplot(gg_df, aes(x = cluster_hierarchical_predicted, 
+                    y = cluster_hierarchical_predicted_similarities))+
+    ggbeeswarm::geom_quasirandom(size = 0.3)+
+    theme_classic()+
+    ggtitle(x$Species_ID[1])+
+    xlab("cluster_hierarchical_predicted")
+  
+  plot3 <- ggplot(gg_df, aes(x = cluster_seurat, 
+                    y = cluster_seurat_predicted_similarities))+
+    ggbeeswarm::geom_quasirandom(size = 0.3)+
+    theme_classic()+
+    ggtitle(x$Species_ID[1])
+  
+  plot4 <- ggplot(gg_df, aes(x = cluster_seurat_predicted, 
+                    y = cluster_seurat_predicted_similarities))+
+    ggbeeswarm::geom_quasirandom(size = 0.3)+
+    theme_classic()+
+    ggtitle(x$Species_ID[1])+
+    xlab("cluster_seurat_predicted")
+  
+  plot5 <- ggplot(gg_df, aes(x = cluster_louvain, 
+                    y = cluster_louvain_predicted_similarities))+
+    ggbeeswarm::geom_quasirandom(size = 0.3)+
+    theme_classic()+
+    ggtitle(x$Species_ID[1])
+  
+  plot6 <- ggplot(gg_df, aes(x = cluster_louvain_predicted, 
+                    y = cluster_louvain_predicted_similarities))+
+    ggbeeswarm::geom_quasirandom(size = 0.3)+
+    theme_classic()+
+    ggtitle(x$Species_ID[1])+
+    xlab("cluster_louvain_predicted")
+  
+  return(list(plot1, plot2, plot3, plot4, plot5, plot6))
+  
+})
+
+plot_list
+
+```
+
+
 ## Heatmaps
 
 ### Hierarchical
@@ -543,10 +606,9 @@ plot_list <- lapply(sce_list, get_heatmap_seurat)
 
 ```
 
-
 ## UMAPs
 
-```{r}
+```{r fig.width=10, fig.height=5}
 
 cluster_plots <- function(sce){
   
@@ -559,25 +621,31 @@ cluster_plots <- function(sce){
   plot_1 <- umap_base(sce, 
                       color_by = "cluster_hierarchical_predicted")+ 
     ggtitle(paste0(species_curr))+
-    scale_color_manual("cluster_hierarchical_predicted", values = col_clust_h)
+    scale_color_manual("cluster_hierarchical_predicted", 
+                       values = c("unassigned" = "thistle", col_clust_h))
   plot_1l <- umap_legend(sce, color_by = "cluster_hierarchical_predicted")+
-    scale_color_manual("cluster_hierarchical_predicted", values = col_clust_h)
+    scale_color_manual("cluster_hierarchical_predicted", 
+                       values = c("unassigned" = "thistle", col_clust_h))
   legend_1 <- get_legend(plot_1l)
 
   plot_2 <- umap_base(sce,
                       color_by = "cluster_seurat_predicted")+ # own function
     ggtitle(paste0(species_curr))+
-    scale_color_manual("cluster_seurat_predicted", values = col_clust_s)
+    scale_color_manual("cluster_seurat_predicted", 
+                      values = c("unassigned" = "thistle", col_clust_s))
   plot_2l <- umap_legend(sce, color_by = "cluster_seurat_predicted")+
-    scale_color_manual("cluster_seurat_predicted", values = col_clust_s)
+    scale_color_manual("cluster_seurat_predicted", 
+                       values = c("unassigned" = "thistle", col_clust_s))
   legend_2 <- get_legend(plot_2l)
   
   plot_3 <- umap_base(sce, 
                       color_by = "cluster_louvain_predicted")+ # own function
     ggtitle(paste0(species_curr))+
-    scale_color_manual("cluster_louvain_predicted", values = col_clust_l)
+    scale_color_manual("cluster_louvain_predicted", 
+                       values = c("unassigned" = "thistle", col_clust_l))
   plot_3l <- umap_legend(sce, color_by = "cluster_louvain_predicted")+
-    scale_color_manual("cluster_louvain_predicted", values = col_clust_l)
+    scale_color_manual("cluster_louvain_predicted", 
+                       values = c("unassigned" = "thistle", col_clust_l))
   legend_3 <- get_legend(plot_3l)
   
   
@@ -628,4 +696,3 @@ cluster_plot_list
 ```{r}
 sessionInfo()
 ```
-

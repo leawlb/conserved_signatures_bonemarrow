@@ -143,7 +143,8 @@ if config["run_clustering_summary"]:
           sce_12_path = OUTPUT_BASE_PATH + "/sce_objects/12_lcls",
           objects_13_path = OUTPUT_BASE_PATH + "/sce_objects/13_svms"
       params:
-          species = species
+         color_tables = TABLES_PATH,
+         species = species
       output:
           OUTPUT_BASE_PATH + "/sce_objects/reports/05_clustering/clustering_summary.html"
       script:

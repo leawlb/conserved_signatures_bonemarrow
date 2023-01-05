@@ -6,7 +6,7 @@ set.seed(37)
 
 # From https://bioconductor.org/packages/release/bioc/vignettes/scmap/inst/doc/scmap.html
 
-sce <- readRDS(file = snakemake@input[["sce_12"]])
+sce <- readRDS(file = snakemake@input[["sce_14"]])
 
 ref_baccin <- readRDS(file = snakemake@params[["ref_baccin_sce"]])
 ref_dahlin <- readRDS(file = snakemake@params[["ref_dahlin_sce"]])
@@ -20,11 +20,12 @@ ref_baccin <- indexCluster(ref_baccin, cluster_col = "identity_ref")
 temp_sce <- sce
 rowData(temp_sce)$feature_symbol <- rownames(temp_sce)
 results <- scmapCluster(projection = temp_sce,
-                        index_list = list(metadata(ref_baccin)$scmap_cluster_index), 
+                        index_list = list(
+                          metadata(ref_baccin)$scmap_cluster_index), 
                         threshold = 0.7)
 
-sce$cluster_ref_baccin <- results$combined_labs
-sce$cluster_ref_baccin_similarities <- results$scmap_cluster_siml
+sce$baccin_identity_pred_cluster <- results$combined_labs
+sce$baccin_identity_pred_cluster_sim <- results$scmap_cluster_siml
 
 # do not separate by fraction anymore because scmap can reject
 # Dahlin
@@ -35,11 +36,12 @@ ref_dahlin <- indexCluster(ref_dahlin, cluster_col = "identity_ref")
 temp_sce <- sce
 rowData(temp_sce)$feature_symbol <- rownames(temp_sce)
 results <- scmapCluster(projection = temp_sce,
-                        index_list = list(metadata(ref_dahlin)$scmap_cluster_index),
+                        index_list = list(
+                          metadata(ref_dahlin)$scmap_cluster_index),
                         threshold = 0.7)
 
-sce$cluster_ref_dahlin <- results$combined_labs
-sce$cluster_ref_dahlin_similarities <- results$scmap_cluster_siml
+sce$dahlin_identity_pred_cluster <- results$combined_labs
+sce$dahlin_identity_pred_cluster_sim <- results$scmap_cluster_siml
 
 # Dolgalev
 rowData(ref_dolgalev)$feature_symbol <- rownames(ref_dolgalev)
@@ -49,11 +51,12 @@ ref_dolgalev <- indexCluster(ref_dolgalev, cluster_col = "labelsimple")
 temp_sce <- sce
 rowData(temp_sce)$feature_symbol <- rownames(temp_sce)
 results <- scmapCluster(projection = temp_sce,
-                        index_list = list(metadata(ref_dolgalev)$scmap_cluster_index), 
+                        index_list = list(
+                          metadata(ref_dolgalev)$scmap_cluster_index), 
                         threshold = 0.7)
 
-sce$cluster_ref_dolgalev <- results$combined_labs
-sce$cluster_ref_dolgalev_similarities <- results$scmap_cluster_siml
+sce$dolgalev_identity_pred_cluster <- results$combined_labs
+sce$dolgalev_identity_pred_cluster_sim <- results$scmap_cluster_siml
 
 print(sce)
 saveRDS(sce, file = snakemake@output[["sce_13"]])

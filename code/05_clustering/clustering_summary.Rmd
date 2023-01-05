@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Report for clustering overlap between species
+Report for clustering overlap between species, using SVM to transfer labels.
 
 #### Load libraries, source code 
 
@@ -21,7 +21,6 @@ library(scran, quietly = TRUE)
 library(tidyverse, quietly = TRUE) 
 library(pheatmap, quietly = TRUE) 
 library(e1071, quietly = TRUE)
-library(scmap, quietly = TRUE)
 
 set.seed(37)
 ```
@@ -50,9 +49,12 @@ object_hir_list <- list()
 object_ser_list <- list()
 object_lou_list <- list()
 for(s in species){
-  object_hir_list[[s]] <- readRDS(file = paste0(objects_path, "/objects_hierarchical/objects_", s))
-  object_ser_list[[s]] <- readRDS(file = paste0(objects_path, "/objects_seurat/objects_", s))
-  object_lou_list[[s]] <- readRDS(file = paste0(objects_path, "/objects_louvain/objects_", s))
+  object_hir_list[[s]] <- readRDS(file = paste0(
+    objects_path, "/objects_hierarchical/objects_", s))
+  object_ser_list[[s]] <- readRDS(file = paste0(
+    objects_path, "/objects_seurat/objects_", s))
+  object_lou_list[[s]] <- readRDS(file = paste0(
+    objects_path, "/objects_louvain/objects_", s))
 }
 
 ```
@@ -102,7 +104,8 @@ data_test_mspr$prediction_hierarchical <- pred_hir_mspr
 
 get_heatmap <- function(data_test, pred_hir){
   
-  mat_comp <- as.matrix(table(as.numeric(unfactor(data_test$cluster_hierarchical)),
+  mat_comp <- as.matrix(table(as.numeric(unfactor(
+    data_test$cluster_hierarchical)),
                               as.numeric(pred_hir)))
   mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
                        which(colMeans(mat_comp) > 0)]
@@ -123,7 +126,8 @@ get_heatmap <- function(data_test, pred_hir){
                          ", predicted hierarchical clusters (model=mmus), SVM"))
   
   mat_comp <- as.matrix(table(as.numeric(pred_hir),
-                              as.numeric(unfactor(data_test$cluster_hierarchical))))
+                              as.numeric(unfactor(
+                                data_test$cluster_hierarchical))))
   mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
                        which(colMeans(mat_comp) > 0)]
 
@@ -325,371 +329,6 @@ get_heatmap <- function(data_test, pred_lou){
 get_heatmap(data_test_mcar, pred_lou_mcar)
 get_heatmap(data_test_mcas, pred_lou_mcas)
 get_heatmap(data_test_mspr, pred_lou_mspr)
-
-```
-
-# Transfer with SVM
-
-```{r}
-
-# prepare sce_ref
-sce_ref <- sce_list[["mmus"]]
-rowData(sce_ref)$feature_symbol <- rownames(sce_ref)
-sce_ref <- selectFeatures(sce_ref, suppress_plot = TRUE)
-
-get_reference_clusters <- function(sce){
-  
-  # hierarchical
-  sce_ref_temp2 <- sce_ref
-  sce_ref_temp2 <- indexCluster(sce_ref_temp2, cluster_col = "cluster_hierarchical")
-
-  temp_sce <- sce
-  rowData(temp_sce)$feature_symbol <- rownames(temp_sce)
-  results <- scmapCluster(projection = temp_sce,
-                          index_list = list(metadata(sce_ref_temp2)$scmap_cluster_index), 
-                          threshold = 0.7)
-
-  sce$cluster_hierarchical_predicted <- results$combined_labs
-  sce$cluster_hierarchical_predicted_similarities <- results$scmap_cluster_siml
-  
-  # seurat
-  sce_ref_temp3 <- sce_ref
-  sce_ref_temp3 <- indexCluster(sce_ref_temp3, cluster_col = "cluster_seurat")
-
-  rowData(temp_sce)$feature_symbol <- rownames(temp_sce)
-  results <- scmapCluster(projection = temp_sce,
-                          index_list = list(metadata(sce_ref_temp3)$scmap_cluster_index), 
-                          threshold = 0.7)
-
-  sce$cluster_seurat_predicted <- results$combined_labs
-  sce$cluster_seurat_predicted_similarities <- results$scmap_cluster_siml
-  
-  # louvain
-  sce_ref_temp4 <- sce_ref
-  sce_ref_temp4 <- indexCluster(sce_ref_temp4, cluster_col = "cluster_louvain")
-
-  rowData(temp_sce)$feature_symbol <- rownames(temp_sce)
-  results <- scmapCluster(projection = temp_sce,
-                          index_list = list(metadata(sce_ref_temp4)$scmap_cluster_index), 
-                          threshold = 0.7)
-
-  sce$cluster_louvain_predicted <- results$combined_labs
-  sce$cluster_louvain_predicted_similarities <- results$scmap_cluster_siml
-
-  return(sce)
-}
-
-sce_list <- lapply(sce_list, get_reference_clusters)
-
-```
-
-```{r}
-print(sce_list)
-```
-
-```{r}
-
-plot_list <- lapply(sce_list, function(x){
-
-  gg_df <- as.data.frame(colData(x))
-  
-  gg_df$cluster_hierarchical_predicted <- factor(gg_df$cluster_hierarchical_predicted, 
-                                                 levels = c(sort(as.numeric(cluster_hierarchical_predicted)), "unassigned"))
-  
-  gg_df$cluster_seurat_predicted <- factor(gg_df$cluster_seurat_predicted, 
-                                                 levels = c(sort(as.numeric(cluster_seurat_predicted)), "unassigned"))
-  
-  gg_df$cluster_louvain_predicted <- factor(gg_df$cluster_louvain_predicted, 
-                                                 levels = c(sort(as.numeric(cluster_louvain_predicted)), "unassigned"))
-  
-  plot1 <- ggplot(gg_df, aes(x = cluster_hierarchical, 
-                    y = cluster_hierarchical_predicted_similarities))+
-    ggbeeswarm::geom_quasirandom(size = 0.3)+
-    theme_classic()+
-    ggtitle(x$Species_ID[1])
-  
-  plot2 <- ggplot(gg_df, aes(x = cluster_hierarchical_predicted, 
-                    y = cluster_hierarchical_predicted_similarities))+
-    ggbeeswarm::geom_quasirandom(size = 0.3)+
-    theme_classic()+
-    ggtitle(x$Species_ID[1])+
-    xlab("cluster_hierarchical_predicted")
-  
-  plot3 <- ggplot(gg_df, aes(x = cluster_seurat, 
-                    y = cluster_seurat_predicted_similarities))+
-    ggbeeswarm::geom_quasirandom(size = 0.3)+
-    theme_classic()+
-    ggtitle(x$Species_ID[1])
-  
-  plot4 <- ggplot(gg_df, aes(x = cluster_seurat_predicted, 
-                    y = cluster_seurat_predicted_similarities))+
-    ggbeeswarm::geom_quasirandom(size = 0.3)+
-    theme_classic()+
-    ggtitle(x$Species_ID[1])+
-    xlab("cluster_seurat_predicted")
-  
-  plot5 <- ggplot(gg_df, aes(x = cluster_louvain, 
-                    y = cluster_louvain_predicted_similarities))+
-    ggbeeswarm::geom_quasirandom(size = 0.3)+
-    theme_classic()+
-    ggtitle(x$Species_ID[1])
-  
-  plot6 <- ggplot(gg_df, aes(x = cluster_louvain_predicted, 
-                    y = cluster_louvain_predicted_similarities))+
-    ggbeeswarm::geom_quasirandom(size = 0.3)+
-    theme_classic()+
-    ggtitle(x$Species_ID[1])+
-    xlab("cluster_louvain_predicted")
-  
-  return(list(plot1, plot2, plot3, plot4, plot5, plot6))
-  
-})
-
-plot_list
-
-```
-
-
-## Heatmaps
-
-### Hierarchical
-
-```{r}
-
-get_heatmap_hierarchical <- function(sce){
-  
-  mat_comp <- as.matrix(table(as.numeric(unfactor(sce$cluster_hierarchical)),
-                              as.numeric(sce$cluster_hierarchical_predicted)))
-  mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
-                       which(colMeans(mat_comp) > 0)]
-
-  for(i in 1:nrow(mat_comp)){
-    mat_comp[i,] <- mat_comp[i,]/sum(mat_comp[i,])
-  }
-  rownames(mat_comp) <- factor(as.numeric(rownames(mat_comp)), 
-                               levels = as.numeric(rownames(mat_comp)))
-  colnames(mat_comp) <- factor(as.numeric(colnames(mat_comp)), 
-                               levels = as.numeric(colnames(mat_comp)))
-  
-  rownames(mat_comp) <- paste0(rownames(mat_comp), "_cluster_hierarchical")
-  colnames(mat_comp) <- paste0(colnames(mat_comp), "_predicted")
-  
-  pheatmap(mat_comp,
-           main = paste0(sce$Species_ID[1], 
-                         ", hierarchical clusters (model=mmus), SCMAP"))
-  
-  mat_comp <- as.matrix(table(as.numeric(sce$cluster_hierarchical_predicted),
-                              as.numeric(unfactor(sce$cluster_hierarchical))))
-  mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
-                       which(colMeans(mat_comp) > 0)]
-
-  for(i in 1:nrow(mat_comp)){
-    mat_comp[i,] <- mat_comp[i,]/sum(mat_comp[i,])
-  }
-  rownames(mat_comp) <- factor(as.numeric(rownames(mat_comp)), 
-                               levels = as.numeric(rownames(mat_comp)))
-  colnames(mat_comp) <- factor(as.numeric(colnames(mat_comp)), 
-                               levels = as.numeric(colnames(mat_comp)))
-  
-  rownames(mat_comp) <- paste0(rownames(mat_comp), "_predicted")
-  colnames(mat_comp) <- paste0(colnames(mat_comp), "_hierarchical_cluster")
-  
-  pheatmap(mat_comp,
-           main = paste0(sce$Species_ID[1], 
-                         ", hierarchical clusters (model=mmus), SCMAP"))
-}
-
-plot_list <- lapply(sce_list, get_heatmap_hierarchical)
-
-```
-
-### Seurat
-
-```{r}
-
-get_heatmap_seurat <- function(sce){
-  
-  mat_comp <- as.matrix(table(as.numeric(unfactor(sce$cluster_seurat)),
-                              as.numeric(sce$cluster_seurat_predicted)))
-  mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
-                       which(colMeans(mat_comp) > 0)]
-
-  for(i in 1:nrow(mat_comp)){
-    mat_comp[i,] <- mat_comp[i,]/sum(mat_comp[i,])
-  }
-  rownames(mat_comp) <- factor(as.numeric(rownames(mat_comp)), 
-                               levels = as.numeric(rownames(mat_comp)))
-  colnames(mat_comp) <- factor(as.numeric(colnames(mat_comp)), 
-                               levels = as.numeric(colnames(mat_comp)))
-  
-  rownames(mat_comp) <- paste0(rownames(mat_comp), "_cluster_seurat")
-  colnames(mat_comp) <- paste0(colnames(mat_comp), "_predicted")
-  
-  pheatmap(mat_comp,
-           main = paste0(sce$Species_ID[1], 
-                         ", seurat clusters (model=mmus), SCMAP"))
-  
-  mat_comp <- as.matrix(table(as.numeric(sce$cluster_seurat_predicted),
-                              as.numeric(unfactor(sce$cluster_seurat))))
-  mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
-                       which(colMeans(mat_comp) > 0)]
-
-  for(i in 1:nrow(mat_comp)){
-    mat_comp[i,] <- mat_comp[i,]/sum(mat_comp[i,])
-  }
-  rownames(mat_comp) <- factor(as.numeric(rownames(mat_comp)), 
-                               levels = as.numeric(rownames(mat_comp)))
-  colnames(mat_comp) <- factor(as.numeric(colnames(mat_comp)), 
-                               levels = as.numeric(colnames(mat_comp)))
-  
-  rownames(mat_comp) <- paste0(rownames(mat_comp), "_predicted")
-  colnames(mat_comp) <- paste0(colnames(mat_comp), "_seurat_cluster")
-  
-  pheatmap(mat_comp,
-           main = paste0(sce$Species_ID[1], 
-                         ", seurat clusters (model=mmus), SCMAP"))
-}
-
-plot_list <- lapply(sce_list, get_heatmap_seurat)
-
-
-```
-
-### Louvain
-
-```{r}
-
-get_heatmap_louvain <- function(sce){
-  
-  mat_comp <- as.matrix(table(as.numeric(unfactor(sce$cluster_louvain)),
-                              as.numeric(sce$cluster_louvain_predicted)))
-  mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
-                       which(colMeans(mat_comp) > 0)]
-
-  for(i in 1:nrow(mat_comp)){
-    mat_comp[i,] <- mat_comp[i,]/sum(mat_comp[i,])
-  }
-  rownames(mat_comp) <- factor(as.numeric(rownames(mat_comp)), 
-                               levels = as.numeric(rownames(mat_comp)))
-  colnames(mat_comp) <- factor(as.numeric(colnames(mat_comp)), 
-                               levels = as.numeric(colnames(mat_comp)))
-  
-  rownames(mat_comp) <- paste0(rownames(mat_comp), "_cluster_louvain")
-  colnames(mat_comp) <- paste0(colnames(mat_comp), "_predicted")
-  
-  pheatmap(mat_comp,
-           main = paste0(sce$Species_ID[1], 
-                         ", predicted clusters (model=mmus), SCMAP"))
-  
-  mat_comp <- as.matrix(table(as.numeric(sce$cluster_seurat_predicted),
-                              as.numeric(unfactor(sce$cluster_seurat))))
-  mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
-                       which(colMeans(mat_comp) > 0)]
-
-  for(i in 1:nrow(mat_comp)){
-    mat_comp[i,] <- mat_comp[i,]/sum(mat_comp[i,])
-  }
-  rownames(mat_comp) <- factor(as.numeric(rownames(mat_comp)), 
-                               levels = as.numeric(rownames(mat_comp)))
-  colnames(mat_comp) <- factor(as.numeric(colnames(mat_comp)), 
-                               levels = as.numeric(colnames(mat_comp)))
-  
-  rownames(mat_comp) <- paste0(rownames(mat_comp), "_predicted")
-  colnames(mat_comp) <- paste0(colnames(mat_comp), "_louvain_cluster")
-  
-  pheatmap(mat_comp,
-           main = paste0(sce$Species_ID[1], 
-                         ", predicted clusters (model=mmus), SCMAP"))
-}
-
-plot_list <- lapply(sce_list, get_heatmap_seurat)
-
-```
-
-## UMAPs
-
-```{r fig.width=10, fig.height=5}
-
-cluster_plots <- function(sce){
-  
-  col_clust_h <- col_num[names(col_num) %in% sce$cluster_hierarchical_predicted]
-  col_clust_s <- col_num[names(col_num) %in% sce$cluster_seurat_predicted]
-  col_clust_l <- col_num[names(col_num) %in% sce$cluster_louvain_predicted]
-
-  species_curr <- sce$Species_ID[1]
-  
-  plot_1 <- umap_base(sce, 
-                      color_by = "cluster_hierarchical_predicted")+ 
-    ggtitle(paste0(species_curr))+
-    scale_color_manual("cluster_hierarchical_predicted", 
-                       values = c("unassigned" = "thistle", col_clust_h))
-  plot_1l <- umap_legend(sce, color_by = "cluster_hierarchical_predicted")+
-    scale_color_manual("cluster_hierarchical_predicted", 
-                       values = c("unassigned" = "thistle", col_clust_h))
-  legend_1 <- get_legend(plot_1l)
-
-  plot_2 <- umap_base(sce,
-                      color_by = "cluster_seurat_predicted")+ # own function
-    ggtitle(paste0(species_curr))+
-    scale_color_manual("cluster_seurat_predicted", 
-                      values = c("unassigned" = "thistle", col_clust_s))
-  plot_2l <- umap_legend(sce, color_by = "cluster_seurat_predicted")+
-    scale_color_manual("cluster_seurat_predicted", 
-                       values = c("unassigned" = "thistle", col_clust_s))
-  legend_2 <- get_legend(plot_2l)
-  
-  plot_3 <- umap_base(sce, 
-                      color_by = "cluster_louvain_predicted")+ # own function
-    ggtitle(paste0(species_curr))+
-    scale_color_manual("cluster_louvain_predicted", 
-                       values = c("unassigned" = "thistle", col_clust_l))
-  plot_3l <- umap_legend(sce, color_by = "cluster_louvain_predicted")+
-    scale_color_manual("cluster_louvain_predicted", 
-                       values = c("unassigned" = "thistle", col_clust_l))
-  legend_3 <- get_legend(plot_3l)
-  
-  
-  plot_4 <- umap_base(sce, 
-                      color_by = "cluster_hierarchical_predicted_similarities")+
-    ggtitle(paste0(species_curr))+
-    scale_colour_gradient(low = "black", high = "gold")
-  plot_4l <- umap_legend(sce, 
-                         color_by = "cluster_hierarchical_predicted_similarities")+
-    scale_colour_gradient(low = "black", high = "gold",
-                          name = "cluster_hierarchical_predicted_similarities")
-  legend_4 <- get_legend(plot_4l)  
-  
-  plot_5 <- umap_base(sce, color_by = "cluster_seurat_predicted_similarities")+
-    ggtitle(paste0(species_curr))+
-    scale_colour_gradient(low = "black", high = "gold")
-  plot_5l <- umap_legend(sce, 
-                         color_by = "cluster_seurat_predicted_similarities")+
-    scale_colour_gradient(low = "black", high = "gold",
-                          name = "cluster_seurat_predicted_similarities")
-  legend_5 <- get_legend(plot_5l)  
-
-  plot_6 <- umap_base(sce, color_by = "cluster_louvain_predicted_similarities")+
-    ggtitle(paste0(species_curr))+
-    scale_colour_gradient(low = "black", high = "gold")
-  plot_6l <- umap_legend(sce,
-                         color_by = "cluster_louvain_predicted_similarities")+
-    scale_colour_gradient(low = "black", high = "gold",
-                          name = "cluster_louvain_predicted_similarities")
-  legend_6 <- get_legend(plot_6l)  
-  
-  PLOT_1 <- ggarrange(plot_1, legend_1)
-  PLOT_2 <- ggarrange(plot_2, legend_2)
-  PLOT_3 <- ggarrange(plot_3, legend_3)
-  PLOT_4 <- ggarrange(plot_4, legend_4)
-  PLOT_5 <- ggarrange(plot_5, legend_5)
-  PLOT_6 <- ggarrange(plot_6, legend_6)
-
-  return(list(PLOT_1, PLOT_2, PLOT_3, PLOT_4, PLOT_5, PLOT_6))
-}
-
-cluster_plot_list <- lapply(sce_list, cluster_plots)
-
-cluster_plot_list
 
 ```
 

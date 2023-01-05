@@ -1,0 +1,2 @@
+
+snakemake --cluster "bsub -n20 -q verylong -R rusage[mem=50GB]" -p -j15 -c20 -s annotation_snakefile.py --configfile ../config/config.yaml -n

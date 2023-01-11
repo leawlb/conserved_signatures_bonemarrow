@@ -1,0 +1,131 @@
+---
+title: "annotation_species_report_reference_annotation"
+author: "Lea Wölbert"
+date: '2023-01-10'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Report for annotation with reference datasets using scmap cluster.
+
+#### Load libraries, source code 
+
+```{r load,  message = FALSE}
+library(DropletUtils, quietly = TRUE) 
+library(scater, quietly = TRUE) 
+library(scuttle, quietly = TRUE) 
+library(scran, quietly = TRUE) 
+library(tidyverse, quietly = TRUE) 
+set.seed(37)
+```
+
+```{r}
+color_tables <- snakemake@params[["color_tables"]]
+source(file = "../source/colors.R")
+source(file = "../source/plotting.R")
+
+```
+
+```{r}
+sce_15 <- readRDS(file = snakemake@input[["sce_15"]])
+species_curr <- sce_15$Species_ID[1]
+```
+
+# Reference cell types 
+
+Cells were annotated with scmap and three reference datasets.
+
+```{r}
+
+identity_plots <- function(sce, title){
+  
+  col_cts_bacc <- col_cts[names(col_cts) %in% sce$baccin_identity_pred_cluster]
+  col_cts_dahl <- col_cts[names(col_cts) %in% sce$dahlin_identity_pred_cluster]
+  col_cts_dolg <- col_cts[names(col_cts) %in% sce$dolgalev_identity_pred_cluster]
+  
+  plot_1 <- umap_base(sce, color_by = "baccin_identity_pred_cluster")+ # own function
+    ggtitle(paste0(species_curr))+
+    scale_color_manual("Identity1", values = col_cts_bacc)
+  
+  plot_1l <- umap_legend(sce, color_by = "baccin_identity_pred_cluster")+
+    scale_color_manual("Identity1", values = col_cts_bacc)
+  legend_1 <- get_legend(plot_1l)
+
+    
+  plot_2 <- umap_base(sce, color_by = "dahlin_identity_pred_cluster")+
+    ggtitle(paste0(species_curr))+
+    scale_color_manual("Identity2", values = col_cts_dahl)
+  
+  plot_2l <- umap_legend(sce, color_by = "dahlin_identity_pred_cluster")+
+    scale_color_manual("Identity2", values = col_cts_dahl)
+  legend_2 <- get_legend(plot_2l)
+  
+  
+  plot_3 <- umap_base(sce, color_by = "dolgalev_identity_pred_cluster")+
+    ggtitle(paste0(species_curr))+
+    scale_color_manual("Identity2", values = col_cts_dolg)
+  
+  plot_3l <- umap_legend(sce, color_by = "dolgalev_identity_pred_cluster")+
+    scale_color_manual("Identity2", values = col_cts_dolg)
+  legend_3 <- get_legend(plot_3l)
+  
+  plot_4 <- umap_base(sce, 
+                      color_by = "baccin_identity_pred_cluster_sim")+
+    ggtitle(paste0(species_curr))+
+    scale_colour_gradient(low = "black", high = "gold")
+  plot_4l <- umap_legend(sce, 
+                         color_by = "baccin_identity_pred_cluster_sim")+
+    scale_colour_gradient(low = "black", high = "gold",
+                          name = "baccin_identity_pred_cluster_sim")
+  legend_4 <- get_legend(plot_4l)  
+  
+  plot_5 <- umap_base(sce, color_by = "dahlin_identity_pred_cluster_sim")+
+    ggtitle(paste0(species_curr))+
+    scale_colour_gradient(low = "black", high = "gold")
+  plot_5l <- umap_legend(sce, 
+                         color_by = "dahlin_identity_pred_cluster_sim")+
+    scale_colour_gradient(low = "black", high = "gold",
+                          name = "dahlin_identity_pred_cluster_sim")
+  legend_5 <- get_legend(plot_5l)  
+
+  plot_6 <- umap_base(sce, color_by = "dolgalev_identity_pred_cluster_sim")+
+    ggtitle(paste0(species_curr))+
+    scale_colour_gradient(low = "black", high = "gold")
+  plot_6l <- umap_legend(sce,
+                         color_by = "dolgalev_identity_pred_cluster_sim")+
+    scale_colour_gradient(low = "black", high = "gold",
+                          name = "dolgalev_identity_pred_cluster_sim")
+  legend_6 <- get_legend(plot_6l)  
+  
+  PLOT_1 <- ggarrange(plot_1, legend_1)
+  PLOT_2 <- ggarrange(plot_2, legend_2)
+  PLOT_3 <- ggarrange(plot_3, legend_3)
+  PLOT_4 <- ggarrange(plot_4, legend_4)
+  PLOT_5 <- ggarrange(plot_5, legend_5)
+  PLOT_6 <- ggarrange(plot_6, legend_6)
+  
+  return(list(PLOT_1, PLOT_2, PLOT_3, PLOT_4, PLOT_5, PLOT_6))
+}
+
+identity_plots_list <- identity_plots(sce_15)
+
+```
+
+```{r fig.width=8, fig.height=4}
+identity_plots_list
+```
+
+```{r}
+sessionInfo()
+```
+
+
+
+
+
+
+
+

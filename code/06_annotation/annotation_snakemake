@@ -1,2 +1,4 @@
 
 snakemake --cluster "bsub -n20 -q verylong -R rusage[mem=50GB]" -p -j15 -c20 -s annotation_snakefile.py --configfile ../config/config.yaml -n
+
+snakemake --cluster "bsub -n20 -q verylong -R rusage[mem=50GB]" -p -j15 -c20 -s annotation_snakefile.py --configfile ../config/config.yaml --config run_annotation_summary_scmap=True -R make_summary_report_scmap -n

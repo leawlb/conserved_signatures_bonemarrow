@@ -24,7 +24,7 @@ def get_list(metadata, column):
 Species_ID = get_list(metadata = METADATA, column = "Species_ID")
 individuals = get_list(metadata = METADATA, column = "Object_ID")
 
-# construct paths for all possible outputs/targets, required for rule all
+# collect all paths for all possible outputs/targets, required for rule all
 targets = []
 for species in Species_ID:
   for ind in individuals:
@@ -44,7 +44,7 @@ localrules: all
 #-------------------------------------------------------------------------------
 
 # define rules
-rule all: # must contain all possible output paths from all rules
+rule all: # must contain all possible output paths from all rules below
     input:
         targets
 

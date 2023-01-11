@@ -72,6 +72,7 @@ run_ref_annotation_summary: False
 run_batch_correction_summary: False
 run_manual_annotation_summary: False
 run_clustering_summary: False
+run_annotation_summary_scmap: False
 
 merge_all: False
 run_mnncorrect: True

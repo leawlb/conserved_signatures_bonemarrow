@@ -5,27 +5,30 @@
 
 library(DropletUtils, quietly = TRUE) 
 library(scmap, quietly = TRUE)
-library(parallel, quietly = TRUE)
 set.seed(37)
 #-------------------------------------------------------------------------------
 
-sce_path_in <- snakemake@input[["sce_12_path"]]
-sce_path_out <- snakemake@output[["sce_14_path"]]
-species <- snakemake@params[["species"]]
+sce_12 <- readRDS(file = snakemake@input[["sce_12"]])
+sce_07 <- readRDS(file = snakemake@input[["sce_07"]])
+sce_mmus <- readRDS(file = snakemake@input[["mmus"]])
 
-print(sce_path_in)
-sce_list <- list()
-for(s in species){
-  sce_list[[s]] <- readRDS(file = paste0(sce_path_in, "/sce_", s, "-12"))
-}
+print(sce_12)
+print(sce_07)
+print(sce_mmus)
 
-print(sce_list)
+#-------------------------------------------------------------------------------
+# use sce_07 as it is not batch corrected and therefore contains all genes
+# scmap doesn't use batch corrected values to my knowledge
+
+sce_07$cluster_hierarchical <- sce_12$cluster_hierarchical[match(colnames(sce_07), colnames(sce_12))]
+sce_07$cluster_seurat <- sce_12$cluster_seurat[match(colnames(sce_07), colnames(sce_12))]
+sce_07$cluster_louvain <- sce_12$cluster_louvain[match(colnames(sce_07), colnames(sce_12))]
 
 #-------------------------------------------------------------------------------
 ## SCMAP Cluster
 
 # use mmus as reference for cluster label transfer
-sce_ref <- sce_list[["mmus"]]
+sce_ref <- sce_mmus
 rowData(sce_ref)$feature_symbol <- rownames(sce_ref)
 sce_ref <- selectFeatures(sce_ref, suppress_plot = TRUE)
 
@@ -78,7 +81,8 @@ get_scmapcluster <- function(sce){
 }
 
 print("starting get_scmapcluster")
-sce_list <- lapply(sce_list, get_scmapcluster)
+sce_14_nbc <- get_scmapcluster(sce_07)
+sce_14 <- get_scmapcluster(sce_12)
 
 #-------------------------------------------------------------------------------
 ## SCMAP Cell
@@ -87,7 +91,7 @@ sce_list <- lapply(sce_list, get_scmapcluster)
 
 # stochastic
 set.seed(37)
-sce_ref2 <- sce_list[["mmus"]]
+sce_ref2 <- sce_mmus
 rowData(sce_ref2)$feature_symbol <- rownames(sce_ref2)
 sce_ref2 <- selectFeatures(sce_ref2, suppress_plot = TRUE)
 sce_ref2 <- indexCell(sce_ref2)
@@ -132,9 +136,11 @@ get_scmapcell <- function(sce){
     )
   )
   
+  print(scmapCell_clusters_hir$scmap_cluster_siml)
+  
   # add to sce 
   sce$mmus_hierarchical_pred_cell <- scmapCell_clusters_hir$combined_labs
-  sce$mmus_hierarchical_pred_cell_sim<-scmapCell_clusters_hir$scmap_cluster_siml
+  sce$mmus_hierarchical_pred_cell_sim <-scmapCell_clusters_hir$scmap_cluster_siml
   
   sce$mmus_seurat_pred_cell <- scmapCell_clusters_ser$combined_labs
   sce$mmus_seurat_pred_cell_sim <- scmapCell_clusters_ser$scmap_cluster_siml
@@ -145,11 +151,14 @@ get_scmapcell <- function(sce){
   return(sce)
 }  
 
-sce_list <- lapply(sce_list, get_scmapcell)
+print("starting get_scmapcell")
+sce_14_nbc <- get_scmapcell(sce_07)
+sce_14 <- get_scmapcell(sce_14)
 
-print(sce_list)
+print(sce_14_nbc)
+print(sce_14)
+print(colData(sce_14_nbc))
+print(colData(sce_14))
 
-print(sce_path_out)
-for(s in species){
-  saveRDS(sce_list[[s]], file = paste0(sce_path_out, "/sce_", s, "-14"))
-}
+saveRDS(sce_14, file = snakemake@output[["sce_14"]])
+saveRDS(sce_14_nbc, file = snakemake@output[["sce_14_nbc"]])

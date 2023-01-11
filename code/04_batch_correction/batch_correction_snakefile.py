@@ -194,6 +194,6 @@ if config["run_batch_correction_summary"]:
       input:
           sce_09_path = OUTPUT_BASE_PATH + "/sce_objects/09_seurat3"
       output:
-          OUTPUT_BASE_PATH + "/sce_objects/reports/04_batch_correction/batch_correction.html"
+          OUTPUT_BASE_PATH + "/sce_objects/reports/04_batch_correction/batch_correction_species_summary.html"
       script:
           "batch_correction_summary.Rmd" 

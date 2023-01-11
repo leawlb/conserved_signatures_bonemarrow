@@ -59,4 +59,4 @@ sce$dolgalev_identity_pred_cluster <- results$combined_labs
 sce$dolgalev_identity_pred_cluster_sim <- results$scmap_cluster_siml
 
 print(sce)
-saveRDS(sce, file = snakemake@output[["sce_13"]])
+saveRDS(sce, file = snakemake@output[["sce_15"]])

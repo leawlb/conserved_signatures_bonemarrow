@@ -87,7 +87,7 @@ rule reduce_dims:
     input: 
         sce_04 = rules.normalize_expr.output
     output:
-        sce_05 = OUTPUT_BASE_PATH + "/sce_objects/05_dimr/{species}/sce_{individual}-05"
+        sce_05 = OUTPUT_BASE_PATH + "/sce_objects/05_dimr/{species}/sce_{individual}-05" 
     params:
         nr_hvgs = VALUES["nr_hvgs"]
     script:

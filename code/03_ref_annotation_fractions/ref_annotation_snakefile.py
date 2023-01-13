@@ -60,7 +60,8 @@ rule cell_type_annotation:
     input: 
         sce_05 = OUTPUT_BASE_PATH + "/sce_objects/05_dimr/{species}/sce_{individual}-05"
     output:
-        sce_06 = OUTPUT_BASE_PATH + "/sce_objects/06_sglr/{species}/sce_{individual}-06",
+        sce_06 = OUTPUT_BASE_PATH + "/sce_objects/06_sglr/{species}/sce_{individual}-06", # for species merges
+        sce_06_path = OUTPUT_BASE_PATH + "/sce_objects/06_sglr/"
         pred_hsc = OUTPUT_BASE_PATH + "/sce_objects/06_sglr/{species}/preds/pred_hsc_{individual}-06",
         pred_str = OUTPUT_BASE_PATH + "/sce_objects/06_sglr/{species}/preds/pred_str_{individual}-06",
         pred_all = OUTPUT_BASE_PATH + "/sce_objects/06_sglr/{species}/preds/pred_all_{individual}-06",

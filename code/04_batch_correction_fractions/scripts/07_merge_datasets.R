@@ -3,6 +3,7 @@
 library(stringr)
 library(DropletUtils)
 set.seed(37)
+source(file = snakemake@params[["sce_functions"]])
 
 sce_06_path <- snakemake@input[["sce_06"]] # correct cell annotation output
 sce_07_hsc_path <- snakemake@output[["sce_07_hsc"]] # correct merging output
@@ -16,10 +17,9 @@ samples_to_remove <- snakemake@params[["samples_to_remove"]] # samples to remove
 individuals <- individuals[!individuals %in% samples_to_remove]
 print(individuals)
 
-# only load SCE objects (as this folder contains pred objects, too)
+# load SCE objects
 print(sce_06_path)
 
-source(file = snakemake@params[["sce_functions"]])
 
 sce_list <- list()
 

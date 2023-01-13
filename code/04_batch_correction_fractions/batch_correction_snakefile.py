@@ -38,10 +38,11 @@ fractions = get_list(metadata = METADATA, column = "Fraction_ID")
 # construct paths for all possible outputs/targets, required for rule all
 targets =[OUTPUT_BASE_PATH + "/sce_objects/07_mrge_fractions/sce_" + f + "-07" for f in fractions]
   
-if config["run_batch_correct"]: # to avoid starting bc before the merged objects are generated
+if config["run_mnncorrect"]: # to avoid starting bc before the merged objects are generated
   for f in fractions:
     targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/08_rnrm_fractions/sce_" + f + "_" + BATCH_USE + "-08"]
     targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/09_mnncorrect_fractions/sce_" + f + "_" + BATCH_USE +"-09"]
+if config["run_seurat3"]:
     targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/09_seurat3_fractions/sce_" + f + "_" + BATCH_USE + SEURAT_RED +"-09"]
     targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/04_batch_correction_fractions/" + f + "/batch_correction_fraction_report_" + f + "_" + BATCH_USE + SEURAT_RED + ".html"]
   
@@ -85,7 +86,7 @@ HVG selection improves performance but restricts analysis
 Scaling requires identical composition in all batches and worsens
 bioconservation so scaling will not be used by default
 """
-if config["run_batch_correct"]:
+if config["run_mnncorrect"]:
   rule renormalize:
       input:
           sce_07 = OUTPUT_BASE_PATH + "/sce_objects/07_mrge_fractions/sce_{fraction}-07"
@@ -107,7 +108,7 @@ bioconservation, but slow and does not perform well on batch correction
 Requires shared cell types between batches but no labels
 (fastMNN) seems to balance batch effect removal and bioconservation
 """
-if config["run_batch_correct"]:
+if config["run_mnncorrect"]:
   print("run_mnncorrect")
   rule run_mnncorrect:
       input:
@@ -136,7 +137,7 @@ It is easiest to use HVGs and Renormalize by seurat means.
 
 RPCA is better suited for imbalanced datasets and runs faster.
 """
-if config["run_batch_correct"]:
+if config["run_seurat3"]:
     rule run_seurat3:
         input:
             sce_07 = OUTPUT_BASE_PATH + "/sce_objects/07_mrge_fractions/sce_{fraction}-07"
@@ -157,7 +158,7 @@ if config["run_batch_correct"]:
 Make batch correction reports for each species and each method
 due to multiple runs, different reports are stored in 04_correction_COLLECTION
 """
-if config["run_batch_correct"]:
+if config["run_seurat3"]:
   rule make_reports:
       input:
           sce_07 = OUTPUT_BASE_PATH + "/sce_objects/07_mrge_fractions/sce_{fraction}-07",
@@ -173,7 +174,7 @@ if config["run_batch_correct"]:
       script:
           "batch_correction_fraction_reports.Rmd" 
         
-if config["run_batch_correction_summary"]:
+if config["run_seurat3"]:
   rule make_summary_report:
       input:
           sce_09_path = OUTPUT_BASE_PATH + "/sce_objects/09_seurat3"

@@ -19,7 +19,8 @@ TABLES_PATH = config["metadata"]["color_tables"]
 
 # objects from config
 METADATA = pd.read_csv(config["metadata"]["raw"])
-BATCH_USE = config["values"]["batch_correction"]["batch_use"] # which SCE col to use as batch
+BATCH_USE = config["values"]["batch_correction"]["batch_use_species"] # which SCE col to use as batch
+SEURAT_RED = config["values"]["batch_correction"]["seurat_reduction"] # which Seurat method to use 
 
 #-------------------------------------------------------------------------------
 
@@ -44,11 +45,11 @@ targets =[OUTPUT_BASE_PATH + "/sce_objects/07_mrge/sce_" + s + "-07" for s in sp
 for s in species_build:
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/08_rnrm/sce_" + s + "_" + BATCH_USE + "-08"]
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/09_mnncorrect/sce_" + s + "_" + BATCH_USE +"-09"]
-  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/09_seurat3/sce_" + s + "_" + BATCH_USE +"-09"]
-  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/04_batch_correction/" + s + "/batch_correction_species_report_" + s + "_" + BATCH_USE + ".html"]
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/09_seurat3/sce_" + s + "_" + BATCH_USE + SEURAT_RED +"-09"]
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/04_batch_correction/" + s + "/batch_correction_species_report_" + s + "_" + BATCH_USE + SEURAT_RED + ".html"]
   
 if config["run_batch_correction_summary"]:
-  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/04_batch_correction/batch_correction_species_summary.html"]
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/04_batch_correction/batch_correction_species_summary_" + SEURAT_RED + ".html"]
   
 #-------------------------------------------------------------------------------
 
@@ -155,18 +156,19 @@ Requires shared cell types between batches but no labels, scaling little effect
 It is easiest to use HVGs and Renormalize by seurat means.
 """
 if config["run_seurat3"]:
-    rule run_seurat3:
-        input:
-            sce_07 = rules.merge_datasets_species.output 
-        output:
-            sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_seurat3/sce_{species}_" + BATCH_USE + "-09"
-        params:
-            batch_use = BATCH_USE,
-            nr_hvgs_batch_correction = config["values"]["batch_correction"]["nr_hvgs_batch_correction"], # number
-            nr_hvgs = config["values"]["preprocessing"]["nr_hvgs"],
-            sce_functions = "../source/sce_functions.R" # this is the working dir
-        script:
-            "scripts/09_seurat.R"
+  rule run_seurat3:
+      input:
+          sce_07 = rules.merge_datasets_species.output 
+      output:
+          sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_seurat3/sce_{species}_" + BATCH_USE + SEURAT_RED + "-09"
+      params:
+          batch_use = BATCH_USE,
+          nr_hvgs_batch_correction = config["values"]["batch_correction"]["nr_hvgs_batch_correction"], # number
+          nr_hvgs = config["values"]["preprocessing"]["nr_hvgs"],
+          seurat_reduction = SEURAT_RED, # which reduction method to use
+          sce_functions = "../source/sce_functions.R" # we are in the working dir
+      script:
+          "scripts/09_seurat.R"
 
 #-------------------------------------------------------------------------------
 
@@ -181,7 +183,7 @@ rule make_reports:
         sce_09mnn = rules.run_mnncorrect.output,
         sce_09seurat = rules.run_seurat3.output
     output:
-        OUTPUT_BASE_PATH + "/sce_objects/reports/04_batch_correction/{species}/batch_correction_species_report_{species}_" + BATCH_USE + ".html"
+        OUTPUT_BASE_PATH + "/sce_objects/reports/04_batch_correction/{species}/batch_correction_species_report_{species}_" + BATCH_USE + SEURAT_RED + ".html"
     params:
         nr_hvgs = config["values"]["preprocessing"]["nr_hvgs"],
         species_build = species_build,
@@ -194,6 +196,6 @@ if config["run_batch_correction_summary"]:
       input:
           sce_09_path = OUTPUT_BASE_PATH + "/sce_objects/09_seurat3"
       output:
-          OUTPUT_BASE_PATH + "/sce_objects/reports/04_batch_correction/batch_correction_species_summary.html"
+          OUTPUT_BASE_PATH + "/sce_objects/reports/04_batch_correction/batch_correction_species_summary_" + SEURAT_RED + ".html"
       script:
           "batch_correction_summary.Rmd" 

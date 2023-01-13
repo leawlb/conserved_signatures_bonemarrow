@@ -13,6 +13,7 @@ sce <- readRDS(file = snakemake@input[["sce_07"]]) #doesn't need renormalization
 batch_use <- snakemake@params[["batch_use"]]
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
 nr_hvgs_batch_correction <- snakemake@params[["nr_hvgs_batch_correction"]]
+seurat_reduction <- snakemake@params[["seurat_reduction"]]
 
 print(nr_hvgs_batch_correction)
 
@@ -36,8 +37,17 @@ for (i in 1:length(seurat_list)) {
                                            verbose = FALSE)
 }
 
+if(seurat_reduction == "rpca"){
+  features <- SelectIntegrationFeatures(object.list = seurat_list)
+  seurat_list <- lapply(X = seurat_list, FUN = function(x) {
+    x <- ScaleData(x, features = features, verbose = FALSE)
+    x <- RunPCA(x, features = features, verbose = FALSE)
+  })
+}
+
 seurat_anchors <- FindIntegrationAnchors(object.list = seurat_list, dims = 1:30,
-                                         anchor.features = nr_hvgs_batch_correction)
+                                         anchor.features = nr_hvgs_batch_correction,
+                                         reduction = seurat_reduction)
 print("starting IntegrateData")
 seurat_integrated <- IntegrateData(anchorset = seurat_anchors, dims = 1:30)
 

@@ -43,7 +43,19 @@ values:
     nr_hvgs: 2000 # nr of top hvgs 
   batch_correction:  
     nr_hvgs_batch_correction: 10000 # nr of top hvgs to be used for bc subsetting  
-    batch_use: "Batch_exp_day" # if changed run ENTIRE batch_correction_snakefile
+    batch_use_species: "Batch_exp_day" # if changed run ENTIRE batch_correction_snakefile
+    batch_use_fractions: "Object_ID" # if changed run ENTIRE batch_correction_snakefile
+    seurat_reduction: "rpca" # can be either "rpca" or "cca"
+    samples_as_references_seurat:
+    # keep for reference even if not used, maybe for later
+      - mcar_old_hsc_2_0
+      - mcar_yng_str_2_1
+      - mcas_yng_hsc_3_0
+      - mcas_old_str_3_0
+      - mmus_yng_hsc_3_0
+      - mmus_yng_str_1_0
+      - mspr_old_hsc_2_0
+      - mspr_yng_str_1_0
   clustering:
     number_k: 
     # adjust according to clustering reports
@@ -74,8 +86,9 @@ run_manual_annotation_summary: False
 run_clustering_summary: False
 run_annotation_summary_scmap: False
 
-merge_all: False
+merge_all: True
 run_mnncorrect: True
+run_batch_correct: False
 mnn_use_fast: TRUE
 run_seurat3: True
 hvgs_for_batch_correction: FALSE 

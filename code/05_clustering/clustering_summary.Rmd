@@ -98,6 +98,10 @@ data_test_mcar$prediction_hierarchical <- pred_hir_mcar
 data_test_mcas$prediction_hierarchical <- pred_hir_mcas
 data_test_mspr$prediction_hierarchical <- pred_hir_mspr
 
+colData(sce_list[["mcar"]])$prediction_hierarchical <- data_test_mcar$prediction_hierarchical
+colData(sce_list[["mcas"]])$prediction_hierarchical <- data_test_mcas$prediction_hierarchical
+colData(sce_list[["mspr"]])$prediction_hierarchical <- data_test_mspr$prediction_hierarchical
+
 ```
 
 ```{r}
@@ -153,6 +157,49 @@ get_heatmap(data_test_mspr, pred_hir_mspr)
 
 ```
 
+### UMAPs
+
+```{r fig.width=10, fig.height=5}
+
+cluster_plots <- function(sce){
+
+  col_clust_h <- col_num[names(col_num) %in% sce$prediction_hierarchical]
+
+  species_curr <- sce$Species_ID[1]
+  if(species_curr != "mmus"){
+    
+    if(is.null(sce$prediction_hierarchical)){
+      print(isnull)
+    }
+  
+    plot_1 <- umap_base(sce, 
+                        color_by = "prediction_hierarchical")+ 
+      ggtitle(paste0(species_curr))+
+      scale_color_manual("prediction_hierarchical", 
+                         values =col_clust_h)
+    plot_1l <- umap_legend(sce, color_by = "prediction_hierarchical")+
+      scale_color_manual("prediction_hierarchical", 
+                         values = col_clust_h)
+    legend_1 <- get_legend(plot_1l)
+  
+    
+    PLOT_1 <- ggarrange(plot_1, legend_1)
+
+    return(PLOT_1)
+  }
+  else{
+    return(NULL)
+  }
+}
+
+cluster_plot_list <- lapply(sce_list, cluster_plots)
+
+```
+
+```{r, fig.width=10, fig.height=5}
+cluster_plot_list
+```
+
 ## Seurat
 
 ```{r}
@@ -187,6 +234,10 @@ pred_ser_mspr <- predict(bestmod_ser_mmus, data_test_mspr)
 data_test_mcar$prediction_seurat <- pred_ser_mcar
 data_test_mcas$prediction_seurat <- pred_ser_mcas
 data_test_mspr$prediction_seurat <- pred_ser_mspr
+
+sce_list[["mcar"]]$prediction_seurat <- pred_ser_mcar
+sce_list[["mcas"]]$prediction_seurat <- pred_ser_mcas
+sce_list[["mspr"]]$prediction_seurat <- pred_ser_mspr
 
 ```
 
@@ -239,7 +290,45 @@ get_heatmap(data_test_mcar, pred_ser_mcar)
 get_heatmap(data_test_mcas, pred_ser_mcas)
 get_heatmap(data_test_mspr, pred_ser_mspr)
 
+```
 
+### UMAPs
+
+```{r fig.width=10, fig.height=5}
+
+cluster_plots <- function(sce){
+  
+  col_clust_s <- col_num[names(col_num) %in% sce$prediction_seurat]
+
+  species_curr <- sce$Species_ID[1]
+  
+  if(species_curr != "mmus"){
+    plot_1 <- umap_base(sce, 
+                        color_by = "prediction_seurat")+ 
+      ggtitle(paste0(species_curr))+
+      scale_color_manual("prediction_seurat", 
+                         values =col_clust_s)
+    plot_1l <- umap_legend(sce, color_by = "prediction_seurat")+
+      scale_color_manual("prediction_seurat", 
+                         values = col_clust_s)
+    legend_1 <- get_legend(plot_1l)
+  
+    
+    PLOT_1 <- ggarrange(plot_1, legend_1)
+
+    return(PLOT_1)
+  }
+  else{
+    return(NULL)
+  }
+}
+
+cluster_plot_list <- lapply(sce_list, cluster_plots)
+
+```
+
+```{r, fig.width=10, fig.height=5}
+cluster_plot_list
 ```
 
 ## Louvain
@@ -278,6 +367,10 @@ pred_lou_mspr <- predict(bestmod_lou_mmus, data_test_mspr)
 data_test_mcar$prediction_louvain <- pred_lou_mcar
 data_test_mcas$prediction_louvain <- pred_lou_mcas
 data_test_mspr$prediction_louvain <- pred_lou_mspr
+
+sce_list[["mcar"]]$prediction_louvain <- pred_lou_mcar
+sce_list[["mcas"]]$prediction_louvain <- pred_lou_mcas
+sce_list[["mspr"]]$prediction_louvain <- pred_lou_mspr
 
 ```
 
@@ -330,6 +423,45 @@ get_heatmap(data_test_mcar, pred_lou_mcar)
 get_heatmap(data_test_mcas, pred_lou_mcas)
 get_heatmap(data_test_mspr, pred_lou_mspr)
 
+```
+
+### UMAPs
+
+```{r fig.width=10, fig.height=5}
+
+cluster_plots <- function(sce){
+  
+  col_clust_l <- col_num[names(col_num) %in% sce$prediction_louvain]
+
+  species_curr <- sce$Species_ID[1]
+  
+  if(species_curr != "mmus"){
+
+    plot_1 <- umap_base(sce, 
+                        color_by = "prediction_louvain")+ 
+      ggtitle(paste0(species_curr))+
+      scale_color_manual("prediction_louvain", 
+                         values =col_clust_l)
+    plot_1l <- umap_legend(sce, color_by = "prediction_louvain")+
+      scale_color_manual("prediction_louvain", 
+                         values = col_clust_l)
+    legend_1 <- get_legend(plot_1l)
+
+  
+    PLOT_1 <- ggarrange(plot_1, legend_1)
+
+    return(PLOT_1)
+  }else{
+    return(NULL)
+  }
+}
+
+cluster_plot_list <- lapply(sce_list, cluster_plots)
+
+```
+
+```{r, fig.width=10, fig.height=5}
+cluster_plot_list
 ```
 
 ```{r}

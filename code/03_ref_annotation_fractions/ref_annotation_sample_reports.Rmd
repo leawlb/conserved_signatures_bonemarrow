@@ -41,12 +41,22 @@ source(file = "../source/colors.R")
 source(file = "../source/plotting.R")
 source(file = "../source/sce_functions.R")
 
-col_cts_baccin_cell <- col_cts[names(col_cts) %in% sce$baccin_celltype_scmapcell]
-col_cts_baccin_clst <- col_cts[names(col_cts) %in% sce$baccin_celltype_scmapclust]
-col_cts_dahlin_cell <- col_cts[names(col_cts) %in% sce$dahlin_celltype_scmapcell]
-col_cts_dahlin_clst <- col_cts[names(col_cts) %in% sce$dahlin_celltype_scmapclust]
-col_cts_dolgalev_cell <- col_cts[names(col_cts) %in% sce$dolgalev_celltype_scmapcell]
-col_cts_dolgalev_clst <- col_cts[names(col_cts) %in% sce$dolgalev_celltype_scmapclust]
+sce <- factor_reference_cts(sce)# own function
+
+col_cts_baccin_cell <- col_cts[match(levels(sce$baccin_celltype_scmapcell), names(col_cts))]
+col_cts_baccin_clst <- col_cts[match(levels(sce$baccin_celltype_scmapclust), names(col_cts))]
+col_cts_dahlin_cell <- col_cts[match(levels(sce$dahlin_celltype_scmapcell), names(col_cts))]
+col_cts_dahlin_clst <- col_cts[match(levels(sce$dahlin_celltype_scmapclust), names(col_cts))]
+col_cts_dolgalev_cell <- col_cts[match(levels(sce$dolgalev_celltype_scmapcell), names(col_cts))]
+col_cts_dolgalev_clst <- col_cts[match(levels(sce$dolgalev_celltype_scmapclust), names(col_cts))]
+
+print(levels(sce$dolgalev_celltype_scmapclust))
+print(levels(sce$baccin_celltype_scmapclust))
+print(levels(sce$dahlin_celltype_scmapclust))
+
+print(col_cts_baccin_cell)
+print(col_cts_dahlin_clst)
+print(col_cts_dolgalev_clst)
 
 ```
 
@@ -110,7 +120,7 @@ PLOT_4
 
 ```{r fig.width=8}
 
-plot_1 <- umap_base(sce, color_by = "dahlin_celltype_scmapcell")+ # own function
+plot_1 <- umap_base(sce, color_by = "dahlin_celltype_scmapcell")+ 
   ggtitle(name_curr)+
   scale_color_manual("dahlin_celltype_scmapcell", values = col_cts_dahlin_cell)
 plot_1l <- umap_legend(sce, color_by = "dahlin_celltype_scmapcell")+
@@ -162,18 +172,22 @@ PLOT_4
 
 ```{r fig.width=8}
 
-plot_1 <- umap_base(sce, color_by = "dolgalev_celltype_scmapcell")+ # own function
+plot_1 <- umap_base(sce, color_by = "dolgalev_celltype_scmapcell")+ 
   ggtitle(name_curr)+
-  scale_color_manual("dolgalev_celltype_scmapcell", values = col_cts_dolgalev_cell)
+  scale_color_manual("dolgalev_celltype_scmapcell",
+                     values = col_cts_dolgalev_cell)
 plot_1l <- umap_legend(sce, color_by = "dolgalev_celltype_scmapcell")+
-  scale_color_manual("dolgalev_celltype_scmapcell", values = col_cts_dolgalev_cell)
+  scale_color_manual("dolgalev_celltype_scmapcell", 
+                     values = col_cts_dolgalev_cell)
 legend_1 <- get_legend(plot_1l)
 
 plot_2 <- umap_base(sce, color_by = "dolgalev_celltype_scmapclust")+ 
   ggtitle(name_curr)+
-  scale_color_manual("dolgalev_celltype_scmapclust", values = col_cts_dolgalev_clst)
+  scale_color_manual("dolgalev_celltype_scmapclust", 
+                     values = col_cts_dolgalev_clst)
 plot_2l <- umap_legend(sce, color_by = "dolgalev_celltype_scmapclust")+
-  scale_color_manual("dolgalev_celltype_scmapclust", values = col_cts_dolgalev_clst)
+  scale_color_manual("dolgalev_celltype_scmapclust", 
+                     values = col_cts_dolgalev_clst)
 legend_2 <- get_legend(plot_2l)
 
 PLOT_1 <- ggarrange(plot_1, legend_1)
@@ -221,11 +235,10 @@ stromal and hematopoetic cell types in a single dataset.
 
 # find contamination in sce objects (scmapcluster)
 
-sce$Identity_ref_all <- sce$baccin_celltype_scmapclust
 if(grepl("str", name_curr)){
   sce <- find_contamination_ref_all(sce, input = "stromal") # own function
 }else if(grepl("hsc", name_curr)){
-  sce <- find_contamination_ref_all(sce, input = "hsc") # own function
+  sce <- find_contamination_ref_all(sce, input = "hsc") 
 }
 
 ```
@@ -264,8 +277,8 @@ plot_5 <- umap_base(sce, color_by = "detected")+
 plot_5l <- umap_legend(sce, color_by = "detected")+
   scale_color_gradientn("Number of detected genes", 
                          limits = c(0, 10000),
-                        
-                         colors = c("black", "darkorange3", "orange", "lightgoldenrod"))
+                         colors = c("black", "darkorange3", 
+                                    "orange", "lightgoldenrod"))
 legend_5 <- get_legend(plot_5l)
 
 PLOT_5 <- ggarrange(plot_5, legend_5)
@@ -356,9 +369,7 @@ if(length(grepl("TRUE", sce$right_fraction))>0){
 ### Mature cells
 
 ```{r}
-
 sce <- get_mature_cts_all(sce) # own function 
-
 ```
 
 ```{r fig.width=8}
@@ -415,7 +426,8 @@ plot_6 <- umap_base(sce, color_by = "sum")+
 plot_6l <- umap_legend(sce, color_by = "sum")+
   scale_color_gradientn("Library size", 
                          limits = c(0, 1000000),
-                          colors = c("black", "darkorange4", "darkorange3", "darkorange1",
+                          colors = c("black", "darkorange4", "darkorange3",
+                                     "darkorange1",
                                     "orange", "orange", "gold1", "gold",
                                     "lightgoldenrod", "lightgoldenrod", 
                                     "lightgoldenrod", "lightgoldenrod", 
@@ -489,8 +501,8 @@ identity with another dataset.
 
 ```{r}
 
-mat_comp <- as.matrix(table(sce$baccin_celltype_scmapcell,
-                            sce$baccin_celltype_scmapclust))
+mat_comp <- as.matrix(table(unfactor(sce$baccin_celltype_scmapcell),
+                            unfactor(sce$baccin_celltype_scmapclust)))
 if(! 1 %in% dim(mat_comp)){
 
   mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
@@ -524,8 +536,8 @@ if(! 1 %in% dim(mat_comp)){
 
 ```{r}
 
-mat_comp <- as.matrix(table(sce$dahlin_celltype_scmapcell,
-                            sce$dahlin_celltype_scmapclust))
+mat_comp <- as.matrix(table(unfactor(sce$dahlin_celltype_scmapcell),
+                            unfactor(sce$dahlin_celltype_scmapclust)))
 if(! 1 %in% dim(mat_comp)){
   mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
                        which(colMeans(mat_comp) > 0)]
@@ -558,8 +570,8 @@ if(! 1 %in% dim(mat_comp)){
 
 ```{r}
 
-mat_comp <- as.matrix(table(sce$dolgalev_celltype_scmapcell,
-                            sce$dolgalev_celltype_scmapclust))
+mat_comp <- as.matrix(table(unfactor(sce$dolgalev_celltype_scmapcell),
+                            unfactor(sce$dolgalev_celltype_scmapclust)))
 if(! 1 %in% dim(mat_comp)){
   mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
                        which(colMeans(mat_comp) > 0)]

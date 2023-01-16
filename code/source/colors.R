@@ -6,6 +6,7 @@ library(dittoSeq, quietly = TRUE)
 
 colors_celltypes <- read.csv(paste0(color_tables, "/colors_celltypes.csv"),
                              sep = ",")
+colors_celltypes <- rbind(colors_celltypes, c(126, "B cell", "lightyellow"))
 colors_species <- read.csv(paste0(color_tables, "/colors_species.csv"),
                            sep = ",")
 colors_annotations <- read.csv(paste0(color_tables, "/colors_annotations.csv"),

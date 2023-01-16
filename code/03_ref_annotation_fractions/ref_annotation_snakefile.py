@@ -35,9 +35,9 @@ for s in species:
   for i in individuals:
     if s in i:
       targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/06_ref_anno/" + s + "/sce_" + i + "-06"]
-      targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/03_ref_annotation/" + s + "/ref_annotation_sample_report_" + i + ".html"]
+      targets = targets + [OUTPUT_BASE_PATH + "/reports/03_ref_annotation/" + s + "/ref_annotation_sample_report_" + i + ".html"]
 
-targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/03_ref_annotation/ref_annotation_summary.html"]
+targets = targets + [OUTPUT_BASE_PATH + "/reports/03_ref_annotation/ref_annotation_summary.html"]
 
 #-------------------------------------------------------------------------------
 
@@ -50,7 +50,7 @@ rule all: # must contain all possible output paths from all rules
 Preliminary cell type annotation using multiple reference datasets and
 scmapcell and scmapcluster.
 To get an overview of approx. cell type numbers and fraction contamination.
-The longest sample takes around 1h for total 6 annotation.
+The longest sample takes around 1h for total 6 annotations.
 """
 rule cell_type_annotation: 
     input: 
@@ -70,12 +70,13 @@ rule make_sample_reports:
     input: 
         rules.cell_type_annotation.output
     output:
-        OUTPUT_BASE_PATH + "/sce_objects/reports/03_ref_annotation/{species}/ref_annotation_sample_report_{individual}.html"
+        OUTPUT_BASE_PATH + "/reports/03_ref_annotation/{species}/ref_annotation_sample_report_{individual}.html"
     params:
         color_tables = TABLES_PATH
     script:
         "ref_annotation_sample_reports.Rmd" 
 
+# generate all possible inputs for the summary
 summary_inputs = []
 for s in species:
   for i in individuals:
@@ -84,16 +85,14 @@ for s in species:
       
 rule make_summary:
     input:
-        summary_inputs
+        sce_06_pathlist = summary_inputs
     output:
-        OUTPUT_BASE_PATH + "/sce_objects/reports/03_ref_annotation/ref_annotation_summary.html"
+        OUTPUT_BASE_PATH + "/reports/03_ref_annotation/ref_annotation_summary.html"
     params:
         samples_to_remove = config["samples_to_remove"],
         color_tables = TABLES_PATH,
         individuals = individuals,
-        species = species,
         sce_functions = "../source/sce_functions.R" # we are in working dir
     script:
+        #"scripts/testing_purposes.R"
         "ref_annotation_summary.Rmd" 
-
-

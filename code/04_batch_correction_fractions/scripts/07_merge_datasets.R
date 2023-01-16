@@ -20,7 +20,6 @@ print(individuals)
 # load SCE objects
 print(sce_06_path)
 
-
 sce_list <- list()
 
 for(j in 1:length(sce_06_path)){

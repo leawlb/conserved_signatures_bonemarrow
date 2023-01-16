@@ -1,0 +1,123 @@
+#!/bin/python 
+
+"""
+Info in batch correction methods from:
+Luecken et al. "Benchmarking atlas-level data integration in single-cell 
+genomics", Nat Met 2022
+Tran, Ang, Chevrier, Zhang et al. "A benchmark of batch effect correction 
+methods for single-cell RNA sequencing data", Genome Biology 2020
+"""
+#-------------------------------------------------------------------------------
+
+import pandas as pd
+import numpy as np
+import sys 
+
+# paths from config
+OUTPUT_BASE_PATH = config["paths"]["output_dir"]
+TABLES_PATH = config["metadata"]["color_tables"]
+
+# objects from config
+METADATA = pd.read_csv(config["metadata"]["raw"])
+BATCH_USE = config["values"]["batch_correction"]["batch_use_fractions"] # which SCE col to use as batch
+
+#-------------------------------------------------------------------------------
+
+def get_list(metadata, column):
+  values = METADATA[column]
+  values = values.drop_duplicates()
+  values = values.squeeze()
+  values = values.tolist()
+  return(values)
+  
+fractions = get_list(metadata = METADATA, column = "Fraction_ID")
+
+# construct paths for all possible outputs/targets, required for rule all
+targets = []
+for f in fractions:
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/08_rnrm_fractions/sce_" + f + "_" + BATCH_USE + "-08"]
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/09_mnncorrect_fractions/sce_" + f + "_" + BATCH_USE +"-09"]
+  targets = targets + [OUTPUT_BASE_PATH + "/reports/04_batch_correction_fractions/" + f + "/batch_correction_fraction_report_" + f + "_" + BATCH_USE + ".html"]
+  
+targets = targets + [OUTPUT_BASE_PATH + "/reports/04_batch_correction_fractions/batch_correction_fraction_summary_" + BATCH_USE + ".html"]
+  
+#-------------------------------------------------------------------------------
+
+localrules: all  
+
+# define rules
+rule all: # must contain all possible output paths from all rules
+    input:
+        targets
+ 
+"""
+Quick and basic renormalization.
+Scaling requires identical composition in all batches and worsens
+bioconservation so scaling will not be used by default
+"""
+
+rule renormalize:
+    input:
+        sce_07 = OUTPUT_BASE_PATH + "/sce_objects/07_mrge_fractions/sce_{fraction}-07"
+    output:
+        sce_08 = OUTPUT_BASE_PATH + "/sce_objects/08_rnrm_fractions/sce_{fraction}_" + BATCH_USE + "-08"
+    params:
+        batch_use = BATCH_USE,
+        rescale = config["rescale_for_batch_correction"]
+    script:
+        "scripts/08_renormalize.R"
+
+#-------------------------------------------------------------------------------
+    
+"""
+batch correct using MNNcorrect:
+
+MNNcorrect is good at recovering DEGs from batch corrected data and 
+bioconservation, but slow and does not perform well on batch correction 
+Requires shared cell types between batches but no labels
+(fastMNN) seems to balance batch effect removal and bioconservation
+HVG selection improves performance but restricts analysis
+Seurat cannot integrate this many samples (Object_ID)
+"""
+rule run_mnncorrect:
+    input:
+        sce_08 = rules.renormalize.output 
+    output:
+        sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_mnncorrect_fractions/sce_{fraction}_" + BATCH_USE + "-09"
+    params:
+        batch_use = BATCH_USE,
+        rescale = config["rescale_for_batch_correction"], # condition
+        hvgs_for_batch_correction = config["hvgs_for_batch_correction"],# condition
+        mnn_fast = config["mnn_use_fast"], # condition
+        nr_hvgs = config["values"]["preprocessing"]["nr_hvgs"],
+        nr_hvgs_batch_correction = config["values"]["batch_correction"]["nr_hvgs_batch_correction"], # number
+        sce_functions = "../source/sce_functions.R" # this is the working dir
+    script:
+        "scripts/09_mnncorrect.R"
+
+#-------------------------------------------------------------------------------
+
+"""
+Make batch correction reports 
+"""
+
+rule make_reports:
+    input:
+        sce_07 = OUTPUT_BASE_PATH + "/sce_objects/07_mrge_fractions/sce_{fraction}-07",
+        sce_08 = rules.run_mnncorrect.output,
+    output:
+        OUTPUT_BASE_PATH + "/sce_objects/reports/04_batch_correction_fractions/{fraction}/batch_correction_fraction_report_{fraction}_" + BATCH_USE + SEURAT_RED + ".html"
+    params:
+        nr_hvgs = config["values"]["preprocessing"]["nr_hvgs"],
+        species = species,
+        color_tables = TABLES_PATH
+    script:
+        "batch_correction_fraction_reports.Rmd" 
+        
+rule make_summary_report:
+    input:
+        sce_08 = expand([rules.run_mnncorrect.output], f = fractions)
+    output:
+        OUTPUT_BASE_PATH + "/sce_objects/reports/04_batch_correction_fractions/batch_correction_fraction_summary_" + SEURAT_RED + ".html"
+    script:
+        "batch_correction_summary.Rmd" 

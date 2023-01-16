@@ -77,10 +77,9 @@ values:
         both: 22   # 22 ...25
     use_svm_kernel: "linear" # linear or radial
       
-# RULES  
+# CONDITIONS  
 # in caps for use in R, only first letter capitalized for use in Snakefile
 run_preprocessing_summary: False
-run_ref_annotation_summary: False
 run_batch_correction_summary: False
 run_manual_annotation_summary: False
 run_clustering_summary: False

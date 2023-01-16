@@ -93,16 +93,14 @@ qcdf_list_06 <- lapply(sce_list_06, function(sce){
   qcdf$Date_collected <- sce$Date_collected
   qcdf$Species <- sce$Species
   qcdf$Fraction <- sce$Fraction
-  #qcdf$right_fraction <- sce$right_fraction
-  #qcdf$mature_cells <- sce$mature_cells
-  #qcdf$baccin_celltype_scmapclust <- unfactor(sce$baccin_celltype_scmapclust)
-  #qcdf$dahlin_celltype_scmapclust <- unfactor(sce$dahlin_celltype_scmapclust)
-  #qcdf$dolgalev_celltype_scmapclust <- unfactor(sce$dolgalev_celltype_scmapclust)
+  qcdf$right_fraction <- sce$right_fraction
+  qcdf$mature_cells <- sce$mature_cells
+  qcdf$baccin_celltype_scmapclust <- unfactor(sce$baccin_celltype_scmapclust)
+  qcdf$dahlin_celltype_scmapclust <- unfactor(sce$dahlin_celltype_scmapclust)
+  qcdf$dolgalev_celltype_scmapclust <- unfactor(sce$dolgalev_celltype_scmapclust)
 
   return(qcdf)
 })
-
-print(blub)
 
 qcdf_gg <- DataFrame()
 

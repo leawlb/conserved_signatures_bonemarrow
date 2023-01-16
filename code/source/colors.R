@@ -36,6 +36,7 @@ names(col_cts) <- colors_celltypes[,2]
 # SPECIES
 col_spc <- colors_species[,2]
 names(col_spc) <- colors_species[,1]
+col_spc[names(col_spc) == "mspr"] <- "tan"
 
 # OTHER ANNOTATIONS
 col_ann <- colors_annotations[,2]

@@ -225,6 +225,7 @@ species_order <- c(
 
 factor_species <- function(sce){
   sce$Species_ID <- factor(sce$Species_ID, levels = species_order)
+  return(sce)
 }
 
 #-------------------------------------------------------------------------------

@@ -1,22 +1,7 @@
 
-snakemake --cluster "bsub -q verylong -n20 -R rusage[mem=200GB]" -p -j5 -c40 -s batch_correction_snakefile.py --configfile ../config/config.yaml --config run_batch_correct=True -n
+snakemake --cluster "bsub -q verylong -n20 -R rusage[mem=200GB]" -p -j1 -c40 -s 01_merge_snakefile.py --configfile ../config/config.yaml -R merge_datasets_fractions -n
 
-snakemake --cluster "bsub -q verylong -n20 -R rusage[mem=200GB]" -p -j5 -c40 -s batch_correction_snakefile.py --configfile ../config/config.yaml -R run_mnncorrect -n
+snakemake --cluster "bsub -q verylong -n20 -R rusage[mem=200GB]" -p -j4 -c40 -s 02_batch_correction_snakefile.py --configfile ../config/config.yaml -R renormalize -n
 
-snakemake -c1 -s batch_correction_snakefile.py --configfile ../config/config.yaml -n
 
-snakemake --cluster "bsub -n20 -q verylong -R rusage[mem=200GB]" -p -j15 -c40 -s batch_correction_snakefile.py --configfile ../config/config.yaml -R merge_datasets_species -n
 
-snakemake --cluster "bsub -n20 -q verylong -R rusage[mem=100GB]" -p -j8 -c40 -s batch_correction_snakefile.py --configfile ../config/config.yaml -R make_reports -n
-
-snakemake --cores 2 -s batch_correction_snakefile.py --configfile ../config/config.yaml  -n
-
-snakemake --cluster "bsub -n20 -q verylong -R rusage[mem=100GB]" -p -j1 -c4 -s batch_correction_snakefile.py --configfile ../config/config.yaml --config run_batch_correction_summary=True -R make_summary_report -n
-
-bash-4.2$ snakemake --cluster "bsub -n20 -q verylong -R rusage[mem=100GB]" -p -j8 -c4 -s batch_correction_snakefile.py --configfile ../config/config.yaml --config run_batch_correct=True  -n
-
-snakemake --cluster "bsub -n20 -q verylong -R rusage[mem=200GB]" -p -j8 -c40 -s batch_correction_snakefile.py --configfile ../config/config.yaml -R run_mnncorrect -n
-
-snakemake --cluster "bsub -n20 -q verylong -R rusage[mem=200GB]" -p -j8 -c40 -s batch_correction_snakefile.py --configfile ../config/config.yaml -R run_seurat3 -n
-
-snakemake --cluster "bsub -n20 -q verylong -R rusage[mem=200GB]" -p -j8 -c40 -s batch_correction_snakefile.py --configfile ../config/config.yaml -n

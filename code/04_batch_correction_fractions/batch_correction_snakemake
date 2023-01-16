@@ -1,7 +1,7 @@
 
 snakemake --cluster "bsub -q verylong -n20 -R rusage[mem=200GB]" -p -j1 -c40 -s 01_merge_snakefile.py --configfile ../config/config.yaml -R merge_datasets_fractions -n
 
-snakemake --cluster "bsub -q verylong -n20 -R rusage[mem=200GB]" -p -j4 -c40 -s 02_batch_correction_snakefile.py --configfile ../config/config.yaml -R renormalize -n
+snakemake --cluster "bsub -q verylong -n20 -R rusage[mem=200GB]" -p -j7 -c40 -s 02_batch_correction_snakefile.py --configfile ../config/config.yaml -R make_reports -n
 
 
 

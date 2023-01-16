@@ -8,13 +8,12 @@ set.seed(37)
 #-------------------------------------------------------------------------------
 
 # load object and prepare batch vector for correctExperiments() + preparation
-print(snakemake@input[["sce_08"]])
 sce <- readRDS(file = snakemake@input[[1]])
 
 batch_use <- snakemake@params[["batch_use"]] # which batch?
 batch_pos <- which(colnames(colData(sce)) == batch_use)
-nr_hvgs <- snakemake@params[["nr_hvgs"]] # how many hvgs 
-nr_hvgs_batch_correction <- snakemake@params[["nr_hvgs_batch_correction"]] 
+nr_hvgs <- snakemake@params[["nr_hvgs"]] # how many hvgs for UMAP calc or PCA&UMAP calc
+nr_hvgs_batch_correction <- snakemake@params[["nr_hvgs_batch_correction"]] # how many hvgs for batch correction
 hvgs_for_batch_correction <- snakemake@params[["hvgs_for_batch_correction"]] # use hvgs?
 
 # rename the already existent Reduced Dimensions

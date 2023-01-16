@@ -40,7 +40,7 @@ Merge samples
 """
 rule merge_datasets_fractions:
     input: 
-        sce_06 = expand(OUTPUT_BASE_PATH + "/sce_objects/06_sglr/{s}/", s = species)
+        sce_06 = expand(OUTPUT_BASE_PATH + "/sce_objects/06_ref_anno/{s}/", s = species)
     output:
         sce_07_hsc = OUTPUT_BASE_PATH + "/sce_objects/07_mrge_fractions/sce_hsc-07",
         sce_07_str = OUTPUT_BASE_PATH + "/sce_objects/07_mrge_fractions/sce_str-07"

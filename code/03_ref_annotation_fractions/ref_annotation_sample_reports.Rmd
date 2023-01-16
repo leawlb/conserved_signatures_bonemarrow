@@ -1,5 +1,5 @@
 ---
-title: "ref_annotation_report"
+title: "ref_annotation_sample_report"
 author: "Lea Wölbert"
 date: '2022-11-25'
 output: html_document
@@ -8,6 +8,9 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+Report on annotation with three reference datasets, annotated using
+scmapcell and scmapcluster at sample level (Object_ID).
 
 #### Load libraries, source code 
 
@@ -43,12 +46,18 @@ source(file = "../source/sce_functions.R")
 
 sce <- factor_reference_cts(sce)# own function
 
-col_cts_baccin_cell <- col_cts[match(levels(sce$baccin_celltype_scmapcell), names(col_cts))]
-col_cts_baccin_clst <- col_cts[match(levels(sce$baccin_celltype_scmapclust), names(col_cts))]
-col_cts_dahlin_cell <- col_cts[match(levels(sce$dahlin_celltype_scmapcell), names(col_cts))]
-col_cts_dahlin_clst <- col_cts[match(levels(sce$dahlin_celltype_scmapclust), names(col_cts))]
-col_cts_dolgalev_cell <- col_cts[match(levels(sce$dolgalev_celltype_scmapcell), names(col_cts))]
-col_cts_dolgalev_clst <- col_cts[match(levels(sce$dolgalev_celltype_scmapclust), names(col_cts))]
+col_cts_baccin_cell <- col_cts[match(levels(sce$baccin_celltype_scmapcell), 
+                                     names(col_cts))]
+col_cts_baccin_clst <- col_cts[match(levels(sce$baccin_celltype_scmapclust),
+                                     names(col_cts))]
+col_cts_dahlin_cell <- col_cts[match(levels(sce$dahlin_celltype_scmapcell), 
+                                     names(col_cts))]
+col_cts_dahlin_clst <- col_cts[match(levels(sce$dahlin_celltype_scmapclust), 
+                                     names(col_cts))]
+col_cts_dolgalev_cell <- col_cts[match(levels(sce$dolgalev_celltype_scmapcell),
+                                       names(col_cts))]
+col_cts_dolgalev_clst <- col_cts[match(levels(sce$dolgalev_celltype_scmapclust),
+                                       names(col_cts))]
 
 print(levels(sce$dolgalev_celltype_scmapclust))
 print(levels(sce$baccin_celltype_scmapclust))
@@ -248,10 +257,10 @@ if(grepl("str", name_curr)){
 if(length(grepl("TRUE", sce$right_fraction)) >0){
   plot_4 <- umap_base(sce, color_by = "right_fraction")+
     ggtitle(name_curr)+
-    scale_color_manual("Correct fraction", values = c("TRUE" = "grey50", 
+    scale_color_manual("Correct fraction", values = c("TRUE" = "grey80", 
                                                       "FALSE" = "orange"))
   plot_4l <- umap_legend(sce, color_by = "right_fraction")+
-    scale_color_manual("Correct fraction", values = c("TRUE" = "grey50", 
+    scale_color_manual("Correct fraction", values = c("TRUE" = "grey80", 
                                                       "FALSE" = "orange"))
   legend_4 <- get_legend(plot_4l)
 
@@ -376,11 +385,11 @@ sce <- get_mature_cts_all(sce) # own function
 
 plot_4 <- umap_base(sce, color_by = "mature_cells")+
   ggtitle(name_curr)+
-  scale_color_manual("Mature cells", values = c("FALSE" = "black", 
+  scale_color_manual("Mature cells", values = c("FALSE" = "grey80", 
                                                     "TRUE" = "orange"))
 plot_4l <- umap_legend(sce, color_by = "mature_cells")+
   ggtitle(name_curr)+
-  scale_color_manual("Mature cells", values = c("FALSE" = "black", 
+  scale_color_manual("Mature cells", values = c("FALSE" = "grey80", 
                                                     "TRUE" = "orange"))
 legend_4 <- get_legend(plot_4l)
 

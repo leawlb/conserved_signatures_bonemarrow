@@ -31,12 +31,13 @@ def get_list(metadata, column):
   return(values)
   
 fractions = get_list(metadata = METADATA, column = "Fraction_ID")
+species = get_list(metadata = METADATA, column = "Species_ID")
 
 # construct paths for all possible outputs/targets, required for rule all
 targets = []
 for f in fractions:
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/08_rnrm_fractions/sce_" + f + "_" + BATCH_USE + "-08"]
-  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/09_mnncorrect_fractions/sce_" + f + "_" + BATCH_USE +"-09"]
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/09_mnnc_fractions/sce_" + f + "_" + BATCH_USE +"-09"]
   targets = targets + [OUTPUT_BASE_PATH + "/reports/04_batch_correction_fractions/" + f + "/batch_correction_fraction_report_" + f + "_" + BATCH_USE + ".html"]
   
 targets = targets + [OUTPUT_BASE_PATH + "/reports/04_batch_correction_fractions/batch_correction_fraction_summary_" + BATCH_USE + ".html"]
@@ -83,7 +84,7 @@ rule run_mnncorrect:
     input:
         sce_08 = rules.renormalize.output 
     output:
-        sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_mnncorrect_fractions/sce_{fraction}_" + BATCH_USE + "-09"
+        sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_mnnc_fractions/sce_{fraction}_" + BATCH_USE + "-09"
     params:
         batch_use = BATCH_USE,
         rescale = config["rescale_for_batch_correction"], # condition
@@ -104,20 +105,23 @@ Make batch correction reports
 rule make_reports:
     input:
         sce_07 = OUTPUT_BASE_PATH + "/sce_objects/07_mrge_fractions/sce_{fraction}-07",
-        sce_08 = rules.run_mnncorrect.output,
+        sce_08 = rules.renormalize.output,
+        sce_09 = rules.run_mnncorrect.output,
     output:
-        OUTPUT_BASE_PATH + "/sce_objects/reports/04_batch_correction_fractions/{fraction}/batch_correction_fraction_report_{fraction}_" + BATCH_USE + SEURAT_RED + ".html"
+        OUTPUT_BASE_PATH + "/reports/04_batch_correction_fractions/{fraction}/batch_correction_fraction_report_{fraction}_" + BATCH_USE + ".html"
     params:
         nr_hvgs = config["values"]["preprocessing"]["nr_hvgs"],
-        species = species,
         color_tables = TABLES_PATH
     script:
         "batch_correction_fraction_reports.Rmd" 
-        
+   
+print(expand(rules.run_mnncorrect.output, fraction = fractions))
 rule make_summary_report:
     input:
-        sce_08 = expand([rules.run_mnncorrect.output], f = fractions)
+        sce_09 = expand(rules.run_mnncorrect.output, fraction = fractions)
+    params:
+        fractions = fractions
     output:
-        OUTPUT_BASE_PATH + "/sce_objects/reports/04_batch_correction_fractions/batch_correction_fraction_summary_" + SEURAT_RED + ".html"
+        OUTPUT_BASE_PATH + "/reports/04_batch_correction_fractions/batch_correction_fraction_summary_" + BATCH_USE + ".html"
     script:
         "batch_correction_summary.Rmd" 

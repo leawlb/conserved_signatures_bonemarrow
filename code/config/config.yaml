@@ -78,8 +78,9 @@ values:
         #per fraction
       hsc: 11
       str: 14
-    resolution: 0.5
+    resolution: 0.2
     use_svm_kernel: "linear" # linear or radial
+    size_subs_hscs: 100000 
       
 # CONDITIONS  
 # in caps for use in R, only first letter capitalized for use in Snakefile

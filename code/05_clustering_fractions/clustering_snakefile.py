@@ -55,13 +55,15 @@ rule hierarchical_clustering:
         sce_10 = OUTPUT_BASE_PATH + "/sce_objects/10_hcls_fractions/sce_{fraction}-10"
     params:
         number_k = config["values"]["clustering"]["number_k"],
+        nr_hvgs = config["values"]["preprocessing"]["nr_hvgs"],
+        size_subs_hscs = config["values"]["clustering"]["size_subs_hscs"],
         sce_functions = "../source/sce_functions.R", # this is the working dir
     script:
         "scripts/10_hierarchical_clustering.R"
         
 rule seurat_clustering:
     input: 
-        sce_10 = rules.hierarchical_clustering.output
+        sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_mnnc_fractions/sce_{fraction}_Object_ID-09"
     output:
         sce_11 = OUTPUT_BASE_PATH + "/sce_objects/11_scls_fractions/sce_{fraction}-11"
     params:
@@ -71,7 +73,7 @@ rule seurat_clustering:
         
 rule louvain_clustering:
     input: 
-        sce_11 = rules.seurat_clustering.output
+        sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_mnnc_fractions/sce_{fraction}_Object_ID-09"
     output:
         sce_12 = OUTPUT_BASE_PATH + "/sce_objects/12_lcls_fractions/sce_{fraction}-12"
     script:
@@ -93,6 +95,8 @@ if config["calculate_k"]:
 rule make_report_full:
     input:
         sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_mnnc_fractions/sce_{fraction}_Object_ID-09",
+        sce_10 = rules.hierarchical_clustering.output,
+        sce_11 = rules.seurat_clustering.output,
         sce_12 = rules.louvain_clustering.output
     params:
         color_tables = TABLES_PATH,

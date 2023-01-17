@@ -31,17 +31,24 @@ set.seed(37)
 
 ```{r}
 sce_09 <- readRDS(file = snakemake@input[["sce_09"]])
+sce_10 <- readRDS(file = snakemake@input[["sce_10"]])
+sce_11 <- readRDS(file = snakemake@input[["sce_11"]])
 sce_12 <- readRDS(file = snakemake@input[["sce_12"]])
-fraction_curr <- sce_09$Fraction_ID[1]
+fraction_curr <- sce_12$Fraction_ID[1]
+
+sce_12$cluster_hierarchical <- sce_10$cluster_hierarchical
+sce_12$cluster_seurat <- sce_11$cluster_seurat
+sce_12$cluster_seurat_resolution <- sce_11$cluster_seurat_resolution
+
+# check if cluster labels can just be transferred
+print(ncol(sce_12))
+print(tail(match(colnames(sce_12), colnames(sce_10))))
+print(tail(match(colnames(sce_12), colnames(sce_11))))
 
 number_k <- snakemake@params[["number_k"]]
 number_k_curr <- number_k[[fraction_curr]]
 
 color_tables <- snakemake@params[["color_tables"]]
-
-sce_07 <- factor_reference_cts(sce_07)# own function
-sce_08 <- factor_reference_cts(sce_08)
-sce_09 <- factor_reference_cts(sce_09)
 
 ```
 
@@ -53,17 +60,20 @@ source(file = "../source/sce_functions.R")
 
 ```{r}
 
+sce_09 <- factor_reference_cts(sce_09)
+sce_12 <- factor_reference_cts(sce_12)
+
 if(fraction_curr == "hsc"){
   col_cts["unassigned"] <- "lightcyan3"
 }else if(fraction_curr == "str"){
   col_cts["unassigned"] <- "mistyrose3"
 }
 
-col_cts_baccin <- col_cts[match(levels(sce$baccin_celltype_scmapclust), 
+col_cts_baccin <- col_cts[match(levels(sce_12$baccin_celltype_scmapclust), 
                                 names(col_cts))]
-col_cts_dahlin <- col_cts[match(levels(sce$baccin_celltype_scmapclust), 
+col_cts_dahlin <- col_cts[match(levels(sce_12$baccin_celltype_scmapclust), 
                                 names(col_cts))]
-col_cts_dolgalev <- col_cts[match(levels(sce$baccin_celltype_scmapclust),
+col_cts_dolgalev <- col_cts[match(levels(sce_12$baccin_celltype_scmapclust),
                                   names(col_cts))]
 
 col_batch_exp_day <- col_alp[names(col_alp) %in% sce_12$Batch_exp_day]
@@ -1335,8 +1345,8 @@ sce_temp$cluster_hierarchical <- paste0(sce_temp$cluster_hierarchical,
                                         "_hierarchical")
 sce_temp$cluster_seurat <- paste0(sce_temp$cluster_seurat, "_seurat")
 
-mat_comp <- as.matrix(table(unfactor(sce_temp$cluster_hierarchical),
-                            unfactor(sce_temp$cluster_seurat)))
+mat_comp <- as.matrix(table(sce_temp$cluster_hierarchical,
+                            sce_temp$cluster_seurat))
 
 mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
                        which(colMeans(mat_comp) > 0)]
@@ -1368,8 +1378,8 @@ sce_temp$cluster_hierarchical <- paste0(sce_temp$cluster_hierarchical,
                                         "_hierarchical")
 sce_temp$cluster_louvain <- paste0(sce_temp$cluster_louvain, "_louvain")
 
-mat_comp <- as.matrix(table(unfactor(sce_temp$cluster_hierarchical),
-                            unfactor(sce_temp$cluster_louvain)))
+mat_comp <- as.matrix(table(sce_temp$cluster_hierarchical,
+                            sce_temp$cluster_louvain))
 
 mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
                        which(colMeans(mat_comp) > 0)]
@@ -1400,8 +1410,8 @@ sce_temp <- sce_12
 sce_temp$cluster_seurat <- paste0(sce_temp$cluster_seurat, "_seurat")
 sce_temp$cluster_louvain <- paste0(sce_temp$cluster_louvain, "_louvain")
 
-mat_comp <- as.matrix(table(unfactor(sce_temp$cluster_seurat),
-                            unfactor(sce_temp$cluster_louvain)))
+mat_comp <- as.matrix(table(sce_temp$cluster_seurat,
+                            sce_temp$cluster_louvain))
 
 mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
                        which(colMeans(mat_comp) > 0)]
@@ -1437,7 +1447,7 @@ sce_temp$cluster_hierarchical <- paste0(sce_temp$cluster_hierarchical,
                                         "_hierarchical")
 
 mat_comp <- as.matrix(table(sce_temp$baccin_celltype_scmapclust,
-                            unfactor(sce_temp$cluster_hierarchical)))
+                            sce_temp$cluster_hierarchical))
 
 mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
                        which(colMeans(mat_comp) > 0)]
@@ -1468,7 +1478,7 @@ sce_temp <- sce_12
 sce_temp$cluster_seurat <- paste0(sce_temp$cluster_seurat, "_seurat")
 
 mat_comp <- as.matrix(table(sce_temp$baccin_celltype_scmapclust,
-                            unfactor(sce_temp$cluster_seurat)))
+                            sce_temp$cluster_seurat))
 
 mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
                        which(colMeans(mat_comp) > 0)]
@@ -1500,7 +1510,7 @@ sce_temp <- sce_12
 sce_temp$cluster_louvain <- paste0(sce_temp$cluster_louvain, "_louvain")
 
 mat_comp <- as.matrix(table(sce_temp$baccin_celltype_scmapclust,
-                            unfactor(sce_temp$cluster_louvain)))
+                            sce_temp$cluster_louvain))
 
 mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
                        which(colMeans(mat_comp) > 0)]

@@ -39,7 +39,9 @@ for f in fractions:
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/08_rnrm_fractions/sce_" + f + "_" + BATCH_USE + "-08"]
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/09_mnnc_fractions/sce_" + f + "_" + BATCH_USE +"-09"]
   targets = targets + [OUTPUT_BASE_PATH + "/reports/04_batch_correction_fractions/" + f + "/batch_correction_fraction_report_" + f + "_" + BATCH_USE + ".html"]
-  
+  if BATCH_USE != "Object_ID":
+    targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/09_srt3_fractions/sce_" + f + "_" + BATCH_USE +"-09"]
+    
 targets = targets + [OUTPUT_BASE_PATH + "/reports/04_batch_correction_fractions/batch_correction_fraction_summary_" + BATCH_USE + ".html"]
   
 #-------------------------------------------------------------------------------
@@ -95,6 +97,31 @@ rule run_mnncorrect:
         sce_functions = "../source/sce_functions.R" # this is the working dir
     script:
         "scripts/09_mnncorrect.R"
+        
+"""
+batch correct using Seurat3
+
+Seurat3 is good at batch correction and among best for multiple batch integration
+but not great at recovering DEGs from batch corrected data
+unbalanced towards stronger batch effect removal, but successful at removing species batch effects
+Requires shared cell types between batches but no labels, scaling little effect
+It is easiest to use HVGs and Renormalize by seurat means.
+"""
+if BATCH_USE != "Object_ID":
+  rule run_seurat3:
+      input:
+          sce_07 = rules.merge_datasets_species.output 
+      output:
+          sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_srt3_ractions/sce_{fraction}_" + BATCH_USE + SEURAT_RED + "-09"
+      params:
+          batch_use = BATCH_USE,
+          nr_hvgs_batch_correction = config["values"]["batch_correction"]["nr_hvgs_batch_correction"], # number
+          nr_hvgs = config["values"]["preprocessing"]["nr_hvgs"],
+          seurat_reduction = SEURAT_RED, # which reduction method to use
+          sce_functions = "../source/sce_functions.R" # we are in the working dir
+      script:
+          "scripts/09_seurat.R"
+
 
 #-------------------------------------------------------------------------------
 
@@ -102,14 +129,23 @@ rule run_mnncorrect:
 Make batch correction reports 
 """
 
+if BATCH_USE == "Object_ID":
+  sce_09_input = rules.run_mnncorrect.output,
+if BATCH_USE != "Object_ID": # seurat cannot deal with Object_ID as batch
+  sce_09_input = [rules.run_mnncorrect.output, rules.run_seurat3.output]
+
+print(sce_09_input)
+
+# takes >4h for hscs
 rule make_reports:
     input:
         sce_07 = OUTPUT_BASE_PATH + "/sce_objects/07_mrge_fractions/sce_{fraction}-07",
         sce_08 = rules.renormalize.output,
-        sce_09 = rules.run_mnncorrect.output,
+        sce_09_input = sce_09_input
     output:
         OUTPUT_BASE_PATH + "/reports/04_batch_correction_fractions/{fraction}/batch_correction_fraction_report_{fraction}_" + BATCH_USE + ".html"
     params:
+        batch_use = BATCH_USE,
         nr_hvgs = config["values"]["preprocessing"]["nr_hvgs"],
         color_tables = TABLES_PATH
     script:

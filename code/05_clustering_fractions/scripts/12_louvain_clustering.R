@@ -7,12 +7,13 @@ set.seed(37)
 
 #-------------------------------------------------------------------------------
 
-sce <- readRDS(file = snakemake@input[["sce_11"]])
+sce <- readRDS(file = snakemake@input[["sce_09"]])
 
 louvain <- clusterCells(sce, use.dimred="PCA", assay.type = NULL,
                         BLUSPARAM=NNGraphParam(cluster.fun="louvain"))
 
-sce$louvain_clustering <- louvain
-
+sce$cluster_louvain <- louvain
+sce$cluster_louvain <- factor(sce$cluster_louvain, 
+                              levels = sort(unique(sce$cluster_louvain))) 
 print(sce)
 saveRDS(sce, file = snakemake@output[["sce_12"]])

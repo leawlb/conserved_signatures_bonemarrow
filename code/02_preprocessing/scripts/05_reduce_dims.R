@@ -5,6 +5,7 @@
 
 library(scater, quietly = TRUE) 
 library(scran, quietly = TRUE) 
+set.seed(37)
 
 sce <- readRDS(file = snakemake@input[["sce_04"]])
 nr_hvgs <- snakemake@params[["nr_hvgs"]]

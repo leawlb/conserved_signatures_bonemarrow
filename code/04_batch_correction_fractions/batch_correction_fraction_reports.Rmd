@@ -27,65 +27,67 @@ set.seed(37)
 ```
 
 ```{r}
-sce_07 <- readRDS(file = snakemake@input[["sce_07"]])
-sce_08 <- readRDS(file = snakemake@input[["sce_08"]])
-sce_09 <- readRDS(file = snakemake@input[["sce_09"]])
 
+batch_use <- snakemake@params[["batch_use"]]
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
 color_tables <- snakemake@params[["color_tables"]]
-fraction_curr <- sce_07$Fraction_ID[1]
-```
 
-```{r}
 source(file = "../source/colors.R")
 source(file = "../source/plotting.R")
 source(file = "../source/sce_functions.R")
-```
 
-```{r}
+sce_07 <- readRDS(file = snakemake@input[["sce_07"]])
+sce_08 <- readRDS(file = snakemake@input[["sce_08"]])
 
-sce_07 <- factor_reference_cts(sce_07)# own function
-sce_08 <- factor_reference_cts(sce_08)
-sce_09 <- factor_reference_cts(sce_09)
-
-# redo dimensionality reduction for renormalized objects
 set.seed(37)
-sce_08 <- reduce_dims(sce_08, nr_hvgs = snakemake@params[["nr_hvgs"]])
+if(batch_use == "Object_ID"){
+  sce_08 <- reduce_dims(sce_08, nr_hvgs = snakemake@params[["nr_hvgs"]])
+  sce_09_mnn <- readRDS(file = snakemake@input[["sce_09_input"]])
+  sce_list <- list(list(sce_07, " after merging"),
+                   list(sce_08, " after renormalization"),
+                   list(sce_09_mnn, " MNN batch correction"))
+}else{
+  sce_09_ser <- readRDS(file = snakemake@input[["sce_09_ser"]])
+  sce_09_mnn <- readRDS(file = snakemake@input[["sce_09_input"]][[1]])
+  sce_09_ser <- readRDS(file = snakemake@input[["sce_09_input"]][[2]])
+  sce_list <- list(list(sce_07, " after merging"),
+                   list(sce_08, " after renormalization"),
+                   list(sce_09_mnn, " MNN batch correction"),
+                   list(sce_09_ser, " CCA batch correction"))
+}
+
+sce_list <- lapply(sce_list, function(x){
+  x[[1]] <- factor_reference_cts(x[[1]])
+  print(x[[1]])
+  return(x)
+})
+
 ```
 
 ```{r}
+
+# use one sce for general colors
+fraction_curr <- sce_list[[1]][[1]]$Fraction_ID[1]
 
 if(fraction_curr == "hsc"){
-  col_cts["unassigned"] <- "lightblue2"
+  col_cts["unassigned"] <- "honeydew2"
 }else if(fraction_curr == "str"){
   col_cts["unassigned"] <- "mistyrose3"
 }
 
-col_cts_baccin <- col_cts[match(levels(sce$baccin_celltype_scmapclust), 
+col_cts_baccin <- col_cts[match(levels(sce_list[[1]][[1]]$baccin_celltype_scmapclust), 
                                 names(col_cts))]
-col_cts_dahlin <- col_cts[match(levels(sce$baccin_celltype_scmapclust), 
+col_cts_dahlin <- col_cts[match(levels(sce_list[[1]][[1]]$dahlin_celltype_scmapclust), 
                                 names(col_cts))]
-col_cts_dolgalev <- col_cts[match(levels(sce$baccin_celltype_scmapclust), 
+col_cts_dolgalev <- col_cts[match(levels(sce_list[[1]][[1]]$dolgalev_celltype_scmapclust), 
                                   names(col_cts))]
 
-col_batch_exp_day <- col_alp[names(col_alp) %in% sce_07$Batch_exp_day]
-col_batch_seq <- col_num[names(col_num) %in% sce_07$Batch_sequencing]
-col_ann_age <- col_ann[names(col_ann) %in% sce_07$Age_ID]
-col_ann_fraction <- col_ann[names(col_ann) %in% sce_07$Fraction_ID]
-col_species <- col_spc[names(col_spc) %in% sce_07$Species_ID]
+col_batch_exp_day <- col_alp[names(col_alp) %in% sce_list[[1]][[1]]$Batch_exp_day]
+col_batch_seq <- col_num[names(col_num) %in% sce_list[[1]][[1]]$Batch_sequencing]
+col_ann_age <- col_ann[names(col_ann) %in% sce_list[[1]][[1]]$Age_ID]
+col_ann_fraction <- col_ann[names(col_ann) %in% sce_list[[1]][[1]]$Fraction_ID]
+col_species <- col_spc[names(col_spc) %in% sce_list[[1]][[1]]$Species_ID]
 
-```
-
-```{r}
-sce_07
-```
-
-```{r}
-sce_08
-```
-
-```{r}
-sce_09
 ```
 
 # Reference cell types 
@@ -110,7 +112,7 @@ identity_plots <- function(sce, title){
     scale_color_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin)
   legend_2 <- get_legend(plot_2l)
   
-  plot_3 <- umap_base(sce, color_by = "dolgalev_celltype_scmapclust")+n
+  plot_3 <- umap_base(sce, color_by = "dolgalev_celltype_scmapclust")+
     ggtitle(paste0(fraction_curr, title))+
     scale_color_manual("dolgalev_celltype_scmapclust", 
                        values = col_cts_dolgalev)
@@ -138,31 +140,14 @@ print(table(sce_07$dolgalev_celltype_scmapclust))
 ### After merging
 
 ```{r}
-identity_plots_07 <- identity_plots(sce_07, title = ", after merging")
+identity_plotlist <- lapply(sce_list, function(x){
+  plotlist <- identity_plots(x[[1]], title = x[[2]])
+  return(plotlist)
+})
 ```
 
 ```{r fig.width=8, fig.height=4}
-identity_plots_07
-```
-
-### After renormalization
-
-```{r}
-identity_plots_08 <- identity_plots(sce_08, title = ", after renormalization")
-```
-
-```{r fig.width=8, fig.height=4}
-identity_plots_08
-```
-
-### After batch correction
-
-```{r}
-identity_plots_09 <- identity_plots(sce_09, title = ", MNN batch correction")
-```
-
-```{r fig.width=8, fig.height=4}
-identity_plots_09
+identity_plotlist
 ```
 
 ## Contamination and mature cell types
@@ -214,32 +199,15 @@ find_contamination_mature <- function(sce, title){
   return(list(PLOT_4, PLOT_5))
 }  
 
-cont_plots_species_07 <- find_contamination_mature(
-  sce_07, title = ", after merging,")
-cont_plots_species_08 <- find_contamination_mature(
-  sce_08, title = ", after renormalization,")
-cont_plots_species_09 <- find_contamination_mature(
-  sce_09, title = ", after MNN batch correction,")
-
+cont_plotlist <- lapply(sce_list, function(x){
+  plotlist <- find_contamination_mature(x[[1]], title = x[[2]])
+  return(plotlist)
+})
 
 ```
 
-### After merging
-
 ```{r fig.width=10, fig.height=5}
-cont_plots_species_07
-```
-
-### After renormalization
-
-```{r fig.width=10, fig.height=5}
-cont_plots_species_08
-```
-
-### After Batch correction
-
-```{r fig.width=10, fig.height=5}
-cont_plots_species_09
+cont_plotlist
 ```
 
 # All QC metrics
@@ -327,7 +295,7 @@ qc_plots <- function(sce, title){
                                       "lightgoldenrod", "lightgoldenrod", 
                                       "lightgoldenrod", "lightgoldenrod", 
                                       "lightgoldenrod", "lightgoldenrod"))+
-    ggtitle(name_curr)
+    ggtitle(paste0(fraction_curr, title))
   plot_11l <- umap_legend(sce, color_by = "sum")+
     scale_color_gradientn("Library size", 
                            limits = c(0, 1000000),
@@ -344,7 +312,7 @@ qc_plots <- function(sce, title){
                            limits = c(0, 10000),
                            colors = c("black", "darkorange3", "orange", 
                                       "lightgoldenrod"))+
-    ggtitle(name_curr)
+    ggtitle(paste0(fraction_curr, title))
   plot_12l <- umap_legend(sce, color_by = "detected")+
     scale_color_gradientn("Number of detected genes", 
                            limits = c(0, 10000),
@@ -374,27 +342,15 @@ qc_plots <- function(sce, title){
   
 }
 
-qc_plots_species_07 <- qc_plots(sce_07, title = ", after merging")
-qc_plots_species_08 <- qc_plots(sce_08, title = ", after renormalization")
-qc_plots_species_09 <- qc_plots(sce_09, title = ", MNN batch correction")
+qc_plotlist <- lapply(sce_list, function(x){
+  plotlist <- qc_plots(x[[1]], title = x[[2]])
+  return(plotlist)
+})
+
 ```
 
-### After merging
-
 ```{r fig.width=10, fig.height=5}
-qc_plots_species_07
-```
-
-### After renormalization
-
-```{r fig.width=10, fig.height=5}
-qc_plots_species_08
-```
-
-### After batch correction
-
-```{r fig.width=10, fig.height=5}
-qc_plots_species_09
+qc_plotlist
 ```
 
 ## Facet grid UMAPs
@@ -409,9 +365,10 @@ Seurat.
 
 facet_plots <- function(sce, title){
 
+  # VARS SPECIES
   plot_1 <- umap_base(sce, color_by = "Object_ID")+ 
     ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Fraction))
+    facet_grid(cols = vars(sce$Species_ID))
   plot_1l <- umap_legend(sce, color_by = "Object_ID")+
     scale_color_discrete("Object_ID")
   legend_1 <- get_legend(plot_1l)
@@ -419,7 +376,7 @@ facet_plots <- function(sce, title){
   plot_2 <- umap_base(sce, color_by = "Batch_sequencing")+
     scale_color_manual("Batch_sequencing", values = col_batch_seq)+
     ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Fraction))
+    facet_grid(cols = vars(sce$Species_ID))
   plot_2l <- umap_legend(sce, color_by = "Batch_sequencing")+
     scale_color_manual("Batch_sequencing", values = col_batch_seq)
   legend_2 <- get_legend(plot_2l)
@@ -427,12 +384,27 @@ facet_plots <- function(sce, title){
   plot_3 <- umap_base(sce, color_by = "Batch_exp_day")+
     scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)+
     ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Fraction))
+    facet_grid(cols = vars(sce$Species_ID))
   plot_3l <- umap_legend(sce, color_by = "Batch_exp_day")+
     scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)
   legend_3 <- get_legend(plot_3l)
+  
+  plot_19 <- umap_base(sce, color_by = "Age_ID")+
+    scale_color_manual("Age", values = col_ann_age)+
+    ggtitle(paste0(fraction_curr, title))+
+    facet_grid(cols = vars(sce$Species_ID))
+  plot_19l <- umap_legend(sce, color_by = "Age_ID")+
+    scale_color_manual("Age", values = col_ann_age)
+  legend_19 <- get_legend(plot_19l)
+  
+  plot_21 <- umap_base(sce, color_by = "Antibody_combination")+
+    ggtitle(paste0(fraction_curr, title))+
+    facet_grid(cols = vars(sce$Species_ID))
+  plot_21l <- umap_legend(sce, color_by = "Antibody_combination")+
+    scale_color_discrete(name = "Antibody combination")
+  legend_21 <- get_legend(plot_21l)
 
-  # check age
+  # AGE
   plot_4 <- umap_base(sce, color_by = "Object_ID")+ 
     ggtitle(paste0(fraction_curr, title))+
     facet_grid(cols = vars(sce$Age))
@@ -456,13 +428,13 @@ facet_plots <- function(sce, title){
     scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)
   legend_6 <- get_legend(plot_6l)
   
-  plot_6 <- umap_base(sce, color_by = "Batch_exp_day")+
-    scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)+
+  plot_20 <- umap_base(sce, color_by = "Species_ID")+
+    scale_color_manual("Species_ID", values = col_species)+
     ggtitle(paste0(fraction_curr, title))+
     facet_grid(cols = vars(sce$Age))
-  plot_6l <- umap_legend(sce, color_by = "Batch_exp_day")+
-    scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)
-  legend_6 <- get_legend(plot_6l)
+  plot_20l <- umap_legend(sce, color_by = "Species_ID")+
+    scale_color_manual("Species_ID", values = col_species)
+  legend_20 <- get_legend(plot_20l)
   
   # Identities
 
@@ -491,6 +463,7 @@ facet_plots <- function(sce, title){
     scale_color_manual("dolgalev_celltype_scmapclust",
                        values = col_cts_dolgalev)
   legend_dolgalev <- get_legend(plot_9l)
+  
   
   
   plot_10 <- umap_base(sce, color_by = "baccin_celltype_scmapclust")+
@@ -549,56 +522,114 @@ facet_plots <- function(sce, title){
     ggtitle(paste0(fraction_curr, title))+
     facet_grid(cols = vars(sce$Batch_sequencing)) 
   
-
+  plot_22 <- umap_base(sce, color_by = "baccin_celltype_scmapclust")+
+    scale_color_manual("baccin_celltype_scmapclust", 
+                       values = col_cts_baccin)+
+    ggtitle(paste0(fraction_curr, title))+
+    facet_grid(cols = vars(sce$Antibody_combination))
   
- 
-  PLOT_1 <- ggarrange(plot_1, legend_1, widths = c(2, 1))
-  PLOT_2 <- ggarrange(plot_2, legend_2, widths = c(2, 1))
-  PLOT_3 <- ggarrange(plot_3, legend_3, widths = c(2, 1))
-  PLOT_4 <- ggarrange(plot_4, legend_4, widths = c(2, 1))
-  PLOT_5 <- ggarrange(plot_5, legend_5, widths = c(2, 1))
-  PLOT_6 <- ggarrange(plot_6, legend_6, widths = c(2, 1))
-  PLOT_7 <- ggarrange(plot_7, legend_baccin, widths = c(2, 1))
-  PLOT_8 <- ggarrange(plot_8, legend_dahlin, widths = c(2, 1))
-  PLOT_9 <- ggarrange(plot_9, legend_dolgalev, widths = c(2, 1))
-  PLOT_10 <- ggarrange(plot_10, legend_baccin, widths = c(2, 1))
-  PLOT_11 <- ggarrange(plot_11, legend_dahlin, widths = c(2, 1))
-  PLOT_12 <- ggarrange(plot_12, legend_dolgalev, widths = c(2, 1))
-  PLOT_13 <- ggarrange(plot_13, legend_baccin, widths = c(2, 1))
-  PLOT_14 <- ggarrange(plot_14, legend_dahlin, widths = c(2, 1))
-  PLOT_15 <- ggarrange(plot_13, legend_dolgalev, widths = c(2, 1))
-  PLOT_16 <- ggarrange(plot_14, legend_baccin, widths = c(2, 1))
-  PLOT_17 <- ggarrange(plot_13, legend_dahlin, widths = c(2, 1))
-  PLOT_18 <- ggarrange(plot_14, legend_dolgalev, widths = c(2, 1))  
-  plot_list <- list(PLOT_1, PLOT_2, PLOT_3, PLOT_4, PLOT_5, PLOT_6, PLOT_7,
-                    PLOT_8, PLOT_9, PLOT_10, PLOT_11, PLOT_12, PLOT_13, PLOT_14,
-                    PLOT_15, PLOT_16, PLOT_17, PLOT_18)
+  plot_23 <- umap_base(sce, color_by = "dahlin_celltype_scmapclust")+
+    scale_color_manual("dahlin_celltype_scmapclust", 
+                       values = col_cts_dahlin)+
+    ggtitle(paste0(fraction_curr, title))+
+    facet_grid(cols = vars(sce$Antibody_combination))
+  
+  plot_24 <- umap_base(sce, color_by = "dolgalev_celltype_scmapclust")+
+    scale_color_manual("dolgalev_celltype_scmapclust", 
+                       values = col_cts_dolgalev)+
+    ggtitle(paste0(fraction_curr, title))+
+    facet_grid(cols = vars(sce$Antibody_combination)) 
+
+  PLOT_1 <- ggarrange(plot_1, legend_1, widths = c(3, 1))
+  PLOT_2 <- ggarrange(plot_2, legend_2, widths = c(3, 1))
+  PLOT_3 <- ggarrange(plot_3, legend_3, widths = c(3, 1))
+  PLOT_4 <- ggarrange(plot_4, legend_4, widths = c(3, 1))
+  PLOT_5 <- ggarrange(plot_5, legend_5, widths = c(3, 1))
+  PLOT_6 <- ggarrange(plot_6, legend_6, widths = c(3, 1))
+  PLOT_7 <- ggarrange(plot_7, legend_baccin, widths = c(3, 1))
+  PLOT_8 <- ggarrange(plot_8, legend_dahlin, widths = c(3, 1))
+  PLOT_9 <- ggarrange(plot_9, legend_dolgalev, widths = c(3, 1))
+  PLOT_10 <- ggarrange(plot_10, legend_baccin, widths = c(3, 1))
+  PLOT_11 <- ggarrange(plot_11, legend_dahlin, widths = c(3, 1))
+  PLOT_12 <- ggarrange(plot_12, legend_dolgalev, widths = c(3, 1))
+  PLOT_13 <- ggarrange(plot_13, legend_baccin, widths = c(3, 1))
+  PLOT_14 <- ggarrange(plot_14, legend_dahlin, widths = c(3, 1))
+  PLOT_15 <- ggarrange(plot_13, legend_dolgalev, widths = c(3, 1))
+  PLOT_16 <- ggarrange(plot_14, legend_baccin, widths = c(3, 1))
+  PLOT_17 <- ggarrange(plot_13, legend_dahlin, widths = c(3, 1))
+  PLOT_18 <- ggarrange(plot_14, legend_dolgalev, widths = c(3, 1))  
+  PLOT_19 <- ggarrange(plot_19, legend_19, widths = c(3, 1))  
+  PLOT_20 <- ggarrange(plot_20, legend_20, widths = c(3, 1))  
+  PLOT_21 <- ggarrange(plot_21, legend_21, widths = c(3, 1))  
+  PLOT_22 <- ggarrange(plot_22, legend_baccin, widths = c(3, 1))  
+  PLOT_23 <- ggarrange(plot_23, legend_dahlin, widths = c(3, 1))  
+  PLOT_24 <- ggarrange(plot_24, legend_dolgalev, widths = c(3, 1))  
+  plot_list <- list(PLOT_1, PLOT_2, PLOT_3, PLOT_19, # Species
+                    PLOT_7, PLOT_8, PLOT_9, PLOT_21, # Species
+                    
+                    PLOT_4, PLOT_5, PLOT_6, PLOT_20, # Age
+                    PLOT_10, PLOT_11, PLOT_12, # Age
+                    
+                    PLOT_13, PLOT_14, PLOT_15, # batchexpday
+                    PLOT_16, PLOT_17, PLOT_18, # batchseq
+                    PLOT_22, PLOT_23, PLOT_24) # antibody combination
   
   return(plot_list)
 }
 
-facet_plots_species_07 <- facet_plots(sce_07, title = ", after merging")
-facet_plots_species_08 <- facet_plots(sce_08, title = ", after renormalization")
-facet_plots_species_09 <- facet_plots(sce_09, title = ", MNN batch correction")
-
+facet_plotlist <- lapply(sce_list, function(x){
+  plotlist <- facet_plots(x[[1]], title = x[[2]])
+  return(plotlist)
+})
 ```
 
-### After merging
-
-```{r fig.width=10, fig.height=4}
-facet_plots_species_07
+```{r fig.width=12, fig.height=4}
+facet_plotlist
 ```
 
-### After renormalization
+```{r}
 
-```{r fig.width=10, fig.height=4}
-facet_plots_species_08
+make_big_grid <- function(sce, title){
+  
+  n_objects <- length(unique(sce$Object_ID))
+  sce_1 <- sce[,sce$Object_ID %in% unique(sce$Object_ID)[1:as.integer(n_objects/5)]]
+  sce_2 <- sce[,sce$Object_ID %in% unique(sce$Object_ID)[(as.integer(n_objects/5)+1):(as.integer(n_objects/5)*2)]]
+  sce_3 <- sce[,sce$Object_ID %in% unique(sce$Object_ID)[(as.integer(n_objects/5)*2+1):(as.integer(n_objects/5)*3)]]
+  sce_4 <- sce[,sce$Object_ID %in% unique(sce$Object_ID)[(as.integer(n_objects/5)*3+1):(as.integer(n_objects/5)*4)]]
+  sce_5 <- sce[,sce$Object_ID %in% unique(sce$Object_ID)[(as.integer(n_objects/5)*4+1):n_objects]]
+  
+  plot_1 <- umap_base(sce_1, color_by = "baccin_celltype_scmapclust")+
+    scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
+    ggtitle(paste0(fraction_curr, title))+
+    facet_grid(cols = vars(sce_1$Object_ID))
+  plot_2 <- umap_base(sce_2, color_by = "baccin_celltype_scmapclust")+
+    scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
+    ggtitle(paste0(fraction_curr, title))+
+    facet_grid(cols = vars(sce_2$Object_ID))
+  plot_3 <- umap_base(sce_3, color_by = "baccin_celltype_scmapclust")+
+    scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
+    ggtitle(paste0(fraction_curr, title))+
+    facet_grid(cols = vars(sce_3$Object_ID))
+  plot_4 <- umap_base(sce_4, color_by = "baccin_celltype_scmapclust")+
+    scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
+    ggtitle(paste0(fraction_curr, title))+
+    facet_grid(cols = vars(sce_4$Object_ID)) 
+  plot_5 <- umap_base(sce_5, color_by = "baccin_celltype_scmapclust")+
+    scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
+    ggtitle(paste0(fraction_curr, title))+
+    facet_grid(cols = vars(sce_5$Object_ID)) 
+
+  return(list(plot_1, plot_2, plot_3, plot_4, plot_5))
+}
+
+biggrid_plotlist <- lapply(sce_list, function(x){
+  plotlist <- make_big_grid(x[[1]], title = x[[2]])
+  return(plotlist)
+})
 ```
 
-### After batch correction
-
 ```{r fig.width=10, fig.height=4}
-facet_plots_species_09
+biggrid_plotlist
 ```
 
 ## PCAs
@@ -717,28 +748,14 @@ make_qc_pcas2 <- function(sce, title){
   
 }
 
-qc_pcas_species_07 <- make_qc_pcas2(sce_07, title = ", after merging")
-qc_pcas_species_08 <- make_qc_pcas2(sce_08, title = ", after renormalization")
-qc_pcas_species_09 <- make_qc_pcas2(sce_09, title = ", MNN batch correction")
-
+pca2_plotlist <- lapply(sce_list, function(x){
+  plotlist <- make_qc_pcas2(x[[1]], title = x[[2]])
+  return(plotlist)
+})
 ```
 
-### After merging
-
 ```{r fig.width=10, fig.height=5}
-qc_pcas_species_07
-```
-
-### After renormalization
-
-```{r fig.width=10, fig.height=5}
-qc_pcas_species_08
-```
-
-### After batch correction
-
-```{r fig.width=10, fig.height=5}
-qc_pcas_species_09
+pca2_plotlist
 ```
 
 ```{r}
@@ -855,28 +872,15 @@ make_qc_pcas3 <- function(sce, title){
   
 }
 
-qc_pcas_species_07 <- make_qc_pcas3(sce_07, title = ", after merging")
-qc_pcas_species_08 <- make_qc_pcas3(sce_08, title = ", after renormalization")
-qc_pcas_species_09 <- make_qc_pcas3(sce_09,  title = ", MNN batch correction")
+pca3_plotlist <- lapply(sce_list, function(x){
+  plotlist <- make_qc_pcas3(x[[1]], title = x[[2]])
+  return(plotlist)
+})
 
 ```
 
-### After merging
-
 ```{r fig.width=10, fig.height=5}
-qc_pcas_species_07
-```
-
-### After renormalization
-
-```{r fig.width=10, fig.height=5}
-qc_pcas_species_08
-```
-
-### After batch correction
-
-```{r fig.width=10, fig.height=5}
-qc_pcas_species_09
+pca3_plotlist
 ```
 
 # Cell Mixing Score
@@ -890,24 +894,27 @@ This takes quite long.
 
 sce_07 <- cms(sce_07, group = "Batch_exp_day", k = 30,
               assay_name = "logcounts", res_name = "Logcounts")
+visHist(sce_07, n_col = 3)
 
-sce_09 <- cms(sce_09, group = "Batch_exp_day", k = 30,
+sce_09_mnn <- cms(sce_09_mnn, group = "Batch_exp_day", k = 30,
               assay_name = "reconstructed", 
               res_name = "MNN")
+visHist(sce_09_mnn, n_col = 3)
+
+if(batch_use != "Object_ID"){
+  sce_09_ser <- cms(sce_09_ser, group = "Batch_exp_day", k = 30,
+              assay_name = "reconstructed", 
+              res_name = "CCA")
+  
+  visHist(sce_09_ser, n_col = 3)
+
+}
 
 ```
 
 The p-val distribution should be relatively even for good batch mixing.
 Due to cell type imbalance (see below) it is unlikely that the results
 will be great.
-
-```{r}
-visHist(sce_07, n_col = 3)
-```
-
-```{r}
-visHist(sce_09, n_col = 3)
-```
 
 # Lisi
 
@@ -962,11 +969,12 @@ plot_lisi <- function(sce, title){
   
 }
 
-lisi_07 <- plot_lisi(sce_07, title = "after merging")
-lisi_09 <- plot_lisi(sce_09, title = "MNN Batch correction")
+lisi_plotlist <- lapply(sce_list, function(x){
+  plotlist <- plot_lisi(x[[1]], title = x[[2]])
+  return(plotlist)
+})
 
-lisi_07
-lisi_09
+lisi_plotlist
 
 ```
 
@@ -978,25 +986,24 @@ Also helps understand balance of cell types in batches.
 Using only one object is enough for this.
 
 ```{r}
-sce <- sce_07
+sce <- sce_list[[1]][[1]]
 ```
 
 ## Per Sample
 
-```{r}
+```{r fig.width=10, fig.height=12}
 
 ggdf <- data.frame(colData(sce))
 
 # BACCIN
 plot1 <- ggplot(ggdf, aes(x = Object_ID,
-                          y=baccin_celltype_scmapclust,
                           fill=baccin_celltype_scmapclust, 
                           color = baccin_celltype_scmapclust))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
   scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
-  theme(legend.position = "none", axis.text.y = element_blank(),
+  theme(legend.position = "none",
         axis.text.x = element_text(angle = 90))+
   ggtitle(fraction_curr)
 
@@ -1020,14 +1027,13 @@ plot2 <- ggplot(ggdf, aes(x = Object_ID,
 
 # DAHLIN
 plot3 <- ggplot(ggdf, aes(x = Object_ID, 
-                          y=dahlin_celltype_scmapclust,
                           fill=dahlin_celltype_scmapclust,
                           color = dahlin_celltype_scmapclust))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin)+
   scale_color_manual(values = col_cts_dahlin)+
-  theme(legend.position = "none", axis.text.y = element_blank(),
+  theme(legend.position = "none", 
         axis.text.x = element_text(angle = 90))+
   ggtitle(fraction_curr)
 
@@ -1051,14 +1057,13 @@ plot4 <- ggplot(ggdf, aes(x = Object_ID,
 
 # DOLGALEV
 plot5 <- ggplot(ggdf, aes(x = Object_ID, 
-                          y=dolgalev_celltype_scmapclust,
                           fill=dolgalev_celltype_scmapclust,
                           color = dolgalev_celltype_scmapclust))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual("dolgalev_celltype_scmapclust", values = col_cts_dolgalev)+
   scale_color_manual(values = col_cts_dolgalev)+
-  theme(legend.position = "none", axis.text.y = element_blank(),
+  theme(legend.position = "none",
         axis.text.x = element_text(angle = 90))+
   ggtitle(fraction_curr)
 
@@ -1079,14 +1084,12 @@ plot6 <- ggplot(ggdf, aes(x = Object_ID,
   theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
   ggtitle(fraction_curr)
 
-
-
-PLOT1 <- ggarrange(plot1, legend_baccin)
-PLOT2 <- ggarrange(plot2, legend_baccin)
-PLOT3 <- ggarrange(plot3, legend_dahlin)
-PLOT4 <- ggarrange(plot4, legend_dahlin)
-PLOT5 <- ggarrange(plot5, legend_dolgalev)
-PLOT6 <- ggarrange(plot6, legend_dolgalev)
+PLOT1 <- ggarrange(plot1, legend_baccin, ncol = 1)
+PLOT2 <- ggarrange(plot2, legend_baccin, ncol = 1)
+PLOT3 <- ggarrange(plot3, legend_dahlin, ncol = 1)
+PLOT4 <- ggarrange(plot4, legend_dahlin, ncol = 1)
+PLOT5 <- ggarrange(plot5, legend_dolgalev, ncol = 1)
+PLOT6 <- ggarrange(plot6, legend_dolgalev, ncol = 1)
 
 PLOT1
 PLOT2
@@ -1102,14 +1105,13 @@ PLOT6
 
 # BACCIN
 plot1 <- ggplot(ggdf, aes(x = Batch_exp_day,
-                          y=baccin_celltype_scmapclust,
                           fill=baccin_celltype_scmapclust, 
                           color = baccin_celltype_scmapclust))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
   scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
-  theme(legend.position = "none", axis.text.y = element_blank(),
+  theme(legend.position = "none", 
         axis.text.x = element_text(angle = 90))+
   ggtitle(fraction_curr)
 
@@ -1126,14 +1128,13 @@ plot2 <- ggplot(ggdf, aes(x = Batch_exp_day,
 
 # DAHLIN
 plot3 <- ggplot(ggdf, aes(x = Batch_exp_day, 
-                          y=dahlin_celltype_scmapclust,
                           fill=dahlin_celltype_scmapclust,
                           color = dahlin_celltype_scmapclust))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin)+
   scale_color_manual(values = col_cts_dahlin)+
-  theme(legend.position = "none", axis.text.y = element_blank(),
+  theme(legend.position = "none", 
         axis.text.x = element_text(angle = 90))+
   ggtitle(fraction_curr)
 
@@ -1150,14 +1151,13 @@ plot4 <- ggplot(ggdf, aes(x = Batch_exp_day,
 
 # DOLGALEV
 plot5 <- ggplot(ggdf, aes(x = Batch_exp_day, 
-                          y=dolgalev_celltype_scmapclust,
                           fill=dolgalev_celltype_scmapclust,
                           color = dolgalev_celltype_scmapclust))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual("dolgalev_celltype_scmapclust", values = col_cts_dolgalev)+
   scale_color_manual(values = col_cts_dolgalev)+
-  theme(legend.position = "none", axis.text.y = element_blank(),
+  theme(legend.position = "none", 
         axis.text.x = element_text(angle = 90))+
   ggtitle(fraction_curr)
 
@@ -1194,14 +1194,13 @@ PLOT6
 
 # BACCIN
 plot1 <- ggplot(ggdf, aes(x = Species_ID,
-                          y=baccin_celltype_scmapclust,
                           fill=baccin_celltype_scmapclust, 
                           color = baccin_celltype_scmapclust))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
   scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
-  theme(legend.position = "none", axis.text.y = element_blank(),
+  theme(legend.position = "none", 
         axis.text.x = element_text(angle = 90))+
   ggtitle(fraction_curr)
 
@@ -1218,14 +1217,13 @@ plot2 <- ggplot(ggdf, aes(x = Species_ID,
 
 # DAHLIN
 plot3 <- ggplot(ggdf, aes(x = Species_ID, 
-                          y=dahlin_celltype_scmapclust,
                           fill=dahlin_celltype_scmapclust,
                           color = dahlin_celltype_scmapclust))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin)+
   scale_color_manual(values = col_cts_dahlin)+
-  theme(legend.position = "none", axis.text.y = element_blank(),
+  theme(legend.position = "none", 
         axis.text.x = element_text(angle = 90))+
   ggtitle(fraction_curr)
 
@@ -1243,14 +1241,13 @@ plot4 <- ggplot(ggdf, aes(x = Species_ID,
 
 # DOLGALEV
 plot5 <- ggplot(ggdf, aes(x = Species_ID, 
-                          y=dolgalev_celltype_scmapclust,
                           fill=dolgalev_celltype_scmapclust,
                           color = dolgalev_celltype_scmapclust))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual("dolgalev_celltype_scmapclust", values = col_cts_dolgalev)+
   scale_color_manual(values = col_cts_dolgalev)+
-  theme(legend.position = "none", axis.text.y = element_blank(),
+  theme(legend.position = "none",
         axis.text.x = element_text(angle = 90))+
   ggtitle(fraction_curr)
 
@@ -1277,6 +1274,11 @@ PLOT3
 PLOT4
 PLOT5
 PLOT6
+
+print(length(which(sce_07$Species_ID == "mmus")))
+print(length(which(sce_07$Species_ID == "mcar")))
+print(length(which(sce_07$Species_ID == "mcas")))
+print(length(which(sce_07$Species_ID == "mspr")))
 
 ```
 

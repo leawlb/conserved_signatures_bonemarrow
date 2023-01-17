@@ -6,13 +6,13 @@ set.seed(37)
 
 #-------------------------------------------------------------------------------
 
-sce <- readRDS(file = snakemake@input[["sce_10"]])
+sce <- readRDS(file = snakemake@input[["sce_09"]])
 resolution <- snakemake@params[["resolution"]]
 
 #-------------------------------------------------------------------------------
 # Clustering
 
-seurat <- as.Seurat(sce, counts = "counts", data = "reconstructed") # batch corrected
+seurat <- as.Seurat(sce, counts = "counts", data = "logcounts") # logcounts (assay) only used if dims (reduction) = NULL
 
 seurat <- FindNeighbors(seurat, dims = 1:10, reduction = "PCA") # batch corrected
 seurat <- FindClusters(seurat, resolution = resolution)

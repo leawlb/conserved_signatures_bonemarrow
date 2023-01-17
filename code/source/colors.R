@@ -32,8 +32,8 @@ names(col_alp) <- c("a", "b", "c", "d", "e", "f", "g")
 # CELL TYPES
 col_cts <- colors_celltypes[,3]
 names(col_cts) <- colors_celltypes[,2]
-col_spc[names(col_spc) == "EC-Arteriar"] <- "dodgerblue3"
-col_spc[names(col_spc) == "Pericytes"] <- "slateblue4"
+col_cts[names(col_cts) == "EC-Arteriar"] <- "dodgerblue3"
+col_cts[names(col_cts) == "Pericytes"] <- "slateblue4"
 
 # SPECIES
 col_spc <- colors_species[,2]

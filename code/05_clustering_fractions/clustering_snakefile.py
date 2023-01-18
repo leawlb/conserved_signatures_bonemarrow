@@ -31,8 +31,8 @@ print(targets)
 
 for f in fractions:
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/10_hcls_fractions/sce_" + f + "-10"]
-  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/11_scls_fractions/sce_" + f + "-11"]
-  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/12_lcls_fractions/sce_" + f + "-12"]
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/10_scls_fractions/sce_" + f + "-10"]
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/10_lcls_fractions/sce_" + f + "-10"]
   targets = targets + [OUTPUT_BASE_PATH + "/reports/05_clustering_fractions/" + f + "/clustering_fraction_report_full_" + f +".html"]
   if config["calculate_k"]:
     targets = targets + [OUTPUT_BASE_PATH + "/reports/05_clustering_fractions/" + f + "/clustering_fraction_report_k_" + f +".html"]
@@ -65,7 +65,7 @@ rule seurat_clustering:
     input: 
         sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_mnnc_fractions/sce_{fraction}_Object_ID-09"
     output:
-        sce_11 = OUTPUT_BASE_PATH + "/sce_objects/11_scls_fractions/sce_{fraction}-11"
+        sce_11 = OUTPUT_BASE_PATH + "/sce_objects/10_scls_fractions/sce_{fraction}-10"
     params:
         resolution = config["values"]["clustering"]["resolution"]
     script:
@@ -75,7 +75,7 @@ rule louvain_clustering:
     input: 
         sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_mnnc_fractions/sce_{fraction}_Object_ID-09"
     output:
-        sce_12 = OUTPUT_BASE_PATH + "/sce_objects/12_lcls_fractions/sce_{fraction}-12"
+        sce_12 = OUTPUT_BASE_PATH + "/sce_objects/10_lcls_fractions/sce_{fraction}-10"
     script:
         "scripts/12_louvain_clustering.R"
 
@@ -95,9 +95,9 @@ if config["calculate_k"]:
 rule make_report_full:
     input:
         sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_mnnc_fractions/sce_{fraction}_Object_ID-09",
-        sce_10 = rules.hierarchical_clustering.output,
-        sce_11 = rules.seurat_clustering.output,
-        sce_12 = rules.louvain_clustering.output
+        sce_10_h = rules.hierarchical_clustering.output,
+        sce_10_s = rules.seurat_clustering.output,
+        sce_10_l = rules.louvain_clustering.output
     params:
         color_tables = TABLES_PATH,
         size_subs_hscs = config["values"]["clustering"]["size_subs_hscs"],

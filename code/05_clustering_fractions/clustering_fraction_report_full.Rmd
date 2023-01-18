@@ -31,10 +31,10 @@ set.seed(37)
 
 ```{r}
 sce_09 <- readRDS(file = snakemake@input[["sce_09"]])
-sce_10 <- readRDS(file = snakemake@input[["sce_10"]])
-sce_11 <- readRDS(file = snakemake@input[["sce_11"]])
-sce_12 <- readRDS(file = snakemake@input[["sce_12"]])
-fraction_curr <- sce_12$Fraction_ID[1]
+sce_10_h <- readRDS(file = snakemake@input[["sce_10_h"]])
+sce_10_s <- readRDS(file = snakemake@input[["sce_10_s"]])
+sce_10_l <- readRDS(file = snakemake@input[["sce_10_l"]])
+fraction_curr <- sce_09$Fraction_ID[1]
 
 number_k <- snakemake@params[["number_k"]]
 number_k_curr <- number_k[[fraction_curr]]
@@ -42,24 +42,12 @@ number_k_curr <- number_k[[fraction_curr]]
 color_tables <- snakemake@params[["color_tables"]]
 size_subs_hscs <- snakemake@params[["size_subs_hscs"]]
 
-# hsc hierarchical may have been downsampled, so make sure to annotate that
-if(fraction_curr == "hsc"){
-  sce_12$cluster_hierarchical <- vector(length = ncol(sce_12))
-  sce_12$cluster_hierarchical[which(!is.na(
-    match(colnames(sce_12), colnames(sce_10))))] <- sce_10$cluster_hierarchical 
-  sce_12$cluster_hierarchical[which(is.na(match(
-    colnames(sce_12), colnames(sce_10))))] <- paste0("DOWNSAMPLED")
-}else{
-  sce_12$cluster_hierarchical <- sce_10$cluster_hierarchical
-}
-
-sce_12$cluster_seurat <- sce_11$cluster_seurat
-sce_12$cluster_seurat_resolution <- sce_11$cluster_seurat_resolution
+sce_10_l$cluster_seurat <- sce_10_s$cluster_seurat
+sce_10_l$cluster_seurat_resolution <- sce_10_s$cluster_seurat_resolution
 
 # check if cluster labels can just be transferred
-print(ncol(sce_12))
-print(tail(match(colnames(sce_12), colnames(sce_10))))
-print(tail(match(colnames(sce_12), colnames(sce_11))))
+print(ncol(sce_10_l))
+print(tail(match(colnames(sce_10_l), colnames(sce_10_s))))
 
 ```
 
@@ -72,7 +60,8 @@ source(file = "../source/sce_functions.R")
 ```{r}
 
 sce_09 <- factor_reference_cts(sce_09)
-sce_12 <- factor_reference_cts(sce_12)
+sce_10_h <- factor_reference_cts(sce_10_h)
+sce_10_l <- factor_reference_cts(sce_10_l)
 
 if(fraction_curr == "hsc"){
   col_cts["unassigned"] <- "honeydew2"
@@ -81,22 +70,22 @@ if(fraction_curr == "hsc"){
   col_cts["unassigned"] <- "mistyrose3"
 }
 
-col_cts_baccin <- col_cts[match(levels(sce_12$baccin_celltype_scmapclust), 
+col_cts_baccin <- col_cts[match(levels(sce_10_l$baccin_celltype_scmapclust), 
                                 names(col_cts))]
-col_cts_dahlin <- col_cts[match(levels(sce_12$dahlin_celltype_scmapclust), 
+col_cts_dahlin <- col_cts[match(levels(sce_10_l$dahlin_celltype_scmapclust), 
                                 names(col_cts))]
-col_cts_dolgalev <- col_cts[match(levels(sce_12$dolgalev_celltype_scmapclust),
+col_cts_dolgalev <- col_cts[match(levels(sce_10_l$dolgalev_celltype_scmapclust),
                                   names(col_cts))]
 
-col_batch_exp_day <- col_alp[names(col_alp) %in% sce_12$Batch_exp_day]
-col_batch_seq <- col_num[names(col_num) %in% sce_12$Batch_sequencing]
-col_ann_age <- col_ann[names(col_ann) %in% sce_12$Age_ID]
-col_ann_fraction <- col_ann[names(col_ann) %in% sce_12$Fraction_ID]
-col_species <- col_spc[names(col_spc) %in% sce_12$Species_ID]
+col_batch_exp_day <- col_alp[names(col_alp) %in% sce_10_l$Batch_exp_day]
+col_batch_seq <- col_num[names(col_num) %in% sce_10_l$Batch_sequencing]
+col_ann_age <- col_ann[names(col_ann) %in% sce_10_l$Age_ID]
+col_ann_fraction <- col_ann[names(col_ann) %in% sce_10_l$Fraction_ID]
+col_species <- col_spc[names(col_spc) %in% sce_10_l$Species_ID]
 
-col_clust_h <- col_num[names(col_num) %in% sce_12$cluster_hierarchical]
-col_clust_s <- col_num[names(col_num) %in% sce_12$cluster_seurat]
-col_clust_l <- col_num[names(col_num) %in% sce_12$cluster_louvain]
+col_clust_h <- col_num[names(col_num) %in% sce_10_h$cluster_hierarchical]
+col_clust_s <- col_num[names(col_num) %in% sce_10_l$cluster_seurat]
+col_clust_l <- col_num[names(col_num) %in% sce_10_l$cluster_louvain]
 
 ```
 
@@ -136,56 +125,48 @@ identity_plots <- function(sce){
   return(list(PLOT_1, PLOT_2, PLOT_3))
 }
 
-identity_plots <- identity_plots(sce_12)
-
-if(fraction_curr == "hsc"){
-  sce_temp <- sce_12[sce_12$cluster_hierarchical != "DOWNSAMPLED"]
-  identity_plots_ds <- identity_plots(sce_temp)
-}else{
-  identity_plots_ds <- NULL
-}
+identity_plots <- identity_plots(sce_10_h)
 
 ```
 
 ```{r fig.width=8, fig.height=4}
 identity_plots
-identity_plots_ds
 ```
 
 # Hierarchical clustering
 
 ```{r}
-print(table(sce_12$cluster_hierarchical))
+print(table(sce_10_h$cluster_hierarchical))
 ```
 
 ## Clusters
 
 ```{r fig.width=8, fig.height=4}
 
-plot_1 <- umap_base(sce_12, color_by = "cluster_hierarchical")+ 
+plot_1 <- umap_base(sce_10_h, color_by = "cluster_hierarchical")+ 
   ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
+                 length(which(sce_10_h$cluster_hierarchical != "DOWNSAMPLED")), 
                  " cells"))+
   scale_color_manual("cluster (hierarchical)", values = col_clust_h)
-plot_1l <- umap_legend(sce_12, color_by = "cluster_hierarchical")+
+plot_1l <- umap_legend(sce_10_h, color_by = "cluster_hierarchical")+
   scale_color_manual("cluster (hierarchical)", values = col_clust_h)
 legend_1 <- get_legend(plot_1l)
 
-plot_2 <- pca_base2(sce_12, color_by = "cluster_hierarchical")+ 
+plot_2 <- pca_base2(sce_10_h, color_by = "cluster_hierarchical")+ 
  ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
+                 length(which(sce_10_h$cluster_hierarchical != "DOWNSAMPLED")), 
                  " cells"))+
   scale_color_manual("cluster (hierarchical)", values = col_clust_h)
-plot_2l <- pca_legend(sce_12, color_by = "cluster_hierarchical")+
+plot_2l <- pca_legend(sce_10_h, color_by = "cluster_hierarchical")+
   scale_color_manual("cluster (hierarchical)", values = col_clust_h)
 legend_2 <- get_legend(plot_2l)
 
-plot_3 <- pca_base3(sce_12, color_by = "cluster_hierarchical")+ 
+plot_3 <- pca_base3(sce_10_h, color_by = "cluster_hierarchical")+ 
  ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
+                 length(which(sce_10_h$cluster_hierarchical != "DOWNSAMPLED")), 
                  " cells"))+
   scale_color_manual("cluster (hierarchical)", values = col_clust_h)
-plot_3l <- pca_legend(sce_12, color_by = "cluster_hierarchical")+
+plot_3l <- pca_legend(sce_10_h, color_by = "cluster_hierarchical")+
   scale_color_manual("cluster (hierarchical)", values = col_clust_h)
 legend_3 <- get_legend(plot_3l)
 
@@ -203,20 +184,17 @@ PLOT_3
 
 ```{r fig.width=8, fig.height=4}
 
-ggdf <- data.frame(colData(sce_12))
+ggdf <- data.frame(colData(sce_10_h))
 
 # Experimental day
-plot1a <- ggplot(ggdf, aes(x = cluster_hierarchical, y=Batch_exp_day,
+plot1a <- ggplot(ggdf, aes(x = cluster_hierarchical, 
                           fill=Batch_exp_day, color = Batch_exp_day))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual(name = "Experimental day", values = col_batch_exp_day)+
   scale_color_manual(name = "Experimental day", values = col_batch_exp_day)+
-  theme(axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 90))+
- ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
-                 " cells"))+
+  theme(axis.text.x = element_text(angle = 90))+
+ ggtitle(paste0(fraction_curr, " ", ncol(sce_10_h), " cells"))+
   theme(axis.title.y = element_blank())
 
 plot1b <- ggplot(ggdf, aes(x = cluster_hierarchical, fill=Batch_exp_day, 
@@ -226,23 +204,18 @@ plot1b <- ggplot(ggdf, aes(x = cluster_hierarchical, fill=Batch_exp_day,
   scale_fill_manual(name = "Experimental day", values = col_batch_exp_day)+
   scale_color_manual(name = "Experimental day", values = col_batch_exp_day)+
   theme(axis.text.x = element_text(angle = 90))+
- ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
-                 " cells"))+
+  ggtitle(paste0(fraction_curr, " ", ncol(sce_10_h), " cells"))+
   theme(axis.title.y = element_blank())
 
-plot2a <- ggplot(ggdf, aes(x = Batch_exp_day, y=cluster_hierarchical,
+plot2a <- ggplot(ggdf, aes(x = Batch_exp_day, 
                           fill=cluster_hierarchical, 
                           color = cluster_hierarchical))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual(name = "Cluster (hierarchical)", values = col_clust_h)+
   scale_color_manual(name = "Cluster (hierarchical)", values = col_clust_h)+
-  theme(axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 90))+
- ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
-                 " cells"))+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, " ", ncol(sce_10_h), " cells"))+
   facet_grid(cols = vars(ggdf$Species))+
   theme(axis.title.y = element_blank())
 
@@ -253,24 +226,19 @@ plot2b <- ggplot(ggdf, aes(x = Batch_exp_day, fill=cluster_hierarchical,
   scale_fill_manual(name = "Cluster (hierarchical)", values = col_clust_h)+
   scale_color_manual(name = "Cluster (hierarchical)", values = col_clust_h)+
   theme(axis.text.x = element_text(angle = 90))+
- ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
-                 " cells"))+
+  ggtitle(paste0(fraction_curr, " ", ncol(sce_10_h), " cells"))+
   facet_grid(cols = vars(ggdf$Species))+
   theme(axis.title.y = element_blank())
 
 # Age
-plot3a <- ggplot(ggdf, aes(x = cluster_hierarchical, y=Age_ID,
+plot3a <- ggplot(ggdf, aes(x = cluster_hierarchical, 
                           fill=Age_ID, color = Age_ID))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual(name = "Age", values = col_ann_age)+
   scale_color_manual(name = "Age", values = col_ann_age)+
-  theme(axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
-                 " cells"))+ 
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, " ", ncol(sce_10_h), " cells"))+
   theme(axis.title.y = element_blank())
 
 plot3b <- ggplot(ggdf, aes(x = cluster_hierarchical, fill=Age_ID, 
@@ -280,23 +248,18 @@ plot3b <- ggplot(ggdf, aes(x = cluster_hierarchical, fill=Age_ID,
   scale_fill_manual(name = "Age", values = col_ann_age)+
   scale_color_manual(name = "Age", values = col_ann_age)+
   theme(axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
-                 " cells"))+  
+  ggtitle(paste0(fraction_curr, " ", ncol(sce_10_h), " cells"))+
   theme(axis.title.y = element_blank())
 
-plot4a <- ggplot(ggdf, aes(x = Age_ID, y=cluster_hierarchical,
+plot4a <- ggplot(ggdf, aes(x = Age_ID, 
                           fill=cluster_hierarchical, 
                           color = cluster_hierarchical))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual(name = "Cluster (hierarchical)", values = col_clust_h)+
   scale_color_manual(name = "Cluster (hierarchical)", values = col_clust_h)+
-  theme(axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
-                 " cells"))+  
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, " ", ncol(sce_10_h), " cells"))+
   theme(axis.title.y = element_blank())
 
 plot4b <- ggplot(ggdf, aes(x = Age_ID,
@@ -308,23 +271,18 @@ plot4b <- ggplot(ggdf, aes(x = Age_ID,
   scale_color_manual(name = "Cluster (hierarchical)", values = col_clust_h)+
   theme(axis.text.y = element_blank(),
         axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
-                 " cells"))+  
+  ggtitle(paste0(fraction_curr, " ", ncol(sce_10_h), " cells"))+
   theme(axis.title.y = element_blank())
 
 # Species
-plot5a <- ggplot(ggdf, aes(x = cluster_hierarchical, y=Species_ID,
+plot5a <- ggplot(ggdf, aes(x = cluster_hierarchical,
                           fill=Species_ID, color = Species_ID))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual(name = "Age", values = col_species)+
   scale_color_manual(name = "Age", values = col_species)+
-  theme(axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
-                 " cells"))+  
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, " ", ncol(sce_10_h), " cells"))+
   theme(axis.title.y = element_blank())
 
 plot5b <- ggplot(ggdf, aes(x = cluster_hierarchical, fill=Species_ID, 
@@ -334,23 +292,18 @@ plot5b <- ggplot(ggdf, aes(x = cluster_hierarchical, fill=Species_ID,
   scale_fill_manual(name = "Age", values = col_species)+
   scale_color_manual(name = "Age", values = col_species)+
   theme(axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
-                 " cells"))+ 
+  ggtitle(paste0(fraction_curr, " ", ncol(sce_10_h), " cells"))+
   theme(axis.title.y = element_blank())
 
-plot6a <- ggplot(ggdf, aes(x = Species_ID, y=cluster_hierarchical,
+plot6a <- ggplot(ggdf, aes(x = Species_ID, 
                           fill=cluster_hierarchical, 
                           color = cluster_hierarchical))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual(name = "Cluster (hierarchical)", values = col_clust_h)+
   scale_color_manual(name = "Cluster (hierarchical)", values = col_clust_h)+
-  theme(axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
-                 " cells"))+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, " ", ncol(sce_10_h), " cells"))+
   theme(axis.title.y = element_blank())
 
 plot6b <- ggplot(ggdf, aes(x = Species_ID,
@@ -362,28 +315,23 @@ plot6b <- ggplot(ggdf, aes(x = Species_ID,
   scale_color_manual(name = "Cluster (hierarchical)", values = col_clust_h)+
   theme(axis.text.y = element_blank(),
         axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
-                 " cells"))+ 
+  ggtitle(paste0(fraction_curr, " ", ncol(sce_10_h), " cells"))+
   theme(axis.title.y = element_blank())
 
 
 # Cell types
 plot7a <- ggplot(ggdf, aes(x = cluster_hierarchical, 
-                           y=baccin_celltype_scmapclust,
                           fill=baccin_celltype_scmapclust, 
                           color = baccin_celltype_scmapclust))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual(name = "baccin_celltype_scmapclust", 
                     values = col_cts_baccin)+
   scale_color_manual(name = "baccin_celltype_scmapclust",
                      values = col_cts_baccin)+
-  theme(legend.position = "none", axis.text.y = element_blank(),
+  theme(legend.position = "none",
         axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
-                 " cells"))+ 
+  ggtitle(paste0(fraction_curr, " ", ncol(sce_10_h), " cells"))+
   theme(axis.title.y = element_blank())
 
 plot7b <- ggplot(ggdf, aes(x = cluster_hierarchical, 
@@ -396,27 +344,22 @@ plot7b <- ggplot(ggdf, aes(x = cluster_hierarchical,
   scale_color_manual(name = "baccin_celltype_scmapclust",
                      values = col_cts_baccin)+
   theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
-                 " cells"))+ 
+  ggtitle(paste0(fraction_curr, " ", ncol(sce_10_h), " cells"))+
   theme(axis.title.y = element_blank())
 
 
 plot8a <- ggplot(ggdf, aes(x = cluster_hierarchical,
-                           y=dahlin_celltype_scmapclust,
                           fill=dahlin_celltype_scmapclust, 
                           color = dahlin_celltype_scmapclust))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual(name = "dahlin_celltype_scmapclust",
                     values = col_cts_dahlin)+
   scale_color_manual(name = "dahlin_celltype_scmapclust", 
                      values = col_cts_dahlin)+
-  theme(legend.position = "none", axis.text.y = element_blank(),
+  theme(legend.position = "none",
         axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
-                 " cells"))+  
+  ggtitle(paste0(fraction_curr, " ", ncol(sce_10_h), " cells"))+
   theme(axis.title.y = element_blank())
 
 plot8b <- ggplot(ggdf, aes(x = cluster_hierarchical,
@@ -429,27 +372,22 @@ plot8b <- ggplot(ggdf, aes(x = cluster_hierarchical,
   scale_color_manual(name = "dahlin_celltype_scmapclust",
                      values = col_cts_dahlin)+
   theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
-                 " cells"))+ 
+  ggtitle(paste0(fraction_curr, " ", ncol(sce_10_h), " cells"))+
   theme(axis.title.y = element_blank())
 
 
 plot9a <- ggplot(ggdf, aes(x = cluster_hierarchical,
-                           y=dahlin_celltype_scmapclust,
                           fill=dolgalev_celltype_scmapclust, 
                           color = dolgalev_celltype_scmapclust))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
-  scale_fill_manual(name = "dahlin_celltype_scmapclust",
+  scale_fill_manual(name = "dolgalev_celltype_scmapclust",
                     values = col_cts_dolgalev)+
-  scale_color_manual(name = "dahlin_celltype_scmapclust",
+  scale_color_manual(name = "dolgalev_celltype_scmapclust",
                      values = col_cts_dolgalev)+
-  theme(legend.position = "none", axis.text.y = element_blank(),
+  theme(legend.position = "none", 
         axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
-                 " cells"))+  
+  ggtitle(paste0(fraction_curr, " ", ncol(sce_10_h), " cells"))+
   theme(axis.title.y = element_blank())
 
 plot9b <- ggplot(ggdf, aes(x = cluster_hierarchical, 
@@ -457,37 +395,32 @@ plot9b <- ggplot(ggdf, aes(x = cluster_hierarchical,
                           color = dolgalev_celltype_scmapclust))+
   geom_bar(position = "fill") + 
   theme_classic()+
-  scale_fill_manual(name = "dahlin_celltype_scmapclust", 
+  scale_fill_manual(name = "dolgalev_celltype_scmapclust", 
                     values = col_cts_dolgalev)+
-  scale_color_manual(name = "dahlin_celltype_scmapclust", 
+  scale_color_manual(name = "dolgalev_celltype_scmapclust", 
                      values = col_cts_dolgalev)+
   theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
-                 " cells"))+  
+  ggtitle(paste0(fraction_curr, " ", ncol(sce_10_h), " cells"))+
   theme(axis.title.y = element_blank())
 
 # legends
 plot_baccin_leg <- ggplot(ggdf, aes(x = cluster_hierarchical, 
-                                    y=baccin_celltype_scmapclust,
                                     fill=baccin_celltype_scmapclust))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   scale_fill_manual("baccin_celltype_scmapclust", values = col_cts_baccin)
 
 legend_baccin <- get_legend(plot_baccin_leg)
 
 plot_dahlin_leg <- ggplot(ggdf, aes(x = cluster_hierarchical, 
-                                    y=dahlin_celltype_scmapclust,
                                     fill=dahlin_celltype_scmapclust))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   scale_fill_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin)
 
 legend_dahlin <- get_legend(plot_dahlin_leg)
 
 plot_dolgalev_leg <- ggplot(ggdf, aes(x = cluster_hierarchical, 
-                                    y=dolgalev_celltype_scmapclust,
                                     fill=dolgalev_celltype_scmapclust))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   scale_fill_manual("dolgalev_celltype_scmapclust", values = col_cts_dolgalev)
 legend_dolgalev <- get_legend(plot_dolgalev_leg)
 # also use legends for later
@@ -525,6 +458,20 @@ PLOT9b
 
 ```
 
+```{r fig.width=12, fig.height=4}
+
+plot_x <- umap_base(sce_10_h, color_by = "cluster_hierarchical")+
+  scale_color_manual("cluster_hierarchical", values = col_clust_h)+
+  ggtitle(paste0(fraction_curr, " ", ncol(sce_10_h), " cells"))+
+  facet_grid(cols = vars(sce_10_h$Species_ID))
+plot_xl <- umap_legend(sce_10_h, color_by = "cluster_hierarchical")+
+  scale_color_manual("cluster_hierarchical", values = col_clust_h)
+legend_x <- get_legend(plot_xl)
+
+PLOT_X <-  ggarrange(plot_x, legend_x, widths = c(3,1))
+PLOT_X
+```
+
 ## Silhouette and Purity
 
 From http://bioconductor.org/books/3.16/OSCA.advanced/clustering-redux.html
@@ -532,21 +479,19 @@ From http://bioconductor.org/books/3.16/OSCA.advanced/clustering-redux.html
 ```{r}
 
 # Silhouette 
-sil_approx <- approxSilhouette(reducedDim(sce_12, "PCA"), 
-                               clusters = sce_12$cluster_hierarchical)
+sil_approx <- approxSilhouette(reducedDim(sce_10_h, "PCA"), 
+                               clusters = sce_10_h$cluster_hierarchical)
 
 sil_data <- as.data.frame(sil_approx)
 sil_data$closest <- factor(ifelse(sil_data$width > 0, 
-                                  sce_12$cluster_hierarchical, 
+                                  sce_10_h$cluster_hierarchical, 
                                   sil_data$other))
-sil_data$cluster <- sce_12$cluster_hierarchical
+sil_data$cluster <- sce_10_h$cluster_hierarchical
 
 ggplot(sil_data, aes(x=cluster, y=width, colour=closest))+
   ggbeeswarm::geom_quasirandom(size = 0.1)+
   theme_classic()+
-  ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
-                 " cells"))+ 
+  ggtitle(paste0(fraction_curr, " ", ncol(sce_10_h), " cells"))+
   scale_color_manual("cluster (hierarchical)", values = col_clust_h)+
   theme(legend.position = "none")+
   xlab("cluster (hierarchical)")+
@@ -556,10 +501,8 @@ ggplot(sil_data, aes(x=cluster, y=width, colour=closest))+
 ggplot(sil_data, aes(x=cluster, y=width, colour=closest))+
   ggbeeswarm::geom_quasirandom(size = 0.1)+
   theme_classic()+
-  ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
-                 " cells"))+ 
-  facet_grid(cols = vars(sce_12$Species_ID))+
+  ggtitle(paste0(fraction_curr, " ", ncol(sce_10_h), " cells"))+
+  facet_grid(cols = vars(sce_10_h$Species_ID))+
   scale_color_manual("cluster (hierarchical)", values = col_clust_h)+
   theme(legend.position = "none")+
   xlab("cluster (hierarchical)")+
@@ -567,18 +510,16 @@ ggplot(sil_data, aes(x=cluster, y=width, colour=closest))+
   ylab("Silhouette width")
 
 # Purity
-pure_sce <- neighborPurity(reducedDim(sce_12, "PCA"), 
-                           sce_12$cluster_hierarchical)
+pure_sce <- neighborPurity(reducedDim(sce_10_h, "PCA"), 
+                           sce_10_h$cluster_hierarchical)
 pure_data <- as.data.frame(pure_sce)
 pure_data$maximum <- factor(pure_data$maximum)
-pure_data$cluster <- sce_12$cluster_hierarchical
+pure_data$cluster <- sce_10_h$cluster_hierarchical
 
 ggplot(pure_data, aes(x=cluster, y=purity, colour=maximum))+
   ggbeeswarm::geom_quasirandom(size = 0.1)+
   theme_classic()+
-  ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
-                 " cells"))+  
+  ggtitle(paste0(fraction_curr, " ", ncol(sce_10_h), " cells"))+
   scale_color_manual("cluster (hierarchical)", values = col_clust_h)+
   theme(legend.position = "none")+
   xlab("cluster (hierarchical)")+
@@ -588,10 +529,8 @@ ggplot(pure_data, aes(x=cluster, y=purity, colour=maximum))+
 ggplot(pure_data, aes(x=cluster, y=purity, colour=maximum))+
   ggbeeswarm::geom_quasirandom(size = 0.1)+
   theme_classic()+
-  ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
-                 " cells"))+ 
-  facet_grid(cols = vars(sce_12$Species_ID))+
+  ggtitle(paste0(fraction_curr, " ", ncol(sce_10_h), " cells"))+
+  facet_grid(cols = vars(sce_10_h$Species_ID))+
   scale_color_manual("cluster (hierarchical)", values = col_clust_h)+
   theme(legend.position = "none")+
   xlab("cluster (hierarchical)")+
@@ -600,9 +539,7 @@ ggplot(pure_data, aes(x=cluster, y=purity, colour=maximum))+
 
 ggplot(pure_data, aes(x=cluster, y=purity, color=cluster))+
   geom_boxplot(outlier.size = 0.1)+
-  ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
-                 " cells"))+ 
+  ggtitle(paste0(fraction_curr, " ", ncol(sce_10_h), " cells"))+
   theme_classic()+
   scale_color_manual("cluster (hierarchical)", values = col_clust_h)+
   theme(legend.position = "none")+
@@ -612,10 +549,8 @@ ggplot(pure_data, aes(x=cluster, y=purity, color=cluster))+
 
 ggplot(pure_data, aes(x=cluster, y=purity, color=cluster))+
   geom_boxplot(outlier.size = 0.1)+
-   ggtitle(paste0(fraction_curr, " ", 
-                 length(which(sce_12$cluster_hierarchical != "DOWNSAMPLED")), 
-                 " cells"))+ 
-  facet_grid(cols = vars(sce_12$Species_ID))+
+  ggtitle(paste0(fraction_curr, " ", ncol(sce_10_h), " cells"))+
+  facet_grid(cols = vars(sce_10_h$Species_ID))+
   theme_classic()+
   scale_color_manual("cluster (hierarchical)", values = col_clust_h)+
   theme(legend.position = "none")+
@@ -629,7 +564,7 @@ ggplot(pure_data, aes(x=cluster, y=purity, color=cluster))+
 
 ```{r}
 
-mat <- reducedDim(sce_09, "PCA") # PCA is batch corrected
+mat <- reducedDim(sce_10_h, "PCA") # PCA is batch corrected
 mat <- scale(mat)
 dist <- dist(mat, method = 'euclidean')
 ward <- hclust(dist, method = "ward.D2")
@@ -655,31 +590,31 @@ plot(col_dend, main = paste0(fraction_curr,
 # Seurat clustering
 
 ```{r}
-print(table(sce_12$cluster_seurat))
+print(table(sce_10_l$cluster_seurat))
 ```
 
 ## Clusters
 
 ```{r fig.width=8, fig.height=4}
 
-plot_1 <- umap_base(sce_12, color_by = "cluster_seurat")+ # own function
-  ggtitle(paste0(fraction_curr, " ", sce_12$cluster_seurat_resolution[1]))+
+plot_1 <- umap_base(sce_10_l, color_by = "cluster_seurat")+ # own function
+  ggtitle(paste0(fraction_curr, " ", sce_10_l$cluster_seurat_resolution[1]))+
   scale_color_manual("cluster (seurat)", values = col_clust_s)
-plot_1l <- umap_legend(sce_12, color_by = "cluster_seurat")+
+plot_1l <- umap_legend(sce_10_l, color_by = "cluster_seurat")+
   scale_color_manual("cluster (seurat)", values = col_clust_s)
 legend_1 <- get_legend(plot_1l)
 
-plot_2 <- pca_base2(sce_12, color_by = "cluster_seurat")+ 
-  ggtitle(paste0(fraction_curr, " ", sce_12$cluster_seurat_resolution[1]))+
+plot_2 <- pca_base2(sce_10_l, color_by = "cluster_seurat")+ 
+  ggtitle(paste0(fraction_curr, " ", sce_10_l$cluster_seurat_resolution[1]))+
   scale_color_manual("cluster (seurat)", values = col_clust_s)
-plot_2l <- pca_legend(sce_12, color_by = "cluster_seurat")+
+plot_2l <- pca_legend(sce_10_l, color_by = "cluster_seurat")+
   scale_color_manual("cluster (seurat)", values = col_clust_s)
 legend_2 <- get_legend(plot_2l)
 
-plot_3 <- pca_base3(sce_12, color_by = "cluster_seurat")+ 
-  ggtitle(paste0(fraction_curr, " ", sce_12$cluster_seurat_resolution[1]))+
+plot_3 <- pca_base3(sce_10_l, color_by = "cluster_seurat")+ 
+  ggtitle(paste0(fraction_curr, " ", sce_10_l$cluster_seurat_resolution[1]))+
   scale_color_manual("cluster (seurat)", values = col_clust_s)
-plot_3l <- pca_legend(sce_12, color_by = "cluster_seurat")+
+plot_3l <- pca_legend(sce_10_l, color_by = "cluster_seurat")+
   scale_color_manual("cluster (seurat)", values = col_clust_s)
 legend_3 <- get_legend(plot_3l)
 
@@ -696,17 +631,16 @@ PLOT_3
 
 ```{r fig.width=8, fig.height=4}
 
-ggdf <- data.frame(colData(sce_12))
+ggdf <- data.frame(colData(sce_10_l))
 
-plot1a <- ggplot(ggdf, aes(x = cluster_seurat, y=Batch_exp_day,
+plot1a <- ggplot(ggdf, aes(x = cluster_seurat, 
                           fill=Batch_exp_day, color = Batch_exp_day))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual(name = "Experimental day", values = col_batch_exp_day)+
   scale_color_manual(name = "Experimental day", values = col_batch_exp_day)+
-  theme(axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", sce_12$cluster_seurat_resolution[1]))+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, " ", sce_10_l$cluster_seurat_resolution[1]))+
   theme(axis.title.y = element_blank())
 
 plot1b <- ggplot(ggdf, aes(x = cluster_seurat, fill=Batch_exp_day, 
@@ -716,18 +650,17 @@ plot1b <- ggplot(ggdf, aes(x = cluster_seurat, fill=Batch_exp_day,
   scale_fill_manual(name = "Experimental day", values = col_batch_exp_day)+
   scale_color_manual(name = "Experimental day", values = col_batch_exp_day)+
   theme(axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", sce_12$cluster_seurat_resolution[1]))+
+  ggtitle(paste0(fraction_curr, " ", sce_10_l$cluster_seurat_resolution[1]))+
   theme(axis.title.y = element_blank())
 
-plot2a <- ggplot(ggdf, aes(x = Batch_exp_day, y=cluster_seurat,
+plot2a <- ggplot(ggdf, aes(x = Batch_exp_day,
                           fill=cluster_seurat, color = cluster_seurat))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual(name = "Cluster (seurat)", values = col_clust_s)+
   scale_color_manual(name = "Cluster (seurat)", values = col_clust_s)+
-  theme(axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", sce_12$cluster_seurat_resolution[1]))+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, " ", sce_10_l$cluster_seurat_resolution[1]))+
   facet_grid(cols = vars(ggdf$Fraction))+
   theme(axis.title.y = element_blank())
 
@@ -738,19 +671,18 @@ plot2b <- ggplot(ggdf, aes(x = Batch_exp_day, fill=cluster_seurat,
   scale_fill_manual(name = "Cluster (seurat)", values = col_clust_s)+
   scale_color_manual(name = "Cluster (seurat)", values = col_clust_s)+
   theme(axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", sce_12$cluster_seurat_resolution[1]))+
+  ggtitle(paste0(fraction_curr, " ", sce_10_l$cluster_seurat_resolution[1]))+
   facet_grid(cols = vars(ggdf$Fraction))+
   theme(axis.title.y = element_blank())
 
-plot3a <- ggplot(ggdf, aes(x = cluster_seurat, y=Age_ID,
+plot3a <- ggplot(ggdf, aes(x = cluster_seurat, 
                           fill=Age_ID, color = Age_ID))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual(name = "Age", values = col_ann_age)+
   scale_color_manual(name = "Age", values = col_ann_age)+
-  theme(axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", sce_12$cluster_seurat_resolution[1]))+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, " ", sce_10_l$cluster_seurat_resolution[1]))+
   theme(axis.title.y = element_blank())
 
 plot3b <- ggplot(ggdf, aes(x = cluster_seurat, fill=Age_ID, 
@@ -760,18 +692,17 @@ plot3b <- ggplot(ggdf, aes(x = cluster_seurat, fill=Age_ID,
   scale_fill_manual(name = "Age", values = col_ann_age)+
   scale_color_manual(name = "Age", values = col_ann_age)+
   theme(axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", sce_12$cluster_seurat_resolution[1]))+
+  ggtitle(paste0(fraction_curr, " ", sce_10_l$cluster_seurat_resolution[1]))+
   theme(axis.title.y = element_blank())
 
-plot4a <- ggplot(ggdf, aes(x = Age_ID, y=cluster_seurat,
+plot4a <- ggplot(ggdf, aes(x = Age_ID,
                           fill=cluster_seurat, color = cluster_seurat))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual("Cluster (seurat)", values = col_clust_s)+
   scale_color_manual(values = col_clust_s)+
-  theme(axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", sce_12$cluster_seurat_resolution[1]))+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, " ", sce_10_l$cluster_seurat_resolution[1]))+
   theme(axis.title.y = element_blank())
 
 plot4b <- ggplot(ggdf, aes(x = Age_ID,
@@ -787,15 +718,14 @@ plot4b <- ggplot(ggdf, aes(x = Age_ID,
   theme(axis.title.y = element_blank())
 
 # Species
-plot5a <- ggplot(ggdf, aes(x = cluster_seurat, y=Species_ID,
+plot5a <- ggplot(ggdf, aes(x = cluster_seurat, 
                           fill=Species_ID, color = Species_ID))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual(name = "Age", values = col_species)+
   scale_color_manual(name = "Age", values = col_species)+
-  theme(axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", sce_12$cluster_seurat_resolution[1]))+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, " ", sce_10_l$cluster_seurat_resolution[1]))+
   theme(axis.title.y = element_blank())
 
 plot5b <- ggplot(ggdf, aes(x = cluster_seurat, fill=Species_ID, 
@@ -805,19 +735,18 @@ plot5b <- ggplot(ggdf, aes(x = cluster_seurat, fill=Species_ID,
   scale_fill_manual(name = "Age", values = col_species)+
   scale_color_manual(name = "Age", values = col_species)+
   theme(axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", sce_12$cluster_seurat_resolution[1]))+
+  ggtitle(paste0(fraction_curr, " ", sce_10_l$cluster_seurat_resolution[1]))+
   theme(axis.title.y = element_blank())
 
-plot6a <- ggplot(ggdf, aes(x = Species_ID, y=cluster_seurat,
+plot6a <- ggplot(ggdf, aes(x = Species_ID, 
                           fill=cluster_seurat, 
                           color = cluster_seurat))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual(name = "Cluster (seurat)", values = col_clust_s)+
   scale_color_manual(name = "Cluster (seurat)", values = col_clust_s)+
-  theme(axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", sce_12$cluster_seurat_resolution[1]))+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, " ", sce_10_l$cluster_seurat_resolution[1]))+
   theme(axis.title.y = element_blank())
 
 plot6b <- ggplot(ggdf, aes(x = Species_ID,
@@ -829,23 +758,23 @@ plot6b <- ggplot(ggdf, aes(x = Species_ID,
   scale_color_manual(name = "Cluster (seurat)", values = col_clust_s)+
   theme(axis.text.y = element_blank(),
         axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", sce_12$cluster_seurat_resolution[1]))+
+  ggtitle(paste0(fraction_curr, " ", sce_10_l$cluster_seurat_resolution[1]))+
   theme(axis.title.y = element_blank())
 
 
 # Cell types
-plot7a <- ggplot(ggdf, aes(x = cluster_seurat, y=baccin_celltype_scmapclust,
+plot7a <- ggplot(ggdf, aes(x = cluster_seurat,
                           fill=baccin_celltype_scmapclust, 
                           color = baccin_celltype_scmapclust))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual(name = "baccin_celltype_scmapclust", 
                     values = col_cts_baccin)+
   scale_color_manual(name = "baccin_celltype_scmapclust", 
                      values = col_cts_baccin)+
-  theme(legend.position = "none", axis.text.y = element_blank(),
+  theme(legend.position = "none", 
         axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", sce_12$cluster_seurat_resolution[1]))+
+  ggtitle(paste0(fraction_curr, " ", sce_10_l$cluster_seurat_resolution[1]))+
   theme(axis.title.y = element_blank())
 
 plot7b <- ggplot(ggdf, aes(x = cluster_seurat, fill=baccin_celltype_scmapclust, 
@@ -857,22 +786,22 @@ plot7b <- ggplot(ggdf, aes(x = cluster_seurat, fill=baccin_celltype_scmapclust,
   scale_color_manual(name = "baccin_celltype_scmapclust", 
                      values = col_cts_baccin)+
   theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", sce_12$cluster_seurat_resolution[1]))+
+  ggtitle(paste0(fraction_curr, " ", sce_10_l$cluster_seurat_resolution[1]))+
   theme(axis.title.y = element_blank())
 
 
-plot8a <- ggplot(ggdf, aes(x = cluster_seurat, y=dahlin_celltype_scmapclust,
+plot8a <- ggplot(ggdf, aes(x = cluster_seurat, 
                           fill=dahlin_celltype_scmapclust, 
                           color = dahlin_celltype_scmapclust))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual(name = "dahlin_celltype_scmapclust", 
                     values = col_cts_dahlin)+
   scale_color_manual(name = "dahlin_celltype_scmapclust", 
                      values = col_cts_dahlin)+
-  theme(legend.position = "none", axis.text.y = element_blank(),
+  theme(legend.position = "none", 
         axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", sce_12$cluster_seurat_resolution[1]))+
+  ggtitle(paste0(fraction_curr, " ", sce_10_l$cluster_seurat_resolution[1]))+
   theme(axis.title.y = element_blank())
 
 plot8b <- ggplot(ggdf, aes(x = cluster_seurat, fill=dahlin_celltype_scmapclust, 
@@ -884,22 +813,22 @@ plot8b <- ggplot(ggdf, aes(x = cluster_seurat, fill=dahlin_celltype_scmapclust,
   scale_color_manual(name = "dahlin_celltype_scmapclust", 
                      values = col_cts_dahlin)+
   theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", sce_12$cluster_seurat_resolution[1]))+
+  ggtitle(paste0(fraction_curr, " ", sce_10_l$cluster_seurat_resolution[1]))+
   theme(axis.title.y = element_blank())
 
 
-plot9a <- ggplot(ggdf, aes(x = cluster_seurat, y=dahlin_celltype_scmapclust,
+plot9a <- ggplot(ggdf, aes(x = cluster_seurat, 
                           fill=dolgalev_celltype_scmapclust, 
                           color = dolgalev_celltype_scmapclust))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
-  scale_fill_manual(name = "dahlin_celltype_scmapclust",
+  scale_fill_manual(name = "dolgalev_celltype_scmapclust",
                     values = col_cts_dolgalev)+
-  scale_color_manual(name = "dahlin_celltype_scmapclust", 
+  scale_color_manual(name = "dolgalev_celltype_scmapclust", 
                      values = col_cts_dolgalev)+
-  theme(legend.position = "none", axis.text.y = element_blank(),
+  theme(legend.position = "none", 
         axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", sce_12$cluster_seurat_resolution[1]))+
+  ggtitle(paste0(fraction_curr, " ", sce_10_l$cluster_seurat_resolution[1]))+
   theme(axis.title.y = element_blank())
 
 plot9b <- ggplot(ggdf, aes(x = cluster_seurat, 
@@ -907,12 +836,12 @@ plot9b <- ggplot(ggdf, aes(x = cluster_seurat,
                           color = dolgalev_celltype_scmapclust))+
   geom_bar(position = "fill") + 
   theme_classic()+
-  scale_fill_manual(name = "dahlin_celltype_scmapclust", 
+  scale_fill_manual(name = "dolgalev_celltype_scmapclust", 
                     values = col_cts_dolgalev)+
-  scale_color_manual(name = "dahlin_celltype_scmapclust", 
+  scale_color_manual(name = "dolgalev_celltype_scmapclust", 
                      values = col_cts_dolgalev)+
   theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(paste0(fraction_curr, " ", sce_12$cluster_seurat_resolution[1]))+
+  ggtitle(paste0(fraction_curr, " ", sce_10_l$cluster_seurat_resolution[1]))+
   theme(axis.title.y = element_blank())
 
 plot1a
@@ -948,18 +877,32 @@ PLOT9b
 
 ```
 
+```{r fig.width=12, fig.height=4}
+
+plot_x <- umap_base(sce_10_l, color_by = "cluster_seurat")+
+  scale_color_manual("cluster_seurat", values = col_clust_s)+
+  ggtitle(fraction_curr)+
+  facet_grid(cols = vars(sce_10_l$Species_ID))
+plot_xl <- umap_legend(sce_10_l, color_by = "cluster_seurat")+
+  scale_color_manual("cluster_seurat", values = col_clust_s)
+legend_x <- get_legend(plot_xl)
+
+PLOT_X <-  ggarrange(plot_x, legend_x, widths = c(3,1))
+PLOT_X
+```
+
 ## Silhouette and Purity
 
 ```{r}
 
 # Silhouette
-sil.approx <- approxSilhouette(reducedDim(sce_12, "PCA"), 
-                               clusters = sce_12$cluster_seurat)
+sil.approx <- approxSilhouette(reducedDim(sce_10_l, "PCA"), 
+                               clusters = sce_10_l$cluster_seurat)
 sil.data <- as.data.frame(sil.approx)
 sil.data$closest <- factor(ifelse(sil.data$width > 0, 
-                                  sce_12$cluster_seurat, 
+                                  sce_10_l$cluster_seurat, 
                                   sil.data$other))
-sil.data$cluster <- sce_12$cluster_seurat
+sil.data$cluster <- sce_10_l$cluster_seurat
 
 ggplot(sil.data, aes(x=cluster, y=width, colour=closest))+
   ggbeeswarm::geom_quasirandom(size = 0.1)+
@@ -975,7 +918,7 @@ ggplot(sil.data, aes(x=cluster, y=width, colour=closest))+
   ggbeeswarm::geom_quasirandom(size = 0.1)+
   theme_classic()+
   ggtitle(fraction_curr)+
-  facet_grid(cols = vars(sce_12$Species_ID))+
+  facet_grid(cols = vars(sce_10_l$Species_ID))+
   scale_color_manual("cluster (seurat)", values = col_clust_s)+
   theme(legend.position = "none")+
   xlab("cluster (seurat)")+
@@ -983,10 +926,10 @@ ggplot(sil.data, aes(x=cluster, y=width, colour=closest))+
   ylab("Silhouette width")
 
 # Purity
-pure_sce <- neighborPurity(reducedDim(sce_12, "PCA"), sce_12$cluster_seurat)
+pure_sce <- neighborPurity(reducedDim(sce_10_l, "PCA"), sce_10_l$cluster_seurat)
 pure_data <- as.data.frame(pure_sce)
 pure_data$maximum <- factor(pure_data$maximum)
-pure_data$cluster <- sce_12$cluster_seurat
+pure_data$cluster <- sce_10_l$cluster_seurat
 
 ggplot(pure_data, aes(x=cluster, y=purity, colour=maximum))+
   ggbeeswarm::geom_quasirandom(size = 0.1)+
@@ -1002,7 +945,7 @@ ggplot(pure_data, aes(x=cluster, y=purity, colour=maximum))+
   ggbeeswarm::geom_quasirandom(size = 0.1)+
   theme_classic()+
   ggtitle(fraction_curr)+
-  facet_grid(cols = vars(sce_12$Species_ID))+
+  facet_grid(cols = vars(sce_10_l$Species_ID))+
   scale_color_manual("cluster (seurat)", values = col_clust_s)+
   theme(legend.position = "none")+
   xlab("cluster (seurat)")+
@@ -1024,7 +967,7 @@ ggplot(pure_data, aes(x=cluster, y=purity, color=cluster))+
   theme_classic()+
   ggtitle(fraction_curr)+
   scale_color_manual("cluster (seurat)", values = col_clust_s)+
-  facet_grid(cols = vars(sce_12$Species_ID))+
+  facet_grid(cols = vars(sce_10_l$Species_ID))+
   theme(legend.position = "none")+
   xlab("cluster (seurat)")+
   ylim(0, 1)+
@@ -1035,31 +978,31 @@ ggplot(pure_data, aes(x=cluster, y=purity, color=cluster))+
 # Louvain
 
 ```{r}
-print(table(sce_12$cluster_louvain))
+print(table(sce_10_l$cluster_louvain))
 ```
 
 ## Clusters
 
 ```{r fig.width=8, fig.height=4}
 
-plot_1 <- umap_base(sce_12, color_by = "cluster_louvain")+ 
+plot_1 <- umap_base(sce_10_l, color_by = "cluster_louvain")+ 
   ggtitle(fraction_curr)+
   scale_color_manual("cluster (louvain)", values = col_clust_l)
-plot_1l <- umap_legend(sce_12, color_by = "cluster_louvain")+
+plot_1l <- umap_legend(sce_10_l, color_by = "cluster_louvain")+
   scale_color_manual("cluster (louvain)", values = col_clust_l)
 legend_1 <- get_legend(plot_1l)
 
-plot_2 <- pca_base2(sce_12, color_by = "cluster_louvain")+ 
+plot_2 <- pca_base2(sce_10_l, color_by = "cluster_louvain")+ 
   ggtitle(fraction_curr)+
   scale_color_manual("cluster (louvain)", values = col_clust_l)
-plot_2l <- pca_legend(sce_12, color_by = "cluster_louvain")+
+plot_2l <- pca_legend(sce_10_l, color_by = "cluster_louvain")+
   scale_color_manual("cluster (louvain)", values = col_clust_l)
 legend_2 <- get_legend(plot_2l)
 
-plot_3 <- pca_base3(sce_12, color_by = "cluster_louvain")+ 
+plot_3 <- pca_base3(sce_10_l, color_by = "cluster_louvain")+ 
   ggtitle(fraction_curr)+
   scale_color_manual("cluster (louvain)", values = col_clust_l)
-plot_3l <- pca_legend(sce_12, color_by = "cluster_louvain")+
+plot_3l <- pca_legend(sce_10_l, color_by = "cluster_louvain")+
   scale_color_manual("cluster (louvain)", values = col_clust_l)
 legend_3 <- get_legend(plot_3l)
 
@@ -1076,16 +1019,15 @@ PLOT_3
 
 ```{r fig.width=8, fig.height=4}
 
-ggdf <- data.frame(colData(sce_12))
+ggdf <- data.frame(colData(sce_10_l))
 
-plot1a <- ggplot(ggdf, aes(x = cluster_louvain, y=Batch_exp_day,
+plot1a <- ggplot(ggdf, aes(x = cluster_louvain, 
                           fill=Batch_exp_day, color = Batch_exp_day))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual(name = "Experimental day", values = col_batch_exp_day)+
   scale_color_manual(name = "Experimental day", values = col_batch_exp_day)+
-  theme(axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 90))+
+  theme(axis.text.x = element_text(angle = 90))+
   ggtitle(fraction_curr)
 
 plot1b <- ggplot(ggdf, aes(x = cluster_louvain, fill=Batch_exp_day, 
@@ -1097,14 +1039,13 @@ plot1b <- ggplot(ggdf, aes(x = cluster_louvain, fill=Batch_exp_day,
   theme(axis.text.x = element_text(angle = 90))+
   ggtitle(fraction_curr)
 
-plot2a <- ggplot(ggdf, aes(x = Batch_exp_day, y=cluster_louvain,
+plot2a <- ggplot(ggdf, aes(x = Batch_exp_day, 
                           fill=cluster_louvain, color = cluster_louvain))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual(name = "Cluster (louvain)", values = col_clust_l)+
   scale_color_manual(name = "Cluster (louvain)", values = col_clust_l)+
-  theme(axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 90))+
+  theme(axis.text.x = element_text(angle = 90))+
   ggtitle(fraction_curr)+
   facet_grid(cols = vars(ggdf$Fraction))
 
@@ -1118,14 +1059,13 @@ plot2b <- ggplot(ggdf, aes(x = Batch_exp_day, fill=cluster_louvain,
   ggtitle(fraction_curr)+
   facet_grid(cols = vars(ggdf$Fraction))
 
-plot3a <- ggplot(ggdf, aes(x = cluster_louvain, y=Age_ID,
+plot3a <- ggplot(ggdf, aes(x = cluster_louvain,
                           fill=Age_ID, color = Age_ID))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual(name = "Age", values = col_ann_age)+
   scale_color_manual(name = "Age", values = col_ann_age)+
-  theme(axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 90))+
+  theme(axis.text.x = element_text(angle = 90))+
   ggtitle(fraction_curr)
 
 plot3b <- ggplot(ggdf, aes(x = cluster_louvain, fill=Age_ID, 
@@ -1137,14 +1077,13 @@ plot3b <- ggplot(ggdf, aes(x = cluster_louvain, fill=Age_ID,
   theme(axis.text.x = element_text(angle = 90))+
   ggtitle(fraction_curr)
 
-plot4a <- ggplot(ggdf, aes(x = Age_ID, y=cluster_louvain,
+plot4a <- ggplot(ggdf, aes(x = Age_ID, 
                           fill=cluster_louvain, color = cluster_louvain))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual(name = "Cluster (louvain)", values = col_clust_l)+
   scale_color_manual(name = "Cluster (louvain)", values = col_clust_l)+
-  theme(axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 90))+
+  theme(axis.text.x = element_text(angle = 90))+
   ggtitle(fraction_curr)
 
 plot4b <- ggplot(ggdf, aes(x = Age_ID,
@@ -1160,14 +1099,13 @@ plot4b <- ggplot(ggdf, aes(x = Age_ID,
 
 
 # Species
-plot5a <- ggplot(ggdf, aes(x = cluster_louvain, y=Species_ID,
+plot5a <- ggplot(ggdf, aes(x = cluster_louvain, 
                           fill=Species_ID, color = Species_ID))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual(name = "Age", values = col_species)+
   scale_color_manual(name = "Age", values = col_species)+
-  theme(axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 90))+
+  theme(axis.text.x = element_text(angle = 90))+
   ggtitle(fraction_curr)+
   theme(axis.title.y = element_blank())
 
@@ -1181,15 +1119,14 @@ plot5b <- ggplot(ggdf, aes(x = cluster_louvain, fill=Species_ID,
   ggtitle(fraction_curr)+
   theme(axis.title.y = element_blank())
 
-plot6a <- ggplot(ggdf, aes(x = Species_ID, y=cluster_louvain,
+plot6a <- ggplot(ggdf, aes(x = Species_ID, 
                           fill=cluster_louvain, 
                           color = cluster_louvain))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual(name = "Cluster (hierarchical)", values = col_clust_l)+
   scale_color_manual(name = "Cluster (hierarchical)", values = col_clust_l)+
-  theme(axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 90))+
+  theme(axis.text.x = element_text(angle = 90))+
   ggtitle(fraction_curr)+
   theme(axis.title.y = element_blank())
 
@@ -1207,16 +1144,16 @@ plot6b <- ggplot(ggdf, aes(x = Species_ID,
 
 
 # Cell types
-plot7a <- ggplot(ggdf, aes(x = cluster_louvain, y=baccin_celltype_scmapclust,
+plot7a <- ggplot(ggdf, aes(x = cluster_louvain, 
                           fill=baccin_celltype_scmapclust, 
                           color = baccin_celltype_scmapclust))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual(name = "baccin_celltype_scmapclust",
                     values = col_cts_baccin)+
   scale_color_manual(name = "baccin_celltype_scmapclust",
                      values = col_cts_baccin)+
-  theme(legend.position = "none", axis.text.y = element_blank(),
+  theme(legend.position = "none", 
         axis.text.x = element_text(angle = 90))+
   ggtitle(fraction_curr)+
   theme(axis.title.y = element_blank())
@@ -1234,16 +1171,16 @@ plot7b <- ggplot(ggdf, aes(x = cluster_louvain, fill=baccin_celltype_scmapclust,
   theme(axis.title.y = element_blank())
 
 
-plot8a <- ggplot(ggdf, aes(x = cluster_louvain, y=dahlin_celltype_scmapclust,
+plot8a <- ggplot(ggdf, aes(x = cluster_louvain,
                           fill=dahlin_celltype_scmapclust, 
                           color = dahlin_celltype_scmapclust))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
   scale_fill_manual(name = "dahlin_celltype_scmapclust", 
                     values = col_cts_dahlin)+
   scale_color_manual(name = "dahlin_celltype_scmapclust",
                      values = col_cts_dahlin)+
-  theme(legend.position = "none", axis.text.y = element_blank(),
+  theme(legend.position = "none", 
         axis.text.x = element_text(angle = 90))+
   ggtitle(fraction_curr)+
   theme(axis.title.y = element_blank())
@@ -1261,16 +1198,16 @@ plot8b <- ggplot(ggdf, aes(x = cluster_louvain, fill=dahlin_celltype_scmapclust,
   theme(axis.title.y = element_blank())
 
 
-plot9a <- ggplot(ggdf, aes(x = cluster_louvain, y=dahlin_celltype_scmapclust,
+plot9a <- ggplot(ggdf, aes(x = cluster_louvain,
                           fill=dolgalev_celltype_scmapclust, 
                           color = dolgalev_celltype_scmapclust))+
-  geom_col()+
+  geom_bar(position = "stack") + 
   theme_classic()+
-  scale_fill_manual(name = "dahlin_celltype_scmapclust", 
+  scale_fill_manual(name = "dolgalev_celltype_scmapclust", 
                     values = col_cts_dolgalev)+
-  scale_color_manual(name = "dahlin_celltype_scmapclust", 
+  scale_color_manual(name = "dolgalev_celltype_scmapclust", 
                      values = col_cts_dolgalev)+
-  theme(legend.position = "none", axis.text.y = element_blank(),
+  theme(legend.position = "none", 
         axis.text.x = element_text(angle = 90))+
   ggtitle(fraction_curr)+
   theme(axis.title.y = element_blank())
@@ -1280,9 +1217,9 @@ plot9b <- ggplot(ggdf, aes(x = cluster_louvain,
                           color = dolgalev_celltype_scmapclust))+
   geom_bar(position = "fill") + 
   theme_classic()+
-  scale_fill_manual(name = "dahlin_celltype_scmapclust", 
+  scale_fill_manual(name = "dolgalev_celltype_scmapclust", 
                     values = col_cts_dolgalev)+
-  scale_color_manual(name = "dahlin_celltype_scmapclust",
+  scale_color_manual(name = "dolgalev_celltype_scmapclust",
                      values = col_cts_dolgalev)+
   theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
   ggtitle(fraction_curr)+
@@ -1321,18 +1258,32 @@ PLOT9b
 
 ```
 
+```{r fig.width=12, fig.height=4}
+
+plot_x <- umap_base(sce_10_l, color_by = "cluster_louvain")+
+  scale_color_manual("cluster_louvain", values = col_clust_l)+
+  ggtitle(fraction_curr)+
+  facet_grid(cols = vars(sce_10_l$Species_ID))
+plot_xl <- umap_legend(sce_10_l, color_by = "cluster_louvain")+
+  scale_color_manual("cluster_louvain", values = col_clust_l)
+legend_x <- get_legend(plot_xl)
+
+PLOT_X <-  ggarrange(plot_x, legend_x, widths = c(3,1))
+PLOT_X
+```
+
 ## Silhouette and Purity
 
 ```{r}
 
 # Silhouette
-sil.approx <- approxSilhouette(reducedDim(sce_12, "PCA"), 
-                               clusters = sce_12$cluster_louvain)
+sil.approx <- approxSilhouette(reducedDim(sce_10_l, "PCA"), 
+                               clusters = sce_10_l$cluster_louvain)
 sil.data <- as.data.frame(sil.approx)
 sil.data$closest <- factor(ifelse(sil.data$width > 0, 
-                                  sce_12$cluster_louvain, 
+                                  sce_10_l$cluster_louvain, 
                                   sil.data$other))
-sil.data$cluster <- sce_12$cluster_louvain
+sil.data$cluster <- sce_10_l$cluster_louvain
 
 ggplot(sil.data, aes(x=cluster, y=width, colour=closest))+
   ggbeeswarm::geom_quasirandom(size = 0.1)+
@@ -1348,7 +1299,7 @@ ggplot(sil.data, aes(x=cluster, y=width, colour=closest))+
   ggbeeswarm::geom_quasirandom(size = 0.1)+
   theme_classic()+
   ggtitle(fraction_curr)+
-  facet_grid(cols = vars(sce_12$Species_ID))+
+  facet_grid(cols = vars(sce_10_l$Species_ID))+
   scale_color_manual("cluster (louvain)", values = col_clust_l)+
   theme(legend.position = "none")+
   xlab("cluster (louvain)")+
@@ -1356,10 +1307,10 @@ ggplot(sil.data, aes(x=cluster, y=width, colour=closest))+
   ylab("Silhouette width")
 
 # Purity
-pure_sce <- neighborPurity(reducedDim(sce_12, "PCA"), sce_12$cluster_louvain)
+pure_sce <- neighborPurity(reducedDim(sce_10_l, "PCA"), sce_10_l$cluster_louvain)
 pure_data <- as.data.frame(pure_sce)
 pure_data$maximum <- factor(pure_data$maximum)
-pure_data$cluster <- sce_12$cluster_louvain
+pure_data$cluster <- sce_10_l$cluster_louvain
 
 ggplot(pure_data, aes(x=cluster, y=purity, colour=maximum))+
   ggbeeswarm::geom_quasirandom(size = 0.1)+
@@ -1375,7 +1326,7 @@ ggplot(pure_data, aes(x=cluster, y=purity, colour=maximum))+
   ggbeeswarm::geom_quasirandom(size = 0.1)+
   theme_classic()+
   ggtitle(fraction_curr)+
-  facet_grid(cols = vars(sce_12$Species_ID))+
+  facet_grid(cols = vars(sce_10_l$Species_ID))+
   scale_color_manual("cluster (louvain)", values = col_clust_l)+
   theme(legend.position = "none")+
   xlab("cluster (louvain)")+
@@ -1397,7 +1348,7 @@ ggplot(pure_data, aes(x=cluster, y=purity, color=cluster))+
   theme_classic()+
   ggtitle(fraction_curr)+
   scale_color_manual("cluster (louvain)", values = col_clust_l)+
-  facet_grid(cols = vars(sce_12$Species_ID))+
+  facet_grid(cols = vars(sce_10_l$Species_ID))+
   theme(legend.position = "none")+
   xlab("cluster (louvain)")+
   ylim(0, 1)+
@@ -1414,73 +1365,81 @@ ggplot(pure_data, aes(x=cluster, y=purity, color=cluster))+
 
 ```{r fig.height = 10}
 
-sce_temp <- sce_12
-sce_temp$cluster_hierarchical <- paste0(sce_temp$cluster_hierarchical,
-                                        "_hierarchical")
-sce_temp$cluster_seurat <- paste0(sce_temp$cluster_seurat, "_seurat")
-
-mat_comp <- as.matrix(table(sce_temp$cluster_hierarchical,
-                            sce_temp$cluster_seurat))
-
-mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
+if(fraction_curr == "str"){
+  sce_10_l$cluster_hierarchical <- sce_10_h$cluster_hierarchical
+  sce_temp <- sce_10_l
+  sce_temp$cluster_hierarchical <- paste0(sce_temp$cluster_hierarchical,
+                                          "_hierarchical")
+  sce_temp$cluster_seurat <- paste0(sce_temp$cluster_seurat, "_seurat")
+  
+  mat_comp <- as.matrix(table(sce_temp$cluster_hierarchical,
+                              sce_temp$cluster_seurat))
+  
+  mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
                        which(colMeans(mat_comp) > 0)]
 
-mat_comp_temp1 <- mat_comp
-for(i in 1:nrow(mat_comp_temp1)){
-  mat_comp_temp1[i,] <- mat_comp_temp1[i,]/sum(mat_comp_temp1[i,])
+  mat_comp_temp1 <- mat_comp
+  for(i in 1:nrow(mat_comp_temp1)){
+    mat_comp_temp1[i,] <- mat_comp_temp1[i,]/sum(mat_comp_temp1[i,])
+  }
+
+  mat_comp_temp2 <- t(mat_comp)
+  for(i in 1:nrow(mat_comp_temp2)){
+    mat_comp_temp2[i,] <- mat_comp_temp2[i,]/sum(mat_comp_temp2[i,])
+  }
+
+  pheatmap(mat_comp_temp1, 
+           main = paste0(fraction_curr, " Seurat/Hierarchical overlap"))
+  
+  pheatmap(mat_comp_temp2, 
+           main = paste0(fraction_curr, " Seurat/Hierarchical overlap"))
+}else{
+  print("no comparison for hierarchical clustering for HSCs")
 }
-
-mat_comp_temp2 <- t(mat_comp)
-for(i in 1:nrow(mat_comp_temp2)){
-  mat_comp_temp2[i,] <- mat_comp_temp2[i,]/sum(mat_comp_temp2[i,])
-}
-
-pheatmap(mat_comp_temp1, 
-         main = paste0(fraction_curr, " Seurat/Hierarchical overlap"))
-
-pheatmap(mat_comp_temp2, 
-         main = paste0(fraction_curr, " Seurat/Hierarchical overlap"))
-
 ```
 
 ### Hierarchical and Louvain
 
 ```{r fig.height = 10}
 
-sce_temp <- sce_12
-sce_temp$cluster_hierarchical <- paste0(sce_temp$cluster_hierarchical,
-                                        "_hierarchical")
-sce_temp$cluster_louvain <- paste0(sce_temp$cluster_louvain, "_louvain")
+if(fraction_curr == "str"){
 
-mat_comp <- as.matrix(table(sce_temp$cluster_hierarchical,
-                            sce_temp$cluster_louvain))
+  sce_temp <- sce_10_l
+  sce_temp$cluster_hierarchical <- paste0(sce_temp$cluster_hierarchical,
+                                          "_hierarchical")
+  sce_temp$cluster_louvain <- paste0(sce_temp$cluster_louvain, "_louvain")
+  
+  mat_comp <- as.matrix(table(sce_temp$cluster_hierarchical,
+                              sce_temp$cluster_louvain))
 
-mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
-                       which(colMeans(mat_comp) > 0)]
+  mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
+                         which(colMeans(mat_comp) > 0)]
 
-mat_comp_temp1 <- mat_comp
-for(i in 1:nrow(mat_comp_temp1)){
-  mat_comp_temp1[i,] <- mat_comp_temp1[i,]/sum(mat_comp_temp1[i,])
+  mat_comp_temp1 <- mat_comp
+  for(i in 1:nrow(mat_comp_temp1)){
+    mat_comp_temp1[i,] <- mat_comp_temp1[i,]/sum(mat_comp_temp1[i,])
+  }
+
+  mat_comp_temp2 <- t(mat_comp)
+  for(i in 1:nrow(mat_comp_temp2)){
+    mat_comp_temp2[i,] <- mat_comp_temp2[i,]/sum(mat_comp_temp2[i,])
+  }
+
+  pheatmap(mat_comp_temp1, 
+           main = paste0(fraction_curr, " Louvain/Hierarchical overlap"))
+  
+  pheatmap(mat_comp_temp2, 
+           main = paste0(fraction_curr, " Louvain/Hierarchical overlap"))
+}else{
+  print("no comparison for hierarchical clustering for HSCs")
 }
-
-mat_comp_temp2 <- t(mat_comp)
-for(i in 1:nrow(mat_comp_temp2)){
-  mat_comp_temp2[i,] <- mat_comp_temp2[i,]/sum(mat_comp_temp2[i,])
-}
-
-pheatmap(mat_comp_temp1, 
-         main = paste0(fraction_curr, " Louvain/Hierarchical overlap"))
-
-pheatmap(mat_comp_temp2, 
-         main = paste0(fraction_curr, " Louvain/Hierarchical overlap"))
-
 ```
 
 ### Seurat and Louvain
 
 ```{r fig.height = 10}
 
-sce_temp <- sce_12
+sce_temp <- sce_10_l
 sce_temp$cluster_seurat <- paste0(sce_temp$cluster_seurat, "_seurat")
 sce_temp$cluster_louvain <- paste0(sce_temp$cluster_louvain, "_louvain")
 
@@ -1516,39 +1475,44 @@ Use only baccin et al. dataset.
 
 ```{r fig.height = 10}
 
-sce_temp <- sce_12
-sce_temp$cluster_hierarchical <- paste0(sce_temp$cluster_hierarchical,
-                                        "_hierarchical")
+if(fraction_curr == "str"){
 
-mat_comp <- as.matrix(table(sce_temp$baccin_celltype_scmapclust,
-                            sce_temp$cluster_hierarchical))
+  sce_temp <- sce_10_l
+  sce_temp$cluster_hierarchical <- paste0(sce_temp$cluster_hierarchical,
+                                          "_hierarchical")
 
-mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
+  mat_comp <- as.matrix(table(sce_temp$baccin_celltype_scmapclust,
+                              sce_temp$cluster_hierarchical))
+  
+  mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
                        which(colMeans(mat_comp) > 0)]
 
-mat_comp_temp1 <- mat_comp
-for(i in 1:nrow(mat_comp_temp1)){
-  mat_comp_temp1[i,] <- mat_comp_temp1[i,]/sum(mat_comp_temp1[i,])
+  mat_comp_temp1 <- mat_comp
+  for(i in 1:nrow(mat_comp_temp1)){
+    mat_comp_temp1[i,] <- mat_comp_temp1[i,]/sum(mat_comp_temp1[i,])
+  }
+  
+  mat_comp_temp2 <- t(mat_comp)
+  for(i in 1:nrow(mat_comp_temp2)){
+    mat_comp_temp2[i,] <- mat_comp_temp2[i,]/sum(mat_comp_temp2[i,])
+  }
+
+  pheatmap(mat_comp_temp1, 
+           main = paste0(fraction_curr, " Cell type/Hierarchical overlap"))
+  
+  pheatmap(mat_comp_temp2, 
+           main = paste0(fraction_curr, " Cell type/Hierarchical overlap"))
+
+}else{
+  print("no comparison for hierarchical clustering for HSCs")
 }
-
-mat_comp_temp2 <- t(mat_comp)
-for(i in 1:nrow(mat_comp_temp2)){
-  mat_comp_temp2[i,] <- mat_comp_temp2[i,]/sum(mat_comp_temp2[i,])
-}
-
-pheatmap(mat_comp_temp1, 
-         main = paste0(fraction_curr, " Cell type/Hierarchical overlap"))
-
-pheatmap(mat_comp_temp2, 
-         main = paste0(fraction_curr, " Cell type/Hierarchical overlap"))
-
 ```
 
 ### Seurat
 
 ```{r fig.height = 10}
 
-sce_temp <- sce_12
+sce_temp <- sce_10_l
 sce_temp$cluster_seurat <- paste0(sce_temp$cluster_seurat, "_seurat")
 
 mat_comp <- as.matrix(table(sce_temp$baccin_celltype_scmapclust,
@@ -1580,7 +1544,7 @@ pheatmap(mat_comp_temp2,
 
 ```{r fig.height = 10}
 
-sce_temp <- sce_12
+sce_temp <- sce_10_l
 sce_temp$cluster_louvain <- paste0(sce_temp$cluster_louvain, "_louvain")
 
 mat_comp <- as.matrix(table(sce_temp$baccin_celltype_scmapclust,

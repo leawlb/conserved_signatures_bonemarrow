@@ -20,6 +20,7 @@ TABLES_PATH = config["metadata"]["color_tables"]
 # objects from config
 METADATA = pd.read_csv(config["metadata"]["raw"])
 BATCH_USE = config["values"]["batch_correction"]["batch_use_fractions"] # which SCE col to use as batch
+SEURAT_RED = config["values"]["batch_correction"]["seurat_reduction"] # which SCE col to use as batch
 
 #-------------------------------------------------------------------------------
 
@@ -40,7 +41,7 @@ for f in fractions:
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/09_mnnc_fractions/sce_" + f + "_" + BATCH_USE +"-09"]
   targets = targets + [OUTPUT_BASE_PATH + "/reports/04_batch_correction_fractions/" + f + "/batch_correction_fraction_report_" + f + "_" + BATCH_USE + ".html"]
   if BATCH_USE != "Object_ID":
-    targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/09_srt3_fractions/sce_" + f + "_" + BATCH_USE +"-09"]
+    targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/09_srt3_fractions/sce_" + f + "_" + BATCH_USE + "_" + SEURAT_RED +"-09"]
     
 targets = targets + [OUTPUT_BASE_PATH + "/reports/04_batch_correction_fractions/batch_correction_fraction_summary_" + BATCH_USE + ".html"]
   
@@ -110,9 +111,9 @@ It is easiest to use HVGs and Renormalize by seurat means.
 if BATCH_USE != "Object_ID":
   rule run_seurat3:
       input:
-          sce_07 = rules.merge_datasets_species.output 
+          sce_07 = OUTPUT_BASE_PATH + "/sce_objects/07_mrge_fractions/sce_{fraction}-07"
       output:
-          sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_srt3_ractions/sce_{fraction}_" + BATCH_USE + SEURAT_RED + "-09"
+          sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_srt3_fractions/sce_{fraction}_" + BATCH_USE + "_" + SEURAT_RED + "-09"
       params:
           batch_use = BATCH_USE,
           nr_hvgs_batch_correction = config["values"]["batch_correction"]["nr_hvgs_batch_correction"], # number

@@ -38,16 +38,15 @@ source(file = "../source/sce_functions.R")
 
 sce_07 <- readRDS(file = snakemake@input[["sce_07"]])
 sce_08 <- readRDS(file = snakemake@input[["sce_08"]])
+sce_08 <- reduce_dims(sce_08, nr_hvgs = snakemake@params[["nr_hvgs"]])
 
 set.seed(37)
 if(batch_use == "Object_ID"){
-  sce_08 <- reduce_dims(sce_08, nr_hvgs = snakemake@params[["nr_hvgs"]])
   sce_09_mnn <- readRDS(file = snakemake@input[["sce_09_input"]])
   sce_list <- list(list(sce_07, " after merging"),
                    list(sce_08, " after renormalization"),
                    list(sce_09_mnn, " MNN batch correction"))
 }else{
-  sce_09_ser <- readRDS(file = snakemake@input[["sce_09_ser"]])
   sce_09_mnn <- readRDS(file = snakemake@input[["sce_09_input"]][[1]])
   sce_09_ser <- readRDS(file = snakemake@input[["sce_09_input"]][[2]])
   sce_list <- list(list(sce_07, " after merging"),
@@ -903,7 +902,7 @@ visHist(sce_09_mnn, n_col = 3)
 
 if(batch_use != "Object_ID"){
   sce_09_ser <- cms(sce_09_ser, group = "Batch_exp_day", k = 30,
-              assay_name = "reconstructed", 
+              assay_name = "corrected", 
               res_name = "CCA")
   
   visHist(sce_09_ser, n_col = 3)
@@ -1097,6 +1096,23 @@ PLOT3
 PLOT4
 PLOT5
 PLOT6
+```
+
+```{r}
+
+plot_x <- ggplot(ggdf, aes(x = Object_ID, 
+                          fill=baccin_celltype_scmapclust, 
+                          color = baccin_celltype_scmapclust))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
+  scale_color_manual(values = col_cts_baccin)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(fraction_curr)+
+  facet_grid(cols = vars(ggdf$Antibody_combination))
+
+plot_x
+
 ```
 
 ## Per Experimental Day

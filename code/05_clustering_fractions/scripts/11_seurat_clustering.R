@@ -14,6 +14,7 @@ resolution <- snakemake@params[["resolution"]]
 
 seurat <- as.Seurat(sce, counts = "counts", data = "logcounts") # logcounts (assay) only used if dims (reduction) = NULL
 
+set.seed(37)
 seurat <- FindNeighbors(seurat, dims = 1:10, reduction = "PCA") # batch corrected
 seurat <- FindClusters(seurat, resolution = resolution)
 sce$cluster_seurat <- Idents(seurat)

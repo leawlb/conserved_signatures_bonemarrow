@@ -44,8 +44,8 @@ values:
   batch_correction:  
     nr_hvgs_batch_correction: 10000 # nr of top hvgs to be used for bc subsetting  
     batch_use_species: "Batch_exp_day" # if changed run ENTIRE batch_correction_snakefile
-    batch_use_fractions: "Object_ID" # if changed run ENTIRE batch_correction_snakefile
-    seurat_reduction: "rpca" # can be either "rpca" or "cca"
+    batch_use_fractions: "Batch_exp_day" # if changed run ENTIRE batch_correction_snakefile
+    seurat_reduction: "cca" # can be either "rpca" or "cca"
     samples_as_references_seurat:
     # keep for reference even if not used, maybe for later
       - mcar_old_hsc_2_0

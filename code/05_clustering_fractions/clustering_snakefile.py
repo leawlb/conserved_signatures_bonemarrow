@@ -100,6 +100,7 @@ rule make_report_full:
         sce_12 = rules.louvain_clustering.output
     params:
         color_tables = TABLES_PATH,
+        size_subs_hscs = config["values"]["clustering"]["size_subs_hscs"],
         number_k = config["values"]["clustering"]["number_k"]
     output:
         OUTPUT_BASE_PATH + "/reports/05_clustering_fractions/{fraction}/clustering_fraction_report_full_{fraction}.html"

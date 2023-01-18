@@ -24,16 +24,6 @@ if(fraction_curr == "hsc"){
   sample_numbers <- sample(x = 1:ncol(sce), size = size_subs_hscs)
   sce <- sce[,sample_numbers]
   
-  # recalculate PCA from batch corrected values
-  hvgs <- modelGeneVar(sce)
-  hvgs <- getTopHVGs(hvgs, n=nr_hvgs)
-  if(sce$Correction_method == "FastMNN"){
-    sce <- runPCA(sce, ncomponents=25, subset_row = hvgs, 
-                  exprs_values = "reconstructed")
-  }else if(sce$Correction_method == "Seurat"){
-    sce <- runPCA(sce, ncomponents=25, subset_row = hvgs, 
-                  exprs_values = "corrected") 
-  }
 }
 
 #-------------------------------------------------------------------------------

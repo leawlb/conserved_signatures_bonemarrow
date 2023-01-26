@@ -65,19 +65,21 @@ rule seurat_clustering:
     input: 
         sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_mnnc_fractions/sce_{fraction}_Object_ID-09"
     output:
-        sce_11 = OUTPUT_BASE_PATH + "/sce_objects/10_scls_fractions/sce_{fraction}-10"
+        sce_10 = OUTPUT_BASE_PATH + "/sce_objects/10_scls_fractions/sce_{fraction}-10"
     params:
         resolution = config["values"]["clustering"]["resolution"]
     script:
-        "scripts/11_seurat_clustering.R"
+        "scripts/10_seurat_clustering.R"
         
 rule louvain_clustering:
     input: 
         sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_mnnc_fractions/sce_{fraction}_Object_ID-09"
     output:
-        sce_12 = OUTPUT_BASE_PATH + "/sce_objects/10_lcls_fractions/sce_{fraction}-10"
+        sce_10 = OUTPUT_BASE_PATH + "/sce_objects/10_lcls_fractions/sce_{fraction}-10"
+    params:
+        k_louvain = config["values"]["clustering"]["k_louvain"]
     script:
-        "scripts/12_louvain_clustering.R"
+        "scripts/10_louvain_clustering.R"
 
 #-------------------------------------------------------------------------------   
 
@@ -87,6 +89,8 @@ if config["calculate_k"]:
           sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_mnnc_fractions/sce_{fraction}_Object_ID-09",
       output:
           OUTPUT_BASE_PATH + "/reports/05_clustering_fractions/{fraction}/clustering_fraction_report_k_{fraction}.html"
+      params: 
+          size_subs_hscs = config["values"]["clustering"]["size_subs_hscs"],
       threads:
           20
       script:

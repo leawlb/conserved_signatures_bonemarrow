@@ -1,4 +1,6 @@
 
 snakemake --cluster "bsub -n20 -q highmem -R rusage[mem=400GB]" -p -j2 -c20 -s clustering_snakefile.py --configfile ../config/config.yaml --config calculate_k=True -R make_report_k -n
 
-snakemake --cluster "bsub -n20 -q long -R rusage[mem=150GB]" -p -j15 -c20 -s clustering_snakefile.py --configfile ../config/config.yaml -R make_report_full -n
+snakemake --cluster "bsub -n20 -q long -R rusage[mem=150GB]" -p -j15 -c20 -s clustering_snakefile.py --configfile ../config/config.yaml -n
+
+snakemake --cluster "bsub -n20 -q verylong -R rusage[mem=200GB]" -p -j12 -c20 -s clustering_snakefile.py --configfile ../config/config.yaml --config calculate_k=True -R make_report_k -n

@@ -44,7 +44,7 @@ values:
   batch_correction:  
     nr_hvgs_batch_correction: 10000 # nr of top hvgs to be used for bc subsetting  
     batch_use_species: "Batch_exp_day" # if changed run ENTIRE batch_correction_snakefile
-    batch_use_fractions: "Batch_exp_day" # if changed run ENTIRE batch_correction_snakefile
+    batch_use_fractions: "Object_ID" # if changed run ENTIRE batch_correction_snakefile
     seurat_reduction: "cca" # can be either "rpca" or "cca"
     samples_as_references_seurat:
     # keep for reference even if not used, maybe for later
@@ -56,6 +56,9 @@ values:
       - mmus_yng_str_1_0
       - mspr_old_hsc_2_0
       - mspr_yng_str_1_0
+    seeds_umap:
+      str: 44
+      hsc: 437
   clustering:
     number_k: 
     # adjust according to clustering reports (per species)
@@ -76,9 +79,10 @@ values:
         str: 15    # just 15
         both: 22   # 22 ...25
         #per fraction
-      hsc: 11
-      str: 14
-    resolution: 0.2
+      hsc: 6 # 3, 6, 9, 12, 15 
+      str: 13 # 9, 13, 14, 26
+    resolution: 0.22 # 0.1, 0.15, 0.2, 0.22, 0.25, 0.3, 0.35
+    k_louvain: 75 # 80, 75, 70, 50, 45, 40, 30
     use_svm_kernel: "linear" # linear or radial
     size_subs_hscs: 60000 
       

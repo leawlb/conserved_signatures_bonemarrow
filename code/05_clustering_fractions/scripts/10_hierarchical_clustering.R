@@ -22,6 +22,7 @@ if(fraction_curr == "hsc"){
   RNGkind("L'Ecuyer-CMRG") # for random number generation
   set.seed(37)
   sample_numbers <- sample(x = 1:ncol(sce), size = size_subs_hscs)
+  print(sample_numbers[123])
   sce <- sce[,sample_numbers]
   
 }

@@ -50,6 +50,7 @@ rule all: # must contain all possible output paths from all rules
 Preliminary cell type annotation using multiple reference datasets and
 scmapcell and scmapcluster.
 To get an overview of approx. cell type numbers and fraction contamination.
+
 The longest sample takes around 1h for total 6 annotations.
 """
 rule cell_type_annotation: 

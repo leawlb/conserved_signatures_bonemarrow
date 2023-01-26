@@ -25,4 +25,4 @@ sce$cluster_seurat <- factor(sce$cluster_seurat,
 sce$cluster_seurat_resolution <- rep(resolution, ncol(sce))
 
 print(sce)
-saveRDS(sce, file = snakemake@output[["sce_11"]])
+saveRDS(sce, file = snakemake@output[["sce_10"]])

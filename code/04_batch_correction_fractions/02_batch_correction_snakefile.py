@@ -95,7 +95,8 @@ rule run_mnncorrect:
         mnn_fast = config["mnn_use_fast"], # condition
         nr_hvgs = config["values"]["preprocessing"]["nr_hvgs"],
         nr_hvgs_batch_correction = config["values"]["batch_correction"]["nr_hvgs_batch_correction"], # number
-        sce_functions = "../source/sce_functions.R" # this is the working dir
+        sce_functions = "../source/sce_functions.R", # this is the working dir
+        seeds_umap = config["values"]["batch_correction"]["seeds_umap"]
     script:
         "scripts/09_mnncorrect.R"
         

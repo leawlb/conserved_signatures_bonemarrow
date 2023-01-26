@@ -986,21 +986,21 @@ print(table(sce_10_l$cluster_louvain))
 ```{r fig.width=8, fig.height=4}
 
 plot_1 <- umap_base(sce_10_l, color_by = "cluster_louvain")+ 
-  ggtitle(fraction_curr)+
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))+
   scale_color_manual("cluster (louvain)", values = col_clust_l)
 plot_1l <- umap_legend(sce_10_l, color_by = "cluster_louvain")+
   scale_color_manual("cluster (louvain)", values = col_clust_l)
 legend_1 <- get_legend(plot_1l)
 
 plot_2 <- pca_base2(sce_10_l, color_by = "cluster_louvain")+ 
-  ggtitle(fraction_curr)+
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))+
   scale_color_manual("cluster (louvain)", values = col_clust_l)
 plot_2l <- pca_legend(sce_10_l, color_by = "cluster_louvain")+
   scale_color_manual("cluster (louvain)", values = col_clust_l)
 legend_2 <- get_legend(plot_2l)
 
 plot_3 <- pca_base3(sce_10_l, color_by = "cluster_louvain")+ 
-  ggtitle(fraction_curr)+
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))+
   scale_color_manual("cluster (louvain)", values = col_clust_l)
 plot_3l <- pca_legend(sce_10_l, color_by = "cluster_louvain")+
   scale_color_manual("cluster (louvain)", values = col_clust_l)
@@ -1028,7 +1028,7 @@ plot1a <- ggplot(ggdf, aes(x = cluster_louvain,
   scale_fill_manual(name = "Experimental day", values = col_batch_exp_day)+
   scale_color_manual(name = "Experimental day", values = col_batch_exp_day)+
   theme(axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))
 
 plot1b <- ggplot(ggdf, aes(x = cluster_louvain, fill=Batch_exp_day, 
                           color = Batch_exp_day))+
@@ -1037,7 +1037,7 @@ plot1b <- ggplot(ggdf, aes(x = cluster_louvain, fill=Batch_exp_day,
   scale_fill_manual(name = "Experimental day", values = col_batch_exp_day)+
   scale_color_manual(name = "Experimental day", values = col_batch_exp_day)+
   theme(axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))
 
 plot2a <- ggplot(ggdf, aes(x = Batch_exp_day, 
                           fill=cluster_louvain, color = cluster_louvain))+
@@ -1046,7 +1046,7 @@ plot2a <- ggplot(ggdf, aes(x = Batch_exp_day,
   scale_fill_manual(name = "Cluster (louvain)", values = col_clust_l)+
   scale_color_manual(name = "Cluster (louvain)", values = col_clust_l)+
   theme(axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)+
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))+
   facet_grid(cols = vars(ggdf$Fraction))
 
 plot2b <- ggplot(ggdf, aes(x = Batch_exp_day, fill=cluster_louvain, 
@@ -1056,7 +1056,7 @@ plot2b <- ggplot(ggdf, aes(x = Batch_exp_day, fill=cluster_louvain,
   scale_fill_manual(name = "Cluster (louvain)",  values = col_clust_l)+
   scale_color_manual(name = "Cluster (louvain)", values = col_clust_l)+
   theme(axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)+
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))+
   facet_grid(cols = vars(ggdf$Fraction))
 
 plot3a <- ggplot(ggdf, aes(x = cluster_louvain,
@@ -1066,7 +1066,7 @@ plot3a <- ggplot(ggdf, aes(x = cluster_louvain,
   scale_fill_manual(name = "Age", values = col_ann_age)+
   scale_color_manual(name = "Age", values = col_ann_age)+
   theme(axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))
 
 plot3b <- ggplot(ggdf, aes(x = cluster_louvain, fill=Age_ID, 
                           color = Age_ID))+
@@ -1075,7 +1075,7 @@ plot3b <- ggplot(ggdf, aes(x = cluster_louvain, fill=Age_ID,
   scale_fill_manual(name = "Age", values = col_ann_age)+
   scale_color_manual(name = "Age", values = col_ann_age)+
   theme(axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))
 
 plot4a <- ggplot(ggdf, aes(x = Age_ID, 
                           fill=cluster_louvain, color = cluster_louvain))+
@@ -1084,7 +1084,7 @@ plot4a <- ggplot(ggdf, aes(x = Age_ID,
   scale_fill_manual(name = "Cluster (louvain)", values = col_clust_l)+
   scale_color_manual(name = "Cluster (louvain)", values = col_clust_l)+
   theme(axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))
 
 plot4b <- ggplot(ggdf, aes(x = Age_ID,
                           fill=cluster_louvain, 
@@ -1095,7 +1095,7 @@ plot4b <- ggplot(ggdf, aes(x = Age_ID,
   scale_color_manual(name = "Cluster (louvain)", values = col_clust_l)+
   theme(axis.text.y = element_blank(),
         axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))
 
 
 # Species
@@ -1106,7 +1106,7 @@ plot5a <- ggplot(ggdf, aes(x = cluster_louvain,
   scale_fill_manual(name = "Age", values = col_species)+
   scale_color_manual(name = "Age", values = col_species)+
   theme(axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)+
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))+
   theme(axis.title.y = element_blank())
 
 plot5b <- ggplot(ggdf, aes(x = cluster_louvain, fill=Species_ID, 
@@ -1116,7 +1116,7 @@ plot5b <- ggplot(ggdf, aes(x = cluster_louvain, fill=Species_ID,
   scale_fill_manual(name = "Age", values = col_species)+
   scale_color_manual(name = "Age", values = col_species)+
   theme(axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)+
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))+
   theme(axis.title.y = element_blank())
 
 plot6a <- ggplot(ggdf, aes(x = Species_ID, 
@@ -1127,7 +1127,7 @@ plot6a <- ggplot(ggdf, aes(x = Species_ID,
   scale_fill_manual(name = "Cluster (hierarchical)", values = col_clust_l)+
   scale_color_manual(name = "Cluster (hierarchical)", values = col_clust_l)+
   theme(axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)+
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))+
   theme(axis.title.y = element_blank())
 
 plot6b <- ggplot(ggdf, aes(x = Species_ID,
@@ -1139,7 +1139,7 @@ plot6b <- ggplot(ggdf, aes(x = Species_ID,
   scale_color_manual(name = "Cluster (hierarchical)", values = col_clust_l)+
   theme(axis.text.y = element_blank(),
         axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)+
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))+
   theme(axis.title.y = element_blank())
 
 
@@ -1155,7 +1155,7 @@ plot7a <- ggplot(ggdf, aes(x = cluster_louvain,
                      values = col_cts_baccin)+
   theme(legend.position = "none", 
         axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)+
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))+
   theme(axis.title.y = element_blank())
 
 plot7b <- ggplot(ggdf, aes(x = cluster_louvain, fill=baccin_celltype_scmapclust, 
@@ -1167,7 +1167,7 @@ plot7b <- ggplot(ggdf, aes(x = cluster_louvain, fill=baccin_celltype_scmapclust,
   scale_color_manual(name = "baccin_celltype_scmapclust",
                      values = col_cts_baccin)+
   theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)+
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))+
   theme(axis.title.y = element_blank())
 
 
@@ -1182,7 +1182,7 @@ plot8a <- ggplot(ggdf, aes(x = cluster_louvain,
                      values = col_cts_dahlin)+
   theme(legend.position = "none", 
         axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)+
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))+
   theme(axis.title.y = element_blank())
 
 plot8b <- ggplot(ggdf, aes(x = cluster_louvain, fill=dahlin_celltype_scmapclust, 
@@ -1194,7 +1194,7 @@ plot8b <- ggplot(ggdf, aes(x = cluster_louvain, fill=dahlin_celltype_scmapclust,
   scale_color_manual(name = "dahlin_celltype_scmapclust",
                      values = col_cts_dahlin)+
   theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)+
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))+
   theme(axis.title.y = element_blank())
 
 
@@ -1209,7 +1209,7 @@ plot9a <- ggplot(ggdf, aes(x = cluster_louvain,
                      values = col_cts_dolgalev)+
   theme(legend.position = "none", 
         axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)+
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))+
   theme(axis.title.y = element_blank())
 
 plot9b <- ggplot(ggdf, aes(x = cluster_louvain,
@@ -1222,7 +1222,7 @@ plot9b <- ggplot(ggdf, aes(x = cluster_louvain,
   scale_color_manual(name = "dolgalev_celltype_scmapclust",
                      values = col_cts_dolgalev)+
   theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)+
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))+
   theme(axis.title.y = element_blank())
 
 plot1a
@@ -1262,7 +1262,7 @@ PLOT9b
 
 plot_x <- umap_base(sce_10_l, color_by = "cluster_louvain")+
   scale_color_manual("cluster_louvain", values = col_clust_l)+
-  ggtitle(fraction_curr)+
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))+
   facet_grid(cols = vars(sce_10_l$Species_ID))
 plot_xl <- umap_legend(sce_10_l, color_by = "cluster_louvain")+
   scale_color_manual("cluster_louvain", values = col_clust_l)
@@ -1288,7 +1288,7 @@ sil.data$cluster <- sce_10_l$cluster_louvain
 ggplot(sil.data, aes(x=cluster, y=width, colour=closest))+
   ggbeeswarm::geom_quasirandom(size = 0.1)+
   theme_classic()+
-  ggtitle(fraction_curr)+
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))+
   scale_color_manual("cluster (louvain)", values = col_clust_l)+
   theme(legend.position = "none")+
   xlab("cluster (louvain)")+
@@ -1298,7 +1298,7 @@ ggplot(sil.data, aes(x=cluster, y=width, colour=closest))+
 ggplot(sil.data, aes(x=cluster, y=width, colour=closest))+
   ggbeeswarm::geom_quasirandom(size = 0.1)+
   theme_classic()+
-  ggtitle(fraction_curr)+
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))+
   facet_grid(cols = vars(sce_10_l$Species_ID))+
   scale_color_manual("cluster (louvain)", values = col_clust_l)+
   theme(legend.position = "none")+
@@ -1315,7 +1315,7 @@ pure_data$cluster <- sce_10_l$cluster_louvain
 ggplot(pure_data, aes(x=cluster, y=purity, colour=maximum))+
   ggbeeswarm::geom_quasirandom(size = 0.1)+
   theme_classic()+
-  ggtitle(fraction_curr)+
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))+
   scale_color_manual("cluster (louvain)", values = col_clust_l)+
   theme(legend.position = "none")+
   xlab("cluster (louvain)")+
@@ -1325,7 +1325,7 @@ ggplot(pure_data, aes(x=cluster, y=purity, colour=maximum))+
 ggplot(pure_data, aes(x=cluster, y=purity, colour=maximum))+
   ggbeeswarm::geom_quasirandom(size = 0.1)+
   theme_classic()+
-  ggtitle(fraction_curr)+
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))+
   facet_grid(cols = vars(sce_10_l$Species_ID))+
   scale_color_manual("cluster (louvain)", values = col_clust_l)+
   theme(legend.position = "none")+
@@ -1336,7 +1336,7 @@ ggplot(pure_data, aes(x=cluster, y=purity, colour=maximum))+
 ggplot(pure_data, aes(x=cluster, y=purity, color=cluster))+
   geom_boxplot(outlier.size = 0.1)+
   theme_classic()+
-  ggtitle(fraction_curr)+
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))+
   scale_color_manual("cluster (louvain)", values = col_clust_l)+
   theme(legend.position = "none")+
   xlab("cluster (louvain)")+
@@ -1346,7 +1346,7 @@ ggplot(pure_data, aes(x=cluster, y=purity, color=cluster))+
 ggplot(pure_data, aes(x=cluster, y=purity, color=cluster))+
   geom_boxplot(outlier.size = 0.1)+
   theme_classic()+
-  ggtitle(fraction_curr)+
+  ggtitle(paste0(fraction_curr, sce_10_l$k_louvain[1]))+
   scale_color_manual("cluster (louvain)", values = col_clust_l)+
   facet_grid(cols = vars(sce_10_l$Species_ID))+
   theme(legend.position = "none")+

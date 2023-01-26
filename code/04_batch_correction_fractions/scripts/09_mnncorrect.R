@@ -63,6 +63,14 @@ if(mnn_fast == TRUE){
   colnames(reducedDim(sce_bc, type = "PCA")) <- paste0(
     "PC", colnames(reducedDim(sce_bc, type = "PCA")))
   
+  seeds_umap <- snakemake@params[["seeds_umap"]]
+  if(sce_bc$Fraction_ID == "hsc"){
+    seed <- seeds_umap[["hsc"]]
+  }else if(sce_bc$Fraction_ID == "str"){
+    seed <- seeds_umap[["str"]]
+  }
+  set.seed(seed)
+  print(seed)
   sce_bc <- runUMAP(sce_bc, dimred = 'PCA',
                     external_neighbors=TRUE, subset_row = hvgs)
   
@@ -75,7 +83,14 @@ if(mnn_fast == TRUE){
   sce_bc$Correction_method <- rep("Classic_MNN", ncol(sce_bc))
 
   # Reduce dimensions
-  set.seed(37)
+  seeds_umap <- snakemake@params[["seeds_umap"]]
+  if(sce_bc$Fraction_ID == "hsc"){
+    seed <- seeds_umap[["hsc"]]
+  }else if(sce_bc$Fraction_ID == "str"){
+    seed <- seeds_umap[["str"]]
+  }
+  set.seed(seed)
+  print(seed)
   sce_bc <- reduce_dims(sce_bc, nr_hvgs = nr_hvgs)
   
 }

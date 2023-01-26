@@ -8,13 +8,12 @@ set.seed(37)
 #-------------------------------------------------------------------------------
 
 # load object and prepare batch vector for correctExperiments() + preparation
-print(snakemake@input[["sce_08"]])
 sce <- readRDS(file = snakemake@input[[1]])
 
 batch_use <- snakemake@params[["batch_use"]] # which batch?
 batch_pos <- which(colnames(colData(sce)) == batch_use)
-nr_hvgs <- snakemake@params[["nr_hvgs"]] # how many hvgs 
-nr_hvgs_batch_correction <- snakemake@params[["nr_hvgs_batch_correction"]] 
+nr_hvgs <- snakemake@params[["nr_hvgs"]] # how many hvgs for UMAP calc or PCA&UMAP calc
+nr_hvgs_batch_correction <- snakemake@params[["nr_hvgs_batch_correction"]] # how many hvgs for batch correction
 hvgs_for_batch_correction <- snakemake@params[["hvgs_for_batch_correction"]] # use hvgs?
 
 # rename the already existent Reduced Dimensions
@@ -64,6 +63,14 @@ if(mnn_fast == TRUE){
   colnames(reducedDim(sce_bc, type = "PCA")) <- paste0(
     "PC", colnames(reducedDim(sce_bc, type = "PCA")))
   
+  seeds_umap <- snakemake@params[["seeds_umap"]]
+  if(sce_bc$Fraction_ID == "hsc"){
+    seed <- seeds_umap[["hsc"]]
+  }else if(sce_bc$Fraction_ID == "str"){
+    seed <- seeds_umap[["str"]]
+  }
+  set.seed(seed)
+  print(seed)
   sce_bc <- runUMAP(sce_bc, dimred = 'PCA',
                     external_neighbors=TRUE, subset_row = hvgs)
   
@@ -76,7 +83,14 @@ if(mnn_fast == TRUE){
   sce_bc$Correction_method <- rep("Classic_MNN", ncol(sce_bc))
 
   # Reduce dimensions
-  set.seed(37)
+  seeds_umap <- snakemake@params[["seeds_umap"]]
+  if(sce_bc$Fraction_ID == "hsc"){
+    seed <- seeds_umap[["hsc"]]
+  }else if(sce_bc$Fraction_ID == "str"){
+    seed <- seeds_umap[["str"]]
+  }
+  set.seed(seed)
+  print(seed)
   sce_bc <- reduce_dims(sce_bc, nr_hvgs = nr_hvgs)
   
 }

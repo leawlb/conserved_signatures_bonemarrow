@@ -45,7 +45,7 @@ values:
     nr_hvgs_batch_correction: 10000 # nr of top hvgs to be used for bc subsetting  
     batch_use_species: "Batch_exp_day" # if changed run ENTIRE batch_correction_snakefile
     batch_use_fractions: "Object_ID" # if changed run ENTIRE batch_correction_snakefile
-    seurat_reduction: "rpca" # can be either "rpca" or "cca"
+    seurat_reduction: "cca" # can be either "rpca" or "cca"
     samples_as_references_seurat:
     # keep for reference even if not used, maybe for later
       - mcar_old_hsc_2_0
@@ -56,9 +56,12 @@ values:
       - mmus_yng_str_1_0
       - mspr_old_hsc_2_0
       - mspr_yng_str_1_0
+    seeds_umap:
+      str: 44
+      hsc: 437
   clustering:
     number_k: 
-    # adjust according to clustering reports
+    # adjust according to clustering reports (per species)
       mcar:
         hsc: 11    # 7 ... 11
         str: 13    # just 13
@@ -75,23 +78,29 @@ values:
         hsc: 10    # 9 ... 10
         str: 15    # just 15
         both: 22   # 22 ...25
+        #per fraction
+      hsc: 6 # 3, 6, 9, 12, 15 
+      str: 13 # 9, 13, 14, 26
+    resolution: 0.22 # 0.1, 0.15, 0.2, 0.22, 0.25, 0.3, 0.35
+    k_louvain: 75 # 80, 75, 70, 50, 45, 40, 30
     use_svm_kernel: "linear" # linear or radial
+    size_subs_hscs: 60000 
       
-# RULES  
+# CONDITIONS  
 # in caps for use in R, only first letter capitalized for use in Snakefile
 run_preprocessing_summary: False
-run_ref_annotation_summary: False
 run_batch_correction_summary: False
 run_manual_annotation_summary: False
 run_clustering_summary: False
 run_annotation_summary_scmap: False
+calculate_k: False
 
 merge_all: True
 run_mnncorrect: True
 run_batch_correct: False
 mnn_use_fast: TRUE
 run_seurat3: False
-hvgs_for_batch_correction: FALSE 
+hvgs_for_batch_correction: TRUE 
 rescale_for_batch_correction: FALSE # Rescaling assumes that the cell composition in all batches is the same 
 
 remove_mature_cells_clustering: FALSE

@@ -1,5 +1,5 @@
 ---
-title: "ref_annotation_report"
+title: "ref_annotation_sample_report"
 author: "Lea Wölbert"
 date: '2022-11-25'
 output: html_document
@@ -8,6 +8,9 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+Report on annotation with three reference datasets, annotated using
+scmapcell and scmapcluster at sample level (Object_ID).
 
 #### Load libraries, source code 
 
@@ -19,6 +22,7 @@ library(tidyverse, quietly = TRUE)
 library(scater, quietly = TRUE) 
 library(scuttle, quietly = TRUE) 
 library(scran, quietly = TRUE) 
+library(pheatmap, quietly = TRUE) 
 set.seed(37)
 ```
 
@@ -26,8 +30,6 @@ set.seed(37)
 
 print(snakemake@input[[1]])
 sce <- readRDS(file = snakemake@input[[1]])
-print("blub")
-nr_hvgs <- snakemake@params[["nr_hvgs"]]
 color_tables <- snakemake@params[["color_tables"]]
 
 # set name for plots
@@ -42,8 +44,28 @@ source(file = "../source/colors.R")
 source(file = "../source/plotting.R")
 source(file = "../source/sce_functions.R")
 
-col_cts_all <- col_cts[names(col_cts) %in% sce$Identity_ref_all]
-col_cts_fraction <- col_cts[names(col_cts) %in% sce$Identity_ref_fraction]
+sce <- factor_reference_cts(sce)# own function
+
+col_cts_baccin_cell <- col_cts[match(levels(sce$baccin_celltype_scmapcell), 
+                                     names(col_cts))]
+col_cts_baccin_clst <- col_cts[match(levels(sce$baccin_celltype_scmapclust),
+                                     names(col_cts))]
+col_cts_dahlin_cell <- col_cts[match(levels(sce$dahlin_celltype_scmapcell), 
+                                     names(col_cts))]
+col_cts_dahlin_clst <- col_cts[match(levels(sce$dahlin_celltype_scmapclust), 
+                                     names(col_cts))]
+col_cts_dolgalev_cell <- col_cts[match(levels(sce$dolgalev_celltype_scmapcell),
+                                       names(col_cts))]
+col_cts_dolgalev_clst <- col_cts[match(levels(sce$dolgalev_celltype_scmapclust),
+                                       names(col_cts))]
+
+print(levels(sce$dolgalev_celltype_scmapclust))
+print(levels(sce$baccin_celltype_scmapclust))
+print(levels(sce$dahlin_celltype_scmapclust))
+
+print(col_cts_baccin_cell)
+print(col_cts_dahlin_clst)
+print(col_cts_dolgalev_clst)
 
 ```
 
@@ -51,20 +73,22 @@ col_cts_fraction <- col_cts[names(col_cts) %in% sce$Identity_ref_fraction]
 
 ### All Identities
 
+#### Baccin
+
 ```{r fig.width=8}
 
-plot_1 <- umap_base(sce, color_by = "Identity_ref_all")+ # own function
+plot_1 <- umap_base(sce, color_by = "baccin_celltype_scmapcell")+ # own function
   ggtitle(name_curr)+
-  scale_color_manual("Identity1", values = col_cts_all)
-plot_1l <- umap_legend(sce, color_by = "Identity_ref_all")+
-  scale_color_manual("Identity1", values = col_cts_all)
+  scale_color_manual("baccin_celltype_scmapcell", values = col_cts_baccin_cell)
+plot_1l <- umap_legend(sce, color_by = "baccin_celltype_scmapcell")+
+  scale_color_manual("baccin_celltype_scmapcell", values = col_cts_baccin_cell)
 legend_1 <- get_legend(plot_1l)
 
-plot_2 <- umap_base(sce, color_by = "Identity_ref_fraction")+ 
+plot_2 <- umap_base(sce, color_by = "baccin_celltype_scmapclust")+ 
   ggtitle(name_curr)+
-  scale_color_manual("Identity2", values = col_cts_fraction)
-plot_2l <- umap_legend(sce, color_by = "Identity_ref_fraction")+
-  scale_color_manual("Identity2", values = col_cts_fraction)
+  scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin_clst)
+plot_2l <- umap_legend(sce, color_by = "baccin_celltype_scmapclust")+
+  scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin_clst)
 legend_2 <- get_legend(plot_2l)
 
 PLOT_1 <- ggarrange(plot_1, legend_1)
@@ -72,6 +96,140 @@ PLOT_2 <- ggarrange(plot_2, legend_2)
 
 PLOT_1
 PLOT_2
+
+```
+
+```{r fig.width=8}
+
+plot_3 <- umap_base(sce, color_by = "baccin_celltype_scmapcell_sim")+
+  ggtitle(name_curr)+
+  scale_colour_gradient(low = "black", high = "gold")
+plot_3l <- umap_legend(sce, color_by = "baccin_celltype_scmapcell_sim")+
+  scale_colour_gradient(low = "black", high = "gold",
+                        name = "baccin_celltype_scmapcell_sim")
+legend_3 <- get_legend(plot_3l)  
+
+plot_4 <- umap_base(sce, color_by = "baccin_celltype_scmapclust_sim")+
+  ggtitle(name_curr)+
+  scale_colour_gradient(low = "black", high = "gold")
+plot_4l <- umap_legend(sce, color_by = "baccin_celltype_scmapclust_sim")+
+  scale_colour_gradient(low = "black", high = "gold",
+                        name = "baccin_celltype_scmapclust_sim")
+legend_4 <- get_legend(plot_4l)  
+
+PLOT_3 <- ggarrange(plot_3, legend_3)
+PLOT_4 <- ggarrange(plot_4, legend_4)
+
+PLOT_3
+PLOT_4
+
+```
+
+#### Dahlin
+
+```{r fig.width=8}
+
+plot_1 <- umap_base(sce, color_by = "dahlin_celltype_scmapcell")+ 
+  ggtitle(name_curr)+
+  scale_color_manual("dahlin_celltype_scmapcell", values = col_cts_dahlin_cell)
+plot_1l <- umap_legend(sce, color_by = "dahlin_celltype_scmapcell")+
+  scale_color_manual("dahlin_celltype_scmapcell", values = col_cts_dahlin_cell)
+legend_1 <- get_legend(plot_1l)
+
+plot_2 <- umap_base(sce, color_by = "dahlin_celltype_scmapclust")+ 
+  ggtitle(name_curr)+
+  scale_color_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin_clst)
+plot_2l <- umap_legend(sce, color_by = "dahlin_celltype_scmapclust")+
+  scale_color_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin_clst)
+legend_2 <- get_legend(plot_2l)
+
+PLOT_1 <- ggarrange(plot_1, legend_1)
+PLOT_2 <- ggarrange(plot_2, legend_2)
+
+PLOT_1
+PLOT_2
+
+```
+
+```{r fig.width=8}
+
+plot_3 <- umap_base(sce, color_by = "dahlin_celltype_scmapcell_sim")+
+  ggtitle(name_curr)+
+  scale_colour_gradient(low = "black", high = "gold")
+plot_3l <- umap_legend(sce, color_by = "dahlin_celltype_scmapcell_sim")+
+  scale_colour_gradient(low = "black", high = "gold",
+                        name = "dahlin_celltype_scmapcell_sim")
+legend_3 <- get_legend(plot_3l)  
+
+plot_4 <- umap_base(sce, color_by = "dahlin_celltype_scmapclust_sim")+
+  ggtitle(name_curr)+
+  scale_colour_gradient(low = "black", high = "gold")
+plot_4l <- umap_legend(sce, color_by = "dahlin_celltype_scmapclust_sim")+
+  scale_colour_gradient(low = "black", high = "gold",
+                        name = "dahlin_celltype_scmapclust_sim")
+legend_4 <- get_legend(plot_4l)  
+
+PLOT_3 <- ggarrange(plot_3, legend_3)
+PLOT_4 <- ggarrange(plot_4, legend_4)
+
+PLOT_3
+PLOT_4
+
+```
+
+#### Dolgalev
+
+```{r fig.width=8}
+
+plot_1 <- umap_base(sce, color_by = "dolgalev_celltype_scmapcell")+ 
+  ggtitle(name_curr)+
+  scale_color_manual("dolgalev_celltype_scmapcell",
+                     values = col_cts_dolgalev_cell)
+plot_1l <- umap_legend(sce, color_by = "dolgalev_celltype_scmapcell")+
+  scale_color_manual("dolgalev_celltype_scmapcell", 
+                     values = col_cts_dolgalev_cell)
+legend_1 <- get_legend(plot_1l)
+
+plot_2 <- umap_base(sce, color_by = "dolgalev_celltype_scmapclust")+ 
+  ggtitle(name_curr)+
+  scale_color_manual("dolgalev_celltype_scmapclust", 
+                     values = col_cts_dolgalev_clst)
+plot_2l <- umap_legend(sce, color_by = "dolgalev_celltype_scmapclust")+
+  scale_color_manual("dolgalev_celltype_scmapclust", 
+                     values = col_cts_dolgalev_clst)
+legend_2 <- get_legend(plot_2l)
+
+PLOT_1 <- ggarrange(plot_1, legend_1)
+PLOT_2 <- ggarrange(plot_2, legend_2)
+
+PLOT_1
+PLOT_2
+
+```
+
+```{r fig.width=8}
+
+plot_3 <- umap_base(sce, color_by = "dolgalev_celltype_scmapcell_sim")+
+  ggtitle(name_curr)+
+  scale_colour_gradient(low = "black", high = "gold")
+plot_3l <- umap_legend(sce, color_by = "dolgalev_celltype_scmapcell_sim")+
+  scale_colour_gradient(low = "black", high = "gold",
+                        name = "dolgalev_celltype_scmapcell_sim")
+legend_3 <- get_legend(plot_3l)  
+
+plot_4 <- umap_base(sce, color_by = "dolgalev_celltype_scmapclust_sim")+
+  ggtitle(name_curr)+
+  scale_colour_gradient(low = "black", high = "gold")
+plot_4l <- umap_legend(sce, color_by = "dolgalev_celltype_scmapclust_sim")+
+  scale_colour_gradient(low = "black", high = "gold",
+                        name = "dolgalev_celltype_scmapclust_sim")
+legend_4 <- get_legend(plot_4l)  
+
+PLOT_3 <- ggarrange(plot_3, legend_3)
+PLOT_4 <- ggarrange(plot_4, legend_4)
+
+PLOT_3
+PLOT_4
 
 ```
 
@@ -84,25 +242,25 @@ stromal and hematopoetic cell types in a single dataset.
 
 ```{r}
 
-# find contamination in sce objects
+# find contamination in sce objects (scmapcluster)
 
 if(grepl("str", name_curr)){
   sce <- find_contamination_ref_all(sce, input = "stromal") # own function
 }else if(grepl("hsc", name_curr)){
-  sce <- find_contamination_ref_all(sce, input = "hsc") # own function
+  sce <- find_contamination_ref_all(sce, input = "hsc") 
 }
 
 ```
 
 ```{r fig.width=8}
 
-if(grepl("TRUE", sce$right_fraction)){
+if(length(grepl("TRUE", sce$right_fraction)) >0){
   plot_4 <- umap_base(sce, color_by = "right_fraction")+
     ggtitle(name_curr)+
-    scale_color_manual("Correct fraction", values = c("TRUE" = "black", 
+    scale_color_manual("Correct fraction", values = c("TRUE" = "grey80", 
                                                       "FALSE" = "orange"))
   plot_4l <- umap_legend(sce, color_by = "right_fraction")+
-    scale_color_manual("Correct fraction", values = c("TRUE" = "black", 
+    scale_color_manual("Correct fraction", values = c("TRUE" = "grey80", 
                                                       "FALSE" = "orange"))
   legend_4 <- get_legend(plot_4l)
 
@@ -128,8 +286,8 @@ plot_5 <- umap_base(sce, color_by = "detected")+
 plot_5l <- umap_legend(sce, color_by = "detected")+
   scale_color_gradientn("Number of detected genes", 
                          limits = c(0, 10000),
-                        
-                         colors = c("black", "darkorange3", "orange", "lightgoldenrod"))
+                         colors = c("black", "darkorange3", 
+                                    "orange", "lightgoldenrod"))
 legend_5 <- get_legend(plot_5l)
 
 PLOT_5 <- ggarrange(plot_5, legend_5)
@@ -165,7 +323,7 @@ PLOT_6
 
 ```{r fig.width=8}
 
-if(grepl("TRUE", sce$right_fraction)){
+if(length(grepl("TRUE", sce$right_fraction))>0){
   sce_wo <- sce[,sce$right_fraction == TRUE]
 
   qcdf_wo <- perCellQCMetrics(sce_wo)
@@ -220,20 +378,18 @@ if(grepl("TRUE", sce$right_fraction)){
 ### Mature cells
 
 ```{r}
-
 sce <- get_mature_cts_all(sce) # own function 
-
 ```
 
 ```{r fig.width=8}
 
 plot_4 <- umap_base(sce, color_by = "mature_cells")+
   ggtitle(name_curr)+
-  scale_color_manual("Mature cells", values = c("FALSE" = "black", 
+  scale_color_manual("Mature cells", values = c("FALSE" = "grey80", 
                                                     "TRUE" = "orange"))
 plot_4l <- umap_legend(sce, color_by = "mature_cells")+
   ggtitle(name_curr)+
-  scale_color_manual("Mature cells", values = c("FALSE" = "black", 
+  scale_color_manual("Mature cells", values = c("FALSE" = "grey80", 
                                                     "TRUE" = "orange"))
 legend_4 <- get_legend(plot_4l)
 
@@ -279,7 +435,8 @@ plot_6 <- umap_base(sce, color_by = "sum")+
 plot_6l <- umap_legend(sce, color_by = "sum")+
   scale_color_gradientn("Library size", 
                          limits = c(0, 1000000),
-                          colors = c("black", "darkorange4", "darkorange3", "darkorange1",
+                          colors = c("black", "darkorange4", "darkorange3",
+                                     "darkorange1",
                                     "orange", "orange", "gold1", "gold",
                                     "lightgoldenrod", "lightgoldenrod", 
                                     "lightgoldenrod", "lightgoldenrod", 
@@ -344,131 +501,113 @@ PLOT_8
 
 ```
 
-## Cell numbers
-
-All cells
-
-```{r}
-
-table(sce$Identity_ref_all)
-table(sce$Identity_ref_fraction)
-
-```
-
-Without contamination
-
-```{r}
-
-if(grepl("TRUE", sce$right_fraction)){
-  table(sce[,sce$right_fraction == TRUE]$Identity_ref_all)
-  table(sce[,sce$right_fraction == TRUE]$Identity_ref_fraction)
-}else{
-  print("only contaminants")
-}
-```
-
-Only contamination
-
-```{r}
-
-table(sce[,sce$right_fraction == FALSE]$Identity_ref_all)
-table(sce[,sce$right_fraction == FALSE]$Identity_ref_fraction)
-
-```
-
-
-### Cell type overlap
+### Cell type overlap scmapcell vs scmapcluster
 
 The percentage of cells per Haas cell type that is assigned another
 identity with another dataset.
 
-#### In Identity 1
+#### In Baccin
 
 ```{r}
 
-ggdf <- data.frame(colData(sce))
+mat_comp <- as.matrix(table(unfactor(sce$baccin_celltype_scmapcell),
+                            unfactor(sce$baccin_celltype_scmapclust)))
+if(! 1 %in% dim(mat_comp)){
 
-plot1a <- ggplot(ggdf, aes(x = Identity_ref_all, y=Identity_ref_fraction,
-                           fill=Identity_ref_fraction, 
-                           color = Identity_ref_fraction))+
-  geom_col()+
-  theme_classic()+
-  scale_fill_manual("Identity2", values = col_cts_fraction)+
-  scale_color_manual(values = col_cts_fraction)+
-  theme(legend.position = "none", axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 90))+
-  ggtitle(name_curr)+
-  xlab("Identity1")
+  mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
+                       which(colMeans(mat_comp) > 0)]
 
-plot_frc1 <- ggplot(ggdf, aes(x = Identity_ref_all, y=Identity_ref_fraction,
-                                 fill=Identity_ref_fraction))+
-  geom_col()+
-  scale_fill_manual("Identity2", values = col_cts_fraction)
-legend_frc1 <- get_legend(plot_frc1)
+  rownames(mat_comp) <- paste0(rownames(mat_comp), "_cell")
+  colnames(mat_comp) <- paste0(colnames(mat_comp), "_clust")
 
-plot1b <- ggplot(ggdf, aes(x = Identity_ref_all,
-                           fill=Identity_ref_fraction, 
-                           color = Identity_ref_fraction))+
-  geom_bar(position = "fill") + 
-  theme_classic()+
-  scale_fill_manual("Identity2", values = col_cts_fraction)+
-  scale_color_manual(values = col_cts_fraction)+
-  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(name_curr)+
-  xlab("Identity1")
+  mat_comp_temp1 <- mat_comp
+  for(i in 1:nrow(mat_comp_temp1)){
+    mat_comp_temp1[i,] <- mat_comp_temp1[i,]/sum(mat_comp_temp1[i,])
+  }
 
+  mat_comp_temp2 <- t(mat_comp)
+  for(i in 1:nrow(mat_comp_temp2)){
+    mat_comp_temp2[i,] <- mat_comp_temp2[i,]/sum(mat_comp_temp2[i,])
+  }
 
-PLOT1a <- ggarrange(plot1a, legend_frc1, ncol = 1)
-PLOT1b <- ggarrange(plot1b, legend_frc1, ncol = 1)
+  pheatmap(mat_comp_temp1, cluster_cols = FALSE, cluster_rows = FALSE, 
+           main = paste0(name_curr, " Baccin overlap"))
+
+  pheatmap(mat_comp_temp2, cluster_cols = FALSE, cluster_rows = FALSE, 
+           main = paste0(name_curr, " Baccin overlap"))
+}else{
+  print("not enough dimensions")
+}
 
 ```
 
-```{r fig.width=10, fig.height = 11}
-PLOT1a
-PLOT1b
-```
-
-#### In Identity 2
+#### In Dahlin
 
 ```{r}
 
-plot1a <- ggplot(ggdf, aes(x = Identity_ref_fraction, y=Identity_ref_all,
-                           fill=Identity_ref_all, 
-                           color = Identity_ref_all))+
-  geom_col()+
-  theme_classic()+
-  scale_fill_manual("Identity1", values = col_cts_all)+
-  scale_color_manual(values = col_cts_all)+
-  theme(legend.position = "none", axis.text.y = element_blank(),
-        axis.text.x = element_text(angle = 90))+
-  ggtitle(name_curr)+
-  xlab("Identity2")
+mat_comp <- as.matrix(table(unfactor(sce$dahlin_celltype_scmapcell),
+                            unfactor(sce$dahlin_celltype_scmapclust)))
+if(! 1 %in% dim(mat_comp)){
+  mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
+                       which(colMeans(mat_comp) > 0)]
+  
+  rownames(mat_comp) <- paste0(rownames(mat_comp), "_cell")
+  colnames(mat_comp) <- paste0(colnames(mat_comp), "_clust")
 
-plot1b <- ggplot(ggdf, aes(x = Identity_ref_fraction, 
-                           fill=Identity_ref_all, 
-                           color = Identity_ref_all))+
-  geom_bar(position = "fill") + 
-  theme_classic()+
-  scale_fill_manual("Identity1", values = col_cts_all)+
-  scale_color_manual(values = col_cts_all)+
-  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(name_curr)+
-  xlab("Identity2")
+  mat_comp_temp1 <- mat_comp
+  for(i in 1:nrow(mat_comp_temp1)){
+    mat_comp_temp1[i,] <- mat_comp_temp1[i,]/sum(mat_comp_temp1[i,])
+  }
 
-plot_all <- ggplot(ggdf, aes(x = Identity_ref_fraction, y=Identity_ref_all,
-                                 fill=Identity_ref_all))+
-  geom_col()+
-  scale_fill_manual("Identity1", values = col_cts_all)
-legend_all <- get_legend(plot_all)
+  mat_comp_temp2 <- t(mat_comp)
+  for(i in 1:nrow(mat_comp_temp2)){
+    mat_comp_temp2[i,] <- mat_comp_temp2[i,]/sum(mat_comp_temp2[i,])
+  }
 
-PLOT1a <- ggarrange(plot1a, legend_all, ncol = 1)
-PLOT1b <- ggarrange(plot1b, legend_all, ncol = 1)
+  pheatmap(mat_comp_temp1, cluster_cols = FALSE, cluster_rows = FALSE, 
+           main = paste0(name_curr, " dahlin overlap"))
+
+  pheatmap(mat_comp_temp2, cluster_cols = FALSE, cluster_rows = FALSE, 
+           main = paste0(name_curr, " dahlin overlap"))
+
+}else{
+  print("not enough dimensions")
+}
 ```
 
-```{r fig.width=10, fig.height = 11}
-PLOT1a
-PLOT1b
+#### In Dolgalev
+
+```{r}
+
+mat_comp <- as.matrix(table(unfactor(sce$dolgalev_celltype_scmapcell),
+                            unfactor(sce$dolgalev_celltype_scmapclust)))
+if(! 1 %in% dim(mat_comp)){
+  mat_comp <- mat_comp[which(rowMeans(mat_comp) > 0), 
+                       which(colMeans(mat_comp) > 0)]
+  
+  rownames(mat_comp) <- paste0(rownames(mat_comp), "_cell")
+  colnames(mat_comp) <- paste0(colnames(mat_comp), "_clust")
+
+  mat_comp_temp1 <- mat_comp
+  for(i in 1:nrow(mat_comp_temp1)){
+    mat_comp_temp1[i,] <- mat_comp_temp1[i,]/sum(mat_comp_temp1[i,])
+  }
+
+  mat_comp_temp2 <- t(mat_comp)
+  for(i in 1:nrow(mat_comp_temp2)){
+    mat_comp_temp2[i,] <- mat_comp_temp2[i,]/sum(mat_comp_temp2[i,])
+  }
+
+  pheatmap(mat_comp_temp1, cluster_cols = FALSE, cluster_rows = FALSE, 
+           main = paste0(name_curr, " dolgalev overlap"))
+  
+  pheatmap(mat_comp_temp2, cluster_cols = FALSE, cluster_rows = FALSE, 
+           main = paste0(name_curr, " dolgalev overlap"))
+}else{
+  print("not enough dimensions")
+}
 ```
+
 
 ```{r}
 sessionInfo()

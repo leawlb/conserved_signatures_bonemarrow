@@ -1,6 +1,8 @@
 #-------------------------------------------------------------------------------
 
 library(DropletUtils)
+library(tidyverse)
+library(mclust)
 
 #-------------------------------------------------------------------------------
 
@@ -82,5 +84,22 @@ for(i in 1:length(score_list_temp)){
 metadata(sce)$score_list <- score_list_temp
 metadata(sce)$usage_list <- usage_list_temp
 
-saveRDS(sce, file = snakemake@input[["sce_11"]])
+#-------------------------------------------------------------------------------
+
+# cluster cells based on program expression, for each program
+
+metadata(sce)$cluster_list <- metadata(sce)$usage_list
+
+for(i in 1:length(metadata(sce)$cluster_list)){
+  for(j in 1:ncol(metadata(sce)$cluster_list[[i]])){
+    result <- Mclust(metadata(sce)$cluster_list[[i]][,j], G = 2)
+    metadata(sce)$cluster_list[[i]][,j] <- result$classification
+  }
+}
+
+names(metadata(sce)$score_list) <- species
+names(metadata(sce)$usage_list) <- species
+names(metadata(sce)$cluster_list) <- species
+
+saveRDS(sce, file = snakemake@output[["sce_11"]])
 

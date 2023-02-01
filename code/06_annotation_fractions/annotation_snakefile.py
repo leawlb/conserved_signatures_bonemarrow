@@ -25,6 +25,7 @@ def get_list(metadata, column):
   
 fractions = get_list(metadata = METADATA, column = "Fraction_ID")
 print(fractions) 
+fractions = ["hsc"]
 
 # construct paths for all possible outputs/targets, required for rule all
 targets = []
@@ -60,7 +61,7 @@ rule go_analysis:
     params:
         nr_hvgs = config["values"]["preprocessing"]["nr_hvgs"],
     script:
-        "scripts/11_01_go_analysis.R"
+        "scripts/11_go_analysis.R"
         
 """
 Prepare NMF data and add to SCE objects for convenience.
@@ -71,5 +72,5 @@ rule prepare_nmf:
     output:
         sce_11 = OUTPUT_BASE_PATH + "/sce_objects/11_annotation/sce_nmf/sce_nmf_{fraction}"
     script:
-        "scripts/11_02_prepare_nmf.R"
+        "scripts/11_prepare_nmf.R"
 

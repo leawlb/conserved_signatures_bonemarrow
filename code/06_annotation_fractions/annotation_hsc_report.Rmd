@@ -28,7 +28,7 @@ source(file = "../source/colors.R")
 source(file = "../source/plotting.R")
 source(file = "../source/sce_functions.R")
 
-sce_hsc <- readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/10_lcls_fractions/sce_hsc-10")
+sce_hsc <- readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/11_annotation/")
 fraction_curr <- sce_hsc$Fraction_ID[1]
 
 ```
@@ -863,5 +863,22 @@ marker_plotlist
 
 # NMF program analysis
 
+```{r}
+
+head(metadata(sce_hsc)$score_list)
+head(metadata(sce_hsc)$usage_list)
+head(metadata(sce_hsc)$cluster_list)
+
+```
+
+```{r}
+
+plot <- umap_program(sce_hsc[,match(colnames(sce_hsc), 
+                                   rownames(metadata(sce_hsc)$usage_list[["mmus"]]))],
+                     species = "mmus", 
+                     program = colnames(metadata(sce_hsc)$usage_list[["mmus"]])[1])
+plot
+
+```
 
 

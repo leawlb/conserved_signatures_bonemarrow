@@ -40,6 +40,23 @@ umap_gene <- function(sce, color_by){
 }
 
 #-------------------------------------------------------------------------------
+# UMAP for gene expression
+umap_program <- function(sce, species, program){
+  
+  base <- ggplot(data.frame(reducedDims(sce_hsc)[["UMAP"]]),
+                 aes(x = X1, y = X2, 
+                     color = metadata(sce_hsc)$usage_list[[species]][,program]))+
+    scale_color_gradientn(program, colors = c("black", "darkorange3", "orange", "lightgoldenrod"))+
+    geom_point(size = 0.01)+
+    theme_classic()+
+    theme(axis.text = element_blank())+
+    ylab("UMAP 2")+
+    xlab("UMAP 1")
+  
+  return(base)
+}
+
+#-------------------------------------------------------------------------------
 # basic UMAP only for legend generation (point sizes visible in legends)
 umap_legend <- function(sce, color_by){
   

@@ -1,0 +1,53 @@
+#-------------------------------------------------------------------------------
+
+library(DropletUtils)
+library(Seurat)
+library(scran)
+library(GOfuncR)
+set.seed(37)
+
+# Use seurats wilcoxon test-based method to find markers
+# see https://www.biorxiv.org/content/10.1101/2022.05.09.490241v1
+
+#-------------------------------------------------------------------------------
+
+sce <- readRDS(file = snakemake@input[["sce_10"]])
+nr_hvgs <- snakemake@params[["nr_hvgs"]]
+
+# convert to seurat
+seurat <- as.Seurat(sce, counts = "counts", data = "logcounts",) 
+Idents(seurat) <- sce$cluster_louvain
+
+# get hvgs for marker genes
+hvgs <- modelGeneVar(sce)
+hvgs <- getTopHVGs(hvgs, n=nr_hvgs)
+
+# find marker genes for each cluster
+clustlist <- as.list(1:length(unique(sce$cluster_louvain)))
+cluster_markers <- lapply(clustlist, function(x){
+  markers <- FindMarkers(seurat, test.use = "wilcox", ident.1 = x, 
+                         features = hvgs)
+  markers <- markers[order(abs(markers$avg_log2FC), decreasing=TRUE),]
+  markers$which_cluster <- rep(x, nrow(markers))
+  return(markers)
+})
+
+saveRDS(cluster_markers, file = snakemake@output[["results_markers"]] )
+
+# use marker genes as input for GO analysis
+get_go_results <- function(markers){
+  
+  go_input_df <- data.frame(
+    gene_ids = rownames(markers),
+    gene_scores =  markers$avg_log2FC
+  )
+  
+  # perform GO analysis using logFC to determine enrichment
+  go_result <- go_enrich(go_input_df, organismDb='Mus.musculus',
+                         test='wilcoxon', n_randsets=100)
+  return(go_result)  
+}
+
+go_results <- lapply(cluster_markers, get_go_results)
+
+saveRDS(go_results, file = snakemake@output[["results_go"]] )

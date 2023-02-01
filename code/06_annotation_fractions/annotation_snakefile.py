@@ -23,20 +23,17 @@ def get_list(metadata, column):
   values = values.tolist()
   return(values)
   
-species = get_list(metadata = METADATA, column = "Species_ID")
-print(species) 
+fractions = get_list(metadata = METADATA, column = "Fraction_ID")
+print(fractions) 
 
 # construct paths for all possible outputs/targets, required for rule all
-targets = [OUTPUT_BASE_PATH + "/sce_objects/14_scmp_cluster/sce_" + s + "-14" for s in species]
+targets = []
 
-for s in species:
-  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/14_scmp_cluster/sce_" + s + "_nbc-14"]
-  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/15_scmp_reference/sce_" + s + "-15"]
-  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/06_annotation/" + s + "/annotation_species_report_" + s + "_refanno.html"]
-
-if config["run_annotation_summary_scmap"]:
-  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/reports/06_annotation/annotation_summary_scmap.html"]
-
+for f in fractions:
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/11_annotation/results_markers/markers_" + f]
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/11_annotation/results_go/go_" + f]
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/11_annotation/sce_nmf/sce_nmf_" + f]
+ 
 print(targets)
 
 #-------------------------------------------------------------------------------
@@ -50,50 +47,29 @@ rule all: # must contain all possible output paths from all rules
 
 #-------------------------------------------------------------------------------
 
-
-rule cluster_scmap_annotation:
+"""
+get marker genes for each cluster and do go analysis on the marker genes.
+Save both marker genes and GO results.
+"""
+rule go_analysis:
     input: 
-        sce_07 = OUTPUT_BASE_PATH + "/sce_objects/07_mrge/sce_{species}-07",
-        sce_12 = OUTPUT_BASE_PATH + "/sce_objects/12_lcls/sce_{species}-12",
-        mmus = OUTPUT_BASE_PATH + "/sce_objects/12_lcls/sce_mmus-12"
+        sce_10 = OUTPUT_BASE_PATH + "/sce_objects/10_lcls_fractions/sce_{fraction}-10"
     output:
-        sce_14 = OUTPUT_BASE_PATH + "/sce_objects/14_scmp_cluster/sce_{species}-14",
-        sce_14_nbc = OUTPUT_BASE_PATH + "/sce_objects/14_scmp_cluster/sce_{species}_nbc-14"
+        results_markers = OUTPUT_BASE_PATH + "/sce_objects/11_annotation/results_markers/markers_{fraction}",
+        results_go = OUTPUT_BASE_PATH + "/sce_objects/11_annotation/results_go/go_{fraction}"
     params:
-        species = species
+        nr_hvgs = config["values"]["preprocessing"]["nr_hvgs"],
     script:
-        "scripts/14_scmap_mmus_cluster_annotation.R"
-
-rule reference_scmap_annotation:
-    input: 
-        sce_14 = rules.cluster_scmap_annotation.output.sce_14
-    output:
-        sce_15 = OUTPUT_BASE_PATH + "/sce_objects/15_scmp_reference/sce_{species}-15"
-    params:
-        ref_baccin_sce = config["metadata"]["ref_baccin_sce"],
-        ref_dahlin_sce = config["metadata"]["ref_dahlin_sce"],
-        ref_dolgalev_sce = config["metadata"]["ref_dolgalev_sce"]
-    script:
-        "scripts/15_scmap_reference_celltype_annotation.R"
+        "scripts/11_01_go_analysis.R"
         
-rule make_species_report:
+"""
+Prepare NMF data and add to SCE objects for convenience.
+"""
+rule prepare_nmf:
     input: 
-        sce_15 = rules.reference_scmap_annotation.output
+        sce_10 = OUTPUT_BASE_PATH + "/sce_objects/10_lcls_fractions/sce_{fraction}-10"
     output:
-        OUTPUT_BASE_PATH + "/sce_objects/reports/06_annotation/{species}/annotation_species_report_{species}_refanno.html"
-    params:
-         color_tables = TABLES_PATH
+        sce_11 = OUTPUT_BASE_PATH + "/sce_objects/11_annotation/sce_nmf/sce_nmf_{fraction}"
     script:
-        "annotation_species_report_refanno.Rmd"
- 
-if config["run_annotation_summary_scmap"]:
-  rule make_summary_report_scmap:
-      input:
-          sce_14_path = OUTPUT_BASE_PATH + "/sce_objects/14_scmp_cluster/"
-      params:
-         color_tables = TABLES_PATH,
-         species = species
-      output:
-          OUTPUT_BASE_PATH + "/sce_objects/reports/06_annotation/annotation_summary_scmap.html"
-      script:
-          "annotation_summary_scmap.Rmd" 
+        "scripts/11_02_prepare_nmf.R"
+

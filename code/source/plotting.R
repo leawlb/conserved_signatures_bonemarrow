@@ -22,13 +22,29 @@ umap_base <- function(sce, color_by){
   
 }
 
+umap_base_l <- function(sce, color_by){
+  
+  base <- ggplot(data.frame(reducedDims(sce)[["UMAP"]]),
+                 aes(x = X1, y = X2, 
+                     color = colData(sce)[,colnames(colData(sce)) == color_by]))+
+    geom_point(size = 0.01)+
+    theme_classic()+
+    theme(axis.text = element_blank())+
+    ylab("UMAP 2")+
+    xlab("UMAP 1")+
+    scale_color_discrete(name = color_by)
+  
+  return(base)
+  
+}
+
 #-------------------------------------------------------------------------------
 # UMAP for gene expression
 umap_gene <- function(sce, color_by){
   
-  base <- ggplot(data.frame(reducedDims(sce_hsc)[["UMAP"]]),
+  base <- ggplot(data.frame(reducedDims(sce)[["UMAP"]]),
                  aes(x = X1, y = X2, 
-                     color = assays(sce_hsc)[["logcounts"]][rownames(assays(sce_hsc)[["logcounts"]]) == color_by,]))+
+                     color = assays(sce)[["logcounts"]][rownames(assays(sce)[["logcounts"]]) == color_by,]))+
     scale_color_gradientn(color_by, colors = c("black", "darkorange3", "orange", "lightgoldenrod"))+
     geom_point(size = 0.01)+
     theme_classic()+
@@ -43,10 +59,12 @@ umap_gene <- function(sce, color_by){
 # UMAP for gene expression
 umap_program <- function(sce, species, program){
   
-  base <- ggplot(data.frame(reducedDims(sce_hsc)[["UMAP"]]),
+  base <- ggplot(data.frame(reducedDims(sce)[["UMAP"]]),
                  aes(x = X1, y = X2, 
-                     color = metadata(sce_hsc)$usage_list[[species]][,program]))+
-    scale_color_gradientn(program, colors = c("black", "darkorange3", "orange", "lightgoldenrod"))+
+                     color = metadata(sce)$usage_list[[species]][,program]))+
+    scale_color_gradientn(name = paste0(program, " usage"), 
+                          colors = c("black", "darkorange3", 
+                                     "orange", "lightgoldenrod"))+
     geom_point(size = 0.01)+
     theme_classic()+
     theme(axis.text = element_blank())+
@@ -59,7 +77,7 @@ umap_program <- function(sce, species, program){
 #-------------------------------------------------------------------------------
 # basic UMAP only for legend generation (point sizes visible in legends)
 umap_legend <- function(sce, color_by){
-  
+
   base <- ggplot(data.frame(reducedDims(sce)[["UMAP"]]),
                  aes(x = X1, y = X2, 
                      color = colData(sce)[,colnames(colData(sce)) == color_by]))+

@@ -1,0 +1,171 @@
+---
+title: "1st layer marker gene report"
+author: "Lea Wölbert"
+date: '2023-03-10'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load libraries, source code 
+
+```{r load,  message = FALSE}
+library(DropletUtils, quietly = TRUE) 
+library(scater, quietly = TRUE) 
+library(scuttle, quietly = TRUE) 
+library(scran, quietly = TRUE) 
+library(tidyverse, quietly = TRUE) 
+library(DESeq2, quietly = TRUE) 
+library(pcaExplorer, quietly = TRUE) 
+library(sva, quietly = TRUE) 
+library(pheatmap)
+library("RColorBrewer")
+library("EnhancedVolcano")
+
+set.seed(37)
+```
+
+```{r}
+
+# load sources
+color_tables <- "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/color_tables"
+source(file = "../source/colors.R")
+source(file = "../source/plotting.R")
+source(file = "../source/sce_functions.R")
+
+#load SCE objects
+sce_cluster <- readRDS(file = snakemake@input[["sce_sep"]])
+sce <- readRDS(file = snakemake@input[["sce_11"]])
+cluster_curr <- snakemake@wildcards[["cluster"]]
+fraction_curr <- sce_cluster$Fraction_ID[1]
+prelim_curr <- sce$prelimanno_broad[sce$cluster_louvain == cluster_curr][1]
+title <- paste0("Cluster ", cluster_curr, " (", prelim_curr, ")")
+
+# load DeSeq2 objects, rlog transformed and SVA objects
+tdsq_before_list <- readRDS(file = snakemake@input[["tdsq_before_11"]])
+tdsq_after_list <- readRDS(file = snakemake@input[["tdsq_before_11"]])
+res_before_list_list <- readRDS(file = snakemake@input[["res_before_11"]])
+res_after_list_list <- readRDS(file = snakemake@input[["res_after_11"]])
+
+tdsq_before <- tdsq_before_list[[as.numeric(cluster_curr)]]
+tdsq_after <- tdsq_after_list[[as.numeric(cluster_curr)]]
+res_list_before <- res_before_list_list[[as.numeric(cluster_curr)]]
+res_list_after <- res_after_list_list[[as.numeric(cluster_curr)]]
+  
+  
+#knitr::knit_exit()
+
+```
+
+Prepare color schemes
+
+```{r}
+
+sce_cluster <- factor_reference_cts(sce_cluster)
+
+col_cts_baccin <- col_cts[match(levels(sce_cluster$baccin_celltype_scmapclust), 
+                                names(col_cts))]
+col_cts_dahlin <- col_cts[match(levels(sce_cluster$dahlin_celltype_scmapclust), 
+                                names(col_cts))]
+col_cts_dolgalev <- col_cts[match(levels(sce_cluster$dolgalev_celltype_scmapclust),
+                                  names(col_cts))]
+
+col_batch_exp_day <- col_alp[names(col_alp) %in% sce_cluster$Batch_exp_day]
+col_batch_seq <- col_num[names(col_num) %in% sce_cluster$Batch_sequencing]
+col_ann_age <- col_ann[names(col_ann) %in% sce_cluster$Age_ID]
+col_species <- col_spc[names(col_spc) %in% sce_cluster$Species_ID]
+
+col_clust_l <- col_num[names(col_num) %in% sce_cluster$cluster_louvain]
+
+```
+
+# MA Plots
+
+## BEFORE SVA
+
+```{r}
+
+for(i in 1:length(res_list_before)){
+    
+    comb <- res_list_before[[i]]
+    print(comb)
+    name <- names(res_list_before)[i]
+    plot1 <- plotMA(comb[[1]], ylim=c(-4,4), main = paste(name,  "results", 
+                                                          title, "BEFORE",
+                                                          sep = " "))
+    plot2 <- plotMA(comb[[2]], ylim=c(-4,4), main = paste(name, 
+                                                         "results shrunk",
+                                                          title, "BEFORE",
+                                                          sep = " "))
+    
+    plot3 <- EnhancedVolcano(comb[[2]], lab = rownames(comb[[2]]),
+                    x = 'log2FoldChange',  y = 'pvalue', 
+                    col = c("grey70", "grey70", "grey70", "dodgerblue3"),
+                    subtitle = "", colAlpha = 0.9, pointSize = 0.5)+
+      theme_classic()+
+      ggtitle(paste(name, "results shrunk",title, "BEFORE", sep = " "))+
+      theme(legend.position="none", plot.subtitle = element_blank())
+    
+    plot4 <- EnhancedVolcano(comb[[2]], lab = "",
+                    x = 'log2FoldChange',  y = 'pvalue', 
+                    col = c("grey70", "grey70", "grey70", "dodgerblue3"),
+                    subtitle = "", colAlpha = 0.9, pointSize = 0.5)+
+      theme_classic()+
+      ggtitle(paste(name, "results shrunk",title, "BEFORE", sep = " "))+
+      theme(legend.position="none", plot.subtitle = element_blank())
+  
+    plot1
+    plot2
+    print(plot3)
+    print(plot4)
+}
+
+```
+
+## AFTER SVA
+
+```{r}
+
+for(i in 1:length(res_list_after)){
+    
+    comb <- res_list_after[[i]]
+    print(comb)
+    name <- names(res_list_after)[i]
+    plot1 <- plotMA(comb[[1]], ylim=c(-4,4), main = paste(name,  "results", 
+                                                          title, "AFTER",
+                                                          sep = " "))
+    plot2 <- plotMA(comb[[2]], ylim=c(-4,4), main = paste(name, 
+                                                         "results shrunk",
+                                                          title, "AFTER",
+                                                          sep = " "))
+  
+    plot3 <- EnhancedVolcano(comb[[2]], lab = rownames(comb[[2]]),
+                    x = 'log2FoldChange',  y = 'pvalue', 
+                    col = c("grey70", "grey70", "grey70", "dodgerblue3"),
+                    subtitle = "", colAlpha = 0.9, pointSize = 0.5)+
+      theme_classic()+
+      ggtitle(paste(name, "results shrunk",title, "AFTER", sep = " "))+
+      theme(legend.position="none", plot.subtitle = element_blank())
+    
+    plot4 <- EnhancedVolcano(comb[[2]], lab = "",
+                    x = 'log2FoldChange',  y = 'pvalue', 
+                    col = c("grey70", "grey70", "grey70", "dodgerblue3"),
+                    subtitle = "", colAlpha = 0.9, pointSize = 0.5)+
+      theme_classic()+
+      ggtitle(paste(name, "results shrunk",title, "AFTER", sep = " "))+
+      theme(legend.position="none", plot.subtitle = element_blank())
+    
+    plot1
+    plot2
+    print(plot3)
+    print(plot4)
+}
+
+```
+
+```{r}
+sessionInfo()
+```
+

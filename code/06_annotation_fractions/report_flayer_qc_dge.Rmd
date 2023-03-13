@@ -1,0 +1,278 @@
+---
+title: "1st layer marker gene report"
+author: "Lea Wölbert"
+date: '2023-03-08'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load libraries, source code 
+
+```{r load,  message = FALSE}
+library(DropletUtils, quietly = TRUE) 
+library(scater, quietly = TRUE) 
+library(scuttle, quietly = TRUE) 
+library(scran, quietly = TRUE) 
+library(tidyverse, quietly = TRUE) 
+library(DESeq2, quietly = TRUE) 
+library(pcaExplorer, quietly = TRUE) 
+library(sva, quietly = TRUE) 
+library(pheatmap)
+library("RColorBrewer")
+set.seed(37)
+```
+
+```{r}
+
+# load sources
+color_tables <- "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/color_tables"
+source(file = "../source/colors.R")
+source(file = "../source/plotting.R")
+source(file = "../source/sce_functions.R")
+
+#load SCE objects
+sce_cluster <- readRDS(file = snakemake@input[["sce_sep"]])
+sce <- readRDS(file = snakemake@input[["sce_11"]])
+cluster_curr <- snakemake@wildcards[["cluster"]]
+fraction_curr <- sce_cluster$Fraction_ID[1]
+prelim_curr <- sce$prelimanno_broad[sce$cluster_louvain == cluster_curr][1]
+title <- paste0("Cluster ", cluster_curr, " (", prelim_curr, ")")
+
+# load DeSeq2 objects, rlog transformed and SVA objects
+sva_list <- readRDS(file = snakemake@input[["sva_11"]])
+rld_list <- readRDS(file = snakemake@input[["rld_11"]])
+tdsq_before_list <- readRDS(file = snakemake@input[["tdsq_before_11"]])
+tdsq_after_list <- readRDS(file = snakemake@input[["tdsq_before_11"]])
+
+sva <- sva_list[[as.numeric(cluster_curr)]]
+rld <- rld_list[[as.numeric(cluster_curr)]]
+tdsq_before <- tdsq_before_list[[as.numeric(cluster_curr)]]
+tdsq_after <- tdsq_after_list[[as.numeric(cluster_curr)]]
+
+#knitr::knit_exit()
+
+```
+
+Prepare color schemes
+
+```{r}
+
+sce_cluster <- factor_reference_cts(sce_cluster)
+
+col_cts_baccin <- col_cts[match(levels(sce_cluster$baccin_celltype_scmapclust), 
+                                names(col_cts))]
+col_cts_dahlin <- col_cts[match(levels(sce_cluster$dahlin_celltype_scmapclust), 
+                                names(col_cts))]
+col_cts_dolgalev <- col_cts[match(levels(sce_cluster$dolgalev_celltype_scmapclust),
+                                  names(col_cts))]
+
+col_batch_exp_day <- col_alp[names(col_alp) %in% sce_cluster$Batch_exp_day]
+col_batch_seq <- col_num[names(col_num) %in% sce_cluster$Batch_sequencing]
+col_ann_age <- col_ann[names(col_ann) %in% sce_cluster$Age_ID]
+col_species <- col_spc[names(col_spc) %in% sce_cluster$Species_ID]
+
+col_clust_l <- col_num[names(col_num) %in% sce_cluster$cluster_louvain]
+
+```
+
+# QC plots
+
+Use pcaExplorer for plots.
+
+```{r}
+
+plot1 <- distro_expr(rld, plot_type = "boxplot")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  theme(legend.position = "none")
+plot1
+
+```
+
+## PCA
+
+```{r}
+rld_pca <- prcomp(t(assay(rld)))
+
+ggdf <- as.data.frame(rld_pca$x)
+ggdf$Antibody_combination <- colData(rld)$Antibody_combination
+ggdf$age <- colData(rld)$age
+ggdf$condition <- colData(rld)$condition
+ggdf$batch <- colData(rld)$batch
+ggdf$Batch_sequencing <- colData(rld)$Batch_sequencing
+ggdf$sample <- colData(rld)$sample
+ggdf$ncells <- colData(rld)$ncells
+
+```
+
+```{r}
+rld_cor <- correlatePCs(rld_pca, colData(rld))
+plotPCcorrs(rld_cor)
+```
+
+```{r}
+
+plot1 <- ggplot(ggdf, aes(x = PC1, y = PC2, color = condition))+
+  geom_point()+
+  theme_classic()+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())+
+  ggtitle(title)+
+  scale_color_manual("Species", values = col_species)
+
+plot2 <- ggplot(ggdf, aes(x = PC1, y = PC2, color = age))+
+  geom_point()+
+  theme_classic()+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())+
+  ggtitle(title)+
+  scale_color_manual("Age", values = col_ann_age)
+
+plot3 <- ggplot(ggdf, aes(x = PC1, y = PC2, color = batch))+
+  geom_point()+
+  theme_classic()+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())+
+  ggtitle(title)+
+  scale_color_manual("Batch_exp_day", values = col_batch_exp_day)
+
+plot4 <- ggplot(ggdf, aes(x = PC1, y = PC2, color = Antibody_combination))+
+  geom_point()+
+  theme_classic()+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())+
+  ggtitle(title)
+
+plot5 <- ggplot(ggdf, aes(x = PC1, y = PC2, color = ncells))+
+  geom_point()+
+  theme_classic()+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())+
+  ggtitle(title)
+
+plot1
+plot2
+plot3
+plot4
+plot5
+
+```
+
+```{r}
+rld_pca <- prcomp(t(assay(rld)))
+plot3 <- pcascree(rld_pca, type="pev")
+print(plot3)
+```
+
+```{r}
+
+for(i in 1:4){
+
+  plot1 <- ggplot(ggdf, aes(x = ggdf[,i], y = condition, color = condition))+
+    geom_point()+
+    theme_classic()+
+    ggtitle(title)+
+    scale_color_manual("Species", values = col_species)+
+    xlab(paste0("PC", i))
+
+  plot2 <- ggplot(ggdf, aes(x = ggdf[,i], y = age, color = age))+
+    geom_point()+
+    theme_classic()+
+    ggtitle(title)+
+    scale_color_manual("Age", values = col_ann_age)+
+    xlab(paste0("PC", i))
+
+  plot3 <- ggplot(ggdf, aes(x = ggdf[,i], y = Antibody_combination, 
+                            color = Antibody_combination))+
+    geom_point()+
+    theme_classic()+
+    ggtitle(title)+
+    xlab(paste0("PC", i))
+
+  plot4 <- ggplot(ggdf, aes(x = ggdf[,i], y = batch, color = batch))+
+    geom_point()+
+    theme_classic()+
+    ggtitle(title)+
+    scale_color_manual("Batch_exp_day", values = col_batch_exp_day)+
+    xlab(paste0("PC", i))
+
+  plot5 <- ggplot(ggdf, aes(x = ggdf[,i], y = Batch_sequencing,
+                            color = Batch_sequencing))+
+    geom_point()+
+    theme_classic()+
+    ggtitle(title)+
+    scale_color_manual("Batch_sequencing", values = col_batch_seq)+
+    xlab(paste0("PC", i))
+  
+  plot6 <- ggplot(ggdf, aes(x = ggdf[,i], y = ncells, 
+                            color = ncells))+
+    geom_point()+
+    theme_classic()+
+    ggtitle(title)+
+    xlab(paste0("PC", i))
+
+  print(plot1)
+  print(plot2)
+  print(plot3)
+  print(plot4)
+  print(plot5)
+  print(plot6)
+}
+
+
+```
+
+```{r}
+
+hi_loadings(rld_pca, topN = 20, whichpc = 1)
+hi_loadings(rld_pca, topN = 20, whichpc = 2)
+
+```
+
+## Distance
+
+```{r}
+
+sampleDists <- dist(t(assay(rld)))
+sampleDistMatrix <- as.matrix(sampleDists)
+rownames(sampleDistMatrix) <- rld$condition
+colnames(sampleDistMatrix) <- NULL
+colors <- colorRampPalette(rev(brewer.pal(9, "Blues")) )(255)
+pheatmap(sampleDistMatrix,
+         clustering_distance_rows=sampleDists,
+         clustering_distance_cols=sampleDists,
+         col=colors)
+
+knitr::knit_exit()
+
+```
+
+## SVA
+
+```{r}
+
+n_sv <- sva[[1]]
+print(n_sv)
+
+svseq <- sva[[2]]
+
+if(svseq != 0){
+  for (i in 1:ncol(svseq$sv)){
+    stripchart(svseq$sv[, i] ~ tdsq_before$Antibody_combination, vertical = TRUE, main = paste0("SV", i, " ", title))
+    stripchart(svseq$sv[, i] ~ tdsq_before$age, vertical = TRUE, main = paste0("SV", i, " ", title))
+    stripchart(svseq$sv[, i] ~ tdsq_before$condition, vertical = TRUE, main = paste0("SV", i, " ", title))
+    stripchart(svseq$sv[, i] ~ tdsq_before$batch, vertical = TRUE, main = paste0("SV", i, " ", title))
+    stripchart(svseq$sv[, i] ~ tdsq_before$Batch_sequencing, vertical = TRUE, main = paste0("SV", i, " ", title))
+    stripchart(svseq$sv[, i] ~ tdsq_before$sample, vertical = TRUE, main = paste0("SV", i, " ", title))
+    abline(h = 0)
+  }
+}
+
+```
+
+```{r}
+sessionInfo()
+```

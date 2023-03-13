@@ -28,7 +28,7 @@ source(file = "../source/colors.R")
 source(file = "../source/plotting.R")
 source(file = "../source/sce_functions.R")
 
-sce_hsc <- readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/11_annotation/")
+sce_hsc <- readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/10_lcls_fractions/sce_hsc-10")
 fraction_curr <- sce_hsc$Fraction_ID[1]
 
 ```
@@ -89,7 +89,7 @@ identity_plots <- function(sce){
   PLOT_2 <- ggarrange(plot_2, legend_2)
   PLOT_3 <- ggarrange(plot_3, legend_3)
 
-  return(list(PLOT_1, PLOT_2, PLOT_3))
+  return(list(plot_1, PLOT_1, PLOT_2, PLOT_3))
 }
 
 identity_plots <- identity_plots(sce_hsc)
@@ -174,7 +174,9 @@ Not necessarily quiescent or LT.
 hsc_marker_genes <- list(
  "2410080I02Rik",
  "Aldoc", 
+ "Cd48",
  "Cd38",
+ "Cd34",
  "Cd82",
  "Cish",
  "Ctnnal1",
@@ -259,6 +261,51 @@ for(i in hsc_marker_genes){
 
 plot_list_hsc2 <- lapply(hsc_marker_genes, ggdf = ggdf, gene_exp_bees)
 plot_list_hsc2
+
+```
+
+```{r}
+
+gene_exp_umaps_fg <- function(gene){
+ 
+  plot_1 <- umap_gene(sce_hsc, gene)+
+    facet_grid(cols = vars(sce_hsc$Species_ID))
+  return(plot_1)
+
+}
+
+plotlist <- lapply(hsc_marker_genes, gene_exp_umaps_fg)
+plotlist
+
+ggdf_temp <- ggdf
+ggdf_temp$Species_ID[ggdf_temp$Species_ID == "mcar"] <- "mus caroli"
+ggdf_temp$Species_ID[ggdf_temp$Species_ID == "mcas"] <- "mus musculus castaneus"
+ggdf_temp$Species_ID[ggdf_temp$Species_ID == "mmus"] <- "C57BL6/J"
+ggdf_temp$Species_ID[ggdf_temp$Species_ID == "mspr"] <- "mus spretus"
+ggdf_temp$Species_ID <- factor(ggdf_temp$Species_ID, levels = c(
+  "C57BL6/J", "mus musculus castaneus",  "mus spretus", "mus caroli")
+)
+
+ggplot(ggdf_temp, 
+       aes(x = Species_ID, 
+           y = logc[rownames(logc) == "Cd48",]))+
+  ggbeeswarm::geom_quasirandom(size = 0.2, color = "grey65")+
+  theme_classic()+
+  geom_boxplot(color = "black", alpha = 0)+
+  ylab("Cd48 renormalized logcounts")+
+  theme(axis.text.x = element_text(angle = 90),
+        axis.title.x = element_blank())
+
+ggplot(ggdf_temp, 
+       aes(x = Species_ID,
+           y = logc[rownames(logc) == "Cd34",]))+
+  ggbeeswarm::geom_quasirandom(size = 0.2, color = "grey65")+
+  theme_classic()+
+  geom_boxplot(color = "black", alpha = 0)+
+  ylab("Cd34 renormalized logcounts")+
+  theme(axis.text.x = element_text(angle = 90),
+        axis.title.x = element_blank())
+  
 
 ```
 
@@ -808,8 +855,8 @@ cluster_markers <- readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/
 marker_plotlist <- lapply(cluster_markers, function(x){
   
   c <- x$which_cluster[1]
-  if(length(which(x$avg_log2FC >0))>6){
-    markers_pos <- as.list(rownames(x[x$avg_log2FC >0,])[1:6])
+  if(length(which(x$avg_log2FC >0))>10){
+    markers_pos <- as.list(rownames(x[x$avg_log2FC >0,])[1:10])
   }else{
     markers_pos <- as.list(rownames(x[x$avg_log2FC >0,])) 
   }
@@ -863,22 +910,145 @@ marker_plotlist
 
 # NMF program analysis
 
+SCE containing NMF data is slightly subset since Adrien has an older version of
+the SCE objects with slightly different retained cells
+
+```{r}
+sce_hsc <- readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/sce_objects/11_annotation/sce_nmf/sce_nmf_hsc")
+```
+
+Redefine colors since some cells are missing
+
 ```{r}
 
-head(metadata(sce_hsc)$score_list)
-head(metadata(sce_hsc)$usage_list)
-head(metadata(sce_hsc)$cluster_list)
+sce_hsc <- factor_reference_cts(sce_hsc)
+
+col_cts_baccin <- col_cts[match(levels(sce_hsc$baccin_celltype_scmapclust), 
+                                names(col_cts))]
+col_cts_dahlin <- col_cts[match(levels(sce_hsc$dahlin_celltype_scmapclust), 
+                                names(col_cts))]
+col_cts_dolgalev <- col_cts[match(levels(sce_hsc$dolgalev_celltype_scmapclust),
+                                  names(col_cts))]
+
+col_batch_exp_day <- col_alp[names(col_alp) %in% sce_hsc$Batch_exp_day]
+col_batch_seq <- col_num[names(col_num) %in% sce_hsc$Batch_sequencing]
+col_ann_age <- col_ann[names(col_ann) %in% sce_hsc$Age_ID]
+col_ann_fraction <- col_ann[names(col_ann) %in% sce_hsc$Fraction_ID]
+col_species <- col_spc[names(col_spc) %in% sce_hsc$Species_ID]
+
+col_clust_l <- col_num[names(col_num) %in% sce_hsc$cluster_louvain]
 
 ```
 
+## Usage UMAPs
+
 ```{r}
 
-plot <- umap_program(sce_hsc[,match(colnames(sce_hsc), 
-                                   rownames(metadata(sce_hsc)$usage_list[["mmus"]]))],
-                     species = "mmus", 
-                     program = colnames(metadata(sce_hsc)$usage_list[["mmus"]])[1])
-plot
+species_list <- as.list(names(metadata(sce_hsc)$usage_list))
+
+plot_list_programs <- lapply(species_list, function(species){
+  
+  program_list <- as.list(colnames(metadata(sce_hsc)$usage_list[[species]]))
+  sce_temp <- sce_hsc[,sce_hsc$Species_ID == species]
+  
+  plotlist_program <- lapply(program_list, function(program){
+  
+    plot1 <- umap_program(sce = sce_temp,
+                          species = species, 
+                          program = program)
+  
+    plot2 <- ggplot(data.frame(reducedDims(sce_temp)[["UMAP"]]),
+                 aes(x = X1, y = X2, 
+                     color = as.character(metadata(sce_temp)$cluster_list[[species]][,program])))+
+    scale_color_manual(name = paste0(program, " cluster"), values = c("1" = "grey60",
+                                                     "2" = "dodgerblue3"))+
+    geom_point(size = 0.01)+
+    theme_classic()+
+    theme(axis.text = element_blank())+
+    ylab("UMAP 2")+
+    xlab("UMAP 1")
+    
+    plot_title1 <- plot1+ggtitle(species)
+    plot_title2 <- plot2+ggtitle(species)
+    return(list(plot_title1, plot_title2))
+  })
+  return(plotlist_program)
+})
+
+plot_list_programs
 
 ```
 
+## Usage histograms
+
+```{r}
+
+species_list <- as.list(names(metadata(sce_hsc)$usage_list))
+histo_list_programs <- lapply(species_list, function(species){
+  
+  program_list <- as.list(colnames(metadata(sce_hsc)$usage_list[[species]]))
+  clusters <- metadata(sce_hsc)$cluster_list[[species]]
+  sce_temp <- sce_hsc[,sce_hsc$Species_ID == species]
+  
+  plotlist_program <- lapply(program_list, function(program){
+  
+    plot1 <- ggplot(metadata(sce_temp)$usage_list[[species]],
+                 aes(y = metadata(sce_temp)$usage_list[[species]][,program], 
+                     x = sce_temp$cluster_louvain,
+                     color = sce_temp$cluster_louvain))+
+      geom_jitter(size = 0.2)+
+      geom_violin(alpha = 0, color ="black", scale = "width")+
+      theme_classic()+
+      scale_color_manual("cluster (louvain)", values = col_clust_l)+
+      ylab(paste0(program, " usage"))+
+      xlab("cluster (louvain)")
+    
+    plot2 <- ggplot(metadata(sce_temp)$usage_list[[species]],
+                 aes(y = metadata(sce_temp)$usage_list[[species]][,program], 
+                     x = sce_temp$Species_ID))+
+      geom_jitter(size = 0.2, color = "grey60")+
+      geom_violin(alpha = 0, color ="black", scale = "width")+
+      theme_classic()+
+      scale_color_manual("cluster (louvain)", values = col_clust_l)+
+      ylab(paste0(program, " usage"))+
+      theme(axis.title.x = element_blank(),
+            axis.text.x = element_blank())   
+    
+    plot3 <- ggplot(metadata(sce_temp)$usage_list[[species]],
+                 aes(y = metadata(sce_temp)$usage_list[[species]][,program], 
+                     x = sce_temp$cluster_louvain,
+                     color = as.character(clusters[,program])))+
+      geom_jitter(size = 0.2)+
+      geom_violin(alpha = 0, color ="black", scale = "width")+
+      theme_classic()+
+      scale_color_manual("cluster program", values = c("1" = "grey60",
+                                                       "2" = "dodgerblue3"))+
+      ylab(paste0(program, " usage"))+
+      xlab("cluster (louvain)")
+    
+    plot4 <- ggplot(metadata(sce_temp)$usage_list[[species]],
+                 aes(y = metadata(sce_temp)$usage_list[[species]][,program], 
+                     x = sce_temp$Species_ID,
+                     color = as.character(clusters[,program])))+
+      geom_jitter(size = 0.2)+
+      geom_violin(alpha = 0, color ="black", scale = "width")+
+      theme_classic()+
+      scale_color_manual("cluster program", values = c("1" = "grey60",
+                                                       "2" = "dodgerblue3"))+
+      ylab(paste0(program, " usage"))+
+      theme(axis.title.x = element_blank(),
+            axis.text.x = element_blank()) 
+  
+    plot_title1 <- plot1+ggtitle(species)
+    plot_title2 <- plot2+ggtitle(species)
+    plot_title3 <- plot3+ggtitle(species)
+    plot_title4 <- plot4+ggtitle(species)
+    return(list(plot_title1, plot_title3, plot_title2, plot_title4))
+  })
+  return(plotlist_program)
+})
+
+histo_list_programs
+
+```
 

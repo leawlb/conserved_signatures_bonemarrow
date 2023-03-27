@@ -1,8 +1,10 @@
 
 snakemake --cluster "bsub -n2 -q long -R rusage[mem=50GB]" -p -j30 -c20 -s annotation_snakefile.py --configfile ../config/config.yaml -n
 
+snakemake --cluster "bsub -n2 -q long -R rusage[mem=50GB]" -p -j30 -c20 -s annotation_snakefile.py --configfile ../config/config.yaml -n
 
-snakemake --cluster "bsub -n2 -q long -R rusage[mem=50GB]" -p -j70 -c20 -s annotation_snakefile.py --configfile ../config/config.yaml -R make_report_flayer_pairwise_dge -n
+
+snakemake --cluster "bsub -n3 -q long -R rusage[mem=50GB]" -p -j100 -c20 -s annotation_snakefile.py --configfile ../config/config.yaml  -R make_report_flayer_markergenes
 
 snakemake --cluster "bsub -n20 -q long -R rusage[mem=100GB]" -p -j4 -c20 -s annotation_snakefile.py --configfile ../config/config.yaml -n
 

@@ -1,5 +1,5 @@
 ---
-title: "1st layer marker gene report"
+title: "1st layer DGE qc report"
 author: "Lea Wölbert"
 date: '2023-03-08'
 output: html_document

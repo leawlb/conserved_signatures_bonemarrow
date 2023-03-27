@@ -186,7 +186,13 @@ Prepare Plots
 ```{r}
 
 gene_exps <- function(gene){
+  
+  sce_cluster$Species_ID <- factor(sce_cluster$Species_ID,
+                                   levels = c("mmus", "mcas", "mspr", "mcar"))
 
+  sce$Species_ID <- factor(sce$Species_ID,
+                           levels = c("mmus", "mcas", "mspr", "mcar"))
+  
   # Gene expression UMAP in cluster X
   plot_1 <- umap_gene(sce_cluster, gene)
 
@@ -197,6 +203,8 @@ gene_exps <- function(gene){
   ggdf <- as.data.frame(colData(sce_cluster))
   logc <- assays(sce_cluster)[["logcounts"]]
 
+  ggdf$Species_ID <- factor(ggdf$Species_ID,
+                            levels = c("mmus", "mcas", "mspr", "mcar"))
   
   plot_3 <- ggplot(ggdf, aes(x = cluster_louvain,
                              y = logc[rownames(logc) == gene,]))+
@@ -230,21 +238,24 @@ gene_exps <- function(gene){
     geom_boxplot(color = "black", alpha = 0)+
     ylab(paste0(gene, " expression"))
   
-  return(list(plot_1, plot_2, plot_3, plot_4, plot_5, plot_6, plot_7))
+  return(list(plot_1, plot_2, plot_3, plot_4, plot_5, plot_6, plot_7, gene))
 }
 
 ```
 
 ```{r}
 
-found_markers <- rownames(markers)[1:40]
+found_markers <- rownames(markers)[1:50]
 
 #TODO: TAKE FROM CSV
 
-base_markers_hcs <- c(
+basic_markers_hsc <- c(
+  'Adgrl4',
   'Birc5',
+  'Blvrb',
   'Car1',
   'Car2',
+  'Cd9',
   'Cd34',
   'Cd52',
   'Cd63',
@@ -259,6 +270,9 @@ base_markers_hcs <- c(
   'Cebpb',
   'Cebpe',
   'Cenpa',
+  'Cenpe',
+  'Cenpf',
+  'Cited2',
   'Ctsg',
   'Dntt',
   'Egr1',
@@ -270,22 +284,145 @@ base_markers_hcs <- c(
   'Gata2',
   'Hba-a1',
   'Hlf',
+  'Hmga2',
+  'Hmgb2',
+  'Hmgb3',
   'Il7r',
   'Kit',
   'Klf1',
   'Ly6a',
+  'Ly6d',
+  'Ly6e',
+  'Mecom',
+  'Mllt3',
+  'Mmrn1',
   'Meis1',
   'Mki67',
   'Mpo',
   'Pbx1',
   'Pf4',
+  'Plac8',
+  'Prdx4',
   'Procr',
   'S100a8',
   'S100a9',
   'Satb1',
   'Slamf1',
+  'Sox4',
   'Spi1',
-  'Top2a'
+  'Top2a',
+  'Tyrobp'
+)
+
+specific_markers_hsc <- c(
+  'Alas1',
+  'Alcam',
+  'Aldh1a1',
+  'Alox5ap',
+  'Anxa3',
+  'Ap3s1',
+  'Calr',
+  'Ccnd2',
+  'Ccne1',
+  'Cd7',
+  'Cdkn1c',
+  'Chil1',
+  'Chil3',
+  'Clec12a',
+  'Clec1a',
+  'Clec12a',
+  'Cpa3',
+  'Crip1',
+  'Ebf1',
+  'Emb',
+  'Epor',
+  'Erg',
+  'F11r',
+  'F13a1',
+  'Fabp5',
+  'Fcer1g',
+  'Fcgr3',
+  'Fcnb',
+  'Fgd5',
+  'Foxo1',
+  'Fxyd5',
+  'Gfi1',
+  'Gfi1b',
+  'Gng11',
+  'Grb10',
+  'Gstm1',
+  'Gzmb',
+  'Hdc',
+  'Hells',
+  'Hist1h1e',
+  'Hoxa9',
+  'Id2',
+  'Igf1r',
+  'Il17ra',
+  'Irf8',
+  'Itga2b',
+  'Itgam',
+  'Itgb2l',
+  'Krt18',
+  'Lcn2',
+  'Ldb1',
+  'Ldhb',
+  'Lmo4',
+  'Lrg1',
+  'Lsp1',
+  'Lst1',
+  'Ltb',
+  'Ltf',
+  'Ly86',
+  'Lyz1',
+  'Lyz2',
+  'Mcm6',
+  'Mcm7',
+  'Mcpt8',
+  'Mef2c',
+  'Mif',
+  'Mpl',
+  'Ms4a3',
+  'Ms4a6c',
+  'Myb',
+  'Mycn',
+  'Ndst2',
+  'Ngp',
+  'Nme1',
+  'Pglyrp1',
+  'Pkm',
+  'Prdx4',
+  'Prss50',
+  'Prtn3',
+  'Rab27b',
+  'Ramp1',
+  'Rap1b',
+  'Rbp1',
+  'Rif1',
+  'Runx1',
+  'S100a10',
+  'Sell',
+  'Serpinb6a',
+  'Sh3bgrl3',
+  'Smim1',
+  'Socs2',
+  'Sptbn1',
+  'Srgn',
+  'Syce2',
+  'Syne1',
+  'Tal1',
+  'Tespa1',
+  'Tet1',
+  'Tgm2',
+  'Tie1',
+  'Tinagl1',
+  'Tmsb10',
+  'Tmsb4x',
+  'Txnip',
+  'Uba7',
+  'Ube2c',
+  'Ugcg',
+  'Vamp5'
 )
 
 base_markers_str <- c(
@@ -315,6 +452,8 @@ base_markers_str <- c(
   'Pdgfra',
   'Pecam1',
   'Ptprc',
+  'Rag1',
+  'Rag2',
   'S100a8',
   'S100a9',
   'Kitl',
@@ -325,11 +464,14 @@ base_markers_str <- c(
   'Top2a',
   'Vcam1',
   'Vim',
-  'Wif1'
+  'Vpreb1',
+  'Vpreb3',
+  'Wif1',
+  'Zfpm1'
 )  
 
 if(fraction_curr == "hsc"){
-  all_markers <- unique(c(found_markers, base_markers_hcs))
+  all_markers <- unique(c(found_markers, basic_markers_hsc, specific_markers_hsc))
 }else if(fraction_curr == "str"){
   all_markers <- unique(c(found_markers, base_markers_str))
 }
@@ -338,6 +480,8 @@ all_markers <- as.list(sort(all_markers))
 
 all_markers[which(!all_markers %in% rownames(sce))]
 print(all_markers)
+
+#knitr::knit_exit()
 ```
 
 ## UMAPs

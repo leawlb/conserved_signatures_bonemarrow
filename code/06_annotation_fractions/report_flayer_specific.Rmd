@@ -1,0 +1,386 @@
+---
+title: "1st layer specific genes report"
+author: "Lea Wölbert"
+date: '2023-03-14'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load libraries, source code 
+
+```{r load,  message = FALSE}
+library(DropletUtils, quietly = TRUE) 
+library(scater, quietly = TRUE) 
+library(scuttle, quietly = TRUE) 
+library(scran, quietly = TRUE) 
+library(tidyverse, quietly = TRUE) 
+library(DESeq2, quietly = TRUE) 
+library(pcaExplorer, quietly = TRUE) 
+library(sva, quietly = TRUE) 
+library(pheatmap)
+library(EnhancedVolcano)
+library("RColorBrewer")
+set.seed(37)
+```
+
+```{r}
+
+# load sources
+color_tables <- "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/color_tables"
+source(file = "../source/colors.R")
+source(file = "../source/plotting.R")
+source(file = "../source/sce_functions.R")
+
+#load SCE objects
+sce_cluster <- readRDS(file = snakemake@input[["sce_sep"]])
+sce <- readRDS(file = snakemake@input[["sce_11"]])
+cluster_curr <- snakemake@wildcards[["cluster"]]
+fraction_curr <- sce_cluster$Fraction_ID[1]
+prelim_curr <- sce$prelimanno_broad[sce$cluster_louvain == cluster_curr][1]
+
+# load DeSeq2 objects
+tdsq_list <- readRDS(file = snakemake@input[["tdsq_11"]])
+tdsq <- tdsq_list[[as.numeric(cluster_curr)]]
+
+res_list <- readRDS(file = snakemake@input[["cluster_res_df"]])
+names(res_list) <- c(1:length(unique(sce$cluster_louvain)))
+res_df <- res_list[[as.character(cluster_curr)]]
+
+fc_cutoff <- snakemake@params[["fc_cutoff"]]
+padj_cutoff <- snakemake@params[["padj_cutoff"]]
+
+title <- paste0("Cluster ", cluster_curr, " (", prelim_curr, ") ",
+                "FC ", fc_cutoff, ", PADJ ", padj_cutoff)
+  
+```
+
+# PVal visualisation
+
+```{r}
+see_pvals <- function(res_df){
+  plot1 <- EnhancedVolcano(res_df, lab = "",
+                           x = 'log2FoldChange',  y = 'pvalue', 
+                           col = c("grey70", "grey70", "grey70", "dodgerblue3"),
+                           subtitle = "", colAlpha = 0.9, pointSize = 0.5,
+                           pCutoff = padj_cutoff, FCcutoff = fc_cutoff)+
+    theme_classic()+
+    ggtitle(paste(title, res_df$comparison[1]))+
+    theme(legend.position="none", plot.subtitle = element_blank())
+
+  print(plot1)
+}
+
+```
+
+## MMUS MCAS
+
+```{r}
+res_df_comb_mmus_mcas <- res_df[res_df$comparison == "mmus-mcas",]
+see_pvals(res_df = res_df_comb_mmus_mcas)
+```
+
+## MMUS MSPR
+
+```{r}
+res_df_comb_mmus_mspr <- res_df[res_df$comparison == "mmus-mspr",]
+see_pvals(res_df = res_df_comb_mmus_mspr)
+```
+
+## MMUS MCAR
+
+```{r}
+res_df_comb_mmus_mcar <- res_df[res_df$comparison == "mmus-mcar",]
+see_pvals(res_df = res_df_comb_mmus_mcar)
+```
+
+## MCAS MSPR
+
+```{r}
+res_df_comb_mcas_mspr <- res_df[res_df$comparison == "mcas-mspr",]
+see_pvals(res_df = res_df_comb_mcas_mspr)
+```
+
+## MCAS MCAR
+
+```{r}
+res_df_comb_mcas_mcar <- res_df[res_df$comparison == "mcas-mcar",]
+see_pvals(res_df = res_df_comb_mcas_mcar)
+```
+
+## MSPR MCAR
+
+```{r}
+res_df_comb_mspr_mcar <- res_df[res_df$comparison == "mspr-mcar",]
+see_pvals(res_df = res_df_comb_mspr_mcar)
+```
+
+# Species-specific genes
+
+```{r}
+
+res_specific <- res_df[which(res_df$specificity != FALSE),]
+
+```
+
+```{r}
+res_specific_mmus <- res_specific[res_specific$species == "mmus",]
+print(length(unique(res_specific_mmus$gene)))
+print(sort(unique(res_specific_mmus$gene)))
+
+res_specific_mcas <- res_specific[res_specific$species == "mcas",]
+print(length(unique(res_specific_mcas$gene)))
+print(sort(unique(res_specific_mcas$gene)))
+
+res_specific_mspr <- res_specific[res_specific$species == "mspr",]
+print(length(unique(res_specific_mspr$gene)))
+print(sort(unique(res_specific_mspr$gene)))
+
+res_specific_mcar <- res_specific[res_specific$species == "mcar",]
+print(length(unique(res_specific_mcar$gene)))
+print(sort(unique(res_specific_mcar$gene)))
+
+knitr::knit_exit()
+```
+
+## MMUS
+
+```{r}
+
+if(nrow(res_specific_mmus) > 0){
+  for(i in sort(unique(res_specific_mmus$gene))){
+    
+    print(i)
+    print(res_specific_mmus[res_specific_mmus$gene == i,])
+
+    dat <- plotCounts(tdsq, gene=i, intgroup="condition", 
+                                 returnData=TRUE)
+    dat$condition <- factor(dat$condition, 
+                            levels = c("mmus", "mcas", "mspr", "mcar"))
+    
+    plot1 <- ggplot(dat, aes(x=condition, y=count))+ 
+      geom_point(position=position_jitter(w=0.1,h=0))+
+      ggtitle(paste0(title, " mmus specific gene ", i, " pseudobulk"))+
+      theme_classic()+
+      ylab(paste0(i, " expression, normalized"))
+    print(plot1)
+  
+    colData(sce)$Species_ID <- factor(colData(sce)$Species_ID, 
+                              levels = c("mmus", "mcas", "mspr", "mcar"))
+  
+    plot_2 <- umap_gene(sce, i)+
+      facet_grid(cols = vars(sce$Species_ID))+
+      ggtitle(paste0(title, " mmus specific gene ", i))
+    plot_3 <- umap_gene(sce_cluster, i)+
+      facet_grid(cols = vars(sce_cluster$Species_ID))+
+      ggtitle(paste0(title, " mmus specific gene ", i))
+  
+    ggdf <- as.data.frame(colData(sce_cluster))
+    logc <- assays(sce_cluster)[["logcounts"]]
+    ggdf$Species_ID <- factor(ggdf$Species_ID, 
+                              levels = c("mmus", "mcas", "mspr", "mcar"))
+    colData(sce_cluster)$Species_ID <- factor(colData(sce_cluster)$Species_ID, 
+                              levels = c("mmus", "mcas", "mspr", "mcar"))
+    
+    plot_4 <- ggplot(ggdf, aes(x = cluster_louvain,
+                               y = logc[rownames(logc) == i,]))+
+      ggbeeswarm::geom_quasirandom(size = 0.2, color = "grey60")+
+      theme_classic()+
+      geom_boxplot(color = "black", alpha = 0)+
+      ylab(paste0(i, " expression (log-norm)"))+
+      facet_grid(cols = vars(sce_cluster$Species_ID))+
+      ggtitle(paste0(title, " mmus specific gene ", i, " SCE"))
+    
+    print(plot_2)
+    print(plot_3)
+    print(plot_4)
+  }
+}else{
+  print("no specific genes")
+}
+
+```
+
+## MCAS
+
+```{r}
+
+if(nrow(res_specific_mcas) > 0){
+  for(i in sort(unique(res_specific_mcas$gene))){
+  
+    print(i)
+    print(res_specific_mcas[res_specific_mcas$gene == i,])
+    
+    dat <- plotCounts(tdsq, gene=i, intgroup="condition", 
+                                 returnData=TRUE)
+    dat$condition <- factor(dat$condition, 
+                            levels = c("mmus", "mcas", "mspr", "mcar"))
+    
+    plot1 <- ggplot(dat, aes(x=condition, y=count))+ 
+      geom_point(position=position_jitter(w=0.1,h=0))+
+      ggtitle(paste0(title, " mcas specific gene ", i, " pseudobulk"))+
+      theme_classic()+
+      ylab(paste0(i, " expression, normalized"))
+    print(plot1)
+  
+    colData(sce)$Species_ID <- factor(colData(sce)$Species_ID, 
+                              levels = c("mmus", "mcas", "mspr", "mcar"))
+  
+    plot_2 <- umap_gene(sce, i)+
+      facet_grid(cols = vars(sce$Species_ID))+
+      ggtitle(paste0(title, " mcas specific gene ", i))
+    plot_3 <- umap_gene(sce_cluster, i)+
+      facet_grid(cols = vars(sce_cluster$Species_ID))+
+      ggtitle(paste0(title, " mcas specific gene ", i))
+  
+    ggdf <- as.data.frame(colData(sce_cluster))
+    logc <- assays(sce_cluster)[["logcounts"]]
+    ggdf$Species_ID <- factor(ggdf$Species_ID, 
+                              levels = c("mmus", "mcas", "mspr", "mcar"))
+    colData(sce_cluster)$Species_ID <- factor(colData(sce_cluster)$Species_ID, 
+                              levels = c("mmus", "mcas", "mspr", "mcar"))
+
+    plot_4 <- ggplot(ggdf, aes(x = cluster_louvain,
+                               y = logc[rownames(logc) == i,]))+
+      ggbeeswarm::geom_quasirandom(size = 0.2, color = "grey60")+
+      theme_classic()+
+      geom_boxplot(color = "black", alpha = 0)+
+      ylab(paste0(i, " expression (log-norm)"))+
+      facet_grid(cols = vars(sce_cluster$Species_ID))+
+      ggtitle(paste0(title, " mcas specific gene ", i, " SCE"))
+  
+    print(plot_2)
+    print(plot_3)
+    print(plot_4)
+  }
+}else{
+  print("no specific genes")
+}
+
+
+```
+
+## MSPR
+
+```{r}
+
+if(nrow(res_specific_mspr) > 0){
+  for(i in sort(unique(res_specific_mspr$gene))){
+  
+    print(i)
+    print(res_specific_mspr[res_specific_mspr$gene == i,])
+
+    dat <- plotCounts(tdsq, gene=i, intgroup="condition", 
+                                 returnData=TRUE)
+    dat$condition <- factor(dat$condition, 
+                            levels = c("mmus", "mcas", "mspr", "mcar"))
+  
+    plot1 <- ggplot(dat, aes(x=condition, y=count))+ 
+      geom_point(position=position_jitter(w=0.1,h=0))+
+      ggtitle(paste0(title, " mspr specific gene ", i, " pseudobulk"))+
+      theme_classic()+
+      ylab(paste0(i, " expression, normalized"))
+    print(plot1)
+  
+    colData(sce)$Species_ID <- factor(colData(sce)$Species_ID, 
+                              levels = c("mmus", "mcas", "mspr", "mcar"))
+  
+    plot_2 <- umap_gene(sce, i)+
+      facet_grid(cols = vars(sce$Species_ID))+
+      ggtitle(paste0(title, " mspr specific gene ", i))
+    plot_3 <- umap_gene(sce_cluster, i)+
+      facet_grid(cols = vars(sce_cluster$Species_ID))+
+      ggtitle(paste0(title, " mspr specific gene ", i))
+  
+    ggdf <- as.data.frame(colData(sce_cluster))
+    logc <- assays(sce_cluster)[["logcounts"]]
+    ggdf$Species_ID <- factor(ggdf$Species_ID, 
+                              levels = c("mmus", "mcas", "mspr", "mcar"))
+    colData(sce_cluster)$Species_ID <- factor(colData(sce_cluster)$Species_ID, 
+                              levels = c("mmus", "mcas", "mspr", "mcar"))
+
+    plot_4 <- ggplot(ggdf, aes(x = cluster_louvain,
+                               y = logc[rownames(logc) == i,]))+
+      ggbeeswarm::geom_quasirandom(size = 0.2, color = "grey60")+
+      theme_classic()+
+      geom_boxplot(color = "black", alpha = 0)+
+      ylab(paste0(i, " expression (log-norm)"))+
+      facet_grid(cols = vars(sce_cluster$Species_ID))+
+      ggtitle(paste0(title, " mspr specific gene ", i, " SCE"))
+  
+    print(plot_2)
+    print(plot_3)
+    print(plot_4)
+  }
+}else{
+  print("no specific genes")
+}  
+
+```
+
+## MCAR
+
+```{r}
+
+res_specific_mcar <- res_specific[res_specific$species == "mcar",]
+
+if(nrow(res_specific_mcar) > 0){
+  for(i in sort(unique(res_specific_mcar$gene))){
+  
+    print(i)
+    print(res_specific_mcar[res_specific_mcar$gene == i,])
+
+    dat <- plotCounts(tdsq, gene=i, intgroup="condition", 
+                                 returnData=TRUE)
+    dat$condition <- factor(dat$condition, 
+                            levels = c("mmus", "mcas", "mspr", "mcar"))
+    
+    plot1 <- ggplot(dat, aes(x=condition, y=count))+ 
+      geom_point(position=position_jitter(w=0.1,h=0))+
+      ggtitle(paste0(title, " mcar specific gene ", i, " pseudobulk"))+
+      theme_classic()+
+      ylab(paste0(i, " expression, normalized"))
+    print(plot1)
+  
+    colData(sce)$Species_ID <- factor(colData(sce)$Species_ID, 
+                              levels = c("mmus", "mcas", "mspr", "mcar"))
+    
+    plot_2 <- umap_gene(sce, i)+
+      facet_grid(cols = vars(sce$Species_ID))+
+      ggtitle(paste0(title, " mcar specific gene ", i))
+    plot_3 <- umap_gene(sce_cluster, i)+
+      facet_grid(cols = vars(sce_cluster$Species_ID))+
+      ggtitle(paste0(title, " mcar specific gene ", i))
+    
+    ggdf <- as.data.frame(colData(sce_cluster))
+    logc <- assays(sce_cluster)[["logcounts"]]
+    ggdf$Species_ID <- factor(ggdf$Species_ID, 
+                              levels = c("mmus", "mcas", "mspr", "mcar"))
+    colData(sce_cluster)$Species_ID <- factor(colData(sce_cluster)$Species_ID, 
+                              levels = c("mmus", "mcas", "mspr", "mcar"))
+  
+    plot_4 <- ggplot(ggdf, aes(x = cluster_louvain,
+                               y = logc[rownames(logc) == i,]))+
+      ggbeeswarm::geom_quasirandom(size = 0.2, color = "grey60")+
+      theme_classic()+
+      geom_boxplot(color = "black", alpha = 0)+
+      ylab(paste0(i, " expression (log-norm)"))+
+      facet_grid(cols = vars(sce_cluster$Species_ID))+
+      ggtitle(paste0(title, " mcar specific gene ", i, " SCE"))
+    
+    print(plot_2)
+    print(plot_3)
+    print(plot_4)
+  }
+}else{
+  print("no specific genes")
+}  
+
+```
+
+```{r}
+sessionInfo()
+```
+

@@ -86,5 +86,3 @@ if(fraction_curr == "hsc"){
 }
 
 saveRDS(sce, file = snakemake@output[["sce_11"]])
-
-

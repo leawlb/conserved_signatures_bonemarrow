@@ -21,7 +21,6 @@ comb_list<- list(
   c(c, d)
 )
 
-
 res_list_list <- lapply(tdsq_list, function(tdsq){
   
   res_list <- lapply(comb_list, function(comb){
@@ -35,7 +34,7 @@ res_list_list <- lapply(tdsq_list, function(tdsq){
     res_lfcs <- lfcShrink(tdsq, contrast=c("condition", comb[1], comb[2]), type = "ashr")
 
     return_list <- list(res, res_lfcs)
-    names(return_list) <- c("Results", "Results_shrink")
+    names(return_list) <- c("Results", "Results_shrunk")
     return(return_list)
   })
   
@@ -49,3 +48,5 @@ names(res_list_list) <- c(1:length(res_list_list))
 print(res_list_list)
 
 saveRDS(res_list_list, file = snakemake@output[["res"]])
+
+

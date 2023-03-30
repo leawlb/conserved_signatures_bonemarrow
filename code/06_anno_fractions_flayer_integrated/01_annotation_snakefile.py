@@ -107,11 +107,7 @@ rule separate_sce:
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
-"""
-FIRST LAYER, INTEGRATED DATASET
-"""
 
-#-------------------------------------------------------------------------------
 """
 preliminary annotation for first layer of broad clusters (flayer)
 """
@@ -224,7 +220,7 @@ rule export_results_visualisation_after:
     script:
         "scripts/11_export_results_vis_flayer_integrated.R"    
 
-# progress report onDGE quality of DGE corrected for batch, age, SVs
+# progress report on DGE quality of DGE corrected for batch, age, SVs
 rule make_report_flayer_pairwise_dge:
     input: 
         sce_11 = rules.assign_flayer_prelim.output,
@@ -240,7 +236,7 @@ rule make_report_flayer_pairwise_dge:
    
 #-------------------------------------------------------------------------------
 """
-Differential gene expression analysis (first layer)
+Differential gene expression analysis 
 """  
 
 # export shrunk FC results in convenient DF lists or csvs as required

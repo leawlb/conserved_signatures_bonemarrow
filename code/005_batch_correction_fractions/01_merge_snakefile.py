@@ -9,7 +9,7 @@ import sys
 # paths and objects from config
 OUTPUT_BASE_PATH = config["paths"]["output_dir"]
 TABLES_PATH = config["metadata"]["color_tables"]
-METADATA = pd.read_csv(config["metadata"]["raw"])
+METADATA = pd.read_csv(config["metadata"]["table"])
 
 #-------------------------------------------------------------------------------
 

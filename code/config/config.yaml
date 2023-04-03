@@ -2,12 +2,12 @@ default:
 # default configs for direct loading into R scripts
   color_tables: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/color_tables"
 paths:
-  output_dir: "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+  output_dir: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis"
   cellranger_output: "/sce_objects/01_cellranger_output" 
   preprocessing: "/02_preprocessing"
   integration: "/03_integration"
 metadata: 
-  raw: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/OE0538_DO-0008_metadata_combined.csv"
+  table: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/OE0538_DO-0008_metadata_combined.csv"
   color_tables: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/color_tables"
   identifiers: 
   # should be the same as in https://github.com/odomlab2/snakemake-cellranger
@@ -75,9 +75,9 @@ values:
     k_louvain: 75 
     use_svm_kernel: "linear" # linear or radial
     size_subs_hscs: 60000 
-  annotation:
+  DGE:
     flayer_integrated_padj_cutoff: 0.001
-    flayer_integrated_fc_cutoff: 1.2
+    flayer_integrated_fc_cutoff: 1.5
 
 # CONDITIONS  
 # in caps for use in R, only first letter capitalized for use in Snakefile

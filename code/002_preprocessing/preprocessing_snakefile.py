@@ -5,13 +5,13 @@
 import pandas as pd
 
 # paths from config
-METADATA_PATH = config["metadata"]["raw"]
+METADATA_PATH = config["metadata"]["table"]
 OUTPUT_BASE_PATH = config["paths"]["output_dir"]
 TABLES_PATH = config["metadata"]["color_tables"]
 
 # objects from config
 IDENTIFIERS = config["metadata"]["identifiers"]
-METADATA = pd.read_csv(config["metadata"]["raw"])
+METADATA = pd.read_csv(config["metadata"]["table"])
 VALUES =  config["values"]["preprocessing"]
 
 def get_list(metadata, column):
@@ -33,10 +33,10 @@ for species in Species_ID:
       targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/03_outl/" + species + "/sce_" + ind + "-03"]
       targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/04_norm/" + species + "/sce_" + ind + "-04"]
       targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/05_dimr/" + species + "/sce_" + ind + "-05"]
-      targets = targets + [OUTPUT_BASE_PATH + "/reports/02_preprocessing/" + species + "/preprocessing_sample_report_" + ind + ".html"]
+      targets = targets + [OUTPUT_BASE_PATH + "/reports/002_preprocessing/" + species + "/preprocessing_sample_report_" + ind + ".html"]
       
 if config["run_preprocessing_summary"]:
-  targets = targets + [OUTPUT_BASE_PATH + "/reports/02_preprocessing/preprocessing_summary.html"]
+  targets = targets + [OUTPUT_BASE_PATH + "/reports/002_preprocessing/preprocessing_summary.html"]
 
 # local execution of non-demanding rules
 localrules: all  
@@ -103,7 +103,7 @@ rule make_sample_reports:
         sce_04 = rules.normalize_expr.output,
         sce_05 = rules.reduce_dims.output
     output:
-        OUTPUT_BASE_PATH + "/reports/02_preprocessing/{species}/preprocessing_sample_report_{individual}.html"
+        OUTPUT_BASE_PATH + "/reports/002_preprocessing/{species}/preprocessing_sample_report_{individual}.html"
     params:
         cutoff_umis = VALUES["cutoff_umis"],
         cutoff_doublets = VALUES["cutoff_doublets"],
@@ -127,13 +127,13 @@ if config["run_preprocessing_summary"]:
       input:
           sce_02_path = OUTPUT_BASE_PATH + "/sce_objects/02_drop",
       output:
-          OUTPUT_BASE_PATH + "/reports/02_preprocessing/preprocessing_summary.html"
+          OUTPUT_BASE_PATH + "/reports/002_preprocessing/preprocessing_summary.html"
       params:
           cutoff_sum = VALUES["cutoff_sum"],
           cutoff_detected = VALUES["cutoff_detected"],
           cutoff_mitos = VALUES["cutoff_mitos"],
           individuals = individuals,
-          metadata = config["metadata"]["raw"],
+          metadata = config["metadata"]["table"],
           color_tables = TABLES_PATH
       script:
           "preprocessing_summary.Rmd" 

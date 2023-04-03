@@ -18,7 +18,7 @@ OUTPUT_BASE_PATH = config["paths"]["output_dir"]
 TABLES_PATH = config["metadata"]["color_tables"]
 
 # objects from config
-METADATA = pd.read_csv(config["metadata"]["raw"])
+METADATA = pd.read_csv(config["metadata"]["table"])
 BATCH_USE = config["values"]["batch_correction"]["batch_use_fractions"] # which SCE col to use as batch
 SEURAT_RED = config["values"]["batch_correction"]["seurat_reduction"] # which SCE col to use as batch
 
@@ -39,11 +39,11 @@ targets = []
 for f in fractions:
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/08_rnrm_fractions/sce_" + f + "_" + BATCH_USE + "-08"]
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/09_mnnc_fractions/sce_" + f + "_" + BATCH_USE +"-09"]
-  targets = targets + [OUTPUT_BASE_PATH + "/reports/04_batch_correction_fractions/" + f + "/batch_correction_fraction_report_" + f + "_" + BATCH_USE + ".html"]
+  targets = targets + [OUTPUT_BASE_PATH + "/reports/005_batch_correction_fractions/" + f + "/batch_correction_fraction_report_" + f + "_" + BATCH_USE + ".html"]
   if BATCH_USE != "Object_ID":
     targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/09_srt3_fractions/sce_" + f + "_" + BATCH_USE + "_" + SEURAT_RED +"-09"]
     
-targets = targets + [OUTPUT_BASE_PATH + "/reports/04_batch_correction_fractions/batch_correction_fraction_summary_" + BATCH_USE + ".html"]
+targets = targets + [OUTPUT_BASE_PATH + "/reports/005_batch_correction_fractions/batch_correction_fraction_summary_" + BATCH_USE + ".html"]
   
 #-------------------------------------------------------------------------------
 
@@ -145,7 +145,7 @@ rule make_reports:
         sce_08 = rules.renormalize.output,
         sce_09_input = sce_09_input
     output:
-        OUTPUT_BASE_PATH + "/reports/04_batch_correction_fractions/{fraction}/batch_correction_fraction_report_{fraction}_" + BATCH_USE + ".html"
+        OUTPUT_BASE_PATH + "/reports/005_batch_correction_fractions/{fraction}/batch_correction_fraction_report_{fraction}_" + BATCH_USE + ".html"
     params:
         batch_use = BATCH_USE,
         nr_hvgs = config["values"]["preprocessing"]["nr_hvgs"],
@@ -160,6 +160,6 @@ rule make_summary_report:
     params:
         fractions = fractions
     output:
-        OUTPUT_BASE_PATH + "/reports/04_batch_correction_fractions/batch_correction_fraction_summary_" + BATCH_USE + ".html"
+        OUTPUT_BASE_PATH + "/reports/005_batch_correction_fractions/batch_correction_fraction_summary_" + BATCH_USE + ".html"
     script:
         "batch_correction_summary.Rmd" 

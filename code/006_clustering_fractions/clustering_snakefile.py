@@ -11,7 +11,7 @@ OUTPUT_BASE_PATH = config["paths"]["output_dir"]
 TABLES_PATH = config["metadata"]["color_tables"]
 
 # objects from config
-METADATA = pd.read_csv(config["metadata"]["raw"])
+METADATA = pd.read_csv(config["metadata"]["table"])
 print(OUTPUT_BASE_PATH)
 
 #-------------------------------------------------------------------------------
@@ -33,9 +33,9 @@ for f in fractions:
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/10_hcls_fractions/sce_" + f + "-10"]
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/10_scls_fractions/sce_" + f + "-10"]
   targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/10_lcls_fractions/sce_" + f + "-10"]
-  targets = targets + [OUTPUT_BASE_PATH + "/reports/05_clustering_fractions/" + f + "/clustering_fraction_report_full_" + f +".html"]
+  targets = targets + [OUTPUT_BASE_PATH + "/reports/006_clustering_fractions/" + f + "/clustering_fraction_report_full_" + f +".html"]
   if config["calculate_k"]:
-    targets = targets + [OUTPUT_BASE_PATH + "/reports/05_clustering_fractions/" + f + "/clustering_fraction_report_k_" + f +".html"]
+    targets = targets + [OUTPUT_BASE_PATH + "/reports/006_clustering_fractions/" + f + "/clustering_fraction_report_k_" + f +".html"]
     
 #-------------------------------------------------------------------------------
 
@@ -88,7 +88,7 @@ if config["calculate_k"]:
       input:
           sce_09 = OUTPUT_BASE_PATH + "/sce_objects/09_mnnc_fractions/sce_{fraction}_Object_ID-09",
       output:
-          OUTPUT_BASE_PATH + "/reports/05_clustering_fractions/{fraction}/clustering_fraction_report_k_{fraction}.html"
+          OUTPUT_BASE_PATH + "/reports/006_clustering_fractions/{fraction}/clustering_fraction_report_k_{fraction}.html"
       params: 
           size_subs_hscs = config["values"]["clustering"]["size_subs_hscs"],
       threads:
@@ -107,6 +107,6 @@ rule make_report_full:
         size_subs_hscs = config["values"]["clustering"]["size_subs_hscs"],
         number_k = config["values"]["clustering"]["number_k"]
     output:
-        OUTPUT_BASE_PATH + "/reports/05_clustering_fractions/{fraction}/clustering_fraction_report_full_{fraction}.html"
+        OUTPUT_BASE_PATH + "/reports/006_clustering_fractions/{fraction}/clustering_fraction_report_full_{fraction}.html"
     script:
         "clustering_fraction_report_full.Rmd"

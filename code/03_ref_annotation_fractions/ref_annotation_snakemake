@@ -1,3 +1,0 @@
-snakemake --cluster "bsub -n2 -q verylong -R rusage[mem=100GB]" -p -j66 -c4 -s ref_annotation_snakefile.py --configfile ../config/config.yaml -n
-
-snakemake --cluster "bsub -n2 -q verylong -R rusage[mem=100GB]" -p -j66 -c4 -s ref_annotation_snakefile.py --configfile ../config/config.yaml -R make_sample_reports -n

@@ -11,7 +11,7 @@ OUTPUT_BASE_PATH = config["paths"]["output_dir"]
 TABLES_PATH = config["metadata"]["color_tables"]
 
 # objects from config
-METADATA = pd.read_csv(config["metadata"]["raw"])
+METADATA = pd.read_csv(config["metadata"]["table"])
 print(OUTPUT_BASE_PATH)
 
 #-------------------------------------------------------------------------------
@@ -35,9 +35,9 @@ for s in species:
   for i in individuals:
     if s in i:
       targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/06_ref_anno/" + s + "/sce_" + i + "-06"]
-      targets = targets + [OUTPUT_BASE_PATH + "/reports/03_ref_annotation/" + s + "/ref_annotation_sample_report_" + i + ".html"]
+      targets = targets + [OUTPUT_BASE_PATH + "/reports/004_ref_annotation/" + s + "/ref_annotation_sample_report_" + i + ".html"]
 
-targets = targets + [OUTPUT_BASE_PATH + "/reports/03_ref_annotation/ref_annotation_summary.html"]
+targets = targets + [OUTPUT_BASE_PATH + "/reports/004_ref_annotation/ref_annotation_summary.html"]
 
 #-------------------------------------------------------------------------------
 
@@ -71,7 +71,7 @@ rule make_sample_reports:
     input: 
         rules.cell_type_annotation.output
     output:
-        OUTPUT_BASE_PATH + "/reports/03_ref_annotation/{species}/ref_annotation_sample_report_{individual}.html"
+        OUTPUT_BASE_PATH + "/reports/004_ref_annotation/{species}/ref_annotation_sample_report_{individual}.html"
     params:
         color_tables = TABLES_PATH
     script:
@@ -88,7 +88,7 @@ rule make_summary:
     input:
         sce_06_pathlist = summary_inputs
     output:
-        OUTPUT_BASE_PATH + "/reports/03_ref_annotation/ref_annotation_summary.html"
+        OUTPUT_BASE_PATH + "/reports/004_ref_annotation/ref_annotation_summary.html"
     params:
         samples_to_remove = config["samples_to_remove"],
         color_tables = TABLES_PATH,

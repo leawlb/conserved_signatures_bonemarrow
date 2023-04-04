@@ -24,6 +24,9 @@ library(scater, quietly = TRUE)
 library(scuttle, quietly = TRUE) 
 library(scran, quietly = TRUE) 
 library(pheatmap, quietly = TRUE) 
+library(biomaRt)
+library(Seurat)
+
 set.seed(37)
 ```
 
@@ -58,9 +61,42 @@ sce_fg
 
 ```
 
+MSPR objects don't have symbols
+
+This part was taken from Perrine's script on how to download the relevant data 
+from BioMart.
+
 ```{r}
 
-if(grepl("mspr", name_curr)){knitr::knit_exit()}
+if(grepl("mspr", name_curr)){
+
+  ensembl_mspr <- useMart(biomart="ENSEMBL_MART_ENSEMBL",
+                          host="https://www.ensembl.org",
+                          dataset="mspretus_gene_ensembl")
+  ensembl_list_mspr=getBM(attributes=c("ensembl_gene_id",
+                                       "mmusculus_homolog_ensembl_gene",
+                                       "mmusculus_homolog_associated_gene_name"), 
+                          mart=ensembl_mspr)
+
+  intersect_IDs <- intersect(rowData(sce_fg)$Symbol, ensembl_list_mspr$ensembl_gene_id)
+
+  ensembl_list_mspr <- ensembl_list_mspr[ensembl_list_mspr$ensembl_gene_id %in% intersect_IDs,]
+  sce_fg <- sce_fg[rowData(sce_fg)$Symbol %in% intersect_IDs,]
+
+  ensembl_list_mspr <- ensembl_list_mspr[!duplicated(ensembl_list_mspr$ensembl_gene_id),]
+  sce_fg <- sce_fg[!duplicated(rowData(sce_fg)$Symbol),]
+
+
+  rowData(sce_fg)$Symbol[
+    match(ensembl_list_mspr$ensembl_gene_id,
+          rownames(sce_fg))] <- ensembl_list_mspr$mmusculus_homolog_associated_gene_name
+
+  rowData(sce_fg)$Symbol[rowData(sce_fg)$Symbol == ""] <- rowData(sce_fg)$ID[rowData(sce_fg)$Symbol == ""]
+}
+
+```
+
+```{r}
 
 head(rowData(sce_og))
 head(rowData(sce_fg))
@@ -78,6 +114,10 @@ sce_og_shared <- sce_og_shared[!duplicated(rowData(sce_og_shared)$Symbol),]
 sce_fg_shared <- sce_fg_shared[!duplicated(rowData(sce_fg_shared)$Symbol),]
 
 ```
+
+
+
+
 
 ```{r}
 
@@ -146,11 +186,7 @@ ggplot(qcdf_gg[qcdf_gg$metric == "sum",], aes(y = value, x = metric))+
 
 ```
 
-
-
-
 ## PCA
-
 
 ```{r}
 
@@ -172,24 +208,26 @@ set.seed(37)
 sce_tog_temp <- runUMAP(sce_tog_temp, dimred = 'PCA', external_neighbors=TRUE, 
                    subset_row = hvg)
 
+pca_slot <- reducedDim(sce_tog_temp, "PCA")
+rotation <- attr(pca_slot,"rotation")
+percent_var <- attr(pca_slot,"percentVar")
+
 plot_1 <- umap_base(sce_tog_temp, color_by = "Genome")+ # own function
   ggtitle(name_curr)
 plot_1
 
 plot_2 <- pca_base2(sce_tog_temp, color_by = "Genome")+ # own function
-  ggtitle(name_curr)
+  ggtitle(name_curr)+
+  xlab(percent_var[1])+
+  ylab(percent_var[2])
 plot_2
 
 plot_3 <- pca_base3(sce_tog_temp, color_by = "Genome")+ # own function
-  ggtitle(name_curr)
+  ggtitle(name_curr)+
+  xlab(percent_var[1])+
+  ylab(percent_var[3])
 plot_3
 
-
-```
-
-```{r}
-pca_slot <- reducedDim(sce_tog_temp, "PCA")
-rotation <- attr(pca_slot,"rotation")
 ```
 
 ### PC 1
@@ -207,7 +245,9 @@ rotation[order(abs(rotation[,1]), decreasing = TRUE),][1:50,1:3]
 
 sce_tog_temp <- runPCA(sce_tog, subset_row = hvg[which(! hvg %in% top_genes_pc1)]) 
 plot_2 <- pca_base2(sce_tog_temp, color_by = "Genome")+ # own function
-  ggtitle(name_curr)
+  ggtitle(name_curr)+
+  xlab(percent_var[1])+
+  ylab(percent_var[2])
 plot_2
 
 sce_tog_temp <- runUMAP(sce_tog_temp, dimred = 'PCA', external_neighbors=TRUE, 
@@ -234,7 +274,9 @@ rotation[order(abs(rotation[,2]), decreasing = TRUE),][1:50,1:3]
 
 sce_tog_temp <- runPCA(sce_tog, subset_row = hvg[which(! hvg %in% top_genes_pc2)]) 
 plot_2 <- pca_base2(sce_tog_temp, color_by = "Genome")+ # own function
-  ggtitle(name_curr)
+  ggtitle(name_curr)+
+  xlab(percent_var[1])+
+  ylab(percent_var[2])
 plot_2
 
 sce_tog_temp <- runUMAP(sce_tog_temp, dimred = 'PCA', external_neighbors=TRUE, 
@@ -261,7 +303,9 @@ print(length(top_genes_pc3))
 
 sce_tog_temp <- runPCA(sce_tog, subset_row = hvg[which(! hvg %in% top_genes_pc3)]) 
 plot_2 <- pca_base3(sce_tog_temp, color_by = "Genome")+ # own function
-  ggtitle(name_curr)
+  ggtitle(name_curr)+
+  xlab(percent_var[1])+
+  ylab(percent_var[3])
 plot_2
 
 sce_tog_temp <- runUMAP(sce_tog_temp, dimred = 'PCA', external_neighbors=TRUE, 
@@ -374,6 +418,62 @@ pheatmap(
 ```{r, fig.height=12, fig.width=7}
 
 sce_tog_temp <- sce_tog[which(rownames(sce_tog) %in% top_genes_pc3),]
+
+mat <- as.matrix(
+  assays(sce_tog_temp)$logcounts
+)
+
+anno_col <- data.frame(
+  features = colnames(sce_tog_temp),
+  Genome = colData(sce_tog_temp)$Genome)
+
+anno_col <- column_to_rownames(anno_col, var = "features")
+
+pheatmap(
+  mat,
+  cluster_cols = FALSE,
+  annotation_col = anno_col,
+  show_colnames = FALSE
+)
+
+```
+
+## Markergenes
+
+```{r}
+
+# convert to seurat
+seurat <- as.Seurat(sce_tog, counts = "counts", data = "logcounts",) 
+Idents(seurat) <- sce_tog$Genome
+
+# get hvgs for marker genes
+hvgs <- modelGeneVar(sce_tog)
+hvgs <- getTopHVGs(hvgs, n=nr_hvgs)
+
+# find marker genes for each cluster
+genomes <- unique(sce_tog$Genome)
+clustlist <- as.list(genomes)
+cluster_markers <- lapply(clustlist, function(x){
+  markers <- FindMarkers(seurat, test.use = "wilcox", ident.1 = x, 
+                         features = hvgs)
+  markers <- markers[order(abs(markers$avg_log2FC), decreasing=TRUE),]
+  markers$which_cluster <- rep(x, nrow(markers))
+  return(markers)
+})
+
+names(cluster_markers) <- genomes
+markergenes_og <- cluster_markers[["OneGenome"]]
+
+markergenes_og[,c(2, 3, 5)]
+
+if(nrow(markergenes_og) > 200){markergenes_og <- markergenes_og[1:200,]}
+
+```
+
+
+```{r, fig.height=14, fig.width=7}
+
+sce_tog_temp <- sce_tog[which(rownames(sce_tog) %in% rownames(markergenes_og)),]
 
 mat <- as.matrix(
   assays(sce_tog_temp)$logcounts

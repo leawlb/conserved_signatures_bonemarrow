@@ -33,8 +33,8 @@ clusters_str = ["4", "6", "8", "9", "10", "13"]
 # construct paths for all possible outputs/targets, required for rule all
 targets = []
 
-padj_cutoff = config["values"]["annotation"]["flayer_integrated_padj_cutoff"]
-fc_cutoff = config["values"]["annotation"]["flayer_integrated_fc_cutoff"]
+padj_cutoff = config["values"]["DGE"]["flayer_integrated_padj_cutoff"]
+fc_cutoff = config["values"]["DGE"]["flayer_integrated_fc_cutoff"]
 tf = "PC_" + str(padj_cutoff) + "_FC_" + str(fc_cutoff)
 print(tf)
 
@@ -45,8 +45,8 @@ for c in clusters_str:
   targets = targets + [OUTPUT_BASE_PATH + "/reports/009_DGE_analysis_flayer/str/shared_nDGE/" + tf + "/shared_str_cluster_" + c + ".html"]
 
 for f in fractions:
-  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/13_DGE_analysis_flayer/res_objects/" + tf + "/nDGE/res_" + f + "_cluster_dfs-11"]
-  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/13_DGE_analysis_flayer/res_objects/" + tf + "/nDGE/res_" + f + "_species_dfs-11"]
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/13_DGE_analysis_flayer/" + tf + "/nDGE/res_" + f + "_cluster_dfs-11"]
+  targets = targets + [OUTPUT_BASE_PATH + "/sce_objects/13_DGE_analysis_flayer/" + tf + "/nDGE/res_" + f + "_species_dfs-11"]
 
 #print(targets)
 
@@ -71,29 +71,30 @@ To get shared genes between all species
 # export results in convenient df lists or csvs
 rule export_results_ndge:
     input:
-        tdsq = rules.preprocessing_dge.output.tdsq_after_11
+        tdsq = OUTPUT_BASE_PATH + "/sce_objects/12_dge_prepro/dsq_objects/tdsq_after_{fraction}-11" # after batch correction
     params:
-        padj_cutoff = config["values"]["annotation"]["flayer_integrated_padj_cutoff"],
-        fc_cutoff = config["values"]["annotation"]["flayer_integrated_fc_cutoff"],
+        padj_cutoff = config["values"]["DGE"]["flayer_integrated_padj_cutoff"],
+        fc_cutoff = config["values"]["DGE"]["flayer_integrated_fc_cutoff"],
         species = species
     output:
-        species_res_df = OUTPUT_BASE_PATH + "/sce_objects/13_DGE_analysis_flayer/res_objects/" + tf + "/nDGE/res_{fraction}_species_dfs-11",
-        cluster_res_df = OUTPUT_BASE_PATH + "/sce_objects/13_DGE_analysis_flayer/res_objects/" + tf + "/nDGE/res_{fraction}_cluster_dfs-11"
+        species_res_df = OUTPUT_BASE_PATH + "/sce_objects/13_DGE_analysis_flayer/" + tf + "/nDGE/res_{fraction}_species_dfs-11",
+        cluster_res_df = OUTPUT_BASE_PATH + "/sce_objects/13_DGE_analysis_flayer/" + tf + "/nDGE/res_{fraction}_cluster_dfs-11"
     script:
         "scripts/13_export_results_ndge_flayer_integrated.R"    
         
 # report on shared genes for pval and cutoff selection
 rule make_report_shared:
     input: 
-        sce_11 = OUTPUT_BASE_PATH + "/sce_objects/11_annotation/sce_objects/sce_anno_{fraction}-11"
+        sce_11 = OUTPUT_BASE_PATH + "/sce_objects/11_annotation/sce_objects/sce_anno_{fraction}-11",
         sce_sep = OUTPUT_BASE_PATH + "/sce_objects/11_annotation/sce_objects/sce_{fraction}_cluster_{cluster}-sep",
-        tdsq_11 = rules.preprocessing_dge.output.tdsq_after_11,
-        cluster_res_df = rules.export_results_ndge.output.cluster_res_df
+        tdsq = OUTPUT_BASE_PATH + "/sce_objects/12_dge_prepro/dsq_objects/tdsq_after_{fraction}-11", # after batch correction
+        cluster_res_df = rules.export_results_ndge.output.cluster_res_df,
+        gene_list = config["metadata"]["gene_list_hsc"],
     params:
-        padj_cutoff = config["values"]["annotation"]["flayer_integrated_padj_cutoff"],
-        fc_cutoff = config["values"]["annotation"]["flayer_integrated_fc_cutoff"]
+        padj_cutoff = config["values"]["DGE"]["flayer_integrated_padj_cutoff"],
+        fc_cutoff = config["values"]["DGE"]["flayer_integrated_fc_cutoff"]
     output:
-        OUTPUT_BASE_PATH + "/reports/009_DGE_analysis_flayer/first_layer/{fraction}/shared_nDGE/" + tf + "/shared_{fraction}_cluster_{cluster}.html"
+        OUTPUT_BASE_PATH + "/reports/009_DGE_analysis_flayer/{fraction}/shared_nDGE/" + tf + "/shared_{fraction}_cluster_{cluster}.html"
     script:
         "report_flayer_shared.Rmd"
 

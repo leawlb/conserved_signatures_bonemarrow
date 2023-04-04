@@ -22,6 +22,7 @@ metadata:
     colors_celltypes: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/color_tables/colors_celltypes.csv"
     colors_species: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/color_tables/colors_species.csv"
     colors_annotations: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/color_tables/colors_annotations.csv"
+  gene_list_hsc: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/gene_list_hsc_all.csv"
 samples_to_remove:
   - mcar_old_str_3_1
   - mcar_old_str_3_2

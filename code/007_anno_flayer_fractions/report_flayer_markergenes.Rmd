@@ -46,6 +46,16 @@ print(cluster_curr)
 print(sce)
 print(fraction_curr)
 
+gene_list <- read.csv(snakemake@params[["gene_list_hsc_all"]], 
+  header = TRUE, 
+  sep = ";", 
+  check.names=FALSE, 
+  stringsAsFactors=FALSE, 
+  as.is=TRUE, 
+  colClasses = "character")
+
+head(gene_list)
+
 #knitr::knit_exit()
 
 ```
@@ -238,7 +248,7 @@ gene_exps <- function(gene){
     geom_boxplot(color = "black", alpha = 0)+
     ylab(paste0(gene, " expression"))
   
-  return(list(plot_1, plot_2, plot_3, plot_4, plot_5, plot_6, plot_7, gene))
+  return(list(gene, plot_1, plot_2, plot_3, plot_4, plot_5, plot_6, plot_7))
 }
 
 ```
@@ -247,183 +257,10 @@ gene_exps <- function(gene){
 
 found_markers <- rownames(markers)[1:50]
 
-#TODO: TAKE FROM CSV
-
-basic_markers_hsc <- c(
-  'Adgrl4',
-  'Birc5',
-  'Blvrb',
-  'Car1',
-  'Car2',
-  'Cd9',
-  'Cd34',
-  'Cd52',
-  'Cd63',
-  'Cd48',
-  'Cd74',
-  'Cd79a',
-  'Cd79b',
-  'Cdk1',
-  'Cdk4',
-  'Cdk6',
-  'Cebpa',
-  'Cebpb',
-  'Cebpe',
-  'Cenpa',
-  'Cenpe',
-  'Cenpf',
-  'Cited2',
-  'Ctsg',
-  'Dntt',
-  'Egr1',
-  'Elane',
-  'Esam',
-  'Fli1',
-  'Flt3',
-  'Gata1',
-  'Gata2',
-  'Hba-a1',
-  'Hlf',
-  'Hmga2',
-  'Hmgb2',
-  'Hmgb3',
-  'Il7r',
-  'Kit',
-  'Klf1',
-  'Ly6a',
-  'Ly6d',
-  'Ly6e',
-  'Mecom',
-  'Mllt3',
-  'Mmrn1',
-  'Meis1',
-  'Mki67',
-  'Mpo',
-  'Pbx1',
-  'Pf4',
-  'Plac8',
-  'Prdx4',
-  'Procr',
-  'S100a8',
-  'S100a9',
-  'Satb1',
-  'Slamf1',
-  'Sox4',
-  'Spi1',
-  'Top2a',
-  'Tyrobp'
-)
-
-specific_markers_hsc <- c(
-  'Alas1',
-  'Alcam',
-  'Aldh1a1',
-  'Alox5ap',
-  'Anxa3',
-  'Ap3s1',
-  'Calr',
-  'Ccnd2',
-  'Ccne1',
-  'Cd7',
-  'Cdkn1c',
-  'Chil1',
-  'Chil3',
-  'Clec12a',
-  'Clec1a',
-  'Clec12a',
-  'Cpa3',
-  'Crip1',
-  'Ebf1',
-  'Emb',
-  'Epor',
-  'Erg',
-  'F11r',
-  'F13a1',
-  'Fabp5',
-  'Fcer1g',
-  'Fcgr3',
-  'Fcnb',
-  'Fgd5',
-  'Foxo1',
-  'Fxyd5',
-  'Gfi1',
-  'Gfi1b',
-  'Gng11',
-  'Grb10',
-  'Gstm1',
-  'Gzmb',
-  'Hdc',
-  'Hells',
-  'Hist1h1e',
-  'Hoxa9',
-  'Id2',
-  'Igf1r',
-  'Il17ra',
-  'Irf8',
-  'Itga2b',
-  'Itgam',
-  'Itgb2l',
-  'Krt18',
-  'Lcn2',
-  'Ldb1',
-  'Ldhb',
-  'Lmo4',
-  'Lrg1',
-  'Lsp1',
-  'Lst1',
-  'Ltb',
-  'Ltf',
-  'Ly86',
-  'Lyz1',
-  'Lyz2',
-  'Mcm6',
-  'Mcm7',
-  'Mcpt8',
-  'Mef2c',
-  'Mif',
-  'Mpl',
-  'Ms4a3',
-  'Ms4a6c',
-  'Myb',
-  'Mycn',
-  'Ndst2',
-  'Ngp',
-  'Nme1',
-  'Pglyrp1',
-  'Pkm',
-  'Prdx4',
-  'Prss50',
-  'Prtn3',
-  'Rab27b',
-  'Ramp1',
-  'Rap1b',
-  'Rbp1',
-  'Rif1',
-  'Runx1',
-  'S100a10',
-  'Sell',
-  'Serpinb6a',
-  'Sh3bgrl3',
-  'Smim1',
-  'Socs2',
-  'Sptbn1',
-  'Srgn',
-  'Syce2',
-  'Syne1',
-  'Tal1',
-  'Tespa1',
-  'Tet1',
-  'Tgm2',
-  'Tie1',
-  'Tinagl1',
-  'Tmsb10',
-  'Tmsb4x',
-  'Txnip',
-  'Uba7',
-  'Ube2c',
-  'Ugcg',
-  'Vamp5'
-)
+cluster_curr_char <- paste0("cluster_", cluster_curr)
+gene_list_temp <- gene_list[gene_list$cluster == cluster_curr_char,]
+gene_markers_hsc <- unique(gene_list_temp[,1])
+print(gene_markers_hsc)
 
 base_markers_str <- c(
   'Acan',
@@ -471,7 +308,7 @@ base_markers_str <- c(
 )  
 
 if(fraction_curr == "hsc"){
-  all_markers <- unique(c(found_markers, basic_markers_hsc, specific_markers_hsc))
+  all_markers <- unique(c(found_markers, gene_markers_hsc))
 }else if(fraction_curr == "str"){
   all_markers <- unique(c(found_markers, base_markers_str))
 }
@@ -479,6 +316,8 @@ if(fraction_curr == "hsc"){
 all_markers <- as.list(sort(all_markers))
 
 all_markers[which(!all_markers %in% rownames(sce))]
+all_markers <- all_markers[which(all_markers %in% rownames(sce))]
+
 print(all_markers)
 
 #knitr::knit_exit()

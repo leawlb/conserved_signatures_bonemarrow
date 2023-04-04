@@ -24,9 +24,6 @@ library(scater, quietly = TRUE)
 library(scuttle, quietly = TRUE) 
 library(scran, quietly = TRUE) 
 library(pheatmap, quietly = TRUE) 
-library(biomaRt)
-library(Seurat)
-
 set.seed(37)
 ```
 
@@ -34,39 +31,16 @@ set.seed(37)
 
 source(file = "../source/plotting.R")
 
-sce_og <- readRDS(file = snakemake@input[["sce_07"]])
-sce_fg_path <- snakemake@input[["sce_fg_path"]]
+sce_tog <- readRDS(file = snakemake@input[["sce_tog"]])
+markergenes_mapping <-  readRDS(file = snakemake@input[["markergenes_mapping"]])
+dge_results <-  read.csv(snakemake@input[["dge_results"]], sep = ";")
 
-# set name for plots
-name_curr <- colData(sce_og)$Object_ID[1] # name to display in plots
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
 
 spec_curr <- snakemake@wildcards[["species"]]
 fraction_curr <- snakemake@wildcards[["fraction"]]
-individuals <- snakemake@params[["individuals"]]
 
-#sce_og <- readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis/sce_objects/07_mrge_species/sce_mspr_hsc-07")
-#sce_fg_path <- list("/omics/odcf/analysis/OE0538_projects/DO-0008/data/fourgenomes/sce_objects/01_cellranger_output/mspr/sce_mspr_old_hsc_2_0-01", "/omics/odcf/analysis/OE0538_projects/DO-0008/data/fourgenomes/sce_objects/01_cellranger_output/mspr/sce_mspr_old_hsc_1_0-01")
-#individuals <- c("mspr_old_hsc_1_0", "mspr_old_hsc_2_0")
-#spec_curr <- "mspr"
-
-sce_fg_list <- list()
-for(i in individuals){
-  if(grepl(spec_curr, i) & grepl(fraction_curr, i)){
-    print(i)
-    print(paste0(sce_fg_path, "/", spec_curr, "/sce_", i, "-01"))
-    sce_fg_list[[i]] <- readRDS(file = paste0(sce_fg_path, "/", spec_curr, "/sce_", i, "-01"))
-    colnames(sce_fg_list[[i]]) <- paste0(colnames(sce_fg_list[[i]]), "_", i)
-  }
-}
-
-#print(sce_fg_list)
-
-if(fraction_curr == "str"){
-  knitr::knit_exit()
-}
-
-gene_list <- read.csv(snakemake@params[["gene_list_hsc_all"]], 
+gene_list <- read.csv(snakemake@input[["gene_list"]], 
   header = TRUE, 
   sep = ";", 
   check.names=FALSE, 
@@ -74,240 +48,225 @@ gene_list <- read.csv(snakemake@params[["gene_list_hsc_all"]],
   as.is=TRUE, 
   colClasses = "character")
 
-class(gene_list)
-print(gene_list)
-
-genes <- unique(gene_list$gene)
-print(genes)
-
-```
-
-# Prepare objects
-
-```{r}
-
-# subset barcodes
-sce_fg_list_qc <- lapply(sce_fg_list, function(sce_fg){
-  sce_fg <- sce_fg[,which(!is.na(match(colnames(sce_fg), colnames(sce_og))))]
-  return(sce_fg)
-})
-
-```
-
-MSPR objects don't have symbols
-
-This part was taken from Perrine's script on how to download the relevant data 
-from BioMart.
-
-```{r}
-
-if(grepl("mspr", spec_curr)){
-
-  ensembl_mspr <- useMart(biomart="ENSEMBL_MART_ENSEMBL",
-                          host="https://www.ensembl.org",
-                          dataset="mspretus_gene_ensembl")
-  ensembl_list_mspr=getBM(attributes=c("ensembl_gene_id",
-                                       "mmusculus_homolog_ensembl_gene",
-                                       "mmusculus_homolog_associated_gene_name"), 
-                          mart=ensembl_mspr)
-
-  sce_fg_list_qc <- lapply(sce_fg_list_qc, function(sce_fg){
-    
-    intersect_IDs <- intersect(rowData(sce_fg)$Symbol, ensembl_list_mspr$ensembl_gene_id)
-
-    ensembl_list_mspr <- ensembl_list_mspr[ensembl_list_mspr$ensembl_gene_id %in% intersect_IDs,]
-    sce_fg <- sce_fg[rowData(sce_fg)$Symbol %in% intersect_IDs,]
-
-    ensembl_list_mspr <- ensembl_list_mspr[!duplicated(ensembl_list_mspr$ensembl_gene_id),]
-    sce_fg <- sce_fg[!duplicated(rowData(sce_fg)$Symbol),]
-
-
-    rowData(sce_fg)$Symbol[
-      match(ensembl_list_mspr$ensembl_gene_id,
-            rownames(sce_fg))] <- ensembl_list_mspr$mmusculus_homolog_associated_gene_name
-
-    rowData(sce_fg)$Symbol[rowData(sce_fg)$Symbol == ""] <- rowData(sce_fg)$ID[rowData(sce_fg)$Symbol == ""]
-    
-    return(sce_fg)
-  })
+markergenes_mapping_temp <- markergenes_mapping
+if(nrow(markergenes_mapping) > 200){
+  markergenes_mapping_temp <- markergenes_mapping_temp[1:200,]
 }
 
+title <- paste("Mapping,", spec_curr, fraction_curr, sep = " ")
+
+#knitr::knit_exit()
 ```
+
+# Differentily mapped genes
+
+Show the genes that are most differently mapped between genomes.
 
 ```{r}
-
-sce_fg_list_shared <- lapply(sce_fg_list_qc, function(sce_fg){
-  
-  shared_genes <- intersect(rowData(sce_og)$Symbol, rowData(sce_fg)$Symbol)
-  length(shared_genes)
-
-  sce_fg_shared <- sce_fg[rowData(sce_fg)$Symbol %in% shared_genes,]
-
-  sce_fg_shared <- sce_fg_shared[order(rowData(sce_fg_shared)$Symbol),]
-
-  sce_fg_shared <- sce_fg_shared[!duplicated(rowData(sce_fg_shared)$Symbol),]
-  return(sce_fg_shared)
-  
-})
-
-shared_genes <- intersect(rowData(sce_og)$Symbol, rowData(sce_fg_list_shared[[1]])$Symbol)
-sce_og_shared <- sce_og[rowData(sce_og)$Symbol %in% shared_genes,]
-sce_og_shared <- sce_og_shared[order(rowData(sce_og_shared)$Symbol),]
-sce_og_shared <- sce_og_shared[!duplicated(rowData(sce_og_shared)$Symbol),]
-
+markergenes_mapping
 ```
 
-merge all fg objects
-
-objects that are not in the species merges have ncol = 0
-by using cbind they get filteres out automatically
-
-```{r}
-
-for(i in 1:length(sce_fg_list_shared)){
-  if(i == 1){
-      sce_fg_merged <- sce_fg_list_shared[[i]] # set first item of list
-  }else{
-      sce_fg_merged <- cbind(sce_fg_merged, sce_fg_list_shared[[i]]) 
-  }
-}
-
-sce_fg_merged
-sce_og_shared
-
-```
-
-```{r}
-
-colnames(sce_og_shared) <- paste0(colnames(sce_og_shared), "_og")
-sce_og_shared$Genome <- rep("OneGenome", ncol(sce_og_shared))
-
-colnames(sce_fg_merged) <- paste0(colnames(sce_fg_merged), "_fg")
-sce_fg_merged$Genome <- rep("FourGenomes", ncol(sce_fg_merged))
-
-rownames(sce_og_shared) <- rowData(sce_og_shared)$Symbol 
-rownames(sce_fg_merged) <- rowData(sce_fg_merged)$Symbol 
-
-colData(sce_og_shared) <- colData(sce_og_shared)[,colnames(colData(sce_og_shared)) %in% colnames(colData(sce_fg_merged))]
-
-colnames(rowData(sce_og_shared))[colnames(rowData(sce_og_shared)) == "ID"] <- "ID_og"
-colnames(rowData(sce_fg_merged))[colnames(rowData(sce_fg_merged)) == "ID"] <- "ID_fg"
-
-assays(sce_og_shared) <- list(counts = counts(sce_og_shared))
-assays(sce_fg_merged)$counts[1:10, 1:10]
-assays(sce_og_shared)$counts[1:10, 1:10]
-
-reducedDim(sce_og_shared) <- NULL
-reducedDim(sce_og_shared) <- NULL
-
-# combine
-sce_tog <- cbind(sce_og_shared, sce_fg_merged)
-
-# normalize
-set.seed(37)
-
-quick_clust <- quickCluster(sce_tog) # quick clustering to accelerate calculation
-sce_tog <- computeSumFactors(sce_tog, cluster = quick_clust)
-sce_tog <- logNormCounts(sce_tog) # log-transformation
-
-sce_tog
-
-```
-
-# Markergenes
-
-```{r}
-
-# convert to seurat
-seurat <- as.Seurat(sce_tog, counts = "counts", data = "logcounts",) 
-Idents(seurat) <- sce_tog$Genome
-
-# get hvgs for marker genes
-hvgs <- modelGeneVar(sce_tog)
-hvgs <- getTopHVGs(hvgs, n=nr_hvgs)
-
-# find marker genes for each cluster
-genomes <- unique(sce_tog$Genome)
-clustlist <- as.list(genomes)
-cluster_markers <- lapply(clustlist, function(x){
-  markers <- FindMarkers(seurat, test.use = "wilcox", ident.1 = x, 
-                         features = hvgs)
-  markers <- markers[order(abs(markers$avg_log2FC), decreasing=TRUE),]
-  markers$which_cluster <- rep(x, nrow(markers))
-  return(markers)
-})
-
-names(cluster_markers) <- genomes
-markergenes_og <- cluster_markers[["OneGenome"]]
-
-markergenes_og[,c(2, 3, 5)]
-
-markergenes_og_temp <- markergenes_og
-if(nrow(markergenes_og_temp) > 200){markergenes_og_temp <- markergenes_og_temp[1:200,]}
-
-```
+## Heatmaps
 
 ```{r, fig.height=20, fig.width=7}
 
-sce_tog_temp <- sce_tog[which(rownames(sce_tog) %in% rownames(markergenes_og_temp)),]
+sce_tog_temp <- sce_tog[which(rownames(sce_tog) %in% rownames(markergenes_mapping)),]
 
-mat <- as.matrix(
-  assays(sce_tog_temp)$logcounts
-)
+mat <- as.matrix(assays(sce_tog_temp)$logcounts)
 
 anno_col <- data.frame(
   features = colnames(sce_tog_temp),
   Genome = colData(sce_tog_temp)$Genome)
 
 anno_col <- column_to_rownames(anno_col, var = "features")
-
-pheatmap(
-  mat,
-  cluster_cols = FALSE,
-  annotation_col = anno_col,
-  show_colnames = FALSE
-)
-
-```
-
-# specific genes
-
-```{r}
-
-genes <- unique(gene_list[,1])
-print(genes)
-print(genes[which(genes %in% rownames(markergenes_og))])
-
-```
-
-```{r}
-
-sce_tog_temp <- sce_tog[which(rownames(sce_tog) %in% genes),]
-
-if(is.null(genes)){knitr::knit_exit()}
-
-mat <- as.matrix(
-  assays(sce_tog_temp)$logcounts
-)
-
-anno_col <- data.frame(
-  features = colnames(sce_tog_temp),
-  Genome = colData(sce_tog_temp)$Genome)
-
-anno_col <- column_to_rownames(anno_col, var = "features")
-
-print(mat[1:10,1:10])
 
 pheatmap(
   mat,
   cluster_cols = FALSE,
   annotation_col = anno_col,
   show_colnames = FALSE,
-  show_rownames = FALSE
+  main = paste0(title, " DMG")
 )
-
 
 ```
 
+# All genes from gene list
 
+Show which genes fromt the gene list (for annotation and sub-clustering)
+are affected.
 
+```{r}
+genes <- unique(gene_list[,1])
+print(genes[which(genes %in% rownames(markergenes_mapping))])
+```
+
+```{r}
+
+sce_tog_temp <- sce_tog[which(rownames(sce_tog) %in% genes),]
+
+mat <- as.matrix(assays(sce_tog_temp)$logcounts)
+
+anno_col <- data.frame(
+  features = colnames(sce_tog_temp),
+  Genome = colData(sce_tog_temp)$Genome)
+
+anno_col <- column_to_rownames(anno_col, var = "features")
+
+pheatmap(
+  mat,
+  cluster_cols = FALSE,
+  annotation_col = anno_col,
+  show_colnames = FALSE,
+  show_rownames = FALSE,
+  main = paste0(title, " gene list")
+)
+
+```
+
+## UMAPs
+
+Because they are important, check that UMAPs look similar, too.
+
+```{r}
+
+genevar <- modelGeneVar(sce_tog)
+hvg <- getTopHVGs(genevar, n=nr_hvgs)
+
+set.seed(37)
+sce_tog_temp <- runPCA(sce_tog, ncomponents=25, subset_row = hvg) 
+set.seed(37)
+sce_tog_temp <- runUMAP(sce_tog_temp, dimred = 'PCA', external_neighbors=TRUE,  subset_row = hvg)
+
+sce_og <- sce_tog_temp[,which(sce_tog_temp$Genome == "OneGenome")]
+sce_fg <- sce_tog_temp[,which(sce_tog_temp$Genome == "FourGenomes")]
+
+sce_og
+sce_fg
+
+knitr::knit_exit()
+
+gene_exps <- function(gene){
+
+  plot_1 <- umap_gene(sce_og, gene)+
+    ggtitle(paste0(title, " DMG, OG ", gene))
+  plot_2 <- umap_gene(sce_fg, gene)+
+    ggtitle(paste0(title, " DMG, FG ", gene))
+  
+  return(list(gene, plot_1, plot_2))
+}
+
+plotlist <- lapply(genes, gene_exps)
+plotlist
+```
+
+# Differentially expressed genes
+
+Show which species-specific DEGs are affected and are therefore not "real" DEGs.
+
+```{r}
+#dge_results <- read.csv("/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis/sce_objects/13_DGE_analysis_flayer/PC_0.001_FC_1.3/DGE/res_hsc_mcas_specific_df-11.csv", sep = ";")
+
+degs <- vector()
+for(i in 1:ncol(dge_results)){
+  degs <- unique(c(degs, dge_results[,i][which(dge_results[,i] != "")]))
+}
+
+```
+
+```{r}
+degs
+print(degs[which(degs %in% rownames(markergenes_mapping))])
+```
+
+```{r}
+
+sce_tog_temp <- sce_tog[which(rownames(sce_tog) %in% degs),]
+
+mat <- as.matrix(assays(sce_tog_temp)$logcounts)
+
+anno_col <- data.frame(
+  features = colnames(sce_tog_temp),
+  Genome = colData(sce_tog_temp)$Genome)
+
+anno_col <- column_to_rownames(anno_col, var = "features")
+
+pheatmap(
+  mat,
+  cluster_cols = FALSE,
+  annotation_col = anno_col,
+  show_colnames = FALSE,
+  show_rownames = FALSE,
+  main = paste0(title, " DEGs")
+)
+
+```
+
+# Observed "problematic" genes
+
+They may be part of DEGs, but I have consistently observed these genes
+to be very different between species.
+
+```{r}
+
+gene_list_problems_obs <- c(
+  "Ly6a",
+  "Apoe",
+  "Cd63",
+  "Cd52",
+  "Cd48",
+  "Car1",
+  "Car2",
+  "Gm10131",
+  "Gm10282",
+  "Gm10320",
+  "Ctla2a",
+  "Gas5",
+  "Myl10",
+  "AC149090.1",
+  "Gm19590",
+  "Ifi203",
+  "Lgals1",
+  "Lst1",
+  "Fkbp11",
+  "Ftl1-ps1",
+  "Gng11",
+  "Hp",
+  "Sdf211",
+  "Cks1b",
+  "Nkg7",
+  "Emb",
+  "Gm15915",
+  "Ifngr1",
+  "Ramp1",
+  "Nrgn",
+  "Serpina3g",
+  "Ifi27l2a",
+  "Serinc3"
+)
+
+print(gene_list_problems_obs[which(
+  gene_list_problems_obs %in% rownames(markergenes_mapping))])
+```
+
+```{r}
+
+sce_tog_temp <- sce_tog[which(rownames(sce_tog) %in% gene_list_problems_obs),]
+
+mat <- as.matrix(assays(sce_tog_temp)$logcounts)
+
+anno_col <- data.frame(
+  features = colnames(sce_tog_temp),
+  Genome = colData(sce_tog_temp)$Genome)
+
+anno_col <- column_to_rownames(anno_col, var = "features")
+
+pheatmap(
+  mat,
+  cluster_cols = FALSE,
+  annotation_col = anno_col,
+  show_colnames = FALSE,
+  show_rownames = TRUE,
+  main = paste0(title, " observed problems")
+)
+
+```

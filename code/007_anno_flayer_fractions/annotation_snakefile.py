@@ -106,6 +106,8 @@ rule make_report_flayer_markergenes:
         results_go = rules.go_analysis.output,
         sce_sep = OUTPUT_BASE_PATH + "/sce_objects/11_annotation/sce_objects/sce_{fraction}_cluster_{cluster}-sep",
         sce_10 = OUTPUT_BASE_PATH + "/sce_objects/10_lcls_fractions/sce_{fraction}-10"
+    params: 
+        gene_list_hsc_all = "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/gene_list_hsc_all.csv"
     output:
         OUTPUT_BASE_PATH + "/reports/007_annotation/{fraction}/markergenes/annotation_markergenes_{fraction}_cluster_{cluster}.html"
     script:

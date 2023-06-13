@@ -7,10 +7,9 @@ library(scater, quietly = TRUE)
 library(scran, quietly = TRUE) 
 set.seed(37)
 
-sce <- readRDS(file = snakemake@input[["sce_04"]])
+sce <- readRDS(file = snakemake@input[["sce_03"]])
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
 
-# extract hvgs for subsequent dimensionality reduction at sample level
 genevar <- modelGeneVar(sce)
 hvg <- getTopHVGs(genevar, n=nr_hvgs)
 
@@ -18,7 +17,6 @@ hvg <- getTopHVGs(genevar, n=nr_hvgs)
 set.seed(37)
 sce <- runPCA(sce, ncomponents=25, subset_row = hvg) 
 set.seed(37)
-sce <- runUMAP(sce, dimred = 'PCA', external_neighbors=TRUE,  subset_row = hvg)
+sce <- runUMAP(sce, dimred = 'PCA', external_neighbors=TRUE, subset_row = hvg)
 
-# save as new object
-saveRDS(sce, file = snakemake@output[["sce_05"]])
+saveRDS(sce, file = snakemake@output[["sce_04"]])

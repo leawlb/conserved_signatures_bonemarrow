@@ -1,5 +1,5 @@
 ---
-title: "preprocessing_report"
+title: "preprocessing_sample_report"
 author: "Amy Danson, Lea Wölbert"
 date: '2022-09-20'
 output: html_document
@@ -9,14 +9,13 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Report QC for all samples separately (Object_ID).
+QC report for all samples separately (Object_ID).
 Some operations from the scripts must be repeated to generate relevant plots,
 but any new objects cannot be saved from an .Rmd script.
 
 #### Load libraries, source code 
 
 ```{r load,  message = FALSE}
-
 library(SingleCellExperiment, quietly = TRUE) 
 library(DropletUtils, quietly = TRUE) 
 library(tidyverse, quietly = TRUE) 
@@ -27,46 +26,40 @@ set.seed(37)
 ```
 
 ```{r load_objects, message = FALSE}
-
-sce_01 <- readRDS(file = snakemake@input[["sce_01"]])
-sce_02 <- readRDS(file = snakemake@input[["sce_02"]])
-sce_03 <- readRDS(file = snakemake@input[["sce_03"]])
-sce_04 <- readRDS(file = snakemake@input[["sce_04"]])
-sce_05 <- readRDS(file = snakemake@input[["sce_05"]])
+sce_01 <- readRDS(file = snakemake@input[["sce_input"]])
+sce_02 <- readRDS(file = snakemake@input[["sce_01"]])
+sce_03 <- readRDS(file = snakemake@input[["sce_02"]])
+sce_04 <- readRDS(file = snakemake@input[["sce_03"]])
+sce_05 <- readRDS(file = snakemake@input[["sce_04"]])
 
 # set name for plots
 name_curr <- colData(sce_02)$Object_ID[1] # name to display in plots
-
 ```
 
 
 ```{r declare_cutoffs, message = FALSE}
-
 cutoff_umis <- snakemake@params[["cutoff_umis"]]
 cutoff_doublets <- snakemake@params[["cutoff_doublets"]] 
 cutoff_sum <- snakemake@params[["cutoff_sum"]] 
 cutoff_detected <- snakemake@params[["cutoff_detected"]]
 cutoff_mitos <- snakemake@params[["cutoff_mitos"]]
 color_tables <- snakemake@params[["color_tables"]]
-
 ```
 
 ```{r}
-source(file = "../source/colors.R")
-source(file = "../source/plotting.R")
+source(file = "../../source/colors.R")
+source(file = "../../source/plotting.R")
 ```
 
 
-## Step 1: call objects and add metadata
+## Call objects and add metadata
 
 ```{r}
-
 print(sce_01)
 print(colData(sce_01))
-
 ```
 
-## Step 2: 
+## Step 1: 
 
 ### Remove empty droplets
 
@@ -97,7 +90,6 @@ hist(out$PValue[out$Total <= cutoff_umis & out$Total > 0],
 # show FDR of droplets that were kept or removed
 check <- table(Sig=out$FDR <= 0.001, Limited=out$Limited)
 print(check)
-
 ```
 
 ### Remove doublets
@@ -105,15 +97,13 @@ print(check)
 Check if cells with high doublet scores form conspicuous clusters
 
 ```{r}
-
 plotUMAP(sce_05, colour_by = "doublet_score")+ # requires reduced dims
   ggtitle(name_curr)+
   theme(legend.key.size = unit(0.3, "cm"), legend.key.width = unit(0.3, "cm"))+
   theme(legend.spacing = unit(0.06, "cm"), legend.text = element_text(size = 7))
-
 ```
 
-## Step 3: Remove outliers
+## Step 2: Remove outliers
 
 Check the quality of the single cells and if cells were removed appropriately
 
@@ -121,7 +111,8 @@ Check the quality of the single cells and if cells were removed appropriately
 
 # get mito count just to check
 mito_genes <- grep("mt-", rownames(sce_02))
-qcdf_02 <- perCellQCMetrics(sce_02, subsets=list(Mito=mito_genes)) # before outlier removal
+qcdf_02 <- perCellQCMetrics(sce_02, subsets=list(Mito=mito_genes)) 
+# before outlier removal
 
 # set QC cutoffs below which cells are removed
 sum_out <- qcdf_02$sum < cutoff_sum 
@@ -137,10 +128,11 @@ qcdf_gg <- as.data.frame(qcdf_02[,c(1,2,5,7)])
 qcdf_gg <- pivot_longer(qcdf_gg, 
                         names_to = "metric", cols = c(1, 2, 3))
 
-ggplot(qcdf_gg[qcdf_gg$metric == "sum",], aes(y = value, x = metric))+
+ggplot(qcdf_gg[qcdf_gg$metric == "sum",], aes(y = value, x = metric, 
+                                              color = removed))+
   theme_classic()+
-  ggbeeswarm::geom_quasirandom(size = 0.1, aes(color = removed))+
-  geom_boxplot(alpha = 0)+
+  geom_jitter(size = 0.1, alpha = 50)+
+  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+  
   scale_color_manual("Removed", values = c("FALSE" = "grey80", 
                                            "TRUE" = "orange"))+
   ylab("Library size")+
@@ -148,10 +140,11 @@ ggplot(qcdf_gg[qcdf_gg$metric == "sum",], aes(y = value, x = metric))+
   theme(axis.title.x = element_blank(), axis.text.x = element_blank())+
   geom_abline(intercept = cutoff_sum, color = marker1,  slope = 0) 
 
-ggplot(qcdf_gg[qcdf_gg$metric == "detected",], aes(y = value, x = metric))+
+ggplot(qcdf_gg[qcdf_gg$metric == "detected",], aes(y = value, x = metric,
+                                                   color = removed))+
   theme_classic()+
-  ggbeeswarm::geom_quasirandom(size = 0.1, aes(color = removed))+
-  geom_boxplot(alpha = 0)+
+  geom_jitter(size = 0.1, alpha = 50)+
+  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+ 
   scale_color_manual("Removed", values = c("FALSE" = "grey80", 
                                            "TRUE" = "orange"))+
   ylab("Detected genes")+
@@ -160,20 +153,19 @@ ggplot(qcdf_gg[qcdf_gg$metric == "detected",], aes(y = value, x = metric))+
   geom_abline(intercept = cutoff_detected, color = marker1, slope = 0) 
 
 ggplot(qcdf_gg[qcdf_gg$metric == "subsets_Mito_percent",], 
-       aes(y = value, x = metric))+
+       aes(y = value, x = metric, color = removed))+
   theme_classic()+
-  ggbeeswarm::geom_quasirandom(size = 0.1, aes(color = removed))+
-  geom_boxplot(alpha = 0)+
+  geom_jitter(size = 0.1, alpha = 50)+
+  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+  
   scale_color_manual("Removed", values = c("FALSE" = "grey80", 
                                            "TRUE" = "orange"))+
   ylab("Mitochondrial gene percent")+
   ggtitle(name_curr)+
   theme(axis.title.x = element_blank(), axis.text.x = element_blank())+
   geom_abline(intercept = cutoff_mitos, color = marker1, slope = 0) 
-
 ```
 
-## Step 4: Normalization
+## Step 3: Normalization
 
 ```{r}
 # calculate two different size factors for direct comparison
@@ -194,18 +186,14 @@ hist(log10(sizef_deconv), xlab="Log10[Deconv factor]", col='grey80',
 qcdf_03 <- perCellQCMetrics(sce_03) # after outlier removal
 plot(sizef_deconv, qcdf_03$sum, log = "xy", ylab = "Library size",
      xlab = "Deconv. Size factor", main = paste("Deconv/libsize", name_curr))
-
 ```
 
 ```{r}
-
 # print final object
 print(name_curr)
 print(sce_04) # after normalization
-
 print(colData(sce_04))
 print(ncol(sce_04))
-
 ```
 
 ## Remaining quality
@@ -255,9 +243,7 @@ legend_2 <- get_legend(plot_2l)
 
 PLOT_2 <- ggarrange(plot_2, legend_2)
 PLOT_2
-
 ```
-
 
 ```{r}
 sessionInfo()

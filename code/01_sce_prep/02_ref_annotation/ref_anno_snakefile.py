@@ -84,7 +84,7 @@ for s in species:
       
 rule make_summary:
     input:
-        sce_06_pathlist = summary_inputs
+        sce_05_pathlist = summary_inputs
     output:
         OUTPUT_BASE + OUTPUT_REP + "ref_anno_summary.html"
     params:

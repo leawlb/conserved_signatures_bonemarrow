@@ -25,7 +25,7 @@ set.seed(37)
 ```
 
 ```{r load_code, message = FALSE}
-sce_06_pathlist <- snakemake@input[["sce_06_pathlist"]]
+sce_06_pathlist <- snakemake@input[["sce_05_pathlist"]]
 samples_to_remove <- snakemake@params[["samples_to_remove"]] # samples to exclude from merging
 individuals <- snakemake@params[["individuals"]]
 ```

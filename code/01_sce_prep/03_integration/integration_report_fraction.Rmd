@@ -76,11 +76,18 @@ make_plots <- function(sce, title){
                        values = col_cts_dolgalev_clst)
   legend_3 <- get_legend(plot_3l)
   
+  plot_4 <- umap_base_l(sce, color_by = "Age_ID")+ 
+    ggtitle(title)
+  plot_5 <- umap_base_l(sce, color_by = "Species_ID")+ 
+    ggtitle(title)
+  plot_6 <- umap_base_l(sce, color_by = "Fraction_ID")+ 
+    ggtitle(title)
+   
   PLOT_1 <- ggarrange(plot_1, legend_1)
   PLOT_2 <- ggarrange(plot_2, legend_2)
   PLOT_3 <- ggarrange(plot_3, legend_3)
 
-return(list(PLOT_1, PLOT_2, PLOT_3))
+return(list(PLOT_1, PLOT_2, PLOT_3, plot_4, plot_5, plot_6))
 }
 
 ```

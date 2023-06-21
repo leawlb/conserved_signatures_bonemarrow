@@ -20,7 +20,7 @@ library(SingleCellExperiment, quietly = TRUE)
 library(DropletUtils, quietly = TRUE) 
 library(tidyverse, quietly = TRUE) 
 library(scater, quietly = TRUE) 
-library(scuttle, quietly = TRUE) 
+#library(scuttle, quietly = TRUE) 
 library(scran, quietly = TRUE) 
 library(pheatmap, quietly = TRUE) 
 library(biomaRt, quietly = TRUE) 
@@ -50,15 +50,11 @@ source(file = "../../source/plotting.R")
 ```{r}
 # subset fg to sce_og
 sce_fg <- sce_fg[,which(!is.na(match(colnames(sce_fg), colnames(sce_og))))]
-```
-
-```{r}
 sce_og
 sce_fg
 ```
 
-MSPR objects don't have symbols
-
+MSPR objects don't have symbols.
 This part was taken from Perrine's script on how to download the relevant data 
 from BioMart.
 
@@ -74,12 +70,15 @@ if(grepl("mspr", name_curr)){
                                        "mmusculus_homolog_associated_gene_name"), 
                           mart=ensembl_mspr)
 
-  intersect_IDs <- intersect(rowData(sce_fg)$Symbol, ensembl_list_mspr$ensembl_gene_id)
+  intersect_IDs <- intersect(rowData(sce_fg)$Symbol, 
+                             ensembl_list_mspr$ensembl_gene_id)
 
-  ensembl_list_mspr <- ensembl_list_mspr[ensembl_list_mspr$ensembl_gene_id %in% intersect_IDs,]
+  ensembl_list_mspr <- ensembl_list_mspr[
+    ensembl_list_mspr$ensembl_gene_id %in% intersect_IDs,]
   sce_fg <- sce_fg[rowData(sce_fg)$Symbol %in% intersect_IDs,]
 
-  ensembl_list_mspr <- ensembl_list_mspr[!duplicated(ensembl_list_mspr$ensembl_gene_id),]
+  ensembl_list_mspr <- ensembl_list_mspr[
+    !duplicated(ensembl_list_mspr$ensembl_gene_id),]
   sce_fg <- sce_fg[!duplicated(rowData(sce_fg)$Symbol),]
 
 
@@ -87,10 +86,14 @@ if(grepl("mspr", name_curr)){
     match(ensembl_list_mspr$ensembl_gene_id,
           rownames(sce_fg))] <- ensembl_list_mspr$mmusculus_homolog_associated_gene_name
 
-  rowData(sce_fg)$Symbol[rowData(sce_fg)$Symbol == ""] <- rowData(sce_fg)$ID[rowData(sce_fg)$Symbol == ""]
+  rowData(sce_fg)$Symbol[rowData(sce_fg)$Symbol == ""] <- rowData(sce_fg)$ID[
+    rowData(sce_fg)$Symbol == ""]
 }
 
 ```
+
+Prepare combination of both SCE.
+RowData first, then colData.
 
 ```{r}
 
@@ -111,7 +114,6 @@ sce_fg_shared <- sce_fg_shared[!duplicated(rowData(sce_fg_shared)$Symbol),]
 
 ```
 
-
 ```{r}
 
 colnames(sce_og_shared) <- paste0(colnames(sce_og_shared), "_og")
@@ -120,27 +122,29 @@ sce_og_shared$Genome <- rep("OneGenome", ncol(sce_og_shared))
 colnames(sce_fg_shared) <- paste0(colnames(sce_fg_shared), "_fg")
 sce_fg_shared$Genome <- rep("FourGenomes", ncol(sce_fg_shared))
 
-colnames(rowData(sce_og_shared))[colnames(rowData(sce_og_shared)) == "ID"] <- "ID_og"
-colnames(rowData(sce_fg_shared))[colnames(rowData(sce_fg_shared)) == "ID"] <- "ID_fg"
+colnames(rowData(sce_og_shared))[
+  colnames(rowData(sce_og_shared)) == "ID"] <- "ID_og"
+colnames(rowData(sce_fg_shared))[
+  colnames(rowData(sce_fg_shared)) == "ID"] <- "ID_fg"
 
 rownames(sce_og_shared) <- rowData(sce_og_shared)$Symbol 
 rownames(sce_fg_shared) <- rowData(sce_fg_shared)$Symbol 
 
 colData(sce_og_shared) <- colData(sce_og_shared)[,-20]
 
+```
+
+```{r}
 # combine
 sce_tog <- cbind(sce_og_shared, sce_fg_shared)
 sce_tog
-
 ```
 
 ## General quality
 
 ```{r}
-
 qcdf_og <- perCellQCMetrics(sce_og_shared)
 qcdf_fg <- perCellQCMetrics(sce_fg_shared)
-
 ```
 
 ```{r}
@@ -153,8 +157,8 @@ ggplot(qcdf_gg[qcdf_gg$metric == "sum",], aes(y = value, x = metric))+
   theme_classic()+
   ggbeeswarm::geom_quasirandom(size = 0.1)+
   geom_boxplot(alpha = 0)+
-  scale_color_manual("Removed", values = c("FALSE" = "grey80", 
-                                           "TRUE" = "orange"))+
+  scale_color_manual("Removed", 
+                     values = c("FALSE" = "grey80", "TRUE" = "orange"))+
   ylab("Library size")+
   ggtitle("One genome")+
   theme(axis.title.x = element_blank(), axis.text.x = element_blank())
@@ -170,8 +174,8 @@ ggplot(qcdf_gg[qcdf_gg$metric == "sum",], aes(y = value, x = metric))+
   theme_classic()+
   ggbeeswarm::geom_quasirandom(size = 0.1)+
   geom_boxplot(alpha = 0)+
-  scale_color_manual("Removed", values = c("FALSE" = "grey80", 
-                                           "TRUE" = "orange"))+
+  scale_color_manual("Removed", 
+                     values = c("FALSE" = "grey80", "TRUE" = "orange"))+
   ylab("Library size")+
   ggtitle("Four genomes")+
   theme(axis.title.x = element_blank(), axis.text.x = element_blank())
@@ -179,15 +183,16 @@ ggplot(qcdf_gg[qcdf_gg$metric == "sum",], aes(y = value, x = metric))+
 
 ## Markergenes
 
-```{r}
-quick_clust <- quickCluster(sce_tog) # quick clustering to accelerate calculation
+Calculate logcounts together for visualisation.
+DMGs = differentially mapped genes.
 
-# must be COMPUTE not CALCULATE SumFactors to add directly to SCE
+```{r}
+quick_clust <- quickCluster(sce_tog) # to accelerate calculation
 sce_tog <- computeSumFactors(sce_tog, cluster = quick_clust)
 sce_tog <- logNormCounts(sce_tog) # log-transformation
 ```
 
-Sample specific dmgs:
+### Sample-specific DMGs:
 
 ```{r}
 dmgs[,c(2, 3, 5)]
@@ -216,7 +221,7 @@ pheatmap(
 )
 ```
 
-All combined dmgs.
+### All combined DMGs
 
 ```{r}
 print(dmg_list)

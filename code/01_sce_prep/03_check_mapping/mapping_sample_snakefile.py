@@ -5,7 +5,6 @@
 import pandas as pd
 
 # paths from config
-METADATA_PATH = config["metadata"]["table"]
 OUTPUT_BASE = config["paths"]["output_dir"]
 TABLES_PATH = config["metadata"]["color_tables"]
 
@@ -36,7 +35,6 @@ for s in species:
       targets = targets + [OUTPUT_REP + s + "/mapping_sample_report_" + i + ".html"]
       
 targets = targets + [OUTPUT_DAT + "07_dmgs/dmgs_list_all"]
-#print(targets)
 
 # local execution of non-demanding rules
 localrules: all  

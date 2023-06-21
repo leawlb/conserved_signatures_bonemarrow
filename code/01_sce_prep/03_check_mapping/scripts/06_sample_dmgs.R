@@ -75,8 +75,10 @@ sce_og_shared$Genome <- rep("OneGenome", ncol(sce_og_shared))
 colnames(sce_fg_shared) <- paste0(colnames(sce_fg_shared), "_fg")
 sce_fg_shared$Genome <- rep("FourGenomes", ncol(sce_fg_shared))
 
-colnames(rowData(sce_og_shared))[colnames(rowData(sce_og_shared)) == "ID"] <- "ID_og"
-colnames(rowData(sce_fg_shared))[colnames(rowData(sce_fg_shared)) == "ID"] <- "ID_fg"
+colnames(rowData(sce_og_shared))[
+  colnames(rowData(sce_og_shared)) == "ID"] <- "ID_og"
+colnames(rowData(sce_fg_shared))[
+  colnames(rowData(sce_fg_shared)) == "ID"] <- "ID_fg"
 
 rownames(sce_og_shared) <- rowData(sce_og_shared)$Symbol 
 rownames(sce_fg_shared) <- rowData(sce_fg_shared)$Symbol 

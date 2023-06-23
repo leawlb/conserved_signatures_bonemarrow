@@ -1,0 +1,5 @@
+
+snakemake --cluster "bsub -q long -n20 -R rusage[mem=100GB]" -p -j10 -c40 -s batch_correction_snakefile.py --configfile ../../config.yaml -n
+
+snakemake --cluster "bsub -q long -n20 -R rusage[mem=100GB]" -p -j10 -c40 -s batch_correction_snakefile.py --configfile ../../config.yaml -R renormalize -ns
+

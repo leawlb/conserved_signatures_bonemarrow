@@ -33,13 +33,17 @@ for s in species:
   for i in individuals:
     if s in i:
       targets = targets + [OUTPUT_DAT + "01_drop/" + s + "/sce_" + i + "-01"]
-      targets = targets + [OUTPUT_DAT + "02_outl/" + s + "/sce_" + i + "-02"]
-      targets = targets + [OUTPUT_DAT + "03_norm/" + s + "/sce_" + i + "-03"]
-      targets = targets + [OUTPUT_DAT + "04_dimr/" + s + "/sce_" + i + "-04"]
-      targets = targets + [OUTPUT_REP + s + "/preprocessing_sample_report_" + i + ".html"]
+      targets = targets + [OUTPUT_DAT + "02_mapp/" + s + "/dmgs_" + i]
+      targets = targets + [OUTPUT_DAT + "04_outl/" + s + "/sce_" + i + "-04"]
+      #targets = targets + [OUTPUT_DAT + "05_norm/" + s + "/sce_" + i + "-05"]
+      #targets = targets + [OUTPUT_DAT + "06_dimr/" + s + "/sce_" + i + "-06"]
+      #targets = targets + [OUTPUT_REP + "qc/" + s + "/preprocessing_qc_report_" + i + ".html"]
+      #targets = targets + [OUTPUT_REP + "dmgs/" + s + "/preprocessing_dmg_report_" + i + ".html"]
+
+#targets = targets + [OUTPUT_DAT + "03_dmgs/dmgs_list_all"]
       
 if config["run_preprocessing_summary"]:
-  targets = targets + [OUTPUT_REP + "preprocessing_summary.html"]
+  targets = targets + [OUTPUT_REP + "qc/preprocessing_qc_summary.html"]
 
 # local execution of non-demanding rules
 localrules: all  
@@ -56,58 +60,104 @@ rule remove_droplets:
     input: 
         sce_input = OUTPUT_BASE + config["paths"]["cellranger_output"] + "/{species}/sce_{individual}-01"
     output:
-        sce_01 = OUTPUT_DAT + "01_drop/{species}/sce_{individual}-01"
+        sce_output = OUTPUT_DAT + "01_drop/{species}/sce_{individual}-01"
     params:
         cutoff_umis = VALUES["cutoff_umis"],
         cutoff_doublets = VALUES["cutoff_doublets"]
     script:
         "scripts/01_remove_droplets.R"
-        
-# find outlier cells with low quality and remove them
-rule remove_outliers:
-    input: 
-        sce_01 = rules.remove_droplets.output
+
+# get the differentially mapped genes (dmgs) for each sample 
+rule get_sample_dmgs:
+    input:
+        sce_input = rules.remove_droplets.output,
+        sce_fg = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/fourgenomes/sce_objects/01_cellranger_output/{species}/sce_{individual}-01"
     output:
-        sce_02 = OUTPUT_DAT + "02_outl/{species}/sce_{individual}-02"
+        dmgs = OUTPUT_DAT + "02_mapp/{species}/dmgs_{individual}"
+    params:
+        nr_hvgs = VALUES["nr_hvgs"],
+        logFC_sample_dmgs = VALUES["logFC_sample_dmgs"],
+        minPC_sample_dmgs = VALUES["minPC_sample_dmgs"]
+    script:
+        "scripts/02_sample_dmgs.R" 
+    
+# merge all dmgs into one list for exclusion during merging  
+merge_dmgs_input = []
+for s in species:
+  for i in individuals:
+    if s in i:
+      merge_dmgs_input = merge_dmgs_input + expand(rules.get_sample_dmgs.output, species = s, individual = i)
+
+rule merge_dmgs:
+    input:
+        dmgs = merge_dmgs_input
+    output:
+        dmg_list = OUTPUT_DAT + "03_dmgs/dmgs_list_all"
+    script:
+        "scripts/03_merge_dmgs.R"
+        
+# find outlier cells with low quality and remove them, also remove dmgs 
+rule remove_outliers_dmgs:
+    input: 
+        sce_input = rules.remove_droplets.output,
+        dmg_list = rules.merge_dmgs.output
+    output:
+        sce_output = OUTPUT_DAT + "04_outl/{species}/sce_{individual}-04"
     params:
         cutoff_sum = VALUES["cutoff_sum"],
         cutoff_detected = VALUES["cutoff_detected"],
         cutoff_mitos = VALUES["cutoff_mitos"]
     script:
-        "scripts/02_remove_outliers.R"
+        "scripts/04_remove_outliers_dmgs.R"
         
-# normalize expression on sample level
+# normalize expression on sample level (for NMFs and Annotation)
 rule normalize_expr:
     input: 
-        sce_02 = rules.remove_outliers.output
+        sce_input = rules.remove_outliers_dmgs.output
     output:
-        sce_03 = OUTPUT_DAT + "03_norm/{species}/sce_{individual}-03"
+        sce_output = OUTPUT_DAT + "05_norm/{species}/sce_{individual}-05"
     script:
-        "scripts/03_normalize_expr.R"
+        "scripts/05_normalize_expr.R"
         
-# extract hvgs and reduce dimensions for QC on sample level 
+# extract hvgs and reduce dimensions for QC visualisation on sample level 
 rule reduce_dims:
     input: 
-        sce_03 = rules.normalize_expr.output
+        sce_input = rules.normalize_expr.output
     output:
-        sce_04 = OUTPUT_DAT + "04_dimr/{species}/sce_{individual}-04" 
+        sce_output = OUTPUT_DAT + "06_dimr/{species}/sce_{individual}-06" 
     params:
         nr_hvgs = VALUES["nr_hvgs"]
     script:
-        "scripts/04_reduce_dims.R"
+        "scripts/06_reduce_dims.R"
         
 #-------------------------------------------------------------------------------
-# construct report files to monitor QC on sample level
+# REPORTS
 
-rule make_sample_reports:
+# report file for dmgs 
+rule make_dmg_reports:
+    input:
+        sce_input = rules.remove_droplets.output,
+        sce_fg = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/fourgenomes/sce_objects/01_cellranger_output/{species}/sce_{individual}-01",
+        dmgs = rules.get_sample_dmgs.output,
+        dmg_list = rules.merge_dmgs.output
+    output:
+        OUTPUT_REP + "dmgs/{species}/mapping_dmg_report_{individual}.html"
+    params:
+        nr_hvgs = VALUES["nr_hvgs"],
+        color_tables = TABLES_PATH
+    script:
+        "preprocessing_dmg_reports.Rmd" 
+
+# report file for QC
+rule make_qc_reports:
     input:
         sce_input = config["paths"]["cellranger_output"] + "/{species}/sce_{individual}-01",
-        sce_01 = rules.remove_droplets.output,
-        sce_02 = rules.remove_outliers.output,
-        sce_03 = rules.normalize_expr.output,
-        sce_04 = rules.reduce_dims.output
+        sce_drop = rules.remove_droplets.output,
+        sce_outl = rules.remove_outliers_dmgs.output,
+        sce_norm = rules.normalize_expr.output,
+        sce_dimr = rules.reduce_dims.output
     output:
-        OUTPUT_REP + "{species}/preprocessing_sample_report_{individual}.html"
+        OUTPUT_REP + "qc/{species}/preprocessing_qc_report_{individual}.html"
     params:
         cutoff_umis = VALUES["cutoff_umis"],
         cutoff_doublets = VALUES["cutoff_doublets"],
@@ -118,7 +168,7 @@ rule make_sample_reports:
         color_tables = TABLES_PATH
     script:
         # .Rmd files should be stored in snakefile working directory
-        "preprocessing_sample_reports.Rmd" 
+        "preprocessing_qc_reports.Rmd" 
         
 """
 Make one summary report on all files
@@ -129,9 +179,9 @@ print(config["run_preprocessing_summary"])
 if config["run_preprocessing_summary"]:
   rule make_summary_report:
       input:
-          sce_01_path = OUTPUT_DAT + "01_drop/"
+          sce_input_path = OUTPUT_DAT + "01_drop/"
       output:
-          OUTPUT_REP + "preprocessing_summary.html"
+          OUTPUT_REP + "qc/preprocessing_summary.html"
       params:
           cutoff_sum = VALUES["cutoff_sum"],
           cutoff_detected = VALUES["cutoff_detected"],
@@ -140,4 +190,4 @@ if config["run_preprocessing_summary"]:
           metadata = config["metadata"]["table"],
           color_tables = TABLES_PATH
       script:
-          "preprocessing_summary.Rmd" 
+          "preprocessing_qc_summary.Rmd" 

@@ -354,9 +354,8 @@ qc_plotlist <- lapply(sce_list, function(x){
 ```
 
 ```{r fig.width=10, fig.height=5}
+#knitr::knit_exit()
 qc_plotlist
-knitr::knit_exit()
-
 ```
 
 ## Facet grid UMAPs
@@ -965,18 +964,18 @@ This takes quite long.
 ```{r}
 
 sce_input <- cms(sce_input, group = "Batch_exp_day", k = 30,
-              assay_name = "logcounts", res_name = "Logcounts", useNames = TRUE)
+              assay_name = "logcounts", res_name = "Logcounts")
 visHist(sce_input, n_col = 3)
 
 sce_mnn <- cms(sce_mnn, group = "Batch_exp_day", k = 30,
               assay_name = "reconstructed", 
-              res_name = "MNN", useNames = TRUE)
+              res_name = "MNN")
 visHist(sce_mnn, n_col = 3)
 
 if(batch_use != "Object_ID"){
   sce_ser <- cms(sce_ser, group = "Batch_exp_day", k = 30,
               assay_name = "corrected", 
-              res_name = "CCA", useNames = TRUE)
+              res_name = "CCA")
   
   visHist(sce_ser, n_col = 3)
 }

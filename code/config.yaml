@@ -34,9 +34,8 @@ values:
     cutoff_sum: 500 # below which cells are discarded
     cutoff_detected: 300 # below which cells are discarded
     nr_hvgs: 2000 # nr of top hvgs to use
-  check_mapping:
-    logFC_sample_mgs: 0.25 # logFC threshold for excluding DMGs per sample
-    minPC_sample_mgs: 0.05 # min percent of cells expressing DMGs per sample
+    logFC_sample_dmgs: 0.25 # logFC threshold for excluding DMGs per sample
+    minPC_sample_dmgs: 0.05 # min percent of cells expressing DMGs per sample
   batch_correction:  
     nr_hvgs_batch_correction: 10000 # nr of top hvgs to be used for subsetting  
     batch_use_fractions: "Object_ID" # if changed run ENTIRE batch_correction_snakefile
@@ -68,7 +67,7 @@ values:
       hsc: 6 
       str: 13 
     resolution: 0.22 
-    k_louvain: 75 
+    k_louvain: 75
     use_svm_kernel: "linear" # linear or radial
     size_subs_hscs: 60000 
   DGE:

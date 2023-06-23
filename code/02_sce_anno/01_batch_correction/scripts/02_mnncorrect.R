@@ -50,6 +50,7 @@ if(mnn_fast == TRUE){
                                batch = colData(sce)[,batch_pos], 
                                PARAM = FastMnnParam(),
                                subset.row = hvgs_for_batch_correction, 
+                               cos.norm.in=TRUE,
                                assay.type = assay_use)
   sce_bc$Correction_method <- rep("FastMNN", ncol(sce_bc))
   
@@ -79,6 +80,7 @@ if(mnn_fast == TRUE){
                                batch = colData(sce)[,batch_pos],
                                PARAM = ClassicMnnParam(), 
                                subset.row = hvgs_for_batch_correction,
+                               cos.norm.in=TRUE,
                                assay.type = assay_use)
   sce_bc$Correction_method <- rep("Classic_MNN", ncol(sce_bc))
 

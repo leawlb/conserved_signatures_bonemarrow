@@ -38,11 +38,10 @@ fractions = get_list(metadata = METADATA, column = "Fraction_ID")
 
 targets = []
 for f in fractions:
-  targets = targets + [OUTPUT_DAT + "01_rnrm/sce_" + f + "_" + BATCH_USE + "-01"]
-  targets = targets + [OUTPUT_DAT + "02_mnnc/sce_" + f + "_" + BATCH_USE + "-02"]
+  targets = targets + [OUTPUT_DAT + "01_mnnc/sce_" + f + "_" + BATCH_USE + "-01"]
   targets = targets + [OUTPUT_REP + "batch_correction_report_" + f + "_" + BATCH_USE + ".html"]
   if BATCH_USE != "Object_ID":
-    targets = targets + [OUTPUT_DAT + "02_srt3/sce_" + f + "_" + BATCH_USE + "_" + SEURAT_RED +"-02"]
+    targets = targets + [OUTPUT_DAT + "01_srt3/sce_" + f + "_" + BATCH_USE + "_" + SEURAT_RED +"-01"]
     
 #targets = targets + [OUTPUT_REP + "batch_correction_summary_" + BATCH_USE + ".html"]
   
@@ -55,23 +54,6 @@ rule all: # must contain all possible output paths from all rules
     input:
         targets
  
-"""
-Quick and basic renormalization.
-Scaling requires identical composition in all batches and worsens
-bioconservation so scaling will not be used by default
-Only required for for fastMNN()
-"""
-rule renormalize:
-    input:
-        sce_input = OUTPUT_BASE + "/sce_objects/01_sce_prep/08_mrge/fractions/sce_{fraction}-08"
-    output:
-        sce_01 = OUTPUT_DAT + "01_rnrm/sce_{fraction}_" + BATCH_USE + "-01"
-    params:
-        batch_use = BATCH_USE,
-        rescale = config["rescale_for_batch_correction"]
-    script:
-        "scripts/01_renormalize.R"
-
 #-------------------------------------------------------------------------------
     
 """
@@ -82,13 +64,15 @@ bioconservation, but slow and does not perform well on batch correction
 Requires shared cell types between batches but no labels
 (fastMNN) seems to balance batch effect removal and bioconservation
 HVG selection improves performance but restricts analysis
-Seurat cannot integrate this many samples (Object_ID)
+Seurat cannot integrate this many samples (Object_ID).
+
+MNN performs its own normalization step.
 """
 rule run_mnncorrect:
     input:
-        sce_01 = rules.renormalize.output 
+        sce_input = OUTPUT_BASE + "/sce_objects/01_sce_prep/08_mrge/fractions/sce_{fraction}-08"
     output:
-        sce_02 = OUTPUT_DAT + "02_mnnc/sce_{fraction}_" + BATCH_USE + "-02"
+        sce_output = OUTPUT_DAT + "01_mnnc/sce_{fraction}_" + BATCH_USE + "-01"
     params:
         batch_use = BATCH_USE,
         rescale = config["rescale_for_batch_correction"], # condition
@@ -115,7 +99,7 @@ if BATCH_USE != "Object_ID":
       input:
         sce_input = OUTPUT_BASE + "/sce_objects/01_sce_prep/08_mrge/fractions/sce_{fraction}-08"
       output:
-          sce_02 = OUTPUT_DAT + "02_srt3/sce_{fraction}_" + BATCH_USE + "_" + SEURAT_RED + "-02"
+          sce_output = OUTPUT_DAT + "01_srt3/sce_{fraction}_" + BATCH_USE + "_" + SEURAT_RED + "-01"
       params:
           batch_use = BATCH_USE,
           nr_hvgs_batch_correction = config["values"]["batch_correction"]["nr_hvgs_batch_correction"], # number
@@ -140,9 +124,8 @@ print(sce_02_input)
 # takes >4h for hscs
 rule make_reports:
     input:
-        sce_input = OUTPUT_BASE + "/sce_objects/01_sce_prep/08_mrge/fractions/sce_{fraction}-08",
-        sce_01 = rules.renormalize.output,
-        sce_02_input = sce_02_input
+        sce_input_raw = OUTPUT_BASE + "/sce_objects/01_sce_prep/08_mrge/fractions/sce_{fraction}-08",
+        sce_input_corrected = sce_02_input
     output:
         OUTPUT_REP + "batch_correction_report_{fraction}_" + BATCH_USE + ".html"
     params:

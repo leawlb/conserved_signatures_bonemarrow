@@ -1,5 +1,0 @@
-snakemake --cluster "bsub -n2 -q long -R rusage[mem=80GB]" -p -j66 -c4 -s integration_snakefile.py --configfile ../../config.yaml -n
-
-snakemake --cluster "bsub -n2 -q long -R rusage[mem=80GB]" -p -j66 -c4 -s integration_snakefile.py --configfile ../../config.yaml -R merge_datasets_fractions -n
-
-snakemake --cluster "bsub -n2 -q long -R rusage[mem=80GB]" -p -j66 -c4 -s integration_snakefile.py --configfile ../../config.yaml -R merge_datasets_species -n

@@ -4,16 +4,14 @@
 
 import pandas as pd
 
-# paths from config
+# paths and objects from config
 OUTPUT_BASE = config["paths"]["output_dir"]
 TABLES_PATH = config["metadata"]["color_tables"]
 
-# objects from config
 METADATA = pd.read_csv(config["metadata"]["table"])
 
-# specific data and report output paths
-OUTPUT_DAT = "/sce_objects/01_sce_prep/"
-OUTPUT_REP = "/reports/01_sce_prep/02_ref_anno/"
+OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/01_sce_prep/"
+OUTPUT_REP = OUTPUT_BASE + "/reports/01_sce_prep/02_ref_anno/"
 
 def get_list(metadata, column):
   values = METADATA[column]
@@ -27,22 +25,20 @@ individuals = get_list(metadata = METADATA, column = "Object_ID")
 
 #-------------------------------------------------------------------------------
 
-# construct paths for all possible outputs/targets, required for rule all
 targets = []
 for s in species:
   for i in individuals:
     if s in i:
-      targets = targets + [OUTPUT_BASE + OUTPUT_DAT + "05_rfan/" + s + "/sce_" + i + "-05"]
-      targets = targets + [OUTPUT_BASE + OUTPUT_REP +  s + "/02_ref_anno_sample_report_" + i + ".html"]
+      targets = targets + [OUTPUT_DAT + "07_rfan/" + s + "/sce_" + i + "-07"]
+      targets = targets + [OUTPUT_REP +  s + "/02_ref_anno_report_" + i + ".html"]
 
-targets = targets + [OUTPUT_BASE + OUTPUT_REP + "ref_anno_summary.html"]
+targets = targets + [OUTPUT_REP + "ref_anno_summary.html"]
 
 #-------------------------------------------------------------------------------
 
 localrules: all  
 
-# define rules
-rule all: # must contain all possible output paths from all rules
+rule all: 
     input:
         targets
   
@@ -54,14 +50,14 @@ The longest sample takes around 1h for total 6 annotations.
 """
 rule sample_anno: 
     input: 
-        sce_input = OUTPUT_BASE + OUTPUT_DAT + "04_dimr/{species}/sce_{individual}-04",
+        sce_input = OUTPUT_DAT + "06_dimr/{species}/sce_{individual}-06",
         ref_baccin_sce = config["metadata"]["ref_baccin_sce"],
         ref_dahlin_sce = config["metadata"]["ref_dahlin_sce"],
         ref_dolgalev_sce = config["metadata"]["ref_dolgalev_sce"]
     output:
-        sce_05 = OUTPUT_BASE + OUTPUT_DAT + "05_rfan/{species}/sce_{individual}-05"
+        sce_output = OUTPUT_DAT + "07_rfan/{species}/sce_{individual}-07"
     script:
-        "scripts/05_ref_anno_scmap.R"  
+        "scripts/07_ref_anno_scmap.R"  
       
 #-------------------------------------------------------------------------------
 # reports
@@ -70,7 +66,7 @@ rule make_sample_reports:
     input: 
         rules.sample_anno.output
     output:
-        OUTPUT_BASE + OUTPUT_REP + "{species}/02_ref_anno_sample_report_{individual}.html"
+        OUTPUT_REP + "{species}/02_ref_anno_sample_report_{individual}.html"
     params:
         color_tables = TABLES_PATH
     script:
@@ -84,9 +80,9 @@ for s in species:
       
 rule make_summary:
     input:
-        sce_05_pathlist = summary_inputs
+        sce_input_pathlist = summary_inputs
     output:
-        OUTPUT_BASE + OUTPUT_REP + "ref_anno_summary.html"
+        OUTPUT_REP + "ref_anno_summary.html"
     params:
         samples_to_remove = config["samples_to_remove"],
         color_tables = TABLES_PATH,

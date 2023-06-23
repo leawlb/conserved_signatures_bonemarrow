@@ -29,4 +29,4 @@ colData(sce)$doublet_score <- computeDoubletDensity(sce)
 sce <- sce[,which(sce$doublet_score <= cutoff_doublets)]
 
 # save
-saveRDS(sce, file = snakemake@output[["sce_01"]])
+saveRDS(sce, file = snakemake@output[["sce_output"]])

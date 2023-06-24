@@ -8,7 +8,7 @@ library(scuttle, quietly = TRUE)
 set.seed(37)
 
 sce <- readRDS(file = snakemake@input[["sce_input"]])
-dmgs <- readRDS(file = snakemake@input[["dmgs"]])
+dmg_list <- readRDS(file = snakemake@input[["dmg_list"]])
 
 # QC cutoffs 
 cutoff_sum <- snakemake@params[["cutoff_sum"]] 
@@ -18,7 +18,7 @@ cutoff_mitos <- snakemake@params[["cutoff_mitos"]]
 #-------------------------------------------------------------------------------
 
 print(sce)
-sce <- sce[!rownames(sce) %in% dmgs,]
+sce <- sce[!rownames(sce) %in% dmg_list,]
 print(sce)
 
 #-------------------------------------------------------------------------------

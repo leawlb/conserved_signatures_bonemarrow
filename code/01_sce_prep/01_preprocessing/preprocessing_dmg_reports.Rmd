@@ -32,7 +32,7 @@ Repeat various steps for visualiation.
 
 ```{r load_objects, message = FALSE}
 
-sce_og <- readRDS(file = snakemake@input[["sce_02"]])
+sce_og <- readRDS(file = snakemake@input[["sce_input"]])
 sce_fg <- readRDS(file = snakemake@input[["sce_fg"]])
 dmg_list <- readRDS(file = snakemake@input[["dmg_list"]])
 dmgs <- readRDS(file = snakemake@input[["dmgs"]])

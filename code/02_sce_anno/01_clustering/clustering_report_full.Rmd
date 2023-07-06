@@ -1,0 +1,530 @@
+---
+title: "clustering_report_full"
+author: "Lea Wölbert"
+date: '2022-12-19'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Report for clustering as part of manual annotation at fraction level.
+
+#### Load libraries, source code 
+
+```{r load,  message = FALSE}
+library(DropletUtils, quietly = TRUE) 
+library(scater, quietly = TRUE) 
+library(scuttle, quietly = TRUE) 
+library(scran, quietly = TRUE) 
+library(tidyverse, quietly = TRUE) 
+library(dendextend, quietly = TRUE) 
+library(pheatmap, quietly = TRUE) 
+library(bluster, quietly = TRUE)
+library(RColorBrewer, quietly = TRUE)
+set.seed(37)
+```
+
+```{r}
+sce_inp <- readRDS(file = snakemake@input[["sce_input"]])
+sce_l <- readRDS(file = snakemake@input[["sce_l"]])
+fraction_curr <- sce_inp$Fraction_ID[1]
+
+color_tables <- snakemake@params[["color_tables"]]
+
+```
+
+```{r}
+source(file = "../../source/colors.R")
+source(file = "../../source/plotting.R")
+source(file = "../../source/sce_functions.R")
+```
+
+```{r}
+
+sce_inp <- factor_reference_cts(sce_inp)
+sce_l <- factor_reference_cts(sce_l)
+
+if(fraction_curr == "hsc"){
+  col_cts["unassigned"] <- "honeydew2"
+  col_num <- c(col_num, "DOWNSAMPLED" = "grey90")
+}else if(fraction_curr == "str"){
+  col_cts["unassigned"] <- "mistyrose3"
+}
+
+col_cts_baccin <- col_cts[match(levels(sce_l$baccin_celltype_scmapclust), 
+                                names(col_cts))]
+col_cts_dahlin <- col_cts[match(levels(sce_l$dahlin_celltype_scmapclust), 
+                                names(col_cts))]
+col_cts_dolgalev <- col_cts[match(levels(sce_l$dolgalev_celltype_scmapclust),
+                                  names(col_cts))]
+
+col_batch_exp_day <- col_alp[names(col_alp) %in% sce_l$Batch_exp_day]
+col_batch_seq <- col_num[names(col_num) %in% sce_l$Batch_sequencing]
+col_ann_age <- col_ann[names(col_ann) %in% sce_l$Age_ID]
+col_ann_fraction <- col_ann[names(col_ann) %in% sce_l$Fraction_ID]
+col_species <- col_spc[names(col_spc) %in% sce_l$Species_ID]
+
+col_clust_l <- col_num[names(col_num) %in% sce_l$cluster_louvain]
+
+```
+
+Annotations for reference.
+
+```{r}
+
+identity_plots <- function(sce){
+  
+  plot_1 <- umap_base(sce, color_by = "baccin_celltype_scmapclust")+ 
+    ggtitle(paste0(fraction_curr))+
+    scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)
+  plot_1l <- umap_legend(sce, color_by = "baccin_celltype_scmapclust")+
+    scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)
+  legend_1 <- get_legend(plot_1l)
+
+  plot_2 <- umap_base(sce, color_by = "dahlin_celltype_scmapclust")+
+    ggtitle(paste0(fraction_curr))+
+    scale_color_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin)
+  plot_2l <- umap_legend(sce, color_by = "dahlin_celltype_scmapclust")+
+    scale_color_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin)
+  legend_2 <- get_legend(plot_2l)
+  
+  plot_3 <- umap_base(sce, color_by = "dolgalev_celltype_scmapclust")+ 
+    ggtitle(paste0(fraction_curr))+
+    scale_color_manual("dolgalev_celltype_scmapclust",
+                       values = col_cts_dolgalev)
+  plot_3l <- umap_legend(sce, color_by = "dolgalev_celltype_scmapclust")+
+    scale_color_manual("dolgalev_celltype_scmapclust", 
+                       values = col_cts_dolgalev)
+  legend_3 <- get_legend(plot_3l)
+  
+  PLOT_1 <- ggarrange(plot_1, legend_1)
+  PLOT_2 <- ggarrange(plot_2, legend_2)
+  PLOT_3 <- ggarrange(plot_3, legend_3)
+
+  return(list(PLOT_1, PLOT_2, PLOT_3))
+}
+
+identity_plots <- identity_plots(sce_l)
+
+```
+
+```{r fig.width=8, fig.height=4}
+identity_plots
+```
+
+# Louvain
+
+```{r}
+print(table(sce_l$cluster_louvain))
+```
+
+```{r}
+print(table(sce_l$cluster_louvain, sce_l$Species_ID))
+```
+
+```{r}
+print(table(sce_l$cluster_louvain, sce_l$Age_ID))
+```
+
+## Clusters
+
+```{r fig.width=8, fig.height=4}
+
+plot_1 <- umap_base(sce_l, color_by = "cluster_louvain")+ 
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))+
+  scale_color_manual("cluster (louvain)", values = col_clust_l)
+plot_1l <- umap_legend(sce_l, color_by = "cluster_louvain")+
+  scale_color_manual("cluster (louvain)", values = col_clust_l)
+legend_1 <- get_legend(plot_1l)
+
+plot_2 <- pca_base2(sce_l, color_by = "cluster_louvain")+ 
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))+
+  scale_color_manual("cluster (louvain)", values = col_clust_l)
+plot_2l <- pca_legend(sce_l, color_by = "cluster_louvain")+
+  scale_color_manual("cluster (louvain)", values = col_clust_l)
+legend_2 <- get_legend(plot_2l)
+
+plot_3 <- pca_base3(sce_l, color_by = "cluster_louvain")+ 
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))+
+  scale_color_manual("cluster (louvain)", values = col_clust_l)
+plot_3l <- pca_legend(sce_l, color_by = "cluster_louvain")+
+  scale_color_manual("cluster (louvain)", values = col_clust_l)
+legend_3 <- get_legend(plot_3l)
+
+PLOT_1 <- ggarrange(plot_1, legend_1)
+PLOT_2 <- ggarrange(plot_2, legend_2)
+PLOT_3 <- ggarrange(plot_3, legend_3)
+  
+PLOT_1
+PLOT_2
+PLOT_3
+```
+
+## QC
+
+```{r fig.width=8, fig.height=4}
+
+ggdf <- data.frame(colData(sce_l))
+
+# legends
+plot_baccin_leg <- ggplot(ggdf, aes(x = cluster_louvain, 
+                                    fill=baccin_celltype_scmapclust))+
+  geom_bar(position = "stack") + 
+  scale_fill_manual("baccin_celltype_scmapclust", values = col_cts_baccin)
+
+legend_baccin <- get_legend(plot_baccin_leg)
+
+plot_dahlin_leg <- ggplot(ggdf, aes(x = cluster_louvain, 
+                                    fill=dahlin_celltype_scmapclust))+
+  geom_bar(position = "stack") + 
+  scale_fill_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin)
+
+legend_dahlin <- get_legend(plot_dahlin_leg)
+
+plot_dolgalev_leg <- ggplot(ggdf, aes(x = cluster_louvain, 
+                                    fill=dolgalev_celltype_scmapclust))+
+  geom_bar(position = "stack") + 
+  scale_fill_manual("dolgalev_celltype_scmapclust", values = col_cts_dolgalev)
+legend_dolgalev <- get_legend(plot_dolgalev_leg)
+# also use legends for later
+
+# plots
+plot1a <- ggplot(ggdf, aes(x = cluster_louvain, 
+                          fill=Batch_exp_day, color = Batch_exp_day))+
+  geom_bar(position = "stack") + 
+  theme_classic()+
+  scale_fill_manual(name = "Experimental day", values = col_batch_exp_day)+
+  scale_color_manual(name = "Experimental day", values = col_batch_exp_day)+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))
+
+plot1b <- ggplot(ggdf, aes(x = cluster_louvain, fill=Batch_exp_day, 
+                          color = Batch_exp_day))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual(name = "Experimental day", values = col_batch_exp_day)+
+  scale_color_manual(name = "Experimental day", values = col_batch_exp_day)+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))
+
+plot2a <- ggplot(ggdf, aes(x = Batch_exp_day, 
+                          fill=cluster_louvain, color = cluster_louvain))+
+  geom_bar(position = "stack") + 
+  theme_classic()+
+  scale_fill_manual(name = "Cluster (louvain)", values = col_clust_l)+
+  scale_color_manual(name = "Cluster (louvain)", values = col_clust_l)+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))+
+  facet_grid(cols = vars(ggdf$Fraction))
+
+plot2b <- ggplot(ggdf, aes(x = Batch_exp_day, fill=cluster_louvain, 
+                          color = cluster_louvain))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual(name = "Cluster (louvain)",  values = col_clust_l)+
+  scale_color_manual(name = "Cluster (louvain)", values = col_clust_l)+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))+
+  facet_grid(cols = vars(ggdf$Fraction))
+
+plot3a <- ggplot(ggdf, aes(x = cluster_louvain,
+                          fill=Age_ID, color = Age_ID))+
+  geom_bar(position = "stack") + 
+  theme_classic()+
+  scale_fill_manual(name = "Age", values = col_ann_age)+
+  scale_color_manual(name = "Age", values = col_ann_age)+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))
+
+plot3b <- ggplot(ggdf, aes(x = cluster_louvain, fill=Age_ID, 
+                          color = Age_ID))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual(name = "Age", values = col_ann_age)+
+  scale_color_manual(name = "Age", values = col_ann_age)+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))
+
+plot4a <- ggplot(ggdf, aes(x = Age_ID, 
+                          fill=cluster_louvain, color = cluster_louvain))+
+  geom_bar(position = "stack") + 
+  theme_classic()+
+  scale_fill_manual(name = "Cluster (louvain)", values = col_clust_l)+
+  scale_color_manual(name = "Cluster (louvain)", values = col_clust_l)+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))
+
+plot4b <- ggplot(ggdf, aes(x = Age_ID,
+                          fill=cluster_louvain, 
+                          color = cluster_louvain))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual(name = "Cluster (louvain)", values = col_clust_l)+
+  scale_color_manual(name = "Cluster (louvain)", values = col_clust_l)+
+  theme(axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))
+
+
+# Species
+plot5a <- ggplot(ggdf, aes(x = cluster_louvain, 
+                          fill=Species_ID, color = Species_ID))+
+  geom_bar(position = "stack") + 
+  theme_classic()+
+  scale_fill_manual(name = "Age", values = col_species)+
+  scale_color_manual(name = "Age", values = col_species)+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))+
+  theme(axis.title.y = element_blank())
+
+plot5b <- ggplot(ggdf, aes(x = cluster_louvain, fill=Species_ID, 
+                          color = Species_ID))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual(name = "Age", values = col_species)+
+  scale_color_manual(name = "Age", values = col_species)+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))+
+  theme(axis.title.y = element_blank())
+
+plot6a <- ggplot(ggdf, aes(x = Species_ID, 
+                          fill=cluster_louvain, 
+                          color = cluster_louvain))+
+  geom_bar(position = "stack") + 
+  theme_classic()+
+  scale_fill_manual(name = "Cluster (hierarchical)", values = col_clust_l)+
+  scale_color_manual(name = "Cluster (hierarchical)", values = col_clust_l)+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))+
+  theme(axis.title.y = element_blank())
+
+plot6b <- ggplot(ggdf, aes(x = Species_ID,
+                          fill=cluster_louvain, 
+                          color = cluster_louvain))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual(name = "Cluster (hierarchical)", values = col_clust_l)+
+  scale_color_manual(name = "Cluster (hierarchical)", values = col_clust_l)+
+  theme(axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))+
+  theme(axis.title.y = element_blank())
+
+
+# Cell types
+plot7a <- ggplot(ggdf, aes(x = cluster_louvain, 
+                          fill=baccin_celltype_scmapclust, 
+                          color = baccin_celltype_scmapclust))+
+  geom_bar(position = "stack") + 
+  theme_classic()+
+  scale_fill_manual(name = "baccin_celltype_scmapclust",
+                    values = col_cts_baccin)+
+  scale_color_manual(name = "baccin_celltype_scmapclust",
+                     values = col_cts_baccin)+
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))+
+  theme(axis.title.y = element_blank())
+
+plot7b <- ggplot(ggdf, aes(x = cluster_louvain, fill=baccin_celltype_scmapclust, 
+                          color = baccin_celltype_scmapclust))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual(name = "baccin_celltype_scmapclust",
+                    values = col_cts_baccin)+
+  scale_color_manual(name = "baccin_celltype_scmapclust",
+                     values = col_cts_baccin)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))+
+  theme(axis.title.y = element_blank())
+
+
+plot8a <- ggplot(ggdf, aes(x = cluster_louvain,
+                          fill=dahlin_celltype_scmapclust, 
+                          color = dahlin_celltype_scmapclust))+
+  geom_bar(position = "stack") + 
+  theme_classic()+
+  scale_fill_manual(name = "dahlin_celltype_scmapclust", 
+                    values = col_cts_dahlin)+
+  scale_color_manual(name = "dahlin_celltype_scmapclust",
+                     values = col_cts_dahlin)+
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))+
+  theme(axis.title.y = element_blank())
+
+plot8b <- ggplot(ggdf, aes(x = cluster_louvain, fill=dahlin_celltype_scmapclust, 
+                          color = dahlin_celltype_scmapclust))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual(name = "dahlin_celltype_scmapclust", 
+                    values = col_cts_dahlin)+
+  scale_color_manual(name = "dahlin_celltype_scmapclust",
+                     values = col_cts_dahlin)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))+
+  theme(axis.title.y = element_blank())
+
+
+plot9a <- ggplot(ggdf, aes(x = cluster_louvain,
+                          fill=dolgalev_celltype_scmapclust, 
+                          color = dolgalev_celltype_scmapclust))+
+  geom_bar(position = "stack") + 
+  theme_classic()+
+  scale_fill_manual(name = "dolgalev_celltype_scmapclust", 
+                    values = col_cts_dolgalev)+
+  scale_color_manual(name = "dolgalev_celltype_scmapclust", 
+                     values = col_cts_dolgalev)+
+  theme(legend.position = "none", 
+        axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))+
+  theme(axis.title.y = element_blank())
+
+plot9b <- ggplot(ggdf, aes(x = cluster_louvain,
+                           fill=dolgalev_celltype_scmapclust, 
+                          color = dolgalev_celltype_scmapclust))+
+  geom_bar(position = "fill") + 
+  theme_classic()+
+  scale_fill_manual(name = "dolgalev_celltype_scmapclust", 
+                    values = col_cts_dolgalev)+
+  scale_color_manual(name = "dolgalev_celltype_scmapclust",
+                     values = col_cts_dolgalev)+
+  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))+
+  theme(axis.title.y = element_blank())
+
+plot1a
+plot1b
+plot2a
+plot2b
+plot3a
+plot3b
+plot4a
+plot4b
+plot5a
+plot5b
+plot6a
+plot6b
+```
+
+```{r fig.width=8, fig.height = 11}
+
+PLOT7a <- ggarrange(plot7a, legend_baccin, ncol = 1)
+PLOT7b <- ggarrange(plot7b, legend_baccin, ncol = 1)
+PLOT8a <- ggarrange(plot8a, legend_dahlin, ncol = 1)
+PLOT8b <- ggarrange(plot8b, legend_dahlin, ncol = 1)
+PLOT9a <- ggarrange(plot9a, legend_dolgalev, ncol = 1)
+PLOT9b <- ggarrange(plot9b, legend_dolgalev, ncol = 1)
+
+PLOT7a
+PLOT7b
+PLOT8a
+PLOT8b
+PLOT9a
+PLOT9b
+```
+
+```{r fig.width=12, fig.height=4}
+
+plot_x <- umap_base(sce_l, color_by = "cluster_louvain")+
+  scale_color_manual("cluster_louvain", values = col_clust_l)+
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))+
+  facet_grid(cols = vars(sce_l$Species_ID))
+plot_xl <- umap_legend(sce_l, color_by = "cluster_louvain")+
+  scale_color_manual("cluster_louvain", values = col_clust_l)
+legend_x <- get_legend(plot_xl)
+
+PLOT_X <-  ggarrange(plot_x, legend_x, widths = c(3,1))
+PLOT_X
+```
+
+## Silhouette and Purity
+
+```{r}
+
+knitr::knit_exit()
+
+# Silhouette
+sil.approx <- approxSilhouette(reducedDim(sce_l, "PCA"), 
+                               clusters = sce_l$cluster_louvain)
+sil.data <- as.data.frame(sil.approx)
+sil.data$closest <- factor(ifelse(sil.data$width > 0, 
+                                  sce_l$cluster_louvain, 
+                                  sil.data$other))
+sil.data$cluster <- sce_l$cluster_louvain
+
+ggplot(sil.data, aes(x=cluster, y=width, colour=closest))+
+  ggbeeswarm::geom_quasirandom(size = 0.1)+
+  theme_classic()+
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))+
+  scale_color_manual("cluster (louvain)", values = col_clust_l)+
+  theme(legend.position = "none")+
+  xlab("cluster (louvain)")+
+  ylim(-1, 1)+
+  ylab("Silhouette width")
+
+ggplot(sil.data, aes(x=cluster, y=width, colour=closest))+
+  ggbeeswarm::geom_quasirandom(size = 0.1)+
+  theme_classic()+
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))+
+  facet_grid(cols = vars(sce_l$Species_ID))+
+  scale_color_manual("cluster (louvain)", values = col_clust_l)+
+  theme(legend.position = "none")+
+  xlab("cluster (louvain)")+
+  ylim(-1, 1)+
+  ylab("Silhouette width")
+
+# Purity
+pure_sce <- neighborPurity(reducedDim(sce_l, "PCA"), sce_l$cluster_louvain)
+pure_data <- as.data.frame(pure_sce)
+pure_data$maximum <- factor(pure_data$maximum)
+pure_data$cluster <- sce_l$cluster_louvain
+
+ggplot(pure_data, aes(x=cluster, y=purity, colour=maximum))+
+  ggbeeswarm::geom_quasirandom(size = 0.1)+
+  theme_classic()+
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))+
+  scale_color_manual("cluster (louvain)", values = col_clust_l)+
+  theme(legend.position = "none")+
+  xlab("cluster (louvain)")+
+  ylim(0, 1)+
+  ylab("Cluster purity")
+
+ggplot(pure_data, aes(x=cluster, y=purity, colour=maximum))+
+  ggbeeswarm::geom_quasirandom(size = 0.1)+
+  theme_classic()+
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))+
+  facet_grid(cols = vars(sce_l$Species_ID))+
+  scale_color_manual("cluster (louvain)", values = col_clust_l)+
+  theme(legend.position = "none")+
+  xlab("cluster (louvain)")+
+  ylim(0, 1)+
+  ylab("Cluster purity")
+
+ggplot(pure_data, aes(x=cluster, y=purity, color=cluster))+
+  geom_boxplot(outlier.size = 0.1)+
+  theme_classic()+
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))+
+  scale_color_manual("cluster (louvain)", values = col_clust_l)+
+  theme(legend.position = "none")+
+  xlab("cluster (louvain)")+
+  ylim(0, 1)+
+  ylab("Cluster purity")
+
+ggplot(pure_data, aes(x=cluster, y=purity, color=cluster))+
+  geom_boxplot(outlier.size = 0.1)+
+  theme_classic()+
+  ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))+
+  scale_color_manual("cluster (louvain)", values = col_clust_l)+
+  facet_grid(cols = vars(sce_l$Species_ID))+
+  theme(legend.position = "none")+
+  xlab("cluster (louvain)")+
+  ylim(0, 1)+
+  ylab("Cluster purity")
+```
+
+```{r}
+sessionInfo()
+```

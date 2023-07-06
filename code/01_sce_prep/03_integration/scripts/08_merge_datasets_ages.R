@@ -6,7 +6,7 @@ library(DropletUtils)
 set.seed(37)
 source(file = "../../source/sce_functions.R")
 
-sce_05_path <- snakemake@input[["sce_input_path"]] # cell annotation output
+sce_input_path <- snakemake@input[["sce_input_path"]] # cell annotation output
 
 individuals <- snakemake@params[["individuals"]] # all objects to merge
 samples_to_remove <- snakemake@params[["samples_to_remove"]] # samples to remove from merging
@@ -20,13 +20,13 @@ individuals_curr <- individuals[grepl(species_curr, individuals)]
 print(individuals_curr)
 
 # load SCE objects
-print(sce_05_path)
+print(sce_input_path)
 
 sce_list <- list()
 
 for(i in individuals_curr){
-  print(paste0(sce_05_path, "/sce_", i, "-05"))
-      sce_list[[i]] <- readRDS(file = paste0(sce_05_path, "/sce_", i, "-05"))
+  print(paste0(sce_input_path, "/sce_", i, "-07"))
+      sce_list[[i]] <- readRDS(file = paste0(sce_input_path, "/sce_", i, "-07"))
 }
 
 # only keep objects that are not to be removed (failsave)

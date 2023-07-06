@@ -1,4 +1,0 @@
-
-snakemake --cluster "bsub -n2 -q medium -R rusage[mem=20GB]" -p -j66 -c20 -s mapping_sample_snakefile.py --configfile ../../config.yaml -n
-
-snakemake --cluster "bsub -n2 -q long -R rusage[mem=20GB]" -p -j66 -c20 -s mapping_sample_snakefile.py --configfile ../../config.yaml -R get_sample_dmgs -n

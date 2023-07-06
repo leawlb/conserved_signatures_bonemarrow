@@ -48,7 +48,7 @@ scmapcell and scmapcluster.
 To get an overview of approx. cell type numbers and fraction contamination.
 The longest sample takes around 1h for total 6 annotations.
 """
-rule sample_anno: 
+rule ref_anno: 
     input: 
         sce_input = OUTPUT_DAT + "06_dimr/{species}/sce_{individual}-06",
         ref_baccin_sce = config["metadata"]["ref_baccin_sce"],
@@ -64,9 +64,9 @@ rule sample_anno:
   
 rule make_sample_reports:
     input: 
-        rules.sample_anno.output
+        rules.ref_anno.output
     output:
-        OUTPUT_REP + "{species}/02_ref_anno_sample_report_{individual}.html"
+        OUTPUT_REP + "{species}/02_ref_anno_report_{individual}.html"
     params:
         color_tables = TABLES_PATH
     script:
@@ -76,7 +76,7 @@ summary_inputs = []
 for s in species:
   for i in individuals:
     if s in i:
-      summary_inputs = summary_inputs+expand(rules.sample_anno.output, species=s, individual=i)
+      summary_inputs = summary_inputs+expand(rules.ref_anno.output, species=s, individual=i)
       
 rule make_summary:
     input:

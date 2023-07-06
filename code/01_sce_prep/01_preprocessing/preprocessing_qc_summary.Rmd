@@ -27,7 +27,7 @@ set.seed(37)
 
 ```{r load_snakemake, message = FALSE}
 
-sce_01_path <- snakemake@input[["sce_01_path"]]
+sce_01_path <- snakemake@input[["sce_input_path"]]
 
 metadata <- read.csv(file = snakemake@params[["metadata"]], 
                      head = TRUE, 

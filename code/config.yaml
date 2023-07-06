@@ -31,19 +31,18 @@ values:
     cutoff_umis: 100 # below which droplets are discarded
     cutoff_doublets: 7.5 # above which likely doublets are discarded
     cutoff_mitos: 5 # percentage of mito genes above which cells are discarded
-    cutoff_sum: 500 # below which cells are discarded
-    cutoff_detected: 300 # below which cells are discarded
+    cutoff_sum: 600 # below which cells are discarded
+    cutoff_detected: 400 # below which cells are discarded
     nr_hvgs: 2000 # nr of top hvgs to use
     logFC_sample_dmgs: 0.25 # logFC threshold for excluding DMGs per sample
     minPC_sample_dmgs: 0.05 # min percent of cells expressing DMGs per sample
   batch_correction:  
     nr_hvgs_batch_correction: 10000 # nr of top hvgs to be used for subsetting  
     batch_use_fractions: "Object_ID" # if changed run ENTIRE batch_correction_snakefile
-    batch_use_species: "Batch_exp_day" # if changed run ENTIRE batch_correction_snakefile
     seurat_reduction: "cca" # either "rpca" or "cca"
     seeds_umap:
-      str: 5
-      hsc: 1
+      str: 6
+      hsc: 10
   clustering:
     number_k: 
     # adjust according to clustering reports (per species)
@@ -67,7 +66,7 @@ values:
       hsc: 6 
       str: 13 
     resolution: 0.22 
-    k_louvain: 75
+    k_louvain: 77 # 70 is super gut # 65 separates h-type vessels, no change hsc # 60 no change hsc, no change str # 50 is interesting
     use_svm_kernel: "linear" # linear or radial
     size_subs_hscs: 60000 
   DGE:
@@ -75,6 +74,8 @@ values:
     flayer_integrated_fc_cutoff: 1.5
     hsc_clusters_keep: 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12
     str_clusters_keep: 4, 6, 8, 9, 10, 12, 13, 14, 16
+  cci_prep:
+    min_cells: 20
 
 
 # CONDITIONS  

@@ -192,6 +192,32 @@ sce_tog <- computeSumFactors(sce_tog, cluster = quick_clust)
 sce_tog <- logNormCounts(sce_tog) # log-transformation
 ```
 
+### Sample heat-map
+
+```{r}
+
+sce_tog_temp <- sce_tog[rowSums(assays(sce_tog)$counts) > 5,]
+
+mat <- as.matrix(
+  assays(sce_tog_temp)$logcounts
+)
+
+anno_col <- data.frame(
+  features = colnames(sce_tog_temp),
+  Genome = colData(sce_tog_temp)$Genome)
+
+anno_col <- column_to_rownames(anno_col, var = "features")
+
+pheatmap(
+  mat,
+  cluster_cols = FALSE,
+  treeheight_row = 0,  
+  annotation_col = anno_col,
+  show_colnames = FALSE,
+  show_rownames = FALSE
+)
+```
+
 ### Sample-specific DMGs:
 
 ```{r}
@@ -227,7 +253,7 @@ pheatmap(
 print(dmg_list)
 ```
 
-```{r, fig.height=14, fig.width=7}
+```{r}
 
 sce_tog_temp <- sce_tog[which(rownames(sce_tog) %in% dmg_list),]
 
@@ -243,7 +269,9 @@ anno_col <- column_to_rownames(anno_col, var = "features")
 
 pheatmap(
   mat,
+  treeheight_row = 0,
   cluster_cols = FALSE,
+  cluster_rows = FALSE,
   annotation_col = anno_col,
   show_colnames = FALSE,
   show_rownames = FALSE

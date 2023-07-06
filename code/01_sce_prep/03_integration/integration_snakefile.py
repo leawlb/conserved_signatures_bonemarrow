@@ -10,7 +10,7 @@ METADATA = pd.read_csv(config["metadata"]["table"])
 TABLES_PATH = config["metadata"]["color_tables"]
 
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/01_sce_prep/"
-OUTPUT_REP = OUTPUT_BASE + "/reports/01_sce_prep/04_integration/"
+OUTPUT_REP = OUTPUT_BASE + "/reports/01_sce_prep/03_integration/"
 
 #-------------------------------------------------------------------------------
 
@@ -84,7 +84,7 @@ rule merge_datasets_species:
 # Merge ages (same as above but for each age separately) (for CCI)
 rule merge_datasets_ages:
     input: 
-        sce_input_path = OUTPUT_DAT + "05_rfan/{species}/",
+        sce_input_path = OUTPUT_DAT + "07_rfan/{species}/",
     output:
         sce_output_old = OUTPUT_DAT + "08_mrge/ages/sce_{species}_old-08",
         sce_output_yng = OUTPUT_DAT + "08_mrge/ages/sce_{species}_yng-08"

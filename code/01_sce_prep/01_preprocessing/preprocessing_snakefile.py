@@ -35,9 +35,9 @@ for s in species:
       targets = targets + [OUTPUT_DAT + "01_drop/" + s + "/sce_" + i + "-01"]
       targets = targets + [OUTPUT_DAT + "02_mapp/" + s + "/dmgs_" + i]
       targets = targets + [OUTPUT_DAT + "04_outl/" + s + "/sce_" + i + "-04"]
-      #targets = targets + [OUTPUT_DAT + "05_norm/" + s + "/sce_" + i + "-05"]
-      #targets = targets + [OUTPUT_DAT + "06_dimr/" + s + "/sce_" + i + "-06"]
-      #targets = targets + [OUTPUT_REP + "qc/" + s + "/preprocessing_qc_report_" + i + ".html"]
+      targets = targets + [OUTPUT_DAT + "05_norm/" + s + "/sce_" + i + "-05"]
+      targets = targets + [OUTPUT_DAT + "06_dimr/" + s + "/sce_" + i + "-06"]
+      targets = targets + [OUTPUT_REP + "qc/" + s + "/preprocessing_qc_report_" + i + ".html"]
       targets = targets + [OUTPUT_REP + "dmgs/" + s + "/preprocessing_dmg_report_" + i + ".html"]
 
 #targets = targets + [OUTPUT_DAT + "03_dmgs/dmgs_list_all"]
@@ -151,7 +151,7 @@ rule make_dmg_reports:
 # report file for QC
 rule make_qc_reports:
     input:
-        sce_input = config["paths"]["cellranger_output"] + "/{species}/sce_{individual}-01",
+        sce_input = OUTPUT_BASE + config["paths"]["cellranger_output"] + "/{species}/sce_{individual}-01",
         sce_drop = rules.remove_droplets.output,
         sce_outl = rules.remove_outliers_dmgs.output,
         sce_norm = rules.normalize_expr.output,
@@ -181,7 +181,7 @@ if config["run_preprocessing_summary"]:
       input:
           sce_input_path = OUTPUT_DAT + "01_drop/"
       output:
-          OUTPUT_REP + "qc/preprocessing_summary.html"
+          OUTPUT_REP + "qc/preprocessing_qc_summary.html"
       params:
           cutoff_sum = VALUES["cutoff_sum"],
           cutoff_detected = VALUES["cutoff_detected"],

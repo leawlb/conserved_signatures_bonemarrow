@@ -1,0 +1,98 @@
+---
+title: "Downsampling report"
+author: "Lea Wölbert"
+date: '2022-12-06'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+To evaluate the effect of downsampling on the age merge counts.
+
+#### Load libraries, source code 
+
+```{r load,  message = FALSE}
+library(scater, quietly = TRUE) 
+library(scran, quietly = TRUE) 
+library(tidyverse, quietly = TRUE) 
+set.seed(37)
+```
+
+```{r}
+
+source(file = "../../source/plotting.R")
+source(file = "../../source/sce_functions.R")
+
+sce_input_path <- snakemake@input[["sce_input_path"]]
+
+for(i in 1:length(sce_input_path)){
+  sce_list[[i]] <- readRDS(file = sce_input_path[[i]])
+}
+
+print(sce_list)
+```
+
+# Calculate Stats
+
+```{r}
+
+qcdf_list <- lapply(sce_list, function(sce){
+  
+  qcdf_counts <- perCellQCMetrics(sce, assay.type = "counts")
+  qcdf_downsm <- perCellQCMetrics(sce, assay.type = "downsampled")
+  
+  qcdf_counts$Object_ID <- sce$Object_ID
+  qcdf_downsm$Object_ID <- sce$Object_ID
+
+  qcdf_counts$Species_ID <- sce$Species_ID
+  qcdf_downsm$Species_ID <- sce$Species_ID
+
+  qcdf_counts$Age <- sce$Age
+  qcdf_downsm$Age <- sce$Age
+  
+  qcdf_counts$Identity <- sce$Identity
+  qcdf_downsm$Identity <- sce$Identity
+  
+  qcdf_counts$Status <- "before downsampling"
+  qcdf_downsm$Status <- "after downsampling"
+
+  return(list(qcdf_counts, qcdf_downsm))
+}) 
+
+
+
+print(qcdf_list)
+
+qcdf_list_temp <- list(unlist(qcdf_list))
+print(qcdf_list_temp)
+
+qcdf_gg <- DataFrame()
+for(i in qcdf_list_temp){
+  qcdf_gg <- rbind(qcdf_gg, i)
+}
+qcdf_gg <- as.data.frame(qcdf_gg)
+print(qcdf_gg)
+```
+
+# Show stats
+
+```{r}
+
+# by Sample
+ggplot(qcdf_gg, aes(x = Identity, y = sum,
+                    color = Status, alpha = 0.5))+
+  geom_jitter(size = 0.1, alpha = 50)+
+  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 120000))+
+  ggtitle(paste("cutoff sum = ", cutoff_sum))+ 
+  scale_y_log10()
+  
+```
+
+```{r}
+sessionInfo()
+```

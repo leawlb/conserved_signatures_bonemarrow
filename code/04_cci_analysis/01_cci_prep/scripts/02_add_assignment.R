@@ -36,6 +36,9 @@ for(i in 1:length(cell_nrs)){
     sce <- sce[,!sce$Identity == names(cell_nrs)[i]]
   }
 }
+
+sce$Identity <- factor(sce$Identity, levels = assignment_list$Identity[
+  assignment_list$Identity %in% sce$Identity])
            
 print(colData(sce))
 

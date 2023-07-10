@@ -49,17 +49,17 @@ for f in fractions:
   targets = targets + [OUTPUT_DAT + "02_clst/louvn_clust/sce_" + f + "-02"]
   targets = targets + [OUTPUT_REP + "01_batch_correction/batch_correction_report_" + f + "_" + BATCH_USE + ".html"]
   targets = targets + [OUTPUT_REP + "02_clustering/clustering_report_full_" + f +".html"]
-  targets = targets + [OUTPUT_DAT + "04_annc/01_markers/markers_" + f]
-  targets = targets + [OUTPUT_DAT + "04_annc/02_goan/go_" + f]
-  targets = targets + [OUTPUT_DAT + "04_annc/03_sce/sce_" + f + "-04"]
+  #targets = targets + [OUTPUT_DAT + "04_annc/01_markers/markers_" + f]
+  #targets = targets + [OUTPUT_DAT + "04_annc/02_goan/go_" + f]
+  #targets = targets + [OUTPUT_DAT + "04_annc/03_sce/sce_" + f + "-04"]
 
-for c in clusters_hsc:
-  targets = targets + [OUTPUT_DAT + "03_sepd/sce_hsc_cluster_" + c + "-sep"]
-  targets = targets + [OUTPUT_REP + "03_anno_clusters/annotation_hsc_cluster_" + c + ".html" ] 
+#for c in clusters_hsc:
+  #targets = targets + [OUTPUT_DAT + "03_sepd/sce_hsc_cluster_" + c + "-sep"]
+  #targets = targets + [OUTPUT_REP + "03_anno_clusters/annotation_hsc_cluster_" + c + ".html" ] 
 
-for c in clusters_str:
-  targets = targets + [OUTPUT_DAT + "03_sepd/sce_str_cluster_" + c + "-sep"]
-  targets = targets + [OUTPUT_REP + "03_anno_clusters/annotation_str_cluster_" + c + ".html"] 
+#for c in clusters_str:
+  #targets = targets + [OUTPUT_DAT + "03_sepd/sce_str_cluster_" + c + "-sep"]
+  #targets = targets + [OUTPUT_REP + "03_anno_clusters/annotation_str_cluster_" + c + ".html"] 
 
 #-------------------------------------------------------------------------------
 

@@ -31,8 +31,8 @@ values:
     cutoff_umis: 100 # below which droplets are discarded
     cutoff_doublets: 7.5 # above which likely doublets are discarded
     cutoff_mitos: 5 # percentage of mito genes above which cells are discarded
-    cutoff_sum: 600 # below which cells are discarded
-    cutoff_detected: 400 # below which cells are discarded
+    cutoff_sum: 700 # below which cells are discarded
+    cutoff_detected: 500 # below which cells are discarded
     nr_hvgs: 2000 # nr of top hvgs to use
     logFC_sample_dmgs: 0.25 # logFC threshold for excluding DMGs per sample
     minPC_sample_dmgs: 0.05 # min percent of cells expressing DMGs per sample
@@ -66,7 +66,7 @@ values:
       hsc: 6 
       str: 13 
     resolution: 0.22 
-    k_louvain: 77 # 70 is super gut # 65 separates h-type vessels, no change hsc # 60 no change hsc, no change str # 50 is interesting
+    k_louvain: 97 # 
     use_svm_kernel: "linear" # linear or radial
     size_subs_hscs: 60000 
   DGE:
@@ -76,7 +76,8 @@ values:
     str_clusters_keep: 4, 6, 8, 9, 10, 12, 13, 14, 16
   cci_prep:
     min_cells: 20
-
+  cci_calc:
+    min_perc: 0.05
 
 # CONDITIONS  
 # in caps for use in R, only first letter capitalized for use in Snakefile

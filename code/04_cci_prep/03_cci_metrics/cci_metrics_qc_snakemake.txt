@@ -1,0 +1,4 @@
+snakemake --cluster "bsub -q -n10 -R rusage[mem=40GB]" -p -j30 -c40 -s cci_metrics_qc_snakefile.py --latency-wait 30 --configfile ../../config.yaml -n
+
+snakemake --cluster "bsub -q -n10 -R rusage[mem=40GB]" -p -j30 -c40 -s cci_metrics_qc_snakefile.py --latency-wait 30 --configfile ../../config.yaml -R get_perc_df -n
+

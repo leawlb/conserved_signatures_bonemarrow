@@ -66,7 +66,7 @@ values:
       hsc: 6 
       str: 13 
     resolution: 0.22 
-    k_louvain: 97 # 
+    k_louvain: 82 # 
     use_svm_kernel: "linear" # linear or radial
     size_subs_hscs: 60000 
   DGE:
@@ -78,6 +78,7 @@ values:
     min_cells: 20
   cci_calc:
     min_perc: 0.05
+    top_level: 300
 
 # CONDITIONS  
 # in caps for use in R, only first letter capitalized for use in Snakefile

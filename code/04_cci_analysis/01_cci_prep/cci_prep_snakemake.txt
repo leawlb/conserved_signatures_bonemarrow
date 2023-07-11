@@ -1,1 +1,0 @@
-snakemake --cluster "bsub -q long -n10 -R rusage[mem=40GB]" -p -j50 -c40 -s cci_prep_snakefile.py --configfile ../../config.yaml -n

@@ -1,15 +1,13 @@
 #!/bin/python 
 
-# Prepping SCEs for CCI calculation
-
 import pandas as pd
 
 OUTPUT_BASE = config["paths"]["output_dir"]
 METADATA = pd.read_csv(config["metadata"]["table"])
 
 # specific data and report output paths
-OUTPUT_DAT = OUTPUT_BASE + "/cci_objects/01_cci_prep/"
-OUTPUT_REP = OUTPUT_BASE + "/reports/04_cci_prep/"
+OUTPUT_DAT = OUTPUT_BASE + "/cci_objects/01_cci_preparation/"
+OUTPUT_REP = OUTPUT_BASE + "/reports/04_cci_prep/01_cci_preparation/"
 
 def get_list(metadata, column):
   values = METADATA[column]
@@ -92,6 +90,7 @@ rule add_clusterlabels:
     script:
         "scripts/01_add_clusterlabels.R" 
 
+#-------------------------------------------------------------------------------
 
 """
 Add Assignments
@@ -111,7 +110,7 @@ If all cell types should be contained in CCI objects, set min_cells to 0
 rule celltype_assignment:
     input:
         sce_input = rules.add_clusterlabels.output,
-        assignment = "assignment.txt"
+        assignment = config["metadata"]["path"] + "/CCI/assignment.txt"
     params:
         min_cells = config["values"]["cci_prep"]["min_cells"]
     output:
@@ -154,7 +153,7 @@ rule subset_sce:
 #-------------------------------------------------------------------------------
 
 """
-Downsample
+Downsampling
 
 - downsample all SCE objects to lowest quality sample to ensure comparability 
 - downsampled counts are stored in a "downsampled" assay slot

@@ -56,9 +56,9 @@ stored separately
 # extract infos on identity pairs
 rule extract_ipi:
     input:
-        interaction_list = OUTPUT_DAT + "08_intl/interaction_list_{species}_{age}"
+        interaction_list = OUTPUT_DAT + "09_intl/interaction_list_{species}_{age}"
     output:
-        ident_pair_info = OUTPUT_DAT + "09_ipis/ipi_{species}_{age}"
+        ident_pair_info = OUTPUT_DAT + "10_ipis/ipi_{species}_{age}"
     params:
         main_functions = "../../source/cci_functions_prep_main.R"
     script:
@@ -69,7 +69,7 @@ rule extract_idi:
     input:
         ident_pair_info = rules.extract_ipi.output
     output:
-        ident_info = OUTPUT_DAT + "10_idis/idi_{species}_{age}"
+        ident_info = OUTPUT_DAT + "11_idis/idi_{species}_{age}"
     params:
         main_functions = "../../source/cci_functions_prep_main.R"
     script:
@@ -81,8 +81,8 @@ rule extract_nrlrs:
         interaction_list = OUTPUT_BASE + "/cci_objects/02_cci_calc/04_intl/interaction_list_{species}_{age}",
         ident_pair_info = rules.extract_idi.output
     output:
-        ident_lrs_info = OUTPUT_DAT + "10_idis/ilrs_{species}_{age}",
-        ident_nrlrs_info = OUTPUT_DAT + "10_idis/nrlrs_{species}_{age}"
+        ident_lrs_info = OUTPUT_DAT + "11_idis/ilrs_{species}_{age}",
+        ident_nrlrs_info = OUTPUT_DAT + "11_idis/nrlrs_{species}_{age}"
     params:
         main_functions = "../../source/cci_functions_prep_main.R"
     script:

@@ -66,7 +66,7 @@ values:
       hsc: 6 
       str: 13 
     resolution: 0.22 
-    k_louvain: 82 # 
+    k_louvain: 81 # somehwat better again at 82
     use_svm_kernel: "linear" # linear or radial
     size_subs_hscs: 60000 
   DGE:

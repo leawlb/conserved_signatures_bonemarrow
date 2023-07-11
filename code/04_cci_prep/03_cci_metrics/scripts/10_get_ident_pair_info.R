@@ -9,7 +9,7 @@ species_curr <- snakemake@wildcards[["species"]]
 print(species_curr)
 
 # use main pipeline 
-source("../../source/cci_functions_calculation_main.R")
+source(snakemake@params[["main_functions"]])
 
 # extract nr of interactions per identity pairs and more
 ident_pair_info <- extract_ident_pair_info(int_list = interaction_list)

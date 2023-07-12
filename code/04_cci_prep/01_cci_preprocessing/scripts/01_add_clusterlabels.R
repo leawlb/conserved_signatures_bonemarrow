@@ -36,17 +36,11 @@ table(is.na(match(colnames(sce_hsc), colnames(sce_sep_hsc))))
 #-------------------------------------------------------------------------------
 
 # add information: ADD CELL TYPE INFO INTO IDENTITY SLOT
-# TODO: change to cell type once annotated
-sce_sep_str$Identity <- sce_str$cluster_louvain[
+# TODO: change to subcluster cell type once annotated
+sce_sep_str$Identity <- sce_str$annotation_cluster[
   match(colnames(sce_sep_str), colnames(sce_str))]
-sce_sep_hsc$Identity <- sce_hsc$cluster_louvain[
+sce_sep_hsc$Identity <- sce_hsc$annotation_cluster[
   match(colnames(sce_sep_hsc), colnames(sce_hsc))]
-
-# TODO: remove later once not required anymore
-sce_sep_str$Identity <- paste0(
-  "cluster_", sce_sep_str$Identity, "_str")
-sce_sep_hsc$Identity <- paste0(
-  "cluster_", sce_sep_hsc$Identity, "_hsc")
 
 sce_output <- cbind(sce_sep_str, sce_sep_hsc)
 

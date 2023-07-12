@@ -26,10 +26,10 @@ OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/02_sce_anno/"
 OUTPUT_REP = OUTPUT_BASE + "/reports/02_sce_anno/"
 
 # cannot take from metadata since cluster number is dependent on fraction
-clusters_hsc = list(range(1,14))
+clusters_hsc = list(range(1,13))
 clusters_hsc = list(map(str,clusters_hsc))
 
-clusters_str = list(range(1,19))
+clusters_str = list(range(1,18))
 clusters_str = list(map(str,clusters_str))
 
 #-------------------------------------------------------------------------------
@@ -49,16 +49,16 @@ for f in fractions:
   targets = targets + [OUTPUT_DAT + "02_clst/louvn_clust/sce_" + f + "-02"]
   targets = targets + [OUTPUT_REP + "01_batch_correction/batch_correction_report_" + f + "_" + BATCH_USE + ".html"]
   targets = targets + [OUTPUT_REP + "02_clustering/clustering_report_full_" + f +".html"]
-  #targets = targets + [OUTPUT_DAT + "04_annc/01_markers/markers_" + f]
-  #targets = targets + [OUTPUT_DAT + "04_annc/02_goan/go_" + f]
-  #targets = targets + [OUTPUT_DAT + "04_annc/03_sce/sce_" + f + "-04"]
+  targets = targets + [OUTPUT_DAT + "04_annc/01_markers/markers_" + f]
+  targets = targets + [OUTPUT_DAT + "04_annc/02_goan/go_" + f]
+  targets = targets + [OUTPUT_DAT + "04_annc/03_sce/sce_" + f + "-04"]
 
-#for c in clusters_hsc:
-  #targets = targets + [OUTPUT_DAT + "03_sepd/sce_hsc_cluster_" + c + "-sep"]
-  #targets = targets + [OUTPUT_REP + "03_anno_clusters/annotation_hsc_cluster_" + c + ".html" ] 
+for c in clusters_hsc:
+  targets = targets + [OUTPUT_DAT + "03_sepd/sce_hsc_cluster_" + c + "-sep"]
+  targets = targets + [OUTPUT_REP + "03_anno_clusters/annotation_hsc_cluster_" + c + ".html" ] 
 
-#for c in clusters_str:
-  #targets = targets + [OUTPUT_DAT + "03_sepd/sce_str_cluster_" + c + "-sep"]
+for c in clusters_str:
+  targets = targets + [OUTPUT_DAT + "03_sepd/sce_str_cluster_" + c + "-sep"]
   #targets = targets + [OUTPUT_REP + "03_anno_clusters/annotation_str_cluster_" + c + ".html"] 
 
 #-------------------------------------------------------------------------------
@@ -182,7 +182,7 @@ rule go_analysis:
     output:
         go = OUTPUT_DAT + "04_annc/02_goan/go_{fraction}"
     script:
-        "scripts/05_go_clusters.R"
+        "scripts/04_go_clusters.R"
 
 # report on marker gene expression and GO 
 rule make_report:
@@ -192,7 +192,7 @@ rule make_report:
         cluster_annotations = "cluster_annotations.txt",
         sce_sep = OUTPUT_DAT + "03_sepd/sce_{fraction}_cluster_{cluster}-sep",
         sce_input = rules.louvain_clustering.output,
-        gene_list_all = "gene_list.txt"
+        gene_list = "gene_list.txt"
     output:
         OUTPUT_REP + "03_anno_clusters/annotation_{fraction}_cluster_{cluster}.html"
     params:
@@ -208,4 +208,4 @@ rule assign_annotation:
     output:      
         sce_output = OUTPUT_DAT + "04_annc/03_sce/sce_{fraction}-04"
     script:
-        "scripts/06_anno_clusters.R"
+        "scripts/04_anno_clusters.R"

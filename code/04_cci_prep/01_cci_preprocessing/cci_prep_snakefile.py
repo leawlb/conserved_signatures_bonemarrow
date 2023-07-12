@@ -83,8 +83,8 @@ following rules should be readily usable by adjusting assignment.txt as required
 rule add_clusterlabels:
     input:
         sce_input = OUTPUT_BASE + "/sce_objects/01_sce_prep/08_mrge/ages/sce_{species}_{age}-08",
-        sce_hsc = OUTPUT_BASE + "/sce_objects/02_sce_anno/02_clst/louvn_clust/sce_hsc-test",
-        sce_str = OUTPUT_BASE + "/sce_objects/02_sce_anno/02_clst/louvn_clust/sce_str-test"
+        sce_hsc = OUTPUT_BASE + "/sce_objects/02_sce_anno/04_annc/03_sce/sce_hsc-test",
+        sce_str = OUTPUT_BASE + "/sce_objects/02_sce_anno/04_annc/03_sce/sce_str-test"
     output:
         sce_output = OUTPUT_DAT + "01_sprp/sce_{species}_{age}-01"
     script:

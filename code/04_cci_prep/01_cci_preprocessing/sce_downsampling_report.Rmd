@@ -61,7 +61,7 @@ lrdb <- readRDS(file = snakemake@input[["lrdb_input"]])
 
 ```{r}
 for(i in 1:length(sce_list)){
-  print(paste(sce_list[[i]]$species_ID[1], sce_list[[i]]$Age_ID[1]))
+  print(paste(sce_list[[i]]$Species_ID[1], sce_list[[i]]$Age_ID[1]))
   print(levels(sce_list[[i]]$Identity))
 }
 ```
@@ -76,7 +76,7 @@ for(i in 1:length(sce_list)){
 
 ```{r}
 for(i in 1:length(sce_list)){
-  print(paste(sce_list[[i]]$species_ID[1], sce_list[[i]]$Age_ID[1]))
+  print(paste(sce_list[[i]]$Species_ID[1], sce_list[[i]]$Age_ID[1]))
   print(table(sce_list[[i]]$Identity, sce_list[[i]]$Assignment))
 }
 ```
@@ -365,10 +365,10 @@ table(duplicated(lrdb_temp$receptor_gene_symbol))
 for(i in 1:length(sce_list)){
   sce_temp <- sce_list[[i]]
   sce_temp2 <- sce_temp[!duplicated(rowData(sce_temp)$Symbol),]
-  table(duplicated(rowData(sce_temp2)$ENSMUS_ID))
+  print(table(duplicated(rowData(sce_temp2)$ENSMUS_ID)))
   
   sce_temp2 <- sce_temp[!duplicated(rowData(sce_temp)$ENSMUS_ID),]
-  table(duplicated(rowData(sce_temp2)$Symbol))
+  print(table(duplicated(rowData(sce_temp2)$Symbol)))
 }
 ```
 

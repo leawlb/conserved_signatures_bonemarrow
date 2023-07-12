@@ -78,7 +78,7 @@ rule extract_idi:
 # extract nr of ligands or receptors per identities
 rule extract_nrlrs:
     input:
-        interaction_list = OUTPUT_BASE + "/cci_objects/02_cci_calc/04_intl/interaction_list_{species}_{age}",
+        interaction_list = OUTPUT_DAT + "09_intl/interaction_list_{species}_{age}",
         ident_pair_info = rules.extract_idi.output
     output:
         ident_lrs_info = OUTPUT_DAT + "11_idis/ilrs_{species}_{age}",

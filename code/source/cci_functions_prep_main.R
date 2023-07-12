@@ -519,6 +519,9 @@ extract_lrs_nrs <- function(int_list, lrs_list){
   )
   
   for(i in 1:length(idents)){
+    print(i)
+    print(idents[i])
+    print(lrs_list[[i]])
     print_df$identity[i] <- lrs_list[[i]]$identity[i]
     print_df$nr_lrs[i] <- nrow(lrs_list[[i]])
     print_df$assignment[i] <- lrs_list[[i]]$assignment[i]

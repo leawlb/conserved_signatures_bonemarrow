@@ -1,0 +1,190 @@
+---
+title: "shared_genes_report"
+author: "Lea Wölbert"
+date: '2023-07-14'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load objects
+
+```{r load,  message = FALSE}
+library(EnhancedVolcano)
+set.seed(37)
+source(file = "../../source/plotting.R")
+
+```
+
+```{r}
+
+fc_cutoff <- snakemake@params[["fc_cutoff"]]
+padj_cutoff <- snakemake@params[["padj_cutoff"]]
+
+sce <- readRDS(snakemake@input[["sce_input"]])
+sce_sep <- readRDS(snakemake@input[["sce_sep"]])
+
+cluster_res_list <- readRDS(snakemake@input[["cluster_res"]])
+shared_gene_list <- readRDS(snakemake@input[["cluster_res_list_shared"]])
+
+cand_list <- read.csv(snakemake@input[["gene_list"]], 
+  header = TRUE, 
+  sep = ";", 
+  check.names=FALSE, 
+  stringsAsFactors=FALSE, 
+  as.is=TRUE, 
+  colClasses = "character")
+
+fraction_curr <- snakemake@wildcards[["fraction"]]
+cluster_curr <- snakemake@wildcards[["cluster"]]
+
+print(sce)
+print(levels(sce$annotation_cluster))
+print(unique(sce$cluster_louvain))
+print(cluster_curr)
+print(fraction_curr)
+
+if(!cluster_curr %in% sce$cluster_louvain){
+  print("cluster irrelevant")
+  knitr::knit_exit()
+}
+
+```
+
+```{r}
+# subset objects to required cluster and fractions
+cand_list <- cand_list[cand_list$Fraction == fraction_curr,]
+cand_genes <- cand_list$Gene
+sce_clust <- sce[,sce$cluster_louvain == as.numeric(cluster_curr)]
+
+ct_curr <- unfactor(sce_clust$annotation_cluster[1])
+print(ct_curr)
+
+shared_gene_list <- shared_gene_list[[ct_curr]]
+cluster_res_list <- cluster_res_list[[ct_curr]]
+```
+
+# Show Pval distributions
+
+```{r}
+see_pvals <- function(cluster_res, comparison){
+  plot1 <- EnhancedVolcano(cluster_res, lab = "",
+                           x = 'log2FoldChange',  y = 'pvalue', 
+                           col = c("grey70", "grey70", "dodgerblue3", "grey70"),
+                           subtitle = "", colAlpha = 0.9, pointSize = 0.5,
+                           pCutoff = padj_cutoff, FCcutoff = fc_cutoff)+
+    theme_classic()+
+    ggtitle(paste(comparison))+
+    theme(legend.position="none", plot.subtitle = element_blank())
+
+  print(plot1)
+}
+
+```
+
+## MMUS MCAS
+
+```{r}
+print(cluster_res_list[["mmus-mcas"]])
+res_df_comb_mmus_mcas <- cluster_res_list[["mmus-mcas"]]
+see_pvals(cluster_res = res_df_comb_mmus_mcas, comparison = "mmus-mcas")
+```
+
+## MMUS MSPR
+
+```{r}
+res_df_comb_mmus_mspr <- cluster_res_list[["mmus-mspr"]]
+see_pvals(cluster_res = res_df_comb_mmus_mspr, comparison = "mmus-mspr")
+```
+
+## MMUS MCAR
+
+```{r}
+res_df_comb_mmus_mcar <- cluster_res_list[["mmus-mcar"]]
+see_pvals(cluster_res = res_df_comb_mmus_mcar, comparison = "mmus-mcar")
+```
+
+## MCAS MSPR
+
+```{r}
+res_df_comb_mcas_mspr <- cluster_res_list[["mcas-mspr"]]
+see_pvals(cluster_res = res_df_comb_mcas_mspr, comparison = "mcas-mspr")
+```
+
+## MCAS MCAR
+
+```{r}
+res_df_comb_mcas_mcar <- cluster_res_list[["mcas-mcar"]]
+see_pvals(cluster_res = res_df_comb_mcas_mcar, comparison = "mcas-mcar")
+```
+
+## MSPR MCAR
+
+```{r}
+res_df_comb_mspr_mcar <- cluster_res_list[["mspr-mcar"]]
+see_pvals(cluster_res = res_df_comb_mspr_mcar, comparison = "mspr-mcar")
+```
+
+# Print lists
+
+```{r}
+print(ct_curr)
+print(shared_gene_list$all)
+print(shared_gene_list$at_least_three)
+```
+
+```{r}
+print(paste("comparison", ct_curr))
+print(cand_list[which(cand_list$Gene %in% shared_gene_list$at_least_three),])
+
+remain_cand_list <- cand_list$Gene[which(cand_list$Gene %in% shared_gene_list$at_least_three)]
+
+```
+
+## UMAPS of remaining candidate subclustering genes
+
+```{r}
+gene_exps <- function(gene){
+  
+  sce_clust$Species_ID <- factor(sce_clust$Species_ID,
+                                   levels = c("mmus", "mcas", "mspr", "mcar"))
+
+  sce$Species_ID <- factor(sce$Species_ID,
+                           levels = c("mmus", "mcas", "mspr", "mcar"))
+  
+  # Gene expression UMAP in cluster X
+  plot_1 <- umap_gene(sce_clust, gene)
+
+  # Gene expression UMAP in cluster X, separated by species
+  plot_2 <- umap_gene(sce_clust, gene)+
+    facet_grid(cols = vars(sce_clust$Species_ID))
+  
+  ggdf <- as.data.frame(colData(sce_clust))
+  logc <- assays(sce_clust)[["logcounts"]]
+
+  ggdf$Species_ID <- factor(ggdf$Species_ID,
+                            levels = c("mmus", "mcas", "mspr", "mcar"))
+  
+  plot_3 <- ggplot(ggdf, aes(x = cluster_louvain,
+                             y = logc[rownames(logc) == gene,]))+
+    ggbeeswarm::geom_quasirandom(size = 0.2, color = "grey60")+
+    theme_classic()+
+    geom_boxplot(color = "black", alpha = 0)+
+    ylab(paste0(gene, " expression"))+
+    facet_grid(cols = vars(sce_clust$Species_ID))
+  
+  return(list(gene, plot_1, plot_2, plot_3))
+}
+
+```
+
+```{r}
+plotlist <- lapply(as.list(remain_cand_list), gene_exps)
+plotlist
+```
+
+```{r}
+sessionInfo()
+```

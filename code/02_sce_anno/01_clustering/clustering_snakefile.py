@@ -59,7 +59,7 @@ for c in clusters_hsc:
 
 for c in clusters_str:
   targets = targets + [OUTPUT_DAT + "03_sepd/sce_str_cluster_" + c + "-sep"]
-  #targets = targets + [OUTPUT_REP + "03_anno_clusters/annotation_str_cluster_" + c + ".html"] 
+  targets = targets + [OUTPUT_REP + "03_anno_clusters/annotation_str_cluster_" + c + ".html"] 
 
 #-------------------------------------------------------------------------------
 

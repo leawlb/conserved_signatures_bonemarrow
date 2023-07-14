@@ -6,7 +6,7 @@ paths:
   cellranger_output: "/sce_objects/01_cellranger_output" 
 metadata: 
   path: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata"
-  table: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/OE0538_DO-0008_metadata_combined.csv"
+  table: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/Alignment/OE0538_DO-0008_metadata_combined.csv"
   color_tables: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/color_tables"
   ref_baccin_sce: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/ref_baccin_sce"
   ref_dahlin_sce: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/ref_dahlin_sce"
@@ -69,6 +69,9 @@ values:
     k_louvain: 80 # 80 quite good for HSCs, almost good for stromal cells
     use_svm_kernel: "linear" # linear or radial
     size_subs_hscs: 60000 
+  annotation:
+    ndge_padj_cutoff: 0.05
+    ndge_fc_cutoff: 1.5
   DGE:
     flayer_integrated_padj_cutoff: 0.05
     flayer_integrated_fc_cutoff: 1.5

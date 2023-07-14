@@ -1,0 +1,4 @@
+
+snakemake --cluster "bsub -q medium -n4 -R rusage[mem=50GB]" -p -j40 -c20 -s nDGE_extraction_snakefile.py --configfile ../../config.yaml -n
+
+

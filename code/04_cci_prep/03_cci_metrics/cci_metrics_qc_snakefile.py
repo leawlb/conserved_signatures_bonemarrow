@@ -32,7 +32,8 @@ for s in species:
     targets = targets + [OUTPUT_DAT + "11_idis/nrlrs_" + s + "_" + a]
     targets = targets + [OUTPUT_REP + "cci_metrics_qc/cci_metrics_qc_report_" + s + "_" + a + ".html"]
 
-targets = targets + [OUTPUT_REP + "cci_metrics_qc/cci_metrics_qc_summary.html"]
+targets = targets + [OUTPUT_REP + "cci_metrics_qc_summary_ctp.html"]
+targets = targets + [OUTPUT_REP + "cci_metrics_qc_summary_ct.html"]
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
@@ -111,16 +112,28 @@ rule make_cci_qc_report_conditions:
         "cci_metrics_qc_report_conditions.Rmd" 
 
 
-rule make_cci_qc_summary:
+rule make_cci_qc_summary_ctp:
     input:
         ident_pair_info = expand(rules.extract_ipi.output.ident_pair_info, species = species, age = age),
         ident_info = expand(rules.extract_idi.output.ident_info, species = species, age = age),
         ident_nrlrs_info = expand(rules.extract_nrlrs.output.ident_nrlrs_info, species = species, age = age),
         sce_input = expand(OUTPUT_DAT + "05_down/sce_{species}_{age}-05", species = species, age = age)
     output:
-        OUTPUT_REP + "cci_metrics_qc/cci_metrics_qc_summary.html"
+        OUTPUT_REP + "cci_metrics_qc_summary_ctp.html"
     params:
         color_tables = TABLES_PATH
     script:
-        "cci_metrics_qc_summary.Rmd" 
+        "cci_metrics_qc_summary_ctp.Rmd" 
         
+rule make_cci_qc_summary_ct:
+    input:
+        ident_pair_info = expand(rules.extract_ipi.output.ident_pair_info, species = species, age = age),
+        ident_info = expand(rules.extract_idi.output.ident_info, species = species, age = age),
+        ident_nrlrs_info = expand(rules.extract_nrlrs.output.ident_nrlrs_info, species = species, age = age),
+        sce_input = expand(OUTPUT_DAT + "05_down/sce_{species}_{age}-05", species = species, age = age)
+    output:
+        OUTPUT_REP + "cci_metrics_qc_summary_ct.html"
+    params:
+        color_tables = TABLES_PATH
+    script:
+        "cci_metrics_qc_summary_ct.Rmd" 

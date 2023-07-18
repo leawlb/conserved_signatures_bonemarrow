@@ -1,6 +1,0 @@
-
-snakemake --cluster "bsub -n2 -q long -R rusage[mem=50GB]" -p -j30 -c20 -s annot_clusters_snakefile.py --configfile ../../config.yaml -n
-
-snakemake --cluster "bsub -n2 -q long -R rusage[mem=50GB]" -p -j30 -c20 -s annot_clusters_snakefile.py --configfile ../config/config.yaml -R find_markers -n
-
-

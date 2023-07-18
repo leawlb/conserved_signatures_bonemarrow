@@ -166,7 +166,7 @@ rule downsample:
     output:
         sce_output_path = expand(OUTPUT_DAT + "05_down/sce_{species}_{age}-05", species = species, age = age)
     script:
-        "scripts/05_downsample.R" 
+        "scripts/05_downsample_sep.R" 
 
 # make a report for downsampling QC
 rule make_downsampling_reports:

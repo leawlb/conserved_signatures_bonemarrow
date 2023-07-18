@@ -1,3 +1,3 @@
 snakemake --cluster "bsub -q medium -n10 -R rusage[mem=40GB]" -p -j50 -c40 -s cci_prep_snakefile.py --latency-wait 60 --configfile ../../config.yaml -n
 
-snakemake --cluster "bsub -q medium -n10 -R rusage[mem=40GB]" -p -j50 -c40 -s cci_prep_snakefile.py --latency-wait 60 --configfile ../../config.yaml -R add_clusterlabels -n
+snakemake --cluster "bsub -q medium -n10 -R rusage[mem=40GB]" -p -j50 -c40 -s cci_prep_snakefile.py --latency-wait 60 --configfile ../../config.yaml -R downsample -n

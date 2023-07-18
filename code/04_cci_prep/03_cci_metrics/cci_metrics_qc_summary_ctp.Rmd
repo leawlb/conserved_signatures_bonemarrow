@@ -1,0 +1,1366 @@
+---
+title: "cci_metrics_qc_summary"
+author: "Lea Wölbert"
+date: '2023-07-17'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load libraries, source code 
+
+```{r load,  message = FALSE}
+set.seed(37)
+```
+
+```{r}
+
+#knitr::knit_exit()
+
+# load sources
+color_tables <- snakemake@params[["color_tables"]]
+source(file = "../../source/colors.R")
+source(file = "../../source/plotting.R")
+source(file = "../../source/sce_functions.R")
+
+#load SCE objects
+ident_pair_info_p <- snakemake@input[["ident_pair_info"]]
+ident_info_p <- snakemake@input[["ident_info"]]
+ident_nrlrs_info_p <- snakemake@input[["ident_nrlrs_info"]]
+sce_p <- snakemake@input[["sce_input"]]
+
+ident_pair_info_list <- list()
+ident_info_list <- list()
+ident_nrlrs_info_list <- list()
+sce_list <- list()
+
+for(i in 1:length(ident_pair_info_p)){
+  ident_pair_info_list[[i]] <- readRDS(file = ident_pair_info_p[[i]])
+  ident_info_list[[i]] <- readRDS(file = ident_info_p[[i]])
+  ident_nrlrs_info_list[[i]] <- readRDS(file = ident_nrlrs_info_p[[i]])
+  sce_list[[i]] <- readRDS(file = sce_p[[i]])
+}
+
+```
+
+```{r}
+
+# o for overview
+ipio_df <- data.frame()
+idio_df <- data.frame()
+nrlrso_df <- data.frame()
+
+for(i in 1:length(ident_pair_info_list)){
+  ipio_df <- rbind(ipio_df, ident_pair_info_list[[i]]$overview)
+  idio_df <- rbind(idio_df, ident_info_list[[i]]$overview)
+  nrlrso_df <- rbind(nrlrso_df, ident_nrlrs_info_list[[i]])
+}
+
+head(ipio_df)
+head(idio_df)
+head(nrlrso_df)
+
+ipio_df$name <- paste0(ipio_df$species, "_", ipio_df$age)
+idio_df$name <- paste0(idio_df$species, "_", idio_df$age)
+nrlrso_df$name <- paste0(nrlrso_df$species, "_", nrlrso_df$age)
+
+```
+
+Preliminary colors
+
+```{r}
+
+col_recs <- c("HSCs" = "black",
+              "Early MPPs" = "grey35",
+              "Late MPPs" = "grey60",
+              "Myeloid progs." = "red",
+               "Eo/Baso/Mast" = "gold",
+              "Mk/Ery progs." = "orchid1",
+              "Mk progs." = "darkred",
+              "Lymphoid" = "wheat2")
+
+col_emis <- c("Mesenchymal progs." = "darkgreen",
+              "CARs" = "seagreen2",
+              "Fibroblasts" = "chartreuse4",
+              "Pericytes/Smooth Muscle" = "cyan",
+              "Arteriolar/Capillary ECs" = "skyblue2",
+              "Arteriolar/Mixed ECs" = "royalblue3",
+              "Sinusoidal ECs" = "midnightblue")
+
+all_cts <- c(col_recs, col_emis)
+
+col_age <- c("yng" = "black",
+             "old" = "grey70")
+
+col_species <- col_spc
+
+```
+
+Calculate Stats
+
+```{r}
+
+qcdf_list <- lapply(sce_list, function(sce){
+  
+  qcdf_counts <- perCellQCMetrics(sce, assay.type = "counts")
+  qcdf_downsm <- perCellQCMetrics(sce, assay.type = "downsampled")
+  
+  qcdf_counts$Object_ID <- sce$Object_ID
+  qcdf_downsm$Object_ID <- sce$Object_ID
+
+  qcdf_counts$Species_ID <- sce$Species_ID
+  qcdf_downsm$Species_ID <- sce$Species_ID
+
+  qcdf_counts$Age_ID <- sce$Age_ID
+  qcdf_downsm$Age_ID <- sce$Age_ID
+  
+  qcdf_counts$Identity <- sce$Identity
+  qcdf_downsm$Identity <- sce$Identity
+  
+  qcdf_counts$Status <- "before downsampling"
+  qcdf_downsm$Status <- "after downsampling"
+  
+  qcdf_both <- rbind(qcdf_counts, qcdf_downsm)
+
+  return(qcdf_both)
+}) 
+
+qcdf_gg <- DataFrame()
+for(i in qcdf_list){
+  qcdf_gg <- rbind(qcdf_gg, i)
+}
+qcdf_gg <- as.data.frame(qcdf_gg)
+
+qcdf_gg$name <- paste0(qcdf_gg$Species_ID, "_", qcdf_gg$Age_ID)
+```
+
+Get nr of cells from corresponding SCE objects
+
+```{r}
+
+# since the SCE list is not named by sample name, cbind
+# then separate by sample name again, just to make sure 
+
+sce_all <- sce_list[[1]]
+for(i in 2:length(sce_list)){
+  sce_all <- cbind(sce_all, sce_list[[i]])
+}
+sce_all$name <- paste0(sce_all$Species_ID, "_", sce_all$Age_ID)
+
+unique(sce_all$Age_ID)
+unique(sce_all$Species_ID)
+unique(sce_all$name)
+
+names <- unique(sce_all$name)
+
+ipio_df$nr_cells_emi <- vector(length = nrow(ipio_df))
+ipio_df$nr_cells_rec <- vector(length = nrow(ipio_df))
+idio_df$nr_cells <- vector(length = nrow(idio_df))
+nrlrso_df$nr_cells <- vector(length = nrow(nrlrso_df))
+
+for(i in names){
+  sce_temp <- sce_all[,sce_all$name == i]
+  nr_cells <- table(sce_temp$Identity)
+  
+  print(i)
+  print(nr_cells)
+  
+  for(j in names(nr_cells)){
+    ipio_df[ipio_df$name == i,]$nr_cells_emi[ipio_df[ipio_df$name == i,]$emitter == j] <- nr_cells[names(nr_cells) == j]
+    ipio_df[ipio_df$name == i,]$nr_cells_rec[ipio_df[ipio_df$name == i,]$receiver == j] <- nr_cells[names(nr_cells) == j]
+    idio_df[idio_df$name == i,]$nr_cells[idio_df[idio_df$name == i,]$identity == j] <- nr_cells[names(nr_cells) == j]
+    nrlrso_df[nrlrso_df$name == i,]$nr_cells[nrlrso_df[nrlrso_df$name == i,]$identity == j] <- nr_cells[names(nr_cells) == j]
+  }
+}
+
+print(head(ipio_df))
+print(head(idio_df))
+print(head(nrlrso_df))
+```
+
+Factor cell types, ages, and species
+
+```{r}
+
+# cell types
+ipio_df$emitter <- factor(ipio_df$emitter, levels = names(all_cts)[
+  names(all_cts) %in% ipio_df$emitter])
+ipio_df$receiver <- factor(ipio_df$receiver, levels = names(all_cts)[
+  names(all_cts) %in% ipio_df$receiver])
+
+idio_df$identity <- factor(idio_df$identity, levels = names(all_cts)[
+  names(all_cts) %in% idio_df$identity])
+nrlrso_df$identity <- factor(nrlrso_df$identity, levels = names(all_cts)[
+  names(all_cts) %in% nrlrso_df$identity])
+
+qcdf_gg$Identity <- factor(qcdf_gg$Identity, levels = names(all_cts)[
+  names(all_cts) %in% qcdf_gg$Identity])
+
+# age
+ipio_df$age <- factor(ipio_df$age, levels = c("yng", "old"))
+idio_df$age <- factor(idio_df$age, levels = c("yng", "old"))
+nrlrso_df$age <- factor(nrlrso_df$age, levels = c("yng", "old"))
+qcdf_gg$Age_ID <- factor(qcdf_gg$Age_ID, levels = c("yng", "old"))
+
+# species
+species <- c("mmus", "mcas", "mspr", "mcar")
+ipio_df$species <- factor(ipio_df$species, levels = species)
+idio_df$species <- factor(idio_df$species, levels = species)
+nrlrso_df$species <- factor(nrlrso_df$species, levels = species)
+qcdf_gg$Species_ID <- factor(qcdf_gg$Species_ID, species)
+
+# name
+conds <- c("mmus_yng", "mmus_old", "mcas_yng", "mcas_old",
+           "mspr_yng", "mspr_old", "mcar_yng", "mcar_old")
+ipio_df$name <- factor(ipio_df$name, levels = conds)
+idio_df$name <- factor(idio_df$name, levels = conds)
+nrlrso_df$name <- factor(nrlrso_df$name, levels = conds)
+```
+
+Prepare downsampled counts
+
+```{r}
+qcdf_gg_ds <- qcdf_gg[qcdf_gg$Status == "after downsampling",]
+
+max_qcdf_gg_ds <- max(qcdf_gg_ds$sum) + 150
+
+qcdf_gg_ds_emis <- qcdf_gg_ds[qcdf_gg_ds$Identity %in% ipio_df$emitter,]
+qcdf_gg_ds_recs <- qcdf_gg_ds[qcdf_gg_ds$Identity %in% ipio_df$receiver,]
+```
+
+# Cell type pair interactome
+
+## Emitters
+
+### General
+
+```{r}
+ggplot(ipio_df, 
+       aes(x = emitter, y = nr_ints, color = receiver))+
+  ggbeeswarm::geom_quasirandom()+
+  geom_boxplot(alpha = 0, color = "grey25")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("Receivers", values = col_recs)+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Emitters")+
+  ylab("Nr of interactions per cell type pair")+
+  ggtitle("all conditions")
+
+ggplot(ipio_df, 
+       aes(x = emitter, y = nr_ints, color = nr_cells_emi))+
+  ggbeeswarm::geom_quasirandom()+
+  geom_boxplot(alpha = 0, color = "grey25")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_continuous("nr cells/emitter")+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Emitters")+
+  ylab("Nr of interactions per cell type pair")+
+  ggtitle("all conditions")
+
+ggplot(ipio_df, 
+       aes(x = emitter, y = nr_ints, color = nr_cells_rec))+
+  ggbeeswarm::geom_quasirandom()+
+  geom_boxplot(alpha = 0, color = "grey25")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_continuous("nr cells/receiver")+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Emitters")+
+  ylab("Nr of interactions per cell type pair")+
+  ggtitle("all conditions")
+
+ggplot(qcdf_gg_ds_emis, 
+       aes(x = Identity, y = sum, color = Status))+
+  geom_boxplot()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "grey25"))+
+  xlab("Emitters")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts")+
+  ggtitle("all conditions")
+
+ggplot(ipio_df, 
+       aes(x = emitter, y = nr_cells_emi, color = name))+
+  geom_point()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_discrete("Condition")+
+  xlab("Emitters")+
+  ylab("nr of cells/emitter")+
+  ggtitle("all conditions")
+
+ggplot(ipio_df, 
+       aes(x = emitter, y = nr_cells_emi, color = species))+
+  geom_point()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_species)+
+  xlab("Emitters")+
+  ylab("nr of cells/emitter")+
+  ggtitle("all conditions")
+
+ggplot(ipio_df,
+       aes(x = emitter, y = nr_cells_emi, color = age))+
+  geom_point()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_age)+
+  xlab("Emitters")+
+  ylab("nr of cells/emitter")+
+  ggtitle("all conditions")
+
+```
+
+### Species
+
+```{r}
+ggplot(ipio_df, 
+       aes(x = emitter, y = nr_ints, color = species))+
+  ggbeeswarm::geom_quasirandom()+
+  geom_boxplot(alpha = 0, color = "grey25")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_species)+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Emitters")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$species))+
+  ggtitle("By species")
+
+ggplot(ipio_df, 
+       aes(x = emitter, y = nr_ints, color = receiver))+
+  ggbeeswarm::geom_quasirandom()+
+  geom_boxplot(alpha = 0, color = "grey25")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Receiver", values = col_recs)+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Emitters")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$species))+
+  ggtitle("By species")
+
+ggplot(ipio_df, 
+       aes(x = emitter, y = nr_ints, color = age))+
+  ggbeeswarm::geom_quasirandom()+
+  geom_boxplot(alpha = 0, color = "grey25")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Age", values = col_age)+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Emitters")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$species))+
+  ggtitle("By species")
+
+ggplot(ipio_df, 
+       aes(x = species, y = nr_ints))+
+  geom_boxplot(alpha = 0, color = "black")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Age", values = col_age)+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Emitters")+
+  ylab("Nr of interactions per cell type pair")+
+  ggtitle("By species")
+
+
+ggplot(ipio_df, 
+       aes(x = emitter, y = nr_ints, color = nr_cells_emi))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_continuous("nr cells/emitter")+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Emitters")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$species))+
+  ggtitle("By species")
+
+ggplot(ipio_df, 
+       aes(x = emitter, y = nr_ints, color = nr_cells_rec))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_continuous("nr cells/receiver")+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Emitters")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$species))+
+  ggtitle("By species")
+
+ggplot(qcdf_gg_ds, 
+       aes(x = Species_ID, y = sum, color = Status))+
+  geom_jitter(color = "grey70", alpha = 0.2, size = 0.2)+
+  geom_violin(alpha = 0, draw_quantiles = c(0.50))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Age")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, all cell types")+
+  ggtitle("By species")
+
+ggplot(qcdf_gg_ds_emis, 
+       aes(x = Species_ID, y = sum, color = Status))+
+  geom_jitter(color = "grey70", alpha = 0.2, size = 0.2)+
+  geom_violin(alpha = 0, draw_quantiles = c(0.50))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Species")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, emitters only")+
+  ggtitle("By species")
+
+ggplot(qcdf_gg_ds_emis, 
+       aes(x = Identity, y = sum, color = Status))+
+  geom_boxplot()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Emitters")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, emitters only")+
+  ggtitle("By species")+
+  facet_grid(cols = vars(qcdf_gg_ds_emis$Species_ID))
+
+ggplot(qcdf_gg_ds_recs, 
+       aes(x = Species_ID, y = sum, color = Status))+
+  geom_jitter(color = "grey70", alpha = 0.2, size = 0.2)+
+  geom_violin(alpha = 0, draw_quantiles = c(0.50))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Species")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, receivers only")+
+  ggtitle("By species")
+
+ggplot(qcdf_gg_ds_recs, 
+       aes(x = Identity, y = sum, color = Status))+
+  geom_boxplot()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Emitters")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, receivers only")+
+  ggtitle("By species")+
+  facet_grid(cols = vars(qcdf_gg_ds_recs$Species_ID))
+
+ggplot(ipio_df, 
+       aes(x = emitter, y = nr_cells_emi, color = age))+
+  geom_point()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Age", values = col_age)+
+  xlab("Emitters")+
+  ylab("Nr of cells/emi")+
+  facet_grid(cols = vars(ipio_df$species))+
+  ggtitle("By species")
+```
+
+### Age
+
+```{r}
+ggplot(ipio_df, 
+       aes(x = emitter, y = nr_ints, color = age))+
+  ggbeeswarm::geom_quasirandom()+
+  geom_boxplot(alpha = 0, color = "grey25")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Age", values = col_age)+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Emitters")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$age))+
+  ggtitle("By Age")
+
+ggplot(ipio_df, 
+       aes(x = emitter, y = nr_ints, color = receiver))+
+  ggbeeswarm::geom_quasirandom()+
+  geom_boxplot(alpha = 0, color = "grey25")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Receiver", values = col_recs)+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Emitters")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$age))+
+  ggtitle("By Age")
+
+ggplot(ipio_df, 
+       aes(x = emitter, y = nr_ints, color = species))+
+  ggbeeswarm::geom_quasirandom()+
+  geom_boxplot(alpha = 0, color = "grey25")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_species)+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Emitters")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$age))+
+  ggtitle("By Age")
+
+ggplot(ipio_df, 
+       aes(x = age, y = nr_ints))+
+  geom_boxplot(alpha = 0, color = "black")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Species")+
+  ylab("Nr of interactions per cell type pair")+
+  ggtitle("By Age")
+
+ggplot(ipio_df, 
+       aes(x = emitter, y = nr_ints, color = nr_cells_emi))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_continuous("nr cells/emitter")+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Emitters")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$age))+
+  ggtitle("By Age")
+
+ggplot(ipio_df, 
+       aes(x = emitter, y = nr_ints, color = nr_cells_rec))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_continuous("nr cells/receiver")+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Emitters")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$age))+
+  ggtitle("By Age")
+
+ggplot(qcdf_gg_ds, 
+       aes(x = Age_ID, y = sum, color = Status))+
+  geom_jitter(color = "grey70", alpha = 0.2, size = 0.2)+
+  geom_violin(alpha = 0, draw_quantiles = c(0.50))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Age")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, all cell types")+
+  ggtitle("By Age")
+
+ggplot(qcdf_gg_ds_emis, 
+       aes(x = Age_ID, y = sum, color = Status))+
+  geom_jitter(color = "grey70", alpha = 0.2, size = 0.2)+
+  geom_violin(alpha = 0, draw_quantiles = c(0.50))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Age")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, emitters only")+
+  ggtitle("By Age")
+
+ggplot(qcdf_gg_ds_emis, 
+       aes(x = Identity, y = sum, color = Status))+
+  geom_boxplot()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Emitters")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, emitters only")+
+  facet_grid(cols = vars(qcdf_gg_ds_emis$Age_ID))+
+  ggtitle("By Age")
+
+ggplot(qcdf_gg_ds_recs, 
+       aes(x = Age_ID, y = sum, color = Status))+
+  geom_jitter(color = "grey70", alpha = 0.2, size = 0.2)+
+  geom_violin(alpha = 0, draw_quantiles = c(0.50))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Species")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, receivers only")+
+  ggtitle("By Age")
+
+ggplot(qcdf_gg_ds_recs, 
+       aes(x = Identity, y = sum, color = Status))+
+  geom_boxplot()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Emitters")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, receivers only")+
+  facet_grid(cols = vars(qcdf_gg_ds_recs$Age_ID))+
+  ggtitle("By Age")
+
+ggplot(ipio_df, 
+       aes(x = emitter, y = nr_cells_emi, color = species))+
+  geom_point()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_species)+
+  xlab("Emitters")+
+  ylab("Nr of cells/emi")+
+  facet_grid(cols = vars(ipio_df$age))+
+  ggtitle("By Age")
+
+```
+
+### Condition
+
+```{r}
+ggplot(ipio_df, 
+       aes(x = emitter, y = nr_ints, color = name))+
+  ggbeeswarm::geom_quasirandom()+
+  geom_boxplot(alpha = 0, color = "grey25")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_discrete("Condition")+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Emitters")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$name))+
+  ggtitle("By Condition")
+
+ggplot(ipio_df, 
+       aes(x = emitter, y = nr_ints, color = receiver))+
+  ggbeeswarm::geom_quasirandom()+
+  geom_boxplot(alpha = 0, color = "grey25")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Receiver", values = col_recs)+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Emitters")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$name))+
+  ggtitle("By Condition")
+
+ggplot(ipio_df, 
+       aes(x = name, y = nr_ints))+
+  geom_boxplot(alpha = 0, color = "black")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Condition")+
+  ylab("Nr of interactions per cell type pair")+
+  ggtitle("By Condition")
+
+ggplot(ipio_df, 
+       aes(x = emitter, y = nr_ints, color = nr_cells_emi))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_continuous("nr cells/emitter")+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Emitters")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$name))+
+  ggtitle("By Condition")
+
+ggplot(ipio_df, 
+       aes(x = emitter, y = nr_ints, color = nr_cells_rec))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_continuous("nr cells/receiver")+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Emitters")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$name))+
+  ggtitle("By Condition")
+
+ggplot(qcdf_gg_ds, 
+       aes(x = name, y = sum, color = Status))+
+  geom_jitter(color = "grey70", alpha = 0.2, size = 0.2)+
+  geom_violin(alpha = 0, draw_quantiles = c(0.50))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Condition")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, all cell types")+
+  ggtitle("By Condition")
+
+ggplot(qcdf_gg_ds_emis, 
+       aes(x = name, y = sum, color = Status))+
+  geom_jitter(color = "grey70", alpha = 0.2, size = 0.2)+
+  geom_violin(alpha = 0, draw_quantiles = c(0.50))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Condition")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, emitters only")+
+  ggtitle("By Condition")
+
+ggplot(qcdf_gg_ds_emis, 
+       aes(x = Identity, y = sum, color = Status))+
+  geom_boxplot()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Emitters")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, emitters only")+
+  facet_grid(cols = vars(qcdf_gg_ds_emis$name))+
+  ggtitle("By Condition")
+
+ggplot(qcdf_gg_ds_recs, 
+       aes(x = name, y = sum, color = Status))+
+  geom_jitter(color = "grey70", alpha = 0.2, size = 0.2)+
+  geom_violin(alpha = 0, draw_quantiles = c(0.50))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Species")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, receivers only")+
+  ggtitle("By Condition")
+
+ggplot(qcdf_gg_ds_recs, 
+       aes(x = Identity, y = sum, color = Status))+
+  geom_boxplot()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Emitters")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, receivers only")+
+  facet_grid(cols = vars(qcdf_gg_ds_recs$name))+
+  ggtitle("By Condition")
+
+ggplot(ipio_df, 
+       aes(x = emitter, y = nr_cells_emi, color = species))+
+  geom_point()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_species)+
+  xlab("Emitters")+
+  ylab("Nr of cells/emi")+
+  facet_grid(cols = vars(ipio_df$name))+
+  ggtitle("By Condition")
+
+```
+
+## Receiver
+
+### General
+
+```{r}
+ggplot(ipio_df, 
+       aes(x = receiver, y = nr_ints, color = emitter))+
+  ggbeeswarm::geom_quasirandom()+
+  geom_boxplot(alpha = 0, color = "grey25")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("Emitter", values = col_emis)+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Receivers")+
+  ylab("Nr of interactions per cell type pair")+
+  ggtitle("all conditions")
+
+ggplot(ipio_df, 
+       aes(x = receiver, y = nr_ints, color = nr_cells_rec))+
+  ggbeeswarm::geom_quasirandom()+
+  geom_boxplot(alpha = 0, color = "grey25")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_continuous("nr cells/receiver")+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Receiver")+
+  ylab("Nr of interactions per cell type pair")+
+  ggtitle("all conditions")
+
+ggplot(ipio_df, 
+       aes(x = receiver, y = nr_ints, color = nr_cells_emi))+
+  ggbeeswarm::geom_quasirandom()+
+  geom_boxplot(alpha = 0, color = "grey25")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_continuous("nr cells/emitter")+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Receiver")+
+  ylab("Nr of interactions per cell type pair")+
+  ggtitle("all conditions")
+
+ggplot(qcdf_gg_ds_recs, 
+       aes(x = Identity, y = sum, color = Status))+
+  geom_boxplot()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "grey25"))+
+  xlab("Emitters")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts")+
+  ggtitle("all conditions")
+
+ggplot(ipio_df, 
+       aes(x = receiver, y = nr_cells_rec, color = name))+
+  geom_point()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_discrete("Condition")+
+  xlab("Receiver")+
+  ylab("nr of cells/receiver")+
+  ggtitle("all conditions")
+
+ggplot(ipio_df, 
+       aes(x = receiver, y = nr_cells_rec, color = species))+
+  geom_point()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_species)+
+  xlab("Receiver")+
+  ylab("nr of cells/receiver")+
+  ggtitle("all conditions")
+
+ggplot(ipio_df,
+       aes(x = receiver, y = nr_cells_rec, color = age))+
+  geom_point()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_age)+
+  xlab("Receiver")+
+  ylab("nr of cells/receiver")+
+  ggtitle("all conditions")
+
+```
+
+### Species
+
+```{r}
+ggplot(ipio_df, 
+       aes(x = receiver, y = nr_ints, color = species))+
+  ggbeeswarm::geom_quasirandom()+
+  geom_boxplot(alpha = 0, color = "grey25")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_species)+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Receiver")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$species))+
+  ggtitle("By species")
+
+ggplot(ipio_df, 
+       aes(x = receiver, y = nr_ints, color = emitter))+
+  ggbeeswarm::geom_quasirandom()+
+  geom_boxplot(alpha = 0, color = "grey25")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Emitter", values = col_emis)+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Receiver")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$species))+
+  ggtitle("By species")
+
+ggplot(ipio_df, 
+       aes(x = receiver, y = nr_ints, color = age))+
+  ggbeeswarm::geom_quasirandom()+
+  geom_boxplot(alpha = 0, color = "grey25")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Age", values = col_age)+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Receiver")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$species))+
+  ggtitle("By species")
+
+ggplot(ipio_df, 
+       aes(x = species, y = nr_ints))+
+  geom_boxplot(alpha = 0, color = "black")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Age", values = col_age)+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Receiver")+
+  ylab("Nr of interactions per cell type pair")+
+  ggtitle("By species")
+
+ggplot(ipio_df, 
+       aes(x = receiver, y = nr_ints, color = nr_cells_rec))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_continuous("nr cells/receiver")+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Receiver")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$species))+
+  ggtitle("By species")
+
+ggplot(ipio_df, 
+       aes(x = receiver, y = nr_ints, color = nr_cells_emi))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_continuous("nr cells/emitter")+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Receiver")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$species))+
+  ggtitle("By species")
+
+ggplot(qcdf_gg_ds, 
+       aes(x = Species_ID, y = sum, color = Status))+
+  geom_jitter(color = "grey70", alpha = 0.2, size = 0.2)+
+  geom_violin(alpha = 0, draw_quantiles = c(0.50))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Age")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, all cell types")+
+  ggtitle("By species")
+
+ggplot(qcdf_gg_ds_recs, 
+       aes(x = Species_ID, y = sum, color = Status))+
+  geom_jitter(color = "grey70", alpha = 0.2, size = 0.2)+
+  geom_violin(alpha = 0, draw_quantiles = c(0.50))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Species")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, receivers only")+
+  ggtitle("By species")
+
+ggplot(qcdf_gg_ds_recs, 
+       aes(x = Identity, y = sum, color = Status))+
+  geom_boxplot()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Emitters")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, receiver only")+
+  ggtitle("By species")+
+  facet_grid(cols = vars(qcdf_gg_ds_recs$Species_ID))
+
+ggplot(qcdf_gg_ds_emis, 
+       aes(x = Species_ID, y = sum, color = Status))+
+  geom_jitter(color = "grey70", alpha = 0.2, size = 0.2)+
+  geom_violin(alpha = 0, draw_quantiles = c(0.50))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Species")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, emitters only")+
+  ggtitle("By species")
+
+ggplot(qcdf_gg_ds_emis, 
+       aes(x = Identity, y = sum, color = Status))+
+  geom_boxplot()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Emitters")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, emitters only")+
+  ggtitle("By species")+
+  facet_grid(cols = vars(qcdf_gg_ds_emis$Species_ID))
+
+ggplot(ipio_df, 
+       aes(x = receiver, y = nr_cells_rec, color = age))+
+  geom_point()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Age", values = col_age)+
+  xlab("Receivers")+
+  ylab("Nr of cells/rec")+
+  facet_grid(cols = vars(ipio_df$species))+
+  ggtitle("By species")
+```
+
+### Age
+
+```{r}
+ggplot(ipio_df, 
+       aes(x = receiver, y = nr_ints, color = age))+
+  ggbeeswarm::geom_quasirandom()+
+  geom_boxplot(alpha = 0, color = "grey25")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Age", values = col_age)+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Receiver")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$age))+
+  ggtitle("By Age")
+
+ggplot(ipio_df, 
+       aes(x = receiver, y = nr_ints, color = emitter))+
+  ggbeeswarm::geom_quasirandom()+
+  geom_boxplot(alpha = 0, color = "grey25")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Emitter", values = col_emis)+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Receiver")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$age))+
+  ggtitle("By Age")
+
+ggplot(ipio_df, 
+       aes(x = receiver, y = nr_ints, color = species))+
+  ggbeeswarm::geom_quasirandom()+
+  geom_boxplot(alpha = 0, color = "grey25")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_species)+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Receiver")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$age))+
+  ggtitle("By Age")
+
+ggplot(ipio_df, 
+       aes(x = age, y = nr_ints))+
+  geom_boxplot(alpha = 0, color = "black")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Species")+
+  ylab("Nr of interactions per cell type pair")+
+  ggtitle("By Age")
+
+ggplot(ipio_df, 
+       aes(x = receiver, y = nr_ints, color = nr_cells_rec))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_continuous("nr cells/receiver")+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Receiver")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$age))+
+  ggtitle("By Age")
+
+ggplot(ipio_df, 
+       aes(x = receiver, y = nr_ints, color = nr_cells_emi))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_continuous("nr cells/emitter")+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Receiver")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$age))+
+  ggtitle("By Age")
+
+ggplot(qcdf_gg_ds, 
+       aes(x = Age_ID, y = sum, color = Status))+
+  geom_jitter(color = "grey70", alpha = 0.2, size = 0.2)+
+  geom_violin(alpha = 0, draw_quantiles = c(0.50))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Age")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, all cell types")+
+  ggtitle("By Age")
+
+ggplot(qcdf_gg_ds_recs, 
+       aes(x = Age_ID, y = sum, color = Status))+
+  geom_jitter(color = "grey70", alpha = 0.2, size = 0.2)+
+  geom_violin(alpha = 0, draw_quantiles = c(0.50))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Age")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, receivers only")+
+  ggtitle("By Age")
+
+ggplot(qcdf_gg_ds_recs, 
+       aes(x = Identity, y = sum, color = Status))+
+  geom_boxplot()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Receiver")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, receivers only")+
+  facet_grid(cols = vars(qcdf_gg_ds_recs$Age_ID))+
+  ggtitle("By Age")
+
+ggplot(qcdf_gg_ds_emis, 
+       aes(x = Age_ID, y = sum, color = Status))+
+  geom_jitter(color = "grey70", alpha = 0.2, size = 0.2)+
+  geom_violin(alpha = 0, draw_quantiles = c(0.50))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Species")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, emitters only")+
+  ggtitle("By Age")
+
+ggplot(qcdf_gg_ds_emis, 
+       aes(x = Identity, y = sum, color = Status))+
+  geom_boxplot()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Receiver")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, emitters only")+
+  facet_grid(cols = vars(qcdf_gg_ds_emis$Age_ID))+
+  ggtitle("By Age")
+
+ggplot(ipio_df, 
+       aes(x = receiver, y = nr_cells_rec, color = species))+
+  geom_point()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_species)+
+  xlab("Receiver")+
+  ylab("Nr of cells/rec")+
+  facet_grid(cols = vars(ipio_df$age))+
+  ggtitle("By Age")
+
+```
+
+### Condition
+
+```{r}
+ggplot(ipio_df, 
+       aes(x = receiver, y = nr_ints, color = name))+
+  ggbeeswarm::geom_quasirandom()+
+  geom_boxplot(alpha = 0, color = "grey25")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_discrete("Condition")+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Receiver")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$name))+
+  ggtitle("By Condition")
+
+ggplot(ipio_df, 
+       aes(x = receiver, y = nr_ints, color = emitter))+
+  ggbeeswarm::geom_quasirandom()+
+  geom_boxplot(alpha = 0, color = "grey25")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Emitters", values = col_emis)+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Receiver")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$name))+
+  ggtitle("By Condition")
+
+ggplot(ipio_df, 
+       aes(x = name, y = nr_ints))+
+  geom_boxplot(alpha = 0, color = "black")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Condition")+
+  ylab("Nr of interactions per cell type pair")+
+  ggtitle("By Condition")
+
+ggplot(ipio_df, 
+       aes(x = receiver, y = nr_ints, color = nr_cells_rec))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_continuous("nr cells/receiver")+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Receiver")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$name))+
+  ggtitle("By Condition")
+
+ggplot(ipio_df, 
+       aes(x = receiver, y = nr_ints, color = nr_cells_emi))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_continuous("nr cells/emitter")+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Receiver")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$condition))+
+  ggtitle("By Condition")
+
+ggplot(qcdf_gg_ds, 
+       aes(x = name, y = sum, color = Status))+
+  geom_jitter(color = "grey70", alpha = 0.2, size = 0.2)+
+  geom_violin(alpha = 0, draw_quantiles = c(0.50))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Condition")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, all cell types")+
+  ggtitle("By Condition")
+
+ggplot(qcdf_gg_ds_recs, 
+       aes(x = name, y = sum, color = Status))+
+  geom_jitter(color = "grey70", alpha = 0.2, size = 0.2)+
+  geom_violin(alpha = 0, draw_quantiles = c(0.50))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Condition")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, emitters only")+
+  ggtitle("By Condition")
+
+ggplot(qcdf_gg_ds_recs, 
+       aes(x = Identity, y = sum, color = Status))+
+  geom_boxplot()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Receiver")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, emitters only")+
+  facet_grid(cols = vars(qcdf_gg_ds_recs$name))+
+  ggtitle("By Condition")
+
+ggplot(qcdf_gg_ds_emis, 
+       aes(x = name, y = sum, color = Status))+
+  geom_jitter(color = "grey70", alpha = 0.2, size = 0.2)+
+  geom_violin(alpha = 0, draw_quantiles = c(0.50))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Species")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, emitters only")+
+  ggtitle("By Condition")
+
+ggplot(qcdf_gg_ds_emis, 
+       aes(x = Identity, y = sum, color = Status))+
+  geom_boxplot()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("after downsampling" = "black"))+
+  xlab("Receiver")+
+  ylim(c(0, max_qcdf_gg_ds))+
+  ylab("Downsampled counts, emitters only")+
+  facet_grid(cols = vars(qcdf_gg_ds_emis$name))+
+  ggtitle("By Condition")
+
+ggplot(ipio_df, 
+       aes(x = receiver, y = nr_cells_rec, color = species))+
+  geom_point()+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_species)+
+  xlab("Receiver")+
+  ylab("Nr of cells/rec")+
+  facet_grid(cols = vars(ipio_df$name))+
+  ggtitle("By Condition")
+
+```
+
+# Additional pretty plots for meetings
+
+```{r}
+
+ggplot(ipio_df, 
+       aes(x = age, y = nr_ints, color = age))+
+  ggbeeswarm::geom_quasirandom(alpha = 0.4)+
+  geom_boxplot(alpha = 0, color = "black")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Age", values = col_age)+
+  ylim(c(0, max(ipio_df$nr_ints)))+
+  xlab("Receiver")+
+  ylab("Nr of interactions per cell type pair")+
+  facet_grid(cols = vars(ipio_df$species))+
+  ggtitle("By Condition")
+
+```
+
+
+
+```{r}
+sessionInfo()
+```

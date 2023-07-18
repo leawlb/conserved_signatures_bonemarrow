@@ -6,10 +6,11 @@ import pandas as pd
 
 OUTPUT_BASE = config["paths"]["output_dir"]
 METADATA = pd.read_csv(config["metadata"]["table"])
+TABLES_PATH = config["metadata"]["color_tables"]
 
 # specific data and report output paths
 OUTPUT_DAT = OUTPUT_BASE + "/cci_objects/01_cci_preparation/"
-OUTPUT_REP = OUTPUT_BASE + "/reports/04_cci_calc/"
+OUTPUT_REP = OUTPUT_BASE + "/reports/04_cci_prep/01_cci_preparation/"
 
 def get_list(metadata, column):
   values = METADATA[column]
@@ -29,8 +30,9 @@ for s in species:
     targets = targets + [OUTPUT_DAT + "11_idis/idi_" + s + "_" + a]
     targets = targets + [OUTPUT_DAT + "11_idis/ilrs_" + s + "_" + a]
     targets = targets + [OUTPUT_DAT + "11_idis/nrlrs_" + s + "_" + a]
+    targets = targets + [OUTPUT_REP + "cci_metrics_qc/cci_metrics_qc_report_" + s + "_" + a + ".html"]
 
-#targets = targets + [OUTPUT_REP + "sce_downsampling_report.html"]
+targets = targets + [OUTPUT_REP + "cci_metrics_qc/cci_metrics_qc_summary.html"]
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
@@ -95,4 +97,30 @@ rule extract_nrlrs:
 Reports
 """
 
+rule make_cci_qc_report_conditions:
+    input:
+        ident_pair_info = rules.extract_ipi.output.ident_pair_info,
+        ident_info = rules.extract_idi.output.ident_info,
+        ident_nrlrs_info = rules.extract_nrlrs.output.ident_nrlrs_info,
+        sce_input = OUTPUT_DAT + "05_down/sce_{species}_{age}-05"
+    output:
+        OUTPUT_REP + "cci_metrics_qc/cci_metrics_qc_report_{species}_{age}.html"
+    params:
+        color_tables = TABLES_PATH
+    script:
+        "cci_metrics_qc_report_conditions.Rmd" 
 
+
+rule make_cci_qc_summary:
+    input:
+        ident_pair_info = expand(rules.extract_ipi.output.ident_pair_info, species = species, age = age),
+        ident_info = expand(rules.extract_idi.output.ident_info, species = species, age = age),
+        ident_nrlrs_info = expand(rules.extract_nrlrs.output.ident_nrlrs_info, species = species, age = age),
+        sce_input = expand(OUTPUT_DAT + "05_down/sce_{species}_{age}-05", species = species, age = age)
+    output:
+        OUTPUT_REP + "cci_metrics_qc/cci_metrics_qc_summary.html"
+    params:
+        color_tables = TABLES_PATH
+    script:
+        "cci_metrics_qc_summary.Rmd" 
+        

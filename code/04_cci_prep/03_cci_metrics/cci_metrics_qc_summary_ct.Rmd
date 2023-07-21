@@ -224,7 +224,7 @@ Prepare downsampled counts
 ```{r}
 qcdf_gg_ds <- qcdf_gg[qcdf_gg$Status == "after downsampling",]
 
-max_qcdf_gg_ds <- max(qcdf_gg_ds$sum) + 150
+max_qcdf_gg_ds <- 4000 # this removes two cells in mcar
 
 qcdf_gg_ds_emis <- qcdf_gg_ds[qcdf_gg_ds$Identity %in% ipio_df$emitter,]
 qcdf_gg_ds_recs <- qcdf_gg_ds[qcdf_gg_ds$Identity %in% ipio_df$receiver,]

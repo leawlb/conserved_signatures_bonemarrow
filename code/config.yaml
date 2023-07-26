@@ -3,7 +3,7 @@ default:
   color_tables: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/color_tables"
 paths:
   output_dir: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis"
-  cellranger_output: "/sce_objects/01_cellranger_output" 
+  cellranger_output: "/sce_objects/00_cellranger_output" 
 metadata: 
   path: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata"
   table: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/Alignment/OE0538_DO-0008_metadata_combined.csv"

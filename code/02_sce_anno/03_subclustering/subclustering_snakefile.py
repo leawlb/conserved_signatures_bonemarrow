@@ -16,6 +16,12 @@ OUTPUT_REP = OUTPUT_BASE + "/reports/02_sce_anno/05_subclustering/"
 clusters_hsc = ["2", "6"]
 clusters_str = ["4"]
 
+subclusters_hsc = list(range(1,13))
+subclusters_hsc = list(map(str,subclusters_hsc))
+
+subclusters_str = list(range(1,9))
+subclusters_str = list(map(str,subclusters_str))
+
 #-------------------------------------------------------------------------------
 
 def get_list(metadata, column):
@@ -38,7 +44,16 @@ for c in clusters_str:
 
 for f in fractions:
   targets = targets + [OUTPUT_DAT + "10_anns/sce_" + f + "-10"]
+  targets = targets + [OUTPUT_REP + "subclustering_report_" + f + ".html"]
   
+for s in subclusters_hsc:
+  targets = targets + [OUTPUT_DAT + "11_sepc/sce_hsc_subcluster_" + s + "-sep"]
+  #targets = targets + [OUTPUT_REP + "03_anno_clusters/annotation_hsc_cluster_" + c + ".html" ] 
+
+for s in subclusters_str:
+  targets = targets + [OUTPUT_DAT + "11_sepc/sce_str_subcluster_" + s + "-sep"]
+  #targets = targets + [OUTPUT_REP + "03_anno_clusters/annotation_str_cluster_" + c + ".html"] 
+
 # local execution of non-demanding rules
 localrules: all  
  
@@ -48,12 +63,6 @@ rule all: # must contain all possible output paths from all rules
         
 #-------------------------------------------------------------------------------
 # subclustering
-"""
-!!!! FOR THIS STEP, ANOTHER ENVIRONMENT IS REQUIRED:
-use snakemake_isbm_mclust
-USE THAT ENVIRONMENT FOR THIS STEP ONLY!!
-!!!!
-"""
 rule subclustering:
     input:
         sce_sep = OUTPUT_DAT + "03_sepd/sce_{fraction}_cluster_{cluster}-sep",
@@ -67,7 +76,8 @@ rule subclustering:
         "scripts/09_subclustering.R" 
   
 # add subclusters to fraction object and annotate
-sce_subcl_input = expand(rules.subclustering.output, cluster = clusters_hsc, fraction = ["hsc"]) + expand(rules.subclustering.output, cluster = clusters_str, fraction = ["str"])
+sce_subcl_input = expand(rules.subclustering.output, cluster = clusters_hsc, fraction = ["hsc"]) 
+sce_subcl_input = sce_subcl_input + expand(rules.subclustering.output, cluster = clusters_str, fraction = ["str"])
 print(sce_subcl_input)
 rule add_subclusters:
     input:
@@ -79,26 +89,69 @@ rule add_subclusters:
     script:
         "scripts/10_add_subclusters_anno.R" 
 
-"""
 # report
 rule make_subclustering_report:
     input:
-        sce_15 = rules.anno_threelayers.output.sce_15_anno,
-        sce_sep = OUTPUT_BASE_PATH + "/sce_objects/11_annotation/sce_objects/sce_{fraction}_cluster_{cluster}-sep",
-        gene_list_subclustering = config["metadata"]["path"] + "/gene_list_{fraction}_subclustering.csv"
+        sce_input = rules.add_subclusters.output,
+        gene_list_subclustering = "subclustering_genes.txt"
+    params:
+        color_table = "colors.txt"
     output:
-        OUTPUT_BASE_PATH + "/reports/011_slayer_annotation/{fraction}/annotated/anno_report_{fraction}_{cluster}.html"
+        OUTPUT_REP + "subclustering_report_{fraction}.html"
     script:
-        "report_anno.Rmd" 
-        
-# summary
+        "subclustering_report.Rmd" 
+  
+"""   
+Dummy rule to allow using subclusters as wildcard
+"""
 
-rule make_anno_summary:
-    input:
-        sce_15 = rules.anno_threelayers.output,
-        gene_list_subclustering = config["metadata"]["path"] + "/gene_list_{fraction}_subclustering.csv"
+output = expand(OUTPUT_DAT + "11_sepc/sce_hsc_subcluster_{subcluster}-sep", subcluster = subclusters_hsc)
+output = output + expand(OUTPUT_DAT + "11_sepc/sce_str_subcluster_{subcluster}-sep", subcluster = subclusters_str)
+print(output)
+rule separate_sce:
+    input: 
+        sce_input = expand(OUTPUT_DAT + "10_anns/sce_{fraction}-10", fraction = fractions)
     output:
-        OUTPUT_BASE_PATH + "/reports/011_slayer_annotation/{fraction}/annotated/anno_summary_{fraction}.html"
+        sce_output = output
     script:
-        "summary_anno.Rmd" 
+        "scripts/11_separate_dummy.R"
+ 
+"""     
+# repeat marker gene and GO analysis on the subclusters now
+# get marker genes for each cluster 
+rule find_markers:
+    input: 
+        sce_input = rules.separate_sce.output
+    output:
+        markers = OUTPUT_DAT + "11_anqc/01_markers/markers_{fraction}"
+    params:
+        nr_hvgs = config["values"]["preprocessing"]["nr_hvgs"],
+    script:
+        "scripts/11_markers_sublusters.R"
+
+# perform preliminary GO analysis for overview (Very basic)
+rule go_analysis:
+    input: 
+        markers = rules.find_markers.output
+    output:
+        go = OUTPUT_DAT + "11_anqc/02_goan/go_{fraction}"
+    script:
+        "scripts/11_go_subclusters.R"
+
+# report on marker gene expression and GO 
+rule make_report_subcl_markers:
+    input: 
+        markers = rules.find_markers.output,
+        go = rules.go_analysis.output,
+        cluster_annotations = "cluster_annotations.txt",
+        sce_sep = OUTPUT_DAT + "11_sepc/sce_{fraction}_subcluster_{subcluster}-sep",
+        sce_input = rules.add_subclusters.output,
+        gene_list = "gene_list.txt"
+    output:
+        OUTPUT_REP + "subclustering_qc/annotation_{fraction}_cluster_{cluster}.html"
+    params:
+        color_tables = TABLES_PATH
+    script:
+        "subclustering_qc_report.Rmd"
+
 """

@@ -14,7 +14,8 @@ umap_base <- function(sce, color_by){
                      color = colData(sce)[,colnames(colData(sce)) == color_by]))+
     geom_point(size = 0.01)+
     theme_classic()+
-    theme(legend.position = "none", axis.text = element_blank())+
+    theme(legend.position = "none", axis.text = element_blank(),
+          axis.ticks = element_blank())+
     ylab("UMAP 2")+
     xlab("UMAP 1")
   
@@ -29,7 +30,8 @@ umap_base_l <- function(sce, color_by){
                      color = colData(sce)[,colnames(colData(sce)) == color_by]))+
     geom_point(size = 0.01)+
     theme_classic()+
-    theme(axis.text = element_blank())+
+    theme(axis.text = element_blank(),
+          axis.ticks = element_blank())+
     ylab("UMAP 2")+
     xlab("UMAP 1")+
     scale_color_discrete(name = color_by)
@@ -48,7 +50,8 @@ umap_gene <- function(sce, color_by){
     scale_color_gradientn(color_by, colors = c("black", "darkorange3", "orange", "lightgoldenrod"))+
     geom_point(size = 0.01)+
     theme_classic()+
-    theme(axis.text = element_blank())+
+    theme(axis.text = element_blank(),
+          axis.ticks = element_blank())+
     ylab("UMAP 2")+
     xlab("UMAP 1")
 
@@ -67,7 +70,8 @@ umap_program <- function(sce, species, program){
                                      "orange", "lightgoldenrod"))+
     geom_point(size = 0.01)+
     theme_classic()+
-    theme(axis.text = element_blank())+
+    theme(axis.text = element_blank(),
+          axis.ticks = element_blank())+
     ylab("UMAP 2")+
     xlab("UMAP 1")
   

@@ -38,7 +38,7 @@ for s in species:
       targets = targets + [OUTPUT_DAT + "05_norm/" + s + "/sce_" + i + "-05"]
       targets = targets + [OUTPUT_DAT + "06_dimr/" + s + "/sce_" + i + "-06"]
       targets = targets + [OUTPUT_REP + "qc/" + s + "/preprocessing_qc_report_" + i + ".html"]
-      targets = targets + [OUTPUT_REP + "dmgs/" + s + "/preprocessing_dmg_report_" + i + ".html"]
+     # targets = targets + [OUTPUT_REP + "dmgs/" + s + "/preprocessing_dmg_report_" + i + ".html"]
 
 #targets = targets + [OUTPUT_DAT + "03_dmgs/dmgs_list_all"]
       

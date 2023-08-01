@@ -1,20 +1,26 @@
-default: 
-# default configs for direct loading into R scripts
-  color_tables: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/color_tables"
-paths:
-  output_dir: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis"
-  cellranger_output: "/sce_objects/00_cellranger_output" 
-metadata: 
-  path: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata"
-  table: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/Alignment/OE0538_DO-0008_metadata_combined.csv"
-  color_tables: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/color_tables"
-  ref_baccin_sce: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/ref_baccin_sce"
-  ref_dahlin_sce: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/ref_dahlin_sce"
-  ref_dolgalev_sce: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/ref_dolgalev_sce"
-  colors:
-    colors_celltypes: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/color_tables/colors_celltypes.csv"
-    colors_species: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/color_tables/colors_species.csv"
-    colors_annotations: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/color_tables/colors_annotations.csv"
+
+base: "/omics/odcf/analysis/OE0538_projects/DO-0008"
+data_paths:
+  main: "/data/main_analysis"
+  cellranger_output: "/data/main_analysis/sce_objects/00_cellranger_output" 
+  fourgenomes_output: "/data/fourgenomes/sce_objects/00_cellranger_output" 
+metadata_paths: 
+  table: "/metadata/00_alignment/OE0538_DO-0008_metadata_combined.csv"
+  colors: "/metadata/colors/colors.txt"
+  colors_ref: "/metadata/colors/colors_references.txt"
+  ref_baccin_sce: "/metadata/01_sce_prep/references_ready/ref_baccin_sce"
+  ref_dahlin_sce: "/metadata/01_sce_prep/references_ready/ref_dahlin_sce"
+  ref_dolgalev_sce: "/metadata/01_sce_prep/references_ready/ref_dolgalev_sce"
+  gene_list_clusters: "/metadata/02_sce_anno/gene_list_clusters.txt"
+  gene_list_subclustering: "/metadata/02_sce_anno/gene_list_subclustering.txt"
+  gene_list_dotplot: "/metadata/02_sce_anno/gene_list_dotplot.txt"
+  annotation_clusters: "/metadata/02_sce_anno/annotation_clusters.txt"
+  annotation_subclusters: "/metadata/02_sce_anno/annotation_subclusters.txt"
+  annotation_final: "/metadata/02_sce_anno/annotation_final.txt"
+  assignment: "/metadata/04_cci_prep/assignment.txt"
+  lrdb_inp: "/metadata/04_cci_prep/mouse_lr_pair.rds"
+  lrdb_out: "/metadata/04_cci_prep/lrdb"
+
 samples_to_remove:
   - mcar_old_str_3_1
   - mcar_old_str_3_2
@@ -26,81 +32,35 @@ samples_to_remove:
   - mmus_old_str_1_0
   - mspr_old_hsc_1_0
   - mspr_yng_str_3_1
+  
 values:
-  preprocessing:
+  nr_hvgs: 2000 # nr of top hvgs to use, universal
+  01_sce_prep:
     cutoff_umis: 100 # below which droplets are discarded
     cutoff_doublets: 7.5 # above which likely doublets are discarded
     cutoff_mitos: 5 # percentage of mito genes above which cells are discarded
     cutoff_sum: 700 # below which cells are discarded
     cutoff_detected: 500 # below which cells are discarded
-    nr_hvgs: 2000 # nr of top hvgs to use
     logFC_sample_dmgs: 0.25 # logFC threshold for excluding DMGs per sample
     minPC_sample_dmgs: 0.05 # min percent of cells expressing DMGs per sample
-  batch_correction:  
+  02_sce_anno:  
     nr_hvgs_batch_correction: 10000 # nr of top hvgs to be used for subsetting  
-    batch_use_fractions: "Object_ID" # if changed run ENTIRE batch_correction_snakefile
-    seurat_reduction: "cca" # either "rpca" or "cca"
+    batch_use: "Object_ID" # if changed run ENTIRE batch_correction_snakefile
     seeds_umap:
-      str: 6
-      hsc: 10
-  clustering:
-    number_k: 
-    # adjust according to clustering reports (per species)
-      mcar:
-        hsc: 11   
-        str: 13   
-        both: 18   
-      mcas:
-        hsc: 10   
-        str: 14  
-        both: 20  
-      mmus:
-        hsc: 10   
-        str: 14  
-        both: 18  
-      mspr:
-        hsc: 10   
-        str: 15   
-        both: 22  
-        #per fraction
-      hsc: 6 
-      str: 13 
-    resolution: 0.22 
-    k_louvain: 80 
-    use_svm_kernel: "linear" # linear or radial
-    size_subs_hscs: 60000 
-  annotation:
-    ndge_padj_cutoff: 0.05
-    ndge_fc_cutoff: 1.5
-  DGE:
+      str: 6 # for nicer plots 
+      hsc: 2 # for nicer plots # 2 is already pretty good # start again at 12
+    k_louvain: 77 # for louvain clustering resolution
+    ndge_padj_cutoff: 0.05 # below which nDGEs are significant
+    ndge_fc_cutoff: 1.5 # above which genes are excluded from nDGEs
+  03_sce_dge:
     flayer_integrated_padj_cutoff: 0.05
     flayer_integrated_fc_cutoff: 1.5
-    hsc_clusters_keep: 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12
-    str_clusters_keep: 4, 6, 8, 9, 10, 12, 13, 14, 16
-  cci_prep:
-    min_cells: 20
-  cci_calc:
-    min_perc: 0.05
-    top_level: 300
+  04_cci_prep:
+    min_cells: 20 # min number of cells required per cell type to consider for cci
+    min_perc: 0.05 # min percentage of cells per cell type a gene must be expressed in to consider for cci
+    top_level: 300 # top level of ligand-receptor pairs to ensure even leveling of ranks and scores
+    colname_identity: celltypes
 
-# CONDITIONS  
+# Conditions  
 # in caps for use in R, only first letter capitalized for use in Snakefile
 run_preprocessing_summary: False
-run_batch_correction_summary: False
-run_manual_annotation_summary: False
-run_clustering_summary: False
-run_annotation_summary_scmap: False
-calculate_k: False
-
-merge_all: True
-run_mnncorrect: True
-run_batch_correct: False
-mnn_use_fast: TRUE
-run_seurat3: False
-hvgs_for_batch_correction: TRUE 
-rescale_for_batch_correction: FALSE # Rescaling assumes that the cell composition in all batches is the same 
-
-remove_mature_cells_clustering: FALSE
-separate_fractions_clustering: FALSE
-
-

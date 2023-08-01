@@ -88,8 +88,6 @@ get_mature_cts_all <- function(sce){
 
 # all cell types
 
-
-
 factor_reference_cts <- function(sce){
   
   cell_types_baccin_ordered <- c(

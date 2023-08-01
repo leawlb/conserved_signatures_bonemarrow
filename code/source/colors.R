@@ -4,16 +4,6 @@ library(dittoSeq, quietly = TRUE)
 
 #-------------------------------------------------------------------------------
 
-colors_celltypes <- read.csv(paste0(color_tables, "/colors_celltypes.csv"),
-                             sep = ",")
-colors_celltypes <- rbind(colors_celltypes, c(126, "B cell", "lightyellow"))
-colors_species <- read.csv(paste0(color_tables, "/colors_species.csv"),
-                           sep = ",")
-colors_annotations <- read.csv(paste0(color_tables, "/colors_annotations.csv"),
-                               sep = ",")
-
-#-------------------------------------------------------------------------------
-
 # MARKERS
 marker1 <- "dodgerblue3"
 marker2 <- "darkgreen"
@@ -29,42 +19,44 @@ names(col_alp) <- c("a", "b", "c", "d", "e", "f", "g")
 
 #-------------------------------------------------------------------------------
 
-# CELL TYPES
-col_cts <- colors_celltypes[,3]
-names(col_cts) <- colors_celltypes[,2]
-col_cts[names(col_cts) == "EC-Arteriar"] <- "dodgerblue3"
-col_cts[names(col_cts) == "Pericytes"] <- "slateblue4"
+# REFERENCE CELL TYPES
+if(exists("colors_ref_path")){
+  colors_ref_df <- read.csv(colors_ref_path, sep = ";", header = TRUE)
+  col_cts_ref <- colors_ref_df$color
+  names(col_cts_ref) <- colors_ref_df$celltype
+}
 
-# SPECIES
-col_spc <- colors_species[,2]
-names(col_spc) <- colors_species[,1]
-col_spc[names(col_spc) == "mspr"] <- "tan"
-
-# OTHER ANNOTATIONS
-col_ann <- colors_annotations[,2]
-names(col_ann) <- colors_annotations[,1]
-
-#-------------------------------------------------------------------------------
-
-col_list <- list(
-  "Age" = col_ann,
-  "Cluster" = col_num,
-  "Species" = col_spc,
-  #"Interaction Type" = col_itp,
-  "Batch_exp" = col_alp,
-  "Batch_seq" = col_num
-)
-
-#-------------------------------------------------------------------------------
-
-# INTERACTION TYPES
-#col_itp <- c(
-#  "ECM" = "lemonchiffon2",
-#  "ECM, Membrane" = "cornsilk3",
-#  "ECM, Membrane, Secreted" = "honeydew3",
-#  "ECM, Secreted" = "honeydew2",
-#  "Membrane" = "darkslategray4",
-#  "Membrane, Secreted" = "cadetblue3",
-#  "Secreted" = "cadetblue2",
-#  "Other" = "orange"
-#)
+# ALL OTHER COLORS 
+if(exists("colors_path")){
+  colors_df <- read.csv(colors_path, sep = ";", header = TRUE)
+  
+  col_age <- colors_df[colors_df$purpose == "Age_ID",]$color
+  names(col_age) <- colors_df[colors_df$purpose == "Age_ID",]$level
+  
+  col_spc <- colors_df[colors_df$purpose == "Species_ID",]$color
+  names(col_spc) <- colors_df[colors_df$purpose == "Species_ID",]$level
+  
+  col_frc <- colors_df[colors_df$purpose == "Fraction_ID",]$color
+  names(col_frc) <- colors_df[colors_df$purpose == "Fraction_ID",]$level
+  
+  col_asn <- colors_df[colors_df$purpose == "Assignment",]$color
+  names(col_asn) <- colors_df[colors_df$purpose == "Assignment",]$level
+  
+  # cell types per fraction
+  colors_df_temp <- colors_df[colors_df$purpose == "celltypes",]
+  
+  col_cts_hsc <- colors_df_temp[colors_df_temp$fraction == "hsc",]$color
+  names(col_cts_hsc) <- colors_df_temp[colors_df_temp$fraction == "hsc",]$level
+  
+  col_cts_str <- colors_df_temp[colors_df_temp$fraction == "str",]$color
+  names(col_cts_str) <- colors_df_temp[colors_df_temp$fraction == "str",]$level
+  
+  # categories per fraction
+  colors_df_temp <- colors_df[colors_df$purpose == "category",]
+  
+  col_cat_hsc <- colors_df_temp[colors_df_temp$fraction == "hsc",]$color
+  names(col_cat_hsc) <- colors_df_temp[colors_df_temp$fraction == "hsc",]$level
+  
+  col_cat_str <- colors_df_temp[colors_df_temp$fraction == "str",]$color
+  names(col_cat_str) <- colors_df_temp[colors_df_temp$fraction == "str",]$level
+}

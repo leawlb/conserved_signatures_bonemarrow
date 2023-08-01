@@ -1,0 +1,204 @@
+---
+title: "annotation_clusters_report"
+author: "Lea Wölbert"
+date: '2023-03-07'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load libraries, source code 
+
+```{r seed,  message = FALSE}
+set.seed(37)
+```
+
+```{r load,  message = FALSE}
+library(DropletUtils, quietly = TRUE) 
+library(scater, quietly = TRUE) 
+library(scuttle, quietly = TRUE) 
+library(scran, quietly = TRUE) 
+library(tidyverse, quietly = TRUE) 
+```
+
+```{r source, message = FALSE}
+source(file =  snakemake@params[["functions"]])
+source(file =  snakemake@params[["plotting"]])
+```
+
+```{r load objects}
+
+#load SCE objects
+sce <- readRDS(file = snakemake@input[["sce_input"]])
+sce_subcluster <- readRDS(file = snakemake@input[["sce_sep"]])
+subcluster_curr <- snakemake@wildcards[["subcluster"]]
+fraction_curr <- sce_subcluster$Fraction_ID[1]
+celltypes <- unique(sce_subcluster$celltypes)
+print(celltypes)
+  
+# load marker genes and results
+results_go <- readRDS(file = snakemake@input[["go"]])
+results_markers <- readRDS(file = snakemake@input[["markers"]])
+
+markers <- results_markers[[as.numeric(subcluster_curr)]]
+go <- results_go[[as.numeric(subcluster_curr)]]
+
+print(fraction_curr)
+print(sce)
+print(fraction_curr)
+
+gene_list <- read.csv(snakemake@input[["gene_list_subcl"]], 
+  header = TRUE, 
+  sep = ";", 
+  check.names=FALSE, 
+  stringsAsFactors=FALSE, 
+  as.is=TRUE, 
+  colClasses = "character")
+
+head(gene_list)
+```
+
+```{r colors, meassage = FALSE}
+colors_path <- snakemake@params[["colors_path"]]
+source(snakemake@params[["colors"]])
+
+if(fraction_curr == "hsc"){
+  col_cts <- col_cts_hsc
+}else if(fraction_curr == "str"){
+  col_cts <- col_cts_str
+}
+```
+
+# Identity plots
+
+# Reference cell types 
+
+Cells were annotated with scmap and three reference datasets.
+
+```{r fig.width=8, fig.height=4}
+
+plot_1 <- umap_base(sce, color_by = "celltypes")+ 
+  ggtitle(paste0(fraction_curr))+
+  scale_color_manual("Cell types", values = col_cts)
+plot_1l <- umap_legend(sce, color_by = "celltypes")+
+   scale_color_manual("Cell types", values = col_cts)
+legend_1 <- get_legend(plot_1l)
+
+plot_2 <- umap_base(sce_subcluster, color_by = "celltypes")+ 
+  ggtitle(paste0(fraction_curr))+
+  scale_color_manual("Cell types", values = col_cts)
+plot_2l <- umap_legend(sce_subcluster, color_by = "celltypes")+
+   scale_color_manual("Cell types", values = col_cts)
+legend_2 <- get_legend(plot_2l)
+  
+PLOT_1 <- ggarrange(plot_1, legend_1)
+PLOT_2 <- ggarrange(plot_2, legend_2)
+PLOT_1
+PLOT_2
+```
+
+# Marker genes
+
+## Found marker genes
+
+```{r}
+markers[1:50,1:4]
+```
+
+```{r}
+markers[order(markers$pct.1, decreasing = TRUE),][1:50,1:4]
+```
+
+## GO analysis
+
+```{r}
+go_short <- go$results[go$results$ontology == "biological_process",]
+go$results[1:50,c(3, 4)]
+go_short[1:50,c(3, 4)]
+```
+
+## All Markers
+
+Prepare Plots
+
+```{r}
+
+gene_exps <- function(gene){
+  
+  sce_subcluster$Species_ID <- factor(sce_subcluster$Species_ID,
+                                   levels = c("mmus", "mcas", "mspr", "mcar"))
+
+  sce$Species_ID <- factor(sce$Species_ID,
+                           levels = c("mmus", "mcas", "mspr", "mcar"))
+  
+  # Gene expression UMAP in cluster X
+  plot_1 <- umap_gene(sce_subcluster, gene)
+
+  # Gene expression UMAP in cluster X, separated by species
+  plot_2 <- umap_gene(sce_subcluster, gene)+
+    facet_grid(cols = vars(sce_subcluster$Species_ID))
+  
+  ggdf <- as.data.frame(colData(sce_subcluster))
+  logc <- assays(sce_subcluster)[["logcounts"]]
+
+  ggdf$Species_ID <- factor(ggdf$Species_ID,
+                            levels = c("mmus", "mcas", "mspr", "mcar"))
+  
+  plot_3 <- ggplot(ggdf, aes(x = celltypes,
+                             y = logc[rownames(logc) == gene,]))+
+    ggbeeswarm::geom_quasirandom(size = 0.2, color = "grey60")+
+    theme_classic()+
+    geom_boxplot(color = "black", alpha = 0)+
+    ylab(paste0(gene, " expression"))+
+    facet_grid(cols = vars(sce_subcluster$Species_ID))
+  
+  ggdf_full <- as.data.frame(colData(sce))
+  logc_full <- assays(sce)[["logcounts"]]
+  
+  plot_4 <- umap_gene(sce, gene)
+  
+  plot_5 <- ggplot(ggdf_full, aes(x = celltypes,
+                           y = logc_full[rownames(logc_full) == gene,], 
+                           color = celltypes))+
+    ggbeeswarm::geom_quasirandom(size = 0.2)+
+    theme_classic()+
+    scale_color_manual(values = col_cts)+
+    geom_boxplot(color = "black", alpha = 0)+
+    ylab(paste0(gene, " expression"))+
+    theme(axis.text.x = element_text(angle = 90))
+
+  plot_6 <- umap_gene(sce, gene)+
+    facet_grid(cols = vars(sce$Species_ID))
+  
+  return(list(gene, plot_1, plot_2, plot_3, plot_4, plot_5, plot_6))
+}
+
+```
+
+```{r}
+
+found_markers <- rownames(markers)[1:50]
+
+gene_markers <- gene_list$Gene[gene_list$Fraction == fraction_curr]
+print(gene_markers)
+
+all_markers <- unique(c(found_markers, gene_markers))
+all_markers <- as.list(sort(all_markers))
+print(all_markers[which(!all_markers %in% rownames(sce))])
+
+all_markers <- all_markers[which(all_markers %in% rownames(sce))]
+print(all_markers)
+```
+
+## UMAPs
+
+```{r}
+plotlist <- lapply(all_markers, gene_exps)
+plotlist
+```
+
+```{r}
+sessionInfo()
+```

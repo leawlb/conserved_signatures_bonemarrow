@@ -1,0 +1,328 @@
+---
+title: "Subclustering results report"
+author: "Lea Wölbert"
+date: '2023-07-24'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load libraries, source code 
+
+```{r seed, message = FALSE}
+set.seed(37)
+```
+
+```{r load, message = FALSE}
+library(SingleCellExperiment, quietly = TRUE) 
+library(scater, quietly = TRUE) 
+library(scran, quietly = TRUE) 
+library(pheatmap, quietly = TRUE) 
+library(tidyverse, quietly = TRUE) 
+library(viridisLite, quietly = TRUE) 
+library(Seurat, quietly = TRUE)
+```
+
+```{r sources, message = FALSE}
+source(file = snakemake@params[["plotting"]])
+#source(file = snakemake@params[["functions"]])
+```
+
+```{r load_objects, message = FALSE}
+#load SCE objects
+sce <- readRDS(file = snakemake@input[["sce_input"]])
+
+fraction_curr <- snakemake@wildcards[["fraction"]]
+
+sce$Species_ID <- factor(sce$Species_ID,
+                         levels = c("mmus", "mcas", "mspr", "mcar"))
+
+print(snakemake@input[["gene_list_subclustering"]])
+print(snakemake@input[["gene_list_dtplt"]])
+
+gene_list <- read.csv(snakemake@input[["gene_list_subclustering"]], 
+  header = TRUE, 
+  sep = ";", 
+  check.names=FALSE, 
+  stringsAsFactors=FALSE, 
+  as.is=TRUE, 
+  colClasses = "character")
+
+gene_list <- gene_list[gene_list$fraction == fraction_curr,]
+
+gene_list_dtplt <- read.csv(snakemake@input[["gene_list_dtplt"]], 
+  header = TRUE, 
+  sep = ";", 
+  check.names=FALSE, 
+  stringsAsFactors=FALSE, 
+  as.is=TRUE, 
+  colClasses = "character")
+
+gene_list_dtplt <- gene_list_dtplt[gene_list_dtplt$fraction == fraction_curr,]
+
+genes_list_shared <- readRDS(file = snakemake@input[["genes_list_shared"]])
+
+```
+
+```{r colors, message = FALSE}
+colors_path <- snakemake@params[["colors_path"]]
+source(snakemake@params[["colors"]])
+
+if(fraction_curr == "hsc"){
+  col_cat <- col_cat_hsc
+  col_cts <- col_cts_hsc
+}else if(fraction_curr == "str"){
+  col_cat <- col_cat_str
+  col_cts <- col_cts_str
+}
+
+```
+
+# Subclustering Overview
+
+```{r}
+
+plot_1 <- umap_base(sce, color_by = "category")+ 
+  ggtitle(fraction_curr)+
+  scale_color_manual("Category", values = col_cat)
+plot_1l <- umap_legend(sce, color_by = "category")+
+  scale_color_manual("Category", values = col_cat)
+legend_1 <- get_legend(plot_1l)
+  
+plot_2 <- umap_base(sce, color_by = "celltypes")+ 
+  ggtitle(paste(fraction_curr))+
+  scale_color_manual("Cell types", values = col_cts)  
+plot_2l <- umap_legend(sce, color_by = "celltypes")+
+  scale_color_manual("Cell types", values = col_cts)
+legend_2 <- get_legend(plot_2l)
+  
+PLOT_1 <- ggarrange(plot_1, legend_1, widths = c(2, 1))
+PLOT_2 <- ggarrange(plot_2, legend_2, widths = c(2, 1))
+
+PLOT_1
+PLOT_2
+```
+
+```{r}
+
+coord_x <- c(min(reducedDims(sce)$UMAP[,1]), max(reducedDims(sce)$UMAP[,1]))
+coord_y <- c(min(reducedDims(sce)$UMAP[,2]), max(reducedDims(sce)$UMAP[,2]))
+
+plot_1 <- umap_base_l(sce[,sce$Species_ID == "mmus"], 
+                      color_by = "celltypes")+
+  ggtitle("mmus")+
+  scale_color_manual("Cell types", values = col_cts)+
+  theme(legend.position = "none")+
+  xlim(coord_x)+
+  ylim(coord_y)
+plot_2 <- umap_base_l(sce[,sce$Species_ID == "mcas"], 
+                      color_by = "celltypes")+
+  ggtitle("mcas")+
+  scale_color_manual("Cell types", values = col_cts)+
+  theme(legend.position = "none")+
+  xlim(coord_x)+
+  ylim(coord_y)
+plot_3 <- umap_base_l(sce[,sce$Species_ID == "mspr"], 
+                      color_by = "celltypes")+
+  ggtitle("mspr")+
+  scale_color_manual("Cell types", values = col_cts)+
+  theme(legend.position = "none")+
+  xlim(coord_x)+
+  ylim(coord_y)
+plot_4 <- umap_base_l(sce[,sce$Species_ID == "mcar"], 
+                      color_by = "celltypes")+
+  ggtitle("mcar")+
+  scale_color_manual("Cell types", values = col_cts)+
+  theme(legend.position = "none")+
+  xlim(coord_x)+
+  ylim(coord_y)
+
+PLOT_1 <- ggarrange(plot_1, legend_1, widths = c(2, 1))
+PLOT_2 <- ggarrange(plot_2, legend_1, widths = c(2, 1))
+PLOT_3 <- ggarrange(plot_3, legend_1, widths = c(2, 1))
+PLOT_4 <- ggarrange(plot_4, legend_1, widths = c(2, 1))
+
+PLOT_1
+PLOT_2
+PLOT_3
+PLOT_4
+```
+
+```{r}
+print(table(sce$Species_ID, sce$celltypes))
+```
+
+```{r}
+print(table(sce$Species_ID, sce$celltypes)/rowSums(table(sce$Species_ID, sce$celltypes))*100)
+```
+
+## Gene expression
+
+```{r}
+
+seurat <- as.Seurat(sce, counts = "counts", logcounts = "logcounts") # logcounts (assay) only used if dims (reduction) = NULL
+Idents(seurat) <- sce$celltypes
+seurat@active.ident <- factor(seurat@active.ident, levels = rev(levels(Idents(seurat))))
+
+```
+
+```{r fig.width = 14, fig.height = 10}
+if(fraction_curr == "hsc"){
+  genes_to_plot <- gene_list_dtplt$gene
+  DotPlot(seurat, features = genes_to_plot, idents = levels(Idents(seurat)))+
+    RotatedAxis()
+}
+```
+
+```{r fig.width = 20, fig.height = 10}
+if(fraction_curr == "str"){
+  genes_to_plot <- gene_list_dtplt$gene
+  DotPlot(seurat, features = genes_to_plot, idents = levels(Idents(seurat)))+
+    RotatedAxis()
+}
+```
+
+## Comparison to References
+
+```{r}
+
+if(fraction_curr == "str"){
+  sce_temp1 <- sce
+  sce_temp1$baccin_celltype_scmapclust <- factor(
+    sce_temp1$baccin_celltype_scmapclust, levels = c("Adipo-CAR",
+                                                     "Osteo-CAR",
+                                                     "Ng2+ MSCs",
+                                                     "Osteoblasts",
+                                                     "Arteriolar fibro.",
+                                                     "Fibro/Chondro p.",
+                                                     "Chondrocytes",
+                                                     "Endosteal fibro.",
+                                                     "Arteriolar ECs",
+                                                     "Sinusoidal ECs",
+                                                     "Smooth muscle",
+                                                     "unassigned"))
+  
+   sce_temp1$dolgalev_celltype_scmapclust <- factor(
+    sce_temp1$dolgalev_celltype_scmapclust, levels = c("MSPC-Adipo",
+                                                       "MSPC-Osteo",
+                                                       "Osteoblasts",
+                                                       "Osteo",
+                                                       "Fibroblasts",
+                                                       "Chondrocytes",
+                                                       "EC-Arteriar",
+                                                       "EC-Arteriolar",
+                                                       "EC-Sinusoidal",
+                                                       "Pericytes",
+                                                       "Smooth-muscle",
+                                                       "unassigned"))
+
+  mat1 <- table(sce_temp1$celltypes, sce_temp1$baccin_celltype_scmapclust)
+  mat1 <- mat1/rowSums(mat1)*100
+
+  mat2 <- table(sce$celltypes, sce$dahlin_celltype_scmapclust)
+  mat2 <- mat2/rowSums(mat2)*100
+ 
+  mat3 <- table(sce_temp1$celltypes, sce_temp1$dolgalev_celltype_scmapclust)
+  mat3 <- mat3/rowSums(mat3)*100
+
+  pheatmap(mat1,
+           cluster_rows = FALSE,
+           cluster_cols = FALSE)
+  
+  pheatmap(mat2)
+  
+  pheatmap(mat3,
+           cluster_rows = FALSE,
+           cluster_cols = FALSE)
+  
+  mat4 <- table(sce_temp1$baccin_celltype_scmapclust, sce_temp1$celltypes)
+  mat4 <- mat4/rowSums(mat4)*100
+
+  mat5 <- table(sce$dahlin_celltype_scmapclust, sce_temp1$celltypes)
+  mat5 <- mat5/rowSums(mat5)*100
+ 
+  mat6 <- table(sce_temp1$dolgalev_celltype_scmapclust, sce_temp1$celltypes)
+  mat6 <- mat6/rowSums(mat6)*100
+
+  pheatmap(mat4,
+           cluster_rows = FALSE,
+           cluster_cols = FALSE)
+  
+  pheatmap(mat5)
+  
+  pheatmap(mat6,
+           cluster_rows = FALSE,
+           cluster_cols = FALSE)
+}  
+```
+
+```{r}
+
+if(fraction_curr == "hsc"){
+  sce_temp1 <- sce
+  sce_temp1$baccin_celltype_scmapclust <- factor(
+    sce_temp1$baccin_celltype_scmapclust, levels = c("LMPPs",
+                                                     "Mk prog.",
+                                                     "Gran/Mono prog.",
+                                                     "Mono prog.",
+                                                     "Neutro prog.",
+                                                     "large pre-B.",
+                                                     "Eo/Baso prog.",
+                                                     "Ery/Mk prog.",
+                                                     "Erythroblasts",
+                                                     "unassigned"))
+  
+   sce_temp1$dahlin_celltype_scmapclust <- factor(
+    sce_temp1$dahlin_celltype_scmapclust, levels = c("HSC LT",
+                                                     "HSC ST",
+                                                     "MPP1",
+                                                     "MPP2",
+                                                     "LMPP",
+                                                     "GMP",
+                                                     "Monocyte Progenitor",
+                                                     "proNeu",
+                                                     "proB",
+                                                     "CLP",
+                                                     "Basophil",
+                                                     "Mast",
+                                                     "MEP",
+                                                     "Mkp",
+                                                     "Erythroblast",
+                                                     "unassigned"))
+
+  mat1 <- table(sce_temp1$celltypes, sce_temp1$baccin_celltype_scmapclust)
+  mat1 <- mat1/rowSums(mat1)*100
+
+  mat2 <- table(sce_temp1$celltypes, sce_temp1$dahlin_celltype_scmapclust)
+  mat2 <- mat2/rowSums(mat2)*100
+ 
+  pheatmap(mat1,
+           cluster_rows = FALSE,
+           cluster_cols = FALSE)
+  
+  pheatmap(mat2,
+           cluster_rows = FALSE,
+           cluster_cols = FALSE)
+  
+  mat4 <- table(sce_temp1$baccin_celltype_scmapclust, sce_temp1$celltypes)
+  mat4 <- mat4/rowSums(mat4)*100
+
+  mat5 <- table(sce_temp1$dahlin_celltype_scmapclust, sce_temp1$celltypes)
+  mat5 <- mat5/rowSums(mat5)*100
+ 
+  pheatmap(mat4,
+           cluster_rows = FALSE,
+           cluster_cols = FALSE)
+  
+  pheatmap(mat5,
+           cluster_rows = FALSE,
+           cluster_cols = FALSE)
+}  
+
+```
+
+```{r}
+sessionInfo()
+```

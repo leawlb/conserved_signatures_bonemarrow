@@ -1,0 +1,191 @@
+---
+title: "Subclustering mclust report"
+author: "Lea Wölbert"
+date: '2023-07-31'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load libraries, source code 
+
+```{r seed, message = FALSE}
+set.seed(37)
+```
+
+```{r load, message = FALSE}
+library(SingleCellExperiment, quietly = TRUE) 
+library(scater, quietly = TRUE) 
+library(scran, quietly = TRUE) 
+library(tidyverse, quietly = TRUE) 
+```
+
+```{r sources, message = FALSE}
+source(file = snakemake@params[["plotting"]])
+```
+
+Wildcards
+
+```{r}
+fraction_curr <- snakemake@wildcards[["fraction"]]
+cluster_curr <- snakemake@wildcards[["cluster"]]
+if(cluster_curr == 2){cluster_curr <- "2_4"}
+```
+
+SCE
+
+```{r}
+#load SCE objects
+sce_clust <- readRDS(file = snakemake@input[["sce_input"]])
+```
+
+Subset SCE
+
+```{r}
+celltypes <- unique(sce_clust$annotation_cluster)
+print(celltypes)
+```
+
+List of genes used for subclustering or evaluation
+
+```{r}
+gene_list_sub <- read.csv(snakemake@input[["gene_list_subclustering"]], 
+  header = TRUE, 
+  sep = ";", 
+  check.names=FALSE, 
+  stringsAsFactors=FALSE, 
+  as.is=TRUE, 
+  colClasses = "character")
+```
+
+Subset and get only genes used for subclustering and to the correct fraction
+and cluster
+
+```{r}
+
+gene_list_sub <- gene_list_sub[gene_list_sub$fraction == fraction_curr,]
+gene_list_sub <- gene_list_sub[gene_list_sub$cluster == cluster_curr,]
+
+subcl <- unique(gene_list_sub$gene[gene_list_sub$purpose == "subclustering"])
+print(subcl)
+```
+
+List of genes that are shared by at least three of four species in this cluster
+
+```{r}
+genes_list_shared <- readRDS(file = snakemake@input[["genes_list_shared"]])
+```
+
+Subset shared gene list to the current cluster/cell type.
+
+```{r}
+if(length(celltypes) == 1){
+  genes_shared <- genes_list_shared[[celltypes]]$at_least_three
+}else if(length(celltypes) == 2){
+  genes_shared <- intersect(genes_list_shared[[celltypes[1]]]$at_least_three, 
+                            genes_list_shared[[celltypes[2]]]$at_least_three)
+}
+```
+
+Print which genes used for subclustering are shared, and which were
+excluded for not being shared.
+Technically, there should be none of the latter if gene_list_subclustering was
+configured correctly.
+
+Also print which genes are shared and could be used for subclustering in addition.
+
+```{r}
+print(paste("subcl genes used:", subcl[which(subcl %in% genes_shared)]))
+print(paste("subcl genes not shared, not used:", 
+            subcl[which(!subcl %in% genes_shared)]))
+
+genes_all <- unique(gene_list_sub$gene)
+poss_subcl <- genes_all[which(genes_all %in% genes_shared)]
+
+print(paste("subcl genes possible:", poss_subcl))
+```
+
+# Subclustering QC
+
+```{r}
+
+coord_x <- c(min(reducedDims(sce_clust)$UMAP[,1]), 
+             max(reducedDims(sce_clust)$UMAP[,1]))
+coord_y <- c(min(reducedDims(sce_clust)$UMAP[,2]), 
+             max(reducedDims(sce_clust)$UMAP[,2]))
+
+plot_1 <- umap_base_l(sce_clust[,sce_clust$Species_ID == "mmus"], 
+                      color_by = "annotation_subcluster")+
+  ggtitle("mmus")+
+  xlim(coord_x)+
+  ylim(coord_y)
+  
+plot_2 <- umap_base_l(sce_clust[,sce_clust$Species_ID == "mcas"], 
+                      color_by = "annotation_subcluster")+
+  ggtitle("mcas")+
+  xlim(coord_x)+
+  ylim(coord_y)
+  
+plot_3 <- umap_base_l(sce_clust[,sce_clust$Species_ID == "mspr"], 
+                      color_by = "annotation_subcluster")+
+  ggtitle("mspr")+
+  xlim(coord_x)+
+  ylim(coord_y)
+    
+plot_4 <- umap_base_l(sce_clust[,sce_clust$Species_ID == "mcar"], 
+                      color_by = "annotation_subcluster")+
+  ggtitle("mcar")+
+  xlim(coord_x)+
+  ylim(coord_y)
+
+plot_5 <- umap_base_l(sce_clust, color_by = "annotation_subcluster")+
+      facet_grid(cols = vars(sce_clust$annotation_subcluster),
+                 rows = vars(sce_clust$Species_ID))
+
+plot_1
+plot_2
+plot_3
+plot_4
+plot_5
+knitr::knit_exit()
+```
+
+```{r}
+make_plot_list <- function(gene){
+  
+  print(gene)
+  
+  ggdf <- as.data.frame(colData(sce_clust))
+  logc <- assays(sce_clust)[["logcounts"]]
+
+  ggdf$Species_ID <- factor(ggdf$Species_ID,
+                            levels = c("mmus", "mcas", "mspr", "mcar"))
+  
+  plot1 <- umap_gene(sce_clust, gene)
+
+  plot2 <- umap_gene(sce_clust, gene)+
+    facet_grid(cols = vars(sce_clust$Species_ID))
+
+  plot3 <- ggplot(ggdf, aes(x = annotation_subcluster,
+                             y = logc[rownames(logc) == gene,]))+
+    geom_violin(fill = "grey60")+
+    theme_classic()+
+    geom_boxplot(color = "black", alpha = 0)+
+    ylab(paste0(gene, " expression"))+
+    facet_grid(cols = vars(sce_clust$Species_ID))+
+    theme(axis.text.x = element_text(angle = 90))+
+    ggtitle(gene)
+  
+  print(list(plot1, plot2, plot3))
+}
+```
+
+```{r}
+lapply(as.list(genes_all), make_plot_list)
+```
+
+```{r}
+sessionInfo()
+```

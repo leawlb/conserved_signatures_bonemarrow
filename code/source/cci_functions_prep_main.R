@@ -69,6 +69,10 @@ extract_matrix <- function(counts, interactions, datasheet, expr_genes){
   
   # iterate through all potential interactions i and celltypes j
   for(i in 1:nrow(interactions)){
+    
+    rownames(interactionmatPlus)[i] <- interactions$lr_pair[i]
+    print(interactions$lr_pair[i])
+    
     for(j in cts_emitter){
       
       #print(interactions$lr_pair[i])
@@ -82,7 +86,7 @@ extract_matrix <- function(counts, interactions, datasheet, expr_genes){
           # only into columns that are denoted as cells from identity j
           i, which(datasheet$identity == j)] <- counts[
             # only from the one row in counts
-            # whose gene ID is in the receptor col of lrdb_part interaction i
+            # whose gene ID is in the ligand col of lrdb_part interaction i
             which(rownames(counts) == interactions[i, "ligand_ensembl_gene_id"]), 
             which(datasheet$identity == j)]
         # fill other slots with NAs
@@ -92,10 +96,15 @@ extract_matrix <- function(counts, interactions, datasheet, expr_genes){
     }
     # repeat for receivers
     for(j in cts_receiver){
-      if(interactions$ligand_ensembl_gene_id[i] %in% c(expr_genes[[j]])){
+      # if receptor of interaction i is found in the expressed genes of ct j
+      if(interactions$receptor_ensembl_gene_id[i] %in% c(expr_genes[[j]])){
         
+        # add to the dataframe only into row corresponding to interaction i
+        # only into columns that are denoted as cells from identity j
         interactionmatPlus[i, which(datasheet$identity == j)] <- counts[
-          rownames(counts) == interactions[i, "ligand_ensembl_gene_id"], 
+          # only from the one row in counts
+          # whose gene ID is in the receptor col of lrdb_part interaction i
+          rownames(counts) == interactions[i, "receptor_ensembl_gene_id"], 
           which(datasheet$identity == j)]
         
       }else{
@@ -161,23 +170,28 @@ interaction_ranking <- function(interaction_mat,
       pos_lig <- which(datasheet$identity %in% unique(datasheetemi$identity)[i])
       # rank the mean expression values of all genes for those positions
       # due to prior construction, there are only ligand genes in emitters slots
+      datasheet[pos_lig,]
+      interaction_mat[,pos_lig]
       if(length(pos_lig) > 1){
         rankLig <- dense_rank(rowMeans(
           interaction_mat[,pos_lig]))
       }else if(length(pos_lig) == 1){
         # if there is only one cell = one column, rowMeans does not work
         # this should only be relevant during testing
-        rankLig <- dense_rank(interactionmatrix[,pos_lig])
+        rankLig <- dense_rank(interaction_mat[,pos_lig])
       }
       table(rankLig)
       
       # same for receptors
       pos_rec <- which(datasheet$identity %in% unique(datasheetrec$identity)[j])
+      datasheet[pos_rec,]
+      interaction_mat[,pos_rec]
+      
       if(length(pos_rec) > 1){
         rankRec <- dense_rank(rowMeans(
           interaction_mat[,pos_rec]))
       }else if(length(pos_rec) == 1){
-        rankRec <- dense_rank(interactionmatrix[,pos_rec])
+        rankRec <- dense_rank(interaction_mat[,pos_rec])
       }
       table(rankRec)
       
@@ -248,8 +262,8 @@ interaction_ranking <- function(interaction_mat,
   
   interactionranking_list <- list()
   interactionranking_list[["Score"]] <- Score
-  interactionranking_list[["Receptorrank"]] <- rankRecs
   interactionranking_list[["Ligandrank"]] <- rankLigs
+  interactionranking_list[["Receptorrank"]] <- rankRecs
   interactionranking_list[["datasheet"]] <- datasheet  # keep datasheet
   return(interactionranking_list)
 }

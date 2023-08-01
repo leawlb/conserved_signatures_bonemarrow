@@ -1,0 +1,472 @@
+---
+title: "cci_pca_report"
+author: "Lea Wölbert"
+date: '2023-07-30'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load objects
+
+```{r seed,  message = FALSE}
+set.seed(37)
+```
+
+```{r load,  message = FALSE}
+library(tidyverse)
+```
+
+```{r source, message = FALSE}
+#source(file =  snakemake@params[["functions"]])
+#source(file =  snakemake@params[["plotting"]])
+```
+
+```{r load_objects}
+
+if(!exists("snakemake@wildcards")){
+  wc_curr <- "all"
+}else if(exists("snakemake@wildcards[[1]]")){
+  wc_curr <- snakemake@wildcards[[1]]
+}
+
+print(wc_curr)
+
+pca_list <- readRDS(snakemake@input[["pca_input"]])
+ggdf <- pca_list[[2]]
+cci <- readRDS(snakemake@input[["cci_input"]])
+  
+```
+
+```{r colors, meassage = FALSE}
+colors_path <- snakemake@params[["colors_path"]]
+source(snakemake@params[["colors"]])
+
+col_cts_emi <- col_cts_str[names(col_cts_str) %in% cci$Identities$emitter]
+col_cts_rec <- col_cts_hsc[names(col_cts_hsc) %in% cci$Identities$receiver]
+
+ggdf$Species <- factor(ggdf$Species, 
+                       levels = names(col_spc)[names(col_spc) %in% ggdf$Species])
+ggdf$Age <- factor(ggdf$Age, 
+                   levels = names(col_age)[names(col_age) %in% ggdf$Age])
+
+ggdf$emitter <- factor(ggdf$emitter,
+                       levels = names(col_cts_emi[names(col_cts_emi) %in% ggdf$emitter]))
+
+ggdf$receiver <- factor(ggdf$receiver,
+                        levels = names(col_cts_rec[names(col_cts_rec) %in% ggdf$receiver]))
+
+```
+
+## PCA plots
+
+```{r}
+sum_df <- summary(pca_list[[1]])
+
+PC1_var <- sum_df$importance[2,1]*100
+PC2_var <- sum_df$importance[2,2]*100
+PC3_var <- sum_df$importance[2,3]*100
+PC4_var <- sum_df$importance[2,4]*100
+PC5_var <- sum_df$importance[2,5]*100
+```
+
+```{r}
+
+ggplot(ggdf, aes(x = PC1, y = PC2, color = Age))+
+  geom_point()+
+  theme_classic()+
+  scale_color_manual(values = col_age)+
+  ggtitle(wc_curr)+
+  xlab(paste0("PC1 [", PC1_var, "%]"))+
+  ylab(paste0("PC2 [", PC2_var, "%]"))+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())
+  
+ggplot(ggdf, aes(x = PC1, y = PC2, color = Species))+
+  geom_point()+
+  theme_classic()+
+  scale_color_manual(values = col_spc)+
+  ggtitle(wc_curr)+
+  xlab(paste0("PC1 [", PC1_var, "%]"))+
+  ylab(paste0("PC2 [", PC2_var, "%]"))+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())
+
+ggplot(ggdf, aes(x = PC1, y = PC2, color = emitter))+
+  geom_point()+
+  theme_classic()+
+  scale_color_manual(values = col_cts_emi)+
+  ggtitle(wc_curr)+
+  xlab(paste0("PC1 [", PC1_var, "%]"))+
+  ylab(paste0("PC2 [", PC2_var, "%]"))+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())
+
+ggplot(ggdf, aes(x = PC1, y = PC2, color = receiver))+
+  geom_point()+
+  theme_classic()+
+  scale_color_manual(values = col_cts_rec)+
+  ggtitle(wc_curr)+
+  xlab(paste0("PC1 [", PC1_var, "%]"))+
+  ylab(paste0("PC2 [", PC2_var, "%]"))+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())
+```
+
+```{r}
+
+ggdf_temp <- ggdf
+ggdf_temp$PC1 <- paste(ggdf_temp$PC1, "[", PC1_var, "%]")
+ggdf_temp$PC2 <- paste(ggdf_temp$PC1, "[", PC2_var, "%]")
+ggdf_temp$PC3 <- paste(ggdf_temp$PC1, "[", PC3_var, "%]")
+ggdf_temp$PC4 <- paste(ggdf_temp$PC1, "[", PC4_var, "%]")
+ggdf_temp$PC5 <- paste(ggdf_temp$PC1, "[", PC5_var, "%]")
+
+ggdf_temp <- pivot_longer(ggdf, cols = c(1:5), names_to = "PCs")
+  
+ggplot(ggdf_temp, aes(x = PCs, y = value, color = Age))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  scale_color_manual(values = col_age)+
+  ggtitle(wc_curr)
+
+ggplot(ggdf_temp, aes(x = PCs, y = value, color = Species))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  scale_color_manual(values = col_spc)+
+  ggtitle(wc_curr)
+
+ggplot(ggdf_temp, aes(x = PCs, y = value, color = emitter))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  scale_color_manual("Emitter", values = col_cts_str)+
+  ggtitle(wc_curr)
+  
+ggplot(ggdf_temp, aes(x = PCs, y = value, color = receiver))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  scale_color_manual("Receiver", values = col_cts_hsc)+
+  ggtitle(wc_curr)
+```
+
+```{r}
+
+#cci$Score[is.na(cci$Score)] <- 0
+  
+ggdf$lr_int1 <- t(cci$Score[grep("Cxcl12_Cxcr4", rownames(cci$Score)),])
+ggdf$lr_int2 <- t(cci$Score[grep("Kitl_Kit", rownames(cci$Score)),])
+ggdf$lr_int3 <- t(cci$Score[grep("Angpt1_Tek", rownames(cci$Score)),])
+ggdf$lr_int4 <- t(cci$Score[grep("Vcam1_Itgb1", rownames(cci$Score)),])
+ggdf$lr_int5 <- t(cci$Score[grep("Vcam1_Itga4", rownames(cci$Score)),])
+
+ggplot(ggdf, aes(x = PC1, y = PC2, color = lr_int1))+
+  geom_point()+
+  theme_classic()+
+  ggtitle(wc_curr)+
+  xlab(paste0("PC1 [", PC1_var, "%]"))+
+  ylab(paste0("PC2 [", PC2_var, "%]"))+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())+
+  scale_color_continuous(paste("Cxcl12_Cxcr4", "Score"))
+
+ggplot(ggdf, aes(x = PC1, y = PC2, color = lr_int2))+
+  geom_point()+
+  theme_classic()+
+  ggtitle(wc_curr)+
+  xlab(paste0("PC1 [", PC1_var, "%]"))+
+  ylab(paste0("PC2 [", PC2_var, "%]"))+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())+
+  scale_color_continuous(paste("Kitl_Kit", "Score"))
+
+ggplot(ggdf, aes(x = PC1, y = PC2, color = lr_int3))+
+  geom_point()+
+  theme_classic()+
+  ggtitle(wc_curr)+
+  xlab(paste0("PC1 [", PC1_var, "%]"))+
+  ylab(paste0("PC2 [", PC2_var, "%]"))+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())+
+  scale_color_continuous(paste("Angpt1_Tek", "Score"))
+
+ggplot(ggdf, aes(x = PC1, y = PC2, color = lr_int4))+
+  geom_point()+
+  theme_classic()+
+  ggtitle(wc_curr)+
+  xlab(paste0("PC1 [", PC1_var, "%]"))+
+  ylab(paste0("PC2 [", PC2_var, "%]"))+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())+
+  scale_color_continuous(paste("Vcam1_Itgb1", "Score"))
+
+ggplot(ggdf, aes(x = PC1, y = PC2, color = lr_int5))+
+  geom_point()+
+  theme_classic()+
+  ggtitle(wc_curr)+
+  xlab(paste0("PC1 [", PC1_var, "%]"))+
+  ylab(paste0("PC2 [", PC2_var, "%]"))+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())+
+  scale_color_continuous(paste("Vcam1_Itga4", "Score"))
+
+```
+
+
+## PCA Rotation
+
+```{r}
+
+PC1_rot <- pca_list[[1]]$rotation[,1]
+PC1_rot_df <- data.frame(
+  "ident_pair" = names(PC1_rot),
+  "rotation" = PC1_rot)
+PC1_rot_df[order(abs(PC1_rot_df$rotation), decreasing = TRUE),]
+
+PC2_rot <- pca_list[[1]]$rotation[,2]
+PC2_rot_df <- data.frame(
+  "ident_pair" = names(PC2_rot),
+  "rotation" = PC2_rot)
+PC2_rot_df[order(abs(PC2_rot_df$rotation), decreasing = TRUE),]
+
+PC_rot_ggdf <- as.data.frame(pca_list[[1]]$rotation[,1:2])
+PC_rot_ggdf$data <- rep("data", nrow(PC_rot_ggdf))
+
+ggplot(PC_rot_ggdf, aes(x = data, y = PC1))+
+  geom_violin(fill = "grey80")+
+  geom_point(alpha = 0.4)+
+  theme_classic()+
+  ggtitle(wc_curr)+
+  ylab("PC1 contribution")+
+  geom_text(label = rownames(PC_rot_ggdf), nudge_x = 0.1, check_overlap = TRUE)
+
+ggplot(PC_rot_ggdf, aes(x = data, y = PC2))+
+  geom_violin(fill = "grey80")+
+  geom_point(alpha = 0.4)+
+  theme_classic()+
+  ggtitle(wc_curr)+
+  ylab("PC2 contribution")+
+  geom_text(label = rownames(PC_rot_ggdf), nudge_x = 0.1, check_overlap = TRUE)
+```
+
+```{r}
+
+for(i in 1:nrow(PC_rot_ggdf)){
+  PC_rot_ggdf$ligand[i] <- str_split(rownames(PC_rot_ggdf)[i], "_")[[1]][1]
+  PC_rot_ggdf$receptor[i] <- str_split(rownames(PC_rot_ggdf)[i], "_")[[1]][2]
+}
+
+ggplot(PC_rot_ggdf, aes(x = data, y = PC1))+
+  geom_violin(fill = "grey80")+
+  geom_point(alpha = 0.4)+
+  theme_classic()+
+  ggtitle(wc_curr)+
+  ylab("PC1 contribution")+
+  geom_text(label = PC_rot_ggdf$ligand, nudge_x = 0.1, check_overlap = TRUE)
+
+ggplot(PC_rot_ggdf, aes(x = data, y = PC2))+
+  geom_violin(fill = "grey80")+
+  geom_point(alpha = 0.4)+
+  theme_classic()+
+  ggtitle(wc_curr)+
+  ylab("PC2 contribution")+
+  geom_text(label = PC_rot_ggdf$ligand, nudge_x = 0.1, check_overlap = TRUE)
+
+```
+
+```{r}
+
+PC_rot_ggdf <- PC_rot_ggdf[order(abs(PC_rot_ggdf$PC1), decreasing = TRUE),]
+top5_ligands_PC1 <- unique(PC_rot_ggdf$ligand)[1:5]
+
+cci$Ligandrank[is.na(cci$Ligandrank)] <- 0
+  
+ggdf$top1 <- t(cci$Ligandrank[grep(top5_ligands_PC1[1], rownames(cci$Ligandrank))[1],])
+ggdf$top2 <- t(cci$Ligandrank[grep(top5_ligands_PC1[2], rownames(cci$Ligandrank))[1],])
+ggdf$top3 <- t(cci$Ligandrank[grep(top5_ligands_PC1[3], rownames(cci$Ligandrank))[1],])
+ggdf$top4 <- t(cci$Ligandrank[grep(top5_ligands_PC1[4], rownames(cci$Ligandrank))[1],])
+ggdf$top5 <- t(cci$Ligandrank[grep(top5_ligands_PC1[5], rownames(cci$Ligandrank))[1],])
+
+ggplot(ggdf, aes(x = PC1, y = PC2, color = top1))+
+  geom_point()+
+  theme_classic()+
+ # ggtitle(wc_curr)+
+  scale_color_continuous(paste(top5_ligands_PC1[1], "Ligand rank"))+
+  xlab(paste0("PC1 [", PC1_var, "%]"))+
+  ylab(paste0("PC2 [", PC2_var, "%]"))+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())
+
+ggplot(ggdf, aes(x = PC1, y = PC2, color = top2))+
+  geom_point()+
+  theme_classic()+
+ # ggtitle(wc_curr)+
+  scale_color_continuous(paste(top5_ligands_PC1[2], "Ligand rank"))+
+  xlab(paste0("PC1 [", PC1_var, "%]"))+
+  ylab(paste0("PC2 [", PC2_var, "%]"))+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())
+
+ggplot(ggdf, aes(x = PC1, y = PC2, color = top3))+
+  geom_point()+
+  theme_classic()+
+ # ggtitle(wc_curr)+
+  scale_color_continuous(paste(top5_ligands_PC1[3], "Ligand rank"))+
+  xlab(paste0("PC1 [", PC1_var, "%]"))+
+  ylab(paste0("PC2 [", PC2_var, "%]"))+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())
+
+ggplot(ggdf, aes(x = PC1, y = PC2, color = top4))+
+  geom_point()+
+  theme_classic()+
+ # ggtitle(wc_curr)+
+  scale_color_continuous(paste(top5_ligands_PC1[4], "Ligand rank"))+
+  xlab(paste0("PC1 [", PC1_var, "%]"))+
+  ylab(paste0("PC2 [", PC2_var, "%]"))+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())
+
+ggplot(ggdf, aes(x = PC1, y = PC2, color = top5))+
+  geom_point()+
+  theme_classic()+
+ # ggtitle(wc_curr)+
+  scale_color_continuous(paste(top5_ligands_PC1[5], "Ligand rank"))+
+  xlab(paste0("PC1 [", PC1_var, "%]"))+
+  ylab(paste0("PC2 [", PC2_var, "%]"))+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())
+```
+
+```{r}
+
+PC_rot_ggdf <- PC_rot_ggdf[order(abs(PC_rot_ggdf$PC2), decreasing = TRUE),]
+top5_ligands_PC2 <- unique(PC_rot_ggdf$ligand)[1:5]
+
+cci$Ligandrank[is.na(cci$Ligandrank)] <- 0
+  
+ggdf$top1 <- t(cci$Ligandrank[grep(top5_ligands_PC2[1], rownames(cci$Ligandrank))[1],])
+ggdf$top2 <- t(cci$Ligandrank[grep(top5_ligands_PC2[2], rownames(cci$Ligandrank))[1],])
+ggdf$top3 <- t(cci$Ligandrank[grep(top5_ligands_PC2[3], rownames(cci$Ligandrank))[1],])
+ggdf$top4 <- t(cci$Ligandrank[grep(top5_ligands_PC2[4], rownames(cci$Ligandrank))[1],])
+ggdf$top5 <- t(cci$Ligandrank[grep(top5_ligands_PC2[5], rownames(cci$Ligandrank))[1],])
+
+ggplot(ggdf, aes(x = PC1, y = PC2, color = top1))+
+  geom_point()+
+  theme_classic()+
+ # ggtitle(wc_curr)+
+  scale_color_continuous(paste(top5_ligands_PC2[1], "Ligand rank"))+
+  xlab(paste0("PC1 [", PC1_var, "%]"))+
+  ylab(paste0("PC2 [", PC2_var, "%]"))+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())
+
+ggplot(ggdf, aes(x = PC1, y = PC2, color = top2))+
+  geom_point()+
+  theme_classic()+
+ # ggtitle(wc_curr)+
+  scale_color_continuous(paste(top5_ligands_PC2[2], "Ligand rank"))+
+  xlab(paste0("PC1 [", PC1_var, "%]"))+
+  ylab(paste0("PC2 [", PC2_var, "%]"))+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())
+
+ggplot(ggdf, aes(x = PC1, y = PC2, color = top3))+
+  geom_point()+
+  theme_classic()+
+ # ggtitle(wc_curr)+
+  scale_color_continuous(paste(top5_ligands_PC2[3], "Ligand rank"))+
+  xlab(paste0("PC1 [", PC1_var, "%]"))+
+  ylab(paste0("PC2 [", PC2_var, "%]"))+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())
+
+ggplot(ggdf, aes(x = PC1, y = PC2, color = top4))+
+  geom_point()+
+  theme_classic()+
+ # ggtitle(wc_curr)+
+  scale_color_continuous(paste(top5_ligands_PC2[4], "Ligand rank"))+
+  xlab(paste0("PC1 [", PC1_var, "%]"))+
+  ylab(paste0("PC2 [", PC2_var, "%]"))+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())
+
+ggplot(ggdf, aes(x = PC1, y = PC2, color = top5))+
+  geom_point()+
+  theme_classic()+
+ # ggtitle(wc_curr)+
+  scale_color_continuous(paste(top5_ligands_PC2[5], "Ligand rank"))+
+  xlab(paste0("PC1 [", PC1_var, "%]"))+
+  ylab(paste0("PC2 [", PC2_var, "%]"))+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())
+```
+
+```{r}
+
+PC_rot_ggdf <- PC_rot_ggdf[order(abs(PC_rot_ggdf$PC2), decreasing = TRUE),]
+top5_receptors_PC2 <- unique(PC_rot_ggdf$receptor)[1:5]
+
+cci$Receptorrank[is.na(cci$Receptorrank)] <- 0
+  
+ggdf$top1 <- t(cci$Receptorrank[grep(top5_receptors_PC2[1], rownames(cci$Receptorrank))[1],])
+ggdf$top2 <- t(cci$Receptorrank[grep(top5_receptors_PC2[2], rownames(cci$Receptorrank))[1],])
+ggdf$top3 <- t(cci$Receptorrank[grep(top5_receptors_PC2[3], rownames(cci$Receptorrank))[1],])
+ggdf$top4 <- t(cci$Receptorrank[grep(top5_receptors_PC2[4], rownames(cci$Receptorrank))[1],])
+ggdf$top5 <- t(cci$Receptorrank[grep(top5_receptors_PC2[5], rownames(cci$Receptorrank))[1],])
+
+ggplot(ggdf, aes(x = PC1, y = PC2, color = top1))+
+  geom_point()+
+  theme_classic()+
+ # ggtitle(wc_curr)+
+  scale_color_continuous(paste(top5_receptors_PC2[1], "Receptor rank"))+
+  xlab(paste0("PC1 [", PC1_var, "%]"))+
+  ylab(paste0("PC2 [", PC2_var, "%]"))+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())
+
+ggplot(ggdf, aes(x = PC1, y = PC2, color = top2))+
+  geom_point()+
+  theme_classic()+
+ # ggtitle(wc_curr)+
+  scale_color_continuous(paste(top5_receptors_PC2[2], "Receptor rank"))+
+  xlab(paste0("PC1 [", PC1_var, "%]"))+
+  ylab(paste0("PC2 [", PC2_var, "%]"))+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())
+
+ggplot(ggdf, aes(x = PC1, y = PC2, color = top3))+
+  geom_point()+
+  theme_classic()+
+ # ggtitle(wc_curr)+
+  scale_color_continuous(paste(top5_receptors_PC2[3], "Receptor rank"))+
+  xlab(paste0("PC1 [", PC1_var, "%]"))+
+  ylab(paste0("PC2 [", PC2_var, "%]"))+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())
+
+ggplot(ggdf, aes(x = PC1, y = PC2, color = top4))+
+  geom_point()+
+  theme_classic()+
+ # ggtitle(wc_curr)+
+  scale_color_continuous(paste(top5_receptors_PC2[4], "Receptor rank"))+
+  xlab(paste0("PC1 [", PC1_var, "%]"))+
+  ylab(paste0("PC2 [", PC2_var, "%]"))+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())
+
+ggplot(ggdf, aes(x = PC1, y = PC2, color = top5))+
+  geom_point()+
+  theme_classic()+
+ # ggtitle(wc_curr)+
+  scale_color_continuous(paste(top5_receptors_PC2[5], "Receptor rank"))+
+  xlab(paste0("PC1 [", PC1_var, "%]"))+
+  ylab(paste0("PC2 [", PC2_var, "%]"))+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())
+```
+
+```{r}
+sessionInfo()
+```

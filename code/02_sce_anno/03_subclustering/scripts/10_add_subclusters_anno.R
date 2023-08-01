@@ -25,7 +25,7 @@ print(sce_subcl_list)
 sce$annotation_subcluster <- vector(length = ncol(sce))
 sce$subcluster <- vector(length = ncol(sce))
 
-final_anno <- read.csv(file = snakemake@input[["final_annotation"]], 
+final_anno <- read.csv(file = snakemake@input[["anno_final"]], 
                        header = TRUE, 
                        sep = ";", 
                        check.names=FALSE, 
@@ -71,6 +71,7 @@ print(sort(unique(sce$celltypes)))
 stopifnot(!is.na(match(unique(final_anno$celltypes), unique(sce$celltypes))))
 stopifnot(!is.na(match(unique(sce$celltypes), unique(final_anno$celltypes))))
 
+print(final_anno$celltypes)
 sce$celltypes <- factor(sce$celltypes, levels = final_anno$celltypes)
 
 #-------------------------------------------------------------------------------
@@ -79,7 +80,8 @@ sce$celltypes <- factor(sce$celltypes, levels = final_anno$celltypes)
 sce$category <- vector(length = ncol(sce))
 
 for(i in unique(sce$celltypes)){
-  sce$category[sce$celltypes == i] <- final_anno$category[final_anno$celltypes == i]
+  sce$category[sce$celltypes == i] <- final_anno$category[
+    final_anno$celltypes == i]
 }
 sce$category <- factor(sce$category, levels = unique(final_anno$category))
 

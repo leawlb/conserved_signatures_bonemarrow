@@ -12,17 +12,25 @@ knitr::opts_chunk$set(echo = TRUE)
 QC report for all samples separately (Object_ID).
 Some operations from the scripts must be repeated to generate relevant plots,
 but any new objects cannot be saved from an .Rmd script.
+Repeat various steps for visualisation.
 
 #### Load libraries, source code 
 
-```{r load,  message = FALSE}
+```{r seed, message = FALSE}
+set.seed(37)
+```
+
+```{r load, message = FALSE}
 library(SingleCellExperiment, quietly = TRUE) 
 library(DropletUtils, quietly = TRUE) 
 library(tidyverse, quietly = TRUE) 
 library(scater, quietly = TRUE) 
 library(scuttle, quietly = TRUE) 
 library(scran, quietly = TRUE) 
-set.seed(37)
+```
+
+```{r source, message = FALSE}
+source(file = snakemake@params[["plotting"]])
 ```
 
 ```{r load_objects, message = FALSE}
@@ -34,7 +42,7 @@ sce_norm <- readRDS(file = snakemake@input[["sce_norm"]])
 sce_dimr <- readRDS(file = snakemake@input[["sce_dimr"]])
 
 # set name for plots
-name_curr <- colData(sce_drop)$Object_ID[1] # name to display in plots
+name_curr <- colData(sce_drop)$Object_ID[1] 
 ```
 
 ```{r declare_cutoffs, message = FALSE}
@@ -44,13 +52,10 @@ cutoff_doublets <- snakemake@params[["cutoff_doublets"]]
 cutoff_sum <- snakemake@params[["cutoff_sum"]] 
 cutoff_detected <- snakemake@params[["cutoff_detected"]]
 cutoff_mitos <- snakemake@params[["cutoff_mitos"]]
-color_tables <- snakemake@params[["color_tables"]]
 ```
 
-```{r}
-# call sources
-source(file = "../../source/colors.R")
-source(file = "../../source/plotting.R")
+```{r colors, message = FALSE}
+source(file = snakemake@params[["colors"]])
 ```
 
 ## Step 1: 

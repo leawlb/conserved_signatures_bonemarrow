@@ -14,12 +14,15 @@ overlap between fractions.
 
 #### Load libraries, source code 
 
+```{r seed,  message = FALSE}
+set.seed(37)
+```
+
 ```{r load,  message = FALSE}
 library(SingleCellExperiment, quietly = TRUE) 
 library(DropletUtils, quietly = TRUE) 
 library(tidyverse, quietly = TRUE) 
 library(ComplexUpset, quietly = TRUE)
-set.seed(37)
 ```
 
 ```{r load_snakemake, message = FALSE}

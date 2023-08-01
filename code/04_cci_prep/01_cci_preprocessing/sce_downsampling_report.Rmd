@@ -13,18 +13,22 @@ To evaluate the effect of downsampling on the age merge counts.
 
 #### Load libraries, source code 
 
-```{r load,  message = FALSE}
-library(scater, quietly = TRUE) 
-library(scran, quietly = TRUE) 
-library(tidyverse, quietly = TRUE) 
+```{r seed, message = FALSE}
 set.seed(37)
 ```
 
+```{r load, message = FALSE}
+library(scater, quietly = TRUE) 
+library(scran, quietly = TRUE) 
+library(tidyverse, quietly = TRUE) 
+```
+
+```{r source, message = FALSE}
+source(file = snakemake@params[["plotting"]])
+source(file = snakemake@params[["sce_functions"]])
+```
+
 ```{r}
-
-source(file = "../../source/plotting.R")
-source(file = "../../source/sce_functions.R")
-
 sce_input_path <- snakemake@input[["sce_input_path"]]
 
 sce_list <- list()
@@ -34,6 +38,13 @@ for(i in 1:length(sce_input_path)){
 
 lrdb <- readRDS(file = snakemake@input[["lrdb_input"]])
 ```
+
+```{r colors, message = FALSE}
+colors_path <- snakemake@params[["colors_path"]]
+source(file = snakemake@params[["colors"]])
+col_cts <- c(col_cts_hsc, col_cts_str)
+```
+
 
 # Check all Conditions
 
@@ -97,8 +108,8 @@ qcdf_list <- lapply(sce_list, function(sce){
   qcdf_counts$Species_ID <- sce$Species_ID
   qcdf_downsm$Species_ID <- sce$Species_ID
 
-  qcdf_counts$Age_ID <- sce$Age
-  qcdf_downsm$Age_ID <- sce$Age
+  qcdf_counts$Age_ID <- sce$Age_ID
+  qcdf_downsm$Age_ID <- sce$Age_ID
   
   qcdf_counts$Identity <- sce$Identity
   qcdf_downsm$Identity <- sce$Identity
@@ -116,6 +127,10 @@ for(i in qcdf_list){
   qcdf_gg <- rbind(qcdf_gg, i)
 }
 qcdf_gg <- as.data.frame(qcdf_gg)
+
+qcdf_gg$Age_ID <- factor(qcdf_gg$Age_ID, levels = names(col_age))
+qcdf_gg$Species_ID <- factor(qcdf_gg$Species_ID, levels = names(col_spc))
+qcdf_gg$Identity <- factor(qcdf_gg$Identity, levels = names(col_cts))
 ```
 
 # Show stats
@@ -124,7 +139,7 @@ qcdf_gg <- as.data.frame(qcdf_gg)
 
 ```{r, fig.height = 12}
 
-qcdf_gg_yng <- qcdf_gg[qcdf_gg$Age_ID == "young",]
+qcdf_gg_yng <- qcdf_gg[qcdf_gg$Age_ID == "yng",]
 ggplot(qcdf_gg_yng, aes(x = Status, y = sum,
                     color = Status, alpha = 0.5))+
   geom_jitter(size = 0.1, alpha = 50)+
@@ -168,7 +183,8 @@ ggplot(qcdf_gg_ds, aes(x = Species_ID, y = sum,
   ylim(limits = c(0, 120000))+
   scale_y_log10()+
   facet_grid(cols = vars(qcdf_gg_ds$Identity))+
-  theme(strip.text.x = element_text(angle = 90))
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_spc)
 ```
 
 ```{r, fig.width= 12}
@@ -182,7 +198,8 @@ ggplot(qcdf_gg_ds, aes(x = Age_ID, y = sum,
   ylim(limits = c(0, 120000))+
   scale_y_log10()+
   facet_grid(cols = vars(qcdf_gg_ds$Identity))+
-  theme(strip.text.x = element_text(angle = 90))
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Age", values = col_age)
 ```
 
 ```{r}
@@ -196,7 +213,8 @@ ggplot(qcdf_gg_ds, aes(x = Species_ID, y = sum,
   ylim(limits = c(0, 120000))+
   scale_y_log10()+
   facet_grid(cols = vars(qcdf_gg_ds$Age_ID))+
-  theme(strip.text.x = element_text(angle = 90))
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_spc)
 ```
 
 ```{r}
@@ -210,7 +228,8 @@ ggplot(qcdf_gg_ds, aes(x = Age_ID, y = sum,
   ylim(limits = c(0, 120000))+
   scale_y_log10()+
   facet_grid(cols = vars(qcdf_gg_ds$Species_ID))+
-  theme(strip.text.x = element_text(angle = 90))
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Age", values = col_age)
 ```
 
 ```{r}
@@ -224,7 +243,8 @@ ggplot(qcdf_gg_ds, aes(x = Species_ID, y = detected,
   theme(axis.text = element_text(angle = 90))+
   scale_y_log10()+
   facet_grid(cols = vars(qcdf_gg_ds$Age_ID))+
-  theme(strip.text.x = element_text(angle = 90))
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_spc)
 ```
 
 ```{r}
@@ -237,7 +257,8 @@ ggplot(qcdf_gg_ds, aes(x = Age_ID, y = detected,
   theme(axis.text = element_text(angle = 90))+
   scale_y_log10()+
   facet_grid(cols = vars(qcdf_gg_ds$Species_ID))+
-  theme(strip.text.x = element_text(angle = 90))
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Age", values = col_age)
 ```
 
 # How similar were they before?
@@ -254,7 +275,8 @@ ggplot(qcdf_gg_bf, aes(x = Species_ID, y = sum,
   ylim(limits = c(0, 120000))+
   scale_y_log10()+
   facet_grid(cols = vars(qcdf_gg_bf$Identity))+
-  theme(strip.text.x = element_text(angle = 90))
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_spc)
 ```
 
 ```{r, fig.width= 12}
@@ -268,7 +290,8 @@ ggplot(qcdf_gg_bf, aes(x = Age_ID, y = sum,
   ylim(limits = c(0, 120000))+
   scale_y_log10()+
   facet_grid(cols = vars(qcdf_gg_bf$Identity))+
-  theme(strip.text.x = element_text(angle = 90))
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Age", values = col_age)
 ```
 
 ```{r}
@@ -282,7 +305,8 @@ ggplot(qcdf_gg_bf, aes(x = Species_ID, y = sum,
   ylim(limits = c(0, 120000))+
   scale_y_log10()+
   facet_grid(cols = vars(qcdf_gg_bf$Age_ID))+
-  theme(strip.text.x = element_text(angle = 90))
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_spc)
 ```
 
 ```{r}
@@ -296,7 +320,8 @@ ggplot(qcdf_gg_bf, aes(x = Age_ID, y = sum,
   ylim(limits = c(0, 120000))+
   scale_y_log10()+
   facet_grid(cols = vars(qcdf_gg_bf$Species_ID))+
-  theme(strip.text.x = element_text(angle = 90))
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Age", values = col_age)
 ```
 
 ```{r}
@@ -309,7 +334,8 @@ ggplot(qcdf_gg_bf, aes(x = Species_ID, y = detected,
   theme(axis.text = element_text(angle = 90))+
   scale_y_log10()+
   facet_grid(cols = vars(qcdf_gg_bf$Age_ID))+
-  theme(strip.text.x = element_text(angle = 90))
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_spc)
 ```
 
 ```{r}
@@ -322,7 +348,8 @@ ggplot(qcdf_gg_bf, aes(x = Age_ID, y = detected,
   theme(axis.text = element_text(angle = 90))+
   scale_y_log10()+
   facet_grid(cols = vars(qcdf_gg_bf$Species_ID))+
-  theme(strip.text.x = element_text(angle = 90))
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Age", values = col_age)
 ```
 
 # Check LRDB and SCE Gene Symbol/Gene ID mapping

@@ -1,14 +1,13 @@
 #!/bin/python 
 
-# Prepping SCEs for CCI calculation
-
 import pandas as pd
 
-OUTPUT_BASE = config["paths"]["output_dir"]
-METADATA = pd.read_csv(config["metadata"]["table"])
+#-------------------------------------------------------------------------------
 
-# specific data and report output paths
-OUTPUT_DAT = OUTPUT_BASE + "/cci_objects/01_cci_preparation/"
+OUTPUT_BASE = config["base"] + config["data_paths"]["main"]
+OUTPUT_DAT = OUTPUT_BASE + "/cci_objects/01_cci_preparation"
+
+METADATA = pd.read_csv(config["base"] + config["metadata_paths"]["table"])
 
 def get_list(metadata, column):
   values = METADATA[column]
@@ -20,23 +19,26 @@ def get_list(metadata, column):
 species = get_list(metadata = METADATA, column = "Species_ID")
 age = get_list(metadata = METADATA, column = "Age_ID")
 
-targets = []
+#-------------------------------------------------------------------------------
 
+targets = []
 for s in species:
   for a in age:
-    targets = targets + [OUTPUT_DAT + "06_perc/perc_df_" + s + "_" + a]
-    targets = targets + [OUTPUT_DAT + "07_intm/interaction_matrix_" + s + "_" + a]
-    targets = targets + [OUTPUT_DAT + "07_intm/datasheet_" + s + "_" + a]
-    targets = targets + [OUTPUT_DAT + "08_rank/interaction_ranking_" + s + "_" + a]
-    targets = targets + [OUTPUT_DAT + "09_intl/interaction_list_" + s + "_" + a]
+    targets = targets + [OUTPUT_DAT + "/06_perc/perc_df_" + s + "_" + a]
+    targets = targets + [OUTPUT_DAT + "/07_intm/interaction_matrix_" + s + "_" + a]
+    targets = targets + [OUTPUT_DAT + "/07_intm/datasheet_" + s + "_" + a]
+    targets = targets + [OUTPUT_DAT + "/08_rank/interaction_ranking_" + s + "_" + a]
+    targets = targets + [OUTPUT_DAT + "/09_intl/interaction_list_" + s + "_" + a]
 
-#-------------------------------------------------------------------------------
+VALUES = config["values"]["04_cci_prep"]
+
+LRDB_OUT =  config["base"] + config["metadata_paths"]["lrdb_out"]
+
 #-------------------------------------------------------------------------------
 
 localrules: all  
 
-# define rules
-rule all: # must contain all possible output paths from all rules
+rule all: 
     input:
         targets
  
@@ -82,9 +84,9 @@ Output = dataframe containing % of expressing cells for each gene per identity
 
 rule get_perc_df:
     input:
-        sce_input = OUTPUT_DAT + "05_down/sce_{species}_{age}-05"
+        sce_input = OUTPUT_DAT + "/05_down/sce_{species}_{age}-05"
     output:
-        perc_df = OUTPUT_DAT + "06_perc/perc_df_{species}_{age}"
+        perc_df = OUTPUT_DAT + "/06_perc/perc_df_{species}_{age}"
     params:
         main_functions = "../../source/cci_functions_prep_main.R"
     script:
@@ -108,14 +110,14 @@ Main output = An interaction matrix with cols = cells and rows = interactions
 
 rule get_interaction_mat:
     input:
-        sce_input = OUTPUT_DAT + "05_down/sce_{species}_{age}-05",
+        sce_input = OUTPUT_DAT + "/05_down/sce_{species}_{age}-05",
         perc_df = rules.get_perc_df.output,
-        lrdb = config["metadata"]["path"] + "/CCI/lrdb"
+        lrdb = LRDB_OUT
     output:
-        interaction_mat = OUTPUT_DAT + "07_intm/interaction_matrix_{species}_{age}",
-        datasheet = OUTPUT_DAT + "07_intm/datasheet_{species}_{age}"
+        interaction_mat = OUTPUT_DAT + "/07_intm/interaction_matrix_{species}_{age}",
+        datasheet = OUTPUT_DAT + "/07_intm/datasheet_{species}_{age}"
     params:
-        min_perc = config["values"]["cci_calc"]["min_perc"],
+        min_perc = VALUES["min_perc"],
         main_functions = "../../source/cci_functions_prep_main.R",
         help_functions = "../../source/cci_functions_prep_help.R"
     script:
@@ -148,9 +150,9 @@ rule interaction_ranking:
         interaction_mat = rules.get_interaction_mat.output.interaction_mat,
         datasheet = rules.get_interaction_mat.output.datasheet
     output:
-        interaction_ranking = OUTPUT_DAT + "08_rank/interaction_ranking_{species}_{age}"
+        interaction_ranking = OUTPUT_DAT + "/08_rank/interaction_ranking_{species}_{age}"
     params:
-        top_level = config["values"]["cci_calc"]["top_level"],
+        top_level = VALUES["top_level"],
         main_functions = "../../source/cci_functions_prep_main.R"
     script:
         "scripts/08_interaction_ranking.R" 
@@ -168,9 +170,9 @@ data required for CCI analysis.
 rule interaction_list:
     input:
         interaction_ranking = rules.interaction_ranking.output,
-        lrdb = config["metadata"]["path"] + "/CCI/lrdb"
+        lrdb = LRDB_OUT
     output:
-        interaction_list = OUTPUT_DAT + "09_intl/interaction_list_{species}_{age}"
+        interaction_list = OUTPUT_DAT + "/09_intl/interaction_list_{species}_{age}"
     params:
         main_functions = "../../source/cci_functions_prep_main.R"
     script:

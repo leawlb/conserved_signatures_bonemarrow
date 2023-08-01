@@ -1,5 +1,5 @@
 ---
-title: "mapping_sample_report"
+title: "dmg_sample_report"
 author: "Lea Wölbert"
 date: '2023-03-31'
 output: html_document
@@ -14,24 +14,25 @@ Check if both mappings result in similar quality.
 
 #### Load libraries, source code 
 
-```{r load,  message = FALSE}
+```{r seed,  message = FALSE}
+set.seed(37)
+```
 
+```{r libraries,  message = FALSE}
 library(SingleCellExperiment, quietly = TRUE) 
 library(DropletUtils, quietly = TRUE) 
 library(tidyverse, quietly = TRUE) 
 library(scater, quietly = TRUE) 
-#library(scuttle, quietly = TRUE) 
 library(scran, quietly = TRUE) 
 library(pheatmap, quietly = TRUE) 
-library(biomaRt, quietly = TRUE) 
-
-set.seed(37)
+library(biomaRt, quietly = TRUE)
 ```
 
-Repeat various steps for visualiation.
+```{r source, message = FALSE}
+source(file = snakemake@params[["plotting"]])
+```
 
 ```{r load_objects, message = FALSE}
-
 sce_og <- readRDS(file = snakemake@input[["sce_input"]])
 sce_fg <- readRDS(file = snakemake@input[["sce_fg"]])
 dmg_list <- readRDS(file = snakemake@input[["dmg_list"]])
@@ -40,11 +41,6 @@ dmgs <- readRDS(file = snakemake@input[["dmgs"]])
 # set name for plots
 name_curr <- colData(sce_og)$Object_ID[1] # name to display in plots
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
-
-color_tables <- snakemake@params[["color_tables"]]
-
-source(file = "../../source/colors.R")
-source(file = "../../source/plotting.R")
 ```
 
 ```{r}

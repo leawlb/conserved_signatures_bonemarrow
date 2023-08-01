@@ -10,6 +10,9 @@ set.seed(37)
 # load objects
 sce <- readRDS(file = snakemake@input[["sce_input"]])
 
+stopifnot(!is.na(sce$annotation_cluster))
+stopifnot(!is.na(sce$cluster_louvain))
+
 #-------------------------------------------------------------------------------
 # aggregate all cells with the same combination of Object ID and cell type 
 agg <- aggregateAcrossCells(sce, id=colData(sce)[,c("Object_ID",

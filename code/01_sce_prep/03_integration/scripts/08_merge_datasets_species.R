@@ -3,12 +3,14 @@
 library(stringr)
 library(DropletUtils)
 set.seed(37)
-source(file = "../../source/sce_functions.R")
+
+source(file = snakemake@params[["functions"]])
 
 sce_input_path <- snakemake@input[["sce_input_path"]] # cell annotation output
 
 individuals <- snakemake@params[["individuals"]] # all objects to merge
 samples_to_remove <- snakemake@params[["samples_to_remove"]] # samples to remove from merging
+nr_hvgs <- snakemake@params[["nr_hvgs"]]
 
 species_curr <- snakemake@wildcards[["species"]]
 print(species_curr)
@@ -107,10 +109,8 @@ print(ncol(sce_merged_str))
 # dimensionality reduction
 
 set.seed(37)
-sce_merged_hsc <- reduce_dims(sce_merged_hsc,
-                              nr_hvgs = snakemake@params[["nr_hvgs"]])
-sce_merged_str <- reduce_dims(sce_merged_str,
-                              nr_hvgs = snakemake@params[["nr_hvgs"]])
+sce_merged_hsc <- reduce_dims(sce_merged_hsc, nr_hvgs = nr_hvgs)
+sce_merged_str <- reduce_dims(sce_merged_str, nr_hvgs = nr_hvgs)
 
 saveRDS(sce_merged_hsc, file = snakemake@output[["sce_output_hsc"]]) # merging output
 saveRDS(sce_merged_str, file = snakemake@output[["sce_output_str"]]) # merging output

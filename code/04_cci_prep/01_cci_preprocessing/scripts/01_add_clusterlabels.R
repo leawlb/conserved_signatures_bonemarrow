@@ -1,6 +1,5 @@
 
 library(SingleCellExperiment)
-
 set.seed(37)
 
 #-------------------------------------------------------------------------------
@@ -8,6 +7,17 @@ set.seed(37)
 sce <- readRDS(file = snakemake@input[["sce_input"]])
 sce_hsc <- readRDS(file = snakemake@input[["sce_hsc"]])
 sce_str <- readRDS(file = snakemake@input[["sce_str"]])
+
+coln_ident <- snakemake@params[["colname_identity"]]
+print(coln_ident)
+# making this modifiable in config causes sce$col to turn into colData(sce)[,colnames(colData(sce)) == col]
+print(unique(colData(sce_hsc)[,colnames(colData(sce_hsc)) == coln_ident]))
+print(unique(colData(sce_str)[,colnames(colData(sce_str)) == coln_ident]))
+
+stopifnot(!is.na(unique(colData(sce_hsc)[,colnames(colData(sce_hsc)) == coln_ident])))
+stopifnot(!is.na(unique(colData(sce_str)[,colnames(colData(sce_str)) == coln_ident])))
+
+#-------------------------------------------------------------------------------
 
 # adjust SCE objects
 # remove cells that are in the age merges but not the fraction merges
@@ -35,13 +45,13 @@ table(is.na(match(colnames(sce_hsc), colnames(sce_sep_hsc))))
 
 #-------------------------------------------------------------------------------
 
-# add information: ADD CELL TYPE INFO INTO IDENTITY SLOT
-# TODO: change to subcluster cell type once annotated
-print(levels(sce_str$annotation_cluster))
-print(levels(sce_hsc$annotation_cluster))
-sce_sep_str$Identity <- sce_str$annotation_cluster[
+# add information from stated coldata slot into IDENTITY slot
+print(levels(colData(sce_str)[,colnames(colData(sce_str)) == coln_ident]))
+print(levels(colData(sce_hsc)[,colnames(colData(sce_hsc)) == coln_ident]))
+
+sce_sep_str$Identity <- colData(sce_str)[,colnames(colData(sce_str)) == coln_ident][
   match(colnames(sce_sep_str), colnames(sce_str))]
-sce_sep_hsc$Identity <- sce_hsc$annotation_cluster[
+sce_sep_hsc$Identity <- colData(sce_hsc)[,colnames(colData(sce_hsc)) == coln_ident][
   match(colnames(sce_sep_hsc), colnames(sce_hsc))]
 
 sce_output <- cbind(sce_sep_str, sce_sep_hsc)

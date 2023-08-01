@@ -11,19 +11,19 @@ knitr::opts_chunk$set(echo = TRUE)
 
 #### Load libraries, source code 
 
-```{r load,  message = FALSE}
+```{r seed,  message = FALSE}
 set.seed(37)
 ```
 
-```{r}
+```{r load, message = FALSE}
+library(scran)
+```
 
-#knitr::knit_exit()
-
-# load sources
-color_tables <- snakemake@params[["color_tables"]]
-source(file = "../../source/colors.R")
+```{r sources, message = FALSE}
 source(file = "../../source/plotting.R")
-source(file = "../../source/sce_functions.R")
+```
+
+```{r}
 
 #load SCE objects
 ident_pair_info <- readRDS(file = snakemake@input[["ident_pair_info"]])
@@ -37,58 +37,35 @@ name <- paste0(species_curr, "_", age_curr)
 print(name)
 ```
 
-Preliminary colors
-
-```{r}
-
-col_recs <- c("HSCs" = "black",
-              "Early MPPs" = "grey35",
-              "Late MPPs" = "grey60",
-              "Myeloid progs." = "red",
-               "Eo/Baso/Mast" = "gold",
-              "Mk/Ery progs." = "orchid1",
-              "Mk progs." = "darkred",
-              "Lymphoid" = "wheat2")
-
-col_emis <- c("Mesenchymal progs." = "darkgreen",
-              "CARs" = "seagreen2",
-              "Fibroblasts" = "chartreuse4",
-              "Pericytes/Smooth Muscle" = "cyan",
-              "Arteriolar/Capillary ECs" = "skyblue2",
-              "Arteriolar/Mixed ECs" = "royalblue3",
-              "Sinusoidal ECs" = "midnightblue")
-
+```{r colors, message = FALSE}
+colors_path <- snakemake@params[["colors_path"]]
+source(file = "../../source/colors.R")
+col_cts <- c(col_cts_hsc, col_cts_str)
 ```
 
-```{r}
+Prepare data
 
+```{r}
 nr_cells <- as.data.frame(table(sce$Identity))
 colnames(nr_cells) <- c("Identity", "nr_cells")
 nr_cells[order(nr_cells$nr_cells, decreasing = TRUE),]
-
 ```
-
 
 # Cell type pairs - Cell type pair interactome
 
 ```{r}
-
 unique(ident_pair_info$overview$emitter)
-
 ```
-
-
-
 
 ```{r}
 
 ident_pair_info$overview$receiver <- factor(
   ident_pair_info$overview$receiver,
-  levels = names(col_recs)[names(col_recs) %in% ident_pair_info$overview$receiver])
+  levels = names(col_cts_hsc)[names(col_cts_hsc) %in% ident_pair_info$overview$receiver])
 
 ident_pair_info$overview$emitter <- factor(
   ident_pair_info$overview$emitter,
-  levels = names(col_emis)[names(col_emis) %in% ident_pair_info$overview$emitter])
+  levels = names(col_cts_str)[names(col_cts_str) %in% ident_pair_info$overview$emitter])
 
 ggdf <- ident_pair_info$overview
 ggdf$nr_cells_emitter <- nr_cells$nr_cells[match(ggdf$emitter, nr_cells$Identity)]
@@ -99,7 +76,7 @@ ggplot(ggdf,
   ggbeeswarm::geom_quasirandom()+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
-  scale_color_manual("Receivers", values = col_recs)+
+  scale_color_manual("Receivers", values = col_cts_hsc)+
   ylim(c(0, max(ggdf$nr_ints)))+
   ggtitle(name)+
   xlab("Emitters")+
@@ -110,7 +87,7 @@ ggplot(ggdf,
   ggbeeswarm::geom_quasirandom()+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
-  scale_color_manual("Emitters", values = col_emis)+
+  scale_color_manual("Emitters", values = col_cts_str)+
   ylim(c(0, max(ggdf$nr_ints)))+
   ggtitle(name)+
   xlab("Receivers")+
@@ -124,7 +101,7 @@ ggplot(ggdf,
   geom_col()+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
-  scale_fill_manual("Receivers", values = col_recs)+
+  scale_fill_manual("Receivers", values = col_cts_hsc)+
   ylim(c(0, max(ggdf$nr_ints)))+
   ggtitle(name)+
   xlab("Cell type pairs")+
@@ -135,7 +112,7 @@ ggplot(ggdf,
   geom_col()+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
-  scale_fill_manual("Emitters", values = col_emis)+
+  scale_fill_manual("Emitters", values = col_cts_str)+
   ylim(c(0, max(ggdf$nr_ints)))+
   ggtitle(name)+
   xlab("Cell type pairs")+
@@ -201,7 +178,7 @@ ggplot(ggdf, aes(x = nr_cells_emitter, y = nr_ints, color = emitter))+
   theme_classic()+
   ylim(c(0, (max(ggdf$nr_ints)+20)))+
   xlim(c(0, (max(ggdf$nr_cells_emitter)+20)))+
-  scale_color_manual("Emitters", values = col_emis)+
+  scale_color_manual("Emitters", values = col_cts_str)+
   ylab("Nr of interactions per cell type pair")+
   theme(legend.position = "none")
 
@@ -218,7 +195,7 @@ ggplot(ggdf, aes(x = nr_cells_receiver, y = nr_ints, color = receiver))+
   theme_classic()+
   ylim(c(0, (max(ggdf$nr_ints)+20)))+
   xlim(c(0, (max(ggdf$nr_cells_receiver)+100)))+
-  scale_color_manual("Receivers", values = col_recs)+
+  scale_color_manual("Receivers", values = col_cts_hsc)+
   ylab("Nr of interactions per cell type pair")+
   theme(legend.position = "none")
 
@@ -271,10 +248,10 @@ ggplot(ggdf,
 ggdf2 <- ident_info$overview
 ggdf2$nr_cells <- nr_cells$nr_cells[match(ggdf2$identity, nr_cells$Identity)]
 
-all_cts <- c(col_recs, col_emis)
+col_cts <- c(col_cts_hsc, col_cts_str)
 
 ggdf2$identity <- factor(
-  ggdf2$identity, levels = names(all_cts)[names(all_cts) %in% ggdf2$identity])
+  ggdf2$identity, levels = names(col_cts)[names(col_cts) %in% ggdf2$identity])
 
 ```
 
@@ -284,7 +261,7 @@ ggplot(ggdf2, aes(x = identity, y = nr_ints, fill = identity))+
   geom_col()+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
-  scale_fill_manual("Cell types", values = all_cts)+
+  scale_fill_manual("Cell types", values = col_cts)+
   ylim(c(0, max(ggdf2$nr_ints)))+
   ggtitle(name)+
   xlab("Cell types")+
@@ -296,7 +273,7 @@ ggplot(ggdf2,
   geom_col()+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
-  scale_fill_manual("Cell types", values = all_cts)+
+  scale_fill_manual("Cell types", values = col_cts)+
   ylim(c(0, max(ggdf2$nr_ints)))+
   ggtitle(name)+
   xlab("Cell types")+
@@ -320,7 +297,7 @@ ggplot(ggdf2, aes(x = nr_cells, y = nr_ints, color = identity))+
   theme_classic()+
   ylim(c(0, (max(ggdf2$nr_ints)+20)))+
   xlim(c(0, (max(ggdf2$nr_cells)+20)))+
-  scale_color_manual("Cell types", values = all_cts)+
+  scale_color_manual("Cell types", values = col_cts)+
   ylab("Nr of interactions per cell type")+
   ggtitle(name)
 
@@ -329,7 +306,7 @@ ggplot(ggdf2, aes(x = nr_cells, y = nr_ints))+
   theme_classic()+
   ylim(c(0, (max(ggdf2$nr_ints)+20)))+
   xlim(c(0, (max(ggdf2$nr_cells)+20)))+
-  scale_color_manual("Cell types", values = all_cts)+
+  scale_color_manual("Cell types", values = col_cts)+
   ylab("Nr of interactions per cell type")+
   geom_smooth(method = lm)+
   ggtitle(name)
@@ -339,7 +316,7 @@ ggplot(ggdf2[ggdf2$assignment == "emitter",], aes(x = nr_cells, y = nr_ints))+
   theme_classic()+
   ylim(c(0, (max(ggdf2[ggdf2$assignment == "emitter",]$nr_ints)+20)))+
   xlim(c(0, (max(ggdf2[ggdf2$assignment == "emitter",]$nr_cells)+20)))+
-  scale_color_manual("Emitters", values = col_emis)+
+  scale_color_manual("Emitters", values = col_cts_str)+
   ylab("Nr of interactions per emitter")+
   geom_smooth(method = lm)+
   ggtitle(name)
@@ -349,7 +326,7 @@ ggplot(ggdf2[ggdf2$assignment == "receiver",], aes(x = nr_cells, y = nr_ints))+
   theme_classic()+
   ylim(c(0, (max(ggdf2[ggdf2$assignment == "receiver",]$nr_ints)+20)))+
   xlim(c(0, (max(ggdf2[ggdf2$assignment == "receiver",]$nr_cells)+20)))+
-  scale_color_manual("Receivers", values = col_recs)+
+  scale_color_manual("Receivers", values = col_cts_hsc)+
   ylab("Nr of interactions per receiver")+
   geom_smooth(method = lm)+
   ggtitle(name)
@@ -364,7 +341,7 @@ ggdf3 <- ident_nrlrs_info
 ggdf3$nr_cells <- nr_cells$nr_cells[match(ggdf3$identity, nr_cells$Identity)]
 
 ggdf3$identity <- factor(
-  ggdf3$identity, levels = names(all_cts)[names(all_cts) %in% ggdf3$identity])
+  ggdf3$identity, levels = names(col_cts)[names(col_cts) %in% ggdf3$identity])
 
 ```
 
@@ -374,7 +351,7 @@ ggplot(ggdf3, aes(x = identity, y = nr_lrs, fill = identity))+
   geom_col()+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
-  scale_fill_manual("Cell types", values = all_cts)+
+  scale_fill_manual("Cell types", values = col_cts)+
   ylim(c(0, max(ggdf3$nr_lrs)))+
   ggtitle(name)+
   xlab("Cell types")+
@@ -386,7 +363,7 @@ ggplot(ggdf3,
   geom_col()+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
-  scale_fill_manual("Cell types", values = all_cts)+
+  scale_fill_manual("Cell types", values = col_cts)+
   ylim(c(0, max(ggdf3$nr_lrs)))+
   ggtitle(name)+
   xlab("Cell types")+
@@ -410,7 +387,7 @@ ggplot(ggdf3, aes(x = nr_cells, y = nr_lrs, color = identity))+
   theme_classic()+
   ylim(c(0, (max(ggdf3$nr_lrs)+20)))+
   xlim(c(0, (max(ggdf3$nr_cells)+20)))+
-  scale_color_manual("Cell types", values = all_cts)+
+  scale_color_manual("Cell types", values = col_cts)+
   ggtitle(name)+
   ylab("Nr of Ligs/Recs per cell type")
 ```
@@ -419,13 +396,13 @@ ggplot(ggdf3, aes(x = nr_cells, y = nr_lrs, color = identity))+
 
 ggdf3_emis <- ggdf3[ggdf3$assignment == "emitter",]
 ggdf3_emis$identity <- factor(
-  ggdf3_emis$identity, levels = names(all_cts)[names(all_cts) %in% ggdf3_emis$identity])
+  ggdf3_emis$identity, levels = names(col_cts)[names(col_cts) %in% ggdf3_emis$identity])
 
 ggplot(ggdf3_emis, aes(x = identity, y = nr_lrs, fill = identity))+
   geom_col()+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
-  scale_fill_manual("Cell types", values = all_cts)+
+  scale_fill_manual("Cell types", values = col_cts)+
   ylim(c(0, max(ggdf3_emis$nr_lrs)))+
   ggtitle(name)+
   xlab("Cell types")+
@@ -437,7 +414,7 @@ ggplot(ggdf3_emis,
   geom_col()+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
-  scale_fill_manual("Cell types", values = all_cts)+
+  scale_fill_manual("Cell types", values = col_cts)+
   ylim(c(0, max(ggdf3_emis$nr_lrs)))+
   ggtitle(name)+
   xlab("Cell types")+
@@ -461,7 +438,7 @@ ggplot(ggdf3_emis, aes(x = nr_cells, y = nr_lrs, color = identity))+
   theme_classic()+
   ylim(c(0, (max(ggdf3_emis$nr_lrs)+20)))+
   xlim(c(0, (max(ggdf3_emis$nr_cells)+20)))+
-  scale_color_manual("Cell types", values = all_cts)+
+  scale_color_manual("Cell types", values = col_cts)+
   ylab("Nr of Ligs per cell type")+
   ggtitle(name)
 
@@ -479,13 +456,13 @@ ggplot(ggdf3_emis, aes(x = nr_cells, y = nr_lrs))+
 
 ggdf3_recs <- ggdf3[ggdf3$assignment == "receiver",]
 ggdf3_recs$identity <- factor(
-  ggdf3_recs$identity, levels = names(all_cts)[names(all_cts) %in% ggdf3_recs$identity])
+  ggdf3_recs$identity, levels = names(col_cts)[names(col_cts) %in% ggdf3_recs$identity])
 
 ggplot(ggdf3_recs, aes(x = identity, y = nr_lrs, fill = identity))+
   geom_col()+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
-  scale_fill_manual("Cell types", values = all_cts)+
+  scale_fill_manual("Cell types", values = col_cts)+
   ylim(c(0, max(ggdf3_recs$nr_lrs)))+
   ggtitle(name)+
   xlab("Cell types")+
@@ -497,7 +474,7 @@ ggplot(ggdf3_recs,
   geom_col()+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
-  scale_fill_manual("Cell types", values = all_cts)+
+  scale_fill_manual("Cell types", values = col_cts)+
   ylim(c(0, max(ggdf3_recs$nr_lrs)))+
   ggtitle(name)+
   xlab("Cell types")+
@@ -521,7 +498,7 @@ ggplot(ggdf3_recs, aes(x = nr_cells, y = nr_lrs, color = identity))+
   theme_classic()+
   ylim(c(0, (max(ggdf3_recs$nr_lrs)+20)))+
   xlim(c(0, (max(ggdf3_recs$nr_cells)+20)))+
-  scale_color_manual("Cell types", values = all_cts)+
+  scale_color_manual("Cell types", values = col_cts)+
   ylab("Nr of Recs per cell type")+
   ggtitle(name)
 
@@ -540,7 +517,7 @@ ggplot(ggdf3_recs, aes(x = nr_cells, y = nr_lrs))+
 ```{r}
 
 int_comp_df <- data.frame()
-for(i in names(all_cts[names(all_cts) %in% ident_nrlrs_info$identity])){
+for(i in names(col_cts[names(col_cts) %in% ident_nrlrs_info$identity])){
   
   print(i)
   
@@ -574,7 +551,7 @@ int_comp_df$mode <- factor(int_comp_df$mode,
                                       "CT interactome"))
 
 int_comp_df$identity <- factor(
-  int_comp_df$identity, levels = names(all_cts[names(all_cts) %in% int_comp_df$identity]))
+  int_comp_df$identity, levels = names(col_cts[names(col_cts) %in% int_comp_df$identity]))
 
 max_all <- 350 
 
@@ -587,8 +564,8 @@ ggplot(int_comp_df, aes(x = mode, y = nr, color = identity))+
   theme_classic()+
   ylim(c(0, (max_all + 20)))+
   facet_grid(cols = vars(int_comp_df$identity))+
-  scale_color_manual("Cell type", values = all_cts[
-    names(all_cts) %in% int_comp_df$identity])+
+  scale_color_manual("Cell type", values = col_cts[
+    names(col_cts) %in% int_comp_df$identity])+
   theme(axis.title.x = element_blank(),
         axis.text.x = element_text(angle = 90),
         strip.text.x = element_text(angle = 90),
@@ -601,8 +578,8 @@ ggplot(int_comp_df, aes(x = identity, y = nr, color = identity))+
   theme_classic()+
   ylim(c(0, (max_all + 20)))+
   facet_grid(cols = vars(int_comp_df$mode))+
-  scale_color_manual("Cell type", values = all_cts[
-    names(all_cts) %in% int_comp_df$identity])+
+  scale_color_manual("Cell type", values = col_cts[
+    names(col_cts) %in% int_comp_df$identity])+
   theme(axis.title.x = element_blank(),
         axis.text.x = element_text(angle = 90),
         strip.text.x = element_text(angle = 90))+

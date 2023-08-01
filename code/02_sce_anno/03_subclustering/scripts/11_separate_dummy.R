@@ -52,6 +52,8 @@ for(i in 1:length(levels(sce_hsc$annotation_subcluster))){
 }
 print("finished HSCs")
 
+print(levels(sce_str$annotation_subcluster))
+print(sce_path_out_str)
 names(sce_path_out_str) <- c(1:length(sce_path_out_str))
 for(i in 1:length(levels(sce_str$annotation_subcluster))){
   print(levels(sce_str$annotation_subcluster)[i])

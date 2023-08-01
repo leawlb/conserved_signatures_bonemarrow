@@ -13,6 +13,10 @@ Report on integrated datasets.
 
 #### Load libraries, source code, objects
 
+```{r seed,  message = FALSE}
+set.seed(37)
+```
+
 ```{r load,  message = FALSE}
 library(SingleCellExperiment, quietly = TRUE) 
 library(DropletUtils, quietly = TRUE) 
@@ -20,32 +24,36 @@ library(tidyverse, quietly = TRUE)
 library(scater, quietly = TRUE) 
 library(scuttle, quietly = TRUE) 
 library(scran, quietly = TRUE) 
-
-color_tables <- snakemake@params[["color_tables"]]
-source(file = "../../source/sce_functions.R")
-source(file = "../../source/plotting.R")
-source(file = "../../source/colors.R")
-
-set.seed(37)
 ```
 
-```{r load_code, message = FALSE}
+```{r source,  message = FALSE}
+source(snakemake@params[["functions"]])
+source(snakemake@params[["plotting"]])
+```
+
+```{r load_objects, message = FALSE}
 sce_input <- readRDS(file = snakemake@input[["sce_input"]])
 sce_input
 ```
 
+```{r colors, message = FALSE}
+colors_ref_path <- snakemake@params[["colors_ref_path"]]
+source(snakemake@params[["colors"]])
+```
+
 # UMAPs
+
 
 ```{r}
 
 make_plots <- function(sce, title){
   
-  col_cts_baccin_clst <- col_cts[match(unique(sce$baccin_celltype_scmapclust),
-                                       names(col_cts))]
-  col_cts_dahlin_clst <- col_cts[match(unique(sce$dahlin_celltype_scmapclust), 
-                                       names(col_cts))]
-  col_cts_dolgalev_clst <- col_cts[match(unique(sce$dolgalev_celltype_scmapclust),
-                                         names(col_cts))]
+  col_cts_baccin_clst <- col_cts_ref[match(unique(sce$baccin_celltype_scmapclust),
+                                       names(col_cts_ref))]
+  col_cts_dahlin_clst <- col_cts_ref[match(unique(sce$dahlin_celltype_scmapclust), 
+                                       names(col_cts_ref))]
+  col_cts_dolgalev_clst <- col_cts_ref[match(unique(sce$dolgalev_celltype_scmapclust),
+                                         names(col_cts_ref))]
   
   if(title == "species"){
     title <- paste(title, sce$Species_ID[1])

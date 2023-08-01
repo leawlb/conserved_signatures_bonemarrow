@@ -13,6 +13,10 @@ Report for clustering as part of manual annotation at fraction level.
 
 #### Load libraries, source code 
 
+```{r seed,  message = FALSE}
+set.seed(37)
+```
+
 ```{r load,  message = FALSE}
 library(DropletUtils, quietly = TRUE) 
 library(scater, quietly = TRUE) 
@@ -23,22 +27,23 @@ library(dendextend, quietly = TRUE)
 library(pheatmap, quietly = TRUE) 
 library(bluster, quietly = TRUE)
 library(RColorBrewer, quietly = TRUE)
-set.seed(37)
 ```
 
-```{r}
+```{r source, message = FALSE}
+source(file =  snakemake@params[["functions"]])
+source(file =  snakemake@params[["plotting"]])
+```
+
+```{r load_objects}
 sce_inp <- readRDS(file = snakemake@input[["sce_input"]])
 sce_l <- readRDS(file = snakemake@input[["sce_l"]])
 fraction_curr <- sce_inp$Fraction_ID[1]
-
-color_tables <- snakemake@params[["color_tables"]]
-
 ```
 
-```{r}
-source(file = "../../source/colors.R")
-source(file = "../../source/plotting.R")
-source(file = "../../source/sce_functions.R")
+```{r colors, meassage = FALSE}
+colors_ref_path <- snakemake@params[["colors_ref_path"]]
+colors_path <- snakemake@params[["colors_path"]]
+source(snakemake@params[["colors"]])
 ```
 
 ```{r}
@@ -47,27 +52,25 @@ sce_inp <- factor_reference_cts(sce_inp)
 sce_l <- factor_reference_cts(sce_l)
 
 if(fraction_curr == "hsc"){
-  col_cts["unassigned"] <- "honeydew2"
+  col_cts_ref["unassigned"] <- "honeydew2"
   col_num <- c(col_num, "DOWNSAMPLED" = "grey90")
 }else if(fraction_curr == "str"){
-  col_cts["unassigned"] <- "mistyrose3"
+  col_cts_ref["unassigned"] <- "mistyrose3"
 }
 
-col_cts_baccin <- col_cts[match(levels(sce_l$baccin_celltype_scmapclust), 
-                                names(col_cts))]
-col_cts_dahlin <- col_cts[match(levels(sce_l$dahlin_celltype_scmapclust), 
-                                names(col_cts))]
-col_cts_dolgalev <- col_cts[match(levels(sce_l$dolgalev_celltype_scmapclust),
-                                  names(col_cts))]
+col_cts_baccin <- col_cts_ref[match(levels(sce_l$baccin_celltype_scmapclust), 
+                                names(col_cts_ref))]
+col_cts_dahlin <- col_cts_ref[match(levels(sce_l$dahlin_celltype_scmapclust), 
+                                names(col_cts_ref))]
+col_cts_dolgalev <- col_cts_ref[match(levels(sce_l$dolgalev_celltype_scmapclust),
+                                  names(col_cts_ref))]
 
 col_batch_exp_day <- col_alp[names(col_alp) %in% sce_l$Batch_exp_day]
-col_batch_seq <- col_num[names(col_num) %in% sce_l$Batch_sequencing]
-col_ann_age <- col_ann[names(col_ann) %in% sce_l$Age_ID]
-col_ann_fraction <- col_ann[names(col_ann) %in% sce_l$Fraction_ID]
-col_species <- col_spc[names(col_spc) %in% sce_l$Species_ID]
+col_age <- col_age[names(col_age) %in% sce_l$Age_ID]
+col_frc <- col_frc[names(col_frc) %in% sce_l$Fraction_ID]
+col_spc <- col_spc[names(col_spc) %in% sce_l$Species_ID]
 
 col_clust_l <- col_num[names(col_num) %in% sce_l$cluster_louvain]
-
 ```
 
 Annotations for reference.
@@ -233,8 +236,8 @@ plot3a <- ggplot(ggdf, aes(x = cluster_louvain,
                           fill=Age_ID, color = Age_ID))+
   geom_bar(position = "stack") + 
   theme_classic()+
-  scale_fill_manual(name = "Age", values = col_ann_age)+
-  scale_color_manual(name = "Age", values = col_ann_age)+
+  scale_fill_manual(name = "Age", values = col_age)+
+  scale_color_manual(name = "Age", values = col_age)+
   theme(axis.text.x = element_text(angle = 90))+
   ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))
 
@@ -242,8 +245,8 @@ plot3b <- ggplot(ggdf, aes(x = cluster_louvain, fill=Age_ID,
                           color = Age_ID))+
   geom_bar(position = "fill") + 
   theme_classic()+
-  scale_fill_manual(name = "Age", values = col_ann_age)+
-  scale_color_manual(name = "Age", values = col_ann_age)+
+  scale_fill_manual(name = "Age", values = col_age)+
+  scale_color_manual(name = "Age", values = col_age)+
   theme(axis.text.x = element_text(angle = 90))+
   ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))
 
@@ -273,8 +276,8 @@ plot5a <- ggplot(ggdf, aes(x = cluster_louvain,
                           fill=Species_ID, color = Species_ID))+
   geom_bar(position = "stack") + 
   theme_classic()+
-  scale_fill_manual(name = "Age", values = col_species)+
-  scale_color_manual(name = "Age", values = col_species)+
+  scale_fill_manual(name = "Age", values = col_spc)+
+  scale_color_manual(name = "Age", values = col_spc)+
   theme(axis.text.x = element_text(angle = 90))+
   ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))+
   theme(axis.title.y = element_blank())
@@ -283,8 +286,8 @@ plot5b <- ggplot(ggdf, aes(x = cluster_louvain, fill=Species_ID,
                           color = Species_ID))+
   geom_bar(position = "fill") + 
   theme_classic()+
-  scale_fill_manual(name = "Age", values = col_species)+
-  scale_color_manual(name = "Age", values = col_species)+
+  scale_fill_manual(name = "Age", values = col_spc)+
+  scale_color_manual(name = "Age", values = col_spc)+
   theme(axis.text.x = element_text(angle = 90))+
   ggtitle(paste0(fraction_curr, sce_l$k_louvain[1]))+
   theme(axis.title.y = element_blank())

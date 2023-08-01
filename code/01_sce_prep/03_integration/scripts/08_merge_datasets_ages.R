@@ -1,15 +1,16 @@
 #-------------------------------------------------------------------------------
 
-print("inside")
 library(stringr)
 library(DropletUtils)
 set.seed(37)
-source(file = "../../source/sce_functions.R")
+
+source(file = snakemake@params[["functions"]])
 
 sce_input_path <- snakemake@input[["sce_input_path"]] # cell annotation output
 
 individuals <- snakemake@params[["individuals"]] # all objects to merge
 samples_to_remove <- snakemake@params[["samples_to_remove"]] # samples to remove from merging
+nr_hvgs <- snakemake@params[["nr_hvgs"]]
 
 species_curr <- snakemake@wildcards[["species"]]
 print(species_curr)
@@ -98,10 +99,8 @@ sce_yng_merged <- merge_lists(sce_list_yng)
 # dimensionality reduction
 
 set.seed(37)
-sce_old_merged <- reduce_dims(sce_old_merged,
-                              nr_hvgs = snakemake@params[["nr_hvgs"]])
-sce_yng_merged <- reduce_dims(sce_yng_merged,
-                              nr_hvgs = snakemake@params[["nr_hvgs"]])
+sce_old_merged <- reduce_dims(sce_old_merged, nr_hvgs = nr_hvgs)
+sce_yng_merged <- reduce_dims(sce_yng_merged, nr_hvgs = nr_hvgs)
 
 test_merged <- function(sce_merged){
   print(unique(sce_merged$Age_ID))

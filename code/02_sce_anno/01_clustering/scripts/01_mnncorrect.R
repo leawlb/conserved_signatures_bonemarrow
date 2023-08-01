@@ -2,7 +2,7 @@
 
 library(DropletUtils, quietly = TRUE)
 library(batchelor, quietly = TRUE)
-source(file = "../../source/sce_functions.R")
+source(file = snakemake@params[["functions"]])
 set.seed(37)
 
 #-------------------------------------------------------------------------------

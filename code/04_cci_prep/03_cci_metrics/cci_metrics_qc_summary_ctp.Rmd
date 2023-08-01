@@ -11,20 +11,19 @@ knitr::opts_chunk$set(echo = TRUE)
 
 #### Load libraries, source code 
 
-```{r load,  message = FALSE}
+```{r seed, message = FALSE}
 set.seed(37)
 ```
 
-```{r}
+```{r load, message = FALSE}
+library(scran)
+```
 
-#knitr::knit_exit()
-
-# load sources
-color_tables <- snakemake@params[["color_tables"]]
-source(file = "../../source/colors.R")
+```{r sources, message = FALSE}
 source(file = "../../source/plotting.R")
-source(file = "../../source/sce_functions.R")
+```
 
+```{r load_objects}
 #load SCE objects
 ident_pair_info_p <- snakemake@input[["ident_pair_info"]]
 ident_info_p <- snakemake@input[["ident_info"]]
@@ -44,6 +43,14 @@ for(i in 1:length(ident_pair_info_p)){
 }
 
 ```
+
+```{r colors, message = FALSE}
+colors_path <- snakemake@params[["colors_path"]]
+source(file = "../../source/colors.R")
+col_cts <- c(col_cts_hsc, col_cts_str)
+```
+
+Prepare data
 
 ```{r}
 
@@ -65,36 +72,6 @@ head(nrlrso_df)
 ipio_df$name <- paste0(ipio_df$species, "_", ipio_df$age)
 idio_df$name <- paste0(idio_df$species, "_", idio_df$age)
 nrlrso_df$name <- paste0(nrlrso_df$species, "_", nrlrso_df$age)
-
-```
-
-Preliminary colors
-
-```{r}
-
-col_recs <- c("HSCs" = "black",
-              "Early MPPs" = "grey35",
-              "Late MPPs" = "grey60",
-              "Myeloid progs." = "red",
-               "Eo/Baso/Mast" = "gold",
-              "Mk/Ery progs." = "orchid1",
-              "Mk progs." = "darkred",
-              "Lymphoid" = "wheat2")
-
-col_emis <- c("Mesenchymal progs." = "darkgreen",
-              "CARs" = "seagreen2",
-              "Fibroblasts" = "chartreuse4",
-              "Pericytes/Smooth Muscle" = "cyan",
-              "Arteriolar/Capillary ECs" = "skyblue2",
-              "Arteriolar/Mixed ECs" = "royalblue3",
-              "Sinusoidal ECs" = "midnightblue")
-
-all_cts <- c(col_recs, col_emis)
-
-col_age <- c("yng" = "black",
-             "old" = "grey70")
-
-col_species <- col_spc
 
 ```
 
@@ -185,18 +162,18 @@ Factor cell types, ages, and species
 ```{r}
 
 # cell types
-ipio_df$emitter <- factor(ipio_df$emitter, levels = names(all_cts)[
-  names(all_cts) %in% ipio_df$emitter])
-ipio_df$receiver <- factor(ipio_df$receiver, levels = names(all_cts)[
-  names(all_cts) %in% ipio_df$receiver])
+ipio_df$emitter <- factor(ipio_df$emitter, levels = names(col_cts)[
+  names(col_cts) %in% ipio_df$emitter])
+ipio_df$receiver <- factor(ipio_df$receiver, levels = names(col_cts)[
+  names(col_cts) %in% ipio_df$receiver])
 
-idio_df$identity <- factor(idio_df$identity, levels = names(all_cts)[
-  names(all_cts) %in% idio_df$identity])
-nrlrso_df$identity <- factor(nrlrso_df$identity, levels = names(all_cts)[
-  names(all_cts) %in% nrlrso_df$identity])
+idio_df$identity <- factor(idio_df$identity, levels = names(col_cts)[
+  names(col_cts) %in% idio_df$identity])
+nrlrso_df$identity <- factor(nrlrso_df$identity, levels = names(col_cts)[
+  names(col_cts) %in% nrlrso_df$identity])
 
-qcdf_gg$Identity <- factor(qcdf_gg$Identity, levels = names(all_cts)[
-  names(all_cts) %in% qcdf_gg$Identity])
+qcdf_gg$Identity <- factor(qcdf_gg$Identity, levels = names(col_cts)[
+  names(col_cts) %in% qcdf_gg$Identity])
 
 # age
 ipio_df$age <- factor(ipio_df$age, levels = c("yng", "old"))
@@ -243,7 +220,7 @@ ggplot(ipio_df,
   geom_boxplot(alpha = 0, color = "grey25")+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
-  scale_color_manual("Receivers", values = col_recs)+
+  scale_color_manual("Receivers", values = col_cts_hsc)+
   ylim(c(0, max(ipio_df$nr_ints)))+
   xlab("Emitters")+
   ylab("Nr of interactions per cell type pair")+
@@ -299,7 +276,7 @@ ggplot(ipio_df,
   geom_point()+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
-  scale_color_manual("Species", values = col_species)+
+  scale_color_manual("Species", values = col_spc)+
   xlab("Emitters")+
   ylab("nr of cells/emitter")+
   ggtitle("all conditions")
@@ -326,7 +303,7 @@ ggplot(ipio_df,
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90),
         strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Species", values = col_species)+
+  scale_color_manual("Species", values = col_spc)+
   ylim(c(0, max(ipio_df$nr_ints)))+
   xlab("Emitters")+
   ylab("Nr of interactions per cell type pair")+
@@ -340,7 +317,7 @@ ggplot(ipio_df,
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90),
         strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Receiver", values = col_recs)+
+  scale_color_manual("Receiver", values = col_cts_hsc)+
   ylim(c(0, max(ipio_df$nr_ints)))+
   xlab("Emitters")+
   ylab("Nr of interactions per cell type pair")+
@@ -502,7 +479,7 @@ ggplot(ipio_df,
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90),
         strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Receiver", values = col_recs)+
+  scale_color_manual("Receiver", values = col_cts_hsc)+
   ylim(c(0, max(ipio_df$nr_ints)))+
   xlab("Emitters")+
   ylab("Nr of interactions per cell type pair")+
@@ -516,7 +493,7 @@ ggplot(ipio_df,
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90),
         strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Species", values = col_species)+
+  scale_color_manual("Species", values = col_spc)+
   ylim(c(0, max(ipio_df$nr_ints)))+
   xlab("Emitters")+
   ylab("Nr of interactions per cell type pair")+
@@ -631,7 +608,7 @@ ggplot(ipio_df,
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90),
         strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Species", values = col_species)+
+  scale_color_manual("Species", values = col_spc)+
   xlab("Emitters")+
   ylab("Nr of cells/emi")+
   facet_grid(cols = vars(ipio_df$age))+
@@ -663,7 +640,7 @@ ggplot(ipio_df,
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90),
         strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Receiver", values = col_recs)+
+  scale_color_manual("Receiver", values = col_cts_hsc)+
   ylim(c(0, max(ipio_df$nr_ints)))+
   xlab("Emitters")+
   ylab("Nr of interactions per cell type pair")+
@@ -778,7 +755,7 @@ ggplot(ipio_df,
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90),
         strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Species", values = col_species)+
+  scale_color_manual("Species", values = col_spc)+
   xlab("Emitters")+
   ylab("Nr of cells/emi")+
   facet_grid(cols = vars(ipio_df$name))+
@@ -797,7 +774,7 @@ ggplot(ipio_df,
   geom_boxplot(alpha = 0, color = "grey25")+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
-  scale_color_manual("Emitter", values = col_emis)+
+  scale_color_manual("Emitter", values = col_cts_str)+
   ylim(c(0, max(ipio_df$nr_ints)))+
   xlab("Receivers")+
   ylab("Nr of interactions per cell type pair")+
@@ -853,7 +830,7 @@ ggplot(ipio_df,
   geom_point()+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))+
-  scale_color_manual("Species", values = col_species)+
+  scale_color_manual("Species", values = col_spc)+
   xlab("Receiver")+
   ylab("nr of cells/receiver")+
   ggtitle("all conditions")
@@ -880,7 +857,7 @@ ggplot(ipio_df,
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90),
         strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Species", values = col_species)+
+  scale_color_manual("Species", values = col_spc)+
   ylim(c(0, max(ipio_df$nr_ints)))+
   xlab("Receiver")+
   ylab("Nr of interactions per cell type pair")+
@@ -894,7 +871,7 @@ ggplot(ipio_df,
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90),
         strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Emitter", values = col_emis)+
+  scale_color_manual("Emitter", values = col_cts_str)+
   ylim(c(0, max(ipio_df$nr_ints)))+
   xlab("Receiver")+
   ylab("Nr of interactions per cell type pair")+
@@ -1055,7 +1032,7 @@ ggplot(ipio_df,
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90),
         strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Emitter", values = col_emis)+
+  scale_color_manual("Emitter", values = col_cts_str)+
   ylim(c(0, max(ipio_df$nr_ints)))+
   xlab("Receiver")+
   ylab("Nr of interactions per cell type pair")+
@@ -1069,7 +1046,7 @@ ggplot(ipio_df,
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90),
         strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Species", values = col_species)+
+  scale_color_manual("Species", values = col_spc)+
   ylim(c(0, max(ipio_df$nr_ints)))+
   xlab("Receiver")+
   ylab("Nr of interactions per cell type pair")+
@@ -1184,7 +1161,7 @@ ggplot(ipio_df,
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90),
         strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Species", values = col_species)+
+  scale_color_manual("Species", values = col_spc)+
   xlab("Receiver")+
   ylab("Nr of cells/rec")+
   facet_grid(cols = vars(ipio_df$age))+
@@ -1216,7 +1193,7 @@ ggplot(ipio_df,
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90),
         strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Emitters", values = col_emis)+
+  scale_color_manual("Emitters", values = col_cts_str)+
   ylim(c(0, max(ipio_df$nr_ints)))+
   xlab("Receiver")+
   ylab("Nr of interactions per cell type pair")+
@@ -1331,7 +1308,7 @@ ggplot(ipio_df,
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90),
         strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Species", values = col_species)+
+  scale_color_manual("Species", values = col_spc)+
   xlab("Receiver")+
   ylab("Nr of cells/rec")+
   facet_grid(cols = vars(ipio_df$name))+
@@ -1358,8 +1335,6 @@ ggplot(ipio_df,
   ggtitle("By Condition")
 
 ```
-
-
 
 ```{r}
 sessionInfo()

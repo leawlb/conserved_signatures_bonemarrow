@@ -14,7 +14,11 @@ scmapcell and scmapcluster at sample level (Object_ID).
 
 #### Load libraries, source code 
 
-```{r load,  message = FALSE}
+```{r seed, message = FALSE}
+set.seed(37)
+```
+
+```{r load, message = FALSE}
 
 library(SingleCellExperiment, quietly = TRUE) 
 library(DropletUtils, quietly = TRUE) 
@@ -23,49 +27,42 @@ library(scater, quietly = TRUE)
 library(scuttle, quietly = TRUE) 
 library(scran, quietly = TRUE) 
 library(pheatmap, quietly = TRUE) 
-set.seed(37)
+```
+
+```{r source, message = FALSE}
+source(file = snakemake@params[["plotting"]])
+source(file = snakemake@params[["functions"]])
 ```
 
 ```{r load_object, message = FALSE}
 
 print(snakemake@input[[1]])
 sce <- readRDS(file = snakemake@input[[1]])
-color_tables <- snakemake@params[["color_tables"]]
 
 # set name for plots
 name_curr <- colData(sce)$Object_ID[1] # choose name to display in plots
 
 ```
 
+```{r colors, message = FALSE}
 
-```{r load_code, message = FALSE}
+colors_ref_path <- snakemake@params[["colors_ref_path"]]
+source(file = snakemake@params[["colors"]])
 
-source(file = "../../source/colors.R")
-source(file = "../../source/plotting.R")
-source(file = "../../source/sce_functions.R")
+sce <- factor_reference_cts(sce) # own function
 
-sce <- factor_reference_cts(sce)# own function
-
-col_cts_baccin_cell <- col_cts[match(levels(sce$baccin_celltype_scmapcell), 
-                                     names(col_cts))]
-col_cts_baccin_clst <- col_cts[match(levels(sce$baccin_celltype_scmapclust),
-                                     names(col_cts))]
-col_cts_dahlin_cell <- col_cts[match(levels(sce$dahlin_celltype_scmapcell), 
-                                     names(col_cts))]
-col_cts_dahlin_clst <- col_cts[match(levels(sce$dahlin_celltype_scmapclust), 
-                                     names(col_cts))]
-col_cts_dolgalev_cell <- col_cts[match(levels(sce$dolgalev_celltype_scmapcell),
-                                       names(col_cts))]
-col_cts_dolgalev_clst <- col_cts[match(levels(sce$dolgalev_celltype_scmapclust),
-                                       names(col_cts))]
-
-print(levels(sce$dolgalev_celltype_scmapclust))
-print(levels(sce$baccin_celltype_scmapclust))
-print(levels(sce$dahlin_celltype_scmapclust))
-
-print(col_cts_baccin_cell)
-print(col_cts_dahlin_clst)
-print(col_cts_dolgalev_clst)
+col_cts_baccin_cell <- col_cts_ref[match(levels(sce$baccin_celltype_scmapcell), 
+                                     names(col_cts_ref))]
+col_cts_baccin_clst <- col_cts_ref[match(levels(sce$baccin_celltype_scmapclust),
+                                     names(col_cts_ref))]
+col_cts_dahlin_cell <- col_cts_ref[match(levels(sce$dahlin_celltype_scmapcell), 
+                                     names(col_cts_ref))]
+col_cts_dahlin_clst <- col_cts_ref[match(levels(sce$dahlin_celltype_scmapclust), 
+                                     names(col_cts_ref))]
+col_cts_dolgalev_cell <- col_cts_ref[match(levels(sce$dolgalev_celltype_scmapcell),
+                                       names(col_cts_ref))]
+col_cts_dolgalev_clst <- col_cts_ref[match(levels(sce$dolgalev_celltype_scmapclust),
+                                       names(col_cts_ref))]
 ```
 
 ## Cell types

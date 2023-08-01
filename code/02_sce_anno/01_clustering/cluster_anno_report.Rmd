@@ -11,24 +11,24 @@ knitr::opts_chunk$set(echo = TRUE)
 
 #### Load libraries, source code 
 
+```{r seed,  message = FALSE}
+set.seed(37)
+```
+
 ```{r load,  message = FALSE}
 library(DropletUtils, quietly = TRUE) 
 library(scater, quietly = TRUE) 
 library(scuttle, quietly = TRUE) 
 library(scran, quietly = TRUE) 
 library(tidyverse, quietly = TRUE) 
-set.seed(37)
 ```
 
-```{r}
+```{r source, message = FALSE}
+source(file =  snakemake@params[["functions"]])
+source(file =  snakemake@params[["plotting"]])
+```
 
-#knitr::knit_exit()
-
-# load sources
-color_tables <- snakemake@params[["color_tables"]]
-source(file = "../../source/colors.R")
-source(file = "../../source/plotting.R")
-source(file = "../../source/sce_functions.R")
+```{r load objects}
 
 #load SCE objects
 sce <- readRDS(file = snakemake@input[["sce_input"]])
@@ -58,24 +58,23 @@ gene_list <- read.csv(snakemake@input[["gene_list"]],
 head(gene_list)
 ```
 
-Prepare color schemes
+```{r colors, meassage = FALSE}
+colors_ref_path <- snakemake@params[["colors_ref_path"]]
+colors_path <- snakemake@params[["colors_path"]]
+source(snakemake@params[["colors"]])
+```
 
 ```{r}
 
 sce <- factor_reference_cts(sce)
 sce_cluster <- factor_reference_cts(sce_cluster)
 
-col_cts_baccin <- col_cts[match(levels(sce$baccin_celltype_scmapclust), 
-                                names(col_cts))]
-col_cts_dahlin <- col_cts[match(levels(sce$dahlin_celltype_scmapclust), 
-                                names(col_cts))]
-col_cts_dolgalev <- col_cts[match(levels(sce$dolgalev_celltype_scmapclust),
-                                  names(col_cts))]
-
-col_batch_exp_day <- col_alp[names(col_alp) %in% sce$Batch_exp_day]
-col_batch_seq <- col_num[names(col_num) %in% sce$Batch_sequencing]
-col_ann_age <- col_ann[names(col_ann) %in% sce$Age_ID]
-col_species <- col_spc[names(col_spc) %in% sce$Species_ID]
+col_cts_baccin <- col_cts_ref[match(levels(sce$baccin_celltype_scmapclust), 
+                                names(col_cts_ref))]
+col_cts_dahlin <- col_cts_ref[match(levels(sce$dahlin_celltype_scmapclust), 
+                                names(col_cts_ref))]
+col_cts_dolgalev <- col_cts_ref[match(levels(sce$dolgalev_celltype_scmapclust),
+                                  names(col_cts_ref))]
 
 col_clust_l <- col_num[names(col_num) %in% sce$cluster_louvain]
 
@@ -250,8 +249,6 @@ gene_exps <- function(gene){
 ```
 
 ```{r}
-#knitr::knit_exit()
-
 found_markers <- rownames(markers)[1:50]
 
 cluster_curr_char <- paste0("cluster_", cluster_curr)

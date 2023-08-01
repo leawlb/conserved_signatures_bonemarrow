@@ -14,8 +14,11 @@ This is a very long report with lots of plots.
 
 #### Load libraries, source code 
 
-```{r load,  message = FALSE}
+```{r seed,  message = FALSE}
+set.seed(37)
+```
 
+```{r load, message = FALSE}
 library(DropletUtils, quietly = TRUE) 
 library(scater, quietly = TRUE) 
 library(scuttle, quietly = TRUE) 
@@ -23,20 +26,17 @@ library(scran, quietly = TRUE)
 library(tidyverse, quietly = TRUE) 
 library(CellMixS, quietly = TRUE) 
 library(lisi, quietly = TRUE)
-set.seed(37)
 ```
 
-```{r}
+```{r source, message = FALSE}
+source(file =  snakemake@params[["functions"]])
+source(file =  snakemake@params[["plotting"]])
+```
+
+```{r load_objects}
 
 batch_use <- snakemake@params[["batch_use"]]
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
-color_tables <- snakemake@params[["color_tables"]]
-
-source(file = "../../source/colors.R")
-source(file = "../../source/plotting.R")
-source(file = "../../source/sce_functions.R")
-
-set.seed(37)
 
 sce_input_raw <- readRDS(file = snakemake@input[["sce_input_raw"]])
 sce_mnn <- readRDS(file = snakemake@input[["sce_input_corrected"]])
@@ -59,28 +59,34 @@ sce_list <- lapply(sce_list, function(x){
 ```
 
 ```{r}
+colors_ref_path <- snakemake@params[["colors_ref_path"]]
+colors_path <- snakemake@params[["colors_path"]]
+source(snakemake@params[["colors"]])
+```
+
+```{r}
 
 # use one sce for general colors
 fraction_curr <- sce_list[[1]][[1]]$Fraction_ID[1]
 
 if(fraction_curr == "hsc"){
-  col_cts["unassigned"] <- "honeydew2"
+  col_cts_ref["unassigned"] <- "honeydew2"
 }else if(fraction_curr == "str"){
-  col_cts["unassigned"] <- "mistyrose3"
+  col_cts_ref["unassigned"] <- "mistyrose3"
 }
 
-col_cts_baccin <- col_cts[match(levels(sce_list[[1]][[1]]$baccin_celltype_scmapclust), 
-                                names(col_cts))]
-col_cts_dahlin <- col_cts[match(levels(sce_list[[1]][[1]]$dahlin_celltype_scmapclust), 
-                                names(col_cts))]
-col_cts_dolgalev <- col_cts[match(levels(sce_list[[1]][[1]]$dolgalev_celltype_scmapclust), 
-                                  names(col_cts))]
+col_cts_baccin <- col_cts_ref[match(levels(sce_list[[1]][[1]]$baccin_celltype_scmapclust), 
+                                names(col_cts_ref))]
+col_cts_dahlin <- col_cts_ref[match(levels(sce_list[[1]][[1]]$dahlin_celltype_scmapclust), 
+                                names(col_cts_ref))]
+col_cts_dolgalev <- col_cts_ref[match(levels(sce_list[[1]][[1]]$dolgalev_celltype_scmapclust), 
+                                  names(col_cts_ref))]
 
 col_batch_exp_day <- col_alp[names(col_alp) %in% sce_list[[1]][[1]]$Batch_exp_day]
 col_batch_seq <- col_num[names(col_num) %in% sce_list[[1]][[1]]$Batch_sequencing]
-col_ann_age <- col_ann[names(col_ann) %in% sce_list[[1]][[1]]$Age_ID]
-col_ann_fraction <- col_ann[names(col_ann) %in% sce_list[[1]][[1]]$Fraction_ID]
-col_species <- col_spc[names(col_spc) %in% sce_list[[1]][[1]]$Species_ID]
+col_age <- col_age[names(col_age) %in% sce_list[[1]][[1]]$Age_ID]
+col_frc <- col_frc[names(col_frc) %in% sce_list[[1]][[1]]$Fraction_ID]
+col_spc <- col_spc[names(col_spc) %in% sce_list[[1]][[1]]$Species_ID]
 
 ```
 
@@ -244,24 +250,24 @@ qc_plots <- function(sce, title){
   
   # check everything else
   plot_5 <- umap_base(sce, color_by = "Species_ID")+ 
-    scale_color_manual("Species", values = col_species)+
+    scale_color_manual("Species", values = col_spc)+
     ggtitle(paste0(fraction_curr, title))
   plot_5l <- umap_legend(sce, color_by = "Species_ID")+
-    scale_color_manual("Species", values = col_species)
+    scale_color_manual("Species", values = col_spc)
   legend_5 <- get_legend(plot_5l)
   
   plot_6 <- umap_base(sce, color_by = "Age_ID")+ 
-    scale_color_manual("Age", values = col_ann_age)+
+    scale_color_manual("Age", values = col_age)+
     ggtitle(paste0(fraction_curr, title))
   plot_6l <- umap_legend(sce, color_by = "Age_ID")+
-    scale_color_manual("Age", values = col_ann_age)
+    scale_color_manual("Age", values = col_age)
   legend_6 <- get_legend(plot_6l) 
   
   plot_7 <- umap_base(sce, color_by = "Fraction_ID")+ 
-    scale_color_manual("Fraction", values = col_ann_fraction)+
+    scale_color_manual("Fraction", values = col_frc)+
     ggtitle(paste0(fraction_curr, title))
   plot_7l <- umap_legend(sce, color_by = "Fraction_ID")+
-    scale_color_manual("Fraction", values = col_ann_fraction)
+    scale_color_manual("Fraction", values = col_frc)
   legend_7 <- get_legend(plot_7l) 
  
   plot_8 <- umap_base(sce, color_by = "Antibody_combination")+ 
@@ -392,11 +398,11 @@ facet_plots <- function(sce, title){
   legend_3 <- get_legend(plot_3l)
   
   plot_19 <- umap_base(sce, color_by = "Age_ID")+
-    scale_color_manual("Age", values = col_ann_age)+
+    scale_color_manual("Age", values = col_age)+
     ggtitle(paste0(fraction_curr, title))+
     facet_grid(cols = vars(sce$Species_ID))
   plot_19l <- umap_legend(sce, color_by = "Age_ID")+
-    scale_color_manual("Age", values = col_ann_age)
+    scale_color_manual("Age", values = col_age)
   legend_19 <- get_legend(plot_19l)
   
   plot_21 <- umap_base(sce, color_by = "Antibody_combination")+
@@ -431,11 +437,11 @@ facet_plots <- function(sce, title){
   legend_6 <- get_legend(plot_6l)
   
   plot_20 <- umap_base(sce, color_by = "Species_ID")+
-    scale_color_manual("Species_ID", values = col_species)+
+    scale_color_manual("Species_ID", values = col_spc)+
     ggtitle(paste0(fraction_curr, title))+
     facet_grid(cols = vars(sce$Age))
   plot_20l <- umap_legend(sce, color_by = "Species_ID")+
-    scale_color_manual("Species_ID", values = col_species)
+    scale_color_manual("Species_ID", values = col_spc)
   legend_20 <- get_legend(plot_20l)
   
   # Identities
@@ -694,24 +700,24 @@ make_qc_pcas2 <- function(sce, title){
   
   # check everything else
   plot_5 <- pca_base2(sce, color_by = "Species_ID")+ 
-    scale_color_manual("Species", values = col_species)+
+    scale_color_manual("Species", values = col_spc)+
     ggtitle(paste0(fraction_curr, title))
   plot_5l <- pca_legend(sce, color_by = "Species_ID")+
-    scale_color_manual("Species", values = col_species)
+    scale_color_manual("Species", values = col_spc)
   legend_5 <- get_legend(plot_5l)
   
   plot_6 <- pca_base2(sce, color_by = "Age_ID")+ 
-    scale_color_manual("Age", values = col_ann_age)+
+    scale_color_manual("Age", values = col_age)+
     ggtitle(paste0(fraction_curr, title))
   plot_6l <- pca_legend(sce, color_by = "Age_ID")+
-    scale_color_manual("Age", values = col_ann_age)
+    scale_color_manual("Age", values = col_age)
   legend_6 <- get_legend(plot_6l) 
   
   plot_7 <- pca_base2(sce, color_by = "Fraction_ID")+ 
-    scale_color_manual("Fraction", values = col_ann_fraction)+
+    scale_color_manual("Fraction", values = col_frc)+
     ggtitle(paste0(fraction_curr, title))
   plot_7l <- pca_legend(sce, color_by = "Fraction_ID")+
-    scale_color_manual("Fraction", values = col_ann_fraction)
+    scale_color_manual("Fraction", values = col_frc)
   legend_7 <- get_legend(plot_7l) 
  
   plot_8 <- pca_base2(sce, color_by = "Antibody_combination")+ 
@@ -818,24 +824,24 @@ make_qc_pcas3 <- function(sce, title){
   
   # check everything else
   plot_5 <- pca_base3(sce, color_by = "Species_ID")+ 
-    scale_color_manual("Species", values = col_species)+
+    scale_color_manual("Species", values = col_spc)+
     ggtitle(paste0(fraction_curr, title))
   plot_5l <- pca_legend(sce, color_by = "Species_ID")+
-    scale_color_manual("Species", values = col_species)
+    scale_color_manual("Species", values = col_spc)
   legend_5 <- get_legend(plot_5l)
   
   plot_6 <- pca_base3(sce, color_by = "Age_ID")+ 
-    scale_color_manual("Age", values = col_ann_age)+
+    scale_color_manual("Age", values = col_age)+
     ggtitle(paste0(fraction_curr, title))
   plot_6l <- pca_legend(sce, color_by = "Age_ID")+
-    scale_color_manual("Age", values = col_ann_age)
+    scale_color_manual("Age", values = col_age)
   legend_6 <- get_legend(plot_6l) 
   
   plot_7 <- pca_base3(sce, color_by = "Fraction_ID")+ 
-    scale_color_manual("Fraction", values = col_ann_fraction)+
+    scale_color_manual("Fraction", values = col_frc)+
     ggtitle(paste0(fraction_curr, title))
   plot_7l <- pca_legend(sce, color_by = "Fraction_ID")+
-    scale_color_manual("Fraction", values = col_ann_fraction)
+    scale_color_manual("Fraction", values = col_frc)
   legend_7 <- get_legend(plot_7l) 
  
   plot_8 <- pca_base3(sce, color_by = "Antibody_combination")+ 

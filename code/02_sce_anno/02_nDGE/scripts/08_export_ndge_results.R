@@ -186,7 +186,8 @@ genes_three_species_list <- lapply(res_list_shared_fin, function(res_list){
 
 })
 
-saveRDS(genes_three_species_list, file = snakemake@output[["cluster_res_list_shared"]])
+saveRDS(genes_three_species_list, 
+        file = snakemake@output[["cluster_res_list_shared"]])
 
 #-------------------------------------------------------------------------------
 # REARRANGE 

@@ -23,21 +23,21 @@ sce_clust$subcluster_annotation <- vector(length = ncol(sce_clust))
 
 #-------------------------------------------------------------------------------
 
-genes_shared_list <- readRDS(file = snakemake@input[["genes_shared_list"]])
+genes_list_shared <- readRDS(file = snakemake@input[["genes_list_shared"]])
 
 celltypes <- unique(sce_clust$annotation_cluster)
 print(celltypes)
 
 if(length(celltypes) == 1){
-  genes_shared <- genes_shared_list[[celltypes]]$at_least_three
+  genes_shared <- genes_list_shared[[celltypes]]$at_least_three
 }else if(length(celltypes) == 2){
-  genes_shared <- intersect(genes_shared_list[[celltypes[1]]]$at_least_three, 
-                            genes_shared_list[[celltypes[2]]]$at_least_three)
+  genes_shared <- intersect(genes_list_shared[[celltypes[1]]]$at_least_three, 
+                            genes_list_shared[[celltypes[2]]]$at_least_three)
 }
 
 #-------------------------------------------------------------------------------
 
-subcl_genes <- read.csv(file = snakemake@input[["subclustering_genes"]], 
+genes_subcl <- read.csv(file = snakemake@input[["gene_list_subcl"]], 
                         header = TRUE, 
                         sep = ";", 
                         check.names=FALSE, 
@@ -45,17 +45,25 @@ subcl_genes <- read.csv(file = snakemake@input[["subclustering_genes"]],
                         as.is=TRUE, 
                         colClasses = "character")
 
-subcl_genes <- subcl_genes[subcl_genes$fraction == fraction_curr,]
-subcl_genes <- subcl_genes[subcl_genes$cluster == cluster_curr,]
+genes_subcl <- genes_subcl[genes_subcl$fraction == fraction_curr,]
+genes_subcl <- genes_subcl[genes_subcl$cluster == cluster_curr,]
 
-subcl <- unique(subcl_genes$gene[subcl_genes$purpose == "subclustering"])
+subcl <- unique(genes_subcl$gene[genes_subcl$purpose == "subclustering"])
 
 stopifnot(subcl %in% genes_shared)
-print(subcl)
+
+print(paste("subcl genes used:", subcl[which(subcl %in% genes_shared)]))
+print(paste("subcl genes not shared, not used:", 
+            subcl[which(!subcl %in% genes_shared)]))
+
+genes_all <- unique(genes_subcl$gene)
+poss_subcl <- genes_all[which(genes_all %in% genes_shared)]
+
+print(paste("subcl genes possible:", poss_subcl))
 
 #-------------------------------------------------------------------------------
 
-subcl_anno <- read.csv(file = snakemake@input[["subclustering_annotation"]], 
+anno_subcl <- read.csv(file = snakemake@input[["anno_subcl"]], 
                        header = TRUE, 
                        sep = ";", 
                        check.names=FALSE, 
@@ -63,17 +71,19 @@ subcl_anno <- read.csv(file = snakemake@input[["subclustering_annotation"]],
                        as.is=TRUE, 
                        colClasses = "character")
 
-subcl_anno <- subcl_anno[subcl_anno$fraction == fraction_curr,]
-subcl_anno <- subcl_anno[subcl_anno$cluster == cluster_curr,]
+anno_subcl <- anno_subcl[anno_subcl$fraction == fraction_curr,]
+anno_subcl <- anno_subcl[anno_subcl$cluster == cluster_curr,]
 
-nr_subcl <- max(subcl_anno$subcluster)
+nr_subcl <- max(anno_subcl$subcluster)
 print(cluster_curr)
 print(nr_subcl)
 
 #-------------------------------------------------------------------------------
 
 data <- logcounts(sce_clust)
+print(paste("final print", subcl))
 data <- t(data[rownames(data) %in% subcl,])
+head(data)
 clust <- Mclust(data, G = nr_subcl,  modelNames = c("EII",
                                                     "VII",
                                                     "EEI",
@@ -93,12 +103,12 @@ summary(clust)
 
 sce_clust$subcluster <- as.character(clust$classification)
 print(unique(sce_clust$subcluster))
-print(subcl_anno)
+print(anno_subcl)
  
 for(i in 1:nr_subcl){
   sce_clust$annotation_subcluster[
-    sce_clust$subcluster == i] <- subcl_anno$annotation_subcluster[
-      subcl_anno$subcluster == i]
+    sce_clust$subcluster == i] <- anno_subcl$annotation_subcluster[
+      anno_subcl$subcluster == i]
 }
 print(unique(sce_clust$annotation_subcluster))
 #-------------------------------------------------------------------------------

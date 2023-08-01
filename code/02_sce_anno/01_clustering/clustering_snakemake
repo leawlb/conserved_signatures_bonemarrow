@@ -1,5 +1,5 @@
 
-snakemake --cluster "bsub -q long -n20 -R rusage[mem=200GB]" -p -j40 -c40 -s clustering_snakefile.py --configfile ../../config.yaml -n
+snakemake --cluster "bsub -q long -n10 -R rusage[mem=200GB]" -p -j40 -c40 -s clustering_snakefile.py --configfile ../../config.yaml -n
 
 snakemake --cluster "bsub -q long -n20 -R rusage[mem=200GB]" -p -j5 -c40 -s clustering_snakefile.py --configfile ../../config.yaml -n
 

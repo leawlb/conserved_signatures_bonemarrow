@@ -1,4 +1,4 @@
 
-snakemake --cluster "bsub -q medium -n6 -R rusage[mem=50GB]" -p -j10 -c20 -s subclustering_snakefile.py --configfile ../../config.yaml -n
+snakemake --cluster "bsub -q long -n6 -R rusage[mem=50GB]" -p -j40 -c20 -s subclustering_snakefile.py --configfile ../../config.yaml -n
 
 

@@ -5,7 +5,7 @@ library(DropletUtils, quietly = TRUE)
 
 sce <- readRDS(file = snakemake@input[["sce_input"]])
 
-clust_anno <- read.csv(file = snakemake@input[["cluster_annotations"]],
+anno_clusters <- read.csv(file = snakemake@input[["anno_clusters"]],
                        header = TRUE, 
                        sep = ";", 
                        check.names=FALSE, 
@@ -14,20 +14,23 @@ clust_anno <- read.csv(file = snakemake@input[["cluster_annotations"]],
                        colClasses = "character")
 
 fraction_curr <- sce$Fraction_ID[1]
-clust_anno <- clust_anno[clust_anno$Fraction == fraction_curr,]
+anno_clusters <- anno_clusters[anno_clusters$Fraction == fraction_curr,]
 
 # assign cluster annotations from cluster_annotations.txt
 sce$annotation_cluster <- vector(length = ncol(sce))
 
-for(i in unique(clust_anno$Cluster)){
-  sce$annotation_cluster[sce$cluster_louvain == i] <- clust_anno$Annotation[clust_anno$Cluster == i]
+for(i in unique(anno_clusters$Cluster)){
+  sce$annotation_cluster[sce$cluster_louvain == i] <- anno_clusters$Annotation[anno_clusters$Cluster == i]
 }
 
 sce <- sce[,-which(sce$annotation_cluster == "remove")]
 
 sce$annotation_cluster <- factor(sce$annotation_cluster,
-                                 levels = clust_anno$Annotation[clust_anno$Annotation != "remove"])
+                                 levels = anno_clusters$Annotation[anno_clusters$Annotation != "remove"])
 
 table(is.na(sce$annotation_cluster))
+
+stopifnot(!is.na(sce$annotation_cluster))
+stopifnot(!is.na(sce$cluster_louvain))
 
 saveRDS(sce, file = snakemake@output[["sce_output"]])

@@ -14,7 +14,7 @@ by Adrien Jolly (Mende, Jolly, Percin et al., Blood 2019). For each pair of
 emitter cells and receiver cells (as assigned), it ranks ligand or receptor 
 gene expression within the corresponding cell type, then sums the ranks and 
 normalizes them to obtain an interaction score between 0 and 1.
-Each known ligand-receptor interaction is scored in each cell type pair,
+Each known ligand-receptor interaction is scored in each cell type pair (ctp),
 resulting in a CCI object with rows = interactions, cols = ctps.
 
 Most Scores are NA because most ligand or receptor genes are not expressed
@@ -24,7 +24,7 @@ and in such cases an interaction is counted as not detected or NA instead of 0.
 To obtain age-specific interactions, I aim to do permutation testing on 
 score deltas (score old - score yng) within each species.
 So that if a score delta is significantly higher than expected from permutation 
-testing, that interaction score in that cell type is significantly enriched
+testing, that interaction in that cell type is significantly enriched
 during ageing.
 
 This script shows all main steps of permutation testing.
@@ -34,6 +34,17 @@ This script shows all main steps of permutation testing.
 find in: 03_perm_age_labels.R
 
 Load
+
+```{r}
+set.seed(37)
+```
+
+```{r}
+library(tidyverse)
+library(SingleCellExperiment)
+library(parallel)
+library(data.table)
+```
 
 ```{r}
 source("../../source/cci_functions_perm.R")

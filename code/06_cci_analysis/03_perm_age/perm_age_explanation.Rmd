@@ -1,0 +1,466 @@
+
+# Permutation of Age labels for Cell-Cell Interaction (CCI)
+
+The experiment contains data from four mouse species (mcar, mcas,
+mmus (BL6), mspr) and two different ages (young, old).
+
+scRNAseq data for CCI calculation is pre-processed, integrated and annotated.
+For CCI analysis, various further preparation steps are required 
+(see 04_cci_prep/01_cci_preprocessing).
+
+The interactome of each of the eight conditions is calculated separately. 
+The method is based on https://github.com/AdrienJolly/CellInteractionScores
+by Adrien Jolly (Mende, Jolly, Percin et al., Blood 2019). For each pair of
+emitter cells and receiver cells (as assigned), it ranks ligand or receptor 
+gene expression within the corresponding cell type, then sums the ranks and 
+normalizes them to obtain an interaction score between 0 and 1.
+Each known ligand-receptor interaction is scored in each cell type pair,
+resulting in a CCI object with rows = interactions, cols = ctps.
+
+Most Scores are NA because most ligand or receptor genes are not expressed
+(in at least X% of cells per cell type = min_perc as assigned), 
+and in such cases an interaction is counted as not detected or NA instead of 0.
+
+To obtain age-specific interactions, I aim to do permutation testing on 
+score deltas (score old - score yng) within each species.
+So that if a score delta is significantly higher than expected from permutation 
+testing, that interaction score in that cell type is significantly enriched
+during ageing.
+
+This script shows all main steps of permutation testing.
+
+## 1. Permutation and CCI calculation
+
+find in: 03_perm_age_labels.R
+
+Load
+
+```{r}
+source("../../source/cci_functions_perm.R")
+source("../../source/cci_functions_calculation.R")
+```
+
+```{r}
+# ligand receptor database from CellTalkDB 
+# "mouse_lr_pair.rds"" downloaded from 
+# https://github.com/ZJUFanLab/CellTalkDB/blob/master/database/mouse_lr_pair.rds
+lrdb <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/04_cci_prep/lrdb")
+```
+
+```{r}
+# load fully pre-processed SCE objects for testing. In this case from mcar
+sce_yng <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis/cci_objects/01_cci_preparation/05_down/sce_mcar_yng-05")
+sce_old <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis/cci_objects/01_cci_preparation/05_down/sce_mcar_old-05")
+```
+
+```{r}
+# load the original corresponding CCI objects that have already been calculated
+cci_yng <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis/cci_objects/01_cci_preparation/09_intl/interaction_list_mcar_yng")
+cci_old <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis/cci_objects/01_cci_preparation/09_intl/interaction_list_mcar_old")
+```
+
+Permutation of age labels and CCI calculation.
+
+```{r}
+iterations <- 10 # very low to allow quicker calculation without mclapply, on Rstudio server takes < 10 min
+min_perc <- 0.02
+top_level <- 300
+# permutation function from cci_functions_perm.R
+# contains CCI calculation functions from cci_functions_calculation.R
+
+# this function returns a list of length = iterations with permuted "yng"
+# and "old" CCI objects
+cci_list_ages <- lapply(
+  X = c(1:iterations),
+  FUN = permute_age,
+  sce_old = sce_old, 
+  sce_yng = sce_yng,
+  lrdb = lrdb, 
+  min_perc = min_perc,
+  top_level = top_level)
+```
+
+This is the main function containing the actual permutation:
+Lifted from cci_functions_perm.R
+
+```{r}
+## PERM FUNCTION: STEP 1
+## permute age labels and calculate scores for "young" and "old" SCE objects
+## PERMUTE LABELS: AGE
+
+# returns two permuted CCI objects, one for each age
+# use with mclapply on list of iterations --> list of CCIs
+# requires calculate_scores()
+
+permute_age_ <- function(
+    iterations_vec,
+    sce_old, 
+    sce_yng,
+    lrdb,
+    min_perc,
+    top_level){
+  
+  # purpose: permute age labels and calculate CCI for perm yng/old SCE objects
+  
+  i <- iterations_vec      # vector from 1 to nr of iterations
+  sce_old <- sce_old       # old SCE object for perm testing
+  sce_yng <- sce_yng       # yng SCE object for perm testing
+  lrdb <- lrdb             # ligand receptor database
+  min_perc <- min_perc     # minimum % of cells required to express a l/r gene 
+  top_level <- top_level   # top rank for better comparability between ranks
+  
+  species <- sce_old$Species_ID[1]
+  stopifnot(sce_old$Species_ID[1] == sce_yng$Species_ID[1])
+  
+  #### PERMUTE LABELS 
+  sce_perm <- cbind(sce_old, sce_yng)
+  
+  sce_perm$age_permuted <- vector(length = ncol(sce_perm))
+  
+    # permute age labels within cell types (identities), otherwise ct labels 
+    # will also be permuted
+  cts <- levels(sce_perm$Identity)
+  for(c in 1:length(cts)){
+    sce_ct <- sce_perm[,sce_perm$Identity == cts[c]]
+    
+    # choose seed depending on iteration and ct
+    set.seed(i*7144+c+11)
+    perm_ages <- sample(c(1:ncol(sce_ct)), size = ncol(sce_ct))
+    
+    set.seed(37) # reset seed to basic value
+    age_permuted <- sce_ct$Age_ID[perm_ages]
+    sce_perm[,sce_perm$Identity == cts[c]]$age_permuted <- age_permuted
+  
+  }
+  print(table(sce_perm$Age_ID, sce_perm$age_permuted))
+  
+  sce_perm_yng <- sce_perm[,sce_perm$age_permuted == "yng"]
+  sce_perm_old <- sce_perm[,sce_perm$age_permuted == "old"]
+
+  #### CALCULATE CCI OBJECTS OF PERMUTED SCE OBJECTS WITH calculate_scores()
+    # separately for "yng" and "old" perm SCEs
+  cci_like_yng <- calculate_scores(
+    sce = sce_perm_yng, 
+    lrdb = lrdb,
+    min_perc = min_perc,
+    top_level = top_level)
+
+  cci_like_old <- calculate_scores(
+    sce = sce_perm_old, 
+    lrdb = lrdb,
+    min_perc = min_perc,
+    top_level = top_level)    
+
+  return_list <- list("yng" = cci_like_yng, "old" = cci_like_old)
+  return(return_list)
+  
+  # for simplicity, will still be referred to as "cci"
+  
+}
+
+```
+
+Some processing steps.
+
+```{r}
+names(cci_list_ages) <- paste0("iteration_", c(1:iterations))
+
+ages <- c("yng", "old")
+cci_list_ages_sorted <- list()
+for(a in ages){
+  for(i in names(cci_list_ages)){
+    cci_list_ages_sorted[[a]][[i]] <- cci_list_ages[[i]][[a]]
+  }
+}
+```
+
+Convert list of CCI objects into list of dataframes.
+"yng" and "old" objects are separated, but still exist as sets (one set per
+permutation).
+
+```{r}
+# convert list of n permuted CCIs into list of perm score dfs with 
+# rows = interactions, cols = iterations, per interacting cell type pair (ctp)
+perm_score_df_lists <- lapply(
+  X = cci_list_ages_sorted, 
+  FUN = convert_perm_df, 
+  lrdb = lrdb)
+```
+
+## 2. Test statistic 
+
+Score deltas (score old - score yng) are used as test statistic.
+
+find in: 04_perm_age_stats.R
+
+Some processing.
+
+```{r}
+# add names for late use
+perm_scores_yng_named <- list()
+for(i in names(perm_score_df_lists$yng)){
+  perm_scores_yng_named[[i]]$name <- i
+  perm_scores_yng_named[[i]]$df <- perm_score_df_lists$yng[[i]]
+}
+
+perm_scores_old_named <- list()
+for(i in names(perm_score_df_lists$old)){
+  perm_scores_old_named[[i]]$name <- i
+  perm_scores_old_named[[i]]$df <- perm_score_df_lists$old[[i]]
+}
+```
+
+Iterate through interacting cell type pairs.
+Obtain dataframes with statistics.
+
+```{r}
+ctps <- as.list(names(perm_score_df_lists$yng))
+
+min_sp_age_perc <- 0.1
+res_lists <- lapply(
+  X = ctps, 
+  min_sp_age_perc = min_sp_age_perc,
+  perm_score_list_yng = perm_scores_yng_named, 
+  perm_score_list_old = perm_scores_old_named,
+  cci_yng = cci_yng, 
+  cci_old = cci_old,
+  iterations = iterations,
+  FUN = stats_perm_age)
+
+names(res_lists) <- names(perm_score_df_lists$yng)
+```
+
+This is the core function found in the wrapper stats_perm_age()
+from cci_functions_perm.R
+
+In short, score deltas and permuted score deltas are calculated, then
+p vals are obtained by counting the number of observations as or more extreme
+than the actual score delta.
+
+There are multiple problems here:
+
+ - the existance of NAs. not all permutations result in a permuted score delta
+ for interactions that were originally detected. 
+ This is because depending on the permutation, some ligand or receptor 
+ genes become expressed in less than X% of cells per cell type.
+ 
+ - at which point should interactions with few successful permutations 
+ (= permutations that resulted in a score) be excluded?
+ At the moment I set at least 10% successful permutations as minimum
+ 
+ - if the nr of successful permutations is lower than the total nr of  
+ permutations, which value should be used for normalization to obtain the 
+ p value? still the number of total permutations? I use nr of successful 
+ permutations currently.
+ 
+ - is it even possible to use this test if there are NAs? Or does it impact the
+ test so badly that it shouldn't be used at all anymore
+ 
+ - using 0 instead of NAs will result in (large) peaks at 1s or 0 for score 
+ deltas in some cases, and then the permuted score deltas do not follow normal 
+ distribution anymore
+
+```{r}
+stats_perm_age_prep_ <- function(
+    int, 
+    ctp, 
+    iterations, 
+    cci_yng,
+    cci_old,
+    score_dft_yng, 
+    score_dft_old,
+    min_sp_age_perc){
+  
+  # purpose: calculate stats from score deltas obtained from permutation per ctp
+  
+  int <- int                          # ligand receptor interaction pair
+  ctp <- ctp                          # current cell type pair
+  iterations <- iterations            # nr of iterations used in previous perm
+  cci_yng <- cci_yng                  # young CCI object (non-permuted)
+  cci_old <- cci_old                  # old CCI object (non-permuted)
+  score_dft_yng <- score_dft_yng      # perm sds, from "yng" perm objects
+  score_dft_old <- score_dft_old      # perm sds, from "old" perm objects
+  min_sp_age_perc <- min_sp_age_perc  # min % of successful perms (sp)
+  # most CCI scores are NAs (= not detected/not "successful")
+  # for some ints, a low number of "successfully" calculated scores (<100) 
+  # is possible, but this is not enough to calculate p vals
+  
+  all_ints <- colnames(score_dft_yng)
+  
+  #### PREPARATION
+    # empty res_df to fill
+    # only one row is used in this function, corresponding to current int
+    # a list of one-row dfs will later be combined by bind_rows()
+  res_df_empty <- data.frame(
+    row.names = all_ints,
+    "score_yng" = vector(length = length(all_ints)),
+    "score_old" = vector(length = length(all_ints)),
+    "shared" = vector(length = length(all_ints)),
+    "score_delta" = vector(length = length(all_ints)),
+    
+    # pval 
+    "p_val" = vector(length = length(all_ints)),
+    "p_adj" = vector(length = length(all_ints)),
+    
+    # perm score delta stats
+    "perm_scores_delta_mean" = vector(length = length(all_ints)),
+    "perm_scores_delta_median" = vector(length = length(all_ints)),
+    "perm_scores_delta_length" = vector(length = length(all_ints)),
+    "perm_scores_delta_sd" = vector(length = length(all_ints)),
+    "perm_scores_delta_iqr" = vector(length = length(all_ints)),
+    "perm_scores_delta_min" = vector(length = length(all_ints)),
+    "perm_scores_delta_max" = vector(length = length(all_ints)),
+    "perm_scores_delta_nr_obs" = vector(length = length(all_ints)),
+    "perm_scores_delta_min_centered" = vector(length = length(all_ints)),
+    "perm_scores_delta_max_centered" = vector(length = length(all_ints)),
+    "score_delta_centered" = vector(length = length(all_ints)),
+    
+    # norm distribution test 
+    "p_val_shapiro" = vector(length = length(all_ints)),
+    "p_adj_shapiro" = vector(length = length(all_ints)))
+  
+  i <- which(all_ints == int)
+  temp_df <- res_df_empty[i,]
+  
+    # get the vector of permuted scores for current interaction nr i
+  perm_scores_yng <- score_dft_yng[,i]
+  perm_scores_old <- score_dft_old[,i]
+
+    # get the scores from the cci object
+  pos_ctp_yng <- which(colnames(cci_yng$Score) == ctp)
+  score_yng <- cci_yng$Score[which(rownames(cci_yng$Score) == int), pos_ctp_yng]
+  temp_df$score_yng[1] <- score_yng
+  
+  pos_ctp_old <- grep(ctp, colnames(cci_old$Score))
+  score_old <- cci_old$Score[which(rownames(cci_old$Score) == int), pos_ctp_old]
+  temp_df$score_old[1] <- score_old
+  
+  #### GET SCORE DELTAS AND PERMUTED SCORE DELTAS
+    # only for permutations where both young and old scores are not NAs
+    # and fill info into df 
+  if(!is.na(score_old) & !is.na(score_yng)){
+
+    temp_df$shared[1] <- TRUE
+    
+    score_delta <- score_old - score_yng
+    temp_df$score_delta[1] <- score_delta
+    
+    perm_score_deltas <- perm_scores_old - perm_scores_yng
+    
+    temp_df$perm_scores_delta_length[1] <- length(
+      which(!is.na(perm_score_deltas)))
+    
+      # add stats only if at least a certain nr of permutations was successful
+      # this prevents calculating means etc. for NAs or very low nr of sds only
+    min_sp_age <- iterations * min_sp_age_perc
+    if(length(which(!is.na(perm_score_deltas))) >= min_sp_age){
+      
+      temp_df$perm_scores_delta_mean[1] <- mean(
+        perm_score_deltas[!is.na(perm_score_deltas)])
+      temp_df$perm_scores_delta_median[1] <- median(
+        perm_score_deltas[!is.na(perm_score_deltas)])
+      temp_df$perm_scores_delta_sd[1] <- sd(
+        perm_score_deltas[!is.na(perm_score_deltas)])
+      temp_df$perm_scores_delta_iqr[1] <- IQR(
+        perm_score_deltas[!is.na(perm_score_deltas)])
+      temp_df$perm_scores_delta_min[1] <- min(
+        perm_score_deltas[!is.na(perm_score_deltas)])
+      temp_df$perm_scores_delta_max[1] <- max(
+        perm_score_deltas[!is.na(perm_score_deltas)])
+    
+      # get pval, which is the number of permuted deltas that are as extreme or
+      # more extreme than the test statistic = score_delta
+      # test using difference from median, because median might not be exactly 0
+
+      # remove NAs from calculation
+      perm_score_deltas_nna <- perm_score_deltas[!is.na(perm_score_deltas)]
+      
+      ## TODO: check if this is correct!
+      # center perm distribution and test statistic around 0 
+      perm_sd_centered <- perm_score_deltas_nna - median(perm_score_deltas_nna)
+      score_delta_centered <- score_delta - median(perm_score_deltas_nna)
+      
+      # obtain nr of observed permuted values that is at least as or more  
+      # extreme as test statistic score delta
+      nr_obs <- length(
+        which(abs(perm_sd_centered) >= abs(score_delta_centered)))
+      
+      temp_df$perm_scores_delta_nr_obs[1] <- nr_obs
+      temp_df$perm_scores_delta_min_centered[1] <- min(perm_sd_centered)
+      temp_df$perm_scores_delta_max_centered[1] <- max(perm_sd_centered)
+      temp_df$score_delta_centered[1] <- score_delta_centered
+      
+      pval <- nr_obs/iterations
+      temp_df$p_val[1] <- pval
+    
+      if(pval == 0){
+        warning(paste0("Pval is exactly 0 for ", int))
+      }
+    
+    }else{
+  
+      # set to NA if nr of successful perm is (too) low
+      temp_df$perm_scores_delta_mean[1] <- NA
+      temp_df$perm_scores_delta_median[1] <- NA
+      temp_df$perm_scores_delta_sd[1] <- NA
+      temp_df$perm_scores_delta_iqr[1] <- NA
+      temp_df$perm_scores_delta_min[1] <- NA
+      temp_df$perm_scores_delta_max[1] <- NA
+      temp_df$p_val[1] <- NA 
+      
+    }
+    
+    # test normal distribution of permuted score deltas
+    if(length(unique(perm_score_deltas)) > 1 & length(which(!is.na(perm_score_deltas))) > 3){
+      temp_df$p_val_shapiro[1] <- shapiro.test(perm_score_deltas)[2]$p.value
+    }else{
+      temp_df$p_val_shapiro[1] <- NA
+    }
+  }else{
+    # if one or both of the actual scores is NA, no delta can be calculated
+    # fill df with NAs
+    temp_df$shared[1] <- FALSE
+    temp_df$score_delta[1] <- NA
+    temp_df$p_val[1] <- NA
+    temp_df$p_adj[1] <- NA
+    temp_df$perm_scores_delta_mean[1] <- NA
+    temp_df$perm_scores_delta_median[1] <- NA
+    temp_df$perm_scores_delta_length[1] <- NA
+    temp_df$perm_scores_delta_sd[1]  <- NA
+    temp_df$perm_scores_delta_iqr[1]  <- NA
+    temp_df$perm_scores_delta_min[1]  <- NA
+    temp_df$perm_scores_delta_max[1]  <- NA
+    
+    temp_df$perm_scores_delta_nr_obs[1] <- NA
+    temp_df$perm_scores_delta_min_centered[1] <- NA
+    temp_df$perm_scores_delta_max_centered[1] <- NA
+    temp_df$score_delta_centered[1] <- NA
+    
+    temp_df$p_val_shapiro[1] <- NA
+    temp_df$p_adj_shapiro[1] <- NA
+    
+    perm_score_deltas <- rep(NA, iterations)
+  }
+  
+  return_list <- list(temp_df, perm_score_deltas)
+  names(return_list) <- c("df", "perm_score_deltas")
+  return(return_list)
+  
+}
+```
+
+Visualise for a random interaction in a random cell type pair
+
+```{r}
+
+res_df_curr <- res_lists$`Fibroblasts&Neutrophil progs.`$res_df
+vis_df_curr <- res_lists$`Fibroblasts&Neutrophil progs.`$vis_df
+
+print(res_df_curr[rownames(res_df_curr) == "Ccl11_Ccr2",])
+
+ggplot(vis_df_curr, aes(x = Ccl11_Ccr2))+
+  geom_histogram()+
+  geom_vline(aes(xintercept = res_df_curr[
+    rownames(res_df_curr) == "Ccl11_Ccr2",]$score_delta))+
+  theme_classic()
+```

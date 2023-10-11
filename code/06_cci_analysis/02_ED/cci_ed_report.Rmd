@@ -1,0 +1,322 @@
+---
+title: "cci_ed_report"
+author: "Lea Wölbert"
+date: '2023-08-14'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load objects
+
+```{r seed,  message = FALSE}
+set.seed(37)
+```
+
+```{r load,  message = FALSE}
+library(tidyverse)
+library(scran)
+library(SingleCellExperiment)
+library(pheatmap)
+```
+
+```{r load_objects}
+cci_dist <- readRDS(snakemake@input[["cci_dist_input"]])
+cci <- readRDS(snakemake@input[["cci_input"]])
+```
+
+```{r colors, meassage = FALSE}
+colors_path <- snakemake@params[["colors_path"]]
+source(snakemake@params[["colors"]])
+
+col_cts_emi <- col_cts_str[names(col_cts_str) %in% cci$Identities$emitter]
+col_cts_rec <- col_cts_hsc[names(col_cts_hsc) %in% cci$Identities$receiver]
+```
+
+# Get distanced between young and old corresponding CTP 
+
+```{r}
+
+dist_oy <- cci_dist[grep("yng", rownames(cci_dist)), 
+                    grep("old", colnames(cci_dist))]
+
+dist_oy <- rownames_to_column(dist_oy, var = "ct_pair_yng")
+
+dist_oy_direct <- dist_oy %>%
+  pivot_longer(cols = c(2:ncol(dist_oy)),
+               names_to = "ct_pair_old",
+               names_ptypes = list("ct_pair_old" = character()),
+               values_to = "distance",
+               values_ptypes = list("euclidian_distance" = numeric()),
+  )
+
+dist_oy_direct$species_old <- vector(length = nrow(dist_oy_direct))
+dist_oy_direct$species_yng <- vector(length = nrow(dist_oy_direct))
+for(i in 1:nrow(dist_oy_direct)){
+  dist_oy_direct$species_old[i] <- str_split(dist_oy_direct$ct_pair_old[i], "_")[[1]][2]
+  dist_oy_direct$species_yng[i] <- str_split(dist_oy_direct$ct_pair_yng[i], "_")[[1]][2]
+}
+
+
+dist_oy_direct$emitter_old <- gsub("[&][[:print:]]+", "", dist_oy_direct$ct_pair_old)
+dist_oy_direct$receiver_old <- gsub("[[:print:]]+[&]", "", dist_oy_direct$ct_pair_old)
+dist_oy_direct$receiver_old <- gsub("[_][[:print:]]+", "", dist_oy_direct$receiver_old)
+dist_oy_direct$ct_pair_old <- gsub("[_][[:print:]]+", "", dist_oy_direct$ct_pair_old)
+
+dist_oy_direct$emitter_yng <- gsub("[&][[:print:]]+", "", dist_oy_direct$ct_pair_yng)
+dist_oy_direct$receiver_yng <- gsub("[[:print:]]+[&]", "", dist_oy_direct$ct_pair_yng)
+dist_oy_direct$receiver_yng <- gsub("[_][[:print:]]+", "", dist_oy_direct$receiver_yng)
+dist_oy_direct$ct_pair_yng <- gsub("[_][[:print:]]+", "", dist_oy_direct$ct_pair_yng)
+
+
+dist_oy_direct$emitter_old <- factor(dist_oy_direct$emitter_old,
+                                levels = names(col_cts_emi))
+dist_oy_direct$emitter_yng <- factor(dist_oy_direct$emitter_yng,
+                                levels = names(col_cts_emi))
+
+dist_oy_direct$receiver_old <- factor(dist_oy_direct$receiver_old,
+                                levels = names(col_cts_rec))
+dist_oy_direct$receiver_yng <- factor(dist_oy_direct$receiver_yng,
+                                levels = names(col_cts_rec))
+
+dist_oy_direct$species_old <- factor(dist_oy_direct$species_old,
+                                levels = names(col_spc))
+dist_oy_direct$species_yng <- factor(dist_oy_direct$species_yng,
+                                levels = names(col_spc))
+
+dist_oy_direct_direct <- dist_oy_direct[dist_oy_direct$ct_pair_yng == dist_oy_direct$ct_pair_old,]
+dist_oy_direct_direct <- dist_oy_direct_direct[dist_oy_direct_direct$species_old == dist_oy_direct_direct$species_yng,]
+
+```
+
+```{r}
+
+ggplot(dist_oy_direct_direct, 
+       aes(x = emitter_old, y = distance, color = emitter_old))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  scale_color_manual("emitter", values = col_cts_emi)+
+  theme(axis.text.x = element_text(angle = 90))+
+  geom_boxplot(color = "grey50", alpha = 0)+
+  ylab("ED young/old")+
+  xlab("Emitters")
+
+ggplot(dist_oy_direct_direct, 
+       aes(x = emitter_old, y = distance, color = receiver_old))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  scale_color_manual("receiver", values = col_cts_rec)+
+  theme(axis.text.x = element_text(angle = 90))+
+  geom_boxplot(color = "grey50", alpha = 0)+
+  ylab("ED young/old")+
+  xlab("Emitters")
+
+ggplot(dist_oy_direct_direct, 
+       aes(x = emitter_old, y = distance, color = species_old))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  scale_color_manual("age", values = col_spc)+
+  theme(axis.text.x = element_text(angle = 90))+
+  geom_boxplot(color = "grey50", alpha = 0)+
+  ylab("ED young/old")+
+  xlab("Emitters")
+
+ggplot(dist_oy_direct_direct, 
+       aes(x = receiver_old, y = distance, color = receiver_old))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  scale_color_manual("receiver", values = col_cts_rec)+
+  theme(axis.text.x = element_text(angle = 90))+
+  geom_boxplot(color = "grey50", alpha = 0)+
+  ylab("ED young/old")+
+  xlab("Receivers")
+
+ggplot(dist_oy_direct_direct, 
+       aes(x = receiver_old, y = distance, color = emitter_old))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  scale_color_manual("emitter", values = col_cts_emi)+
+  theme(axis.text.x = element_text(angle = 90))+
+  geom_boxplot(color = "grey50", alpha = 0)+
+  ylab("ED young/old")+
+  xlab("Receivers")
+
+ggplot(dist_oy_direct_direct, 
+       aes(x = receiver_old, y = distance, color = species_old))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  scale_color_manual("Species", values = col_spc)+
+  theme(axis.text.x = element_text(angle = 90))+
+  geom_boxplot(color = "grey50", alpha = 0)+
+  ylab("ED young/old")+
+  xlab("Receivers")
+```
+
+```{r}
+ggplot(dist_oy_direct_direct, 
+       aes(x = emitter_old, y = distance, color = emitter_old))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  scale_color_manual("emitter", values = col_cts_emi)+
+  theme(axis.text.x = element_text(angle = 90))+
+  geom_boxplot(color = "grey50", alpha = 0)+
+  facet_grid(cols = vars(dist_oy_direct_direct$species_old))+
+  ylab("ED young/old")+
+  xlab("Emitters")
+
+ggplot(dist_oy_direct_direct, 
+       aes(x = emitter_old, y = distance, color = receiver_old))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  scale_color_manual("receiver", values = col_cts_rec)+
+  theme(axis.text.x = element_text(angle = 90))+
+  geom_boxplot(color = "grey50", alpha = 0)+
+  facet_grid(cols = vars(dist_oy_direct_direct$species_old))+
+  ylab("ED young/old")+
+  xlab("Emitters")
+
+ggplot(dist_oy_direct_direct, 
+       aes(x = emitter_old, y = distance, color = species_old))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  scale_color_manual("age", values = col_spc)+
+  theme(axis.text.x = element_text(angle = 90))+
+  geom_boxplot(color = "grey50", alpha = 0)+
+  facet_grid(cols = vars(dist_oy_direct_direct$species_old))+
+  ylab("ED young/old")+
+  xlab("Emitters")
+
+ggplot(dist_oy_direct_direct, 
+       aes(x = receiver_old, y = distance, color = receiver_old))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  scale_color_manual("receiver", values = col_cts_rec)+
+  theme(axis.text.x = element_text(angle = 90))+
+  geom_boxplot(color = "grey50", alpha = 0)+
+  facet_grid(cols = vars(dist_oy_direct_direct$species_old))+
+  ylab("ED young/old")+
+  xlab("Receivers")
+
+ggplot(dist_oy_direct_direct, 
+       aes(x = receiver_old, y = distance, color = emitter_old))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  scale_color_manual("emitter", values = col_cts_emi)+
+  theme(axis.text.x = element_text(angle = 90))+
+  geom_boxplot(color = "grey50", alpha = 0)+
+  facet_grid(cols = vars(dist_oy_direct_direct$species_old))+
+  ylab("ED young/old")+
+  xlab("Receivers")
+
+ggplot(dist_oy_direct_direct, 
+       aes(x = receiver_old, y = distance, color = species_yng))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  scale_color_manual("Species", values = col_spc)+
+  theme(axis.text.x = element_text(angle = 90))+
+  geom_boxplot(color = "grey50", alpha = 0)+
+  facet_grid(cols = vars(dist_oy_direct_direct$species_old))+
+  ylab("ED young/old")+
+  xlab("Receivers")
+```
+
+```{r}
+ggplot(dist_oy_direct_direct, 
+       aes(x = species_old, y = distance, color = emitter_old))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  scale_color_manual("emitter", values = col_cts_emi)+
+  theme(axis.text.x = element_text(angle = 90))+
+  geom_boxplot(color = "grey50", alpha = 0)+
+  facet_grid(cols = vars(dist_oy_direct_direct$emitter_old))+
+  theme(strip.text.x = element_text(angle = 90))+
+  ylab("ED young/old")+
+  xlab("Species")
+
+ggplot(dist_oy_direct_direct, 
+       aes(x = species_old, y = distance, color = receiver_old))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  scale_color_manual("receiver", values = col_cts_rec)+
+  theme(axis.text.x = element_text(angle = 90))+
+  geom_boxplot(color = "grey50", alpha = 0)+
+  facet_grid(cols = vars(dist_oy_direct_direct$emitter_old))+
+  theme(strip.text.x = element_text(angle = 90))+
+  ylab("ED young/old")+
+  xlab("Species")
+
+ggplot(dist_oy_direct_direct, 
+       aes(x = species_old, y = distance, color = species_old))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  scale_color_manual("Species", values = col_spc)+
+  theme(axis.text.x = element_text(angle = 90))+
+  geom_boxplot(color = "grey50", alpha = 0)+
+  facet_grid(cols = vars(dist_oy_direct_direct$emitter_old))+
+  theme(strip.text.x = element_text(angle = 90))+
+  ylab("ED young/old")+
+  xlab("Species")
+
+ggplot(dist_oy_direct_direct, 
+       aes(x = species_old, y = distance, color = receiver_old))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  scale_color_manual("receiver", values = col_cts_rec)+
+  theme(axis.text.x = element_text(angle = 90))+
+  geom_boxplot(color = "grey50", alpha = 0)+
+  facet_grid(cols = vars(dist_oy_direct_direct$receiver_old))+
+  theme(strip.text.x = element_text(angle = 90))+
+  ylab("ED young/old")+
+  xlab("Species")
+
+ggplot(dist_oy_direct_direct, 
+       aes(x = species_old, y = distance, color = emitter_old))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  scale_color_manual("emitter", values = col_cts_emi)+
+  theme(axis.text.x = element_text(angle = 90))+
+  geom_boxplot(color = "grey50", alpha = 0)+
+  facet_grid(cols = vars(dist_oy_direct_direct$receiver_old))+
+  theme(strip.text.x = element_text(angle = 90))+
+  ylab("ED young/old")+
+  xlab("Species")
+
+ggplot(dist_oy_direct_direct, 
+       aes(x = species_old, y = distance, color = species_yng))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  scale_color_manual("Species", values = col_spc)+
+  theme(axis.text.x = element_text(angle = 90))+
+  geom_boxplot(color = "grey50", alpha = 0)+
+  facet_grid(cols = vars(dist_oy_direct_direct$receiver_old))+
+  theme(strip.text.x = element_text(angle = 90))+
+  ylab("ED young/old")+
+  xlab("Species")
+```
+
+```{r}
+ggplot(dist_oy_direct_direct, 
+       aes(x = species_old, y = distance, color = emitter_old))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  scale_color_manual("emitter", values = col_cts_emi)+
+  theme(axis.text.x = element_text(angle = 90))+
+  geom_boxplot(color = "grey50", alpha = 0)+
+  ylab("ED young/old")+
+  xlab("Species")
+
+ggplot(dist_oy_direct_direct, 
+       aes(x = species_old, y = distance, color = receiver_old))+
+  ggbeeswarm::geom_quasirandom()+
+  theme_classic()+
+  scale_color_manual("receiver", values = col_cts_rec)+
+  theme(axis.text.x = element_text(angle = 90))+
+  geom_boxplot(color = "grey50", alpha = 0)+
+  ylab("ED young/old")+
+  xlab("Species")
+```
+```{r}
+sessionInfo()
+```

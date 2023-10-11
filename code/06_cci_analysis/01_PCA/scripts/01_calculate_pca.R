@@ -12,7 +12,7 @@ temp_df <- temp_df[,-which(colSums(temp_df) == 0)]
 
 print(temp_df[1:10,1:10])
 
-# use base::pcromp for PCA calculation
+# use base::prcomp for PCA calculation
 pca_df <- prcomp(temp_df, scale. = TRUE)
 
 str(pca_df)

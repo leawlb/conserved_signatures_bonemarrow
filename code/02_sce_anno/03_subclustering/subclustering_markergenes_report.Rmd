@@ -138,7 +138,8 @@ gene_exps <- function(gene){
 
   # Gene expression UMAP in cluster X, separated by species
   plot_2 <- umap_gene(sce_subcluster, gene)+
-    facet_grid(cols = vars(sce_subcluster$Species_ID))
+    facet_grid(cols = vars(sce_subcluster$Species_ID),
+               rows = vars(sce_subcluster$Age_ID))
   
   ggdf <- as.data.frame(colData(sce_subcluster))
   logc <- assays(sce_subcluster)[["logcounts"]]
@@ -152,7 +153,8 @@ gene_exps <- function(gene){
     theme_classic()+
     geom_boxplot(color = "black", alpha = 0)+
     ylab(paste0(gene, " expression"))+
-    facet_grid(cols = vars(sce_subcluster$Species_ID))
+    facet_grid(cols = vars(sce_subcluster$Species_ID),
+               rows = vars(sce_subcluster$Age_ID))
   
   ggdf_full <- as.data.frame(colData(sce))
   logc_full <- assays(sce)[["logcounts"]]

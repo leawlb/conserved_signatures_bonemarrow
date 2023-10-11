@@ -6,6 +6,7 @@ set.seed(37)
 
 sce <- readRDS(file = snakemake@input[["sce_input"]])
 min_cells <- snakemake@params[["min_cells"]]
+min_cells <- 80
 
 assignment_list <- read.csv(snakemake@input[["assignment"]], 
                        header = TRUE, 
@@ -30,17 +31,15 @@ print(ncol(sce))
 sce <- sce[,!sce$Assignment == "remove"]
 print(ncol(sce))
 
-cell_nrs <- table(sce$Identity)
-print(min_cells)
-for(i in 1:length(cell_nrs)){
-  if(cell_nrs[i] <= min_cells){
-    print(paste("removing", names(cell_nrs)[i]))
-    sce <- sce[,!sce$Identity == names(cell_nrs)[i]]
-  }
-}
-
-print(levels(sce$Identity))
+# remove identities with low cell numbers
 sce$Identity <- unfactor(sce$Identity)
+ident_rm <- names(table(sce$Identity))[which(table(sce$Identity) <= min_cells)]
+
+print(paste("removing", ident_rm))
+# only if the ident_rm to be removed are still in SCE object
+sce <- sce[,!sce$Identity %in% ident_rm]
+
+# factor again using assignment_list for the correct sequence of identities
 print(assignment_list$Identity[assignment_list$Identity %in% sce$Identity])
 
 sce$Identity <- factor(sce$Identity, levels = assignment_list$Identity[

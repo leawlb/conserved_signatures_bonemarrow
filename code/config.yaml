@@ -18,6 +18,7 @@ metadata_paths:
   annotation_subclusters: "/metadata/02_sce_anno/annotation_subclusters.txt"
   annotation_final: "/metadata/02_sce_anno/annotation_final.txt"
   assignment: "/metadata/04_cci_prep/assignment.txt"
+  assignment_no_ct_removal: "/metadata/05_cci_alt/assignment_no_ct_removal.txt"
   lrdb_inp: "/metadata/04_cci_prep/mouse_lr_pair.rds"
   lrdb_out: "/metadata/04_cci_prep/lrdb"
 
@@ -56,10 +57,15 @@ values:
     flayer_integrated_padj_cutoff: 0.05
     flayer_integrated_fc_cutoff: 1.5
   04_cci_prep:
-    min_cells: 20 # min number of cells required per cell type to consider for cci
-    min_perc: 0.05 # min percentage of cells per cell type a gene must be expressed in to consider for cci
+    min_cells: 80 # min number of cells required per cell type to consider for cci
+    min_perc: 0.00 # min percentage of cells per cell type a gene must be expressed in to consider for cci
     top_level: 300 # top level of ligand-receptor pairs to ensure even leveling of ranks and scores
     colname_identity: celltypes
+    iterations: 100
+    min_sp_age_perc: 0.1 # % of iterations that must be successful for stats calc
+    nr_cores_age: 20
+    nr_cores_cts: 25
+    min_sp_cts: 3
 
 # Conditions  
 # in caps for use in R, only first letter capitalized for use in Snakefile

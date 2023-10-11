@@ -190,7 +190,7 @@ print(config["run_preprocessing_summary"])
 if config["run_preprocessing_summary"]:
   rule make_summary_report:
       input:
-          sce_input_path = OUTPUT_DAT + "01_drop/"
+          sce_input_path = OUTPUT_DAT + "/01_drop/"
       output:
           OUTPUT_REP + "/qc/preprocessing_qc_summary.html"
       params:
@@ -198,6 +198,6 @@ if config["run_preprocessing_summary"]:
           cutoff_detected = VALUES["cutoff_detected"],
           cutoff_mitos = VALUES["cutoff_mitos"],
           individuals = individuals,
-          metadata = config["metadata"]["table"]
+          metadata = config["metadata_paths"]["table"]
       script:
           "preprocessing_qc_summary.Rmd" 

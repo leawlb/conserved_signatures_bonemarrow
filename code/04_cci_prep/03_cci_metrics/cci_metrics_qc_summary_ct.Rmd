@@ -17,6 +17,7 @@ set.seed(37)
 
 ```{r load, message = FALSE}
 library(scran)
+library("ggpubr")
 ```
 
 ```{r sources, message = FALSE}
@@ -588,8 +589,6 @@ ggplot(idio_df_emi,
   facet_grid(cols = vars(idio_df_emi$name))+
   ggtitle("By condition")
 
-knitr::knit_exit()
-
 ```
 
 ## Receivers
@@ -970,8 +969,6 @@ ggplot(idio_df_rec,
   facet_grid(cols = vars(idio_df_rec$name))+
   ggtitle("By condition")
 
-knitr::knit_exit()
-
 ```
 
 # Additional pretty plots for meetings
@@ -994,6 +991,68 @@ ggplot(ipio_df,
 
 ```
 
+```{r}
+
+ggplot(idio_df, aes(x = nr_cells, y = nr_ints, color = identity))+
+  geom_point()+
+  theme_classic()+
+  ylim(c(0, (max(idio_df$nr_ints)+20)))+
+  xlim(c(0, (max(idio_df$nr_cells)+20)))+
+  scale_color_manual("Cell types", values = col_cts)+
+  ylab("Nr of interactions per cell type pair")+
+  theme(legend.position = "none")+
+  geom_smooth(method = lm, se = FALSE)
+
+ggplot(idio_df, aes(x = nr_cells, y = nr_ints, color = species))+
+  geom_point()+
+  theme_classic()+
+  ylim(c(0, (max(idio_df$nr_ints)+20)))+
+  xlim(c(0, (max(idio_df$nr_cells)+20)))+
+  scale_color_manual("Species", values = col_spc)+
+  ylab("Nr of interactions per cell type pair")+
+  theme(legend.position = "none")+
+  geom_smooth(method = lm, se = FALSE)
+
+ggplot(idio_df, aes(x = nr_cells, y = nr_ints, color = age))+
+  geom_point()+
+  theme_classic()+
+  ylim(c(0, (max(idio_df$nr_ints)+20)))+
+  xlim(c(0, (max(idio_df$nr_cells)+20)))+
+  scale_color_manual("Age", values = col_age)+
+  ylab("Nr of interactions per cell type pair")+
+  theme(legend.position = "none")+
+  geom_smooth(method = lm, se = FALSE)
+
+```
+
+```{r}
+ggscatter(idio_df, x = "nr_cells", y = "nr_ints",
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "nr of cells per cell type", 
+          ylab = "nr of interactions per cell type")+
+  ylim(c(0, (max(idio_df$nr_ints)+20)))+
+  xlim(c(0, (max(idio_df$nr_cells)+20)))
+
+ggscatter(idio_df[idio_df$assignment == "emitter",], x = "nr_cells", 
+          y = "nr_ints", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "nr of cells per cell type", 
+          ylab = "nr of interactions per cell type")+
+  ylim(c(0, (max(idio_df$nr_ints)+20)))+
+  xlim(c(0, (max(idio_df$nr_cells)+20)))
+
+ggscatter(idio_df[idio_df$assignment == "receiver",], x = "nr_cells", 
+          y = "nr_ints", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "nr of cells per cell type", 
+          ylab = "nr of interactions per cell type")+
+  ylim(c(0, (max(idio_df$nr_ints)+20)))+
+  xlim(c(0, (max(idio_df$nr_cells)+20)))
+
+```
 
 
 ```{r}

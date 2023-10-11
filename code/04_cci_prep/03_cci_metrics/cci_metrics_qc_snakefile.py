@@ -59,35 +59,36 @@ stored separately
 # extract infos on identity pairs
 rule extract_ipi:
     input:
-        interaction_list = OUTPUT_DAT + "/09_intl/interaction_list_{species}_{age}"
+        cci_input = OUTPUT_DAT + "/09_intl/interaction_list_{species}_{age}",
+        sce_input = OUTPUT_BASE + "/cci_objects/01_cci_preparation/05_down/sce_{species}_{age}-05"
     output:
-        ident_pair_info = OUTPUT_DAT + "/10_ipis/ipi_{species}_{age}"
+        ipi_list = OUTPUT_DAT + "/10_ipis/ipi_{species}_{age}"
     params:
-        main_functions = "../../source/cci_functions_prep_main.R"
+        metrics_functions = "../../source/cci_functions_metrics.R"
     script:
         "scripts/10_get_ident_pair_info.R" 
 
 # extract infos on identities
 rule extract_idi:
     input:
-        ident_pair_info = rules.extract_ipi.output
+        ipi_list = rules.extract_ipi.output
     output:
-        ident_info = OUTPUT_DAT + "/11_idis/idi_{species}_{age}"
+        idi_list = OUTPUT_DAT + "/11_idis/idi_{species}_{age}"
     params:
-        main_functions = "../../source/cci_functions_prep_main.R"
+        metrics_functions = "../../source/cci_functions_metrics.R"
     script:
         "scripts/11_get_ident_info.R" 
         
 # extract nr of ligands or receptors per identities
 rule extract_nrlrs:
     input:
-        interaction_list = OUTPUT_DAT + "/09_intl/interaction_list_{species}_{age}",
-        ident_pair_info = rules.extract_idi.output
+        cci_input = OUTPUT_DAT + "/09_intl/interaction_list_{species}_{age}",
+        idi_list = rules.extract_idi.output
     output:
-        ident_lrs_info = OUTPUT_DAT + "/11_idis/ilrs_{species}_{age}",
-        ident_nrlrs_info = OUTPUT_DAT + "/11_idis/nrlrs_{species}_{age}"
+        ident_lrs_list = OUTPUT_DAT + "/11_idis/ilrs_{species}_{age}",
+        ident_nrlrs_list = OUTPUT_DAT + "/11_idis/nrlrs_{species}_{age}"
     params:
-        main_functions = "../../source/cci_functions_prep_main.R"
+        metrics_functions = "../../source/cci_functions_metrics.R"
     script:
         "scripts/11_get_ident_nrlrs_info.R" 
  
@@ -100,10 +101,10 @@ Reports
 
 rule make_cci_qc_report_conditions:
     input:
-        ident_pair_info = rules.extract_ipi.output.ident_pair_info,
-        ident_info = rules.extract_idi.output.ident_info,
-        ident_nrlrs_info = rules.extract_nrlrs.output.ident_nrlrs_info,
-        sce_input = OUTPUT_DAT + "/05_down/sce_{species}_{age}-05"
+        ident_pair_info = rules.extract_ipi.output.ipi_list,
+        ident_info = rules.extract_idi.output.idi_list,
+        ident_nrlrs_info = rules.extract_nrlrs.output.ident_nrlrs_list,
+        sce_input = OUTPUT_BASE + "/cci_objects/01_cci_preparation/05_down/sce_{species}_{age}-05"
     output:
         OUTPUT_REP + "/cci_metrics_qc/cci_metrics_qc_report_{species}_{age}.html"
     params:
@@ -117,10 +118,10 @@ rule make_cci_qc_report_conditions:
 
 rule make_cci_qc_summary_ctp:
     input:
-        ident_pair_info = expand(rules.extract_ipi.output.ident_pair_info, species = species, age = age),
-        ident_info = expand(rules.extract_idi.output.ident_info, species = species, age = age),
-        ident_nrlrs_info = expand(rules.extract_nrlrs.output.ident_nrlrs_info, species = species, age = age),
-        sce_input = expand(OUTPUT_DAT + "/05_down/sce_{species}_{age}-05", species = species, age = age)
+        ident_pair_info = expand(rules.extract_ipi.output.ipi_list, species = species, age = age),
+        ident_info = expand(rules.extract_idi.output.idi_list, species = species, age = age),
+        ident_nrlrs_info = expand(rules.extract_nrlrs.output.ident_nrlrs_list, species = species, age = age),
+        sce_input = expand(OUTPUT_BASE + "/cci_objects/01_cci_preparation/05_down/sce_{species}_{age}-05", species = species, age = age)
     output:
         OUTPUT_REP + "/cci_metrics_qc_summary_ctp.html"
     params:
@@ -133,10 +134,10 @@ rule make_cci_qc_summary_ctp:
         
 rule make_cci_qc_summary_ct:
     input:
-        ident_pair_info = expand(rules.extract_ipi.output.ident_pair_info, species = species, age = age),
-        ident_info = expand(rules.extract_idi.output.ident_info, species = species, age = age),
-        ident_nrlrs_info = expand(rules.extract_nrlrs.output.ident_nrlrs_info, species = species, age = age),
-        sce_input = expand(OUTPUT_DAT + "/05_down/sce_{species}_{age}-05", species = species, age = age)
+        ident_pair_info = expand(rules.extract_ipi.output.ipi_list, species = species, age = age),
+        ident_info = expand(rules.extract_idi.output.idi_list, species = species, age = age),
+        ident_nrlrs_info = expand(rules.extract_nrlrs.output.ident_nrlrs_list, species = species, age = age),
+        sce_input = expand(OUTPUT_BASE + "/cci_objects/01_cci_preparation/05_down/sce_{species}_{age}-05", species = species, age = age)
     output:
         OUTPUT_REP + "/cci_metrics_qc_summary_ct.html"
     params:
@@ -146,3 +147,4 @@ rule make_cci_qc_summary_ct:
         colors = "../../source/colors.R"
     script:
         "cci_metrics_qc_summary_ct.Rmd" 
+

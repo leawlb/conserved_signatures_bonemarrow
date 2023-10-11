@@ -10,8 +10,6 @@ min_perc <- snakemake@params[["min_perc"]]
 
 # use main pipeline 
 source(snakemake@params[["main_functions"]])
-# user helper functions
-source(snakemake@params[["help_functions"]])
 
 #-------------------------------------------------------------------------------
 # helper function for quick and easy preparation of datasheet and counts matrix
@@ -19,11 +17,12 @@ prep_list <- prepare_extraction(sce = sce, assay_use = "downsampled")
 
 idents_list <- as.list(prep_list$idents)
 
+
 # helper function for implementing gene cutoff according to percentage of cells
 expr_genes_list <- lapply(X = idents_list, 
                           perc_df = perc_df, 
                           cutoff = min_perc, 
-                          FUN = perc_expr_genes)
+                          FUN = nexpr_gene_cutoff)
     
 names(expr_genes_list) <- prep_list$idents
 
@@ -34,10 +33,10 @@ names(expr_genes_list) <- prep_list$idents
 interaction_mat <- extract_matrix(counts = prep_list$countsmatrix,
                                   datasheet = prep_list$datasheet,
                                   expr_genes = expr_genes_list,
-                                  interactions = lrdb
+                                  lrdb = lrdb
                                   )
 
-table(is.na(interaction_mat))
+#table(is.na(interaction_mat))
 
 saveRDS(interaction_mat, snakemake@output[["interaction_mat"]])
 saveRDS(prep_list$datasheet, snakemake@output[["datasheet"]])

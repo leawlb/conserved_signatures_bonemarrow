@@ -68,6 +68,10 @@ These conditions are fulfilled in 01_cci_prep.
 
 Please refer to 01_cci_prep for detailed steps to ensure these conditions.
 
+The main functions for CCI calculation were adjusted for scRNAseq data
+from Adrien Jolly's CellInteractionScores Method:
+https://github.com/AdrienJolly/CellInteractionScores
+
 """
 
 #-------------------------------------------------------------------------------
@@ -88,7 +92,7 @@ rule get_perc_df:
     output:
         perc_df = OUTPUT_DAT + "/06_perc/perc_df_{species}_{age}"
     params:
-        main_functions = "../../source/cci_functions_prep_main.R"
+        main_functions = "../../source/cci_functions_calculation.R"
     script:
         "scripts/06_get_perc_df.R" 
 
@@ -118,15 +122,14 @@ rule get_interaction_mat:
         datasheet = OUTPUT_DAT + "/07_intm/datasheet_{species}_{age}"
     params:
         min_perc = VALUES["min_perc"],
-        main_functions = "../../source/cci_functions_prep_main.R",
-        help_functions = "../../source/cci_functions_prep_help.R"
+        main_functions = "../../source/cci_functions_calculation.R"
     script:
         "scripts/07_get_interaction_mat.R" 
         
 #-------------------------------------------------------------------------------
 
 """
-Interaction Ranking
+Interaction Scoring
 
 The heart of this method.
 
@@ -145,17 +148,17 @@ information.
 
 """
 
-rule interaction_ranking:
+rule interaction_scoring:
     input:
         interaction_mat = rules.get_interaction_mat.output.interaction_mat,
         datasheet = rules.get_interaction_mat.output.datasheet
     output:
-        interaction_ranking = OUTPUT_DAT + "/08_rank/interaction_ranking_{species}_{age}"
+        interaction_scoring = OUTPUT_DAT + "/08_rank/interaction_ranking_{species}_{age}"
     params:
         top_level = VALUES["top_level"],
-        main_functions = "../../source/cci_functions_prep_main.R"
+        main_functions = "../../source/cci_functions_calculation.R"
     script:
-        "scripts/08_interaction_ranking.R" 
+        "scripts/08_interaction_scoring.R" 
         
 """
 
@@ -164,17 +167,17 @@ Making the interaction list.
 The ranking and scoring are transformed into a more convenient format.
 
 Output = list of annotated objects with all relevant information and all
-data required for CCI analysis.
+data required for CCI analysis == CCI OBJECTS
 """
 
 rule interaction_list:
     input:
-        interaction_ranking = rules.interaction_ranking.output,
+        interaction_scoring = rules.interaction_scoring.output,
         lrdb = LRDB_OUT
     output:
         interaction_list = OUTPUT_DAT + "/09_intl/interaction_list_{species}_{age}"
     params:
-        main_functions = "../../source/cci_functions_prep_main.R"
+        main_functions = "../../source/cci_functions_calculation.R"
     script:
         "scripts/09_get_interaction_list.R" 
         

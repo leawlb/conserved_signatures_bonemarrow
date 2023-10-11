@@ -2,21 +2,14 @@ set.seed(37)
 
 #-------------------------------------------------------------------------------
 
-interaction_list <- readRDS(file = snakemake@input[["interaction_list"]])
+cci <- readRDS(file = snakemake@input[["cci_input"]])
+sce <- readRDS(file = snakemake@input[["sce_input"]])
 
-age_curr <- snakemake@wildcards[["age"]]
-print(age_curr)
-species_curr <- snakemake@wildcards[["species"]]
-print(species_curr)
 
 # use main pipeline 
-source(snakemake@params[["main_functions"]])
+source(snakemake@params[["metrics_functions"]])
 
 # extract nr of interactions per identity pairs and more
-ident_pair_info <- extract_ident_pair_info(int_list = interaction_list)
+ipi_list <- extract_ident_pair_info(cci = cci, sce = sce)
 
-ident_pair_info$overview$age <- age_curr
-ident_pair_info$overview$species <- species_curr
-ident_pair_info$overview$condition <- "main"
-
-saveRDS(ident_pair_info, snakemake@output[["ident_pair_info"]])
+saveRDS(ipi_list, snakemake@output[["ipi_list"]])

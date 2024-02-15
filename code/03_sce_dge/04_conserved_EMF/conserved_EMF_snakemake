@@ -1,0 +1,5 @@
+
+snakemake --cluster "bsub -q long -n20 -R rusage[mem=150GB]" -p -j8 -c20 -s conserved_EMF_snakefile.py --latency-wait 20 --configfile ../../config.yaml -n
+
+
+snakemake --cluster "bsub -q medium -n5 -R rusage[mem=150GB]" -p -j40 -c5 -s conserved_EMF_snakefile.py --latency-wait 20 --configfile ../../config.yaml -n

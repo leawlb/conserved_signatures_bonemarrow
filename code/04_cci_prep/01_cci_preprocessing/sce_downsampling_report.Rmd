@@ -68,7 +68,7 @@ col_cts <- c(col_cts_hsc, col_cts_str)
   - downsampled to lowest quality samples
   
   
-## 1. Cluster cell type labels and 3. Assignment
+## 1. Cluster cell type labels and Assignment
 
 ```{r}
 for(i in 1:length(sce_list)){
@@ -131,11 +131,326 @@ qcdf_gg <- as.data.frame(qcdf_gg)
 qcdf_gg$Age_ID <- factor(qcdf_gg$Age_ID, levels = names(col_age))
 qcdf_gg$Species_ID <- factor(qcdf_gg$Species_ID, levels = names(col_spc))
 qcdf_gg$Identity <- factor(qcdf_gg$Identity, levels = names(col_cts))
+qcdf_gg$Status <- factor(qcdf_gg$Status, levels = c("before downsampling",
+                                                    "after downsampling"))
 ```
 
 # Show stats
 
-## How much did they change (per cell type)?
+## Before
+
+```{r, fig.width= 12}
+qcdf_gg_bf <- qcdf_gg[qcdf_gg$Status == "before downsampling",]
+ggplot(qcdf_gg_bf, aes(x = Species_ID, y = sum,
+                        color = Species_ID, alpha = 0.25))+
+  geom_jitter(size = 0.3, alpha = 50)+
+  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 120000))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg_bf$Identity),
+             rows = vars(qcdf_gg_bf$Age_ID))+
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_spc)+
+  ylab("Library size (ligand/receptor genes)")+
+  ggtitle("Before downsampling")
+
+ggplot(qcdf_gg_bf, aes(x = Species_ID, y = sum,
+                        color = Species_ID, alpha = 0.25))+
+  geom_jitter(size = 0.3, alpha = 50)+
+  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 120000))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg_bf$Identity))+
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_spc)+
+  ylab("Library size (ligand/receptor genes)")+
+  ggtitle("Before downsampling")
+```
+
+```{r, fig.width= 12}
+ggplot(qcdf_gg_bf, aes(x = Species_ID, y = detected,
+                        color = Species_ID, alpha = 0.25))+
+  geom_jitter(size = 0.3, alpha = 50)+
+  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg_bf$Identity),
+             rows = vars(qcdf_gg_bf$Age_ID))+
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_spc)+
+  ylab("Nr of detected ligand/receptor genes")+
+  ggtitle("Before downsampling")
+
+ggplot(qcdf_gg_bf, aes(x = Species_ID, y = detected,
+                        color = Species_ID, alpha = 0.25))+
+  geom_jitter(size = 0.3, alpha = 50)+
+  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg_bf$Identity))+
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_spc)+
+  ylab("Nr of detected ligand/receptor genes")+
+  ggtitle("Before downsampling")
+```
+
+```{r, fig.width= 12}
+ggplot(qcdf_gg_bf, aes(x = Age_ID, y = sum,
+                        color = Age_ID, alpha = 0.25))+
+  geom_jitter(size = 0.3, alpha = 50)+
+  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 120000))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg_bf$Identity))+
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Age", values = col_age)+
+  ylab("Library size (ligand/receptor genes)")+
+  ggtitle("Before downsampling")
+```
+
+```{r, fig.width= 12}
+ggplot(qcdf_gg_bf, aes(x = Age_ID, y = detected,
+                        color = Age_ID, alpha = 0.25))+
+  geom_jitter(size = 0.3, alpha = 50)+
+  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg_bf$Identity))+
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Age", values = col_age)+
+  ylab("Nr of detected ligand/receptor genes")+
+  ylab("Library size (ligand/receptor genes)")+
+  ggtitle("Before downsampling")
+```
+
+```{r}
+ggplot(qcdf_gg_bf, aes(x = Species_ID, y = sum,
+                        color = Species_ID, alpha = 0.25))+
+  geom_jitter(size = 0.3, alpha = 50)+
+  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 120000))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg_bf$Age_ID))+
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_spc)+
+  ylab("Library size (ligand/receptor genes)")+
+  ggtitle("Before downsampling")
+```
+
+```{r}
+ggplot(qcdf_gg_bf, aes(x = Species_ID, y = detected,
+                        color = Species_ID, alpha = 0.25))+
+  geom_jitter(size = 0.3, alpha = 50)+
+  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg_bf$Age_ID))+
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_spc)+
+  ylab("Nr of detected ligand/receptor genes")+
+  ggtitle("Before downsampling")
+```
+
+```{r}
+ggplot(qcdf_gg_bf, aes(x = Age_ID, y = sum,
+                        color = Age_ID, alpha = 0.25))+
+  geom_jitter(size = 0.3, alpha = 50)+
+  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 120000))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg_bf$Species_ID))+
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Age", values = col_age)+
+  ylab("Library size (ligand/receptor genes)")+
+  ggtitle("Before downsampling")
+```
+
+```{r}
+ggplot(qcdf_gg_bf, aes(x = Age_ID, y = detected,
+                        color = Age_ID, alpha = 0.25))+
+  geom_jitter(size = 0.3, alpha = 50)+
+  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg_bf$Species_ID))+
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Age", values = col_age)+
+  ylab("Nr of detected ligand/receptor genes")+
+  ggtitle("Before downsampling")
+```
+
+## After 
+
+```{r, fig.width= 12}
+qcdf_gg_ds <- qcdf_gg[qcdf_gg$Status == "after downsampling",]
+ggplot(qcdf_gg_ds, aes(x = Species_ID, y = sum,
+                        color = Species_ID, alpha = 0.25))+
+  geom_jitter(size = 0.3, alpha = 50)+
+  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 120000))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg_ds$Identity),
+             rows = vars(qcdf_gg_ds$Age_ID))+
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_spc)+
+  ylab("Library size (ligand/receptor genes)")+
+  ggtitle("After downsampling")
+
+ggplot(qcdf_gg_ds, aes(x = Species_ID, y = sum,
+                        color = Species_ID, alpha = 0.25))+
+  geom_jitter(size = 0.3, alpha = 50)+
+  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 120000))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg_ds$Identity))+
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_spc)+
+  ylab("Library size (ligand/receptor genes)")+
+  ggtitle("After downsampling")
+```
+
+```{r, fig.width= 12}
+ggplot(qcdf_gg_ds, aes(x = Species_ID, y = detected,
+                        color = Species_ID, alpha = 0.25))+
+  geom_jitter(size = 0.3, alpha = 50)+
+  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg_ds$Identity),
+             rows = vars(qcdf_gg_ds$Age_ID))+
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_spc)+
+  ylab("Nr of detected ligand/receptor genes")+
+  ggtitle("After downsampling")
+
+ggplot(qcdf_gg_ds, aes(x = Species_ID, y = detected,
+                        color = Species_ID, alpha = 0.25))+
+  geom_jitter(size = 0.3, alpha = 50)+
+  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg_ds$Identity))+
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_spc)+
+  ylab("Nr of detected ligand/receptor genes")+
+  ggtitle("After downsampling")
+```
+
+```{r, fig.width= 12}
+ggplot(qcdf_gg_ds, aes(x = Age_ID, y = sum,
+                        color = Age_ID, alpha = 0.25))+
+  geom_jitter(size = 0.3, alpha = 50)+
+  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 120000))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg_ds$Identity))+
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Age", values = col_age)+
+  ylab("Library size (ligand/receptor genes)")+
+  ggtitle("After downsampling")
+```
+
+```{r, fig.width= 12}
+ggplot(qcdf_gg_ds, aes(x = Age_ID, y = detected,
+                        color = Age_ID, alpha = 0.25))+
+  geom_jitter(size = 0.3, alpha = 50)+
+  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg_ds$Identity))+
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Age", values = col_age)+
+  ylab("Nr of detected ligand/receptor genes")+
+  ggtitle("After downsampling")
+```
+
+```{r}
+ggplot(qcdf_gg_ds, aes(x = Species_ID, y = sum,
+                        color = Species_ID, alpha = 0.25))+
+  geom_jitter(size = 0.3, alpha = 50)+
+  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 120000))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg_ds$Age_ID))+
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_spc)+
+  ylab("Library size (ligand/receptor genes)")+
+  ggtitle("After downsampling")
+```
+
+```{r}
+ggplot(qcdf_gg_ds, aes(x = Species_ID, y = detected,
+                        color = Species_ID, alpha = 0.25))+
+  geom_jitter(size = 0.3, alpha = 50)+
+  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg_ds$Age_ID))+
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Species", values = col_spc)+
+  ylab("Nr of detected ligand/receptor genes")+
+  ggtitle("After downsampling")
+```
+
+```{r}
+ggplot(qcdf_gg_ds, aes(x = Age_ID, y = sum,
+                        color = Age_ID, alpha = 0.25))+
+  geom_jitter(size = 0.3, alpha = 50)+
+  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 120000))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg_ds$Species_ID))+
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Age", values = col_age)+
+  ylab("Library size (ligand/receptor genes)")+
+  ggtitle("After downsampling")
+```
+
+```{r}
+ggplot(qcdf_gg_ds, aes(x = Age_ID, y = detected,
+                        color = Age_ID, alpha = 0.25))+
+  geom_jitter(size = 0.3, alpha = 50)+
+  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg_ds$Species_ID))+
+  theme(strip.text.x = element_text(angle = 90))+
+  scale_color_manual("Age", values = col_age)+
+  ylab("Nr of detected ligand/receptor genes")+
+  ggtitle("After downsampling")
+```
+
+## Direct comparison
 
 ```{r, fig.height = 12}
 
@@ -150,7 +465,9 @@ ggplot(qcdf_gg_yng, aes(x = Status, y = sum,
   scale_y_log10()+
   facet_grid(cols = vars(qcdf_gg_yng$Identity),
              rows = vars(qcdf_gg_yng$Species_ID))+
-  theme(strip.text.x = element_text(angle = 90))
+  theme(strip.text.x = element_text(angle = 90))+
+  ylab("Library size (ligand/receptor genes)")+
+  ggtitle("Downsampling comparison")
 ```
 
 ```{r, fig.height = 12}
@@ -166,190 +483,43 @@ ggplot(qcdf_gg_old, aes(x = Status, y = sum,
   scale_y_log10()+
   facet_grid(cols = vars(qcdf_gg_old$Identity),
              rows = vars(qcdf_gg_old$Species_ID))+
-  theme(strip.text.x = element_text(angle = 90))
+  theme(strip.text.x = element_text(angle = 90))+
+  ylab("Library size (ligand/receptor genes)")+
+  ggtitle("Downsampling comparison")
 ```
 
-## Are they similar afterwards?
+```{r, fig.height = 12}
 
-```{r, fig.width= 12}
-
-qcdf_gg_ds <- qcdf_gg[qcdf_gg$Status == "after downsampling",]
-ggplot(qcdf_gg_ds, aes(x = Species_ID, y = sum,
-                        color = Species_ID, alpha = 0.25))+
-  geom_jitter(size = 0.3, alpha = 50)+
+qcdf_gg_yng <- qcdf_gg[qcdf_gg$Age_ID == "yng",]
+ggplot(qcdf_gg_yng, aes(x = Status, y = detected,
+                    color = Status, alpha = 0.5))+
+  geom_jitter(size = 0.1, alpha = 50)+
   geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 120000))+
   scale_y_log10()+
-  facet_grid(cols = vars(qcdf_gg_ds$Identity))+
+  facet_grid(cols = vars(qcdf_gg_yng$Identity),
+             rows = vars(qcdf_gg_yng$Species_ID))+
   theme(strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Species", values = col_spc)
+  ylab("Nr of detected ligand/receptor genes")+
+  ggtitle("Downsampling comparison")
 ```
 
-```{r, fig.width= 12}
+```{r, fig.height = 12}
 
-ggplot(qcdf_gg_ds, aes(x = Age_ID, y = sum,
-                        color = Age_ID, alpha = 0.25))+
-  geom_jitter(size = 0.3, alpha = 50)+
-  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 120000))+
-  scale_y_log10()+
-  facet_grid(cols = vars(qcdf_gg_ds$Identity))+
-  theme(strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Age", values = col_age)
-```
-
-```{r}
-
-ggplot(qcdf_gg_ds, aes(x = Species_ID, y = sum,
-                        color = Species_ID, alpha = 0.25))+
-  geom_jitter(size = 0.3, alpha = 50)+
-  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 120000))+
-  scale_y_log10()+
-  facet_grid(cols = vars(qcdf_gg_ds$Age_ID))+
-  theme(strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Species", values = col_spc)
-```
-
-```{r}
-
-ggplot(qcdf_gg_ds, aes(x = Age_ID, y = sum,
-                        color = Age_ID, alpha = 0.25))+
-  geom_jitter(size = 0.3, alpha = 50)+
-  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 120000))+
-  scale_y_log10()+
-  facet_grid(cols = vars(qcdf_gg_ds$Species_ID))+
-  theme(strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Age", values = col_age)
-```
-
-```{r}
-
-qcdf_gg_ds <- qcdf_gg[qcdf_gg$Status == "after downsampling",]
-ggplot(qcdf_gg_ds, aes(x = Species_ID, y = detected,
-                        color = Species_ID, alpha = 0.25))+
+qcdf_gg_old <- qcdf_gg[qcdf_gg$Age_ID == "old",]
+ggplot(qcdf_gg_old, aes(x = Status, y = detected,
+                    color = Status, alpha = 0.25))+
   geom_jitter(size = 0.3, alpha = 50)+
   geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
   scale_y_log10()+
-  facet_grid(cols = vars(qcdf_gg_ds$Age_ID))+
+  facet_grid(cols = vars(qcdf_gg_old$Identity),
+             rows = vars(qcdf_gg_old$Species_ID))+
   theme(strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Species", values = col_spc)
-```
-
-```{r}
-
-ggplot(qcdf_gg_ds, aes(x = Age_ID, y = detected,
-                        color = Age_ID, alpha = 0.25))+
-  geom_jitter(size = 0.3, alpha = 50)+
-  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  scale_y_log10()+
-  facet_grid(cols = vars(qcdf_gg_ds$Species_ID))+
-  theme(strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Age", values = col_age)
-```
-
-# How similar were they before?
-
-```{r, fig.width= 12}
-
-qcdf_gg_bf <- qcdf_gg[qcdf_gg$Status == "before downsampling",]
-ggplot(qcdf_gg_bf, aes(x = Species_ID, y = sum,
-                        color = Species_ID, alpha = 0.25))+
-  geom_jitter(size = 0.3, alpha = 50)+
-  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 120000))+
-  scale_y_log10()+
-  facet_grid(cols = vars(qcdf_gg_bf$Identity))+
-  theme(strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Species", values = col_spc)
-```
-
-```{r, fig.width= 12}
-
-ggplot(qcdf_gg_bf, aes(x = Age_ID, y = sum,
-                        color = Age_ID, alpha = 0.25))+
-  geom_jitter(size = 0.3, alpha = 50)+
-  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 120000))+
-  scale_y_log10()+
-  facet_grid(cols = vars(qcdf_gg_bf$Identity))+
-  theme(strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Age", values = col_age)
-```
-
-```{r}
-
-ggplot(qcdf_gg_bf, aes(x = Species_ID, y = sum,
-                        color = Species_ID, alpha = 0.25))+
-  geom_jitter(size = 0.3, alpha = 50)+
-  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 120000))+
-  scale_y_log10()+
-  facet_grid(cols = vars(qcdf_gg_bf$Age_ID))+
-  theme(strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Species", values = col_spc)
-```
-
-```{r}
-
-ggplot(qcdf_gg_bf, aes(x = Age_ID, y = sum,
-                        color = Age_ID, alpha = 0.25))+
-  geom_jitter(size = 0.3, alpha = 50)+
-  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 120000))+
-  scale_y_log10()+
-  facet_grid(cols = vars(qcdf_gg_bf$Species_ID))+
-  theme(strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Age", values = col_age)
-```
-
-```{r}
-
-ggplot(qcdf_gg_bf, aes(x = Species_ID, y = detected,
-                        color = Species_ID, alpha = 0.25))+
-  geom_jitter(size = 0.3, alpha = 50)+
-  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  scale_y_log10()+
-  facet_grid(cols = vars(qcdf_gg_bf$Age_ID))+
-  theme(strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Species", values = col_spc)
-```
-
-```{r}
-
-ggplot(qcdf_gg_bf, aes(x = Age_ID, y = detected,
-                        color = Age_ID, alpha = 0.25))+
-  geom_jitter(size = 0.3, alpha = 50)+
-  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  scale_y_log10()+
-  facet_grid(cols = vars(qcdf_gg_bf$Species_ID))+
-  theme(strip.text.x = element_text(angle = 90))+
-  scale_color_manual("Age", values = col_age)
+  ylab("Nr of detected ligand/receptor genes")+
+  ggtitle("Downsampling comparison")
 ```
 
 # Check LRDB and SCE Gene Symbol/Gene ID mapping

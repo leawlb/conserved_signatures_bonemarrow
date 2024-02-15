@@ -3,7 +3,7 @@
 """
 Batch correction, clustering and cluster annotation
 
-This is the version for tested pipelines. 
+This is the version for the chosen method after various testing. 
 For testing pipelines with other methods see 02_sce_anno_TEST
 
 """

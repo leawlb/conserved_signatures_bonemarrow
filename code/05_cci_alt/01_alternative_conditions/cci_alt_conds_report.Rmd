@@ -131,13 +131,80 @@ ggplot(ilr_df,
   ylab("Nr of ligands/receptors per identity")+
   ylim(c(0, max(ilr_df$nr_lrs)))
 
+ggplot(ipi_df, 
+       aes(x = condition, y = nr_ints))+
+  geom_boxplot(alpha = 0, color = "grey30")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("Species" , values = col_spc)+
+  xlab("Condition")+
+  ylab("Nr of interactions per cell type pair")+
+  ylim(c(0, max(ipi_df$nr_ints)))
+
+ggplot(ilr_df, 
+       aes(x = condition, y = nr_lrs))+
+  geom_boxplot(alpha = 0, color = "grey30")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("Species" , values = col_spc)+
+  xlab("Condition")+
+  ylab("Nr of ligands/receptors per identity")+
+  ylim(c(0, max(ilr_df$nr_lrs)))
+
 ```
+
+```{r}
+ggscatter(ipi_df[ipi_df$condition == "all preprocessing steps",],
+          x = "nr_cells_emitter", y = "nr_ints",
+          add = "reg.line", conf.int = TRUE, size = 0.4,
+          cor.coef = TRUE, cor.method = "pearson", 
+          cor.coef.size = 3.5,  cor.coeff.args = list(color = "dodgerblue3"),
+          xlab = "nr of cells per emitter", 
+          ylab = "nr of interactions per cell type pair")+
+  ylim(c(0, (max(ipi_df$nr_ints)+20)))+
+  xlim(c(0, (max(ipi_df$nr_cells_emitter)+20)))+
+  ggtitle("all preprocessing steps")
+
+ggscatter(ipi_df[ipi_df$condition == "all preprocessing steps",],
+          x = "nr_cells_receiver", y = "nr_ints",
+          add = "reg.line", conf.int = TRUE, size = 0.4,
+          cor.coef = TRUE, cor.method = "pearson",
+          cor.coef.size = 3.5,  cor.coeff.args = list(color = "dodgerblue3"),
+          xlab = "nr of cells per receiver", 
+          ylab = "nr of interactions per cell type pair")+
+  ylim(c(0, (max(ipi_df$nr_ints)+20)))+
+  xlim(c(0, (max(ipi_df$nr_cells_receiver)+20)))+
+  ggtitle("all preprocessing steps")
+
+ggscatter(ipi_df[ipi_df$condition == "no pre-processing steps",],
+          x = "nr_cells_emitter", y = "nr_ints",
+          add = "reg.line", conf.int = TRUE, size = 0.4,
+          cor.coef = TRUE, cor.method = "pearson", 
+          cor.coef.size = 3.5,  cor.coeff.args = list(color = "dodgerblue3"),
+          xlab = "nr of cells per emitter", 
+          ylab = "nr of interactions per cell type pair")+
+  ylim(c(0, (max(ipi_df$nr_ints)+20)))+
+  xlim(c(0, (max(ipi_df$nr_cells_emitter)+20)))+
+  ggtitle("no preprocessing steps")
+
+ggscatter(ipi_df[ipi_df$condition == "no pre-processing steps",],
+          x = "nr_cells_receiver", y = "nr_ints",
+          add = "reg.line", conf.int = TRUE, size = 0.4,
+          cor.coef = TRUE, cor.method = "pearson",
+          cor.coef.size = 3.5,  cor.coeff.args = list(color = "dodgerblue3"),
+          xlab = "nr of cells per receiver", 
+          ylab = "nr of interactions per cell type pair")+
+  ylim(c(0, (max(ipi_df$nr_ints)+20)))+
+  xlim(c(0, (max(ipi_df$nr_cells_receiver)+20)))+
+  ggtitle("no preprocessing steps")
+```
+
 
 ```{r}
 
 ggscatter(ipi_df[ipi_df$condition == "all preprocessing steps",],
           x = "nr_cells_emitter", y = "nr_ints",
-          add = "reg.line", conf.int = TRUE, size = 0.1,
+          add = "reg.line", conf.int = TRUE, size = 0.4,
           cor.coef = TRUE, cor.method = "pearson", 
           cor.coef.size = 3.5,  cor.coeff.args = list(color = "dodgerblue3"),
           xlab = "nr of cells per emitter", 
@@ -150,7 +217,7 @@ ggscatter(ipi_df[ipi_df$condition == "all preprocessing steps",],
 
 ggscatter(ipi_df[ipi_df$condition == "all preprocessing steps",],
           x = "nr_cells_receiver", y = "nr_ints",
-          add = "reg.line", conf.int = TRUE, size = 0.1,
+          add = "reg.line", conf.int = TRUE, size = 0.4,
           cor.coef = TRUE, cor.method = "pearson",
           cor.coef.size = 3.5,  cor.coeff.args = list(color = "dodgerblue3"),
           xlab = "nr of cells per receiver", 
@@ -165,7 +232,7 @@ ggscatter(ipi_df[ipi_df$condition == "all preprocessing steps",],
 
 ggscatter(ipi_df[ipi_df$condition == "no rank level",],
           x = "nr_cells_emitter", y = "nr_ints",
-          add = "reg.line", conf.int = TRUE, size = 0.1,
+          add = "reg.line", conf.int = TRUE, size = 0.4,
           cor.coef = TRUE, cor.method = "pearson",
           cor.coef.size = 3.5,  cor.coeff.args = list(color = "dodgerblue3"),
           xlab = "nr of cells per emitter", 
@@ -178,7 +245,7 @@ ggscatter(ipi_df[ipi_df$condition == "no rank level",],
 
 ggscatter(ipi_df[ipi_df$condition == "no rank level",],
           x = "nr_cells_receiver", y = "nr_ints",
-          add = "reg.line", conf.int = TRUE, size = 0.1,
+          add = "reg.line", conf.int = TRUE, size = 0.4,
           cor.coef = TRUE, cor.method = "pearson",
           cor.coef.size = 3.5,  cor.coeff.args = list(color = "dodgerblue3"),
           xlab = "nr of cells per receiver", 
@@ -193,7 +260,7 @@ ggscatter(ipi_df[ipi_df$condition == "no rank level",],
 
 ggscatter(ipi_df[ipi_df$condition == "no downsampling",],
           x = "nr_cells_emitter", y = "nr_ints",
-          add = "reg.line", conf.int = TRUE, size = 0.1,
+          add = "reg.line", conf.int = TRUE, size = 0.4,
           cor.coef = TRUE, cor.method = "pearson",
           cor.coef.size = 3.5,  cor.coeff.args = list(color = "dodgerblue3"),
           xlab = "nr of cells per emitter", 
@@ -206,7 +273,7 @@ ggscatter(ipi_df[ipi_df$condition == "no downsampling",],
 
 ggscatter(ipi_df[ipi_df$condition == "no downsampling",],
           x = "nr_cells_receiver", y = "nr_ints",
-          add = "reg.line", conf.int = TRUE, size = 0.1,
+          add = "reg.line", conf.int = TRUE, size = 0.4,
           cor.coef = TRUE, cor.method = "pearson",
           cor.coef.size = 3.5,  cor.coeff.args = list(color = "dodgerblue3"),
           xlab = "nr of cells per receiver", 
@@ -220,7 +287,7 @@ ggscatter(ipi_df[ipi_df$condition == "no downsampling",],
 
 
 ggscatter(ipi_df[ipi_df$condition == "no cutoff",],
-          x = "nr_cells_emitter", y = "nr_ints", size = 0.1,
+          x = "nr_cells_emitter", y = "nr_ints", size = 0.4,
           add = "reg.line", conf.int = TRUE, 
           cor.coef = TRUE, cor.method = "pearson", cor.coef.coord = c(0, 50),
           cor.coef.size = 3.5,  cor.coeff.args = list(color = "dodgerblue3"),
@@ -234,7 +301,7 @@ ggscatter(ipi_df[ipi_df$condition == "no cutoff",],
 
 ggscatter(ipi_df[ipi_df$condition == "no cutoff",],
           x = "nr_cells_receiver", y = "nr_ints",
-          add = "reg.line", conf.int = TRUE, size = 0.1,
+          add = "reg.line", conf.int = TRUE, size = 0.4,
           cor.coef = TRUE, cor.method = "pearson", cor.coef.coord = c(0, 50),
           cor.coef.size = 3.5,  cor.coeff.args = list(color = "dodgerblue3"),
           xlab = "nr of cells per receiver", 
@@ -249,7 +316,7 @@ ggscatter(ipi_df[ipi_df$condition == "no cutoff",],
 
 ggscatter(ipi_df[ipi_df$condition == "no pre-processing steps",],
           x = "nr_cells_emitter", y = "nr_ints",
-          add = "reg.line", conf.int = TRUE, size = 0.1,
+          add = "reg.line", conf.int = TRUE, size = 0.4,
           cor.coef = TRUE, cor.method = "pearson",  cor.coef.coord = c(0, 50),
           cor.coef.size = 3.5,  cor.coeff.args = list(color = "dodgerblue3"),
           xlab = "nr of cells per emitter", 
@@ -262,7 +329,7 @@ ggscatter(ipi_df[ipi_df$condition == "no pre-processing steps",],
 
 ggscatter(ipi_df[ipi_df$condition == "no pre-processing steps",],
           x = "nr_cells_receiver", y = "nr_ints",
-          add = "reg.line", conf.int = TRUE, size = 0.1,
+          add = "reg.line", conf.int = TRUE, size = 0.4,
           cor.coef = TRUE, cor.method = "pearson", cor.coef.coord = c(0, 50),
           cor.coef.size = 3.5,  cor.coeff.args = list(color = "dodgerblue3"),
           xlab = "nr of cells per receiver", 

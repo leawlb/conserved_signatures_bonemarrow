@@ -18,7 +18,7 @@ batch_pos <- which(colnames(colData(sce)) == batch_use)
 nr_hvgs_batch_correction <- snakemake@params[["nr_hvgs_batch_correction"]] 
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
 
-# rename or copy the already existant Reduceddims and assays for testing
+# rename or copy the already existent Reduceddims and assays for testing
 reducedDimNames(sce)[grep("PCA", reducedDimNames(sce))] <- "PCA_before_BC"
 reducedDimNames(sce)[grep("UMAP", reducedDimNames(sce))] <- "UMAP_before_BC"
 assays(sce)$counts_before_BC <- assays(sce)$counts

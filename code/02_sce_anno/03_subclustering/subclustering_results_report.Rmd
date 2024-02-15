@@ -184,6 +184,98 @@ if(fraction_curr == "str"){
 }
 ```
 
+### BL6
+
+```{r fig.width = 14, fig.height = 10}
+
+seurat <- as.Seurat(sce[,sce$Species_ID == "mmus"], counts = "counts", logcounts = "logcounts") # logcounts (assay) only used if dims (reduction) = NULL
+Idents(seurat) <- sce[,sce$Species_ID == "mmus"]$celltypes
+seurat@active.ident <- factor(seurat@active.ident, levels = rev(levels(Idents(seurat))))
+
+if(fraction_curr == "hsc"){
+  genes_to_plot <- gene_list_dtplt$gene
+  DotPlot(seurat, features = genes_to_plot, idents = levels(Idents(seurat)))+
+    RotatedAxis()
+}
+```
+
+```{r fig.width = 20, fig.height = 10}
+if(fraction_curr == "str"){
+  genes_to_plot <- gene_list_dtplt$gene
+  DotPlot(seurat, features = genes_to_plot, idents = levels(Idents(seurat)))+
+    RotatedAxis()
+}
+```
+
+### CAST
+
+```{r fig.width = 14, fig.height = 10}
+
+seurat <- as.Seurat(sce[,sce$Species_ID == "mcas"], counts = "counts", logcounts = "logcounts") # logcounts (assay) only used if dims (reduction) = NULL
+Idents(seurat) <- sce[,sce$Species_ID == "mcas"]$celltypes
+seurat@active.ident <- factor(seurat@active.ident, levels = rev(levels(Idents(seurat))))
+
+if(fraction_curr == "hsc"){
+  genes_to_plot <- gene_list_dtplt$gene
+  DotPlot(seurat, features = genes_to_plot, idents = levels(Idents(seurat)))+
+    RotatedAxis()
+}
+```
+
+```{r fig.width = 20, fig.height = 10}
+if(fraction_curr == "str"){
+  genes_to_plot <- gene_list_dtplt$gene
+  DotPlot(seurat, features = genes_to_plot, idents = levels(Idents(seurat)))+
+    RotatedAxis()
+}
+```
+
+### SPRETUS
+
+```{r fig.width = 14, fig.height = 10}
+
+seurat <- as.Seurat(sce[,sce$Species_ID == "mspr"], counts = "counts", logcounts = "logcounts") # logcounts (assay) only used if dims (reduction) = NULL
+Idents(seurat) <- sce[,sce$Species_ID == "mspr"]$celltypes
+seurat@active.ident <- factor(seurat@active.ident, levels = rev(levels(Idents(seurat))))
+
+if(fraction_curr == "hsc"){
+  genes_to_plot <- gene_list_dtplt$gene
+  DotPlot(seurat, features = genes_to_plot, idents = levels(Idents(seurat)))+
+    RotatedAxis()
+}
+```
+
+```{r fig.width = 20, fig.height = 10}
+if(fraction_curr == "str"){
+  genes_to_plot <- gene_list_dtplt$gene
+  DotPlot(seurat, features = genes_to_plot, idents = levels(Idents(seurat)))+
+    RotatedAxis()
+}
+```
+
+### CARO
+
+```{r fig.width = 14, fig.height = 10}
+
+seurat <- as.Seurat(sce[,sce$Species_ID == "mcar"], counts = "counts", logcounts = "logcounts") # logcounts (assay) only used if dims (reduction) = NULL
+Idents(seurat) <- sce[,sce$Species_ID == "mcar"]$celltypes
+seurat@active.ident <- factor(seurat@active.ident, levels = rev(levels(Idents(seurat))))
+
+if(fraction_curr == "hsc"){
+  genes_to_plot <- gene_list_dtplt$gene
+  DotPlot(seurat, features = genes_to_plot, idents = levels(Idents(seurat)))+
+    RotatedAxis()
+}
+```
+
+```{r fig.width = 20, fig.height = 10}
+if(fraction_curr == "str"){
+  genes_to_plot <- gene_list_dtplt$gene
+  DotPlot(seurat, features = genes_to_plot, idents = levels(Idents(seurat)))+
+    RotatedAxis()
+}
+```
+
 ## Comparison to References
 
 ```{r}

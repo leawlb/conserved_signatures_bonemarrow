@@ -42,9 +42,9 @@ calculate_scores <- function(
   # calculate CCI-like object (interaction_list) from SCE object and LRDB
   
   sce <- sce              # preprocessed/downsampled SCE object
-  min_perc <- min_perc    # minimum % of cells required to express a l/r gene 
   lrdb <- lrdb            # ligand receptor database
   top_level <- top_level  # top rank for better comparability between ranks
+  min_perc <- min_perc    # cut-off of lowly expressed genes
   
   species <- sce$Species_ID[1]
   age <- sce$Age_ID[1]

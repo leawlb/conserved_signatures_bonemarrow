@@ -1,0 +1,430 @@
+---
+title: "clustering_ctrl_report"
+author: "Lea Wölbert"
+date: '2023-11-15'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load objects
+
+```{r seed, message = FALSE}
+set.seed(37)
+```
+
+```{r load, message = FALSE}
+library(tidyverse)
+library(scater)
+library(pheatmap)
+```
+
+```{r source, message = FALSE}
+source(file = snakemake@params[["plotting"]])
+```
+
+```{r load_objects}
+sce <- readRDS(snakemake@input[["sce_input"]])
+
+sce_baccin <- readRDS(snakemake@input[["sce_baccin"]])
+sce_ref2 <- readRDS(snakemake@input[["sce_ref2"]])
+
+#sce_baccin <- readRDS(snakemake@input[["sce_baccin"]])
+#sce_dolgalev <- readRDS(snakemake@input[["sce_dolgalev"]])
+#sce_dahlin <- readRDS(snakemake@input[["sce_dahlin"]])
+#sce <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis/sce_objects/03_sce_analysis/08_clst/sce_hsc")
+
+#sce_ref2 <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis/sce_objects/03_sce_analysis/09_cref/sce_ref2_hsc")
+#sce_baccin <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/01_sce_prep/references_ready/ref_baccin_sce")
+#sce_dolgalev <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/01_sce_prep/references_ready/ref_dolgalev_sce")
+#sce_dahlin <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/01_sce_prep/references_ready/ref_dahlin_sce")
+fraction_curr <- snakemake@wildcards[["fraction"]]
+```
+
+```{r colors, meassage = FALSE}
+colors_path <- snakemake@params[["colors_path"]]
+source(snakemake@params[["colors"]])
+
+if(fraction_curr == "hsc"){
+  col_cts <- col_cts_hsc
+}else if(fraction_curr == "str"){
+  col_cts <- col_cts_str
+}
+```
+
+# UMAPs
+
+```{r}
+umap_base_l(sce, color_by = "celltypes")+ 
+  ggtitle(paste(fraction_curr, "original cell types"))+
+  scale_color_discrete("cell types")
+ 
+umap_base_l(sce, color_by = "cluster_core")+ 
+  ggtitle(paste(sce$nr_cc[1], "core conserved genes"))+
+  scale_color_discrete("cluster_core")
+umap_base_l(sce, color_by = "cluster_ndge")+ 
+  ggtitle(paste(sce$nr_nd[1], "non-differentially expressed genes"))+
+  scale_color_discrete("cluster_ndge")
+umap_base_l(sce, color_by = "cluster_cmrk")+ 
+  ggtitle(paste(sce$nr_cm[1], "genes with conserved marker gene function"))+
+  scale_color_discrete("cluster_cmrk")
+```
+
+# Heatmaps
+
+```{r}
+if(fraction_curr == "str"){
+  sce$cluster_core <- factor(sce$cluster_core, 
+                             levels = c(5, 8, 1, 3, 6, 2, 4, 9, 7))
+}else if(fraction_curr == "hsc"){
+  sce$cluster_core <- factor(sce$cluster_core, 
+                             levels = c(3, 10, 11, 1, 9, 5, 7, 8, 4, 2, 6))
+}
+  
+  
+mat1 <- table(sce$celltypes, sce$cluster_core)
+for(i in 1:nrow(mat1)){
+  mat1[i,] <- mat1[i,]/sum(mat1[i,])
+}
+
+pheatmap(mat1,
+         cluster_rows = FALSE,
+         cluster_cols = FALSE,
+         main = "core conserved genes")
+
+mat2 <- table(sce$cluster_core, sce$celltypes)
+for(i in 1:nrow(mat2)){
+  mat2[i,] <- mat2[i,]/sum(mat2[i,])
+}
+
+pheatmap(mat2,
+         cluster_rows = FALSE,
+         cluster_cols = FALSE,
+         main = "core conserved genes")
+```
+
+```{r}
+if(fraction_curr == "str"){
+  sce$cluster_ndge <- factor(sce$cluster_ndge, 
+                           levels = c(5, 1, 2, 9, 4, 6, 3, 8, 7))
+}else if(fraction_curr == "hsc"){
+  sce$cluster_ndge <- factor(sce$cluster_ndge, 
+                           levels = c(16, 6, 14, 11, 5, 3, 1, 9, 8, 15, 2, 4, 7, 13, 10, 12))
+}
+
+table(sce$cluster_ndge)
+
+mat1 <- table(sce$celltypes, sce$cluster_ndge)
+for(i in 1:nrow(mat1)){
+  mat1[i,] <- mat1[i,]/sum(mat1[i,])
+}
+
+pheatmap(mat1,
+         cluster_rows = FALSE,
+         cluster_cols = FALSE,
+         main = "non-differentially expressed genes")
+
+mat2 <- table(sce$cluster_ndge, sce$celltypes)
+for(i in 1:nrow(mat2)){
+  mat2[i,] <- mat2[i,]/sum(mat2[i,])
+}
+
+pheatmap(mat2,
+         cluster_rows = FALSE,
+         cluster_cols = FALSE,
+         main = "non-differentially expressed genes")
+```
+
+```{r}
+if(fraction_curr == "str"){
+  sce$cluster_cmrk <- factor(sce$cluster_cmrk, 
+                             levels = c(5, 1, 2, 9, 4, 10, 6, 3, 8, 7))
+}else if(fraction_curr == "hsc"){
+  sce$cluster_cmrk <- factor(sce$cluster_cmrk, 
+                             levels = c(3, 11, 8, 1, 10, 4, 9, 6, 7, 12, 2, 13, 5))
+}
+
+mat1 <- table(sce$celltypes, sce$cluster_cmrk)
+for(i in 1:nrow(mat1)){
+  mat1[i,] <- mat1[i,]/sum(mat1[i,])
+}
+
+pheatmap(mat1,
+         cluster_rows = FALSE,
+         cluster_cols = FALSE,
+         main = "genes with conserved marker gene function")
+
+mat2 <- table(sce$cluster_cmrk, sce$celltypes)
+for(i in 1:nrow(mat2)){
+  mat2[i,] <- mat2[i,]/sum(mat2[i,])
+}
+
+pheatmap(mat2,
+         cluster_rows = FALSE,
+         cluster_cols = FALSE,
+         main = "non-differentially expressed genes")
+```
+
+# Check References
+
+```{r}
+
+sce_ref <- sce_baccin
+
+sce_ref$identity_ref <- factor(
+  sce_ref$identity_ref, 
+  levels = levels(sce_ref$identity_ref)[
+    levels(sce_ref$identity_ref)%in% unique(sce_ref$identity_ref)])
+
+table(sce_ref$identity_ref)
+
+if(fraction_curr == "str"){
+  
+  sce_ref$identity_ref <- factor(sce_ref$identity_ref,
+                                 levels = c("Adipo-CAR",
+                                            "Osteo-CAR",
+                                            "Osteoblasts",
+                                            "Ng2+ MSCs",
+                                            "Chondrocytes",
+                                            "Fibro/Chondro p.",
+                                            "Arteriolar fibro.",
+                                            "Endosteal fibro.",
+                                            "Stromal fibro.",
+                                            "Arteriolar ECs",
+                                            "Sinusoidal ECs", 
+                                            "Myofibroblasts",
+                                            "Smooth muscle"))
+  
+  sce_ref$cluster_core <- factor(sce_ref$cluster_core, 
+                                 levels = c(1, 2, 3, 4, 5))
+}else if(fraction_curr == "hsc"){
+  sce_ref$identity_ref <- factor(sce_ref$identity_ref,
+                                 levels = c("LMPPs",
+                                            "Gran/Mono prog.",
+                                            "Mono prog.",
+                                            "Neutro prog.",
+
+                                            "Monocytes",
+                                            "Dendritic cells",
+                                            "Neutrophils",
+
+                                            "Eo/Baso prog.",
+                                            
+                                            "large pre-B.",
+                                            "small pre-B.",
+                                            "pro-B",
+                                            "B cell",
+                                            "NK cells",
+                                            "T cells",
+
+                                            "Ery/Mk prog.",
+                                            "Mk prog.",
+                                            "Ery prog."))
+   sce_ref$cluster_core <- factor(sce_ref$cluster_core, 
+                                 levels = c(3, 2, 5, 7, 4, 6, 1))
+}
+
+
+mat1 <- table(sce_ref$identity_ref, sce_ref$cluster_core)
+for(i in 1:nrow(mat1)){
+  mat1[i,] <- mat1[i,]/sum(mat1[i,])
+}
+
+pheatmap(mat1,
+         cluster_rows = FALSE,
+         cluster_cols = FALSE,
+         main = "genes with conserved marker gene function")
+
+mat2 <- table(sce_ref$cluster_core, sce_ref$identity_ref)
+for(i in 1:nrow(mat2)){
+  mat2[i,] <- mat2[i,]/sum(mat2[i,])
+}
+
+pheatmap(mat2,
+         cluster_rows = FALSE,
+         cluster_cols = FALSE,
+         main = "non-differentially expressed genes")
+
+```
+
+```{r}
+
+if(fraction_curr == "str"){
+  sce_ref <- sce_ref2
+  table(sce_ref$labelsimple)
+
+  sce_ref$labelsimple <- factor(
+    sce_ref$labelsimple, 
+    levels = levels(sce_ref$labelsimple)[
+      levels(sce_ref$labelsimple)%in% unique(sce_ref$labelsimple)])
+  
+  sce_ref$labelsimple <- factor(sce_ref$labelsimple,
+                                levels = c("MSPC-Adipo",
+                                           "MSPC-Osteo",
+                                           "Osteoblasts",
+                                              
+                                            "Chondrocytes",
+                                            "Osteo",
+                                            "Fibroblasts",
+                                              
+                                            "EC-Arteriar",
+                                            "EC-Arteriolar",
+                                            "EC-Sinusoidal",
+                                            
+                                            "Pericytes",
+                                            "Smooth-muscle"))
+  
+  table(sce_ref$labelsimple)
+  
+  sce_ref$cluster_core <- factor(sce_ref$cluster_core, 
+                                   levels = c(2, 1, 6, 4, 7, 3, 5))
+  
+  mat1 <- table(sce_ref$labelsimple, sce_ref$cluster_core)
+  for(i in 1:nrow(mat1)){
+    mat1[i,] <- mat1[i,]/sum(mat1[i,])
+  }
+
+  pheatmap(mat1,
+           cluster_rows = FALSE,
+           cluster_cols = FALSE,
+           main = "genes with conserved marker gene function")
+
+  mat2 <- table(sce_ref$cluster_core, sce_ref$labelsimple)
+  for(i in 1:nrow(mat2)){
+    mat2[i,] <- mat2[i,]/sum(mat2[i,])
+  }
+  
+  pheatmap(mat2,
+           cluster_rows = FALSE,
+           cluster_cols = FALSE,
+           main = "non-differentially expressed genes")
+}
+```
+
+```{r}
+if(fraction_curr == "hsc"){
+  sce_ref <- sce_ref2
+  table(sce_ref$identity_ref)
+
+  sce_ref$identity_ref <- factor(sce_ref$identity_ref,
+                                levels = c("HSC LT",
+                                           "HSC ST",
+                                           "LMPP",
+                                           
+                                           "MPP1",
+                                           "MPP2",
+                                           "CLP",
+                                           
+                                           "GMP",
+                                           "Monocyte Progenitor",
+                                           "proNeu",
+          
+                                           "Mast",
+                                           "Basophil",
+
+                                           "proB",
+
+                                           "MEP",
+                                           "Mkp"
+                                           ))
+  
+  sce_ref$cluster_core <- factor(sce_ref$cluster_core, 
+                                   levels = c(1, 6, 2, 4, 5, 7, 3, 8))
+  
+  mat1 <- table(sce_ref$identity_ref, sce_ref$cluster_core)
+  for(i in 1:nrow(mat1)){
+    mat1[i,] <- mat1[i,]/sum(mat1[i,])
+  }
+
+  pheatmap(mat1,
+           cluster_rows = FALSE,
+           cluster_cols = FALSE,
+           main = "genes with conserved marker gene function")
+
+  mat2 <- table(sce_ref$cluster_core, sce_ref$identity_ref)
+  for(i in 1:nrow(mat2)){
+    mat2[i,] <- mat2[i,]/sum(mat2[i,])
+  }
+  
+  pheatmap(mat2,
+           cluster_rows = FALSE,
+           cluster_cols = FALSE,
+           main = "non-differentially expressed genes")
+}
+
+knitr::knit_exit()
+
+```
+
+```{r}
+sce_ref2 <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis/sce_objects/03_sce_analysis/09_cref/sce_ref2_hsc")
+
+library(ggalluvial)
+
+ggdf2 <- as.data.frame(table(colData(sce_ref2)$identity_ref, colData(sce_ref2)$cluster_core))
+
+ggdf2$Var1 <- factor(ggdf2$Var1, levels = c("HSC LT",
+                                           "HSC ST",
+                                           "LMPP",
+                                           
+                                           "MPP1",
+                                           "MPP2",
+                                           "CLP",
+                                           
+                                           "GMP",
+                                           "Monocyte Progenitor",
+                                           "proNeu",
+          
+                                           "Mast",
+                                           "Basophil",
+                                           "Eosinophil",
+                                           
+                                           "proB",
+
+                                           "MEP",
+                                           "Mkp"
+                                           ))
+
+ggdf2$Var2 <- factor(ggdf2$Var2, 
+                                   levels = c(1, 2, 5, 4, 7, 8, 6, 3))
+ggplot(ggdf2,
+       aes(y = Freq, axis1 = Var1, axis2 = Var2)) +
+  geom_alluvium(aes(fill = Var1), width = 1/12) +
+  geom_stratum(width = 1/12, fill = "black", color = "grey") +
+  geom_label(stat = "stratum", aes(label = after_stat(stratum))) +
+  scale_x_discrete(limits = c("Var1", "Var2"), expand = c(.05, .05))+
+  scale_fill_discrete("Original cell type")
+
+```
+
+# Silhouette
+
+```{r}
+
+
+
+sil.approx <- approxSilhouette(reducedDim(sce, "PCA"), 
+                               clusters = sce$cluster_core)
+sil.data <- as.data.frame(sil.approx)
+sil.data$closest <- factor(ifelse(sil.data$width > 0, 
+                                  sce$cluster_core, 
+                                  sil.data$other))
+sil.data$cluster <- sce$cluster_core
+
+ggplot(sil.data, aes(x=cluster, y=width, colour=closest))+
+  ggbeeswarm::geom_quasirandom(size = 0.1)+
+  theme_classic()+
+  theme(legend.position = "none")+
+  xlab("cluster (louvain)")+
+  ylim(-1, 1)+
+  ylab("Silhouette width")
+
+
+
+```
+
+```{r}
+sessionInfo()
+```

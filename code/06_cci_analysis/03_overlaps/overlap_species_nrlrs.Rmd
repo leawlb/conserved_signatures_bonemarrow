@@ -1,0 +1,882 @@
+---
+title: "overlap_ages_ligands/receptors"
+author: "Lea Wölbert"
+date: '2023-10-24'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load objects
+
+```{r seed,  message = FALSE}
+set.seed(37)
+```
+
+```{r}
+source(file = snakemake@params[["plotting"]])
+print(umap_gene)
+```
+
+```{r load,  message = FALSE}
+library(tidyverse)
+library(scran)
+library(ggpubr)
+```
+
+```{r colors, meassage = FALSE}
+colors_path <- snakemake@params[["colors_path"]]
+source(snakemake@params[["colors"]])
+```
+
+```{r load_objects}
+#cci_mlist_mcar_yng <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis/cci_objects/01_cci_preparation/11_idis/ilrs_mcar_yng")
+#cci_mlist_mmus_yng <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis/cci_objects/01_cci_preparation/11_idis/ilrs_mmus_yng")
+#cci_mlist_mcas_yng <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis/cci_objects/01_cci_preparation/11_idis/ilrs_mcas_yng")
+#cci_mlist_mspr_yng <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis/cci_objects/01_cci_preparation/11_idis/ilrs_mspr_yng")
+
+#cci_met_list <- list(cci_mlist_mcar_yng, cci_mlist_mmus_yng, cci_mlist_mcas_yng, cci_mlist_mspr_yng)
+#names(cci_met_list) <- c("cci_mlist_mcar_yng", "cci_mlist_mmus_yng", "cci_mlist_mcas_yng", "cci_mlist_mspr_yng")
+#species <- c("mmus", "mcar", "mcas", "mspr")
+#age <- c("yng")
+
+#sce_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10")
+
+cci_met_path_list <- snakemake@input[["cci_met_ilrs_paths"]]
+sce_path_list <- snakemake@input[["sce_paths"]]
+sce_hsc <- readRDS(snakemake@input[["sce_input_hsc"]])
+sce_str <- readRDS(snakemake@input[["sce_input_str"]])
+
+print(cci_met_path_list)
+
+species <- snakemake@params[["species"]]
+
+cci_met_list <- list()
+sce_list <- list()
+for(s in species){
+  cond <- as.character(paste0(s, "_yng"))
+  print(cond)
+  cci_met_path <- cci_met_path_list[[which(grepl(cond, cci_met_path_list))]]
+  sce_path <- sce_path_list[[which(grepl(cond, sce_path_list))]]
+  print(cci_met_path)
+  cci_met_list[[cond]] <- readRDS(cci_met_path)
+  sce_list[[s]][["yng"]] <- readRDS(sce_path)
+  
+}
+
+print("blrop")
+
+print(names(cci_met_list))
+print(sce_list)
+print(sce_hsc)
+print(sce_str)
+```
+
+```{r}
+# now for each species, get the overlap and young and old only interactions
+# sort list by species and then age
+
+cts <- unique(c(names(cci_met_list[[1]]),
+                names(cci_met_list[[2]]),
+                names(cci_met_list[[3]]),
+                names(cci_met_list[[4]])))
+
+cci_met_cts_list_cts <- list()
+for(s in species){
+  for(c in cts){
+    cci_met_cts_list_cts[[c]][[s]] <- cci_met_list[[which(grepl(s, names(cci_met_list)))]][[c]]
+  }
+}
+print(names(cci_met_cts_list_cts))
+print(names(cci_met_cts_list_cts[[1]]))
+#cci_met_cts_list_cts$`Monocyte progs.`$mmus
+#grep("Fgf7", cci_met_cts_list_cts$`Monocyte progs.`$mmus$sigmol)
+#overlap_lists$`Monocyte progs.`$mmus_only
+```
+
+
+
+```{r}
+# within species, extract the list of interactions that are shared,
+# young_only, and old_only, as well as handy data frames for each cell type
+overlap_lists <- lapply(cci_met_cts_list_cts, function(cci_met_ct){
+  
+  cci_met_mmus <- cci_met_ct[["mmus"]]
+  cci_met_mcas <- cci_met_ct[["mcas"]]
+  cci_met_mspr <- cci_met_ct[["mspr"]]
+  cci_met_mcar <- cci_met_ct[["mcar"]]
+  
+  stopifnot(cci_met_mmus$identity[1] == cci_met_mcas$identity[1])
+  stopifnot(cci_met_mmus$identity[1] == cci_met_mspr$identity[1])
+  stopifnot(cci_met_mmus$identity[1] == cci_met_mcar$identity[1])
+    
+  mmusg <- unique(cci_met_mmus$sigmol)
+  mcasg <- unique(cci_met_mcas$sigmol)
+  msprg <- unique(cci_met_mspr$sigmol)
+  mcarg <- unique(cci_met_mcar$sigmol)
+
+  shared <- intersect(intersect(intersect(mmusg, mcasg), msprg), mcarg)
+
+  mmus_only <- mmusg[!mmusg %in% c(mcasg, msprg, mcarg)]
+  mcas_only <- mcasg[!mcasg %in% c(mmusg, msprg, mcarg)]
+  mspr_only <- msprg[!msprg %in% c(mmusg, mcasg, mcarg)]
+  mcar_only <- mcarg[!mcarg %in% c(mmusg, mcasg, msprg)]
+  
+  all <- unique(c(mmusg, mcasg, msprg, mcarg))
+  partially_shared <- all[!all %in% c(mmus_only, mcas_only, mspr_only, mcar_only, shared)]
+
+  # count the length of each cell type entry  
+  return_df <- data.frame(
+    "mode" = c("shared", "mmus_only", "mcas_only", "mspr_only", "mcar_only", "partially_shared"),
+    "nr" = c(length(shared), length(mmus_only), length(mcas_only),
+             length(mspr_only), length(mcar_only), length(partially_shared))
+      
+    )
+    
+  return(list("shared" = shared,
+              "mmus_only" = mmus_only,
+              "mcas_only" = mcas_only,
+              "mspr_only" = mspr_only,
+              "mcar_only" = mcar_only,
+              "partially_shared" = partially_shared,
+              "nr_df" = return_df))
+
+  return(overlap)
+})
+names(overlap_lists) <- cts
+names(overlap_lists[[1]][[1]])
+```
+
+```{r}
+# extract only the nr_dfs for now!
+nr_df_all <- data.frame()
+for(i in 1:length(overlap_lists)){
+
+
+    nr_df_add <- overlap_lists[[i]]$nr_df
+    nr_df_add$cell_type <- names(overlap_lists)[i]
+      
+    if(length(grep(0, nr_df_add$nr)) <= 1){
+      nr_df_add$proportion <- nr_df_add$nr/sum(nr_df_add$nr)
+      nr_df_add$normalized <- nr_df_add$nr/nr_df_add$nr[nr_df_add$mode == "shared"]
+      print(nr_df_add)
+      nr_df_all <- rbind(nr_df_all, nr_df_add)
+    }
+}
+
+head(nr_df_all)
+```
+
+```{r}
+nr_df_all$mode <- factor(nr_df_all$mode,
+                         levels = c("mcar_only" ,"mspr_only", "mcas_only",
+                                    "mmus_only","partially_shared", "shared"))
+nr_df_all$cell_type <- factor(nr_df_all$cell_type, levels = rev(c(names(col_cts_hsc), names(col_cts_str))))
+
+print(col_spc)
+print(names(col_spc))
+
+#col_spc <- c("mmus" = "grey30",
+#             "mcas" = "lightsalmon4",
+#             "mspr" = "tan3",
+#             "mcar"  = "bisque2")     
+
+col_mode <- c("mmus_only" = col_spc[["mmus"]],
+              "mcas_only" = col_spc[["mcas"]], 
+              "mspr_only" = col_spc[["mspr"]],
+              "mcar_only" = col_spc[["mcar"]],
+              "partially_shared" = "lightgoldenrod", 
+              "shared" = "orange2")
+
+ggplot(nr_df_all, aes(y = cell_type, x = nr, fill = mode))+
+  geom_col(position = "stack")+
+  theme_classic()+
+  scale_fill_manual("Detection", values = col_mode)+
+  xlab("Nr of detected ligands/receptors per cell type")+
+  theme(axis.text.x = element_text(angle = 90))
+
+ggplot(nr_df_all, aes(y = cell_type, x = nr, fill = mode))+
+  geom_col(position = "stack")+
+  theme_classic()+
+  facet_grid(cols = vars(mode))+
+  scale_fill_manual("Detection", values = col_mode)+
+  xlab("Nr of detected ligands/receptors per cell type")+
+  theme(axis.text.x = element_text(angle = 90))
+
+ggplot(nr_df_all, aes(y = cell_type, x = nr, fill = mode))+
+  geom_col(position = "fill")+
+  theme_classic()+
+  scale_fill_manual("Detection", values = col_mode)+
+  xlab("Proportions of detected interactions per cell type")+
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+ggplot(nr_df_all, aes(y = cell_type, x = normalized, fill = mode))+
+  geom_col(position = "dodge")+
+  theme_classic()+
+  scale_fill_manual("Detection", values = col_mode)+
+  xlab("Normalized nr of detected interactions per cell type")+
+  theme(axis.text.x = element_text(angle = 90))
+
+ggplot(nr_df_all, aes(y = cell_type, x = proportion, fill = mode))+
+  geom_col(position = "dodge")+
+  theme_classic()+
+  scale_fill_manual("Detection", values = col_mode)+
+  xlab("Proportions of detected interactions per cell type")+
+  theme(axis.text.x = element_text(angle = 90))
+
+ggplot(nr_df_all, aes(y = cell_type, x = nr, fill = mode))+
+  geom_col(position = "dodge")+
+  theme_classic()+
+  scale_fill_manual("Detection", values = col_mode)+
+  xlab("Nr of detected interactions per cell type")+
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+overlap_lists$HSCs$mmus_only
+overlap_lists$HSCs$mcas_only
+overlap_lists$HSCs$mspr_only
+overlap_lists$HSCs$mcar_only
+overlap_lists$HSCs$nr_df
+
+nr_df_all[nr_df_all$cell_type == "HSCs",]
+```
+
+```{r}
+sce_str <- sce_str[,sce_str$Age_ID == "yng"]
+sce_hsc <- sce_hsc[,sce_hsc$Age_ID == "yng"]
+
+logc_str <- assays(sce_str)[["logcounts"]]
+ggdf_sce_str <- as.data.frame(colData(sce_str))
+ggdf_sce_str$Species_ID <- factor(ggdf_sce_str$Species_ID,
+                                  levels = c("mmus", "mcas", "mspr", "mcar"))
+  
+logc_hsc <- assays(sce_hsc)[["logcounts"]]
+ggdf_sce_hsc <- as.data.frame(colData(sce_hsc))
+ggdf_sce_hsc$Species_ID <- factor(ggdf_sce_hsc$Species_ID,
+                                    levels = c("mmus", "mcas", "mspr", "mcar"))
+ 
+```
+
+```{r}
+mmus_only_all_rec <- c(overlap_lists$HSCs$mmus_only, 
+                       overlap_lists$`Early MPPs`$mmus_only,
+                       overlap_lists$`Activated MPPs`$mmus_only,
+                       overlap_lists$`Mk/Ery progs.`$mmus_only,
+                       overlap_lists$`Early Myeloid progs.`$mmus_only,
+                       overlap_lists$`Neutrophil progs.`$mmus_only,
+                       overlap_lists$`Monocyte progs.`$mmus_only)
+
+mmus_only_all_emi <- c(overlap_lists$`Adipo/CARs`$mmus_only, 
+                       overlap_lists$Osteo$mmus_only,
+                       overlap_lists$`Fibro/Chondro`$mmus_only,
+                       overlap_lists$Fibroblasts$mmus_only,
+                       overlap_lists$`Arteriolar/Capillary ECs`$mmus_only,
+                       overlap_lists$`Arteriolar/Mixed ECs`$mmus_only)
+
+sort(table(mmus_only_all_rec), decreasing = TRUE)
+sort(table(mmus_only_all_emi), decreasing = TRUE)
+
+umap_gene(sce_hsc, "Vldlr")+
+  facet_grid(cols = vars(sce_hsc$Species_ID))
+
+umap_gene(sce_hsc, "Cd74")+
+  facet_grid(cols = vars(sce_hsc$Species_ID))
+
+umap_gene(sce_str, "Clu")+
+  facet_grid(cols = vars(sce_str$Species_ID))
+
+umap_gene(sce_str, "Serpine1")+
+  facet_grid(cols = vars(sce_str$Species_ID))
+
+ggplot(ggdf_sce_hsc, aes(x = celltypes,
+                         y = logc_hsc[rownames(logc_hsc) == "Vldlr",],
+                         color = celltypes))+
+  ggbeeswarm::geom_quasirandom(size = 0.2)+
+  theme_classic()+
+  geom_boxplot(color = "black", alpha = 0)+
+  ylab(paste0("Vldlr", " expression"))+
+  facet_grid(cols = vars(ggdf_sce_hsc$Species_ID))+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("cell types", values = col_cts_hsc)+
+  theme(legend.position = "none")
+ 
+ggplot(ggdf_sce_hsc, aes(x = celltypes,
+                         y = logc_hsc[rownames(logc_hsc) == "Cd74",],
+                         color = celltypes))+
+  ggbeeswarm::geom_quasirandom(size = 0.2)+
+  theme_classic()+
+  geom_boxplot(color = "black", alpha = 0)+
+  ylab(paste0("Cd74", " expression"))+
+  facet_grid(cols = vars(ggdf_sce_hsc$Species_ID))+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("cell types", values = col_cts_hsc)+
+  theme(legend.position = "none")
+
+ggplot(ggdf_sce_str, aes(x = celltypes,
+                         y = logc_str[rownames(logc_str) == "Clu",],
+                         color = celltypes))+
+  ggbeeswarm::geom_quasirandom(size = 0.2)+
+  theme_classic()+
+  geom_boxplot(color = "black", alpha = 0)+
+  ylab(paste0("Clu", " expression"))+
+  facet_grid(cols = vars(ggdf_sce_str$Species_ID))+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("cell types", values = col_cts_str)+
+  theme(legend.position = "none")
+ 
+ggplot(ggdf_sce_str, aes(x = celltypes,
+                         y = logc_str[rownames(logc_str) == "Serpine1",],
+                         color = celltypes))+
+  ggbeeswarm::geom_quasirandom(size = 0.2)+
+  theme_classic()+
+  geom_boxplot(color = "black", alpha = 0)+
+  ylab(paste0("Serpine1", " expression"))+
+  facet_grid(cols = vars(ggdf_sce_str$Species_ID))+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("cell types", values = col_cts_str)+
+  theme(legend.position = "none")
+```
+
+```{r}
+mcas_only_all_rec <- c(overlap_lists$HSCs$mcas_only, 
+                       overlap_lists$`Early MPPs`$mcas_only,
+                       overlap_lists$`Activated MPPs`$mcas_only,
+                       overlap_lists$`Mk/Ery progs.`$mcas_only,
+                       overlap_lists$`Early Myeloid progs.`$mcas_only,
+                       overlap_lists$`Neutrophil progs.`$mcas_only,
+                       overlap_lists$`Monocyte progs.`$mcas_only)
+
+mcas_only_all_emi <- c(overlap_lists$`Adipo/CARs`$mcas_only, 
+                       overlap_lists$Osteo$mcas_only,
+                       overlap_lists$`Fibro/Chondro`$mcas_only,
+                       overlap_lists$Fibroblasts$mcas_only,
+                       overlap_lists$`Arteriolar/Capillary ECs`$mcas_only,
+                       overlap_lists$`Arteriolar/Mixed ECs`$mcas_only)
+
+sort(table(mcas_only_all_rec), decreasing = TRUE)
+sort(table(mcas_only_all_emi), decreasing = TRUE)
+
+umap_gene(sce_hsc, "Itgb2")+
+  facet_grid(cols = vars(sce_hsc$Species_ID))
+
+umap_gene(sce_hsc, "Ncstn")+
+  facet_grid(cols = vars(sce_hsc$Species_ID))
+
+umap_gene(sce_str, "Rtn3")+
+  facet_grid(cols = vars(sce_str$Species_ID))
+
+umap_gene(sce_str, "Rtn4")+
+  facet_grid(cols = vars(sce_str$Species_ID))
+
+umap_gene(sce_str, "Cd14")+
+  facet_grid(cols = vars(sce_str$Species_ID))
+
+ggplot(ggdf_sce_hsc, aes(x = celltypes,
+                         y = logc_hsc[rownames(logc_hsc) == "Itgb2",],
+                         color = celltypes))+
+  ggbeeswarm::geom_quasirandom(size = 0.2)+
+  theme_classic()+
+  geom_boxplot(color = "black", alpha = 0)+
+  ylab(paste0("Itgb2", " expression"))+
+  facet_grid(cols = vars(ggdf_sce_hsc$Species_ID))+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("cell types", values = col_cts_hsc)+
+  theme(legend.position = "none")
+ 
+ggplot(ggdf_sce_hsc, aes(x = celltypes,
+                         y = logc_hsc[rownames(logc_hsc) == "Ncstn",],
+                         color = celltypes))+
+  ggbeeswarm::geom_quasirandom(size = 0.2)+
+  theme_classic()+
+  geom_boxplot(color = "black", alpha = 0)+
+  ylab(paste0("Ncstn", " expression"))+
+  facet_grid(cols = vars(ggdf_sce_hsc$Species_ID))+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("cell types", values = col_cts_hsc)+
+  theme(legend.position = "none")
+
+ggplot(ggdf_sce_str, aes(x = celltypes,
+                         y = logc_str[rownames(logc_str) == "Rtn3",],
+                         color = celltypes))+
+  ggbeeswarm::geom_quasirandom(size = 0.2)+
+  theme_classic()+
+  geom_boxplot(color = "black", alpha = 0)+
+  ylab(paste0("Rtn3", " expression"))+
+  facet_grid(cols = vars(ggdf_sce_str$Species_ID))+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("cell types", values = col_cts_str)+
+  theme(legend.position = "none")
+ 
+ggplot(ggdf_sce_str, aes(x = celltypes,
+                         y = logc_str[rownames(logc_str) == "Rtn4",],
+                         color = celltypes))+
+  ggbeeswarm::geom_quasirandom(size = 0.2)+
+  theme_classic()+
+  geom_boxplot(color = "black", alpha = 0)+
+  ylab(paste0("Rtn4", " expression"))+
+  facet_grid(cols = vars(ggdf_sce_str$Species_ID))+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("cell types", values = col_cts_str)+
+  theme(legend.position = "none")
+  
+ggplot(ggdf_sce_str, aes(x = celltypes,
+                         y = logc_str[rownames(logc_str) == "Cd14",],
+                         color = celltypes))+
+  ggbeeswarm::geom_quasirandom(size = 0.2)+
+  theme_classic()+
+  geom_boxplot(color = "black", alpha = 0)+
+  ylab(paste0("Cd14", " expression"))+
+  facet_grid(cols = vars(ggdf_sce_str$Species_ID))+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("cell types", values = col_cts_str)+
+  theme(legend.position = "none")
+```
+
+```{r}
+mspr_only_all_rec <- c(overlap_lists$HSCs$mspr_only, 
+                       overlap_lists$`Early MPPs`$mspr_only,
+                       overlap_lists$`Activated MPPs`$mspr_only,
+                       overlap_lists$`Mk/Ery progs.`$mspr_only,
+                       overlap_lists$`Early Myeloid progs.`$mspr_only,
+                       overlap_lists$`Neutrophil progs.`$mspr_only,
+                       overlap_lists$`Monocyte progs.`$mspr_only)
+
+mspr_only_all_emi <- c(overlap_lists$`Adipo/CARs`$mspr_only, 
+                       overlap_lists$Osteo$mspr_only,
+                       overlap_lists$`Fibro/Chondro`$mspr_only,
+                       overlap_lists$Fibroblasts$mspr_only,
+                       overlap_lists$`Arteriolar/Capillary ECs`$mspr_only,
+                       overlap_lists$`Arteriolar/Mixed ECs`$mspr_only)
+
+sort(table(mspr_only_all_rec), decreasing = TRUE)
+sort(table(mspr_only_all_emi), decreasing = TRUE)
+
+umap_gene(sce_hsc, "Crlf2")+
+  facet_grid(cols = vars(sce_hsc$Species_ID))
+
+umap_gene(sce_hsc, "Scarb1")+
+  facet_grid(cols = vars(sce_hsc$Species_ID))
+
+umap_gene(sce_hsc, "Sorl1")+
+  facet_grid(cols = vars(sce_hsc$Species_ID))
+
+umap_gene(sce_str, "Cd200")+
+  facet_grid(cols = vars(sce_str$Species_ID))
+
+umap_gene(sce_str, "Sema3c")+
+  facet_grid(cols = vars(sce_str$Species_ID))
+
+umap_gene(sce_str, "Vegfa")+
+  facet_grid(cols = vars(sce_str$Species_ID))
+
+ggplot(ggdf_sce_hsc, aes(x = celltypes,
+                         y = logc_hsc[rownames(logc_hsc) == "Crlf2",],
+                         color = celltypes))+
+  ggbeeswarm::geom_quasirandom(size = 0.2)+
+  theme_classic()+
+  geom_boxplot(color = "black", alpha = 0)+
+  ylab(paste0("Crlf2", " expression"))+
+  facet_grid(cols = vars(ggdf_sce_hsc$Species_ID))+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("cell types", values = col_cts_hsc)+
+  theme(legend.position = "none")
+ 
+ggplot(ggdf_sce_hsc, aes(x = celltypes,
+                         y = logc_hsc[rownames(logc_hsc) == "Scarb1",],
+                         color = celltypes))+
+  ggbeeswarm::geom_quasirandom(size = 0.2)+
+  theme_classic()+
+  geom_boxplot(color = "black", alpha = 0)+
+  ylab(paste0("Scarb1", " expression"))+
+  facet_grid(cols = vars(ggdf_sce_hsc$Species_ID))+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("cell types", values = col_cts_hsc)+
+  theme(legend.position = "none")
+  
+ggplot(ggdf_sce_hsc, aes(x = celltypes,
+                         y = logc_hsc[rownames(logc_hsc) == "Sorl1",],
+                         color = celltypes))+
+  ggbeeswarm::geom_quasirandom(size = 0.2)+
+  theme_classic()+
+  geom_boxplot(color = "black", alpha = 0)+
+  ylab(paste0("Sorl1", " expression"))+
+  facet_grid(cols = vars(ggdf_sce_hsc$Species_ID))+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("cell types", values = col_cts_hsc)+
+  theme(legend.position = "none")
+
+ggplot(ggdf_sce_str, aes(x = celltypes,
+                         y = logc_str[rownames(logc_str) == "Cd200",],
+                         color = celltypes))+
+  ggbeeswarm::geom_quasirandom(size = 0.2)+
+  theme_classic()+
+  geom_boxplot(color = "black", alpha = 0)+
+  ylab(paste0("Cd200", " expression"))+
+  facet_grid(cols = vars(ggdf_sce_str$Species_ID))+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("cell types", values = col_cts_str)+
+  theme(legend.position = "none")
+ 
+ggplot(ggdf_sce_str, aes(x = celltypes,
+                         y = logc_str[rownames(logc_str) == "Sema3c",],
+                         color = celltypes))+
+  ggbeeswarm::geom_quasirandom(size = 0.2)+
+  theme_classic()+
+  geom_boxplot(color = "black", alpha = 0)+
+  ylab(paste0("Sema3c", " expression"))+
+  facet_grid(cols = vars(ggdf_sce_str$Species_ID))+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("cell types", values = col_cts_str)+
+  theme(legend.position = "none")
+  
+ggplot(ggdf_sce_str, aes(x = celltypes,
+                         y = logc_str[rownames(logc_str) == "Vegfa",],
+                         color = celltypes))+
+  ggbeeswarm::geom_quasirandom(size = 0.2)+
+  theme_classic()+
+  geom_boxplot(color = "black", alpha = 0)+
+  ylab(paste0("Vegfa", " expression"))+
+  facet_grid(cols = vars(ggdf_sce_str$Species_ID))+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("cell types", values = col_cts_str)+
+  theme(legend.position = "none")
+```
+
+```{r}
+mcar_only_all_rec <- c(overlap_lists$HSCs$mcar_only, 
+                       overlap_lists$`Early MPPs`$mcar_only,
+                       overlap_lists$`Activated MPPs`$mcar_only,
+                       overlap_lists$`Mk/Ery progs.`$mcar_only,
+                       overlap_lists$`Early Myeloid progs.`$mcar_only,
+                       overlap_lists$`Neutrophil progs.`$mcar_only,
+                       overlap_lists$`Monocyte progs.`$mcar_only)
+
+mcar_only_all_emi <- c(overlap_lists$`Adipo/CARs`$mcar_only, 
+                       overlap_lists$Osteo$mcar_only,
+                       overlap_lists$`Fibro/Chondro`$mcar_only,
+                       overlap_lists$Fibroblasts$mcar_only,
+                       overlap_lists$`Arteriolar/Capillary ECs`$mcar_only,
+                       overlap_lists$`Arteriolar/Mixed ECs`$mcar_only)
+
+sort(table(mcar_only_all_rec), decreasing = TRUE)
+sort(table(mcar_only_all_emi), decreasing = TRUE)
+
+umap_gene(sce_hsc, "Scarb2")+
+  facet_grid(cols = vars(sce_hsc$Species_ID))
+
+umap_gene(sce_hsc, "Selp")+
+  facet_grid(cols = vars(sce_hsc$Species_ID))
+
+umap_gene(sce_hsc, "Flt3")+
+  facet_grid(cols = vars(sce_hsc$Species_ID))
+
+umap_gene(sce_str, "Tnfsf9")+
+  facet_grid(cols = vars(sce_str$Species_ID))
+
+umap_gene(sce_str, "Sfrp2")+
+  facet_grid(cols = vars(sce_str$Species_ID))
+
+umap_gene(sce_str, "Flt3l")+
+  facet_grid(cols = vars(sce_str$Species_ID))
+
+ggplot(ggdf_sce_hsc, aes(x = celltypes,
+                         y = logc_hsc[rownames(logc_hsc) == "Scarb2",],
+                         color = celltypes))+
+  ggbeeswarm::geom_quasirandom(size = 0.2)+
+  theme_classic()+
+  geom_boxplot(color = "black", alpha = 0)+
+  ylab(paste0("Scarb2", " expression"))+
+  facet_grid(cols = vars(ggdf_sce_hsc$Species_ID))+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("cell types", values = col_cts_hsc)+
+  theme(legend.position = "none")
+ 
+ggplot(ggdf_sce_hsc, aes(x = celltypes,
+                         y = logc_hsc[rownames(logc_hsc) == "Selp",],
+                         color = celltypes))+
+  ggbeeswarm::geom_quasirandom(size = 0.2)+
+  theme_classic()+
+  geom_boxplot(color = "black", alpha = 0)+
+  ylab(paste0("Selp", " expression"))+
+  facet_grid(cols = vars(ggdf_sce_hsc$Species_ID))+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("cell types", values = col_cts_hsc)+
+  theme(legend.position = "none")
+  
+ggplot(ggdf_sce_hsc, aes(x = celltypes,
+                         y = logc_hsc[rownames(logc_hsc) == "Flt3",],
+                         color = celltypes))+
+  ggbeeswarm::geom_quasirandom(size = 0.2)+
+  theme_classic()+
+  geom_boxplot(color = "black", alpha = 0)+
+  ylab(paste0("Flt3", " expression"))+
+  facet_grid(cols = vars(ggdf_sce_hsc$Species_ID))+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("cell types", values = col_cts_hsc)+
+  theme(legend.position = "none")
+
+ggplot(ggdf_sce_str, aes(x = celltypes,
+                         y = logc_str[rownames(logc_str) == "Tnfsf9",],
+                         color = celltypes))+
+  ggbeeswarm::geom_quasirandom(size = 0.2)+
+  theme_classic()+
+  geom_boxplot(color = "black", alpha = 0)+
+  ylab(paste0("Tnfsf9", " expression"))+
+  facet_grid(cols = vars(ggdf_sce_str$Species_ID))+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("cell types", values = col_cts_str)+
+  theme(legend.position = "none")
+ 
+ggplot(ggdf_sce_str, aes(x = celltypes,
+                         y = logc_str[rownames(logc_str) == "Sfrp2",],
+                         color = celltypes))+
+  ggbeeswarm::geom_quasirandom(size = 0.2)+
+  theme_classic()+
+  geom_boxplot(color = "black", alpha = 0)+
+  ylab(paste0("Sfrp2", " expression"))+
+  facet_grid(cols = vars(ggdf_sce_str$Species_ID))+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("cell types", values = col_cts_str)+
+  theme(legend.position = "none")
+  
+ggplot(ggdf_sce_str, aes(x = celltypes,
+                         y = logc_str[rownames(logc_str) == "Flt3l",],
+                         color = celltypes))+
+  ggbeeswarm::geom_quasirandom(size = 0.2)+
+  theme_classic()+
+  geom_boxplot(color = "black", alpha = 0)+
+  ylab(paste0("Flt3l", " expression"))+
+  facet_grid(cols = vars(ggdf_sce_str$Species_ID))+
+  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual("cell types", values = col_cts_str)+
+  theme(legend.position = "none")
+
+print(overlap_lists$`Adipo/CARs`$mcar_only) 
+print(overlap_lists$Osteo$mcar_only)
+print(overlap_lists$`Fibro/Chondro`$mcar_only)
+print(overlap_lists$Fibroblasts$mcar_only)
+print(overlap_lists$`Arteriolar/Capillary ECs`$mcar_only)
+print(overlap_lists$`Arteriolar/Mixed ECs`$mcar_only)
+
+knitr::knit_exit()
+```
+
+## Check gene expression levels
+
+```{r}
+#sce_mcar_old <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis/cci_objects/01_cci_preparation/05_down/sce_mcar_old-05")
+#sce_mcar_yng <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis/cci_objects/01_cci_preparation/05_down/sce_mcar_yng-05")
+#sce_mmus_old <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis/cci_objects/01_cci_preparation/05_down/sce_mmus_old-05")
+#sce_mmus_yng <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis/cci_objects/01_cci_preparation/05_down/sce_mmus_yng-05")
+
+#sce_list <- list()
+#sce_list[["mcar"]][["old"]] <- sce_mcar_old
+#sce_list[["mcar"]][["yng"]] <- sce_mcar_yng
+#
+#sce_list[["mmus"]][["old"]] <- sce_mmus_old
+#sce_list[["mmus"]][["yng"]] <- sce_mmus_yng
+
+```
+
+```{r}
+species_list <- as.list(species)
+ggdf_list_list <- lapply(species_list, function(species){ 
+  
+  overlap <- overlap_lists[[species]]
+  cts_all <- as.list(names(overlap))
+  
+  ggdf_list <- lapply(cts_all, function(ct){
+      
+    if(length(grep(0, overlap[[ct]]$nr_df$nr)) <= 1){
+    
+      gene_df_ct <- data.frame(
+        sigmols = unique(c(overlap[[ct]]$shared,
+                           overlap[[ct]]$yng_only, 
+                           overlap[[ct]]$old_only))
+      )
+
+      gene_df_ct$mode <- vector(length = nrow(gene_df_ct))
+      gene_df_ct$mode[gene_df_ct$sigmols %in% overlap[[ct]]$shared] <- "shared"
+      gene_df_ct$mode[gene_df_ct$sigmols %in% overlap[[ct]]$yng_only] <- "yng_only"
+      gene_df_ct$mode[gene_df_ct$sigmols %in% overlap[[ct]]$old_only] <- "old_only"
+      gene_df_ct$species <- rep(species, nrow(gene_df_ct))
+      gene_df_ct$cell_type <- rep(ct, nrow(gene_df_ct))
+    
+      sce_old <- sce_list[[species]]$old
+      sce_yng <- sce_list[[species]]$yng
+      
+      ds_old <- assays(sce_old)$downsampled
+      ds_old <- ds_old[match(gene_df_ct$sigmols, rownames(ds_old)),]
+      ds_old <- as.data.frame(as.matrix(ds_old))
+    
+      ds_yng <- assays(sce_yng)$downsampled
+      ds_yng <- ds_yng[match(gene_df_ct$sigmols, rownames(ds_yng)),]
+      ds_yng <- as.data.frame(as.matrix(ds_yng))
+      
+      gene_df_ct$average_downsampled_old <- rowMeans(ds_old)
+      gene_df_ct$average_downsampled_yng <- rowMeans(ds_yng)
+      
+      lc_old <- assays(sce_old)$logcounts
+      lc_old <- lc_old[match(gene_df_ct$sigmols, rownames(lc_old)),]
+      lc_old <- as.data.frame(as.matrix(lc_old))
+    
+      lc_yng <- assays(sce_yng)$logcounts
+      lc_yng <- lc_yng[match(gene_df_ct$sigmols, rownames(lc_yng)),]
+      lc_yng <- as.data.frame(as.matrix(lc_yng))
+      
+      stopifnot(!identical(lc_yng, lc_old))
+      stopifnot(!identical(ds_old, ds_yng))
+      
+      gene_df_ct$average_logcounts_old <- rowMeans(lc_old)
+      gene_df_ct$average_logcounts_yng <- rowMeans(lc_yng)
+      
+      return(gene_df_ct)
+    }
+  })
+  return(ggdf_list)
+})
+
+ggdf_large <- bind_rows(ggdf_list_list)
+ggdf_large_long <- pivot_longer(ggdf_large, 
+                                cols = c("average_downsampled_old", 
+                                         "average_downsampled_yng", 
+                                         "average_logcounts_old",
+                                         "average_logcounts_yng"), 
+                                names_to = "expression")
+
+ggdf_large_long$age <- vector(length = nrow(ggdf_large_long))
+ggdf_large_long$age[grep("old", ggdf_large_long$expression)] <- "old"
+ggdf_large_long$age[grep("yng", ggdf_large_long$expression)] <- "yng"
+
+ggdf_large_long_lc <- ggdf_large_long[grep("logcounts", ggdf_large_long$expression),]
+ggdf_large_long_ds <- ggdf_large_long[grep("downsampled", ggdf_large_long$expression),]
+
+print(head(ggdf_large))
+print(head(ggdf_large_long_lc))
+#knitr::knit_exit()
+
+print(head(ggdf_list_list[[1]][[2]]))
+
+```
+
+```{r}
+
+plotlist_list <- lapply(ggdf_list_list, function(ggdf_list){ 
+  
+  plot_list <- lapply(ggdf_list, function(ggdf){
+    
+    print(head(ggdf))
+
+    plot1 <- ggplot(ggdf, aes(y = average_downsampled_old, x = mode))+
+      geom_jitter(color = "grey78", alpha = 30)+
+      geom_boxplot(alpha = 0)+
+      theme_classic()+
+      stat_compare_means(test = 'kruskal.test', p.adjust.method = "BH")+
+      stat_compare_means(
+      comparisons = list(c("old_only", "shared"), c("old_only", "yng_only"),
+                         c("shared", "yng_only")),
+      test = 'dunn_test', p.adjust.method = "BH", hide.ns = TRUE, 
+      aes(label = after_stat(p.signif)))+
+      ggtitle(paste(species, ggdf$cell_type[1]))
+
+    plot2 <- ggplot(ggdf, aes(y = average_downsampled_yng, x = mode))+
+      geom_jitter(color = "grey78", alpha = 30)+
+      geom_boxplot(alpha = 0)+
+      theme_classic()+
+      stat_compare_means(test = 'kruskal.test', p.adjust.method = "BH")+
+      stat_compare_means(
+        comparisons = list(c("old_only", "shared"), c("old_only", "yng_only"),
+                         c("shared", "yng_only")),
+        test = 'dunn_test', p.adjust.method = "BH",  hide.ns = TRUE,
+        aes(label = after_stat(p.signif)))+
+      ggtitle(paste(species, ggdf$cell_type[1]))
+    
+    plot3 <- ggplot(ggdf, aes(y = average_logcounts_old, x = mode))+
+      geom_jitter(color = "grey78", alpha = 30)+
+      geom_boxplot(alpha = 0)+
+      theme_classic()+
+      stat_compare_means(test = 'kruskal.test', p.adjust.method = "BH")+
+      stat_compare_means(
+      comparisons = list(c("old_only", "shared"), c("old_only", "yng_only"),
+                         c("shared", "yng_only")),
+      test = 'dunn_test', p.adjust.method = "BH", hide.ns = TRUE, 
+      aes(label = after_stat(p.signif)))+
+      ggtitle(paste(species, ggdf$cell_type[1]))
+
+    plot4 <- ggplot(ggdf, aes(y = average_logcounts_yng, x = mode))+
+      geom_jitter(color = "grey78", alpha = 30)+
+      geom_boxplot(alpha = 0)+
+      theme_classic()+
+      stat_compare_means(test = 'kruskal.test', p.adjust.method = "BH")+
+      stat_compare_means(
+        comparisons = list(c("old_only", "shared"), c("old_only", "yng_only"),
+                         c("shared", "yng_only")),
+        test = 'dunn_test', p.adjust.method = "BH",  hide.ns = TRUE,
+        aes(label = after_stat(p.signif)))+
+      ggtitle(paste(species, ggdf$cell_type[1]))
+    
+    return(list(plot1, plot2, plot3, plot4))
+  })
+  return(plot_list)
+})
+
+plotlist_list
+```
+
+```{r}
+
+ggplot(ggdf_large, aes(x = mode, y = average_downsampled_old, color = mode))+
+  geom_jitter()+
+  geom_boxplot(alpha = 0, color = "black")+
+  theme_classic()+
+  ylim(c(-0.01, 9))+
+  scale_color_manual(values = col_mode)
+
+
+ggplot(ggdf_large, aes(x = mode, y = average_downsampled_yng, color = mode))+
+  geom_jitter()+
+  geom_boxplot(alpha = 0, color = "black")+
+  theme_classic()+
+  ylim(c(-0.01, 9))+
+  scale_color_manual(values = col_mode)
+
+ggplot(ggdf_large, aes(x = mode, y = average_logcounts_old, color = mode))+
+  geom_jitter()+
+  geom_boxplot(alpha = 0, color = "black")+
+  theme_classic()+
+  ylim(c(-0.01, 9))+
+  scale_color_manual(values = col_mode)
+
+
+ggplot(ggdf_large, aes(x = mode, y = average_logcounts_yng, color = mode))+
+  geom_jitter()+
+  geom_boxplot(alpha = 0, color = "black")+
+  theme_classic()+
+  ylim(c(-0.01, 9))+
+  scale_color_manual(values = col_mode)
+```
+
+```{r}
+ggplot(ggdf_large_long_lc, aes(x = age, y = value, color = mode))+
+  geom_boxplot()+
+  theme_classic()+
+  scale_color_manual(values = col_mode)+
+  facet_grid(cols = vars(species))+
+  ylab("average logcount expression")
+
+ggplot(ggdf_large_long_ds, aes(x = age, y = value, color = mode))+
+  geom_boxplot()+
+  theme_classic()+
+  scale_color_manual(values = col_mode)+
+  facet_grid(cols = vars(species))+
+  ylab("average downsampled expression")
+```
+
+```{r}
+sessionInfo()
+```

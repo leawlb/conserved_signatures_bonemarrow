@@ -1,6 +1,5 @@
 #-------------------------------------------------------------------------------
-# author: Amy Danson, Lea Wölbert
-# date: 2022-09-21
+# authors: Amy Danson, Lea Wölbert
 # extract highly variable genes and reduce dimensions for QC purposes
 
 library(scater, quietly = TRUE) 

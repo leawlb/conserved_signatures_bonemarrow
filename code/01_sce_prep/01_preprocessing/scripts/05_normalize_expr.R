@@ -1,6 +1,5 @@
 #-------------------------------------------------------------------------------
-# author: Amy Danson, Lea Wölbert
-# date: 2022-09-20
+# authors: Amy Danson, Lea Wölbert
 # normalize and log-transform expression on the level of individual samples 
 
 library(SingleCellExperiment, quietly = TRUE) 

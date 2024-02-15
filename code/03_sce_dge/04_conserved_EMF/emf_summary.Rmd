@@ -1,0 +1,551 @@
+---
+title: "emf_summary"
+author: "Lea Wölbert"
+date: '2023-11-15'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load objects
+
+```{r seed, message = FALSE}
+set.seed(37)
+```
+
+```{r load, message = FALSE}
+library(tidyverse)
+library(scater)
+library(ComplexUpset)
+```
+
+```{r source, message = FALSE}
+source(file = snakemake@params[["plotting"]])
+```
+
+```{r load_objects}
+emf_list_hsc <- readRDS(snakemake@input[["emf_list_hsc"]])
+#emf_list_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis/sce_objects/03_sce_analysis/04_conserved_EMF/01_emfs/emf_list_str")
+#emf_list_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis/sce_objects/03_sce_analysis/04_conserved_EMF/01_emfs/emf_list_hsc")
+emf_list_str <- readRDS(snakemake@input[["emf_list_str"]])
+fraction_curr <- snakemake@wildcards[["fraction"]]
+
+```
+
+```{r colors, meassage = FALSE}
+colors_path <- snakemake@params[["colors_path"]]
+source(snakemake@params[["colors"]])
+
+colors_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/colors/colors.txt"
+source("../../source/colors.R")
+```
+
+# Preparation 
+
+Put all dfs containing info on conservation level per cell type together.
+
+```{r}
+cons_emf_df_list_str <- lapply(as.list(names(emf_list_str)), function(c){
+  
+  emf_list_str[[c]]$marker_cons_ct$cell_type <- c
+  emf_list_str[[c]]$marker_cons_ct$assignment <- "emitter"
+  return(emf_list_str[[c]]$marker_cons_ct)
+})
+
+cons_emf_df_list_hsc <- lapply(as.list(names(emf_list_hsc)), function(c){
+  
+  emf_list_hsc[[c]]$marker_cons_ct$cell_type <- c
+  emf_list_hsc[[c]]$marker_cons_ct$assignment <- "receiver"
+  return(emf_list_hsc[[c]]$marker_cons_ct)
+})
+
+cons_emf_df_str <- bind_rows(cons_emf_df_list_str)
+cons_emf_df_hsc <- bind_rows(cons_emf_df_list_hsc)
+cons_emf_df <- rbind(cons_emf_df_str, cons_emf_df_hsc)
+head(cons_emf_df)
+```
+
+Make on df specifically for upset plot
+
+```{r}
+cons_emf_df_up <- cons_emf_df
+cons_emf_df_up$mmus[!is.na(cons_emf_df_up$mmus)] <- TRUE
+cons_emf_df_up$mcas[!is.na(cons_emf_df_up$mcas)] <- TRUE
+cons_emf_df_up$mspr[!is.na(cons_emf_df_up$mspr)] <- TRUE
+cons_emf_df_up$mcar[!is.na(cons_emf_df_up$mcar)] <- TRUE
+cons_emf_df_up$mmus[is.na(cons_emf_df_up$mmus)] <- FALSE
+cons_emf_df_up$mcas[is.na(cons_emf_df_up$mcas)] <- FALSE
+cons_emf_df_up$mspr[is.na(cons_emf_df_up$mspr)] <- FALSE
+cons_emf_df_up$mcar[is.na(cons_emf_df_up$mcar)] <- FALSE
+
+head(cons_emf_df_up)
+table(cons_emf_df_up$cons_emf)
+```
+
+Make a df with categories of conservation for visualisation.
+
+```{r}
+ggdf2 <- cons_emf_df
+
+ggdf2$marker_only <- vector(length = nrow(ggdf2))
+ggdf2$ndge_marker <- vector(length = nrow(ggdf2))
+ggdf2$conserved_marker <- vector(length = nrow(ggdf2))
+ggdf2$conserved_emf <- vector(length = nrow(ggdf2))
+
+ggdf2$marker_only[which(ggdf2$cons_marker == FALSE &
+                          ggdf2$cons_emf == FALSE &
+                          ggdf2$ndge == FALSE)] <- TRUE
+
+ggdf2$ndge_marker[which(ggdf2$cons_marker == FALSE &
+                              ggdf2$cons_emf == FALSE &
+                              ggdf2$ndge == TRUE)] <- TRUE
+
+ggdf2$conserved_marker[which(ggdf2$cons_marker == TRUE &
+                             ggdf2$cons_emf == FALSE &
+                             ggdf2$ndge == FALSE)] <- TRUE
+
+ggdf2$conserved_emf[which(ggdf2$cons_marker == TRUE &
+                             ggdf2$cons_emf == TRUE &
+                             ggdf2$ndge == TRUE)] <- TRUE
+
+ggdf2 <- as.data.frame(pivot_longer(ggdf2, cols = c("marker_only",
+                                                    "ndge_marker",
+                                                    "conserved_marker",
+                                                    "conserved_emf"), 
+                                     names_to = "mode", values_to = "is_true"))
+
+ggdf2 <- as.data.frame(pivot_longer(ggdf2, cols = c("mmus",
+                                                    "mcas",
+                                                    "mspr",
+                                                    "mcar"), 
+                                     names_to = "species", values_to = "value"))
+ggdf2 <- ggdf2[ggdf2$is_true == TRUE,]
+ggdf2 <- ggdf2[!is.na(ggdf2$value),]
+
+ggdf2$cell_type <- factor(ggdf2$cell_type, levels = c(names(col_cts_hsc),
+                                                      names(col_cts_str)))
+ggdf2$species <- factor(ggdf2$species, levels = names(col_spc))
+
+ggdf2$is_emf <- vector(length = nrow(ggdf2))
+
+ggdf2$is_emf[ggdf2$mode == "marker_only"] <- FALSE
+ggdf2$is_emf[ggdf2$mode == "ndge_marker"] <- FALSE
+ggdf2$is_emf[ggdf2$mode == "conserved_marker"] <- FALSE
+ggdf2$is_emf[ggdf2$mode == "conserved_emf"] <- TRUE
+
+ggdf2$is_emf <- factor(ggdf2$is_emf, levels =c(FALSE, TRUE))
+
+head(ggdf2)
+```
+
+expand the df
+
+```{r}
+ggdf3 <- ggdf2
+
+species <- names(col_spc)
+celltypes <- c(names(col_cts_hsc), names(col_cts_str))
+
+ggdf3$nr_markers_all <- vector(length = nrow(ggdf3))
+ggdf3$nr_markers_only <- vector(length = nrow(ggdf3))
+ggdf3$nr_ndge_marker <- vector(length = nrow(ggdf3))
+ggdf3$nr_conserved_marker <- vector(length = nrow(ggdf3))
+ggdf3$nr_cons_emf <- vector(length = nrow(ggdf3))
+ggdf3$nr_is_emf<- vector(length = nrow(ggdf3))
+ggdf3$nr_is_not_emf <- vector(length = nrow(ggdf3))
+
+for(s in species){
+  for(c in celltypes){
+    
+    pos <- which(ggdf3$species == s & ggdf3$cell_type == c)
+
+    ggdf3[pos,]$nr_markers_all <- length(pos)
+   
+    ggdf3[pos,]$nr_markers_only <- length(which(ggdf3[pos,]$mode == "marker_only"))
+    ggdf3[pos,]$nr_ndge_marker <- length(which(ggdf3[pos,]$mode == "ndge_marker"))
+    ggdf3[pos,]$nr_conserved_marker <- length(which(ggdf3[pos,]$mode == "conserved_marker"))
+    ggdf3[pos,]$nr_cons_emf <- length(which(ggdf3[pos,]$mode == "conserved_emf"))
+    
+    ggdf3[pos,]$nr_is_emf <- ggdf3[pos,]$nr_cons_emf
+    ggdf3[pos,]$nr_is_not_emf <- length(pos) - ggdf3[pos,]$nr_cons_emf
+    
+  }
+}
+
+ggdf3$prop_markers_only <- ggdf3$nr_markers_only/ggdf3$nr_markers_all
+ggdf3$prop_ndge_marker <- ggdf3$nr_ndge_marker/ggdf3$nr_markers_all
+ggdf3$prop_conserved_marker <- ggdf3$nr_conserved_marker/ggdf3$nr_markers_all
+ggdf3$prop_cons_emf <- ggdf3$nr_cons_emf/ggdf3$nr_markers_all
+ggdf3$prop_is_emf <- ggdf3$nr_is_emf/ggdf3$nr_markers_all
+ggdf3$prop_is_not_emf <- ggdf3$nr_is_not_emf/ggdf3$nr_markers_all
+
+ggdf3_nr <- pivot_longer(ggdf3, cols = c("nr_markers_only",
+                                         "nr_ndge_marker",
+                                         "nr_conserved_marker",
+                                         "nr_cons_emf"), 
+                         values_to = "nrs",
+                        names_to = "mode2")
+
+ggdf3_prop <- pivot_longer(ggdf3, cols = c("prop_markers_only",
+                                         "prop_ndge_marker",
+                                         "prop_conserved_marker",
+                                         "prop_cons_emf"), 
+                         values_to = "prop",
+                        names_to = "mode2")
+
+ggdf3_emf <- pivot_longer(ggdf3, cols = c("nr_is_emf",
+                                         "nr_is_not_emf"), 
+                         values_to = "nrs",
+                        names_to = "mode4")
+
+ggdf3_emf_prop <- pivot_longer(ggdf3, cols = c("prop_is_emf",
+                                         "prop_is_not_emf"), 
+                         values_to = "prop",
+                        names_to = "mode4")
+
+ggdf3_prop$mode2 <- gsub("prop_", "", ggdf3_prop$mode2)
+ggdf3_nr$mode2 <- gsub("nr_", "", ggdf3_nr$mode2)
+ggdf3_emf$mode4 <- gsub("nr_", "", ggdf3_emf$mode4)
+ggdf3_emf_prop$mode4 <- gsub("prop_", "", ggdf3_emf_prop$mode4)
+
+ggdf3_prop$mode2 <- factor(ggdf3_prop$mode2, 
+                           levels = c("markers_only", "ndge_marker",
+                                      "conserved_marker", "cons_emf"))
+
+ggdf3_nr$mode2 <- factor(ggdf3_nr$mode2, 
+                           levels = c("markers_only", "ndge_marker",
+                                      "conserved_marker", "cons_emf"))
+head(ggdf3_nr)
+```
+
+```{r}
+
+ggdf2$mode[ggdf2$mode == "marker_only"] <- "marker only"
+ggdf2$mode[ggdf2$mode == "ndge_marker"] <- "non-differentally expressed"
+ggdf2$mode[ggdf2$mode == "conserved_marker"] <- "conserved function"
+ggdf2$mode[ggdf2$mode == "conserved_emf"] <- "conserved marker gene function and expression"
+ggdf2$mode <- factor(ggdf2$mode, 
+                           levels = c("marker only", "non-differentally expressed",
+                                      "conserved function", "conserved marker gene function and expression"))
+
+col_mode1 <-c("marker only" = "grey80",
+              "non-differentally expressed" = "burlywood1",
+              "conserved function" = "orange",
+              "conserved marker gene function and expression" = "darkorange3")
+
+
+col_mode2 <- c("markers_only" = "grey80",
+               "ndge_marker"= "burlywood1",
+               "conserved_marker" = "orange",
+               "conserved_emf"= "darkorange3")
+
+col_core <- c("TRUE" = "darkorange3",
+              "FALSE" = "grey80")
+
+ggdf3_emf$mode4[ggdf3_emf$mode4 == "is_emf"] <- "TRUE"
+ggdf3_emf$mode4[ggdf3_emf$mode4 == "is_not_emf"] <- "FALSE"
+
+ggdf3_emf_prop$mode4[ggdf3_emf_prop$mode4 == "is_emf"] <- "TRUE"
+ggdf3_emf_prop$mode4[ggdf3_emf_prop$mode4 == "is_not_emf"] <- "FALSE"
+
+ggdf3_emf$mode4 <- factor(ggdf3_emf$mode4, 
+                           levels = c("TRUE", "FALSE"))
+
+ggdf3_emf_prop$mode4 <- factor(ggdf3_emf_prop$mode4, 
+                           levels = c("TRUE", "FALSE"))
+
+col_mode4 <- c("TRUE" = "darkorange3",
+               "FALSE" = "grey80")
+```
+
+# Important Plots
+
+```{r}
+upset(cons_emf_df_up, intersect = c("mmus", "mcas", "mspr",  "mcar"))+
+  xlab("")+
+  ggtitle("all marker genes")
+
+upset(cons_emf_df_up[cons_emf_df_up$ndge == TRUE,], intersect = c("mmus", "mcas", "mspr",  "mcar"))+
+  xlab("")+
+  ggtitle("non-differentially expressed marker genes")
+
+upset(cons_emf_df_up[cons_emf_df_up$cons_marker == TRUE,], intersect = c("mmus", "mcas", "mspr",  "mcar"))+
+  xlab("")+
+  ggtitle("conserved marker genes")
+
+upset(cons_emf_df_up[cons_emf_df_up$cons_emf == TRUE,], intersect = c("mmus", "mcas", "mspr",  "mcar"))+
+  xlab("")+
+  ggtitle("core marker genes")
+
+print(table(cons_emf_df_up$cons_marker))
+```
+
+```{r fig.width = 12, fig.height = 5.5}
+exclude_markero <- which(ggdf2$cons_marker == FALSE & ggdf2$ndge == FALSE &
+                           ggdf2$cons_emf == FALSE)
+  
+ggplot(ggdf2[-exclude_markero,], aes(fill = mode, x = species))+
+  geom_bar(position = "stack")+
+  theme_classic()+
+  ylab("Nr of detected marker genes")+
+  scale_fill_manual("Marker genes", values = col_mode1)+
+  facet_grid(cols = vars(cell_type))+
+  theme(strip.text.x = element_text(angle = 90),
+        axis.text.x = element_text(angle = 90),
+        legend.position = "bottom")+
+  xlab("Species")
+
+ggplot(ggdf2[-exclude_markero,], aes(fill = mode, x = species))+
+  geom_bar(position = "fill")+
+  theme_classic()+
+  ylab("Nr of detected marker genes")+
+  scale_fill_manual("Conservation level", values = col_mode1)+
+  facet_grid(cols = vars(cell_type))+
+  theme(strip.text.x = element_text(angle = 90),
+        axis.text.x = element_text(angle = 90))+
+  xlab("Species")
+
+ggplot(ggdf2[-exclude_markero,], aes(fill = mode, x = cell_type))+
+  geom_bar(position = "fill")+
+  theme_classic()+
+  ylab("Nr of detected marker genes")+
+  scale_fill_manual("Conservation level", values = col_mode1)+
+  facet_grid(cols = vars(species))+
+  theme(strip.text.x = element_text(angle = 90),
+        axis.text.x = element_text(angle = 90))+
+  xlab("Cell type")
+```
+
+```{r fig.width = 13, fig.height = 4}
+ggplot(ggdf2, aes(fill = mode, x = species))+
+  geom_bar(position = "stack")+
+  theme_classic()+
+  ylab("Nr of detected marker genes")+
+  scale_fill_manual("Marker genes", values = col_mode1)+
+  facet_grid(cols = vars(cell_type))+
+  theme(strip.text.x = element_text(angle = 90),
+        axis.text.x = element_text(angle = 90))+
+  xlab("Species")
+
+ggplot(ggdf2, aes(fill = mode, x = species))+
+  geom_bar(position = "fill")+
+  theme_classic()+
+  ylab("Nr of detected marker genes")+
+  scale_fill_manual("Marker genes", values = col_mode1)+
+  facet_grid(cols = vars(cell_type))+
+  theme(strip.text.x = element_text(angle = 90),
+        axis.text.x = element_text(angle = 90))+
+  xlab("Species")
+
+ggplot(ggdf2, aes(fill = mode, x = cell_type))+
+  geom_bar(position = "fill")+
+  theme_classic()+
+  ylab("Nr of detected marker genes")+
+  scale_fill_manual("Marker genes", values = col_mode1)+
+  facet_grid(cols = vars(species))+
+  theme(strip.text.x = element_text(angle = 90),
+        axis.text.x = element_text(angle = 90))+
+  xlab("Cell type")
+```
+
+```{r fig.width = 5, fig.height = 4}
+ggplot(ggdf2[-exclude_markero,][ggdf2[-exclude_markero,]$species == "mmus",],
+       aes(fill = mode, x = cell_type))+
+  geom_bar(position = "stack")+
+  theme_classic()+
+  ylab("Nr of detected marker genes")+
+  scale_fill_manual("Marker genes", values = col_mode1)+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle("BL6 marker genes")+
+  xlab("Cell type")
+
+ggplot(ggdf2[-exclude_markero,][ggdf2[-exclude_markero,]$species == "mmus",],
+       aes(fill = mode, x = cell_type))+
+  geom_bar(position = "fill")+
+  theme_classic()+
+  ylab("Proportion of detected marker genes")+
+  scale_fill_manual("Marker genes", values = col_mode1)+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle("BL6 marker genes")+
+  xlab("Cell type")
+```
+
+```{r fig.width = 5, fig.height = 4}
+ggplot(ggdf2[ggdf2$species == "mmus",],
+       aes(fill = mode, x = cell_type))+
+  geom_bar(position = "stack")+
+  theme_classic()+
+  ylab("Nr of detected marker genes")+
+  scale_fill_manual("Marker genes", values = col_mode1)+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle("BL6 all marker genes")+
+  xlab("Cell type")
+
+ggplot(ggdf2[ggdf2$species == "mmus",],
+       aes(fill = mode, x = cell_type))+
+  geom_bar(position = "fill")+
+  theme_classic()+
+  ylab("Proportion of detected marker genes")+
+  scale_fill_manual("Marker genes", values = col_mode1)+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle("BL6 all marker genes")+
+  xlab("Cell type")
+```
+
+```{r fig.width = 6, fig.height = 4}
+ggplot(ggdf2[-exclude_markero,][ggdf2[-exclude_markero,]$species == "mmus",],
+       aes(fill = is_emf, x = cell_type))+
+  geom_bar(position = "stack")+
+  theme_classic()+
+  ylab("Nr of detected marker genes")+
+  scale_fill_manual("Core marker gene", values = col_core)+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle("BL6 marker genes")+
+  xlab("Cell type")
+
+ggplot(ggdf2[-exclude_markero,][ggdf2[-exclude_markero,]$species == "mmus",],
+       aes(fill = is_emf, x = cell_type))+
+  geom_bar(position = "fill")+
+  theme_classic()+
+  ylab("Proportion of detected marker genes")+
+  scale_fill_manual("Core marker gene", values = col_core)+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle("BL6 marker genes")+
+  xlab("Cell type")
+```
+
+```{r fig.width = 6, fig.height = 4}
+ggplot(ggdf2[ggdf2$species == "mmus",], aes(fill = is_emf, x = cell_type))+
+  geom_bar(position = "stack")+
+  theme_classic()+
+  ylab("Nr of detected marker genes")+
+  scale_fill_manual("Core marker gene", values = col_core)+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle("BL6 all marker genes")+
+  xlab("Cell type")
+
+ggplot(ggdf2[ggdf2$species == "mmus",], aes(fill = is_emf, x = cell_type))+
+  geom_bar(position = "fill")+
+  theme_classic()+
+  ylab("Proportion of detected marker genes")+
+  scale_fill_manual("Core marker gene", values = col_core)+
+  theme(axis.text.x = element_text(angle = 90))+
+  ggtitle("BL6 all marker genes")+
+  xlab("Cell type")
+```
+
+# QC Plots
+
+```{r fig.width = 13, fig.height = 4}
+ggplot(ggdf2, aes(fill = is_emf, x = species))+
+  geom_bar(position = "stack")+
+  theme_classic()+
+  ylab("Nr of detected marker genes")+
+  scale_fill_manual("Core marker gene", values = col_core)+
+  facet_grid(cols = vars(cell_type))+
+  theme(strip.text.x = element_text(angle = 90),
+        axis.text.x = element_text(angle = 90))+
+  xlab("Species")
+
+ggplot(ggdf2, aes(fill = is_emf, x = species))+
+  geom_bar(position = "fill")+
+  theme_classic()+
+  ylab("Nr of detected marker genes")+
+  scale_fill_manual("Core marker gene", values = col_core)+
+  facet_grid(cols = vars(cell_type))+
+  theme(strip.text.x = element_text(angle = 90),
+        axis.text.x = element_text(angle = 90))+
+  xlab("Species")
+
+ggplot(ggdf2, aes(fill = is_emf, x = cell_type))+
+  geom_bar(position = "fill")+
+  theme_classic()+
+  ylab("Nr of detected marker genes")+
+  scale_fill_manual("Core marker gene", values = col_core)+
+  facet_grid(cols = vars(species))+
+  theme(strip.text.x = element_text(angle = 90),
+        axis.text.x = element_text(angle = 90))+
+  xlab("Cell type")
+
+```
+
+```{r}
+# for control reasons, compare directly to HSC report
+ggplot(ggdf2[ggdf2$cell_type == "HSCs",], aes(fill = mode, x = species))+
+  geom_bar(position = "stack")+
+  theme_classic()+
+  ylab("Nr of detected marker genes")+
+  scale_fill_manual("Conservation level", values = col_mode1)
+```
+
+```{r fig.width = 6, fig.height = 4}
+pos <- which(ggdf3_nr$mode2 == "markers_only")
+
+ggplot(ggdf3_nr[-pos,], aes(x = species, y = nrs, fill = mode2))+
+  geom_boxplot(color = "black", alpha = 0.8)+
+  theme_classic()+
+  scale_fill_manual("Conservation level", values = col_mode2)+
+  xlab("Species")+
+  ylab("Nr of marker genes")+
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r fig.width = 6, fig.height = 4}
+ggplot(ggdf3_nr, aes(x = species, y = nrs, fill = mode2))+
+  geom_boxplot(color = "black", alpha = 0.8)+
+  theme_classic()+
+  scale_fill_manual("Conservation level", values = col_mode2)+
+  xlab("Species")+
+  ylab("Nr of marker genes")+
+  theme(axis.text.x = element_text(angle = 90))
+
+ggplot(ggdf3_prop, aes(x = species, y = prop, fill = mode2))+
+  geom_boxplot(color = "black", alpha = 0.8)+
+  theme_classic()+
+  scale_fill_manual("Conservation level", values = col_mode2)+
+  xlab("Species")+
+  ylab("Proportion of marker genes")+
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r fig.width = 5, fig.height = 4}
+ggplot(ggdf3_emf_prop, aes(x = species, y = prop, fill = mode4))+
+  geom_boxplot(color = "black", alpha = 0.8)+
+  theme_classic()+
+  scale_fill_manual("Core marker gene", values = col_mode4)+
+  xlab("Species")+
+  ylab("Proportion of all marker genes")+
+  theme(axis.text.x = element_text(angle = 90))
+  
+ggplot(ggdf3_emf, aes(x = species, y = nrs, fill = mode4))+
+  geom_boxplot(color = "black", alpha = 0.8)+
+  theme_classic()+
+  scale_fill_manual("Core marker gene", values = col_mode4)+
+  theme(axis.text.x = element_text(angle = 90))+
+  xlab("Species")+
+  ylab("Nr of all marker genes")
+```
+
+```{r fig.width = 5, fig.height = 4}
+ggplot(ggdf3_prop, aes(x = mode2, y = prop, fill = species))+
+  geom_boxplot(color = "black", alpha = 0.8)+
+  theme_classic()+
+  scale_fill_manual("Species", values = col_spc)+
+  theme(axis.text.x = element_text(angle = 90))+
+  xlab("Conservation level")+
+  ylab("Proportion of marker genes")
+
+ggplot(ggdf3_emf_prop, aes(x = mode4, y = prop, fill = species))+
+  geom_boxplot(color = "black", alpha = 0.8)+
+  theme_classic()+
+  scale_fill_manual("Species", values = col_spc)+
+  theme(axis.text.x = element_text(angle = 90))+
+  xlab("Conservation level")+
+  ylab("Proportion of marker genes")
+```
+
+```{r}
+sessionInfo()
+```

@@ -33,8 +33,9 @@ for s in species:
     targets = targets + [OUTPUT_DAT + "/11_idis/nrlrs_" + s + "_" + a]
     targets = targets + [OUTPUT_REP + "/cci_metrics_qc/cci_metrics_qc_report_" + s + "_" + a + ".html"]
 
-targets = targets + [OUTPUT_REP + "/cci_metrics_qc_summary_ctp.html"]
-targets = targets + [OUTPUT_REP + "/cci_metrics_qc_summary_ct.html"]
+targets = targets + [OUTPUT_REP +"/cci_metrics_ct_repertoire_summary.html"]
+targets = targets + [OUTPUT_REP +"/cci_metrics_ct_interactome_summary.html"]
+targets = targets + [OUTPUT_REP +"/cci_metrics_ctp_interactome_summary.html"]
 
 #-------------------------------------------------------------------------------
 
@@ -115,36 +116,46 @@ rule make_cci_qc_report_conditions:
     script:
         "cci_metrics_qc_report_conditions.Rmd" 
 
-
-rule make_cci_qc_summary_ctp:
+rule make_cci_ct_rep_sum:
     input:
-        ident_pair_info = expand(rules.extract_ipi.output.ipi_list, species = species, age = age),
-        ident_info = expand(rules.extract_idi.output.idi_list, species = species, age = age),
         ident_nrlrs_info = expand(rules.extract_nrlrs.output.ident_nrlrs_list, species = species, age = age),
         sce_input = expand(OUTPUT_BASE + "/cci_objects/01_cci_preparation/05_down/sce_{species}_{age}-05", species = species, age = age)
     output:
-        OUTPUT_REP + "/cci_metrics_qc_summary_ctp.html"
+        OUTPUT_REP + "/cci_metrics_ct_repertoire_summary.html"
     params:
         colors_path = COLORS,
         sce_functions = "../../source/sce_functions.R",
         plotting = "../../source/plotting.R",
         colors = "../../source/colors.R"
     script:
-        "cci_metrics_qc_summary_ctp.Rmd" 
+        "cci_metrics_ct_repertoire_summary.Rmd" 
         
-rule make_cci_qc_summary_ct:
+        
+rule make_cci_ct_int_sum:
     input:
-        ident_pair_info = expand(rules.extract_ipi.output.ipi_list, species = species, age = age),
         ident_info = expand(rules.extract_idi.output.idi_list, species = species, age = age),
-        ident_nrlrs_info = expand(rules.extract_nrlrs.output.ident_nrlrs_list, species = species, age = age),
         sce_input = expand(OUTPUT_BASE + "/cci_objects/01_cci_preparation/05_down/sce_{species}_{age}-05", species = species, age = age)
     output:
-        OUTPUT_REP + "/cci_metrics_qc_summary_ct.html"
+        OUTPUT_REP + "/cci_metrics_ct_interactome_summary.html"
     params:
         colors_path = COLORS,
         sce_functions = "../../source/sce_functions.R",
         plotting = "../../source/plotting.R",
         colors = "../../source/colors.R"
     script:
-        "cci_metrics_qc_summary_ct.Rmd" 
-
+        "cci_metrics_ct_interactome_summary.Rmd" 
+        
+        
+rule make_cci_ctp_int_sum:
+    input:
+        ident_pair_info = expand(rules.extract_ipi.output.ipi_list, species = species, age = age),
+        sce_input = expand(OUTPUT_BASE + "/cci_objects/01_cci_preparation/05_down/sce_{species}_{age}-05", species = species, age = age)
+    output:
+        OUTPUT_REP + "/cci_metrics_ctp_interactome_summary.html"
+    params:
+        colors_path = COLORS,
+        sce_functions = "../../source/sce_functions.R",
+        plotting = "../../source/plotting.R",
+        colors = "../../source/colors.R"
+    script:
+        "cci_metrics_ctp_interactome_summary.Rmd" 

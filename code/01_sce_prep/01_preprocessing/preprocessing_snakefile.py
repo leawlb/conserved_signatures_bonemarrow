@@ -46,9 +46,9 @@ for s in species:
       targets = targets + [OUTPUT_DAT + "/05_norm/" + s + "/sce_" + i + "-05"]
       targets = targets + [OUTPUT_DAT + "/06_dimr/" + s + "/sce_" + i + "-06"]
       targets = targets + [OUTPUT_REP + "/qc/" + s + "/preprocessing_qc_report_" + i + ".html"]
-      targets = targets + [OUTPUT_REP + "/dmgs/" + s + "/preprocessing_dmg_report_" + i + ".html"]
+      #targets = targets + [OUTPUT_REP + "/dmgs/" + s + "/preprocessing_dmg_report_" + i + ".html"]
 
-targets = targets + [OUTPUT_DAT + "/03_dmgs/dmgs_list_all"]
+#targets = targets + [OUTPUT_DAT + "/03_dmgs/dmgs_list_all"]
       
 if config["run_preprocessing_summary"]:
   targets = targets + [OUTPUT_REP + "/qc/preprocessing_qc_summary.html"]
@@ -64,7 +64,7 @@ rule all: # must contain all possible output paths from all rules below and must
         targets
         
 #-------------------------------------------------------------------------------
-# remove empty droplets and doublets to retain only single cells
+# remove empty droplets and doublets from main data to retain only single cells
 rule remove_droplets:
     input: 
         sce_input = CELLRANGER_OUT + "/{species}/sce_{individual}-01"
@@ -76,11 +76,16 @@ rule remove_droplets:
     script:
         "scripts/01_remove_droplets.R"
 
-# get the differentially mapped genes (dmgs) for each sample 
+"""
+get the differentially mapped genes (dmgs) for each sample by comparing
+the expression levels between the main data, and data annotated with species-
+specific genomes
+"""
 rule get_sample_dmgs:
     input:
         sce_input = rules.remove_droplets.output,
-        sce_fg = FOURGENOMES_OUT +  "/{species}/sce_{individual}-01"
+        sce_fg = FOURGENOMES_OUT +  "/{species}/sce_{individual}-01",
+        ensembl_list_mspr = config["base"] + config["metadata_paths"]["ensembl_mspr"]
     output:
         dmgs = OUTPUT_DAT + "/02_mapp/{species}/dmgs_{individual}"
     params:
@@ -90,7 +95,7 @@ rule get_sample_dmgs:
     script:
         "scripts/02_sample_dmgs.R" 
     
-# merge all dmgs into one list for exclusion during merging  
+# merge all dmgs into one list for exclusion 
 merge_dmgs_input = []
 for s in species:
   for i in individuals:
@@ -148,7 +153,8 @@ rule make_dmg_reports:
         sce_input = rules.remove_droplets.output,
         sce_fg = FOURGENOMES_OUT + "/{species}/sce_{individual}-01",
         dmgs = rules.get_sample_dmgs.output,
-        dmg_list = rules.merge_dmgs.output
+        dmg_list = rules.merge_dmgs.output,
+        ensembl_list_mspr = config["base"] + config["metadata_paths"]["ensembl_mspr"]
     output:
         OUTPUT_REP + "/dmgs/{species}/preprocessing_dmg_report_{individual}.html"
     params:
@@ -183,7 +189,7 @@ rule make_qc_reports:
         
 """
 Make one summary report on all files
-Because this rule is dependend on previous outputs but this is not reflected
+Because this rule is dependent on previous outputs but this is not reflected
 in input, it's generally turned off in config to avoid premature job submission
 """
 print(config["run_preprocessing_summary"])

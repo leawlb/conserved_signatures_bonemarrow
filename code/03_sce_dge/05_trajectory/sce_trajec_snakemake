@@ -1,0 +1,12 @@
+
+snakemake --cluster "bsub -q medium -n20 -R rusage[mem=150GB]" -p -j8 -c20 -s sce_trajec_snakefile.py --latency-wait 20 --configfile ../../config.yaml -n
+
+snakemake --cluster "bsub -q long -n20 -R rusage[mem=150GB]" -p -j8 -c20 -s sce_trajec_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda -n
+
+snakemake --cluster "bsub -q medium -n20 -R rusage[mem=150GB]" -p -j8 -c20 -s sce_trajec_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda -n
+
+
+snakemake --cluster "bsub -q long -n20 -R rusage[mem=150GB]" -p -j8 -c20 -s sce_trajec_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda --conda-create-envs-only
+
+conda create --name monocle3-test r-monocle3=1.3.1 bioconductor-singlecellexperiment bioconductor-scran bioconductor-scater r-tidyverse r-ggpubr bioconductor-dittoseq r-matrix=1.6-1 r-igraph=1.4.3
+

@@ -52,10 +52,10 @@ for f in fractions:
   targets = targets + [OUTPUT_DAT + "/06_dsqc/rlog_" + f]
   targets = targets + [OUTPUT_DAT + "/06_dsqc/sva_" + f]
   targets = targets + [OUTPUT_DAT + "/07_tdsq/deseq_" + f + "-07"]
-  targets = targets + [OUTPUT_DAT + "/08_dres/" + tf + "/res_" + f + "_species"]
-  targets = targets + [OUTPUT_DAT + "/08_dres/" + tf + "/res_" + f + "_cluster"]
-  targets = targets + [OUTPUT_DAT + "/08_dres/" + tf + "/res_" + f + "_cluster_dfs"]
-  targets = targets + [OUTPUT_DAT + "/08_dres/" + tf + "/res_" + f + "_cluster_shared"]
+  targets = targets + [OUTPUT_DAT + "/08_nres/" + tf + "/res_" + f + "_species"]
+  targets = targets + [OUTPUT_DAT + "/08_nres/" + tf + "/res_" + f + "_cluster"]
+  targets = targets + [OUTPUT_DAT + "/08_nres/" + tf + "/res_" + f + "_cluster_dfs"]
+  targets = targets + [OUTPUT_DAT + "/08_nres/" + tf + "/res_" + f + "_cluster_shared"]
 
 #print(targets)
 
@@ -118,10 +118,10 @@ rule export_results_ndge:
         clusters_hsc = clusters_hsc,
         clusters_str = clusters_str
     output:
-        species_res = OUTPUT_DAT + "/08_dres/" + tf + "/res_{fraction}_species",
-        cluster_res = OUTPUT_DAT + "/08_dres/" + tf + "/res_{fraction}_cluster",
-        cluster_res_dfs = OUTPUT_DAT + "/08_dres/" + tf + "/res_{fraction}_cluster_dfs",
-        cluster_res_list_shared = OUTPUT_DAT + "/08_dres/" + tf + "/res_{fraction}_cluster_shared"
+        species_res = OUTPUT_DAT + "/08_nres/" + tf + "/res_{fraction}_species",
+        cluster_res = OUTPUT_DAT + "/08_nres/" + tf + "/res_{fraction}_cluster",
+        cluster_res_dfs = OUTPUT_DAT + "/08_nres/" + tf + "/res_{fraction}_cluster_dfs",
+        cluster_res_list_shared = OUTPUT_DAT + "/08_nres/" + tf + "/res_{fraction}_cluster_shared"
     script:
         "scripts/08_export_ndge_results.R"    
  

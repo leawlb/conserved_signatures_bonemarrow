@@ -179,11 +179,12 @@ Downsampling
 
 rule downsample:
     input:
-        sce_input_path = expand(rules.subset_sce.output, species = species, age = age)
+        sce_input_path = expand(rules.subset_sce.output, species = species, age = age),
+        assignment = ASSIGNMENT
     output:
         sce_output_path = expand(OUTPUT_DAT + "/05_down/sce_{species}_{age}-05", species = species, age = age)
     script:
-        "scripts/05_downsample_ct.R" 
+        "scripts/05_downsample_ass.R" 
 
 # make a report for downsampling QC
 rule make_downsampling_report:

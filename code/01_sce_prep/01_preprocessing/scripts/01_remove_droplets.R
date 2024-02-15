@@ -1,7 +1,6 @@
 #-------------------------------------------------------------------------------
-# author: Amy Danson, Lea Wölbert
-# date: 2022-09-20
-# remove empty droplets and add doublet score for subsequent doublet removal
+# authors: Amy Danson, Lea Wölbert
+# remove empty droplets and add doublet score for doublet removal
 
 library(SingleCellExperiment, quietly = TRUE) 
 library(DropletUtils, quietly = TRUE) 

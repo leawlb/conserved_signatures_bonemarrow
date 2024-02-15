@@ -1,0 +1,68 @@
+---
+title: "dge_celltype_report"
+author: "Lea Wölbert"
+date: '2024-01-04'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load objects
+
+```{r seed, message = FALSE}
+set.seed(37)
+```
+
+```{r load, message = FALSE}
+library(EnhancedVolcano)
+```
+
+```{r source, message = FALSE}
+source(file = snakemake@params[["plotting"]])
+```
+
+```{r load_objects}
+
+res_list <- readRDS(snakemake@input[["res_list"]])
+
+fraction_curr <- snakemake@wildcards[["fraction"]]
+species_curr <- snakemake@wildcards[["species"]]
+
+print(names(res_list))
+
+print(res_list[[1]])
+print(names(res_list[[1]]))
+```
+
+# Show Pval distributions
+
+```{r}
+see_pvals <- function(res){
+  plot1 <- EnhancedVolcano(res, 
+                           x = 'log2FoldChange',  y = 'pvalue', pCutoff = 0.01,
+                           col = c("grey70", "grey70", "grey70", "dodgerblue3"),
+                           subtitle = "", colAlpha = 0.9, pointSize = 0.5,
+                            lab = rownames(res))+
+    theme_classic()+
+    theme(legend.position="none", plot.subtitle = element_blank())
+
+  print(plot1)
+}
+```
+
+```{r}
+for(i in names(res_list)){
+  print(res_list[[i]][order(res_list[[i]]$log2FoldChange),])
+  #print(res_list[[i]])
+  res_df <- res_list[[i]]
+  plot2 <- see_pvals(res = res_df)+
+    ggtitle(i)
+  print(plot2)
+}
+```
+
+```{r}
+sessionInfo()
+```

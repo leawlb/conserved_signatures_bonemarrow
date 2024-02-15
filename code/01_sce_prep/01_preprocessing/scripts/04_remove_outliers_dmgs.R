@@ -1,7 +1,6 @@
 #-------------------------------------------------------------------------------
-# author: Amy Danson, Lea Wölbert
-# date: 2022-09-20
-# remove cells with low quality and dmgs
+# authors: Amy Danson, Lea Wölbert
+# remove cells with low quality, remove dmgs
 
 library(SingleCellExperiment, quietly = TRUE) 
 library(scuttle, quietly = TRUE) 
@@ -17,6 +16,7 @@ cutoff_mitos <- snakemake@params[["cutoff_mitos"]]
 
 #-------------------------------------------------------------------------------
 
+# remove all dmgs
 print(sce)
 sce <- sce[!rownames(sce) %in% dmg_list,]
 print(sce)

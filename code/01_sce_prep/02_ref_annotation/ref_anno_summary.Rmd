@@ -85,11 +85,13 @@ sce_list_06 <- lapply(sce_list_06, get_mature_cts_all)
 
 Check Quality per sample in a large overview.
 
+### Before
+
 ```{r fig.width = 14}
 
 qcdf_list_06 <- lapply(sce_list_06, function(sce){
   
-  qcdf <- perCellQCMetrics(sce)
+  qcdf <- perCellQCMetrics(sce, assay.type = "counts")
   qcdf$Object_ID <- sce$Object_ID
   qcdf$Species_ID <- sce$Species_ID
   qcdf$Age <- sce$Age
@@ -132,6 +134,7 @@ ggplot(qcdf_gg, aes(x = Object_ID, y = detected))+
 # by Age and Species
 ggplot(qcdf_gg, aes(x = Age, y = sum))+
   ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  geom_boxplot(alpha = 0, color = "black")+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
   ylim(limits = c(0, 120000))+
@@ -140,6 +143,7 @@ ggplot(qcdf_gg, aes(x = Age, y = sum))+
 
 ggplot(qcdf_gg, aes(x = Age, y = detected))+
   ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  geom_boxplot(alpha = 0, color = "black")+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
   ylim(limits = c(0, 10000))+
@@ -149,6 +153,7 @@ ggplot(qcdf_gg, aes(x = Age, y = detected))+
 # by Fraction and Species
 ggplot(qcdf_gg, aes(x = Fraction, y = sum))+
   ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  geom_boxplot(alpha = 0, color = "black")+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
   ylim(limits = c(0, 120000))+
@@ -157,6 +162,7 @@ ggplot(qcdf_gg, aes(x = Fraction, y = sum))+
 
 ggplot(qcdf_gg, aes(x = Fraction, y = detected))+
   ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  geom_boxplot(alpha = 0, color = "black")+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
   ylim(limits = c(0, 10000))+
@@ -166,6 +172,7 @@ ggplot(qcdf_gg, aes(x = Fraction, y = detected))+
 # by Age and Fraction
 ggplot(qcdf_gg, aes(x = Age, y = sum))+
   ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  geom_boxplot(alpha = 0, color = "black")+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
   ylim(limits = c(0, 120000))+
@@ -174,6 +181,7 @@ ggplot(qcdf_gg, aes(x = Age, y = sum))+
 
 ggplot(qcdf_gg, aes(x = Age, y = detected))+
   ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  geom_boxplot(alpha = 0, color = "black")+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
   ylim(limits = c(0, 10000))+
@@ -183,6 +191,7 @@ ggplot(qcdf_gg, aes(x = Age, y = detected))+
 # by Batch experimental day
 ggplot(qcdf_gg, aes(x = Batch_exp_day, y = sum))+
   ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  geom_boxplot(alpha = 0, color = "black")+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
   ylim(limits = c(0, 120000))+
@@ -190,6 +199,7 @@ ggplot(qcdf_gg, aes(x = Batch_exp_day, y = sum))+
 
 ggplot(qcdf_gg, aes(x = Batch_exp_day, y = detected))+
   ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  geom_boxplot(alpha = 0, color = "black")+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
   ylim(limits = c(0, 10000))+
@@ -198,6 +208,7 @@ ggplot(qcdf_gg, aes(x = Batch_exp_day, y = detected))+
 # by Batch sequencing
 ggplot(qcdf_gg, aes(x = Batch_sequencing, y = sum))+
   ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  geom_boxplot(alpha = 0, color = "black")+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
   ylim(limits = c(0, 120000))+
@@ -205,6 +216,7 @@ ggplot(qcdf_gg, aes(x = Batch_sequencing, y = sum))+
 
 ggplot(qcdf_gg, aes(x = Batch_sequencing, y = detected))+
   ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  geom_boxplot(alpha = 0, color = "black")+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
   ylim(limits = c(0, 10000))+
@@ -233,7 +245,7 @@ ggplot(qcdf_gg, aes(x = dolgalev_celltype_scmapclust, y = detected))+
   scale_y_log10()
 ```
 
-## Without contaminants
+#### Without contaminants
 
 ```{r fig.width = 14}
 
@@ -252,7 +264,7 @@ ggplot(qcdf_gg[qcdf_gg$right_fraction == TRUE,], aes(x = Object_ID, y = detected
   scale_y_log10()
 ```
 
-## Without mature cells
+#### Without mature cells
 
 ```{r fig.width = 14}
 
@@ -271,7 +283,231 @@ ggplot(qcdf_gg[qcdf_gg$mature_cells == FALSE,], aes(x = Object_ID, y = detected)
   scale_y_log10()
 ```
 
-## Without either
+#### Without either
+
+```{r fig.width = 14}
+
+remove_pos <- as.logical(qcdf_gg$mature_cells) | !as.logical(qcdf_gg$right_fraction)
+table(qcdf_gg$mature_cells)
+table(qcdf_gg$right_fraction)
+table(remove_pos)
+
+qcdf_gg <- qcdf_gg[!remove_pos,]
+
+ggplot(qcdf_gg, aes(x = Object_ID, y = sum))+
+  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 120000))+
+  scale_y_log10()
+
+ggplot(qcdf_gg, aes(x = Object_ID, y = detected))+
+  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 10000))+
+  scale_y_log10()
+```
+
+### After
+
+```{r fig.width = 14}
+
+qcdf_list_06 <- lapply(sce_list_06, function(sce){
+  
+  qcdf <- perCellQCMetrics(sce, assay.type = "logcounts")
+  qcdf$Object_ID <- sce$Object_ID
+  qcdf$Species_ID <- sce$Species_ID
+  qcdf$Age <- sce$Age
+  qcdf$Batch_exp_day <- sce$Batch_exp_day
+  qcdf$Batch_sequencing <- sce$Batch_sequencing
+  qcdf$Date_collected <- sce$Date_collected
+  qcdf$Species <- sce$Species
+  qcdf$Fraction <- sce$Fraction
+  qcdf$right_fraction <- sce$right_fraction
+  qcdf$mature_cells <- sce$mature_cells
+  qcdf$baccin_celltype_scmapclust <- unfactor(sce$baccin_celltype_scmapclust)
+  qcdf$dahlin_celltype_scmapclust <- unfactor(sce$dahlin_celltype_scmapclust)
+  qcdf$dolgalev_celltype_scmapclust <- unfactor(sce$dolgalev_celltype_scmapclust)
+
+  return(qcdf)
+})
+
+qcdf_gg <- DataFrame()
+
+for(i in qcdf_list_06){
+  qcdf_gg <- rbind(qcdf_gg, i)
+}
+qcdf_gg <- data.frame(qcdf_gg)
+
+# by Sample
+ggplot(qcdf_gg, aes(x = Object_ID, y = sum))+
+  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 120000))+
+  scale_y_log10()
+
+ggplot(qcdf_gg, aes(x = Object_ID, y = detected))+
+  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 10000))+
+  scale_y_log10()
+
+# by Age and Species
+ggplot(qcdf_gg, aes(x = Age, y = sum))+
+  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  geom_boxplot(alpha = 0, color = "black")+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 120000))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg$Species))
+
+ggplot(qcdf_gg, aes(x = Age, y = detected))+
+  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  geom_boxplot(alpha = 0, color = "black")+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 10000))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg$Species))
+
+# by Fraction and Species
+ggplot(qcdf_gg, aes(x = Fraction, y = sum))+
+  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  geom_boxplot(alpha = 0, color = "black")+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 120000))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg$Species))
+
+ggplot(qcdf_gg, aes(x = Fraction, y = detected))+
+  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  geom_boxplot(alpha = 0, color = "black")+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 10000))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg$Species))
+
+# by Age and Fraction
+ggplot(qcdf_gg, aes(x = Age, y = sum))+
+  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  geom_boxplot(alpha = 0, color = "black")+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 120000))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg$Fraction))
+
+ggplot(qcdf_gg, aes(x = Age, y = detected))+
+  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  geom_boxplot(alpha = 0, color = "black")+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 10000))+
+  scale_y_log10()+
+  facet_grid(cols = vars(qcdf_gg$Fraction))
+
+# by Batch experimental day
+ggplot(qcdf_gg, aes(x = Batch_exp_day, y = sum))+
+  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  geom_boxplot(alpha = 0, color = "black")+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 120000))+
+  scale_y_log10()
+
+ggplot(qcdf_gg, aes(x = Batch_exp_day, y = detected))+
+  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  geom_boxplot(alpha = 0, color = "black")+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 10000))+
+  scale_y_log10()
+
+# by Batch sequencing
+ggplot(qcdf_gg, aes(x = Batch_sequencing, y = sum))+
+  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  geom_boxplot(alpha = 0, color = "black")+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 120000))+
+  scale_y_log10()
+
+ggplot(qcdf_gg, aes(x = Batch_sequencing, y = detected))+
+  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  geom_boxplot(alpha = 0, color = "black")+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 10000))+
+  scale_y_log10()
+
+# by Cell type
+ggplot(qcdf_gg, aes(x = baccin_celltype_scmapclust, y = sum))+
+  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 120000))+
+  scale_y_log10()
+
+ggplot(qcdf_gg, aes(x = dahlin_celltype_scmapclust, y = detected))+
+  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 10000))+
+  scale_y_log10()
+
+ggplot(qcdf_gg, aes(x = dolgalev_celltype_scmapclust, y = detected))+
+  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 10000))+
+  scale_y_log10()
+```
+
+#### Without contaminants
+
+```{r fig.width = 14}
+
+ggplot(qcdf_gg[qcdf_gg$right_fraction == TRUE,], aes(x = Object_ID, y = sum))+
+  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 120000))+
+  scale_y_log10()
+
+ggplot(qcdf_gg[qcdf_gg$right_fraction == TRUE,], aes(x = Object_ID, y = detected))+
+  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 10000))+
+  scale_y_log10()
+```
+
+#### Without mature cells
+
+```{r fig.width = 14}
+
+ggplot(qcdf_gg[qcdf_gg$mature_cells == FALSE,], aes(x = Object_ID, y = sum))+
+  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 120000))+
+  scale_y_log10()
+
+ggplot(qcdf_gg[qcdf_gg$mature_cells == FALSE,], aes(x = Object_ID, y = detected))+
+  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
+  theme_classic()+
+  theme(axis.text = element_text(angle = 90))+
+  ylim(limits = c(0, 10000))+
+  scale_y_log10()
+```
+
+#### Without either
 
 ```{r fig.width = 14}
 

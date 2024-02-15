@@ -8,8 +8,8 @@ import pandas as pd
 #-------------------------------------------------------------------------------
 
 OUTPUT_BASE = config["base"] + config["data_paths"]["main"]
-OUTPUT_DAT = OUTPUT_BASE + "/cci_objects/02_cci_alt_conds"
-OUTPUT_REP = OUTPUT_BASE + "/reports/05_cci_alt_conds"
+OUTPUT_DAT = OUTPUT_BASE + "/cci_objects/02_cci_alt/conditions"
+OUTPUT_REP = OUTPUT_BASE + "/reports/05_cci_alt/conditions"
 
 COLORS = config["base"] + config["metadata_paths"]["colors"]
 
@@ -37,9 +37,9 @@ targets = []
 for s in species:
   for a in age:
     for c in conds:
-      targets = targets + [OUTPUT_DAT + "/01_calc/cci_" + s + "_" + a + "_" + c]
-      targets = targets + [OUTPUT_DAT + "/02_mtrc/cci_metrics_" + s + "_" + a + "_" + c]
-      targets = targets + [OUTPUT_DAT + "/03_cpca/cci_pca_" + s + "_" + a + "_" + c]
+      targets = targets + [OUTPUT_DAT + "/01_calc_cond/cci_" + s + "_" + a + "_" + c]
+      targets = targets + [OUTPUT_DAT + "/02_mtrc_cond/cci_metrics_" + s + "_" + a + "_" + c]
+      targets = targets + [OUTPUT_DAT + "/03_cpca_cond/cci_pca_" + s + "_" + a + "_" + c]
 
 targets = targets + [OUTPUT_REP + "/conditions_summary.html"]
     
@@ -73,7 +73,7 @@ rule calculate_main:
         sce_input = OUTPUT_BASE + "/cci_objects/01_cci_preparation/05_down/sce_{species}_{age}-05",
         lrdb = LRDB_OUT
     output:
-        cci_output = OUTPUT_DAT + "/01_calc/cci_{species}_{age}_main"
+        cci_output = OUTPUT_DAT + "/01_calc_cond/cci_{species}_{age}_main"
     params:
         main_functions = "../../source/cci_functions_calculation.R",
         alternative_functions = "../../source/cci_functions_alt_conds.R",
@@ -89,7 +89,7 @@ rule calculate_nocutoff:
         sce_input = OUTPUT_BASE + "/cci_objects/01_cci_preparation/05_down/sce_{species}_{age}-05",
         lrdb = LRDB_OUT
     output:
-        cci_output = OUTPUT_DAT + "/01_calc/cci_{species}_{age}_nctf"
+        cci_output = OUTPUT_DAT + "/01_calc_cond/cci_{species}_{age}_nctf"
     params:
         main_functions = "../../source/cci_functions_calculation.R",
         alternative_functions = "../../source/cci_functions_alt_conds.R",
@@ -105,7 +105,7 @@ rule calculate_nolevel:
         sce_input = OUTPUT_BASE + "/cci_objects/01_cci_preparation/05_down/sce_{species}_{age}-05",
         lrdb = LRDB_OUT
     output:
-        cci_output = OUTPUT_DAT + "/01_calc/cci_{species}_{age}_nlvl"
+        cci_output = OUTPUT_DAT + "/01_calc_cond/cci_{species}_{age}_nlvl"
     params:
         main_functions = "../../source/cci_functions_calculation.R",
         alternative_functions = "../../source/cci_functions_alt_conds.R",
@@ -121,7 +121,7 @@ rule calculate_nodownsampling:
         sce_input = OUTPUT_BASE + "/cci_objects/01_cci_preparation/05_down/sce_{species}_{age}-05",
         lrdb = LRDB_OUT
     output:
-        cci_output = OUTPUT_DAT + "/01_calc/cci_{species}_{age}_ndwn"
+        cci_output = OUTPUT_DAT + "/01_calc_cond/cci_{species}_{age}_ndwn"
     params:
         main_functions = "../../source/cci_functions_calculation.R",
         alternative_functions = "../../source/cci_functions_alt_conds.R",
@@ -137,7 +137,7 @@ rule calculate_nopreprocessing:
         sce_input = OUTPUT_BASE + "/cci_objects/01_cci_preparation/05_down/sce_{species}_{age}-05",
         lrdb = LRDB_OUT
     output:
-        cci_output = OUTPUT_DAT + "/01_calc/cci_{species}_{age}_nprp"
+        cci_output = OUTPUT_DAT + "/01_calc_cond/cci_{species}_{age}_nprp"
     params:
         main_functions = "../../source/cci_functions_calculation.R",
         alternative_functions = "../../source/cci_functions_alt_conds.R",
@@ -160,9 +160,9 @@ The following rules summarizes the entire process of CCI metrics calculation.
 rule metrics:
     input:
         sce_input = OUTPUT_BASE + "/cci_objects/01_cci_preparation/05_down/sce_{species}_{age}-05",
-        cci_input =  OUTPUT_DAT + "/01_calc/cci_{species}_{age}_{condition}"
+        cci_input =  OUTPUT_DAT + "/01_calc_cond/cci_{species}_{age}_{condition}"
     output:
-        metrics_lists = OUTPUT_DAT + "/02_mtrc/cci_metrics_{species}_{age}_{condition}"
+        metrics_lists = OUTPUT_DAT + "/02_mtrc_cond/cci_metrics_{species}_{age}_{condition}"
     params:
         metrics_functions = "../../source/cci_functions_metrics.R"
     script:
@@ -176,9 +176,9 @@ Do PCA under different conditions:
 
 rule pca:
     input:
-        cci_input =  OUTPUT_DAT + "/01_calc/cci_{species}_{age}_{condition}"
+        cci_input =  OUTPUT_DAT + "/01_calc_cond/cci_{species}_{age}_{condition}"
     output:
-        pca_output = OUTPUT_DAT + "/03_cpca/cci_pca_{species}_{age}_{condition}"
+        pca_output = OUTPUT_DAT + "/03_cpca_cond/cci_pca_{species}_{age}_{condition}"
     params:
         metrics_functions = "../../source/cci_functions_metrics.R"
     script:

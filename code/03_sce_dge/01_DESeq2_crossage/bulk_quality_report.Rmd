@@ -1,0 +1,162 @@
+---
+title: "bulk_quality_report"
+author: "Lea Wölbert"
+date: '2023-11-07'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Summary
+
+This data is NOT batch corrected.
+DESeq objects are batch corrected by removing hidden sources of variations using
+the sva package.
+It is no surprising that aggregated samples would by separated by batch 
+(Batch_experimental_day).
+It was not possible to include Batch_experimental_day in the design because
+in the case of BL6, Age_ID and Batch_experimental_day cannot be separated 
+(all young BL6 are in one batch, all old BL6 in another batch).
+
+#### Load objects
+
+```{r seed,  message = FALSE}
+set.seed(37)
+```
+
+```{r load,  message = FALSE}
+library(pcaExplorer)
+library(pheatmap)
+library(RColorBrewer)
+```
+
+```{r source, message = FALSE}
+source(file =  snakemake@params[["functions"]])
+source(file =  snakemake@params[["plotting"]])
+```
+
+```{r load_objects}
+
+rlog_list = readRDS(snakemake@input[["rlog"]])
+rlog_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis/sce_objects/03_sce_analysis/01_DESeq2_crossage/04_dres/res_mcar_hsc_celltype")
+
+print(names(rld))
+```
+
+```{r colors, meassage = FALSE}
+colors_path <- snakemake@params[["colors_path"]]
+source(snakemake@params[["colors"]])
+```
+
+# QC
+
+Distribution of expression values, should be uniform.
+
+```{r}
+plot1 <- distro_expr(rld, plot_type = "boxplot")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
+  theme(legend.position = "none")
+
+plot1
+```
+
+```{r}
+rld_pca <- prcomp(t(assay(rld)))
+
+rld_cor <- correlatePCs(rld_pca, colData(rld))
+
+plotPCcorrs(rld_cor)
+
+```
+
+```{r}
+
+ggdf <- as.data.frame(rld_pca$x)
+ggdf$Antibody_combination <- colData(rld)$Antibody_combination
+ggdf$age <- colData(rld)$age
+ggdf$condition <- colData(rld)$condition
+ggdf$batch <- colData(rld)$batch
+ggdf$Batch_sequencing <- colData(rld)$Batch_sequencing
+ggdf$sample <- colData(rld)$sample
+ggdf$ncells <- colData(rld)$ncells
+
+head(ggdf)
+#knitr::knit_exit()
+```
+
+# PCAs
+
+```{r}
+plot1 <- ggplot(ggdf, aes(x = PC1, y = PC2, color = condition))+
+  geom_point()+
+  theme_classic()+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())+
+  scale_color_manual("Species", values = col_spc)
+plot1
+
+plot2 <- ggplot(ggdf, aes(x = PC1, y = PC2, color = age))+
+  geom_point()+
+  theme_classic()+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())+
+  scale_color_manual("Age", values = col_age)
+plot2
+
+plot3 <- ggplot(ggdf, aes(x = PC1, y = PC2, color = batch))+
+  geom_point()+
+  theme_classic()+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())
+plot3
+
+plot4 <- ggplot(ggdf, aes(x = PC1, y = PC2, color = Antibody_combination))+
+  geom_point()+
+  theme_classic()+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())
+plot4
+
+plot5 <- ggplot(ggdf, aes(x = PC1, y = PC2, color = ncells))+
+  geom_point()+
+  theme_classic()+
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank())
+plot5
+
+knitr::knit_exit()
+
+```
+
+```{r}
+rld_pca <- prcomp(t(assay(rld)))
+plot3 <- pcascree(rld_pca, type="pev")
+print(plot3)
+```
+
+```{r}
+hi_loadings(rld_pca, topN = 20, whichpc = 1)
+```
+
+```{r}
+hi_loadings(rld_pca, topN = 20, whichpc = 2)
+```
+
+```{r}
+sampleDists <- dist(t(assay(rld)))
+sampleDistMatrix <- as.matrix(sampleDists)
+rownames(sampleDistMatrix) <- rld$condition
+colnames(sampleDistMatrix) <- NULL
+colors <- colorRampPalette(rev(brewer.pal(9, "Blues")) )(255)
+pheatmap(sampleDistMatrix,
+         clustering_distance_rows=sampleDists,
+         clustering_distance_cols=sampleDists,
+         col=colors)
+```
+
+```{r}
+sessionInfo()
+```

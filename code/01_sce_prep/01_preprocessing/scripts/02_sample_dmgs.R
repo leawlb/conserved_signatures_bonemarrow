@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# This is a somewhat bigger script for 1 step: Finding differentially mapped 
+# This is a bigger script for 1 step: Finding differentially mapped 
 # genes (dmgs) between SCE mapped with different reference genomes.
 # Prepare for direct comparison between both SCEs, then find marker genes.
 
@@ -15,7 +15,10 @@ sce_fg <- readRDS(file = snakemake@input[["sce_fg"]])
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
 logFC_sample_dmgs <- snakemake@params[["logFC_sample_dmgs"]]
 logFC_sample_dmgs <- snakemake@params[["logFC_sample_dmgs"]]
-  
+
+ensembl_list_mspr <- readRDS(snakemake@input[["ensembl_list_mspr"]])
+head(ensembl_list_mspr)
+
 sce_fg <- sce_fg[,which(!is.na(match(colnames(sce_fg), colnames(sce_og))))]
 
 print(sce_og)
@@ -24,20 +27,10 @@ print(sce_fg)
 #-------------------------------------------------------------------------------
 
 name_curr <- colData(sce_og)$Object_ID[1] # name to display in plots
-# add symbols to mspr objects 
-# This part was taken from Perrine's script on how to download the relevant data 
+
+# add symbols to mspr fg objects that are missing annotations
 if(grepl("mspr", name_curr)){
-
-  ensembl_mspr <- useMart(biomart="ENSEMBL_MART_ENSEMBL",
-                          host="https://www.ensembl.org",
-                          dataset="mspretus_gene_ensembl")
   
-  ensembl_list_mspr=getBM(
-    attributes=c("ensembl_gene_id",
-                 "mmusculus_homolog_ensembl_gene",
-                 "mmusculus_homolog_associated_gene_name"), 
-    mart=ensembl_mspr)
-
   intersect_IDs <- intersect(
     rowData(sce_fg)$Symbol, ensembl_list_mspr$ensembl_gene_id)
 
@@ -61,7 +54,7 @@ if(grepl("mspr", name_curr)){
 
 #-------------------------------------------------------------------------------
 
-# make og and fg ready for comparison
+# get og and fg ready for comparison
 
 # rows
 shared_genes <- intersect(rowData(sce_og)$Symbol, rowData(sce_fg)$Symbol)

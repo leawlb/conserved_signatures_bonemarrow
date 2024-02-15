@@ -30,8 +30,6 @@ targets = []
 for f in fractions:
   targets = targets + [OUTPUT_DAT + "/08_mrge/fractions/sce_" + f + "-08"]
   targets = targets + [OUTPUT_REP + "/fractions/integration_report_" + f + ".html"]
-  
-for f in fractions:
   for s in species:
     targets = targets + [OUTPUT_DAT + "/08_mrge/species/sce_" + s + "_" + f + "-08"]
     targets = targets + [OUTPUT_REP + "/species/integration_report_" + s + "_" + f + ".html"]

@@ -1,0 +1,51 @@
+paths:
+  # directory to store output data = cellranger files and SingleCellExperiment objects
+  # paths to input data = fastq files are stored in metadata sheet 
+  output_dir: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis"
+  target_templates:
+    # paths for each type of output file
+    linked_files: "cellranger/linked_files/{0[Species_ID]}/{0[individual]}" 
+    cellranger_count: "cellranger/cellranger_count/{0[Species_ID]}/{0[individual]}/outs"
+    construct_sce_objects: "sce_objects/00_cellranger_output/{0[Species_ID]}/sce_{0[individual]}-01"
+  # define specific target files
+  target_files:
+    samples_sheet: "metadata.csv"
+references:
+  all_masked: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/00_alignment/nmasked_genome/GRCm38_masked_allStrains/"
+metadata:
+  table:
+  # should have same format as or be based on OTP export sheet
+   - "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/00_alignment/OE0538_DO-0008_metadata_combined.csv"
+  identifiers: 
+  # define one or multiple column name(s) that uniquely define a sample/object 
+    - Species_ID 
+    - Age_ID
+    - Fraction_ID 
+    - Sample_NR
+  single_cell_object_metadata_fields:
+  # Define all columns from the metadata spreadsheet that
+  # will be included in the SingleCellExperiment / Seurat objects
+      - Object_ID 
+      - Mouse_ID
+      - Species_ID
+      - Age
+      - Age_ID
+      - Age_weeks
+      - Fraction
+      - Fraction_ID
+      - Antibody_combination
+      - Sample_NR
+      - Extrarun
+      - Batch_exp_day
+      - Batch_sequencing
+      - Date_collected
+      - Keep_sample
+      - individual
+      - PID
+# Enable / Disable rules and specifiy rule-specific parameters
+rules:
+  cellranger_count:
+    extra: ""  # set additional arguments for cellranger count
+  allele_specific: False
+  wasp_filter_reads: False
+  realign_bam: False

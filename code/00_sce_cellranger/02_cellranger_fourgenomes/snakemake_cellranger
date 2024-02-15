@@ -1,0 +1,3 @@
+snakemake --cluster "bsub -n16 -q verylong -R rusage[mem=200GB]" -p -j66 -c42 --configfile ../config/config-interspecies-bonemarrow.yaml --use-conda --use-envmodules --conda-frontend conda -R link_files -n
+
+snakemake --cluster "bsub -n16 -q long -R rusage[mem=200GB]" -p -j66 -c42 --configfile ../config/config-interspecies-bonemarrow.yaml --use-conda --use-envmodules --conda-frontend conda -n

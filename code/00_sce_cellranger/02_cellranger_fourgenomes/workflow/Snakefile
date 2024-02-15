@@ -1,0 +1,118 @@
+#!/bin/python 
+
+import os
+from pathlib import Path
+from scripts.samples import Samples
+
+samples = Samples(config)
+
+METADATA_PATH = config["metadata"]["table"]
+OUTPUT_BASE_PATH = config["paths"]["output_dir"]
+
+REFERENCES = config["references"]
+IDENTIFIERS = config["metadata"]["identifiers"]
+
+print(samples.metadata)
+
+localrules: link_files, write_samples_spreadsheet, all  # local execution of non-demanding rules
+
+wildcard_constraints: #should not contain ".", see rule cellranger_count
+    individual="[A-z0-9_-]+",
+    Species_ID="[A-z0-9_-]+"
+
+rule all:
+    input:
+        samples.targets
+
+rule link_files:
+    """Link files with filename pattern required for Cellranger
+    
+    Note: output must match target_templates in configuration YAML.
+    
+    """
+    input:
+        lambda wildcards: samples.filter_by_wildcards(
+            wildcards=wildcards,
+            data=samples.metadata,
+            column="FastQ Path",
+
+        )
+    output:
+       directory(f"{OUTPUT_BASE_PATH}/cellranger/linked_files/{{Species_ID}}/{{individual}}")
+    log:
+        f"{OUTPUT_BASE_PATH}/cellranger/logs/{{Species_ID}}/link_files_{{individual}}.log"
+    run:
+        log_fh  = open(log[0], "w")
+        os.makedirs(output[0], exist_ok=True)
+        for in_fastq_filepath in input:
+            print(f"linking {in_fastq_filepath} to {output[0]}", file=log_fh)
+            out_fastq_filepath = samples.metadata.loc[samples.metadata["FastQ Path"] == in_fastq_filepath]["CELLRANGER_FASTQ_PATH"].to_list()
+            if len(out_fastq_filepath) == 1:
+                out_fastq_filepath = out_fastq_filepath[0]
+            os.symlink(in_fastq_filepath, Path(output[0], out_fastq_filepath))
+        log_fh.close()
+
+rule write_samples_spreadsheet:
+    output:
+        f"{OUTPUT_BASE_PATH}/cellranger/{config['paths']['target_files']['samples_sheet']}"
+    log:
+        f"{OUTPUT_BASE_PATH}/cellranger/logs/write_samples_spreadsheet.log"
+    run:
+        with open(log[0], "w") as log_fh:
+            print("storing samples metadata to {output[0]}", file=log_fh)
+            samples.metadata.to_csv(output[0], index=False)
+            print("done.", file=log_fh)
+
+rule cellranger_count:
+    """Run Cellranger count
+    
+    Note: output must match target_templates in configuration YAML. 
+    """
+
+    input:
+        rules.link_files.output
+    output:
+        outs_dir=directory(f"{OUTPUT_BASE_PATH}/cellranger/cellranger_count/{{Species_ID}}/{{individual}}/outs")
+    params:
+        genome=REFERENCES["input_dir"] + "/{Species_ID}",
+        output_root_dir=lambda wildcards, output: Path(output[0]).parents[1],  # remove last 2 levels from output path
+        extra=config["rules"]["cellranger_count"]["extra"]
+    log:
+        f"{OUTPUT_BASE_PATH}/cellranger/logs/{{Species_ID}}/cellranger_count_{{individual}}.log"
+    threads: 16
+    envmodules:
+        "cellranger/6.1.1",
+    shell:
+        "cd {params.output_root_dir}; "
+        "pwd; "
+        "cellranger count "
+        "--id {wildcards.individual} "  # letters, numbers, hyphens, and underscores
+        "--transcriptome {params.genome} "
+        "--fastqs {input} "
+        "--localcores={threads} "
+        "{params.extra} "
+        "--sample {wildcards.individual} "
+        "> {log}"
+
+
+rule construct_sce_objects:
+    """construct SCE objects from counts matrices
+    
+    Initially, building the environment might take some time.
+    
+    Note: output must match target_templates in configuration YAML.
+    """
+    input: 
+        output_cellranger = rules.cellranger_count.output
+    output:
+        sce_objects = f"{OUTPUT_BASE_PATH}/sce_objects/00_cellranger_output/{{Species_ID}}/sce_{{individual}}-01"
+    params:
+        identifiers = IDENTIFIERS,
+        metadata = METADATA_PATH,
+        single_cell_object_metadata_fields = config["metadata"]["single_cell_object_metadata_fields"]
+    threads: 2
+    conda: 
+        "envs/construct_sce_objects.yaml" 
+    script:
+        "scripts/construct_sce_objects.R"
+        

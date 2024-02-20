@@ -6,16 +6,16 @@ import pandas as pd
 # CONFIG
 
 # get all paths and objects from config
-OUTPUT_BASE = config["base"] + config["data_paths"]["main"]
+OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 
 # directory for data
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/01_sce_prep"
 # directory for reports
-OUTPUT_REP = OUTPUT_BASE + "/reports/01_sce_prep/01_preprocessing"
+OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/01_sce_prep/01_preprocessing"
 
 # directories of raw input data
-CELLRANGER_OUT = config["base"] + config["data_paths"]["cellranger_output"] 
-FOURGENOMES_OUT = config["base"] + config["data_paths"]["fourgenomes_output"]
+CELLRANGER_OUT = config["base"] + config["scRNAseq_data_paths"]["cellranger_output"] 
+FOURGENOMES_OUT = config["base"] + config["scRNAseq_data_paths"]["fourgenomes_output"]
 
 # load metadata table to obtain species, individuals, fractions to be used
 METADATA = pd.read_csv(config["base"] + config["metadata_paths"]["table"])
@@ -41,11 +41,11 @@ for s in species:
   for i in individuals:
     if s in i:
       targets = targets + [OUTPUT_DAT + "/01_drop/" + s + "/sce_" + i + "-01"]
-      targets = targets + [OUTPUT_DAT + "/02_mapp/" + s + "/dmgs_" + i]
-      targets = targets + [OUTPUT_DAT + "/04_outl/" + s + "/sce_" + i + "-04"]
-      targets = targets + [OUTPUT_DAT + "/05_norm/" + s + "/sce_" + i + "-05"]
-      targets = targets + [OUTPUT_DAT + "/06_dimr/" + s + "/sce_" + i + "-06"]
-      targets = targets + [OUTPUT_REP + "/qc/" + s + "/preprocessing_qc_report_" + i + ".html"]
+      #targets = targets + [OUTPUT_DAT + "/02_mapp/" + s + "/dmgs_" + i]
+      #targets = targets + [OUTPUT_DAT + "/04_outl/" + s + "/sce_" + i + "-04"]
+      #targets = targets + [OUTPUT_DAT + "/05_norm/" + s + "/sce_" + i + "-05"]
+      #targets = targets + [OUTPUT_DAT + "/06_dimr/" + s + "/sce_" + i + "-06"]
+      #targets = targets + [OUTPUT_REP + "/qc/" + s + "/preprocessing_qc_report_" + i + ".html"]
       #targets = targets + [OUTPUT_REP + "/dmgs/" + s + "/preprocessing_dmg_report_" + i + ".html"]
 
 #targets = targets + [OUTPUT_DAT + "/03_dmgs/dmgs_list_all"]

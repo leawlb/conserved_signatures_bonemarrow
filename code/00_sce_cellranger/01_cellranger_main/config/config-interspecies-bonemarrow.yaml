@@ -11,11 +11,11 @@ paths:
   target_files:
     samples_sheet: "metadata.csv"
 references:
-  all_masked: "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/00_alignment/nmasked_genome/GRCm38_masked_allStrains/"
+  all_masked: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/00_alignment/nmasked_genome/GRCm38_masked_allStrains/"
 metadata:
   table:
   # should have same format as or be based on OTP export sheet
-   - "/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/00_alignment/OE0538_DO-0008_metadata_combined.csv"
+   - "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/00_alignment/OE0538_DO-0008_metadata_combined.csv"
   identifiers: 
   # define one or multiple column name(s) that uniquely define a sample/object 
     - Species_ID 

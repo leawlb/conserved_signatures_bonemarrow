@@ -10,8 +10,8 @@ scRNAseq_data_paths:
   fourgenomes_output: "/data/scRNAseq/fourgenomes/sce_objects/00_cellranger_output" 
 metadata_paths: 
   table: "/data/metadata/scRNAseq/00_alignment/OE0538_DO-0008_metadata_combined.csv"
-  colors: "/data/metadata/scRNAseq/colors/colors.txt"
-  colors_ref: "/data/metadata/scRNAseq/colors/colors_references.txt"
+  colors: "/data/metadata/colors/colors.txt"
+  colors_ref: "/data/metadata/colors/colors_references.txt"
   ensembl_mspr: "/data/metadata/scRNAseq/01_sce_prep/ensembl_mspr/ensembl_list_mspr"
   ref_baccin_sce: "/data/metadata/scRNAseq/01_sce_prep/references_processed/ref_baccin_sce"
   ref_dahlin_sce: "/data/metadata/scRNAseq/01_sce_prep/references_processed/ref_dahlin_sce"

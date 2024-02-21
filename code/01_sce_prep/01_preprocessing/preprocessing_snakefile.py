@@ -41,14 +41,14 @@ for s in species:
   for i in individuals:
     if s in i:
       targets = targets + [OUTPUT_DAT + "/01_drop/" + s + "/sce_" + i + "-01"]
-      #targets = targets + [OUTPUT_DAT + "/02_mapp/" + s + "/dmgs_" + i]
-      #targets = targets + [OUTPUT_DAT + "/04_outl/" + s + "/sce_" + i + "-04"]
-      #targets = targets + [OUTPUT_DAT + "/05_norm/" + s + "/sce_" + i + "-05"]
-      #targets = targets + [OUTPUT_DAT + "/06_dimr/" + s + "/sce_" + i + "-06"]
-      #targets = targets + [OUTPUT_REP + "/qc/" + s + "/preprocessing_qc_report_" + i + ".html"]
+      targets = targets + [OUTPUT_DAT + "/02_mapp/" + s + "/dmgs_" + i]
+      targets = targets + [OUTPUT_DAT + "/04_outl/" + s + "/sce_" + i + "-04"]
+      targets = targets + [OUTPUT_DAT + "/05_norm/" + s + "/sce_" + i + "-05"]
+      targets = targets + [OUTPUT_DAT + "/06_dimr/" + s + "/sce_" + i + "-06"]
+      targets = targets + [OUTPUT_REP + "/qc/" + s + "/preprocessing_qc_report_" + i + ".html"]
       #targets = targets + [OUTPUT_REP + "/dmgs/" + s + "/preprocessing_dmg_report_" + i + ".html"]
 
-#targets = targets + [OUTPUT_DAT + "/03_dmgs/dmgs_list_all"]
+targets = targets + [OUTPUT_DAT + "/03_dmgs/dmgs_list_all"]
       
 if config["run_preprocessing_summary"]:
   targets = targets + [OUTPUT_REP + "/qc/preprocessing_qc_summary.html"]

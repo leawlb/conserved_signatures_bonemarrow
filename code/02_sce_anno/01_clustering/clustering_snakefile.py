@@ -12,9 +12,9 @@ import pandas as pd
 
 #-------------------------------------------------------------------------------
 
-OUTPUT_BASE = config["base"] + config["data_paths"]["main"]
+OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/02_sce_anno"
-OUTPUT_REP = OUTPUT_BASE + "/reports/02_sce_anno"
+OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/02_sce_anno"
 
 ANNO_CLUSTERS = config["base"] + config["metadata_paths"]["annotation_clusters"]
 GENES_CLUSTERS = config["base"] + config["metadata_paths"]["gene_list_clusters"]

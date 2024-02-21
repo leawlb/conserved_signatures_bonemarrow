@@ -7,7 +7,7 @@ import pandas as pd
 # paths and objects from config
 OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/01_sce_prep"
-OUTPUT_REP = OUTPUT_BASE + "/reports/01_sce_prep/02_ref_anno"
+OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/01_sce_prep/02_ref_anno"
 
 METADATA = pd.read_csv(config["base"] + config["metadata_paths"]["table"])
 def get_list(metadata, column):

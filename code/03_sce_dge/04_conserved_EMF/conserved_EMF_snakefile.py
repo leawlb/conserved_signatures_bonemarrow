@@ -4,9 +4,9 @@ import pandas as pd
 
 #-------------------------------------------------------------------------------
 
-OUTPUT_BASE = config["base"] + config["data_paths"]["main"]
+OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/03_sce_analysis/04_conserved_EMF"
-OUTPUT_REP = OUTPUT_BASE + "/reports/03_sce_analysis/04_conserved_EMF"
+OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/04_conserved_EMF"
 
 COLORS_REF = config["base"] + config["metadata_paths"]["colors_ref"]
 COLORS = config["base"] + config["metadata_paths"]["colors"]
@@ -97,7 +97,7 @@ rule export_emf_genes:
     output:
         cons_EMF_list = OUTPUT_DAT + "/01_emfs/emf_list_{fraction}"
     script:
-        "scripts/07_export_emfs.R"    
+        "scripts/01_export_emfs.R"    
 
 rule emf_celltype_report:
     input: 

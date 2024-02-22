@@ -5,9 +5,9 @@ import pandas as pd
 #-------------------------------------------------------------------------------
 
 # paths from config
-OUTPUT_BASE = config["base"] + config["data_paths"]["main"]
+OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/03_sce_analysis/02_DESeq2_crossspecies"
-OUTPUT_REP = OUTPUT_BASE + "/reports/03_sce_analysis/02_DESeq2_crossspecies"
+OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/02_DESeq2_crossspecies"
 
 COLORS = config["base"] + config["metadata_paths"]["colors"]
 
@@ -249,9 +249,9 @@ rule celltype_ndge_report:
         sep = OUTPUT_DAT + "/06_sepd/{fraction}_{celltype}-sep",
         sce_input = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10",
         celltype_res_list_shared = rules.export_results_ndge.output.celltype_res_list_shared,
-        celltype_res_list_shared_orig = OUTPUT_BASE + "/sce_objects/02_sce_anno/08_dres/PC_0.05_FC_1.5/res_{fraction}_cluster_shared",
+        celltype_res_list_shared_orig = OUTPUT_BASE + "/sce_objects/02_sce_anno/08_nres/PC_0.05_FC_1.5/res_{fraction}_cluster_shared",
         celltype_res = rules.export_results_ndge.output.celltype_res,
-        celltype_res_orig = OUTPUT_BASE + "/sce_objects/02_sce_anno/08_dres/PC_0.05_FC_1.5/res_{fraction}_cluster",
+        celltype_res_orig = OUTPUT_BASE + "/sce_objects/02_sce_anno/08_nres/PC_0.05_FC_1.5/res_{fraction}_cluster",
     output:
         OUTPUT_REP + "/ndge/ndge_report_{fraction}_{celltype}.html"
     params:

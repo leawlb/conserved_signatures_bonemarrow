@@ -4,7 +4,7 @@ import pandas as pd
 
 #-------------------------------------------------------------------------------
 
-OUTPUT_BASE = config["base"] + config["data_paths"]["main"]
+OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT = OUTPUT_BASE + "/cci_objects/01_cci_preparation"
 
 METADATA = pd.read_csv(config["base"] + config["metadata_paths"]["table"])
@@ -30,7 +30,7 @@ for s in species:
     targets = targets + [OUTPUT_DAT + "/08_rank/interaction_ranking_" + s + "_" + a]
     targets = targets + [OUTPUT_DAT + "/09_intl/interaction_list_" + s + "_" + a]
 
-VALUES = config["values"]["04_cci_prep"]
+VALUES = config["values"]["05_cci_prep"]
 
 LRDB_OUT =  config["base"] + config["metadata_paths"]["lrdb_out"]
 

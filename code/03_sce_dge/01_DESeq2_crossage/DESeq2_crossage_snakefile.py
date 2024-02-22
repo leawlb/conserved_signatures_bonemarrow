@@ -5,9 +5,9 @@ import pandas as pd
 #-------------------------------------------------------------------------------
 
 # paths from config
-OUTPUT_BASE = config["base"] + config["data_paths"]["main"]
+OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/03_sce_analysis/01_DESeq2_crossage"
-OUTPUT_REP = OUTPUT_BASE + "/reports/03_sce_analysis/01_DESeq2_crossage"
+OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/01_DESeq2_crossage"
 
 COLORS = config["base"] + config["metadata_paths"]["colors"]
 
@@ -38,7 +38,7 @@ for f in fractions:
     targets = targets + [OUTPUT_DAT + "/02_dsqc/rlog_" + s + "_" + f]
     targets = targets + [OUTPUT_DAT + "/02_dsqc/sva_" + s + "_"+ f]
     targets = targets + [OUTPUT_DAT + "/03_tdsq/deseq_" + s + "_" + f]
-    targets = targets + [OUTPUT_DAT + "/04_dres/res_" + s + "_" + f + "_celltype"]
+    targets = targets + [OUTPUT_DAT + "/04_dres/res_" + s + "_" + f]
     targets = targets + [OUTPUT_REP + "/bulk/bulk_quality_report_" + s + "_" + f + ".html"]
     targets = targets + [OUTPUT_REP + "/dge/dge_report_" + s + "_" + f + ".html"]
 

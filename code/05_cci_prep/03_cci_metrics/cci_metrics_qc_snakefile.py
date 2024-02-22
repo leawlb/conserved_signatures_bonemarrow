@@ -4,9 +4,9 @@ import pandas as pd
 
 #-------------------------------------------------------------------------------
 
-OUTPUT_BASE = config["base"] + config["data_paths"]["main"]
+OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT = OUTPUT_BASE + "/cci_objects/01_cci_preparation"
-OUTPUT_REP = OUTPUT_BASE + "/reports/04_cci_prep/01_cci_preparation"
+OUTPUT_REP = OUTPUT_BASE + "/cci_objects/reports/01_cci_preparation"
 
 COLORS = config["base"] + config["metadata_paths"]["colors"]
 

@@ -22,12 +22,12 @@ metadata_paths:
   annotation_clusters: "/data/metadata/scRNAseq/02_sce_anno/annotation_clusters.txt"
   annotation_subclusters: "/data/metadata/scRNAseq/02_sce_anno/annotation_subclusters.txt"
   annotation_final: "/data/metadata/scRNAseq/02_sce_anno/annotation_final.txt"
-  assignment: "/data/metadata/scRNAseq/04_cci_prep/assignment.txt"
-  assignment_reverse: "/data/metadata/scRNAseq/04_cci_prep/assignment_reverse.txt"
-  assignment_no_ct_removal: "/data/metadata/scRNAseq/05_cci_alt/assignment_no_ct_removal.txt"
+  assignment: "/data/metadata/scRNAseq/05_cci_prep/assignment.txt"
+  assignment_reverse: "/data/metadata/scRNAseq/05_cci_prep/assignment_reverse.txt"
+  assignment_no_ct_removal: "/data/metadata/scRNAseq/06_cci_alt/assignment_no_ct_removal.txt"
   cell_cycle_genes: "/data/metadata/scRNAseq/03_sce_analysis/cell_cycle_genes/go_term_cellcycleprocess_mouse.csv"
-  lrdb_inp: "/data/metadata/scRNAseq/04_cci_prep/mouse_lr_pair.rds"
-  lrdb_out: "/data/metadata/scRNAseq/04_cci_prep/lrdb"
+  lrdb_inp: "/data/metadata/scRNAseq/05_cci_prep/mouse_lr_pair.rds"
+  lrdb_out: "/data/metadata/scRNAseq/05_cci_prep/lrdb"
 
 samples_to_remove:
   - mcar_old_str_3_1
@@ -64,7 +64,7 @@ values:
   03_sce_dge:
     flayer_integrated_padj_cutoff: 0.05
     flayer_integrated_fc_cutoff: 1.5
-  04_cci_prep:
+  05_cci_prep:
     min_cells: 60 # min number of cells required per cell type to consider for cci
     min_perc: 0.05 # min percentage of cells per cell type a gene must be expressed in to consider for cci
     top_level: 300 # top level of ligand-receptor pairs to ensure even leveling of ranks and scores

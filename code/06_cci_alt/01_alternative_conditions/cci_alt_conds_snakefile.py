@@ -7,9 +7,9 @@ import pandas as pd
 
 #-------------------------------------------------------------------------------
 
-OUTPUT_BASE = config["base"] + config["data_paths"]["main"]
-OUTPUT_DAT = OUTPUT_BASE + "/cci_objects/02_cci_alt/conditions"
-OUTPUT_REP = OUTPUT_BASE + "/reports/05_cci_alt/conditions"
+OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
+OUTPUT_DAT = OUTPUT_BASE + "/cci_objects/02_cci_alt/01_conditions"
+OUTPUT_REP = OUTPUT_BASE + "/cci_objects/reports/02_cci_alt/01_conditions"
 
 COLORS = config["base"] + config["metadata_paths"]["colors"]
 
@@ -28,7 +28,7 @@ species = get_list(metadata = METADATA, column = "Species_ID")
 age = get_list(metadata = METADATA, column = "Age_ID")
 conds = ["main", "nctf", "nlvl", "ndwn", "nprp"]
 
-VALUES = config["values"]["04_cci_prep"]
+VALUES = config["values"]["05_cci_prep"]
 
 
 #-------------------------------------------------------------------------------

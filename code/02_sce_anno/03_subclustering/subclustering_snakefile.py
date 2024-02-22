@@ -4,9 +4,9 @@ import pandas as pd
 
 #-------------------------------------------------------------------------------
 
-OUTPUT_BASE = config["base"] + config["data_paths"]["main"]
+OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/02_sce_anno"
-OUTPUT_REP = OUTPUT_BASE + "/reports/02_sce_anno/05_subclustering"
+OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/02_sce_anno/05_subclustering"
 
 COLORS = config["base"] + config["metadata_paths"]["colors"]
 COLORS_REF = config["base"] + config["metadata_paths"]["colors_ref"]
@@ -85,7 +85,7 @@ rule subclustering:
         sce_input = OUTPUT_DAT + "/04_annc/03_sce/sce_{fraction}-04",
         gene_list_subcl = GENE_LIST_SUBCLUSTERING,
         anno_subcl = ANNO_SUBCLUSTERS,
-        genes_list_shared = OUTPUT_DAT + "/08_dres/PC_0.05_FC_1.5/res_{fraction}_cluster_shared"
+        genes_list_shared = OUTPUT_DAT + "/08_nres/PC_0.05_FC_1.5/res_{fraction}_cluster_shared"
     output:
         sce_output = OUTPUT_DAT + "/09_sbcl/sce_{fraction}_cluster_{cluster}-09"
     script:
@@ -96,7 +96,7 @@ rule subclustering_mclust_report:
     input:
         sce_input = rules.subclustering.output, #
         gene_list_subclustering = GENE_LIST_SUBCLUSTERING, #
-        genes_list_shared = OUTPUT_DAT + "/08_dres/PC_0.05_FC_1.5/res_{fraction}_cluster_shared" #
+        genes_list_shared = OUTPUT_DAT + "/08_nres/PC_0.05_FC_1.5/res_{fraction}_cluster_shared" #
     output:
         OUTPUT_REP + "/mclust/mclust_report_{fraction}_cluster_{cluster}.html"
     params:
@@ -127,7 +127,7 @@ rule make_subclustering_results_report:
         sce_input = rules.add_subclusters.output,
         gene_list_subclustering = GENE_LIST_SUBCLUSTERING,
         gene_list_dtplt = GENE_LIST_DOTPLOT,
-        genes_list_shared = OUTPUT_DAT + "/08_dres/PC_0.05_FC_1.5/res_{fraction}_cluster_shared"
+        genes_list_shared = OUTPUT_DAT + "/08_nres/PC_0.05_FC_1.5/res_{fraction}_cluster_shared"
     params:
         colors_path = COLORS,
         functions = "../../source/sce_functions.R",

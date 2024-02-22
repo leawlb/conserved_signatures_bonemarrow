@@ -1,0 +1,1 @@
+snakemake --cluster "bsub -q medium -n4 -R rusage[mem=40GB]" -p -j20 -c4 -s cci_scores_snakefile.py --latency-wait 60 --configfile ../../config.yaml -n

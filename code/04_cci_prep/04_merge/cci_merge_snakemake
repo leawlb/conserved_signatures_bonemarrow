@@ -1,1 +1,0 @@
-snakemake --cluster "bsub -q medium -n10 -R rusage[mem=40GB]" -p -j50 -c10 -s cci_merge_snakefile.py --latency-wait 60 --configfile ../../config.yaml -n

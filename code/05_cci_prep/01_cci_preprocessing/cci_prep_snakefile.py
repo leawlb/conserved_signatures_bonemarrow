@@ -6,15 +6,16 @@ import pandas as pd
 
 #-------------------------------------------------------------------------------
 
-OUTPUT_BASE = config["base"] + config["data_paths"]["main"]
+OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT = OUTPUT_BASE + "/cci_objects/01_cci_preparation"
-OUTPUT_REP = OUTPUT_BASE + "/reports/04_cci_prep/01_cci_preparation"
+OUTPUT_REP = OUTPUT_BASE + "/cci_objects/reports/01_cci_preparation"
 
 COLORS = config["base"] + config["metadata_paths"]["colors"]
 
 LRDB_INP =  config["base"] + config["metadata_paths"]["lrdb_inp"]
 LRDB_OUT =  config["base"] + config["metadata_paths"]["lrdb_out"]
 ASSIGNMENT = config["base"] + config["metadata_paths"]["assignment"]
+print(ASSIGNMENT)
 
 METADATA = pd.read_csv(config["base"] + config["metadata_paths"]["table"])
 def get_list(metadata, column):
@@ -27,7 +28,7 @@ def get_list(metadata, column):
 species = get_list(metadata = METADATA, column = "Species_ID")
 age = get_list(metadata = METADATA, column = "Age_ID")
 
-VALUES = config["values"]["04_cci_prep"]
+VALUES = config["values"]["05_cci_prep"]
 
 # from which colData slot to take identites (e.g. cluster, subcluster, cell type) as specified in config
 COLNAME_IDENTITY = VALUES["colname_identity"]
@@ -154,7 +155,7 @@ rule prepare_lrdb:
         sce_input_path = expand(rules.celltype_assignment.output, species = species, age = age),
         lrdb_input = LRDB_INP
     output:
-        lrdb_output = LRDB_OUT
+        lrdb_output = LRDB_OUT # saved in metadata, not data
     script:
         "scripts/03_prepare_lrdb.R" 
 

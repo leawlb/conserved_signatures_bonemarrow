@@ -4,9 +4,9 @@ import pandas as pd
 
 #-------------------------------------------------------------------------------
 
-OUTPUT_BASE = config["base"] + config["data_paths"]["main"]
+OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT = OUTPUT_BASE + "/cci_objects/03_cci_analysis"
-OUTPUT_REP = OUTPUT_BASE + "/reports/06_cci_analysis/01_cci_pca"
+OUTPUT_REP = OUTPUT_BASE + "/cci_objects/reports/03_cci_analysis/01_cci_pca"
 
 COLORS = config["base"] + config["metadata_paths"]["colors"]
 
@@ -20,8 +20,6 @@ def get_list(metadata, column):
   
 species = get_list(metadata = METADATA, column = "Species_ID")
 age = get_list(metadata = METADATA, column = "Age_ID")
-
-#VALUES = config["values"]["05_cci_analysis"]
 
 #-------------------------------------------------------------------------------
 

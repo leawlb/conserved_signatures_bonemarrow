@@ -161,8 +161,8 @@ nr_df_all$cell_type_rev <- factor(nr_df_all$cell_type,
 nr_df_all$species <- factor(nr_df_all$species, levels = names(col_spc))
 nr_df_all$species_rev <- factor(nr_df_all$species, levels = rev(names(col_spc)))
 
-col_mode <- c("old_only" = "grey60", "yng_only" = "black",
-              "preserved" = "orange2")
+col_mode <- c("old_only" = "grey80", "yng_only" = "black",
+              "preserved" = "#EB9523")
 ```
 
 ## Upset Plots 
@@ -674,6 +674,8 @@ ints_of_interest2 <- c(
                       "Igf2_Insr",
                       "Igf2_Igf2r")
 
+# blub
+
 ggdf_x <- large_df_upset[large_df_upset$interaction %in% ints_of_interest2,]
 ggdf_x$interaction <- factor(ggdf_x$interaction, levels = rev(ints_of_interest2))
 
@@ -684,6 +686,19 @@ ggplot(ggdf_x,
   ylab("Interactions")+
   scale_fill_manual(values = col_mode)+
   xlab("Nr of cell types")
+
+ggplot(ggdf_x,
+       aes(y = interaction, fill = mode))+
+  geom_bar()+
+  theme_classic()+
+  theme(strip.text = element_text(face = "bold", size = 14),
+        strip.background = element_rect(linetype = 0))+
+  facet_grid(cols = vars(species))+
+  ylab("Interactions")+
+  scale_fill_manual(values = col_mode)+
+  xlab("Nr of cell types")
+
+
 ```
 
 # QC PLOTS

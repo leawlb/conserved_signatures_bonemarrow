@@ -41,6 +41,9 @@ nr_hvgs <- snakemake@params[["nr_hvgs"]]
 sce_input_raw <- readRDS(file = snakemake@input[["sce_input_raw"]])
 sce_mnn <- readRDS(file = snakemake@input[["sce_input_corrected"]])
 
+#sce_input_raw <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/01_sce_prep/08_mrge/fractions/sce_str-08")
+#sce_mnn <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/01_mnnc/sce_str_Object_ID-01")
+
 sce_list <- list(list(sce_input_raw, " after merging"),
                  list(sce_mnn, " MNN batch correction"))
 
@@ -62,6 +65,8 @@ sce_list <- lapply(sce_list, function(x){
 colors_ref_path <- snakemake@params[["colors_ref_path"]]
 colors_path <- snakemake@params[["colors_path"]]
 source(snakemake@params[["colors"]])
+#colors_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt"
+#source("../../source/colors.R")
 ```
 
 ```{r}
@@ -352,6 +357,44 @@ qc_plotlist <- lapply(sce_list, function(x){
   plotlist <- qc_plots(x[[1]], title = x[[2]])
   return(plotlist)
 })
+```
+
+```{r}
+library(scater)
+library(scran) 
+
+sce_input_raw_test1 <- sce_input_raw[,sce_input_raw$Object_ID %in% c("mspr_yng_str_1_0", "mspr_old_str_5_0", "mspr_old_str_4_0")]
+sce_input_raw_test2 <- sce_input_raw[,sce_input_raw$Species_ID == "mspr"]
+
+sce <- sce_input_raw_test1
+
+nr_hvgs <- 2000
+
+genevar <- modelGeneVar(sce)
+hvg <- getTopHVGs(genevar, n=nr_hvgs)
+
+# reduce dimensions
+set.seed(37)
+sce <- runPCA(sce, ncomponents=25, subset_row = hvg) 
+plotPCA(sce, color_by = "Object_ID")
+plotPCA(sce, color_by = "Age_ID")
+
+
+sce <- sce_input_raw_test2
+
+nr_hvgs <- 2000
+
+genevar <- modelGeneVar(sce)
+hvg <- getTopHVGs(genevar, n=nr_hvgs)
+
+# reduce dimensions
+set.seed(37)
+sce <- runPCA(sce, ncomponents=25, subset_row = hvg) 
+plotPCA(sce, color_by = "Object_ID")
+plotPCA(sce, color_by = "Age_ID")
+
+knitr::knit_exit()
+
 ```
 
 ```{r fig.width=10, fig.height=5}
@@ -1273,6 +1316,48 @@ print(length(which(sce_mnn$Species_ID == "mcar")))
 print(length(which(sce_mnn$Species_ID == "mcas")))
 print(length(which(sce_mnn$Species_ID == "mspr")))
 ```
+
+
+
+```{r}
+
+source("../../source/plotting.R")
+umap_base_l(sce_input_raw[,sce_input_raw$Species_ID == "mspr"], color_by = "Object_ID")
+umap_base_l(sce_input_raw[,sce_input_raw$Object_ID == "mspr_yng_str_1_0"], color_by = "Object_ID")
+umap_base_l(sce_input_raw[,sce_input_raw$Object_ID == "mspr_yng_str_3_2"], color_by = "Object_ID")
+umap_base_l(sce_input_raw[,sce_input_raw$Object_ID %in% c("mspr_yng_str_1_0", "mspr_old_str_5_0", "mspr_old_str_4_0")], color_by = "Object_ID")
+umap_base_l(sce_input_raw[,sce_input_raw$Object_ID %in% c("mspr_yng_str_1_0", "mspr_old_str_5_0", "mspr_old_str_4_0")], color_by = "Age_ID")
+umap_base_l(sce_input_raw[,sce_input_raw$Object_ID %in% c("mspr_yng_str_1_0", "mspr_yng_str_3_2")], color_by = "Object_ID")
+
+umap_base_l(sce_input_raw[,sce_input_raw$Species_ID %in% c("mspr", "mcar")], color_by = "Object_ID")
+
+umap_base_l(sce_input_raw[,sce_input_raw$Species_ID == "mspr"], color_by = "Age_ID")
+umap_base_l(sce_input_raw[,sce_input_raw$Species_ID == "mspr"], color_by = "Antibody_combination")
+
+umap_base_l(sce_input_raw[,sce_input_raw$Object_ID %in% c("mspr_yng_str_1_0", "mcar_old_str_5_0", "mcar_old_str_4_0", "mcar_yng_str_1_0")], color_by = "Object_ID")
+
+umap_base_l(sce_input_raw[,sce_input_raw$Object_ID == "mspr_yng_str_1_0"], color_by = "Object_ID")
+umap_base_l(sce_input_raw[,sce_input_raw$Object_ID == "mspr_old_str_5_0"], color_by = "Object_ID")
+umap_base_l(sce_input_raw[,sce_input_raw$Object_ID == "mspr_old_str_4_0"], color_by = "Object_ID")
+
+sce_input_raw_test <- sce_input_raw[,sce_input_raw$Object_ID %in% c("mspr_yng_str_1_0", "mspr_old_str_5_0", "mspr_old_str_4_0")]
+
+sce <- sce_input_raw_test
+library(scater)
+library(scran) 
+
+nr_hvgs <- 2000
+
+genevar <- modelGeneVar(sce)
+hvg <- getTopHVGs(genevar, n=nr_hvgs)
+
+# reduce dimensions
+set.seed(37)
+sce <- runPCA(sce, ncomponents=25, subset_row = hvg) 
+plotPCA(sce)
+
+```
+
 
 ```{r}
 sessionInfo()

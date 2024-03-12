@@ -32,14 +32,6 @@ library(scran, quietly = TRUE)
 
 sce_01_path <- snakemake@input[["sce_input_path"]]
 
-metadata <- read.csv(file = snakemake@params[["metadata"]], 
-                     head = TRUE, 
-                     sep = ",", 
-                     check.names=FALSE, 
-                     stringsAsFactors=FALSE, 
-                     as.is=TRUE, 
-                     colClasses = "character")
-
 individuals <- snakemake@params[["individuals"]]
 
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
@@ -99,6 +91,12 @@ for(i in qcdf_list_01){
   qcdf_gg <- rbind(qcdf_gg, i)
 }
 qcdf_gg <- as.data.frame(qcdf_gg)
+
+qcdf_gg_print <- qcdf_gg[qcdf_gg$Keep_sample == TRUE,]
+print(median(qcdf_gg_print$sum))
+print(median(qcdf_gg_print$sum[qcdf_gg_print$removed == FALSE]))
+print(median(qcdf_gg_print$detected))
+print(median(qcdf_gg_print$detected[qcdf_gg_print$removed == FALSE]))
 
 # by Sample
 ggplot(qcdf_gg, aes(x = Object_ID, y = sum,

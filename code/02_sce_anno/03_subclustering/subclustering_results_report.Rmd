@@ -28,12 +28,14 @@ library(Seurat, quietly = TRUE)
 ```{r sources, message = FALSE}
 source(file = snakemake@params[["plotting"]])
 #source(file = snakemake@params[["functions"]])
+#source("../../source/plotting.R")
 ```
 
 ```{r load_objects, message = FALSE}
 #load SCE objects
 sce <- readRDS(file = snakemake@input[["sce_input"]])
 
+nr_hvgs <- snakemake@params[["nr_hvgs"]]
 fraction_curr <- snakemake@wildcards[["fraction"]]
 
 sce$Species_ID <- factor(sce$Species_ID,
@@ -69,6 +71,7 @@ genes_list_shared <- readRDS(file = snakemake@input[["genes_list_shared"]])
 ```{r colors, message = FALSE}
 colors_path <- snakemake@params[["colors_path"]]
 source(snakemake@params[["colors"]])
+#source("../../source/colors.R")
 
 if(fraction_curr == "hsc"){
   col_cat <- col_cat_hsc
@@ -81,6 +84,26 @@ if(fraction_curr == "hsc"){
 ```
 
 # Subclustering Overview
+
+```{r}
+
+# make str UMAP better looking
+
+if(fraction_curr == "str"){
+  
+  gene_var <- modelGeneVar(sce)
+  hvgs_for_batch_correction <- getTopHVGs(gene_var, n = nr_hvgs)
+  hvgs <- getTopHVGs(gene_var, n = nr_hvgs)
+
+  set.seed(2)
+  
+  sce <- runUMAP(sce, dimred = "PCA", subset_row = hvgs)
+  colnames(reducedDims(sce)$UMAP) <- c("X1", "X2")
+  set.seed(37)
+}
+
+```
+
 
 ```{r}
 
@@ -104,6 +127,24 @@ PLOT_2 <- ggarrange(plot_2, legend_2, widths = c(2, 1))
 PLOT_1
 PLOT_2
 ```
+
+```{r}
+plot_2 <- umap_base(sce, color_by = "celltypes")+ 
+  ggtitle(paste(fraction_curr))+
+  scale_color_manual("Cell types", values = col_cts)+
+  theme(axis.text = element_blank(),
+        axis.title = element_blank(),
+        axis.line = element_blank(),
+        plot.title = element_blank())
+plot_2l <- umap_legend(sce, color_by = "celltypes")+
+  scale_color_manual("Cell types", values = col_cts)+
+  theme(legend.text= element_text(size = 11),
+        legend.title = element_text(size = 14, face = "bold"))
+legend_2 <- get_legend(plot_2l)
+PLOT_2 <- ggarrange(plot_2, legend_2, widths = c(2, 1))
+PLOT_2
+```
+
 
 ```{r}
 
@@ -158,6 +199,35 @@ print(table(sce$Species_ID, sce$celltypes))
 print(table(sce$Species_ID, sce$celltypes)/rowSums(table(sce$Species_ID, sce$celltypes))*100)
 ```
 
+```{r, fig.width = 7, fig.height = 5}
+plot_a <- umap_base(sce, color_by = "celltypes")+ 
+  ggtitle(paste(fraction_curr))+
+  scale_color_manual("Cell types", values = col_cts)+
+  theme(axis.text = element_blank(),
+        axis.title = element_blank(),
+        axis.line = element_blank(),
+        plot.title = element_blank())+
+  facet_wrap( ~ sce$Species_ID, ncol = 2)+
+  theme(strip.text = element_text(face = "bold", size = 14),
+        strip.background = element_rect(linetype = 0))
+
+plot_a
+
+plot_2l <- umap_legend(sce, color_by = "celltypes")+
+  scale_color_manual("Cell types", values = col_cts)+
+  theme(legend.text= element_text(size = 11),
+        legend.title = element_text(size = 14, face = "bold"))
+legend_2 <- get_legend(plot_2l)
+
+PLOT_all <- ggarrange(plot_a, legend_2, widths = c(2.5, 1))
+PLOT_all
+```
+
+```{r, fig.width = 8, fig.height = 5}
+PLOT_all <- ggarrange(plot_a, legend_2, widths = c(2.5, 1.5))
+PLOT_all
+```
+
 ## Gene expression
 
 ```{r}
@@ -176,11 +246,102 @@ if(fraction_curr == "hsc"){
 }
 ```
 
+```{r fig.width = 14, fig.height = 10}
+
+if(fraction_curr == "hsc"){
+  genes_to_plot <- gene_list_dtplt$gene
+  DotPlot(seurat, features = genes_to_plot, idents = levels(Idents(seurat)))+
+    RotatedAxis()+
+    theme(axis.text.y = element_text(size = 16),
+          axis.title = element_blank(),
+          legend.position = "bottom")
+}
+```
+
+```{r fig.width = 12, fig.height = 4}
+
+if(fraction_curr == "hsc"){
+  
+  seurat_sub <- seurat
+  seurat_sub[['groups']] <- seurat_sub$Species_ID
+  seurat_sub[['groups']]$groups <- factor(seurat_sub[['groups']]$groups, levels = rev(names(col_spc)))
+
+  genes_to_plot <- gene_list_dtplt$gene
+  DotPlot(seurat_sub, features = genes_to_plot, group.by = 'groups', idents = "HSCs")+
+    RotatedAxis()+
+    theme(axis.text.y = element_text(size = 16),
+          axis.title = element_blank(),
+          legend.position = "bottom")
+}
+```
+
+```{r fig.width = 12, fig.height = 4}
+
+if(fraction_curr == "hsc"){
+  
+  seurat_sub <- seurat
+  seurat_sub[['groups']] <- seurat_sub$Species_ID
+  seurat_sub[['groups']]$groups <- factor(seurat_sub[['groups']]$groups, levels = rev(names(col_spc)))
+
+  genes_to_plot <- gene_list_dtplt$gene
+  DotPlot(seurat_sub, features = genes_to_plot, group.by = 'groups', idents = "Monocyte progs.")+
+    RotatedAxis()+
+    theme(axis.text.y = element_text(size = 16),
+          axis.title = element_blank(),
+          legend.position = "bottom")
+}
+```
+
 ```{r fig.width = 20, fig.height = 10}
 if(fraction_curr == "str"){
   genes_to_plot <- gene_list_dtplt$gene
   DotPlot(seurat, features = genes_to_plot, idents = levels(Idents(seurat)))+
     RotatedAxis()
+}
+```
+
+```{r fig.width = 20, fig.height = 7}
+if(fraction_curr == "str"){
+  genes_to_plot <- gene_list_dtplt$gene
+  DotPlot(seurat, features = genes_to_plot, idents = levels(Idents(seurat)))+
+    RotatedAxis()+
+    theme(axis.text.y = element_text(size = 16),
+          axis.title = element_blank(),
+          legend.position = "bottom")
+}
+```
+
+```{r fig.width = 20, fig.height = 4}
+
+if(fraction_curr == "str"){
+  
+  seurat_sub <- seurat
+  seurat_sub[['groups']] <- seurat_sub$Species_ID
+  seurat_sub[['groups']]$groups <- factor(seurat_sub[['groups']]$groups, levels = rev(names(col_spc)))
+
+  genes_to_plot <- gene_list_dtplt$gene
+  DotPlot(seurat_sub, features = genes_to_plot, group.by = 'groups', idents = "Osteo")+
+    RotatedAxis()+
+    theme(axis.text.y = element_text(size = 16),
+          axis.title = element_blank(),
+          legend.position = "bottom")
+}
+```
+
+```{r fig.width = 17, fig.height = 4}
+
+if(fraction_curr == "str"){
+  
+  seurat_sub <- seurat
+  seurat_sub[['groups']] <- seurat_sub$Species_ID
+  seurat_sub[['groups']]$groups <- factor(seurat_sub[['groups']]$groups, levels = rev(names(col_spc)))
+
+  genes_to_plot <- gene_list_dtplt$gene
+  DotPlot(seurat_sub, features = genes_to_plot, group.by = 'groups', idents = "Adipo/CARs")+
+    RotatedAxis()+
+    theme(axis.text.y = element_text(size = 16),
+          axis.title = element_blank(),
+          legend.position = "bottom")
 }
 ```
 

@@ -1,4 +1,0 @@
-
-snakemake --cluster "bsub -n3 -q long -R rusage[mem=50GB]" -p -j30 -c20 -s DESeq2_crossspecies_snakefile.py --configfile ../../config.yaml -n
-
-snakemake --cluster "bsub -n3 -q medium -R rusage[mem=50GB]" -p -j30 -c20 -s DESeq2_crossspecies_snakefile.py --configfile ../../config.yaml -n

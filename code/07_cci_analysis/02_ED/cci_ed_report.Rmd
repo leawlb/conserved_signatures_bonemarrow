@@ -135,6 +135,28 @@ ggplot(dist_oy_direct_direct,
 #knitr::knit_exit()
 ```
 
+```{r fig.width = 4, fig.height = 4}
+ggplot(dist_oy_direct_direct, 
+       aes(x = species_old, y = distance, fill = species_old))+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 0),
+        legend.position = "none")+
+  geom_boxplot(color = "black", alpha = 0.8)+
+  ylab("ED (corresp. young&old cell type pairs)")+
+  xlab("Species")+
+  scale_fill_manual("Species", values = col_spc)+
+  stat_compare_means(test = 'kruskal.test', p.adjust.method = "BH", label.y = 16)+
+  stat_compare_means(
+    comparisons = list(c("mmus", "mcas"), c("mmus", "mspr"),
+                       c("mmus", "mcar"), c("mcas", "mspr"),
+                       c("mcas", "mcar"), c("mspr", "mcar")),
+    test = 'dunn_test', p.adjust.method = "BH",
+    hide.ns = TRUE, aes(label = after_stat(p.signif)))+
+  ggtitle("Euclidian distances")
+
+#knitr::knit_exit()
+```
+
 ```{r}
 
 ggplot(dist_oy_direct_direct, 

@@ -32,10 +32,10 @@ source(snakemake@params[["colors"]])
 ```
 
 ```{r load_objects}
-#cci_mlist_mcar_yng <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis/cci_objects/01_cci_preparation/11_idis/ilrs_mcar_yng")
-#cci_mlist_mmus_yng <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis/cci_objects/01_cci_preparation/11_idis/ilrs_mmus_yng")
-#cci_mlist_mcas_yng <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis/cci_objects/01_cci_preparation/11_idis/ilrs_mcas_yng")
-#cci_mlist_mspr_yng <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/main_analysis/cci_objects/01_cci_preparation/11_idis/ilrs_mspr_yng")
+#cci_mlist_mcar_yng <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/cci_objects/01_cci_preparation/11_idis/ilrs_mcar_yng")
+#cci_mlist_mmus_yng <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/cci_objects/01_cci_preparation/11_idis/ilrs_mmus_yng")
+#cci_mlist_mcas_yng <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/cci_objects/01_cci_preparation/11_idis/ilrs_mcas_yng")
+#cci_mlist_mspr_yng <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/cci_objects/01_cci_preparation/11_idis/ilrs_mspr_yng")
 
 #cci_met_list <- list(cci_mlist_mcar_yng, cci_mlist_mmus_yng, cci_mlist_mcas_yng, cci_mlist_mspr_yng)
 #names(cci_met_list) <- c("cci_mlist_mcar_yng", "cci_mlist_mmus_yng", "cci_mlist_mcas_yng", "cci_mlist_mspr_yng")
@@ -108,46 +108,136 @@ overlap_lists <- lapply(cci_met_cts_list_cts, function(cci_met_ct){
   cci_met_mspr <- cci_met_ct[["mspr"]]
   cci_met_mcar <- cci_met_ct[["mcar"]]
   
+  cts_curr <- unique(c(cci_met_mmus$identity,
+                       cci_met_mcas$identity,
+                       cci_met_mspr$identity,
+                       cci_met_mcar$identity))
+  
+  print(cts_curr)
+  
   stopifnot(cci_met_mmus$identity[1] == cci_met_mcas$identity[1])
   stopifnot(cci_met_mmus$identity[1] == cci_met_mspr$identity[1])
   stopifnot(cci_met_mmus$identity[1] == cci_met_mcar$identity[1])
     
-  mmusg <- unique(cci_met_mmus$sigmol)
-  mcasg <- unique(cci_met_mcas$sigmol)
-  msprg <- unique(cci_met_mspr$sigmol)
-  mcarg <- unique(cci_met_mcar$sigmol)
-
-  shared <- intersect(intersect(intersect(mmusg, mcasg), msprg), mcarg)
-
-  mmus_only <- mmusg[!mmusg %in% c(mcasg, msprg, mcarg)]
-  mcas_only <- mcasg[!mcasg %in% c(mmusg, msprg, mcarg)]
-  mspr_only <- msprg[!msprg %in% c(mmusg, mcasg, mcarg)]
-  mcar_only <- mcarg[!mcarg %in% c(mmusg, mcasg, msprg)]
+  # get all sigmols of this cell type
+  all_sigmols <- unique(c(cci_met_mmus$sigmol,
+                          cci_met_mcas$sigmol,
+                          cci_met_mspr$sigmol,
+                          cci_met_mcar$sigmol))
   
-  all <- unique(c(mmusg, mcasg, msprg, mcarg))
-  partially_shared <- all[!all %in% c(mmus_only, mcas_only, mspr_only, mcar_only, shared)]
-
-  # count the length of each cell type entry  
-  return_df <- data.frame(
-    "mode" = c("shared", "mmus_only", "mcas_only", "mspr_only", "mcar_only", "partially_shared"),
-    "nr" = c(length(shared), length(mmus_only), length(mcas_only),
-             length(mspr_only), length(mcar_only), length(partially_shared))
-      
-    )
+  shared_df <- data.frame(
+    "celltype" = rep(cts_curr, length(all_sigmols)),
+    "sigmols" = all_sigmols)
+  
+  for(s in species){
+    shared_df$new <- shared_df$sigmols %in% cci_met_ct[[s]]$sigmol
+    colnames(shared_df)[colnames(shared_df) == "new"] <- s
     
-  return(list("shared" = shared,
-              "mmus_only" = mmus_only,
-              "mcas_only" = mcas_only,
-              "mspr_only" = mspr_only,
-              "mcar_only" = mcar_only,
-              "partially_shared" = partially_shared,
-              "nr_df" = return_df))
+  }
+  
+  shared_df$status <- vector(length = nrow(shared_df))
+  nrow(shared_df)
+  
+  shared_df$status[shared_df$mmus == TRUE & shared_df$mcas == TRUE & shared_df$mspr == TRUE & shared_df$mcar == TRUE] <- "shared by all" 
+  
+  shared_df$status[shared_df$mmus == FALSE & shared_df$mcas == TRUE & shared_df$mspr == TRUE & shared_df$mcar == TRUE] <- "shared by three" 
+  shared_df$status[shared_df$mmus == TRUE & shared_df$mcas == FALSE & shared_df$mspr == TRUE & shared_df$mcar == TRUE] <- "shared by three" 
+  shared_df$status[shared_df$mmus == TRUE & shared_df$mcas == TRUE & shared_df$mspr == FALSE & shared_df$mcar == TRUE] <- "shared by three" 
+  shared_df$status[shared_df$mmus == TRUE & shared_df$mcas == TRUE & shared_df$mspr == TRUE & shared_df$mcar == FALSE] <- "shared by three" 
 
-  return(overlap)
+  shared_df$status[shared_df$mmus == TRUE & shared_df$mcas == FALSE & shared_df$mspr == FALSE & shared_df$mcar == FALSE] <- "mmus_only" 
+  shared_df$status[shared_df$mmus == FALSE & shared_df$mcas == TRUE & shared_df$mspr == FALSE & shared_df$mcar == FALSE] <- "mcas_only" 
+  shared_df$status[shared_df$mmus == FALSE & shared_df$mcas == FALSE & shared_df$mspr == TRUE & shared_df$mcar == FALSE] <- "mspr_only" 
+  shared_df$status[shared_df$mmus == FALSE & shared_df$mcas == FALSE & shared_df$mspr == FALSE & shared_df$mcar == TRUE] <- "mcar_only" 
+
+  shared_df$status[shared_df$status == FALSE] <- "shared by two"
+
+  
+  shared_df$percentage <- vector(length = nrow(shared_df))
+  for(i in unique(shared_df$status)){
+    shared_df$percentage[shared_df$status == i] <- length(which(shared_df$status == i))/nrow(shared_df)*100
+  }
+  
+  return(shared_df)
 })
 names(overlap_lists) <- cts
-names(overlap_lists[[1]][[1]])
 ```
+
+
+```{r}
+shared_df_all <- bind_rows(overlap_lists)
+
+shared_df_all$status <- factor(shared_df_all$status, 
+                               levels = c("mcar_only", "mspr_only",
+                                          "mcas_only", "mmus_only",
+                                          "shared by two",
+                                          "shared by three",
+                                          "shared by all"))
+
+shared_df_all$status2 <- shared_df_all$status
+shared_df_all$status2 <- factor(shared_df_all$status2, 
+                               levels = rev(c("mcar_only", "mspr_only",
+                                          "mcas_only", "mmus_only",
+                                          "shared by two",
+                                          "shared by three",
+                                          "shared by all")))
+
+shared_df_all$celltype <- factor(shared_df_all$celltype, levels = rev(c(names(col_cts_hsc), names(col_cts_str))))
+
+col_cons <- c("mcar_only" = col_spc[["mcar"]],
+              "mspr_only" = col_spc[["mspr"]],
+              "mcas_only" = col_spc[["mcas"]], 
+              "mmus_only" = col_spc[["mmus"]],
+              "shared by two" = "#EDE2D4",
+              "shared by three" = "#EB9523",
+              "shared by all" = "#DD5C00")
+
+plot1 <- ggplot(shared_df_all, aes(y = celltype, fill = status2))+
+  geom_bar(position = "stack")+
+  theme_classic()+
+  scale_fill_manual("Conservation", values = col_cons)+
+  facet_grid(cols = vars(shared_df_all$status2))+
+  theme(strip.text.x = element_blank(),
+        axis.title.y = element_text(angle = 0, vjust = 0.5), 
+        legend.position = "none")+
+  ylab("Cell type")+
+  xlab("Nr of detected ligands/receptors per cell type")
+
+pdf(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/cci_objects/03_cci_analysis/plot_1.pdf", width = 10, height = 5)
+plot1
+dev.off()
+
+ggplot(shared_df_all, aes(y = celltype, fill = status))+
+  geom_bar(position = "fill")+
+  theme_classic()+
+  scale_fill_manual("Conservation", values = col_cons)
+```
+
+```{r fig.width = 4, fig.height = 2}
+
+shared_df_all$combination <- paste0(shared_df_all$celltype, "_", shared_df_all$status)
+shared_df_all_perc <- shared_df_all[which(duplicated(shared_df_all$combination) == FALSE),]
+
+plot_2 <- ggplot(shared_df_all_perc, aes(x = status2, y = percentage, color = status2))+
+  geom_jitter()+
+  geom_boxplot(alpha = 0)+
+  theme_classic()+
+  scale_color_manual("Conservation", values = col_cons)+
+  theme(axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
+        legend.position = "none",
+        axis.title.y = element_text(angle = 0, vjust = 0.5))+
+  ylab("[%]")
+
+pdf(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/cci_objects/03_cci_analysis/plot_2.pdf", width = 8, height = 1.5)
+plot_2
+dev.off()
+
+
+```
+
+
+
 
 ```{r}
 # extract only the nr_dfs for now!

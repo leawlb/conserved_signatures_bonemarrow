@@ -26,8 +26,8 @@ metadata_paths:
   assignment_reverse: "/data/metadata/scRNAseq/05_cci_prep/assignment_reverse.txt"
   assignment_no_ct_removal: "/data/metadata/scRNAseq/06_cci_alt/assignment_no_ct_removal.txt"
   cell_cycle_genes: "/data/metadata/scRNAseq/03_sce_analysis/cell_cycle_genes/go_term_cellcycleprocess_mouse.csv"
-  lrdb_inp: "/data/metadata/scRNAseq/05_cci_prep/mouse_lr_pair.rds"
-  lrdb_out: "/data/metadata/scRNAseq/05_cci_prep/lrdb"
+  lrdb_inp: "/data/metadata/scRNAseq/05_cci_prep/lrdb_raw/mouse_lr_pair.rds"
+  lrdb_out: "/data/metadata/scRNAseq/05_cci_prep/lrdb_processed/lrdb"
 
 samples_to_remove:
   - mcar_old_str_3_1

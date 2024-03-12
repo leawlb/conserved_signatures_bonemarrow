@@ -258,8 +258,16 @@ score_delta_df$is_outlier[pos] <- TRUE
 ggplot(score_delta_df, aes(x = species, y = score_delta, color = is_outlier))+
   geom_jitter(alpha = 0.6)+
   theme_classic()+
-  scale_color_manual(values = c("FALSE" = "grey80", "TRUE" = "dodgerblue3"))+
-  theme(axis.text.x = element_text(angle = 90))+
+  scale_color_manual(values = c("FALSE" = "grey80", "TRUE" = "grey80"))+
+  theme(axis.text.x = element_text(angle = 0))+
+  xlab("Species")+
+  ylab("Delta Score (old - young)")
+
+ggplot(score_delta_df, aes(x = species, y = score_delta, color = is_outlier))+
+  geom_jitter(alpha = 0.6)+
+  theme_classic()+
+  scale_color_manual(values = c("FALSE" = "grey80", "TRUE" = "grey80"))+
+  theme(axis.text.x = element_text(angle = 0))+
   xlab("Species")+
   ylab("Delta Score (old - young)")
 ```
@@ -312,7 +320,7 @@ ggplot(score_delta_df,
 ```{r fig.width = 4, fig.height = 4}
 ggplot(outlier_df, 
        aes(x = species, y = abs(score_delta)))+
-  geom_violin(color = "dodgerblue3", fill= "dodgerblue3")+
+  geom_violin(color = "blue", fill= "blue")+
   geom_boxplot(outlier.size =  0.4, color = "black", alpha = 0.3)+
   theme_classic()+
   stat_compare_means(method = 'kruskal.test', p.adjust.method = "BH", label.y = 1.3)+
@@ -320,7 +328,7 @@ ggplot(outlier_df,
     comparisons = list(c("mmus", "mcas"), c("mmus", "mspr"), c("mmus", "mcar"),
                        c("mcas", "mspr"), c("mcas", "mcar"), c("mspr", "mcar")),
     test = 'dunn_test', p.adjust.method = "BH", hide.ns = TRUE, aes(label = after_stat(p.signif)))+
-  theme(axis.text.x = element_text(angle = 90))+
+  theme(axis.text.x = element_text(angle = 0))+
   xlab("Species")+
   ylab("|Delta Scores (old-young)|")+
   ylim(c(0, 1.4))
@@ -409,6 +417,30 @@ ggplot(ggdf1, aes(y = reorder(interaction, species_pos), fill = direction))+
   ylab("Outlier Interactions")+
   scale_fill_manual("", values = c("increase during ageing" = "skyblue1",
                                    "decrease during ageing" = "dodgerblue4"))
+```
+
+```{r fig.height = 9, fig.width= 8}
+ggplot(ggdf1_temp, aes(y = reorder(interaction, species_pos), fill = direction))+
+  geom_bar(position = "stack")+
+  theme_classic()+
+  theme(strip.text = element_text(face = "bold", size = 14),
+        strip.background = element_rect(linetype = 0))+
+  facet_grid(cols = vars(species))+
+  xlab("Nr of cell type pairs per species")+
+  ylab("Outlier Interactions")+
+  scale_fill_manual("", values = c("increase during ageing" = "grey80",
+                                   "decrease during ageing" = "black"))
+
+ggplot(ggdf1, aes(y = reorder(interaction, species_pos), fill = direction))+
+  geom_bar(position = "stack")+
+  theme_classic()+
+  theme(strip.text = element_text(face = "bold", size = 14),
+        strip.background = element_rect(linetype = 0))+
+  facet_grid(cols = vars(species))+
+  xlab("Nr of cell type pairs per species")+
+  ylab("Outlier Interactions")+
+  scale_fill_manual("", values = c("increase during ageing" = "grey80",
+                                   "decrease during ageing" = "black"))
 ```
 
 # QC

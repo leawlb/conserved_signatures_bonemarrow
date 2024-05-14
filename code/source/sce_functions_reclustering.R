@@ -1,6 +1,7 @@
 #-------------------------------------------------------------------------------
 # function for a standard seurat pipeline clustering pipeline from counts
-# make it so mapply through resolution vector CAN be used
+# make it so that mapply can be used for list of different resolution(s)
+# used for reclustering, and for reclustering permutation
 standard_seu_pipeline <- function(resolution, features, seu, assay_use,
                                   calc_umap = FALSE){
   
@@ -10,13 +11,13 @@ standard_seu_pipeline <- function(resolution, features, seu, assay_use,
   assay_use <- assay_use # assay to use as basis for clustering
   calc_umap <- calc_umap # whether umap coordinates should be calculated
   
-  seu <- Seurat::NormalizeData(seu, assay = assay_use, # "RNA"
+  seu <- Seurat::NormalizeData(seu, assay = assay_use, # "RNA" in my case
                                verbose = FALSE)
   seu <- Seurat::ScaleData(seu, verbose = FALSE)
   seu <- Seurat::RunPCA(seu, verbose = FALSE, features = features)
   seu <- Seurat::FindNeighbors(seu, dims = 1:30, verbose = FALSE)
-  seu <- Seurat::FindClusters(seu, resolution = resolution, 
-                              verbose = FALSE) 
+  seu <- Seurat::FindClusters(seu, resolution = resolution, verbose = FALSE) 
+  
   if(calc_umap == TRUE){
     seu <- Seurat::RunUMAP(seu, dims = 1:30, verbose = FALSE)
   }
@@ -92,16 +93,16 @@ random_reclustering_scores <- function(iteration,
                                        resolution,
                                        assay_use){
   
-  iteration <- iteration # list of iterations like as.list(c(1:i))
+  iteration <- iteration # list of iterations like: as.list(c(1:i))
   #print(iteration)
   seu <- seu # seurat object to be reclustered 
-  iteration_df <- iteration_df # dataframe with ncol=i and random sets of genes in each column
+  iteration_df <- iteration_df # dataframe with ncol=i and random sets of gene positions in each column
   resolution <- resolution # resolution to parse to FindClusters
-  assay_use <- assay_use
+  assay_use <- assay_use # the assay to be used for reclustering ("RNA" in my case)
   
   # subset object to previously generated random list of genes from iteration_df
   iteration_vector <- iteration_df[,iteration]
-  print(iteration_vector[1:10])
+  #print(iteration_vector[1:10])
   
   seu_sub <- subset(seu, features = Features(seu)[iteration_vector], 
                     slot = "count")

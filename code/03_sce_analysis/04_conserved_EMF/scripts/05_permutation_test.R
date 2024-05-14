@@ -9,7 +9,6 @@
 #-------------------------------------------------------------------------------
 set.seed(37)
 
-library(scCustomize)
 library(Seurat)
 library(parallel)
 library(dplyr)
@@ -26,44 +25,21 @@ if(snakemake@wildcards[["reference"]] %in%
   fraction_curr <- "hsc"
 }
 
-# load the human reference dataset
+# load the human reference dataset and the EMFs
 seu_preprocessed <- readRDS(snakemake@input[["seu_preprocessed"]])
-#seu_preprocessed <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/pre-processed/ts_all_stromal")
 emfs_paths <- snakemake@input[["ensembl_emfs"]]
 ensembl_emfs <- readRDS(emfs_paths[[which(!grepl(fraction_curr, emfs_paths))]])
-#ensembl_emfs <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_conserved_EMF/03_ensm/ensembl_emfs_str")
 nr_emfs <- nrow(ensembl_emfs)
-print(snakemake@wildcards[["reference"]] )
+
+print(snakemake@wildcards[["reference"]])
 print(nr_emfs)
 
+# load parameters for permutation
 cut_off_counts <- snakemake@params[["cut_off_counts"]]
 iterations <- snakemake@params[["iterations"]]
-# iterations <- 3
 resolution_list <- snakemake@params[["resolution"]] 
 resolution <- resolution_list[[snakemake@wildcards[["reference"]]]]
-# resolution <- 0.4
 nr_cores <- snakemake@params[["nr_cores"]] 
-# nr_cores <- 2
-
-#-------------------------------------------------------------------------------
-# generate i sets of genes that are expressed in at 
-# least 10% of cells of at least 1 cell type
-# this is the pre-requisite for marker genes from Seurat::FindMarkers()
-
-# get the percentage of cells per cell type
-#perc_expr <- scCustomize::Percent_Expressing(seu_preprocessed, layer = "counts",
-#                                             features = Features(seu_preprocessed), 
-#                                             split_by = "cell_type")
-
-# get the genes expressed in at least 10% of cells of at least 1 cell type
-#gene_pool <- vector()
-#for(i in 1:ncol(perc_expr)){
-#  gene_pos <- which(perc_expr[,i] > 5)
-#  print(length(gene_pos))
-#  gene_pool <- c(gene_pool, rownames(perc_expr)[gene_pos])
-#}
-#gene_pool <- unique(gene_pool)
-#print(length(gene_pool))
 
 #-------------------------------------------------------------------------------
 # get the nr of genes that have a counts of at least 10

@@ -1,5 +1,5 @@
 ---
-title: "dmg_sample_report"
+title: "Differentially mapped gene report per sample"
 author: "Lea Wölbert"
 date: '2023-03-31'
 output: html_document
@@ -19,13 +19,10 @@ set.seed(37)
 ```
 
 ```{r libraries,  message = FALSE}
-library(SingleCellExperiment, quietly = TRUE) 
-library(DropletUtils, quietly = TRUE) 
-library(tidyverse, quietly = TRUE) 
+library(scuttle, quietly = TRUE) 
 library(scater, quietly = TRUE) 
 library(scran, quietly = TRUE) 
 library(pheatmap, quietly = TRUE) 
-library(biomaRt, quietly = TRUE)
 ```
 
 ```{r source, message = FALSE}
@@ -35,22 +32,18 @@ source(file = snakemake@params[["plotting"]])
 ```{r load_objects, message = FALSE}
 sce_og <- readRDS(file = snakemake@input[["sce_input"]])
 sce_fg <- readRDS(file = snakemake@input[["sce_fg"]])
+
 dmg_list <- readRDS(file = snakemake@input[["dmg_list"]])
 dmgs <- readRDS(file = snakemake@input[["dmgs"]])
 
-dmgs <- file = snakemake@input[["dmgs"]]
-
 ensembl_list_mspr <- readRDS(snakemake@input[["ensembl_list_mspr"]])
 
-# set name for plots
-name_curr <- colData(sce_og)$Object_ID[1] # name to display in plots
+name_curr <- colData(sce_og)$Object_ID[1] 
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
-
 species_curr <- snakemake@wildcards[["species"]]
-
 ```
 
-```{r}
+```{r susbet}
 # subset fg to sce_og
 sce_fg <- sce_fg[,which(!is.na(match(colnames(sce_fg), colnames(sce_og))))]
 sce_og
@@ -61,7 +54,7 @@ MSPR objects don't have symbols.
 This part was taken from Perrine's script on how to download the relevant data 
 from BioMart.
 
-```{r}
+```{r mspr_ensembl}
 
 if(grepl("mspr", name_curr)){
   
@@ -85,13 +78,12 @@ if(grepl("mspr", name_curr)){
     rowData(sce_fg)$Symbol == ""] <- rowData(sce_fg)$ID[
       rowData(sce_fg)$Symbol == ""]
 }
-
 ```
 
 Prepare combination of both SCE.
 RowData first, then colData.
 
-```{r}
+```{r prep_comb_row}
 
 head(rowData(sce_og))
 head(rowData(sce_fg))
@@ -107,10 +99,9 @@ sce_fg_shared <- sce_fg_shared[order(rowData(sce_fg_shared)$Symbol),]
 
 sce_og_shared <- sce_og_shared[!duplicated(rowData(sce_og_shared)$Symbol),]
 sce_fg_shared <- sce_fg_shared[!duplicated(rowData(sce_fg_shared)$Symbol),]
-
 ```
 
-```{r}
+```{r prep_comp_col}
 
 colnames(sce_og_shared) <- paste0(colnames(sce_og_shared), "_og")
 sce_og_shared$Genome <- rep("OneGenome", ncol(sce_og_shared))
@@ -127,10 +118,9 @@ rownames(sce_og_shared) <- rowData(sce_og_shared)$Symbol
 rownames(sce_fg_shared) <- rowData(sce_fg_shared)$Symbol 
 
 colData(sce_og_shared) <- colData(sce_og_shared)[,-20]
-
 ```
 
-```{r}
+```{r combine}
 # combine
 sce_tog <- cbind(sce_og_shared, sce_fg_shared)
 sce_tog
@@ -138,12 +128,12 @@ sce_tog
 
 ## General quality
 
-```{r}
+```{r qc_metrics}
 qcdf_og <- perCellQCMetrics(sce_og_shared)
 qcdf_fg <- perCellQCMetrics(sce_fg_shared)
 ```
 
-```{r}
+```{r qc_metrics_plot1}
 
 qcdf_gg <- as.data.frame(qcdf_og)
 qcdf_gg <- pivot_longer(qcdf_gg, 
@@ -160,7 +150,7 @@ ggplot(qcdf_gg[qcdf_gg$metric == "sum",], aes(y = value, x = metric))+
   theme(axis.title.x = element_blank(), axis.text.x = element_blank())
 ```
 
-```{r}
+```{r qc_metrics_plot2}
 
 qcdf_gg <- as.data.frame(qcdf_fg)
 qcdf_gg <- pivot_longer(qcdf_gg, 
@@ -182,46 +172,54 @@ ggplot(qcdf_gg[qcdf_gg$metric == "sum",], aes(y = value, x = metric))+
 Calculate logcounts together for visualisation.
 DMGs = differentially mapped genes.
 
-```{r}
-quick_clust <- quickCluster(sce_tog) # to accelerate calculation
-sce_tog <- computeSumFactors(sce_tog, cluster = quick_clust)
-sce_tog <- logNormCounts(sce_tog) # log-transformation
+```{r marker_genes}
+quick_clust <- scran::quickCluster(sce_tog) # to accelerate calculation
+sce_tog <- scran::computeSumFactors(sce_tog, cluster = quick_clust)
+sce_tog <- scuttle::logNormCounts(sce_tog) # log-transformation
 ```
 
-### Sample heat-map
+### Sample heatmap
 
-```{r}
+```{r sample_heatmap}
 
-#sce_tog_temp <- sce_tog[rowSums(assays(sce_tog)$counts) > 5,]
+sce_tog_temp <- sce_tog[rowSums(assays(sce_tog)$counts) > 5,]
+# randomly subset to 2000 cells if necessary 
+# first half and second half of object should be subset identically
+if(ncol(sce_tog_temp) > 2000){
+  random_cols <- sample(1:(ncol(sce_tog_temp)/2), 1000)
+  random_cols_firsthalf <- random_cols
+  random_cols_secondhalf <- random_cols + (ncol(sce_tog_temp)/2)
+  sce_tog_temp <- sce_tog_temp[,c(random_cols_firsthalf, random_cols_secondhalf)]
+}
 
-#mat <- as.matrix(
-#  assays(sce_tog_temp)$logcounts
-#)
+mat <- as.matrix(
+  assays(sce_tog_temp)$logcounts
+)
 
-#anno_col <- data.frame(
-#  features = colnames(sce_tog_temp),
-#  Genome = colData(sce_tog_temp)$Genome)
+anno_col <- data.frame(
+  features = colnames(sce_tog_temp),
+  Genome = colData(sce_tog_temp)$Genome)
 
-#anno_col <- column_to_rownames(anno_col, var = "features")
+anno_col <- column_to_rownames(anno_col, var = "features")
 
-#pheatmap(
-#  mat,
-#  cluster_cols = FALSE,
-#  treeheight_row = 0,  
-#  annotation_col = anno_col,
-#  show_colnames = FALSE,
-#  show_rownames = FALSE
-#)
+pheatmap::pheatmap(
+  mat,
+  cluster_cols = FALSE,
+  treeheight_row = 0.1,  
+  annotation_col = anno_col,
+  show_colnames = FALSE,
+  show_rownames = FALSE
+)
 ```
 
 ### Sample-specific DMGs:
 
-```{r}
+```{r subset_dmgs}
 dmgs[,c(2, 3, 5)]
 if(nrow(dmgs) > 200){dmgs <- dmgs[1:200,]}
 ```
 
-```{r, fig.height=14, fig.width=7}
+```{r heatmap, fig.height=14, fig.width=7}
 
 sce_tog_temp <- sce_tog[which(rownames(sce_tog) %in% rownames(dmgs)),]
 
@@ -235,7 +233,7 @@ anno_col <- data.frame(
 
 anno_col <- column_to_rownames(anno_col, var = "features")
 
-pheatmap(
+pheatmap::pheatmap(
   mat,
   cluster_cols = FALSE,
   annotation_col = anno_col,
@@ -245,11 +243,11 @@ pheatmap(
 
 ### All combined DMGs
 
-```{r}
+```{r all_dmgs}
 print(dmg_list)
 ```
 
-```{r}
+```{r heatmap_all}
 
 sce_tog_temp <- sce_tog[which(rownames(sce_tog) %in% dmg_list),]
 
@@ -263,9 +261,9 @@ anno_col <- data.frame(
 
 anno_col <- column_to_rownames(anno_col, var = "features")
 
-pheatmap(
+pheatmap::pheatmap(
   mat,
-  treeheight_row = 0,
+  treeheight_row = 0.1,
   cluster_cols = FALSE,
   cluster_rows = FALSE,
   annotation_col = anno_col,
@@ -274,6 +272,6 @@ pheatmap(
 )
 ```
 
-```{r}
+```{r session_info}
 sessionInfo()
 ```

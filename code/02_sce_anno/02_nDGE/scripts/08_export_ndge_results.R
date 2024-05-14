@@ -1,11 +1,13 @@
-
-library(DESeq2)
-library(tidyverse)
-library(ashr)
-
+#-------------------------------------------------------------------------------
 # in this script, results from DESeq objects are exported for every 
 # combination of binary species comparisons
-# for differentially expressed genes
+# for non-differentially expressed genes
+
+library(DESeq2, quietly = TRUE)
+library(tidyverse, quietly = TRUE)
+set.seed(37)
+#library(ashr)
+
 #-------------------------------------------------------------------------------
 
 tdsq_list <- readRDS(file = snakemake@input[["deseq_input"]])
@@ -19,7 +21,6 @@ species <- snakemake@params[["species"]]
 clusters <- names(tdsq_list)
 print(clusters)
 
-#-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
 a <- species[1]
@@ -52,9 +53,10 @@ comb_list<- list(
 res_list_list <- lapply(tdsq_list, function(tdsq){
   
   res_list <- lapply(comb_list, function(comb){
-    res_lfcs <- results(tdsq, lfcThreshold=fc_cutoff, altHypothesis="lessAbs",
-                        contrast=c("condition", comb[1], comb[2]),
-                        alpha = padj_cutoff)
+    res_lfcs <- DESeq2::results(tdsq, lfcThreshold=fc_cutoff, 
+                                altHypothesis="lessAbs",
+                                contrast=c("condition", comb[1], comb[2]),
+                                alpha = padj_cutoff)
     
     return(res_lfcs)
   })
@@ -87,6 +89,8 @@ res_df_list <- lapply(res_list_list, function(res_list){
   return(res_df)
 })
 names(res_df_list) <- names(res_list_list)
+
+# save list
 saveRDS(res_df_list, file = snakemake@output[["cluster_res_dfs"]])
 
 #-------------------------------------------------------------------------------
@@ -104,7 +108,6 @@ res_list_shared_comp <- lapply(res_df_list, function(res_df){
     shared_genes <- unique(shared_genes)
     shared_list[[i]] <- unique(shared_genes)
   }
-  
   return(shared_list)
 })
 
@@ -186,6 +189,7 @@ genes_three_species_list <- lapply(res_list_shared_fin, function(res_list){
 
 })
 
+# save list
 saveRDS(genes_three_species_list, 
         file = snakemake@output[["cluster_res_list_shared"]])
 
@@ -204,4 +208,7 @@ for(s in species){
 names(species_res_list_list) 
 names(species_res_list_list[[1]])
 
+# save list
 saveRDS(species_res_list_list, file = snakemake@output[["species_res"]])
+
+sessionInfo()

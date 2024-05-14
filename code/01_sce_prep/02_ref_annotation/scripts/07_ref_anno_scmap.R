@@ -1,7 +1,7 @@
 #-------------------------------------------------------------------------------
 
-library(DropletUtils)
-library(scmap)
+library(scran, quietly = TRUE)
+library(scmap, quietly = TRUE)
 set.seed(37)
 
 # From https://bioconductor.org/packages/release/bioc/vignettes/scmap/inst/doc/scmap.html
@@ -19,27 +19,28 @@ ref_dolgalev <- readRDS(file = snakemake@input[["ref_dolgalev_sce"]])
 
 # prepare reference and test datasets
 rowData(ref_baccin)$feature_symbol <- rownames(ref_baccin)
-ref_baccin <- selectFeatures(ref_baccin, suppress_plot = TRUE)
+ref_baccin <- scmap::selectFeatures(ref_baccin, suppress_plot = TRUE)
 
 test_sce <- sce
 rowData(test_sce)$feature_symbol <- rownames(test_sce)
 
 # get index lists
-ref_baccin_clst_ind <- indexCluster(ref_baccin, cluster_col = "identity_ref")
-ref_baccin_cell_ind <- indexCell(ref_baccin)
+ref_baccin_clst_ind <- scmap::indexCluster(ref_baccin, 
+                                           cluster_col = "identity_ref")
+ref_baccin_cell_ind <- scmap::indexCell(ref_baccin)
 
 # scmapcell
 set.seed(37)
-ref_baccin_cell_temp <- scmapCell(
+ref_baccin_cell_temp <- scmap::scmapCell(
   projection = test_sce, 
   index_list = list(results = metadata(ref_baccin_cell_ind)$scmap_cell_index))
 
-ref_baccin_cell_results <- scmapCell2Cluster(
+ref_baccin_cell_results <- scmap::scmapCell2Cluster(
   scmapCell_results = ref_baccin_cell_temp, 
   cluster_list = list(as.character(colData(ref_baccin)$identity_ref)))
 
 # scmapclust
-ref_baccin_clst_results <- scmapCluster(
+ref_baccin_clst_results <- scmap::scmapCluster(
   projection = test_sce,
   index_list = list(metadata(ref_baccin_clst_ind)$scmap_cluster_index), 
   threshold = 0.7)
@@ -56,27 +57,28 @@ sce$baccin_celltype_scmapclust_sim <- ref_baccin_clst_results$scmap_cluster_siml
 
 # prepare reference and test datasets
 rowData(ref_dahlin)$feature_symbol <- rownames(ref_dahlin)
-ref_dahlin <- selectFeatures(ref_dahlin, suppress_plot = TRUE)
+ref_dahlin <- scmap::selectFeatures(ref_dahlin, suppress_plot = TRUE)
 
 test_sce <- sce
 rowData(test_sce)$feature_symbol <- rownames(test_sce)
 
 # get index lists
-ref_dahlin_clst_ind <- indexCluster(ref_dahlin, cluster_col = "identity_ref")
-ref_dahlin_cell_ind <- indexCell(ref_dahlin)
+ref_dahlin_clst_ind <- scmap::indexCluster(ref_dahlin,
+                                           cluster_col = "identity_ref")
+ref_dahlin_cell_ind <- scmap::indexCell(ref_dahlin)
 
 # scmapcell
 set.seed(37)
-ref_dahlin_cell_temp <- scmapCell(
+ref_dahlin_cell_temp <- scmap::scmapCell(
   projection = test_sce, 
   index_list = list(results = metadata(ref_dahlin_cell_ind)$scmap_cell_index))
 
-ref_dahlin_cell_results <- scmapCell2Cluster(
+ref_dahlin_cell_results <- scmap::scmapCell2Cluster(
   scmapCell_results = ref_dahlin_cell_temp, 
   cluster_list = list(as.character(colData(ref_dahlin)$identity_ref)))
 
 # scmapclust
-ref_dahlin_clst_results <- scmapCluster(
+ref_dahlin_clst_results <- scmap::scmapCluster(
   projection = test_sce,
   index_list = list(metadata(ref_dahlin_clst_ind)$scmap_cluster_index), 
   threshold = 0.7)
@@ -89,31 +91,32 @@ sce$dahlin_celltype_scmapclust_sim <- ref_dahlin_clst_results$scmap_cluster_siml
 
 #-------------------------------------------------------------------------------
 
-# Baccin
+# Dolgalev
 
 # prepare reference and test datasets
 rowData(ref_dolgalev)$feature_symbol <- rownames(ref_dolgalev)
-ref_dolgalev <- selectFeatures(ref_dolgalev, suppress_plot = TRUE)
+ref_dolgalev <- scmap::selectFeatures(ref_dolgalev, suppress_plot = TRUE)
 
 test_sce <- sce
 rowData(test_sce)$feature_symbol <- rownames(test_sce)
 
 # get index lists
-ref_dolgalev_clst_ind <- indexCluster(ref_dolgalev, cluster_col = "labelsimple")
-ref_dolgalev_cell_ind <- indexCell(ref_dolgalev)
+ref_dolgalev_clst_ind <- scmap::indexCluster(ref_dolgalev, 
+                                             cluster_col = "labelsimple")
+ref_dolgalev_cell_ind <- scmap::indexCell(ref_dolgalev)
 
 # scmapcell
 set.seed(37)
-ref_dolgalev_cell_temp <- scmapCell(
+ref_dolgalev_cell_temp <- scmap::scmapCell(
   projection = test_sce, 
   index_list = list(results = metadata(ref_dolgalev_cell_ind)$scmap_cell_index))
 
-ref_dolgalev_cell_results <- scmapCell2Cluster(
+ref_dolgalev_cell_results <- scmap::scmapCell2Cluster(
   scmapCell_results = ref_dolgalev_cell_temp, 
   cluster_list = list(as.character(colData(ref_dolgalev)$labelsimple)))
 
 # scmapclust
-ref_dolgalev_clst_results <- scmapCluster(
+ref_dolgalev_clst_results <- scmap::scmapCluster(
   projection = test_sce,
   index_list = list(metadata(ref_dolgalev_clst_ind)$scmap_cluster_index), 
   threshold = 0.7)
@@ -128,3 +131,5 @@ sce$dolgalev_celltype_scmapclust_sim <- ref_dolgalev_clst_results$scmap_cluster_
 
 print(sce)
 saveRDS(sce, file = snakemake@output[["sce_output"]])
+
+sessionInfo()

@@ -1,5 +1,5 @@
 ---
-title: "preprocessing_summary"
+title: "Preprocessing summary report"
 author: "Amy Danson, Lea Wölbert"
 date: '2022-09-20'
 output: html_document
@@ -19,13 +19,12 @@ but any new objects cannot be saved from an .Rmd script.
 set.seed(37)
 ```
 
-```{r load,  message = FALSE}
-library(SingleCellExperiment, quietly = TRUE) 
-library(DropletUtils, quietly = TRUE) 
-library(tidyverse, quietly = TRUE) 
-library(scater, quietly = TRUE) 
+```{r load_packages,  message = FALSE}
 library(scuttle, quietly = TRUE) 
-library(scran, quietly = TRUE) 
+```
+
+```{r source, message = FALSE}
+source(file = snakemake@params[["plotting"]])
 ```
 
 ```{r load_objects, message = FALSE}
@@ -33,23 +32,21 @@ library(scran, quietly = TRUE)
 sce_01_path <- snakemake@input[["sce_input_path"]]
 
 individuals <- snakemake@params[["individuals"]]
+species <- snakemake@params[["species"]]
 
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
 cutoff_sum <- snakemake@params[["cutoff_sum"]]
 cutoff_detected <- snakemake@params[["cutoff_detected"]]
 cutoff_mitos <- snakemake@params[["cutoff_mitos"]]
-
 ```
 
 # QC
 
 Check Quality per sample.
 
-```{r fig.width = 14}
+```{r check_quality, fig.width = 14}
 
 sce_list_01 <- list()
-
-species <- c("mmus", "mspr", "mcas", "mcar")
 
 for(s in species){
   for(i in individuals){
@@ -64,7 +61,7 @@ qcdf_list_01 <- lapply(sce_list_01, function(sce){
   
   mito_genes <- grep("mt-", rownames(sce))
 
-  qcdf <- perCellQCMetrics(sce, subsets=list(Mito=mito_genes))
+  qcdf <- scuttle::perCellQCMetrics(sce, subsets=list(Mito=mito_genes))
   qcdf$Object_ID <- sce$Object_ID
   qcdf$Species_ID <- sce$Species_ID
   qcdf$Age <- sce$Age
@@ -100,7 +97,7 @@ print(median(qcdf_gg_print$detected[qcdf_gg_print$removed == FALSE]))
 
 # by Sample
 ggplot(qcdf_gg, aes(x = Object_ID, y = sum,
-                    color = removed, alpha = Keep_sample))+
+                    color = removed))+
   geom_jitter(size = 0.1, alpha = 50)+
   geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
   theme_classic()+
@@ -115,7 +112,7 @@ ggplot(qcdf_gg, aes(x = Object_ID, y = sum,
   
 
 ggplot(qcdf_gg, aes(x = Object_ID, y = detected, 
-                    color = removed, alpha = Keep_sample))+
+                    color = removed))+
   geom_jitter(size = 0.1, alpha = 50)+
   geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
   theme_classic()+
@@ -281,6 +278,6 @@ ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Date_collected,
                      values = c("TRUE" = "orange", "FALSE" = "grey80"))
 ```
 
-```{r}
+```{r session_info}
 sessionInfo()
 ```

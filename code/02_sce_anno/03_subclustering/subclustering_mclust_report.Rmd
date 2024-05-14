@@ -16,41 +16,34 @@ set.seed(37)
 ```
 
 ```{r load, message = FALSE}
-library(SingleCellExperiment, quietly = TRUE) 
-library(scater, quietly = TRUE) 
-library(scran, quietly = TRUE) 
-library(tidyverse, quietly = TRUE) 
+#
 ```
 
 ```{r sources, message = FALSE}
 source(file = snakemake@params[["plotting"]])
 ```
 
-Wildcards
-
-```{r}
+```{r wildcards, message = FALSE}
 fraction_curr <- snakemake@wildcards[["fraction"]]
 cluster_curr <- snakemake@wildcards[["cluster"]]
 if(cluster_curr == 2){cluster_curr <- "2_4"}
 ```
 
-SCE
-
-```{r}
+```{r sce, message = FALSE}
 #load SCE objects
 sce_clust <- readRDS(file = snakemake@input[["sce_input"]])
+celltypes <- unique(sce_clust$annotation_cluster)
 ```
 
 Subset SCE
 
-```{r}
-celltypes <- unique(sce_clust$annotation_cluster)
+```{r print_celltypes}
 print(celltypes)
 ```
 
 List of genes used for subclustering or evaluation
 
-```{r}
+```{r gene_list}
 gene_list_sub <- read.csv(snakemake@input[["gene_list_subclustering"]], 
   header = TRUE, 
   sep = ";", 
@@ -63,7 +56,7 @@ gene_list_sub <- read.csv(snakemake@input[["gene_list_subclustering"]],
 Subset and get only genes used for subclustering and to the correct fraction
 and cluster
 
-```{r}
+```{r subset_genes}
 
 gene_list_sub <- gene_list_sub[gene_list_sub$fraction == fraction_curr,]
 gene_list_sub <- gene_list_sub[gene_list_sub$cluster == cluster_curr,]
@@ -73,14 +66,14 @@ print(subcl)
 ```
 
 List of genes that are shared by at least three of four species in this cluster
-
-```{r}
+ 
+```{r shared_genes}
 genes_list_shared <- readRDS(file = snakemake@input[["genes_list_shared"]])
 ```
 
 Subset shared gene list to the current cluster/cell type.
 
-```{r}
+```{r subset_shared_genes}
 if(length(celltypes) == 1){
   genes_shared <- genes_list_shared[[celltypes]]$at_least_three
 }else if(length(celltypes) == 2){
@@ -94,9 +87,9 @@ excluded for not being shared.
 Technically, there should be none of the latter if gene_list_subclustering was
 configured correctly.
 
-Also print which genes are shared and could be used for subclustering in addition.
+Also print which genes are shared/could be used for subclustering in addition.
 
-```{r}
+```{r print}
 print(paste("subcl genes used:", subcl[which(subcl %in% genes_shared)]))
 print(paste("subcl genes not shared, not used:", 
             subcl[which(!subcl %in% genes_shared)]))
@@ -109,7 +102,7 @@ print(paste("subcl genes possible:", poss_subcl))
 
 # Subclustering QC
 
-```{r}
+```{r qc_plots}
 
 coord_x <- c(min(reducedDims(sce_clust)$UMAP[,1]), 
              max(reducedDims(sce_clust)$UMAP[,1]))
@@ -149,10 +142,10 @@ plot_2
 plot_3
 plot_4
 plot_5
-knitr::knit_exit()
+knitr::knit_exit() # TODO: Find error in chunks below
 ```
 
-```{r}
+```{r plot_function}
 make_plot_list <- function(gene){
   
   print(gene)
@@ -182,10 +175,11 @@ make_plot_list <- function(gene){
 }
 ```
 
-```{r}
+```{r plotlist}
+genes_all <- genes_all[genes_all %in% rownames(sce)]
 lapply(as.list(genes_all), make_plot_list)
 ```
 
-```{r}
+```{r session_info}
 sessionInfo()
 ```

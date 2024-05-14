@@ -1,0 +1,122 @@
+---
+title: "Species DGE report"
+author: "Lea Wölbert"
+date: '2024-01-04'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load objects
+
+```{r seed, message = FALSE}
+set.seed(37)
+```
+
+```{r load, message = FALSE}
+library(EnhancedVolcano)
+```
+
+```{r source, message = FALSE}
+source(file = snakemake@params[["plotting"]])
+```
+
+```{r load_objects}
+
+fc_cutoff <- snakemake@params[["fc_cutoff"]]
+padj_cutoff <- snakemake@params[["padj_cutoff"]]
+
+sce <- readRDS(snakemake@input[["sce_input"]])
+celltype <- snakemake@wildcards[["celltype"]]
+
+# alter celltypes to fit the wildcards for subsetting
+sce$celltypes_alt <- sce$celltypes
+sce$celltypes_alt <- gsub(" ", "_", sce$celltypes_alt)
+sce$celltypes_alt <- gsub("/", "_", sce$celltypes_alt)
+sce$celltypes_alt <- gsub("[.]", "", sce$celltypes_alt)
+
+sce_sep <- sce[,which(sce$celltypes_alt == celltype)]
+ct_curr <- sce_sep$celltypes[1]
+
+celltype_res_list <- readRDS(snakemake@input[["celltype_res"]])
+
+fraction_curr <- snakemake@wildcards[["fraction"]]
+
+print(sce_sep)
+print(levels(sce_sep$celltypes_copy))
+print(fraction_curr)
+```
+
+```{r}
+# subset objects to required cluster and fractions
+celltype_res_list <- celltype_res_list[[ct_curr]]
+```
+
+# Show Pval distributions
+
+```{r}
+see_pvals <- function(celltype_res, comparison){
+                            
+  plot1 <- EnhancedVolcano(celltype_res, 
+                           x = 'log2FoldChange',  y = 'pvalue', 
+                           col = c("grey70", "grey70", "grey70", "dodgerblue3"),
+                           subtitle = "", colAlpha = 0.9, pointSize = 0.5,
+                           pCutoff = padj_cutoff, FCcutoff = fc_cutoff,
+                            lab = rownames(celltype_res))+
+    theme_classic()+
+    ggtitle(paste(comparison))+
+    theme(legend.position="none", plot.subtitle = element_blank())
+
+  print(plot1)
+}
+
+```
+
+## MMUS MCAS
+
+```{r}
+print(celltype_res_list[["mmus-mcas"]])
+res_df_comb_mmus_mcas <- celltype_res_list[["mmus-mcas"]]
+see_pvals(celltype_res = res_df_comb_mmus_mcas, comparison = "mmus-mcas")
+```
+
+## MMUS MSPR
+
+```{r}
+res_df_comb_mmus_mspr <- celltype_res_list[["mmus-mspr"]]
+see_pvals(celltype_res = res_df_comb_mmus_mspr, comparison = "mmus-mspr")
+```
+
+## MMUS MCAR
+
+```{r}
+res_df_comb_mmus_mcar <- celltype_res_list[["mmus-mcar"]]
+see_pvals(celltype_res = res_df_comb_mmus_mcar, comparison = "mmus-mcar")
+```
+
+## MCAS MSPR
+
+```{r}
+res_df_comb_mcas_mspr <- celltype_res_list[["mcas-mspr"]]
+see_pvals(celltype_res = res_df_comb_mcas_mspr, comparison = "mcas-mspr")
+```
+
+## MCAS MCAR
+
+```{r}
+res_df_comb_mcas_mcar <- celltype_res_list[["mcas-mcar"]]
+see_pvals(celltype_res = res_df_comb_mcas_mcar, comparison = "mcas-mcar")
+```
+
+## MSPR MCAR
+
+```{r}
+res_df_comb_mspr_mcar <- celltype_res_list[["mspr-mcar"]]
+see_pvals(celltype_res = res_df_comb_mspr_mcar, comparison = "mspr-mcar")
+```
+
+```{r}
+sessionInfo()
+```

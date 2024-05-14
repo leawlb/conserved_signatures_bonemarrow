@@ -2,20 +2,17 @@
 # authors: Amy Danson, Lea Wölbert
 # extract highly variable genes and reduce dimensions for QC purposes
 
-library(scater, quietly = TRUE) 
-library(scran, quietly = TRUE) 
 set.seed(37)
+source(file = snakemake@params[["functions"]])
 
+#-------------------------------------------------------------------------------
 sce <- readRDS(file = snakemake@input[["sce_input"]])
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
 
-genevar <- modelGeneVar(sce)
-hvg <- getTopHVGs(genevar, n=nr_hvgs)
-
-# reduce dimensions
-set.seed(37)
-sce <- runPCA(sce, ncomponents=25, subset_row = hvg) 
-set.seed(37)
-sce <- runUMAP(sce, dimred = 'PCA', external_neighbors=TRUE, subset_row = hvg)
+# get highly variably genes
+# use own function summarizing the dimensionality reduction steps
+sce <- reduce_dims(sce, nr_hvgs = nr_hvgs)
 
 saveRDS(sce, file = snakemake@output[["sce_output"]])
+
+sessionInfo()

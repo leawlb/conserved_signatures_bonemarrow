@@ -9,8 +9,6 @@ library(scater, quietly = TRUE)
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
-# Find contamination from Haas reference
-
 hsc_cts_all <- c(
   "B cell",
   "Dendritic cells",
@@ -48,39 +46,6 @@ str_cts_all <- c(
   "Smooth muscle",
   "Stromal fibro."
 )
-
-find_contamination_ref_all <- function(sce, input){
-  
-  sce$right_fraction <- rep("TRUE", n = ncol(sce))
-  
-  if(input == "stromal"){
-    wrong_pos <- which(sce$baccin_celltype_scmapclust %in% hsc_cts_all)
-    sce$right_fraction[wrong_pos] <- "FALSE"
-  
-  }else if(input == "hsc"){
-    wrong_pos <- which(sce$baccin_celltype_scmapclust %in% str_cts_all)
-    sce$right_fraction[wrong_pos] <- "FALSE"
-  }
-  return(sce)
-}
-
-#-------------------------------------------------------------------------------
-
-# Get Mature cells from Haas reference
-
-hsc_mature_cts_all <- c(
-  "B cell",
-  "small pre-B.",
-  "T cells",
-  "NK cells",
-  "large pre-B."
-)
-
-get_mature_cts_all <- function(sce){
-  sce$mature_cells <- rep("FALSE", n = ncol(sce))
-  sce$mature_cells[sce$baccin_celltype_scmapclust %in% hsc_mature_cts_all] <- "TRUE"
-  return(sce)
-}
 
 #-------------------------------------------------------------------------------
 
@@ -214,31 +179,19 @@ factor_reference_cts <- function(sce){
 
 #-------------------------------------------------------------------------------
 
-species_order <- c(
-  "mmus",
-  "mcas",
-  "mspr",
-  "mcar"
-)
-
-factor_species <- function(sce){
-  sce$Species_ID <- factor(sce$Species_ID, levels = species_order)
-  return(sce)
-}
-
-#-------------------------------------------------------------------------------
-
 # generic dimensionality reduction for quick UMAP visualisation of SCE objects
+# only for intermediate dimensionality reduction (e.g. for reports):
+# - preprocessing at sample level
+# - objects merged per fraction, species, or age
 reduce_dims <- function(sce, nr_hvgs){
   
-  hvgs <- modelGeneVar(sce)
-  hvgs <- getTopHVGs(hvgs, n=nr_hvgs)
+  hvgs <- scran::modelGeneVar(sce)
+  hvgs <- scran::getTopHVGs(hvgs, n=nr_hvgs)
   
-  sce <- runPCA(sce, ncomponents=25, subset_row = hvgs) 
-  sce <- runUMAP(sce, dimred = 'PCA',
-                 external_neighbors=TRUE, subset_row = hvgs)
+  sce <- scater::runPCA(sce, ncomponents=25, subset_row = hvgs) 
+  sce <- scater::runUMAP(sce, dimred = 'PCA',
+                         external_neighbors=TRUE, subset_row = hvgs)
   return(sce)  
 }
 
 #-------------------------------------------------------------------------------
-

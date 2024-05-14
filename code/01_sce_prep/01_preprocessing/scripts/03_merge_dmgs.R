@@ -1,4 +1,5 @@
 #-------------------------------------------------------------------------------
+# unify list of all dmgs to exclude from SCE objects
 
 dmg_paths <- snakemake@input[["dmgs"]]
 
@@ -7,8 +8,6 @@ for(i in 1:length(dmg_paths)){
   dmg_list[[i]] <- readRDS(file = dmg_paths[[i]])
 }
 print(dmg_list)
-
-#-------------------------------------------------------------------------------
 
 dmgs_exclude <- rownames(dmg_list[[1]])
 
@@ -21,3 +20,5 @@ dmgs_exclude <- sort(dmgs_exclude)
 print(dmgs_exclude)
 
 saveRDS(dmgs_exclude, file = snakemake@output[["dmg_list"]])
+
+sessionInfo()

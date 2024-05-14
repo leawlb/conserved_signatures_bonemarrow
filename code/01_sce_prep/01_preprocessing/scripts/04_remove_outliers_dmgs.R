@@ -2,7 +2,6 @@
 # authors: Amy Danson, Lea Wölbert
 # remove cells with low quality, remove dmgs
 
-library(SingleCellExperiment, quietly = TRUE) 
 library(scuttle, quietly = TRUE) 
 set.seed(37)
 
@@ -23,11 +22,11 @@ print(sce)
 
 #-------------------------------------------------------------------------------
 
-# get mitos
+# get percentage of mitochondrial genes
 mito_genes <- grep("mt-", rownames(sce))
 print(mito_genes)
-qcdf<- perCellQCMetrics(sce, 
-                        subsets=list(Mito=mito_genes)) # before outlier removal
+qcdf<- scuttle::perCellQCMetrics(sce, 
+                                 subsets=list(Mito=mito_genes)) 
 
 # identify and remove cells below QC cutoffs 
 sum_out <- qcdf$sum < cutoff_sum 
@@ -40,5 +39,6 @@ print(sce)
 sce <- sce[,!remove_pos]
 print(sce)
 
-# save 
 saveRDS(sce, file = snakemake@output[["sce_output"]])
+
+sessionInfo()

@@ -1,5 +1,5 @@
 ---
-title: "ref_anno_summary"
+title: "Reference annotation summary report"
 author: "Amy Danson, Lea Wölbert"
 date: '2022-09-20'
 output: html_document
@@ -18,19 +18,14 @@ set.seed(37)
 ```
 
 ```{r load,  message = FALSE}
-library(SingleCellExperiment, quietly = TRUE) 
-library(DropletUtils, quietly = TRUE) 
-library(tidyverse, quietly = TRUE) 
-library(scater, quietly = TRUE) 
 library(scuttle, quietly = TRUE) 
-library(scran, quietly = TRUE) 
 ```
 
 ```{r source, message = FALSE}
-source(file = snakemake@params[["functions"]])
+source(file = snakemake@params[["plotting"]])
 ```
 
-```{r load_code, message = FALSE}
+```{r load_objects, message = FALSE}
 sce_06_pathlist <- snakemake@input[["sce_input_pathlist"]]
 samples_to_remove <- snakemake@params[["samples_to_remove"]] # samples to exclude from merging
 individuals <- snakemake@params[["individuals"]]
@@ -40,45 +35,18 @@ individuals <- snakemake@params[["individuals"]]
 
 ### Preparation
 
-```{r}
+```{r qc_prep}
 
 sce_list_06 <- list()
 names(sce_06_pathlist) <- unlist(sce_06_pathlist)
 
 for(i in individuals){
-  sce_list_06[[i]] <- readRDS(file = sce_06_pathlist[[which(grepl(i, names(sce_06_pathlist)))]])
+  sce_list_06[[i]] <- readRDS(file = sce_06_pathlist[[
+    which(grepl(i, names(sce_06_pathlist)))]])
 }
 
-sce_list_06 <- sce_list_06[names(sce_list_06)[!names(sce_list_06) %in% samples_to_remove]]
-
-```
-
-Get contamination.
-Use only Baccin et al dataset because it's the only one containing both
-stromal and hematopoetic cell types in a single dataset.
-
-```{r}
-
-sce_list_06 <- lapply(sce_list_06, function(sce){
-
-  if("hsc" %in% sce$Fraction_ID){
-    sce <- find_contamination_ref_all(sce, input = "hsc")
-  }else if("str" %in% sce$Fraction_ID){
-    sce <- find_contamination_ref_all(sce, input = "stromal")
-  }
-  
-  return(sce)
-})
-
-sce_list_06 <- lapply(sce_list_06, factor_reference_cts)
-sce_list_06 <- lapply(sce_list_06, factor_species)
-
-```
-
-Identify all mature cells.
-
-```{r}
-sce_list_06 <- lapply(sce_list_06, get_mature_cts_all)
+sce_list_06 <- sce_list_06[names(sce_list_06)[!names(sce_list_06) %in% 
+                                                samples_to_remove]]
 ```
 
 ## All cells after QC
@@ -87,11 +55,11 @@ Check Quality per sample in a large overview.
 
 ### Before
 
-```{r fig.width = 14}
+```{r qc_before, fig.width = 14}
 
 qcdf_list_06 <- lapply(sce_list_06, function(sce){
   
-  qcdf <- perCellQCMetrics(sce, assay.type = "counts")
+  qcdf <- scuttle::perCellQCMetrics(sce, assay.type = "counts")
   qcdf$Object_ID <- sce$Object_ID
   qcdf$Species_ID <- sce$Species_ID
   qcdf$Age <- sce$Age
@@ -100,11 +68,9 @@ qcdf_list_06 <- lapply(sce_list_06, function(sce){
   qcdf$Date_collected <- sce$Date_collected
   qcdf$Species <- sce$Species
   qcdf$Fraction <- sce$Fraction
-  qcdf$right_fraction <- sce$right_fraction
-  qcdf$mature_cells <- sce$mature_cells
-  qcdf$baccin_celltype_scmapclust <- unfactor(sce$baccin_celltype_scmapclust)
-  qcdf$dahlin_celltype_scmapclust <- unfactor(sce$dahlin_celltype_scmapclust)
-  qcdf$dolgalev_celltype_scmapclust <- unfactor(sce$dolgalev_celltype_scmapclust)
+  qcdf$baccin_celltype_scmapclust <- sce$baccin_celltype_scmapclust
+  qcdf$dahlin_celltype_scmapclust <- sce$dahlin_celltype_scmapclust
+  qcdf$dolgalev_celltype_scmapclust <- sce$dolgalev_celltype_scmapclust
 
   return(qcdf)
 })
@@ -238,70 +204,6 @@ ggplot(qcdf_gg, aes(x = dahlin_celltype_scmapclust, y = detected))+
   scale_y_log10()
 
 ggplot(qcdf_gg, aes(x = dolgalev_celltype_scmapclust, y = detected))+
-  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 10000))+
-  scale_y_log10()
-```
-
-#### Without contaminants
-
-```{r fig.width = 14}
-
-ggplot(qcdf_gg[qcdf_gg$right_fraction == TRUE,], aes(x = Object_ID, y = sum))+
-  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 120000))+
-  scale_y_log10()
-
-ggplot(qcdf_gg[qcdf_gg$right_fraction == TRUE,], aes(x = Object_ID, y = detected))+
-  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 10000))+
-  scale_y_log10()
-```
-
-#### Without mature cells
-
-```{r fig.width = 14}
-
-ggplot(qcdf_gg[qcdf_gg$mature_cells == FALSE,], aes(x = Object_ID, y = sum))+
-  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 120000))+
-  scale_y_log10()
-
-ggplot(qcdf_gg[qcdf_gg$mature_cells == FALSE,], aes(x = Object_ID, y = detected))+
-  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 10000))+
-  scale_y_log10()
-```
-
-#### Without either
-
-```{r fig.width = 14}
-
-remove_pos <- as.logical(qcdf_gg$mature_cells) | !as.logical(qcdf_gg$right_fraction)
-table(qcdf_gg$mature_cells)
-table(qcdf_gg$right_fraction)
-table(remove_pos)
-
-qcdf_gg <- qcdf_gg[!remove_pos,]
-
-ggplot(qcdf_gg, aes(x = Object_ID, y = sum))+
-  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 120000))+
-  scale_y_log10()
-
-ggplot(qcdf_gg, aes(x = Object_ID, y = detected))+
   ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
   theme_classic()+
   theme(axis.text = element_text(angle = 90))+
@@ -311,11 +213,11 @@ ggplot(qcdf_gg, aes(x = Object_ID, y = detected))+
 
 ### After
 
-```{r fig.width = 14}
+```{r qc_after, fig.width = 14}
 
 qcdf_list_06 <- lapply(sce_list_06, function(sce){
   
-  qcdf <- perCellQCMetrics(sce, assay.type = "logcounts")
+  qcdf <- scuttle::perCellQCMetrics(sce, assay.type = "logcounts")
   qcdf$Object_ID <- sce$Object_ID
   qcdf$Species_ID <- sce$Species_ID
   qcdf$Age <- sce$Age
@@ -324,11 +226,9 @@ qcdf_list_06 <- lapply(sce_list_06, function(sce){
   qcdf$Date_collected <- sce$Date_collected
   qcdf$Species <- sce$Species
   qcdf$Fraction <- sce$Fraction
-  qcdf$right_fraction <- sce$right_fraction
-  qcdf$mature_cells <- sce$mature_cells
-  qcdf$baccin_celltype_scmapclust <- unfactor(sce$baccin_celltype_scmapclust)
-  qcdf$dahlin_celltype_scmapclust <- unfactor(sce$dahlin_celltype_scmapclust)
-  qcdf$dolgalev_celltype_scmapclust <- unfactor(sce$dolgalev_celltype_scmapclust)
+  qcdf$baccin_celltype_scmapclust <- sce$baccin_celltype_scmapclust
+  qcdf$dahlin_celltype_scmapclust <- sce$dahlin_celltype_scmapclust
+  qcdf$dolgalev_celltype_scmapclust <- sce$dolgalev_celltype_scmapclust
 
   return(qcdf)
 })
@@ -469,70 +369,6 @@ ggplot(qcdf_gg, aes(x = dolgalev_celltype_scmapclust, y = detected))+
   scale_y_log10()
 ```
 
-#### Without contaminants
-
-```{r fig.width = 14}
-
-ggplot(qcdf_gg[qcdf_gg$right_fraction == TRUE,], aes(x = Object_ID, y = sum))+
-  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 120000))+
-  scale_y_log10()
-
-ggplot(qcdf_gg[qcdf_gg$right_fraction == TRUE,], aes(x = Object_ID, y = detected))+
-  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 10000))+
-  scale_y_log10()
-```
-
-#### Without mature cells
-
-```{r fig.width = 14}
-
-ggplot(qcdf_gg[qcdf_gg$mature_cells == FALSE,], aes(x = Object_ID, y = sum))+
-  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 120000))+
-  scale_y_log10()
-
-ggplot(qcdf_gg[qcdf_gg$mature_cells == FALSE,], aes(x = Object_ID, y = detected))+
-  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 10000))+
-  scale_y_log10()
-```
-
-#### Without either
-
-```{r fig.width = 14}
-
-remove_pos <- as.logical(qcdf_gg$mature_cells) | !as.logical(qcdf_gg$right_fraction)
-table(qcdf_gg$mature_cells)
-table(qcdf_gg$right_fraction)
-table(remove_pos)
-
-qcdf_gg <- qcdf_gg[!remove_pos,]
-
-ggplot(qcdf_gg, aes(x = Object_ID, y = sum))+
-  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 120000))+
-  scale_y_log10()
-
-ggplot(qcdf_gg, aes(x = Object_ID, y = detected))+
-  ggbeeswarm::geom_quasirandom(size = 0.1, color = "grey60")+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 10000))+
-  scale_y_log10()
-```
-
-```{r}
+```{r session_info}
 sessionInfo()
 ```

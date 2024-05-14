@@ -1,12 +1,14 @@
 
 base: "/omics/odcf/analysis/OE0538_projects/DO-0008"
 #data_paths:
-#  main: "/data/main_analysis"
-#  cellranger_output: "/data/main_analysis/sce_objects/00_cellranger_output" 
-#  fourgenomes_output: "/data/fourgenomes/sce_objects/00_cellranger_output" 
+  #main: "/data/main_analysis"
+  #cellranger_output: "/data/main_analysis/sce_objects/00_cellranger_output" 
+  #fourgenomes_output: "/data/fourgenomes/sce_objects/00_cellranger_output" 
 scRNAseq_data_paths:
   main: "/data/scRNAseq/main_analysis"
+  #main: "/data/test_new_caroli/main_analysis"
   cellranger_output: "/data/scRNAseq/main_analysis/sce_objects/00_cellranger_output" 
+  #cellranger_output: "/data/test_new_caroli/main_analysis/sce_objects/00_cellranger_output" 
   fourgenomes_output: "/data/scRNAseq/fourgenomes/sce_objects/00_cellranger_output" 
 metadata_paths: 
   table: "/data/metadata/scRNAseq/00_alignment/OE0538_DO-0008_metadata_combined.csv"
@@ -22,10 +24,17 @@ metadata_paths:
   annotation_clusters: "/data/metadata/scRNAseq/02_sce_anno/annotation_clusters.txt"
   annotation_subclusters: "/data/metadata/scRNAseq/02_sce_anno/annotation_subclusters.txt"
   annotation_final: "/data/metadata/scRNAseq/02_sce_anno/annotation_final.txt"
+  ensembl_hum: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/ensembl_hum"
+  ensembl_mus: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/ensembl_mus"
+  human_test_datasets: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/pre-processed"
+  test_ts_all_stromal: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/pre-processed/ts_all_stromal"
+  test_ts_bone_marrow: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/pre-processed/ts_bone_marrow"
+  test_ts_hsc_progenitors: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/pre-processed/ts_hscs_progenitors"
+  test_li_all_stromal: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/pre-processed/li_all_stromal"
+  cell_cycle_genes: "/data/metadata/scRNAseq/03_sce_analysis/cell_cycle_genes/go_term_cellcycleprocess_mouse.csv"
   assignment: "/data/metadata/scRNAseq/05_cci_prep/assignment.txt"
   assignment_reverse: "/data/metadata/scRNAseq/05_cci_prep/assignment_reverse.txt"
   assignment_no_ct_removal: "/data/metadata/scRNAseq/06_cci_alt/assignment_no_ct_removal.txt"
-  cell_cycle_genes: "/data/metadata/scRNAseq/03_sce_analysis/cell_cycle_genes/go_term_cellcycleprocess_mouse.csv"
   lrdb_inp: "/data/metadata/scRNAseq/05_cci_prep/lrdb_raw/mouse_lr_pair.rds"
   lrdb_out: "/data/metadata/scRNAseq/05_cci_prep/lrdb_processed/lrdb"
 
@@ -55,8 +64,11 @@ values:
     nr_hvgs_batch_correction: 10000 # nr of top hvgs to be used for subsetting  
     batch_use: "Object_ID" # if changed run ENTIRE batch_correction_snakefile
     seeds_umap:
-      str: 6 # for nicer plots 
-      hsc: 2 # for nicer plots # 2 is already pretty good # start again at 12
+      str: 6 # for nicer plots after batch correction
+      hsc: 2 # for nicer plots after batch correction
+    seeds_umap_after:
+      str: 2 # for nicer plots after subclustering
+      hsc: 6 # for nicer plots aafter subclustering
     k_louvain: 77 # for louvain clustering resolution
     k_louvain_refs: 50 # for louvain clustering resolution
     ndge_padj_cutoff: 0.05 # below which nDGEs are significant

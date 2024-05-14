@@ -1,0 +1,133 @@
+---
+title: "reclustering permutation test"
+author: "Lea Wölbert"
+date: '2024-05-08'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load objects
+
+```{r seed, message = FALSE}
+set.seed(37)
+```
+
+```{r load, message = FALSE}
+library(Seurat)
+```
+
+```{r}
+#source("../../source/plotting.R")
+source(file = snakemake@params[["plotting"]])
+
+#colors_path <- snakemake@params[["colors_path"]]
+#source(snakemake@params[["colors"]])
+
+#source(snakemake@params[["reclustering_functions"]])
+```
+
+```{r load_objects}
+
+#score_df <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_conserved_EMF/05_perm/li_all_stromal_score_df")
+
+score_df <- readRDS(snakemake@input[["score_df"]])
+
+seu_list <- readRDS(snakemake@input[["seu_list"]])
+#seu_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_conserved_EMF/04_rcls/reclustered_li_all_stromal_list")
+resolution_list <- snakemake@params[["resolution"]] 
+resolution <- resolution_list[[snakemake@wildcards[["reference"]]]]
+
+#resolution <- 0.6
+seu_reclustered <- seu_list$seu_emf_cor[[as.character(resolution)]]
+```
+
+
+
+```{r}
+head(score_df)
+print(seu_reclustered)
+```
+
+```{r}
+calculate_scores <- function(seu){
+  
+  seu <- seu 
+  
+  # make a comparison matrix, then split into cells/celltype and cells/cluster
+  mat <- table(seu$cell_type, seu$seurat_clusters)
+  mat_per_celltype <- mat/rowSums(mat)
+  t_mat <- t(mat)
+  mat_per_cluster <- t(t_mat/rowSums(t_mat))
+
+  #-----------------------------------------------------------------------------
+  # score 1: proportions of 0
+  
+  # extract which nr is higher; nr of clusters or number of cell types  
+  if(nrow(mat) >= ncol(mat)){
+    max_nr <- nrow(mat)
+  }else if(nrow(mat) < ncol(mat)){
+    max_nr <- ncol(mat)
+  }
+
+  # get the proportion of fields that are 0 from the max possible nr of fields
+  # that can be 0 in a theoretical perfect re-clustering. 
+  # That "max possible nr" is equivalent to all fields - max_nr
+
+  score_1 <- length(which(mat == 0))/(ncol(mat)*nrow(mat)-max_nr)
+
+  #-----------------------------------------------------------------------------
+  # score 2: mean proportion of cells/cell type and cells/cluster
+  
+  # for each field
+  mat_mean_prop <- (mat_per_celltype+mat_per_cluster)/2
+
+  # average across all fields
+  non_zeros <- mat_mean_prop[which(mat_mean_prop > 0)]
+  score_2 <- sum(non_zeros)/length(non_zeros)
+
+  return(
+    data.frame(
+      "score_1" = score_1,
+      "score_2" = score_2))
+}  
+
+```
+
+```{r}
+res_df <- calculate_scores(seu_reclustered)
+res_df
+```
+
+```{r}
+
+pval = length(which(score_df$score_1 > res_df$score_1))/nrow(score_df)
+
+ggplot(score_df, aes(x = score_1))+
+  geom_histogram(binwidth = 0.02)+
+  geom_vline(xintercept = res_df$score_1)+
+  theme_classic()+
+  xlim(c(0,1))+
+  ggtitle("Proportion of fields that are 0")+
+  annotate("text", x = 0.8, y = 0.8, label = paste0("pval = ", as.character(pval)))
+```
+
+```{r}
+
+pval = length(which(score_df$score_2 > res_df$score_2))/nrow(score_df)
+
+ggplot(score_df, aes(x = score_2))+
+  geom_histogram(binwidth = 0.02)+
+  geom_vline(xintercept = res_df$score_2)+
+  theme_classic()+
+  xlim(c(0,1))+
+  ggtitle("Proportion of fields that are 0")+
+  annotate("text", x = 0.8, y = 0.8, label = paste0("pval = ", as.character(pval)))
+```
+
+```{r}
+sessionInfo()
+```
+

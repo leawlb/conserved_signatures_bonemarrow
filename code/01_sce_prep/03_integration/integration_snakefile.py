@@ -4,7 +4,6 @@ import pandas as pd
 
 #-------------------------------------------------------------------------------
 
-# paths and objects from config
 OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/01_sce_prep"
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/01_sce_prep/03_integration"
@@ -49,7 +48,7 @@ rule all:
         
 #-------------------------------------------------------------------------------
 
-# Merge fractions (for annotation)
+# Merge fractions (to be used for annotation)
 rule merge_datasets_fractions:
     input: 
         sce_input_path = expand(OUTPUT_DAT + "/07_rfan/{s}/", s = species)
@@ -65,7 +64,7 @@ rule merge_datasets_fractions:
     script:
         "scripts/08_merge_datasets_fractions.R" 
         
-# Merge species (same as above but for each species separately) (for NMF)
+# Merge species 
 rule merge_datasets_species:
     input: 
         sce_input_path = OUTPUT_DAT + "/07_rfan/{species}/"
@@ -108,7 +107,6 @@ rule make_reports_fractions:
         OUTPUT_REP + "/fractions/integration_report_{fraction}.html"
     params:
         colors_ref_path = COLORS_REF,
-        functions = "../../source/sce_functions.R",
         plotting = "../../source/plotting.R",
         colors = "../../source/colors.R"
     script:
@@ -121,7 +119,6 @@ rule make_reports_species:
         OUTPUT_REP + "/species/integration_report_{species}_{fraction}.html"
     params:
         colors_ref_path = COLORS_REF,
-        functions = "../../source/sce_functions.R",
         plotting = "../../source/plotting.R",
         colors = "../../source/colors.R"
     script:
@@ -134,7 +131,6 @@ rule make_reports_ages:
         OUTPUT_REP + "/ages/integration_report_{species}_{age}.html"
     params:
         colors_ref_path = COLORS_REF,
-        functions = "../../source/sce_functions.R",
         plotting = "../../source/plotting.R",
         colors = "../../source/colors.R"
     script:

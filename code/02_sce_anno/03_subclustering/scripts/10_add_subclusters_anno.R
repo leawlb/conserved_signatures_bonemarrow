@@ -1,10 +1,27 @@
 #-------------------------------------------------------------------------------
 
-library(SingleCellExperiment)
+library(scran, quietly = TRUE)
+library(scater, quietly = TRUE)
+set.seed(37)
+
+#-------------------------------------------------------------------------------
 
 sce <- readRDS(file = snakemake@input[["sce_input"]])
 sce_subcl_path <- snakemake@input[["sce_subcl"]]
 fraction_curr <- snakemake@wildcards[["fraction"]]
+
+nr_hvgs <- snakemake@params[["nr_hvgs"]]
+seeds_umap <- snakemake@params[["seeds_umap"]]
+
+if(fraction_curr == "hsc"){
+  seed <- seeds_umap[["hsc"]]
+}else if(fraction_curr == "str"){
+  seed <- seeds_umap[["str"]]
+}
+
+#-------------------------------------------------------------------------------
+
+print(sce)
 
 sce_subcl_list <- list()
 for(i in 1:length(sce_subcl_path)){
@@ -21,6 +38,7 @@ sce_subcl_list <- sce_subcl_list[lengths(sce_subcl_list) != 0]
 print(sce_subcl_list)
 
 #-------------------------------------------------------------------------------
+# load final annotation for clusters and subclusters = cell types
 
 sce$annotation_subcluster <- vector(length = ncol(sce))
 sce$subcluster <- vector(length = ncol(sce))
@@ -37,7 +55,8 @@ final_anno <- final_anno[final_anno$fraction == fraction_curr,]
 head(final_anno)
 
 #-------------------------------------------------------------------------------
-# add info
+# add more info
+
 for(i in 1:length(sce_subcl_list)){
   sce_temp <- sce_subcl_list[[i]]
 
@@ -75,7 +94,7 @@ print(final_anno$celltypes)
 sce$celltypes <- factor(sce$celltypes, levels = final_anno$celltypes)
 
 #-------------------------------------------------------------------------------
-# add category
+# add category 
 
 sce$category <- vector(length = ncol(sce))
 
@@ -91,4 +110,24 @@ print(levels(sce$celltypes))
 stopifnot(!is.na(sce$category))
 stopifnot(!is.na(sce$celltypes))
 
+#-------------------------------------------------------------------------------
+# re-calculate UMAP coordinates for better looking plots
+# now that some cell types are missing
+
+gene_var <- scran::modelGeneVar(sce)
+hvgs_for_batch_correction <- scran::getTopHVGs(gene_var, n = nr_hvgs)
+hvgs <- scran::getTopHVGs(gene_var, n = nr_hvgs)
+
+set.seed(seed)
+
+# use batch-corrected PC coordinates in "PCA
+sce <- scater::runUMAP(sce, dimred = "PCA", subset_row = hvgs)
+colnames(reducedDims(sce)$UMAP) <- c("X1", "X2")
+
+set.seed(37)
+
+#-------------------------------------------------------------------------------
+
 saveRDS(sce, snakemake@output[["sce_output"]])
+
+sessionInfo()

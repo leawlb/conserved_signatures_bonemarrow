@@ -1,0 +1,138 @@
+---
+title: "DGE age bulk quality report"
+author: "Lea Wölbert"
+date: '2023-01-04'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load objects
+
+```{r seed,  message = FALSE}
+set.seed(37)
+```
+
+```{r load,  message = FALSE}
+library(pcaExplorer)
+library(pheatmap)
+library(RColorBrewer)
+library(SingleCellExperiment)
+```
+
+```{r source, message = FALSE}
+source(file =  snakemake@params[["plotting"]])
+```
+
+```{r load_objects}
+rlog_list = readRDS(snakemake@input[["rlog"]])
+print(names(rlog_list))
+```
+
+```{r colors, meassage = FALSE}
+colors_path <- snakemake@params[["colors_path"]]
+source(snakemake@params[["colors"]])
+```
+
+# QC
+
+```{r plot1}
+for(i in names(rlog_list)){
+  plot1 <- distro_expr(rlog_list[[i]], plot_type = "boxplot")+
+    theme_classic()+
+    theme(axis.text.x = element_text(angle = 90))+
+    theme(legend.position = "none")+
+    ggtitle(i)
+  
+  print(plot1)
+}
+print(rlog_list[[1]])
+#knitr::knit_exit()
+```
+
+```{r plot_function}
+
+for(i in names(rlog_list)){
+
+  rld_pca <- prcomp(t(assay(rlog_list[[i]])))
+  rld_cor <- pcaExplorer::correlatePCs(rld_pca, colData(rlog_list[[i]]))
+
+  print(pcaExplorer::plotPCcorrs(rld_cor))
+  
+  ggdf <- as.data.frame(rld_pca$x)
+  ggdf$Antibody_combination <- colData(rlog_list[[i]])$Antibody_combination
+  ggdf$age <- colData(rlog_list[[i]])$age
+  ggdf$batch <- colData(rlog_list[[i]])$batch
+  ggdf$Batch_sequencing <- colData(rlog_list[[i]])$Batch_sequencing
+  ggdf$sample <- colData(rlog_list[[i]])$sample
+  ggdf$ncells <- colData(rlog_list[[i]])$ncells
+
+  plot1 <- ggplot(ggdf, aes(x = PC1, y = PC2, color = age))+
+    geom_point(size = 3)+
+    theme_classic()+
+    theme(axis.text = element_blank(),
+          axis.ticks = element_blank())+
+      scale_color_manual("age", values = col_age)+
+    ggtitle(i)
+  print(plot1)
+
+  plot2 <- ggplot(ggdf, aes(x = PC1, y = PC2, color = batch))+
+    geom_point(size = 3)+
+    theme_classic()+
+    theme(axis.text = element_blank(),
+          axis.ticks = element_blank())+
+    ggtitle(i)
+  print(plot2)
+  
+  plot3 <- ggplot(ggdf, aes(x = PC1, y = PC2, color = Antibody_combination))+
+    geom_point(size = 3)+
+    theme_classic()+
+    theme(axis.text = element_blank(),
+          axis.ticks = element_blank())+
+    ggtitle(i)
+  print(plot3)
+  
+  plot4 <- ggplot(ggdf, aes(x = PC1, y = PC2, color = ncells))+
+    geom_point(size = 3)+
+    theme_classic()+
+    theme(axis.text = element_blank(),
+          axis.ticks = element_blank())+
+    ggtitle(i)
+  print(plot4)
+
+}
+knitr::knit_exit()
+# TODO: take care of the chunks below
+```
+
+```{r pca1}
+rld_pca <- prcomp(t(assay(rld)))
+plot3 <- pcaExplorer::pcascree(rld_pca, type="pev")
+print(plot3)
+```
+
+```{r pca2}
+pcaExplorer::hi_loadings(rld_pca, topN = 20, whichpc = 1)
+```
+
+```{r pca3}
+pcaExplorer::hi_loadings(rld_pca, topN = 20, whichpc = 2)
+```
+
+```{r pca4}
+sampleDists <- dist(t(assay(rld)))
+sampleDistMatrix <- as.matrix(sampleDists)
+rownames(sampleDistMatrix) <- rld$condition
+colnames(sampleDistMatrix) <- NULL
+colors <- colorRampPalette(rev(RColorBrewer::brewer.pal(9, "Blues")) )(255)
+pheatmap::pheatmap(sampleDistMatrix,
+                   clustering_distance_rows=sampleDists,
+                   clustering_distance_cols=sampleDists,
+                   col=colors)
+```
+
+```{r session_info}
+sessionInfo()
+```

@@ -4,13 +4,14 @@ import pandas as pd
 
 #-------------------------------------------------------------------------------
 # CONFIG
-
 # get all paths and objects from config
+
+# base path
 OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 
-# directory for data
+# directory for storing data
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/01_sce_prep"
-# directory for reports
+# directory for storing reports
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/01_sce_prep/01_preprocessing"
 
 # directories of raw input data
@@ -46,7 +47,7 @@ for s in species:
       targets = targets + [OUTPUT_DAT + "/05_norm/" + s + "/sce_" + i + "-05"]
       targets = targets + [OUTPUT_DAT + "/06_dimr/" + s + "/sce_" + i + "-06"]
       targets = targets + [OUTPUT_REP + "/qc/" + s + "/preprocessing_qc_report_" + i + ".html"]
-      #targets = targets + [OUTPUT_REP + "/dmgs/" + s + "/preprocessing_dmg_report_" + i + ".html"]
+      targets = targets + [OUTPUT_REP + "/dmgs/" + s + "/preprocessing_dmg_report_" + i + ".html"]
 
 targets = targets + [OUTPUT_DAT + "/03_dmgs/dmgs_list_all"]
       
@@ -64,12 +65,14 @@ rule all: # must contain all possible output paths from all rules below and must
         targets
         
 #-------------------------------------------------------------------------------
-# remove empty droplets and doublets from main data to retain only single cells
+# remove empty droplets, doublets, duplicated genes from main data 
 rule remove_droplets:
     input: 
         sce_input = CELLRANGER_OUT + "/{species}/sce_{individual}-01"
     output:
         sce_output = OUTPUT_DAT + "/01_drop/{species}/sce_{individual}-01"
+    resources:
+        mem_mb=10000
     params:
         cutoff_umis = VALUES["cutoff_umis"],
         cutoff_doublets = VALUES["cutoff_doublets"]
@@ -77,9 +80,12 @@ rule remove_droplets:
         "scripts/01_remove_droplets.R"
 
 """
-get the differentially mapped genes (dmgs) for each sample by comparing
-the expression levels between the main data, and data annotated with species-
-specific genomes
+# Get the differentially mapped genes (dmgs) for each sample by comparing
+# the expression levels between the main data, and data annotated with species-
+# specific genomes
+
+# ensembl_list_mspr contains gene annotations for mspr-specific genome-
+# annotated SCE objects
 """
 rule get_sample_dmgs:
     input:
@@ -88,6 +94,8 @@ rule get_sample_dmgs:
         ensembl_list_mspr = config["base"] + config["metadata_paths"]["ensembl_mspr"]
     output:
         dmgs = OUTPUT_DAT + "/02_mapp/{species}/dmgs_{individual}"
+    resources:
+        mem_mb=15000
     params:
         nr_hvgs = config["values"]["nr_hvgs"],
         logFC_sample_dmgs = VALUES["logFC_sample_dmgs"],
@@ -105,6 +113,8 @@ for s in species:
 rule merge_dmgs:
     input:
         dmgs = merge_dmgs_input
+    resources:
+        mem_mb=100
     output:
         dmg_list = OUTPUT_DAT + "/03_dmgs/dmgs_list_all"
     script:
@@ -117,6 +127,8 @@ rule remove_outliers_dmgs:
         dmg_list = rules.merge_dmgs.output
     output:
         sce_output = OUTPUT_DAT + "/04_outl/{species}/sce_{individual}-04"
+    resources:
+        mem_mb=2000
     params:
         cutoff_sum = VALUES["cutoff_sum"],
         cutoff_detected = VALUES["cutoff_detected"],
@@ -130,17 +142,23 @@ rule normalize_expr:
         sce_input = rules.remove_outliers_dmgs.output
     output:
         sce_output = OUTPUT_DAT + "/05_norm/{species}/sce_{individual}-05"
+    resources:
+        mem_mb=2000
     script:
         "scripts/05_normalize_expr.R"
         
 # extract hvgs and reduce dimensions for QC visualisation on sample level 
+# use own function that summarizes dimensionaility reduction steps
 rule reduce_dims:
     input: 
         sce_input = rules.normalize_expr.output
     output:
         sce_output = OUTPUT_DAT + "/06_dimr/{species}/sce_{individual}-06" 
+    resources:
+        mem_mb=2000
     params:
-        nr_hvgs = config["values"]["nr_hvgs"]
+        nr_hvgs = config["values"]["nr_hvgs"],
+        functions = "../../source/sce_functions.R"
     script:
         "scripts/06_reduce_dims.R"
         
@@ -157,6 +175,8 @@ rule make_dmg_reports:
         ensembl_list_mspr = config["base"] + config["metadata_paths"]["ensembl_mspr"]
     output:
         OUTPUT_REP + "/dmgs/{species}/preprocessing_dmg_report_{individual}.html"
+    resources:
+        mem_mb=10000
     params:
         nr_hvgs = config["values"]["nr_hvgs"],
         plotting = "../../source/plotting.R" # path to source file
@@ -204,6 +224,8 @@ if config["run_preprocessing_summary"]:
           cutoff_detected = VALUES["cutoff_detected"],
           cutoff_mitos = VALUES["cutoff_mitos"],
           individuals = individuals,
-          metadata = config["metadata_paths"]["table"]
+          metadata = config["metadata_paths"]["table"],
+          plotting = "../../source/plotting.R",
+          species = species
       script:
           "preprocessing_qc_summary.Rmd" 

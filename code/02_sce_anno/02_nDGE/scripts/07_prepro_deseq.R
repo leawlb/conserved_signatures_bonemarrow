@@ -1,9 +1,9 @@
-
-library(DESeq2)
-set.seed(37)
-
+#-------------------------------------------------------------------------------
 # In this script, Transformed DESeq2 objects are generated.
 # Hidden sources of variation are taken into account for transformtion
+
+library(DESeq2, quietly = TRUE)
+set.seed(37)
 
 #-------------------------------------------------------------------------------
 # load object
@@ -35,7 +35,8 @@ for(i in 1:length(dsq_list)){
     
     for(j in 1:ncol(sva$sv)){
       colData(dsq_list[[i]])[,ncol(colData(dsq_list[[i]]))+1] <- sva$sv[,j]
-      colnames(colData(dsq_list[[i]]))[ncol(colData(dsq_list[[i]]))] <- paste0("SV", j)
+      colnames(colData(dsq_list[[i]]))[
+        ncol(colData(dsq_list[[i]]))] <- paste0("SV", j)
     }
   
     if(ncol(sva$sv) == 1){
@@ -55,5 +56,9 @@ for(i in 1:length(dsq_list)){
 }
 
 # transform/calculate DGE (normalisation and statistics)
-tdsq_list <- lapply(dsq_list, DESeq)
+tdsq_list <- lapply(dsq_list, DESeq2::DESeq)
+
+#-------------------------------------------------------------------------------
 saveRDS(tdsq_list, snakemake@output[["deseq_output"]])
+
+sessionInfo()

@@ -1,5 +1,5 @@
 ---
-title: "ref_anno_sample_report"
+title: "Reference annotation reports on sample level"
 author: "Lea Wölbert"
 date: '2022-11-25'
 output: html_document
@@ -19,13 +19,6 @@ set.seed(37)
 ```
 
 ```{r load, message = FALSE}
-
-library(SingleCellExperiment, quietly = TRUE) 
-library(DropletUtils, quietly = TRUE) 
-library(tidyverse, quietly = TRUE) 
-library(scater, quietly = TRUE) 
-library(scuttle, quietly = TRUE) 
-library(scran, quietly = TRUE) 
 library(pheatmap, quietly = TRUE) 
 ```
 
@@ -34,14 +27,10 @@ source(file = snakemake@params[["plotting"]])
 source(file = snakemake@params[["functions"]])
 ```
 
-```{r load_object, message = FALSE}
-
+```{r load_objects, message = FALSE}
 print(snakemake@input[[1]])
 sce <- readRDS(file = snakemake@input[[1]])
-
-# set name for plots
 name_curr <- colData(sce)$Object_ID[1] # choose name to display in plots
-
 ```
 
 ```{r colors, message = FALSE}
@@ -71,7 +60,7 @@ col_cts_dolgalev_clst <- col_cts_ref[match(levels(sce$dolgalev_celltype_scmapclu
 
 #### Baccin
 
-```{r fig.width=8}
+```{r baccin_scmap, fig.width=8}
 
 plot_1 <- umap_base(sce, color_by = "baccin_celltype_scmapcell")+ # own function
   ggtitle(name_curr)+
@@ -94,7 +83,7 @@ PLOT_1
 PLOT_2
 ```
 
-```{r fig.width=8}
+```{r baccin_qc, fig.width=8}
 
 plot_3 <- umap_base(sce, color_by = "baccin_celltype_scmapcell_sim")+
   ggtitle(name_curr)+
@@ -121,7 +110,7 @@ PLOT_4
 
 #### Dahlin
 
-```{r fig.width=8}
+```{r dahlin_scmap, fig.width=8}
 
 plot_1 <- umap_base(sce, color_by = "dahlin_celltype_scmapcell")+ 
   ggtitle(name_curr)+
@@ -144,7 +133,7 @@ PLOT_1
 PLOT_2
 ```
 
-```{r fig.width=8}
+```{r dahlin_qc, fig.width=8}
 
 plot_3 <- umap_base(sce, color_by = "dahlin_celltype_scmapcell_sim")+
   ggtitle(name_curr)+
@@ -171,7 +160,7 @@ PLOT_4
 
 #### Dolgalev
 
-```{r fig.width=8}
+```{r dolgalev_scmap, fig.width=8}
 
 plot_1 <- umap_base(sce, color_by = "dolgalev_celltype_scmapcell")+ 
   ggtitle(name_curr)+
@@ -198,7 +187,7 @@ PLOT_1
 PLOT_2
 ```
 
-```{r fig.width=8}
+```{r dolgalev_qc, fig.width=8}
 
 plot_3 <- umap_base(sce, color_by = "dolgalev_celltype_scmapcell_sim")+
   ggtitle(name_curr)+
@@ -223,266 +212,6 @@ PLOT_3
 PLOT_4
 ```
 
-## Contamination vs. correct cell types vs mature cell types
-
-### Contamination
-
-Use only Baccin et al dataset because it's the only one containing both
-stromal and hematopoetic cell types in a single dataset.
-
-```{r}
-
-# find contamination in sce objects (scmapcluster)
-
-if(grepl("str", name_curr)){
-  sce <- find_contamination_ref_all(sce, input = "stromal") # own function
-}else if(grepl("hsc", name_curr)){
-  sce <- find_contamination_ref_all(sce, input = "hsc") 
-}
-
-```
-
-```{r fig.width=8}
-
-if(length(grepl("TRUE", sce$right_fraction)) >0){
-  plot_4 <- umap_base(sce, color_by = "right_fraction")+
-    ggtitle(name_curr)+
-    scale_color_manual("Correct fraction", values = c("TRUE" = "grey80", 
-                                                      "FALSE" = "orange"))
-  plot_4l <- umap_legend(sce, color_by = "right_fraction")+
-    scale_color_manual("Correct fraction", values = c("TRUE" = "grey80", 
-                                                      "FALSE" = "orange"))
-  legend_4 <- get_legend(plot_4l)
-
-  PLOT_4 <- ggarrange(plot_4, legend_4)
-  PLOT_4
-}
-```
-
-```{r fig.width=8}
-
-qcdf <- perCellQCMetrics(sce)
-sce$sum <- qcdf$sum
-sce$detected <- qcdf$detected
-
-plot_5 <- umap_base(sce, color_by = "detected")+
-  ggtitle(name_curr)+
-  scale_color_gradientn("Number of detected genes", 
-                         limits = c(0, 10000),
-                         colors = c("black", "darkorange3", 
-                                    "orange", "lightgoldenrod"))+
-  ggtitle("With contaminants")
-plot_5l <- umap_legend(sce, color_by = "detected")+
-  scale_color_gradientn("Number of detected genes", 
-                         limits = c(0, 10000),
-                         colors = c("black", "darkorange3", 
-                                    "orange", "lightgoldenrod"))
-legend_5 <- get_legend(plot_5l)
-
-PLOT_5 <- ggarrange(plot_5, legend_5)
-PLOT_5
-
-plot_6 <- umap_base(sce, color_by = "sum")+
-  ggtitle(name_curr)+
-  scale_color_gradientn("Library size", 
-                         limits = c(0, 100000),
-                         colors = c("black", "darkorange4", 
-                                    "darkorange3", "darkorange1",
-                                    "orange", "orange", "gold1", "gold",
-                                    "lightgoldenrod", "lightgoldenrod", 
-                                    "lightgoldenrod", "lightgoldenrod", 
-                                    "lightgoldenrod", "lightgoldenrod"))+
-  ggtitle("With contaminants")
-plot_6l <- umap_legend(sce, color_by = "sum")+
-  scale_color_gradientn("Library size", 
-                         limits = c(0, 1000000),
-                          colors = c("black", "darkorange4", 
-                                     "darkorange3", "darkorange1",
-                                    "orange", "orange", "gold1", "gold",
-                                    "lightgoldenrod", "lightgoldenrod", 
-                                    "lightgoldenrod", "lightgoldenrod", 
-                                    "lightgoldenrod", "lightgoldenrod"))
-legend_6 <- get_legend(plot_6l)
-
-PLOT_6 <- ggarrange(plot_6, legend_6)
-PLOT_6
-```
-
-```{r fig.width=8}
-
-if(length(grepl("TRUE", sce$right_fraction))>0){
-  sce_wo <- sce[,sce$right_fraction == TRUE]
-
-  qcdf_wo <- perCellQCMetrics(sce_wo)
-  sce_wo$sum <- qcdf_wo$sum
-  sce_wo$detected <- qcdf_wo$detected
-
-  plot_7 <- umap_base(sce_wo, color_by = "detected")+
-    ggtitle(name_curr)+
-    scale_color_gradientn("Number of detected genes", 
-                           limits = c(0, 10000),
-                           colors = c("black", "darkorange3", 
-                                      "orange", "lightgoldenrod"))+
-  ggtitle("Without contaminants")
-  plot_7l <- umap_legend(sce_wo, color_by = "detected")+
-    scale_color_gradientn("Number of detected genes", 
-                           limits = c(0, 10000),
-                           colors = c("black", "darkorange3",
-                                      "orange", "lightgoldenrod"))
-  legend_7 <- get_legend(plot_7l)
-
-  PLOT_7 <- ggarrange(plot_7, legend_7)
-  PLOT_7
-  
-  plot_8 <- umap_base(sce_wo, color_by = "sum")+
-    ggtitle(name_curr)+
-    scale_color_gradientn("Library size", 
-                           limits = c(0, 100000),
-                           colors = c("black", "darkorange4",
-                                      "darkorange3", "darkorange1",
-                                      "orange", "orange", "gold1", "gold",
-                                      "lightgoldenrod", "lightgoldenrod", 
-                                      "lightgoldenrod", "lightgoldenrod", 
-                                      "lightgoldenrod", "lightgoldenrod"))+
-    ggtitle("Without contaminants")
-  plot_8l <- umap_legend(sce_wo, color_by = "sum")+
-    scale_color_gradientn("Library size", 
-                           limits = c(0, 1000000),
-                            colors = c("black", "darkorange4",
-                                       "darkorange3", "darkorange1",
-                                       "orange", "orange", "gold1", "gold",
-                                       "lightgoldenrod", "lightgoldenrod", 
-                                       "lightgoldenrod", "lightgoldenrod", 
-                                       "lightgoldenrod", "lightgoldenrod"))
-  legend_8 <- get_legend(plot_8l)
-
-  PLOT_8 <- ggarrange(plot_8, legend_8)
-  PLOT_8
-}
-```
-
-### Mature cells
-
-```{r}
-sce <- get_mature_cts_all(sce) # own function 
-```
-
-```{r fig.width=8}
-
-plot_4 <- umap_base(sce, color_by = "mature_cells")+
-  ggtitle(name_curr)+
-  scale_color_manual("Mature cells", values = c("FALSE" = "grey80", 
-                                                    "TRUE" = "orange"))
-plot_4l <- umap_legend(sce, color_by = "mature_cells")+
-  ggtitle(name_curr)+
-  scale_color_manual("Mature cells", values = c("FALSE" = "grey80", 
-                                                    "TRUE" = "orange"))
-legend_4 <- get_legend(plot_4l)
-
-PLOT_4 <- ggarrange(plot_4, legend_4)
-PLOT_4
-```
-
-```{r}
-
-qcdf <- perCellQCMetrics(sce)
-sce$sum <- qcdf$sum
-sce$detected <- qcdf$detected
-
-plot_5 <- umap_base(sce, color_by = "detected")+
-  ggtitle(name_curr)+
-  scale_color_gradientn("Number of detected genes", 
-                         limits = c(0, 10000),
-                         colors = c("black", "darkorange3", 
-                                    "orange", "lightgoldenrod"))+
-  ggtitle("With mature cell types")
-plot_5l <- umap_legend(sce, color_by = "detected")+
-  scale_color_gradientn("Number of detected genes", 
-                         limits = c(0, 10000),
-                         colors = c("black", "darkorange3", 
-                                    "orange", "lightgoldenrod"))
-legend_5 <- get_legend(plot_5l)
-
-PLOT_5 <- ggarrange(plot_5, legend_5)
-PLOT_5
-
-plot_6 <- umap_base(sce, color_by = "sum")+
-  ggtitle(name_curr)+
-  scale_color_gradientn("Library size", 
-                         limits = c(0, 100000),
-                         colors = c("black", "darkorange4", 
-                                    "darkorange3", "darkorange1",
-                                    "orange", "orange", "gold1", "gold",
-                                    "lightgoldenrod", "lightgoldenrod", 
-                                    "lightgoldenrod", "lightgoldenrod", 
-                                    "lightgoldenrod", "lightgoldenrod"))+
-  ggtitle("With mature cell types")
-plot_6l <- umap_legend(sce, color_by = "sum")+
-  scale_color_gradientn("Library size", 
-                         limits = c(0, 1000000),
-                          colors = c("black", "darkorange4", "darkorange3",
-                                     "darkorange1",
-                                    "orange", "orange", "gold1", "gold",
-                                    "lightgoldenrod", "lightgoldenrod", 
-                                    "lightgoldenrod", "lightgoldenrod", 
-                                    "lightgoldenrod", "lightgoldenrod"))
-legend_6 <- get_legend(plot_6l)
-
-PLOT_6 <- ggarrange(plot_6, legend_6)
-PLOT_6
-```
-
-```{r}
-
-sce_wo <- sce[,sce$mature_cells == FALSE]
-
-qcdf_wo <- perCellQCMetrics(sce_wo)
-sce_wo$sum <- qcdf_wo$sum
-sce_wo$detected <- qcdf_wo$detected
-
-plot_7 <- umap_base(sce_wo, color_by = "detected")+
-  ggtitle(name_curr)+
-  scale_color_gradientn("Number of detected genes", 
-                         limits = c(0, 10000),
-                         colors = c("black", "darkorange3", 
-                                    "orange", "lightgoldenrod"))+
-  ggtitle("Without contaminants")
-plot_7l <- umap_legend(sce_wo, color_by = "detected")+
-  scale_color_gradientn("Number of detected genes", 
-                         limits = c(0, 10000),
-                         colors = c("black", "darkorange3", 
-                                    "orange", "lightgoldenrod"))
-legend_7 <- get_legend(plot_7l)
-
-PLOT_7 <- ggarrange(plot_7, legend_7)
-PLOT_7
-
-plot_8 <- umap_base(sce_wo, color_by = "sum")+
-  ggtitle(name_curr)+
-  scale_color_gradientn("Library size", 
-                         limits = c(0, 100000),
-                         colors = c("black", "darkorange4", 
-                                    "darkorange3", "darkorange1",
-                                    "orange", "orange", "gold1", "gold",
-                                    "lightgoldenrod", "lightgoldenrod", 
-                                    "lightgoldenrod", "lightgoldenrod", 
-                                    "lightgoldenrod", "lightgoldenrod"))+
-  ggtitle("Without contaminants")
-plot_8l <- umap_legend(sce_wo, color_by = "sum")+
-  scale_color_gradientn("Library size", 
-                         limits = c(0, 1000000),
-                          colors = c("black", "darkorange4", 
-                                     "darkorange3", "darkorange1",
-                                     "orange", "orange", "gold1", "gold",
-                                     "lightgoldenrod", "lightgoldenrod", 
-                                     "lightgoldenrod", "lightgoldenrod", 
-                                     "lightgoldenrod", "lightgoldenrod"))
-legend_8 <- get_legend(plot_8l)
-
-PLOT_8 <- ggarrange(plot_8, legend_8)
-PLOT_8
-```
-
 ### Cell type overlap scmapcell vs scmapcluster
 
 The percentage of cells per Haas cell type that is assigned another
@@ -490,7 +219,7 @@ identity with another dataset.
 
 #### In Baccin
 
-```{r}
+```{r mat_baccim}
 
 mat_comp <- as.matrix(table(unfactor(sce$baccin_celltype_scmapcell),
                             unfactor(sce$baccin_celltype_scmapclust)))
@@ -512,10 +241,10 @@ if(! 1 %in% dim(mat_comp)){
     mat_comp_temp2[i,] <- mat_comp_temp2[i,]/sum(mat_comp_temp2[i,])
   }
 
-  pheatmap(mat_comp_temp1, cluster_cols = FALSE, cluster_rows = FALSE, 
+  pheatmap::pheatmap(mat_comp_temp1, cluster_cols = FALSE, cluster_rows = FALSE, 
            main = paste0(name_curr, " Baccin overlap"))
 
-  pheatmap(mat_comp_temp2, cluster_cols = FALSE, cluster_rows = FALSE, 
+  pheatmap::pheatmap(mat_comp_temp2, cluster_cols = FALSE, cluster_rows = FALSE, 
            main = paste0(name_curr, " Baccin overlap"))
 }else{
   print("not enough dimensions")
@@ -524,7 +253,7 @@ if(! 1 %in% dim(mat_comp)){
 
 #### In Dahlin
 
-```{r}
+```{r mat_dahlin}
 
 mat_comp <- as.matrix(table(unfactor(sce$dahlin_celltype_scmapcell),
                             unfactor(sce$dahlin_celltype_scmapclust)))
@@ -545,10 +274,10 @@ if(! 1 %in% dim(mat_comp)){
     mat_comp_temp2[i,] <- mat_comp_temp2[i,]/sum(mat_comp_temp2[i,])
   }
 
-  pheatmap(mat_comp_temp1, cluster_cols = FALSE, cluster_rows = FALSE, 
+  pheatmap::pheatmap(mat_comp_temp1, cluster_cols = FALSE, cluster_rows = FALSE, 
            main = paste0(name_curr, " dahlin overlap"))
 
-  pheatmap(mat_comp_temp2, cluster_cols = FALSE, cluster_rows = FALSE, 
+  pheatmap::pheatmap(mat_comp_temp2, cluster_cols = FALSE, cluster_rows = FALSE, 
            main = paste0(name_curr, " dahlin overlap"))
 
 }else{
@@ -558,7 +287,7 @@ if(! 1 %in% dim(mat_comp)){
 
 #### In Dolgalev
 
-```{r}
+```{r mat_dolgalev}
 
 mat_comp <- as.matrix(table(unfactor(sce$dolgalev_celltype_scmapcell),
                             unfactor(sce$dolgalev_celltype_scmapclust)))
@@ -579,16 +308,16 @@ if(! 1 %in% dim(mat_comp)){
     mat_comp_temp2[i,] <- mat_comp_temp2[i,]/sum(mat_comp_temp2[i,])
   }
 
-  pheatmap(mat_comp_temp1, cluster_cols = FALSE, cluster_rows = FALSE, 
+  pheatmap::pheatmap(mat_comp_temp1, cluster_cols = FALSE, cluster_rows = FALSE, 
            main = paste0(name_curr, " dolgalev overlap"))
   
-  pheatmap(mat_comp_temp2, cluster_cols = FALSE, cluster_rows = FALSE, 
+  pheatmap::pheatmap(mat_comp_temp2, cluster_cols = FALSE, cluster_rows = FALSE, 
            main = paste0(name_curr, " dolgalev overlap"))
 }else{
   print("not enough dimensions")
 }
 ```
 
-```{r}
+```{r session_info}
 sessionInfo()
 ```

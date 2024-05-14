@@ -32,7 +32,7 @@ def get_list(metadata, column):
 fractions = get_list(metadata = METADATA, column = "Fraction_ID")
 species = get_list(metadata = METADATA, column = "Species_ID")
 
-# clusters for subclustering
+# clusters to be subclustered 
 # hsc clusters 2 and 4 will be merged later
 clusters_hsc = ["2", "7"]
 clusters_str = ["4"]
@@ -62,12 +62,12 @@ for f in fractions:
   targets = targets + [OUTPUT_DAT + "/12_anqc/02_go/go_" + f]
 
 for s in subclusters_hsc:
-  targets = targets + [OUTPUT_DAT + "/11_sepc/sce_hsc_subcluster_" + s + "-sep"]
-  targets = targets + [OUTPUT_REP + "/markergenes/markergenes_report_hsc_subcluster_" + s + ".html"]
+  targets = targets + [OUTPUT_DAT + "/11_sepc/hsc_subcluster_" + s + "-sep"]
+  #targets = targets + [OUTPUT_REP + "/markergenes/markergenes_report_hsc_subcluster_" + s + ".html"]
   
 for s in subclusters_str:
-  targets = targets + [OUTPUT_DAT + "/11_sepc/sce_str_subcluster_" + s + "-sep"]
-  targets = targets + [OUTPUT_REP + "/markergenes/markergenes_report_str_subcluster_" + s + ".html"]
+  targets = targets + [OUTPUT_DAT + "/11_sepc/str_subcluster_" + s + "-sep"]
+  #targets = targets + [OUTPUT_REP + "/markergenes/markergenes_report_str_subcluster_" + s + ".html"]
 
 #-------------------------------------------------------------------------------
 
@@ -81,7 +81,7 @@ rule all:
 # subclustering
 rule subclustering:
     input:
-        sce_sep = OUTPUT_DAT + "/03_sepd/sce_{fraction}_cluster_{cluster}-sep",
+        sep = OUTPUT_DAT + "/03_sepd/{fraction}_cluster_{cluster}-sep",
         sce_input = OUTPUT_DAT + "/04_annc/03_sce/sce_{fraction}-04",
         gene_list_subcl = GENE_LIST_SUBCLUSTERING,
         anno_subcl = ANNO_SUBCLUSTERS,
@@ -94,20 +94,25 @@ rule subclustering:
 # report on subclustering genes, mclust, subclusters per cluster
 rule subclustering_mclust_report:
     input:
-        sce_input = rules.subclustering.output, #
-        gene_list_subclustering = GENE_LIST_SUBCLUSTERING, #
+        sce_input = rules.subclustering.output, 
+        gene_list_subclustering = GENE_LIST_SUBCLUSTERING, 
         genes_list_shared = OUTPUT_DAT + "/08_nres/PC_0.05_FC_1.5/res_{fraction}_cluster_shared" #
     output:
         OUTPUT_REP + "/mclust/mclust_report_{fraction}_cluster_{cluster}.html"
     params:
         colors_path = COLORS,
-        functions = "../../source/sce_functions.R",
         plotting = "../../source/plotting.R",
         colors = "../../source/colors.R"
     script:
         "subclustering_mclust_report.Rmd" 
-  
+
+#-------------------------------------------------------------------------------
+"""
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # add subclusters to fraction object and annotate
+# these are the SCE objects that will be used for most downstream analyses
+# since they contain the final cell type annotation
+"""
 sce_subcl_input = expand(rules.subclustering.output, cluster = clusters_hsc, fraction = ["hsc"]) 
 sce_subcl_input = sce_subcl_input + expand(rules.subclustering.output, cluster = clusters_str, fraction = ["str"])
 print(sce_subcl_input)
@@ -116,12 +121,20 @@ rule add_subclusters:
         sce_input = OUTPUT_DAT + "/04_annc/03_sce/sce_{fraction}-04",
         sce_subcl = sce_subcl_input,
         anno_final = ANNO_FINAL
+    params:
+        nr_hvgs = config["values"]["nr_hvgs"],
+        seeds_umap = VALUES["seeds_umap_after"]
     output:
         sce_output = OUTPUT_DAT + "/10_anns/sce_{fraction}-10"
     script:
         "scripts/10_add_subclusters_anno.R" 
 
-# report results of clustering for entire fraction
+"""
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# report annotation results of entire fraction
+# I take many plots from this script for "main figure drafts", so it is quite 
+# long and under continuous processing/editing 
+"""
 rule make_subclustering_results_report:
     input:
         sce_input = rules.add_subclusters.output,
@@ -130,26 +143,29 @@ rule make_subclustering_results_report:
         genes_list_shared = OUTPUT_DAT + "/08_nres/PC_0.05_FC_1.5/res_{fraction}_cluster_shared"
     params:
         colors_path = COLORS,
-        functions = "../../source/sce_functions.R",
         plotting = "../../source/plotting.R",
         colors = "../../source/colors.R"
     output:
         OUTPUT_REP + "/results/results_report_{fraction}.html"
     script:
         "subclustering_results_report.Rmd" 
-  
+
+#-------------------------------------------------------------------------------
+
 # Dummy rule to allow using subclusters as wildcard
-output = expand(OUTPUT_DAT + "/11_sepc/sce_hsc_subcluster_{subcluster}-sep", subcluster = subclusters_hsc)
-output = output + expand(OUTPUT_DAT + "/11_sepc/sce_str_subcluster_{subcluster}-sep", subcluster = subclusters_str)
+output = expand(OUTPUT_DAT + "/11_sepc/hsc_subcluster_{subcluster}-sep", subcluster = subclusters_hsc)
+output = output + expand(OUTPUT_DAT + "/11_sepc/str_subcluster_{subcluster}-sep", subcluster = subclusters_str)
 print(output)
 rule separate_sce:
     input: 
         sce_input = expand(OUTPUT_DAT + "/10_anns/sce_{fraction}-10", fraction = fractions)
     output:
-        sce_output = output
+        output = output
     script:
         "scripts/11_separate_dummy.R"
  
+#-------------------------------------------------------------------------------
+
 # repeat marker gene and GO analysis on the subclusters now
 # get marker genes for each cluster 
 rule find_markers:
@@ -158,7 +174,7 @@ rule find_markers:
     output:
         markers = OUTPUT_DAT + "/12_anqc/01_markers/markers_{fraction}"
     params:
-        nr_hvgs = config["values"]["nr_hvgs"],
+        nr_hvgs = config["values"]["nr_hvgs"]
     script:
         "scripts/12_markers_subclusters.R"
 
@@ -171,19 +187,19 @@ rule go_analysis:
     script:
         "scripts/12_go_subclusters.R"
 
+# TODO: fix this
 # report on marker gene expression and GO 
 rule make_subclustering_markers_report:
     input: 
         markers = rules.find_markers.output,
         go = rules.go_analysis.output,
-        sce_sep = OUTPUT_DAT + "/11_sepc/sce_{fraction}_subcluster_{subcluster}-sep",
+        sep = OUTPUT_DAT + "/11_sepc/{fraction}_subcluster_{subcluster}-sep",
         sce_input = rules.add_subclusters.output,
         gene_list_subcl = GENE_LIST_CLUSTERS
     output:
         OUTPUT_REP + "/markergenes/markergenes_report_{fraction}_subcluster_{subcluster}.html"
     params:
         colors_path = COLORS,
-        functions = "../../source/sce_functions.R",
         plotting = "../../source/plotting.R",
         colors = "../../source/colors.R"
     script:

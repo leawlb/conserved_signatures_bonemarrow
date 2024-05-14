@@ -1,5 +1,5 @@
 ---
-title: "annotation_clusters_report"
+title: "Subclustering marker genes report"
 author: "Lea Wölbert"
 date: '2023-03-07'
 output: html_document
@@ -11,43 +11,27 @@ knitr::opts_chunk$set(echo = TRUE)
 
 #### Load libraries, source code 
 
-```{r seed,  message = FALSE}
+```{r seed, message = FALSE}
 set.seed(37)
 ```
 
-```{r load,  message = FALSE}
-library(DropletUtils, quietly = TRUE) 
-library(scater, quietly = TRUE) 
-library(scuttle, quietly = TRUE) 
+```{r load, message = FALSE}
+#library(DropletUtils, quietly = TRUE) 
+#library(scater, quietly = TRUE) 
+#library(scuttle, quietly = TRUE) 
 library(scran, quietly = TRUE) 
-library(tidyverse, quietly = TRUE) 
 ```
 
 ```{r source, message = FALSE}
-source(file =  snakemake@params[["functions"]])
 source(file =  snakemake@params[["plotting"]])
 ```
 
-```{r load objects}
-
+```{r load_objects, message = FALSE}
 #load SCE objects
 sce <- readRDS(file = snakemake@input[["sce_input"]])
-sce_subcluster <- readRDS(file = snakemake@input[["sce_sep"]])
+sep <- readRDS(file = snakemake@input[["sep"]])
 subcluster_curr <- snakemake@wildcards[["subcluster"]]
-fraction_curr <- sce_subcluster$Fraction_ID[1]
-celltypes <- unique(sce_subcluster$celltypes)
-print(celltypes)
-  
-# load marker genes and results
-results_go <- readRDS(file = snakemake@input[["go"]])
-results_markers <- readRDS(file = snakemake@input[["markers"]])
-
-markers <- results_markers[[as.numeric(subcluster_curr)]]
-go <- results_go[[as.numeric(subcluster_curr)]]
-
-print(fraction_curr)
-print(sce)
-print(fraction_curr)
+fraction_curr <- snakemake@wildcards[["fraction"]]
 
 gene_list <- read.csv(snakemake@input[["gene_list_subcl"]], 
   header = TRUE, 
@@ -57,18 +41,48 @@ gene_list <- read.csv(snakemake@input[["gene_list_subcl"]],
   as.is=TRUE, 
   colClasses = "character")
 
+# load marker genes and results
+results_go <- readRDS(file = snakemake@input[["go"]])
+results_markers <- readRDS(file = snakemake@input[["markers"]])
+
+markers <- results_markers[[as.numeric(subcluster_curr)]]
+go <- results_go[[as.numeric(subcluster_curr)]]
+```
+
+```{r print_objects}
+print(sce)
+print(sep)
+head(sce$subcluster)
+print(subcluster_curr)
+
+table(sce$subcluster, sce$celltypes)
+
+sce_subcluster <- sce[,which(sce$subcluster == sep)]
+celltypes <- unique(sce_subcluster$celltypes)
+
+print(celltypes)
+print(fraction_curr)
+print(sce_subcluster)
+
 head(gene_list)
+
+print(fraction_curr == "hsc")
+print(fraction_curr == "str")
 ```
 
 ```{r colors, meassage = FALSE}
 colors_path <- snakemake@params[["colors_path"]]
 source(snakemake@params[["colors"]])
 
+col_cts_str
+col_cts_hsc
+
 if(fraction_curr == "hsc"){
   col_cts <- col_cts_hsc
 }else if(fraction_curr == "str"){
   col_cts <- col_cts_str
 }
+#knitr::knit_exit()
 ```
 
 # Identity plots
@@ -77,7 +91,7 @@ if(fraction_curr == "hsc"){
 
 Cells were annotated with scmap and three reference datasets.
 
-```{r fig.width=8, fig.height=4}
+```{r identity_plots, fig.width=8, fig.height=4}
 
 plot_1 <- umap_base(sce, color_by = "celltypes")+ 
   ggtitle(paste0(fraction_curr))+
@@ -97,23 +111,21 @@ PLOT_1 <- ggarrange(plot_1, legend_1)
 PLOT_2 <- ggarrange(plot_2, legend_2)
 PLOT_1
 PLOT_2
+knitr::knit_exit()
 ```
 
 # Marker genes
 
 ## Found marker genes
 
-```{r}
+```{r markers}
 markers[1:50,1:4]
-```
-
-```{r}
 markers[order(markers$pct.1, decreasing = TRUE),][1:50,1:4]
 ```
 
 ## GO analysis
 
-```{r}
+```{r go}
 go_short <- go$results[go$results$ontology == "biological_process",]
 go$results[1:50,c(3, 4)]
 go_short[1:50,c(3, 4)]
@@ -123,7 +135,7 @@ go_short[1:50,c(3, 4)]
 
 Prepare Plots
 
-```{r}
+```{r marker_plot_function}
 
 gene_exps <- function(gene){
   
@@ -179,7 +191,7 @@ gene_exps <- function(gene){
 
 ```
 
-```{r}
+```{r found_markers}
 
 found_markers <- rownames(markers)[1:50]
 
@@ -196,11 +208,11 @@ print(all_markers)
 
 ## UMAPs
 
-```{r}
+```{r umaps}
 plotlist <- lapply(all_markers, gene_exps)
 plotlist
 ```
 
-```{r}
+```{r session_info}
 sessionInfo()
 ```

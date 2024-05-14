@@ -1,12 +1,15 @@
 #-------------------------------------------------------------------------------
+# basic GO analysis
 
-library(DropletUtils)
-library(scran)
+#library(scran)
 library(GOfuncR)
 set.seed(37)
 
+#-------------------------------------------------------------------------------
+
 cluster_markers <- readRDS(file = snakemake@input[["markers"]])
 
+#-------------------------------------------------------------------------------
 # use marker genes as input for GO analysis
 get_go_results <- function(markers){
   
@@ -19,11 +22,14 @@ get_go_results <- function(markers){
   }
 
   # perform GO analysis using logFC to determine enrichment
-  go_result <- go_enrich(go_input_df, organismDb='Mus.musculus',
-                         test='wilcoxon', n_randsets=100)
+  go_result <- GOfuncR::go_enrich(go_input_df, organismDb='Mus.musculus',
+                                  test='wilcoxon', n_randsets=100)
   return(go_result)  
 }
 
 go_results <- lapply(cluster_markers, get_go_results)
 
-saveRDS(go_results, file = snakemake@output[["go"]] )
+#-------------------------------------------------------------------------------
+saveRDS(go_results, file = snakemake@output[["go"]])
+
+sessionInfo()

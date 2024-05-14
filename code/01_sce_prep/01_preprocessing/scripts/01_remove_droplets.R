@@ -1,8 +1,8 @@
 #-------------------------------------------------------------------------------
 # authors: Amy Danson, Lea Wölbert
 # remove empty droplets and add doublet score for doublet removal
+# remove duplicated genes
 
-library(SingleCellExperiment, quietly = TRUE) 
 library(DropletUtils, quietly = TRUE) 
 library(scDblFinder, quietly = TRUE) 
 set.seed(37)
@@ -19,13 +19,15 @@ sce <- sce[!duplicated(rownames(sce)),]
 
 # remove empty droplets
 set.seed(37)
-out  <- emptyDrops(counts(sce), lower = cutoff_umis)
+out  <- DropletUtils::emptyDrops(counts(sce), lower = cutoff_umis)
 sce <- sce[,which(out$FDR <= 0.001)]
 
 # identify and remove possible doublets 
 set.seed(37)
-colData(sce)$doublet_score <- computeDoubletDensity(sce)
+colData(sce)$doublet_score <- scDblFinder::computeDoubletDensity(sce)
 sce <- sce[,which(sce$doublet_score <= cutoff_doublets)]
 
 # save
 saveRDS(sce, file = snakemake@output[["sce_output"]])
+
+sessionInfo()

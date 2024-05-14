@@ -1,6 +1,8 @@
+#-------------------------------------------------------------------------------
+# prepare for DESeq2 QC 
 
-library(DESeq2)
-library(sva)
+library(DESeq2, quietly = TRUE)
+library(sva, quietly = TRUE)
 set.seed(37)
 
 # In this script, QC data is exported, including logr-transformed objects
@@ -24,7 +26,7 @@ print(dsq_list)
 #-------------------------------------------------------------------------------
 # transform counts FOR VISUALISATION ONLY
 # log transformation and sequencing depth correction 
-rld_list <- lapply(dsq_list, rlog, blind = FALSE)
+rld_list <- lapply(dsq_list, DESeq2::rlog, blind = FALSE)
 print(rld_list)
 saveRDS(rld_list, snakemake@output[["rlog"]])
 
@@ -32,7 +34,7 @@ saveRDS(rld_list, snakemake@output[["rlog"]])
 # get the number of hidden sources of variations
 
 # transformation is required for num.sv
-tdsq_list <- lapply(dsq_list, DESeq)
+tdsq_list <- lapply(dsq_list, DESeq2::DESeq)
 
 sva_list <- lapply(tdsq_list, function(dsq){
   
@@ -42,14 +44,17 @@ sva_list <- lapply(tdsq_list, function(dsq){
   mod <- model.matrix(~ batch + age + condition, colData(dsq))
   mod0 <- model.matrix(~ 1, colData(dsq))
   
-  n_sv_be <- num.sv(data, mod, method = "be")  
-  n_sv_lk <- num.sv(data, mod, method = "leek")  
+  n_sv_be <- sva::num.sv(data, mod, method = "be")  
+  n_sv_lk <- sva::num.sv(data, mod, method = "leek")  
   
   # n_sv_lk is so large that it usually doesn't work 
   
-  svseq <- svaseq(data, mod, mod0, n.sv = n_sv_be)
+  svseq <- sva::svaseq(data, mod, mod0, n.sv = n_sv_be)
   print(c(n_sv_be, n_sv_lk))
   return(list(c(n_sv_be, n_sv_lk), svseq))
 })
 
+#-------------------------------------------------------------------------------
 saveRDS(sva_list, snakemake@output[["sva"]])
+
+sessionInfo()

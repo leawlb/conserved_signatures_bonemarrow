@@ -1,5 +1,5 @@
 ---
-title: "integration_report_ages"
+title: "Report on age integration"
 author: "Lea Wölbert"
 date: '2023-06-20'
 output: html_document
@@ -18,16 +18,10 @@ set.seed(37)
 ```
 
 ```{r load,  message = FALSE}
-library(SingleCellExperiment, quietly = TRUE) 
-library(DropletUtils, quietly = TRUE) 
-library(tidyverse, quietly = TRUE) 
-library(scater, quietly = TRUE) 
-library(scuttle, quietly = TRUE) 
-library(scran, quietly = TRUE) 
+#
 ```
 
 ```{r source,  message = FALSE}
-source(snakemake@params[["functions"]])
 source(snakemake@params[["plotting"]])
 ```
 
@@ -43,19 +37,20 @@ source(snakemake@params[["colors"]])
 
 # UMAPs
 
-```{r}
+```{r umap_function}
 
 make_plots <- function(sce, title){
   
-  col_cts_baccin_clst <- col_cts_ref[match(unique(sce$baccin_celltype_scmapclust),
-                                       names(col_cts_ref))]
-  col_cts_dahlin_clst <- col_cts_ref[match(unique(sce$dahlin_celltype_scmapclust), 
-                                       names(col_cts_ref))]
-  col_cts_dolgalev_clst <- col_cts_ref[match(unique(sce$dolgalev_celltype_scmapclust),
-                                         names(col_cts_ref))]
+  col_cts_baccin_clst <- col_cts_ref[
+    match(unique(sce$baccin_celltype_scmapclust), names(col_cts_ref))]
+  col_cts_dahlin_clst <- col_cts_ref[
+    match(unique(sce$dahlin_celltype_scmapclust), names(col_cts_ref))]
+  col_cts_dolgalev_clst <- col_cts_ref[
+    match(unique(sce$dolgalev_celltype_scmapclust), names(col_cts_ref))]
   
   if(title == "species"){title <- paste(title, sce$Species_ID[1])}
-  if(title == "condition"){title <- paste(title, sce$Species_ID[1], sce$Age_ID[1])}
+  if(title == "condition"){title <- paste(title, sce$Species_ID[1], 
+                                          sce$Age_ID[1])}
   
   plot_1 <- umap_base(sce, color_by = "baccin_celltype_scmapclust")+ 
     ggtitle(title)+
@@ -68,9 +63,11 @@ make_plots <- function(sce, title){
   
   plot_2 <- umap_base(sce, color_by = "dahlin_celltype_scmapclust")+ 
     ggtitle(title)+
-    scale_color_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin_clst)
+    scale_color_manual("dahlin_celltype_scmapclust", 
+                       values = col_cts_dahlin_clst)
   plot_2l <- umap_legend(sce, color_by = "dahlin_celltype_scmapclust")+
-    scale_color_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin_clst)
+    scale_color_manual("dahlin_celltype_scmapclust", 
+                       values = col_cts_dahlin_clst)
   legend_2 <- get_legend(plot_2l)
 
   plot_3 <- umap_base(sce, color_by = "dolgalev_celltype_scmapclust")+ 
@@ -95,14 +92,13 @@ make_plots <- function(sce, title){
 
 return(list(PLOT_1, PLOT_2, PLOT_3, plot_4, plot_5, plot_6))
 }
-
 ```
 
-```{r}
+```{r make_plots}
 plotlist_species <- make_plots(sce_input, title = "condition")
 plotlist_species
 ```
 
-```{r}
+```{r session_info}
 sessionInfo()
 ```

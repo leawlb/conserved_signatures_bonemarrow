@@ -130,9 +130,9 @@ rule export_results_ndge:
 Make Reports
 """
 
-rule cluster_ndge_report:
+rule ndge_cluster_report:
     input: 
-        sce_sep = OUTPUT_DAT + "/03_sepd/sce_{fraction}_cluster_{cluster}-sep",
+        sep = OUTPUT_DAT + "/03_sepd/{fraction}_cluster_{cluster}-sep",
         sce_input = OUTPUT_DAT + "/04_annc/03_sce/sce_{fraction}-04",
         cluster_res_list_shared = rules.export_results_ndge.output.cluster_res_list_shared,
         cluster_res = rules.export_results_ndge.output.cluster_res,
@@ -143,23 +143,22 @@ rule cluster_ndge_report:
         padj_cutoff = PADJ_CUTOFF,
         fc_cutoff = FC_CUTOFF,
         colors_path = COLORS,
-        functions = "../../source/sce_functions.R",
         plotting = "../../source/plotting.R",
         colors = "../../source/colors.R"
-  
     script:
         "ndge_cluster_report.Rmd"
   
-rule cluster_bulk_report:
+# this might sometimes fail initially, because this rule doesn't wait long 
+# enough for rlog to be saved
+rule ndge_bulk_report:
     input: 
-        sce_sep = OUTPUT_DAT + "/03_sepd/sce_{fraction}_cluster_{cluster}-sep",
+        sep = OUTPUT_DAT + "/03_sepd/{fraction}_cluster_{cluster}-sep",
         sce_input = OUTPUT_DAT + "/04_annc/03_sce/sce_{fraction}-04",
         rlog = rules.qc_deseq.output.rlog
     output:
         OUTPUT_REP + "/bulk/bulk_quality_report_{fraction}_cluster_{cluster}.html"
     params:
         colors_path = COLORS,
-        functions = "../../source/sce_functions.R",
         plotting = "../../source/plotting.R",
         colors = "../../source/colors.R"
     script:

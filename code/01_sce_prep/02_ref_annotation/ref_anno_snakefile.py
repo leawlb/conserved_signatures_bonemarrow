@@ -4,7 +4,6 @@ import pandas as pd
 
 #-------------------------------------------------------------------------------
 
-# paths and objects from config
 OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/01_sce_prep"
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/01_sce_prep/02_ref_anno"
@@ -58,8 +57,6 @@ rule ref_anno:
         "scripts/07_ref_anno_scmap.R"  
       
 #-------------------------------------------------------------------------------
-# reports
-  
 rule make_sample_reports:
     input: 
         rules.ref_anno.output
@@ -86,10 +83,7 @@ rule make_summary:
         OUTPUT_REP + "/ref_anno_summary.html"
     params:
         samples_to_remove = config["samples_to_remove"],
-        individuals = individuals,
-        colors_ref_path = COLORS_REF,
         plotting = "../../source/plotting.R",
-        colors = "../../source/colors.R",
-        functions = "../../source/sce_functions.R"
+        individuals = individuals
     script:
         "ref_anno_summary.Rmd" 

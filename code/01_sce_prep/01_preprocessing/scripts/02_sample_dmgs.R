@@ -1,19 +1,17 @@
 #-------------------------------------------------------------------------------
-# This is a bigger script for 1 step: Finding differentially mapped 
-# genes (dmgs) between SCE mapped with different reference genomes.
+# This is a longer script for 1 step: Finding differentially mapped 
+# genes (dmgs) between SCE objects mapped with different reference genomes.
 # Prepare for direct comparison between both SCEs, then find marker genes.
 
-library(SingleCellExperiment, quietly = TRUE) 
 library(Seurat, quietly = TRUE)
-library(biomaRt, quietly = TRUE)
 library(scran, quietly = TRUE)
 
+#-------------------------------------------------------------------------------
 # load og (one genome) and fg (four genomes) objects
 sce_og <- readRDS(file = snakemake@input[["sce_input"]])
 sce_fg <- readRDS(file = snakemake@input[["sce_fg"]])
 
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
-logFC_sample_dmgs <- snakemake@params[["logFC_sample_dmgs"]]
 logFC_sample_dmgs <- snakemake@params[["logFC_sample_dmgs"]]
 
 ensembl_list_mspr <- readRDS(snakemake@input[["ensembl_list_mspr"]])
@@ -53,7 +51,6 @@ if(grepl("mspr", name_curr)){
 }
 
 #-------------------------------------------------------------------------------
-
 # get og and fg ready for comparison
 
 # rows
@@ -86,29 +83,31 @@ print(sce_tog)
 #-------------------------------------------------------------------------------
 
 # normalize together for visual comparison and marker gene detection
-quick_clust <- quickCluster(sce_tog)
-sce_tog <- computeSumFactors(sce_tog, cluster = quick_clust)
-sce_tog <- logNormCounts(sce_tog) 
+quick_clust <- scran::quickCluster(sce_tog)
+sce_tog <- scran::computeSumFactors(sce_tog, cluster = quick_clust)
+sce_tog <- scuttle::logNormCounts(sce_tog) 
 
 #-------------------------------------------------------------------------------
-
 # get markergenes = genes that are differentially "expressed" (=mapped)
 
 # convert to seurat
-seurat <- as.Seurat(sce_tog, counts = "counts", data = "logcounts",) 
+seurat <- Seurat::as.Seurat(sce_tog, counts = "counts", data = "logcounts",) 
 Idents(seurat) <- sce_tog$Genome
 
 # get hvgs for marker genes
-gene_var <- modelGeneVar(sce_tog)
-hvgs <- getTopHVGs(gene_var, n=nr_hvgs)
+gene_var <- scran::modelGeneVar(sce_tog)
+hvgs <- scran::getTopHVGs(gene_var, n=nr_hvgs)
 
 # find marker genes for each genome
 genomes <- unique(sce_tog$Genome)
 clustlist <- as.list(genomes)
 cluster_markers <- lapply(clustlist, function(x){
-  markers <- FindMarkers(seurat, test.use = "wilcox", ident.1 = x, 
-                         features = hvgs, logfc.threshold = logFC_sample_dmgs,
-                         min.pct = logFC_sample_dmgs)
+  markers <- Seurat::FindMarkers(seurat, 
+                                 est.use = "wilcox", 
+                                 ident.1 = x, 
+                                 features = hvgs, 
+                                 logfc.threshold = logFC_sample_dmgs,
+                                 min.pct = logFC_sample_dmgs)
   markers <- markers[order(abs(markers$avg_log2FC), decreasing=TRUE),]
   markers$which_cluster <- rep(x, nrow(markers))
   return(markers)
@@ -117,4 +116,7 @@ cluster_markers <- lapply(clustlist, function(x){
 names(cluster_markers) <- genomes
 markergenes_og <- cluster_markers[["OneGenome"]]
 
+#-------------------------------------------------------------------------------
 saveRDS(markergenes_og, snakemake@output[["dmgs"]])
+
+sessionInfo()

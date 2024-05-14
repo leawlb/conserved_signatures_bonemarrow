@@ -1,5 +1,5 @@
 ---
-title: "preprocessing_sample_report"
+title: "Preprocessing reports at sample level"
 author: "Amy Danson, Lea Wölbert"
 date: '2022-09-20'
 output: html_document
@@ -20,10 +20,8 @@ Repeat various steps for visualisation.
 set.seed(37)
 ```
 
-```{r load, message = FALSE}
-library(SingleCellExperiment, quietly = TRUE) 
+```{r load_packages, message = FALSE}
 library(DropletUtils, quietly = TRUE) 
-library(tidyverse, quietly = TRUE) 
 library(scater, quietly = TRUE) 
 library(scuttle, quietly = TRUE) 
 library(scran, quietly = TRUE) 
@@ -34,7 +32,7 @@ source(file = snakemake@params[["plotting"]])
 ```
 
 ```{r load_objects, message = FALSE}
-# call objects
+
 sce_input <- readRDS(file = snakemake@input[["sce_input"]])
 sce_drop <- readRDS(file = snakemake@input[["sce_drop"]])
 sce_outl <- readRDS(file = snakemake@input[["sce_outl"]])
@@ -65,7 +63,7 @@ source(file = snakemake@params[["colors"]])
 Check that the barcode rank and p value distributions look appropriate.
 Also check if any droplets with low FDR (that are likely cells) were dropped
 
-```{r}
+```{r remove_droplets}
 
 # show barcoded ranks 
 bcrank <- barcodeRanks(counts(sce_input)) #before droplet removal
@@ -95,7 +93,7 @@ print(check)
 
 Check if cells with high doublet scores form conspicuous clusters
 
-```{r}
+```{r plot_doublets}
 plotUMAP(sce_dimr, colour_by = "doublet_score")+ # requires reduced dims
   ggtitle(name_curr)+
   theme(legend.key.size = unit(0.3, "cm"), legend.key.width = unit(0.3, "cm"))+
@@ -106,7 +104,7 @@ plotUMAP(sce_dimr, colour_by = "doublet_score")+ # requires reduced dims
 
 Check the quality of the single cells and if cells were removed appropriately
 
-```{r}
+```{r remove_outliers}
 
 # get mito count just to check
 mito_genes <- grep("mt-", rownames(sce_drop))
@@ -166,7 +164,7 @@ ggplot(qcdf_gg[qcdf_gg$metric == "subsets_Mito_percent",],
 
 ## Step 3: Normalization
 
-```{r}
+```{r normalization}
 # calculate two different size factors for direct comparison
 quick_clust <- quickCluster(sce_outl) # before normalization
 sizef_deconv <- calculateSumFactors(sce_outl, cluster = quick_clust)
@@ -187,7 +185,7 @@ plot(sizef_deconv, qcdf_03$sum, log = "xy", ylab = "Library size",
      xlab = "Deconv. Size factor", main = paste("Deconv/libsize", name_curr))
 ```
 
-```{r}
+```{r print_objects}
 # print final object
 print(name_curr)
 print(sce_norm) # after normalization
@@ -197,7 +195,7 @@ print(ncol(sce_norm))
 
 ## Remaining quality
 
-```{r}
+```{r remaining_quality}
 
 qcdf_dimr <- perCellQCMetrics(sce_dimr)
 sce_dimr$sum <- qcdf_dimr$sum
@@ -244,6 +242,6 @@ PLOT_2 <- ggarrange(plot_2, legend_2)
 PLOT_2
 ```
 
-```{r}
+```{r session_info}
 sessionInfo()
 ```

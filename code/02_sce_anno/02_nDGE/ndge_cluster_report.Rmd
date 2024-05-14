@@ -1,5 +1,5 @@
 ---
-title: "shared_genes_report"
+title: "Shared genes report"
 author: "Lea Wölbert"
 date: '2023-07-14'
 output: html_document
@@ -16,20 +16,19 @@ set.seed(37)
 ```
 
 ```{r load, message = FALSE}
-library(EnhancedVolcano)
+library(EnhancedVolcano, quietly = TRUE)
 ```
 
 ```{r source, message = FALSE}
 source(file = snakemake@params[["plotting"]])
 ```
 
-```{r load_objects}
-
+```{r load_objects, message = FALSE}
 fc_cutoff <- snakemake@params[["fc_cutoff"]]
 padj_cutoff <- snakemake@params[["padj_cutoff"]]
 
 sce <- readRDS(snakemake@input[["sce_input"]])
-sce_sep <- readRDS(snakemake@input[["sce_sep"]])
+sep <- readRDS(snakemake@input[["sep"]])
 
 cluster_res_list <- readRDS(snakemake@input[["cluster_res"]])
 shared_gene_list <- readRDS(snakemake@input[["cluster_res_list_shared"]])
@@ -44,7 +43,9 @@ cand_list <- read.csv(snakemake@input[["gene_list"]],
 
 fraction_curr <- snakemake@wildcards[["fraction"]]
 cluster_curr <- snakemake@wildcards[["cluster"]]
+```
 
+```{r print_objects, message = FALSE}
 print(sce)
 print(levels(sce$annotation_cluster))
 print(unique(sce$cluster_louvain))
@@ -55,10 +56,9 @@ if(!cluster_curr %in% sce$cluster_louvain){
   print("cluster irrelevant")
   knitr::knit_exit()
 }
-
 ```
 
-```{r}
+```{r subset}
 # subset objects to required cluster and fractions
 cand_list <- cand_list[cand_list$Fraction == fraction_curr,]
 cand_genes <- cand_list$Gene
@@ -73,25 +73,25 @@ cluster_res_list <- cluster_res_list[[ct_curr]]
 
 # Show Pval distributions
 
-```{r}
+```{r pval_distr_function}
 see_pvals <- function(cluster_res, comparison){
-  plot1 <- EnhancedVolcano(cluster_res, lab = "",
-                           x = 'log2FoldChange',  y = 'pvalue', 
-                           col = c("grey70", "grey70", "dodgerblue3", "grey70"),
-                           subtitle = "", colAlpha = 0.9, pointSize = 0.5,
-                           pCutoff = padj_cutoff, FCcutoff = fc_cutoff)+
+  plot1 <- EnhancedVolcano::EnhancedVolcano(
+      cluster_res, lab = "",
+      x = 'log2FoldChange',  y = 'pvalue', 
+      col = c("grey70", "grey70", "dodgerblue3", "grey70"),
+      subtitle = "", colAlpha = 0.9, pointSize = 0.5,
+      pCutoff = padj_cutoff, FCcutoff = fc_cutoff)+
     theme_classic()+
     ggtitle(paste(comparison))+
     theme(legend.position="none", plot.subtitle = element_blank())
 
   print(plot1)
 }
-
 ```
 
 ## MMUS MCAS
 
-```{r}
+```{r mmus_mcas}
 print(cluster_res_list[["mmus-mcas"]])
 res_df_comb_mmus_mcas <- cluster_res_list[["mmus-mcas"]]
 see_pvals(cluster_res = res_df_comb_mmus_mcas, comparison = "mmus-mcas")
@@ -99,58 +99,55 @@ see_pvals(cluster_res = res_df_comb_mmus_mcas, comparison = "mmus-mcas")
 
 ## MMUS MSPR
 
-```{r}
+```{r mmus_mspr}
 res_df_comb_mmus_mspr <- cluster_res_list[["mmus-mspr"]]
 see_pvals(cluster_res = res_df_comb_mmus_mspr, comparison = "mmus-mspr")
 ```
 
 ## MMUS MCAR
 
-```{r}
+```{r mmus_mcar}
 res_df_comb_mmus_mcar <- cluster_res_list[["mmus-mcar"]]
 see_pvals(cluster_res = res_df_comb_mmus_mcar, comparison = "mmus-mcar")
 ```
 
 ## MCAS MSPR
 
-```{r}
+```{r mcas_mspr}
 res_df_comb_mcas_mspr <- cluster_res_list[["mcas-mspr"]]
 see_pvals(cluster_res = res_df_comb_mcas_mspr, comparison = "mcas-mspr")
 ```
 
 ## MCAS MCAR
 
-```{r}
+```{r mcas_mcar}
 res_df_comb_mcas_mcar <- cluster_res_list[["mcas-mcar"]]
 see_pvals(cluster_res = res_df_comb_mcas_mcar, comparison = "mcas-mcar")
 ```
 
 ## MSPR MCAR
 
-```{r}
+```{r mspr_mcar}
 res_df_comb_mspr_mcar <- cluster_res_list[["mspr-mcar"]]
 see_pvals(cluster_res = res_df_comb_mspr_mcar, comparison = "mspr-mcar")
 ```
 
 # Print lists
 
-```{r}
+```{r print}
 print(ct_curr)
 print(shared_gene_list$all)
 print(shared_gene_list$at_least_three)
-```
 
-```{r}
 print(paste("comparison", ct_curr))
 print(cand_list[which(cand_list$Gene %in% shared_gene_list$at_least_three),])
 
 remain_cand_list <- cand_list$Gene[which(cand_list$Gene %in% shared_gene_list$at_least_three)]
-
 ```
 
 ## UMAPS of remaining candidate subclustering genes
 
-```{r}
+```{r umap_plots_function}
 gene_exps <- function(gene){
   
   sce_clust$Species_ID <- factor(sce_clust$Species_ID,
@@ -182,14 +179,13 @@ gene_exps <- function(gene){
   
   return(list(gene, plot_1, plot_2, plot_3))
 }
-
 ```
 
-```{r}
+```{r umap_plots}
 plotlist <- lapply(as.list(remain_cand_list), gene_exps)
 plotlist
 ```
 
-```{r}
+```{r session_info}
 sessionInfo()
 ```

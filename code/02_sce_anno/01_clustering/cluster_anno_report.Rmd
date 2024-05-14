@@ -1,5 +1,5 @@
 ---
-title: "annotation_clusters_report"
+title: "Report on annotations at cluster level"
 author: "Lea Wölbert"
 date: '2023-03-07'
 output: html_document
@@ -16,11 +16,7 @@ set.seed(37)
 ```
 
 ```{r load,  message = FALSE}
-library(DropletUtils, quietly = TRUE) 
-library(scater, quietly = TRUE) 
-library(scuttle, quietly = TRUE) 
-library(scran, quietly = TRUE) 
-library(tidyverse, quietly = TRUE) 
+#
 ```
 
 ```{r source, message = FALSE}
@@ -32,9 +28,12 @@ source(file =  snakemake@params[["plotting"]])
 
 #load SCE objects
 sce <- readRDS(file = snakemake@input[["sce_input"]])
-sce_cluster <- readRDS(file = snakemake@input[["sce_sep"]])
+cluster <- readRDS(file = snakemake@input[["sep"]])
 cluster_curr <- snakemake@wildcards[["cluster"]]
-fraction_curr <- sce_cluster$Fraction_ID[1]
+print(cluster == cluster_curr)
+fraction_curr <- sce$Fraction_ID[1]
+
+sce_cluster <- sce[,sce$cluster_louvain == cluster]
 
 # load marker genes and results
 results_go <- readRDS(file = snakemake@input[["go"]])
@@ -62,9 +61,6 @@ head(gene_list)
 colors_ref_path <- snakemake@params[["colors_ref_path"]]
 colors_path <- snakemake@params[["colors_path"]]
 source(snakemake@params[["colors"]])
-```
-
-```{r}
 
 sce <- factor_reference_cts(sce)
 sce_cluster <- factor_reference_cts(sce_cluster)
@@ -82,11 +78,11 @@ col_clust_l <- col_num[names(col_num) %in% sce$cluster_louvain]
 
 # Identity plots
 
-# Reference cell types 
+## Reference cell types 
 
 Cells were annotated with scmap and three reference datasets.
 
-```{r}
+```{r plotlist}
 
 identity_plots <- function(sce){
   
@@ -122,20 +118,19 @@ identity_plots <- function(sce){
 
 identity_plots_full <- identity_plots(sce)
 identity_plots <- identity_plots(sce_cluster)
-
 ```
 
-```{r fig.width=8, fig.height=4}
+```{r plots1, fig.width=8, fig.height=4}
 identity_plots_full
 ```
 
-```{r fig.width=8, fig.height=4}
+```{r plots2, fig.width=8, fig.height=4}
 identity_plots
 ```
 
 # Clusters
 
-```{r fig.width=8, fig.height=4}
+```{r cluster_plots, fig.width=8, fig.height=4}
 
 plot_1 <- umap_base(sce, color_by = "cluster_louvain")+ 
   scale_color_manual("cluster (louvain)", values = col_clust_l)
@@ -168,17 +163,17 @@ PLOT_3
 
 ## Found marker genes
 
-```{r}
+```{r markers1}
 markers[1:50,1:4]
 ```
 
-```{r}
+```{r markers2}
 markers[order(markers$pct.1, decreasing = TRUE),][1:50,1:4]
 ```
 
 ## GO analysis
 
-```{r}
+```{r go}
 go_short <- go$results[go$results$ontology == "biological_process",]
 go$results[1:50,c(3, 4)]
 go_short[1:50,c(3, 4)]
@@ -188,7 +183,7 @@ go_short[1:50,c(3, 4)]
 
 Prepare Plots
 
-```{r}
+```{r marker_plot_function}
 
 gene_exps <- function(gene){
   
@@ -247,10 +242,9 @@ gene_exps <- function(gene){
   
   return(list(gene, plot_1, plot_2, plot_3, plot_4, plot_5, plot_6, plot_7))
 }
-
 ```
 
-```{r}
+```{r markers3}
 found_markers <- rownames(markers)[1:50]
 
 cluster_curr_char <- paste0("cluster_", cluster_curr)
@@ -267,11 +261,11 @@ print(all_markers)
 
 ## UMAPs
 
-```{r}
+```{r umaps}
 plotlist <- lapply(all_markers, gene_exps)
 plotlist
 ```
 
-```{r}
+```{r session_info}
 sessionInfo()
 ```

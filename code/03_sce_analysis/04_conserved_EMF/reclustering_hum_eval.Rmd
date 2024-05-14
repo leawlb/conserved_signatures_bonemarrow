@@ -1,0 +1,569 @@
+---
+title: "test"
+author: "Lea Wölbert"
+date: '2024-04-15'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load objects
+
+```{r seed, message = FALSE}
+set.seed(37)
+```
+
+```{r load, message = FALSE}
+library(tidyverse)
+library(scater)
+library(pheatmap)
+library(Seurat)
+library(cluster)
+```
+
+```{r source, message = FALSE}
+#source(file = snakemake@params[["plotting"]])
+```
+
+```{r}
+seu_list <- readRDS(snakemake@input[["seu_list"]])
+#seu_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_conserved_EMF/04_rcls/reclustered_ts_hsc_progenitors_list")
+```
+
+Functions for getting cluster silhouette width and cluster purity
+
+```{r}
+get_silhuoette <- function(seu){
+  
+  dist.matrix <- dist(x = Embeddings(object = seu[["pca"]])[,1:10]) 
+  clusters <- seu$seurat_clusters
+  sil <- silhouette(x = as.numeric(x = as.factor(x = clusters)), 
+                    dist = dist.matrix)
+  seu$sil <- sil[,3]
+  
+  return(seu)
+}
+
+get_purity <- function(seu){
+  
+  # default options, 10PCs, k = 50
+  mat <- seu@reductions$pca@cell.embeddings[,1:10]
+  res <- bluster::neighborPurity(mat, clusters = seu$seurat_clusters, k = 50)
+  seu$purity <- res$purity
+  
+  return(seu)
+}
+```
+
+Functions for visualisation of median and mean silhouette or purity 
+
+```{r}
+get_sil_summary <- function(seu, get){
+
+    if(get == "median"){
+    
+    median <- seu@meta.data %>%
+      group_by(seurat_clusters) %>% 
+      summarise(median = median(sil, na.rm = TRUE))
+    
+    #median_all <- seu@meta.data %>%
+    #  summarise(median = median(sil, na.rm = TRUE))
+    
+    return(median)
+    
+  }else if(get == "mean"){
+    
+    mean <- seu@meta.data %>%
+      group_by(seurat_clusters) %>% 
+      summarise(mean = mean(sil, na.rm = TRUE))
+    
+    #mean_all <- seu@meta.data %>%
+    #  summarise(mean = mean(sil, na.rm = TRUE))  
+    
+    return(mean)
+  }
+}
+
+get_pur_summary <- function(seu, get){
+
+    if(get == "median"){
+    
+    median <- seu@meta.data %>%
+      group_by(seurat_clusters) %>% 
+      summarise(median = median(purity, na.rm = TRUE))
+    
+    #median_all <- seu@meta.data %>%
+    #  summarise(median = median(purity, na.rm = TRUE))
+    
+    return(median)
+    
+  }else if(get == "mean"){
+    
+    mean <- seu@meta.data %>%
+      group_by(seurat_clusters) %>% 
+      summarise(mean = mean(purity, na.rm = TRUE))
+    
+    #mean_all <- seu@meta.data %>%
+    #  summarise(mean = mean(purity, na.rm = TRUE))  
+    
+    return(mean)
+  }
+}
+
+get_median_df <- function(median_list){
+  
+  # get max number of clusters using a dirty trick
+  median_df_temp <- bind_rows(median_list)
+  max_clusters <- max(as.numeric(median_df_temp$seurat_clusters))
+
+  median_df <- data.frame(row.names = 1:max_clusters)
+
+  for(i in 1:length(median_list)){
+    median_df$median_new <- c(median_list[[i]]$median,
+                              rep(NA, max_clusters - nrow(median_list[[i]])))
+    colnames(median_df)[colnames(median_df) == "median_new"] <- 
+      paste0("resolution_", names(median_list)[i])
+  }
+  return(median_df)
+}
+
+get_mean_df <- function(mean_list){
+  
+  mean_df_temp <- bind_rows(mean_list)
+  max_clusters <- max(as.numeric(mean_df_temp$seurat_clusters))
+
+  mean_df <- data.frame(row.names = 1:max_clusters)
+
+  for(i in 1:length(mean_list)){
+    mean_df$mean_new <- c(mean_list[[i]]$mean,
+                              rep(NA, max_clusters - nrow(mean_list[[i]])))
+    colnames(mean_df)[colnames(mean_df) == "mean_new"] <- 
+      paste0("resolution_", names(mean_list)[i])
+  }
+  return(mean_df)
+}
+```
+
+Functions for big visualisation
+
+```{r}
+get_violinplot <- function(seu_list){
+  
+  resolution_list <- as.list(names(seu_list))
+  
+  sum_list <- lapply(resolution_list, function(res, seu_list){
+    
+    seu <- seu_list[[res]]
+    return_df <- data.frame(
+      row.names = rownames(seu@meta.data),
+      "sil" = seu$sil,
+      "pur" = seu$purity,
+      "cluster" = seu$seurat_clusters,
+      "resolution" = rep(res, nrow(seu@meta.data))
+    )
+    return(return_df)
+  },
+  seu_list = seu_list)
+  
+  names(sum_list) <- names(seu_list)
+  summary_df <- bind_rows(sum_list)
+  
+  summary_df <- summary_df %>%
+    group_by(resolution)  %>%
+    mutate(median_sil_by_res = median(sil, na.rm = TRUE)) 
+  
+  summary_df <- summary_df %>%
+    group_by(resolution)  %>%
+    mutate(mean_pur_by_res = mean(pur, na.rm = TRUE)) 
+  
+  plot1 <- ggplot(summary_df, aes(x = cluster, y = sil, 
+                                  color = median_sil_by_res, 
+                                  fill = median_sil_by_res))+
+    geom_violin()+
+    theme_classic()+
+    facet_grid(rows = vars(summary_df$resolution))+
+    theme(strip.text.y = element_text(angle = 0),
+          strip.background.y = element_rect(color = "grey80", fill = "grey80"))
+  
+  plot2 <- ggplot(summary_df, aes(x = cluster, y = pur, 
+                                  color = mean_pur_by_res,
+                                  fill = mean_pur_by_res))+
+    geom_violin()+
+    theme_classic()+
+    facet_grid(rows = vars(summary_df$resolution))+
+    theme(strip.text.y = element_text(angle = 0),
+          strip.background.y = element_rect(color = "grey80", fill = "grey80"))
+
+  return(list(plot1, plot2))
+}
+```
+
+
+```{r}
+mycolor_silhouette <- colorRampPalette(c("steelblue3", "lightskyblue1", "grey98", "goldenrod1", "orangered4"))(201)
+mycolor_purity <- colorRampPalette(c("grey98", "goldenrod1", "orangered3"))(100)
+
+```
+
+
+# correct EMFs
+
+```{r}
+emf_cor_list <- seu_list$seu_emf_cor
+
+seu_sil_list <- lapply(emf_cor_list, get_silhuoette)
+seu_both_list <- lapply(seu_sil_list, get_purity)
+
+```
+
+```{r}
+sil_median_list <- lapply(seu_both_list, get_sil_summary, get = "median")
+sil_median_df <- get_median_df(sil_median_list)
+
+sil_mean_list <- lapply(seu_both_list, get_sil_summary, get = "mean")
+sil_mean_df <- get_mean_df(sil_mean_list)
+```
+
+```{r}
+
+# visualise
+pheatmap(
+  t(sil_median_df),
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  angle_col = 0,
+  color =mycolor_silhouette,
+  breaks = c(-100:100)/100,
+  main = "correct EMFs, median silhouette",
+)
+
+# visualise
+pheatmap(
+  t(sil_mean_df),
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  angle_col = 0,
+  color =mycolor_silhouette,
+  breaks = c(-100:100)/100,  
+  main = "correct EMFs, mean silhouette"
+)
+
+
+```
+
+```{r}
+pur_median_list <- lapply(seu_both_list, get_pur_summary, get = "median")
+pur_median_df <- get_median_df(pur_median_list)
+
+pur_mean_list <- lapply(seu_both_list, get_pur_summary, get = "mean")
+pur_mean_df <- get_mean_df(pur_mean_list)
+```
+
+```{r}
+pheatmap(
+  t(pur_median_df),
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  angle_col = 0,
+  color =mycolor_purity,
+  breaks = c(1:100)/100,  
+  main = "correct EMFs, median silhouette"
+)
+
+# 
+pheatmap(
+  t(pur_mean_df),
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  angle_col = 0,
+  color =mycolor_purity,
+  breaks = c(1:100)/100,  
+  main = "correct EMFs, mean silhouette"
+)
+```
+
+```{r}
+plotlist <- get_violinplot(seu_both_list)
+plotlist
+```
+
+```{r}
+seu_temp <- seu_both_list[[1]]
+Idents(seu_temp) <- seu_temp$cell_type
+print(DimPlot(seu_temp)+ggtitle("correct EMFs"))
+
+lapply(seu_both_list, function(seu){
+  print(DimPlot(seu))
+  table <- table(seu$cell_type, seu$seurat_clusters)
+})
+```
+
+# reverse EMFs
+
+```{r}
+emf_rev_list <- seu_list$seu_emf_rev
+
+seu_sil_list <- lapply(emf_rev_list, get_silhuoette)
+seu_both_list <- lapply(seu_sil_list, get_purity)
+```
+
+```{r}
+sil_median_list <- lapply(seu_both_list, get_sil_summary, get = "median")
+sil_median_df <- get_median_df(sil_median_list)
+
+sil_mean_list <- lapply(seu_both_list, get_sil_summary, get = "mean")
+sil_mean_df <- get_mean_df(sil_mean_list)
+```
+
+```{r}
+# visualise
+pheatmap(
+  t(sil_median_df),
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  angle_col = 0,
+  color =mycolor_silhouette,
+  breaks = c(-100:100)/100,  
+  main = "reverse EMFs, median silhouette"
+)
+
+# visualise
+pheatmap(
+  t(sil_mean_df),
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  angle_col = 0,
+  color =mycolor_silhouette,
+  breaks = c(-100:100)/100,  
+  main = "reverse EMFs, mean silhouette"
+)
+```
+
+```{r}
+pur_median_list <- lapply(seu_both_list, get_pur_summary, get = "median")
+pur_median_df <- get_median_df(pur_median_list)
+
+pur_mean_list <- lapply(seu_both_list, get_pur_summary, get = "mean")
+pur_mean_df <- get_mean_df(pur_mean_list)
+```
+
+```{r}
+pheatmap(
+  t(pur_median_df),
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  angle_col = 0,
+  color =mycolor_purity,
+  breaks = c(1:100)/100,  
+  main = "reverse EMFs, median silhouette"
+)
+
+# 
+pheatmap(
+  t(pur_mean_df),
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  angle_col = 0,
+  color =mycolor_purity,
+  breaks = c(1:100)/100,  
+  main = "reverse EMFs, mean silhouette"
+)
+```
+
+```{r}
+plotlist <- get_violinplot(seu_both_list)
+plotlist
+```
+
+```{r}
+seu_temp <- seu_both_list[[1]]
+Idents(seu_temp) <- seu_temp$cell_type
+print(DimPlot(seu_temp)+ggtitle("reverse EMFs"))
+
+lapply(seu_both_list, function(seu){
+  print(DimPlot(seu))
+  table <- table(seu$cell_type, seu$seurat_clusters)
+})
+```
+
+# correct markers 
+
+```{r}
+emf_mark_list <- seu_list$seu_mark_cor
+
+seu_sil_list <- lapply(emf_mark_list, get_silhuoette)
+seu_both_list <- lapply(seu_sil_list, get_purity)
+```
+
+```{r}
+sil_median_list <- lapply(seu_both_list, get_sil_summary, get = "median")
+sil_median_df <- get_median_df(sil_median_list)
+
+sil_mean_list <- lapply(seu_both_list, get_sil_summary, get = "mean")
+sil_mean_df <- get_mean_df(sil_mean_list)
+```
+
+```{r}
+# visualise
+pheatmap(
+  t(sil_median_df),
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  color =mycolor_silhouette,
+  breaks = c(-100:100)/100,  
+  angle_col = 0,
+  main = "correct markers, median silhouette"
+)
+
+# visualise
+pheatmap(
+  t(sil_mean_df),
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  angle_col = 0,
+  color =mycolor_silhouette,
+  breaks = c(-100:100)/100,  
+  main = "correct markers, mean silhouette"
+)
+```
+
+```{r}
+pur_median_list <- lapply(seu_both_list, get_pur_summary, get = "median")
+pur_median_df <- get_median_df(pur_median_list)
+
+pur_mean_list <- lapply(seu_both_list, get_pur_summary, get = "mean")
+pur_mean_df <- get_mean_df(pur_mean_list)
+```
+
+```{r}
+pheatmap(
+  t(pur_median_df),
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  angle_col = 0,
+  color =mycolor_purity,
+  breaks = c(1:100)/100,  
+  main = "correct markers, median silhouette"
+)
+
+# 
+pheatmap(
+  t(pur_mean_df),
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  angle_col = 0,
+  color =mycolor_purity,
+  breaks = c(1:100)/100,  
+  main = "correct markers, mean silhouette"
+)
+```
+
+```{r}
+plotlist <- get_violinplot(seu_both_list)
+plotlist
+```
+
+```{r}
+seu_temp <- seu_both_list[[1]]
+Idents(seu_temp) <- seu_temp$cell_type
+print(DimPlot(seu_temp)+ggtitle("correct markers"))
+
+lapply(seu_both_list, function(seu){
+  print(DimPlot(seu))
+  table <- table(seu$cell_type, seu$seurat_clusters)
+})
+```
+
+# RANDOM
+
+```{r}
+random_list <- seu_list$seu_random
+
+seu_sil_list <- lapply(random_list, get_silhuoette)
+seu_both_list <- lapply(seu_sil_list, get_purity)
+```
+
+```{r}
+sil_median_list <- lapply(seu_both_list, get_sil_summary, get = "median")
+sil_median_df <- get_median_df(sil_median_list)
+
+sil_mean_list <- lapply(seu_both_list, get_sil_summary, get = "mean")
+sil_mean_df <- get_mean_df(sil_mean_list)
+```
+
+```{r}
+# visualise
+pheatmap(
+  t(sil_median_df),
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  angle_col = 0,
+  color =mycolor_silhouette,
+  breaks = c(-100:100)/100,  
+  main = "random genes, median silhouette"
+)
+
+# visualise
+pheatmap(
+  t(sil_mean_df),
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  angle_col = 0,
+  color =mycolor_silhouette,
+  breaks = c(-100:100)/100,  
+  main = "random genes,mean silhouette"
+)
+```
+
+```{r}
+pur_median_list <- lapply(seu_both_list, get_pur_summary, get = "median")
+pur_median_df <- get_median_df(pur_median_list)
+
+pur_mean_list <- lapply(seu_both_list, get_pur_summary, get = "mean")
+pur_mean_df <- get_mean_df(pur_mean_list)
+```
+
+```{r}
+pheatmap(
+  t(pur_median_df),
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  angle_col = 0,
+  color =mycolor_purity,
+  breaks = c(1:100)/100,  
+  main = "random genes,median silhouette"
+)
+
+# 
+pheatmap(
+  t(pur_mean_df),
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  angle_col = 0,
+  color =mycolor_purity,
+  breaks = c(1:100)/100,  
+  main = "random genes, mean silhouette"
+)
+```
+
+```{r}
+plotlist <- get_violinplot(seu_both_list)
+plotlist
+```
+
+```{r}
+seu_temp <- seu_both_list[[1]]
+Idents(seu_temp) <- seu_temp$cell_type
+print(DimPlot(seu_temp)+ggtitle("random genes"))
+
+lapply(seu_both_list, function(seu){
+  print(DimPlot(seu))
+  table <- table(seu$cell_type, seu$seurat_clusters)
+})
+```
+
+```{r}
+sessionInfo()
+```

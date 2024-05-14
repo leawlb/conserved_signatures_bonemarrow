@@ -1,3 +1,1 @@
-snakemake --cluster "bsub -n2 -q medium -R rusage[mem=90GB]" -p -j66 -c4 -s ref_anno_snakefile.py --configfile ../../config.yaml -n
-
-snakemake --cluster "bsub -n2 -q medium -R rusage[mem=90GB]" -p -j66 -c4 -s ref_anno_snakefile.py --configfile ../../config.yaml -R ref_anno -n
+snakemake --cluster "bsub -n2 -q medium -R rusage[mem=50GB]" -p -j66 -c4 -s ref_anno_snakefile.py --configfile ../../config.yaml --latency-wait 60 -n

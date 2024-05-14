@@ -1,12 +1,13 @@
 #-------------------------------------------------------------------------------
-# Functions to make my life regarding plots easier
+# Functions for plotting
 #-------------------------------------------------------------------------------
 
 library(cowplot, quietly = TRUE) 
 library(ggpubr, quietly = TRUE) 
+library(tidyverse, quietly = TRUE) 
 
 #-------------------------------------------------------------------------------
-# basic UMAP, must contain a Dimred called "UMAP", must specify Factor for color
+# basic UMAP, must contain a Dimred called "UMAP", must specify factor for color
 umap_base <- function(sce, color_by){
   
   base <- ggplot(data.frame(reducedDims(sce)[["UMAP"]]),
@@ -79,6 +80,26 @@ umap_program <- function(sce, species, program){
 }
 
 #-------------------------------------------------------------------------------
+# UMAP for continuous colData
+umap_cont <- function(sce, color_by){
+  
+  base <- ggplot(data.frame(reducedDims(sce)[["UMAP"]]),
+                 aes(x = X1, y = X2, 
+                     color = colData(sce)[,which(
+                       colnames(colData(sce))== color_by)]))+
+    scale_color_gradientn(name = color_by, 
+                          colors = c("grey80", "blue"))+
+    geom_point(size = 0.001)+
+    theme_classic()+
+    theme(axis.text = element_blank(),
+          axis.ticks = element_blank())+
+    ylab("UMAP 2")+
+    xlab("UMAP 1")
+  
+  return(base)
+}
+
+#-------------------------------------------------------------------------------
 # basic UMAP only for legend generation (point sizes visible in legends)
 umap_legend <- function(sce, color_by){
 
@@ -95,7 +116,6 @@ umap_legend <- function(sce, color_by){
   return(base)
   
 }
-
 
 #-------------------------------------------------------------------------------
 # basic PCA Dims 1 and 3,  must specify Factor for color

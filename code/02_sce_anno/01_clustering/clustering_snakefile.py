@@ -1,11 +1,7 @@
 #!/bin/python 
 
 """
-Batch correction, clustering and cluster annotation
-
-This is the version for the chosen method after various testing. 
-For testing pipelines with other methods see 02_sce_anno_TEST
-
+Batch correction, clustering and cluster annotation using louvain clustering. 
 """
 
 import pandas as pd
@@ -45,6 +41,9 @@ clusters_hsc = list(map(str, clusters_hsc))
 clusters_str = list(range(1,18))
 clusters_str = list(map(str, clusters_str))
 
+print(clusters_hsc)
+print(clusters_str)
+
 #-------------------------------------------------------------------------------
 
 targets = []
@@ -52,18 +51,18 @@ for f in fractions:
   targets = targets + [OUTPUT_DAT + "/01_mnnc/sce_" + f + "_" + BATCH_USE + "-01"]
   targets = targets + [OUTPUT_DAT + "/02_clst/louvn_clust/sce_" + f + "-02"]
   targets = targets + [OUTPUT_REP + "/01_batch_correction/batch_correction_report_" + f + "_" + BATCH_USE + ".html"]
-  targets = targets + [OUTPUT_REP + "/02_clustering/clustering_report_full_" + f +".html"]
+  targets = targets + [OUTPUT_REP + "/02_clustering/clustering_report_" + f +".html"]
   targets = targets + [OUTPUT_DAT + "/04_annc/01_markers/markers_" + f]
   targets = targets + [OUTPUT_DAT + "/04_annc/02_goan/go_" + f]
   targets = targets + [OUTPUT_DAT + "/04_annc/03_sce/sce_" + f + "-04"]
 
 for c in clusters_hsc:
-  targets = targets + [OUTPUT_DAT + "/03_sepd/sce_hsc_cluster_" + c + "-sep"]
-  targets = targets + [OUTPUT_REP + "/03_anno_clusters/annotation_hsc_cluster_" + c + ".html" ] 
+  targets = targets + [OUTPUT_DAT + "/03_sepd/hsc_cluster_" + c + "-sep"]
+  #targets = targets + [OUTPUT_REP + "/03_anno_clusters/annotation_hsc_cluster_" + c + ".html" ] 
 
 for c in clusters_str:
-  targets = targets + [OUTPUT_DAT + "/03_sepd/sce_str_cluster_" + c + "-sep"]
-  targets = targets + [OUTPUT_REP + "/03_anno_clusters/annotation_str_cluster_" + c + ".html"] 
+  targets = targets + [OUTPUT_DAT + "/03_sepd/str_cluster_" + c + "-sep"]
+  #targets = targets + [OUTPUT_REP + "/03_anno_clusters/annotation_str_cluster_" + c + ".html"] 
 
 #-------------------------------------------------------------------------------
 
@@ -81,7 +80,7 @@ genomics", Nat Met 2022
 Tran, Ang, Chevrier, Zhang et al. "A benchmark of batch effect correction 
 methods for single-cell RNA sequencing data", Genome Biology 2020
 
-Batch correction using MNNcorrect:
+Batch correction using MNNcorrect (fastMNN):
 
 """
 rule run_mnncorrect:
@@ -91,10 +90,9 @@ rule run_mnncorrect:
         sce_output = OUTPUT_DAT + "/01_mnnc/sce_{fraction}_" + BATCH_USE + "-01"
     params:
         batch_use = BATCH_USE,
-        nr_hvgs_batch_correction = VALUES["nr_hvgs_batch_correction"], 
-        seeds_umap = VALUES["seeds_umap"],
-        nr_hvgs = config["values"]["nr_hvgs"],
-        functions = "../../source/sce_functions.R"
+        nr_hvgs_BC = VALUES["nr_hvgs_batch_correction"], 
+        nr_hvgs = config["values"]["nr_hvgs"], # general value
+        seeds_umap = VALUES["seeds_umap"]
     script:
         "scripts/01_mnncorrect.R"
         
@@ -118,7 +116,6 @@ rule make_batchcorrection_reports:
     script:
         "batch_correction_report.Rmd" 
   
-        
 #-------------------------------------------------------------------------------
 """
 Louvain clustering
@@ -149,25 +146,25 @@ rule make_clustering_report:
         plotting = "../../source/plotting.R",
         colors = "../../source/colors.R"
     output:
-        OUTPUT_REP + "/02_clustering/clustering_report_full_{fraction}.html"
+        OUTPUT_REP + "/02_clustering/clustering_report_{fraction}.html"
     script:
-        "clustering_report_full.Rmd"
+        "clustering_report.Rmd"
         
 #-------------------------------------------------------------------------------
 """
-Dummy rule to allow using clusters as wildcard
+This only saves the cluster number, not a SCE object, but it allows using
+clusters as a wildcard
 """
 
-output = expand(OUTPUT_DAT + "/03_sepd/sce_hsc_cluster_{cluster}-sep", cluster = clusters_hsc)
-output = output + expand(OUTPUT_DAT + "/03_sepd/sce_str_cluster_{cluster}-sep", cluster = clusters_str)
+output = expand(OUTPUT_DAT + "/03_sepd/hsc_cluster_{cluster}-sep", cluster = clusters_hsc)
+output = output + expand(OUTPUT_DAT + "/03_sepd/str_cluster_{cluster}-sep", cluster = clusters_str)
 rule separate_sce:
     input: 
         sce_input = expand(OUTPUT_DAT + "/02_clst/louvn_clust/sce_{fraction}-02", fraction = fractions)
     output:
-        sce_output = output
+        output = output
     script:
         "scripts/03_separate_dummy.R"
-        
         
 #-------------------------------------------------------------------------------
  
@@ -186,7 +183,7 @@ rule find_markers:
     script:
         "scripts/04_markers_clusters.R"
 
-# perform preliminary GO analysis for overview (Very basic)
+# perform preliminary GO analysis for overview (very basic)
 rule go_analysis:
     input: 
         markers = rules.find_markers.output
@@ -196,11 +193,11 @@ rule go_analysis:
         "scripts/04_go_clusters.R"
 
 # report on marker gene expression and GO 
-rule make_report:
+rule make_anno_report:
     input: 
         markers = rules.find_markers.output,
         go = rules.go_analysis.output,
-        sce_sep = OUTPUT_DAT + "/03_sepd/sce_{fraction}_cluster_{cluster}-sep",
+        sep = OUTPUT_DAT + "/03_sepd/{fraction}_cluster_{cluster}-sep",
         sce_input = rules.louvain_clustering.output,
         gene_list = GENES_CLUSTERS
     output:

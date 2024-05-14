@@ -1,9 +1,8 @@
-
+#-------------------------------------------------------------------------------
 # aggregate SCE objects for each Sample, then convert to Deseq2 object
 
-library(DESeq2)
-library(scuttle)
-library(SingleCellExperiment)
+library(DESeq2, quietly = TRUE)
+library(scuttle, quietly = TRUE)
 set.seed(37)
 
 #-------------------------------------------------------------------------------
@@ -15,11 +14,10 @@ stopifnot(!is.na(sce$cluster_louvain))
 
 #-------------------------------------------------------------------------------
 # aggregate all cells with the same combination of Object ID and cell type 
-agg <- aggregateAcrossCells(sce, id=colData(sce)[,c("Object_ID",
-                                                    "annotation_cluster")])
-
+agg <- scuttle::aggregateAcrossCells(sce,
+                                     id=colData(sce)[,c("Object_ID",
+                                                        "annotation_cluster")])
 print(agg)
-colData(agg)
 
 # for each cell type, put into a separate list item to perform analysis per ct
 # only keep relevant col data
@@ -36,7 +34,6 @@ for(i in levels(agg$annotation_cluster)){
                                                       "sample", "age", "ncells", 
                                                       "Antibody_combination", 
                                                       "Batch_sequencing")]
-  
 }
 # each list item contains an object for each cell type, containing all 
 # samples from each species and age
@@ -46,7 +43,7 @@ for(i in levels(agg$annotation_cluster)){
 # "batch" and "age" are covariates, "condition" the condition to be tested
 
 dsq_list <- lapply(agg_list, function(agg){
-  dsq <- DESeqDataSet(agg, design = ~ batch + age + condition) 
+  dsq <- DESeq2::DESeqDataSet(agg, design = ~ batch + age + condition) 
   colnames(dsq) <- agg$sample
   
   colData(dsq)$condition <- factor(colData(dsq)$condition,
@@ -61,4 +58,7 @@ dsq_list <- lapply(agg_list, function(agg){
   return(dsq)
 })
 
+#-------------------------------------------------------------------------------
 saveRDS(dsq_list, file = snakemake@output[["deseq_output"]])
+
+sessionInfo()

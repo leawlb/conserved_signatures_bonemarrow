@@ -1,10 +1,11 @@
 #-------------------------------------------------------------------------------
 
 library(stringr)
-library(DropletUtils)
+library(scran)
 set.seed(37)
 
 source(file = snakemake@params[["functions"]])
+#-------------------------------------------------------------------------------
 
 sce_input_path <- snakemake@input[["sce_input_path"]] # cell annotation output
 
@@ -34,7 +35,7 @@ for(i in individuals_curr){
 sce_list <- sce_list[names(sce_list)[!names(sce_list) %in% samples_to_remove]]
 
 #-------------------------------------------------------------------------------
-## prepare fraction-wise merge (within species)
+## prepare fraction-wise merge (within ages)
 
 # get genes shared by all objects
 rownames_list <- invisible(lapply(sce_list, function(sce){
@@ -61,7 +62,7 @@ sce_list <- lapply(sce_list, function(sce){
 })
 
 #-------------------------------------------------------------------------------
-## fraction merge  
+## age merge  
 
 sce_list_old <- sce_list[grep("old", names(sce_list))]
 sce_list_yng <- sce_list[grep("yng", names(sce_list))]
@@ -96,7 +97,7 @@ sce_old_merged <- merge_lists(sce_list_old)
 sce_yng_merged <- merge_lists(sce_list_yng)
 
 #-------------------------------------------------------------------------------
-# dimensionality reduction
+# dimensionality reduction (own function)
 
 set.seed(37)
 sce_old_merged <- reduce_dims(sce_old_merged, nr_hvgs = nr_hvgs)
@@ -111,5 +112,7 @@ test_merged <- function(sce_merged){
 test_merged(sce_old_merged)
 test_merged(sce_yng_merged)
 
-saveRDS(sce_old_merged, file = snakemake@output[["sce_output_old"]]) # merging output
-saveRDS(sce_yng_merged, file = snakemake@output[["sce_output_yng"]]) # merging output
+saveRDS(sce_old_merged, file = snakemake@output[["sce_output_old"]]) 
+saveRDS(sce_yng_merged, file = snakemake@output[["sce_output_yng"]]) 
+
+sessionInfo()

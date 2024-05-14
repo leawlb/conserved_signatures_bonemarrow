@@ -1,10 +1,11 @@
 #-------------------------------------------------------------------------------
 
 library(stringr)
-library(DropletUtils)
+library(scran)
 set.seed(37)
 
 source(file = snakemake@params[["functions"]])
+#-------------------------------------------------------------------------------
 
 sce_input_path <- snakemake@input[["sce_input_path"]] #  cell annotation output
 
@@ -30,7 +31,6 @@ for(j in 1:length(sce_input_path)){
     }
   }
 }
-
 # only keep objects that are not to be removed (failsave)
 sce_list <- sce_list[names(sce_list)[!names(sce_list) %in% samples_to_remove]]
 
@@ -105,11 +105,12 @@ for(i in 1:length(sce_list_str)){
 print(nrow(sce_merged_str))
 
 #-------------------------------------------------------------------------------
-# dimensionality reduction
+# dimensionality reduction (own function)
 
-set.seed(37)
 sce_merged_hsc <- reduce_dims(sce_merged_hsc, nr_hvgs = nr_hvgs)
 sce_merged_str <- reduce_dims(sce_merged_str, nr_hvgs = nr_hvgs)
 
-saveRDS(sce_merged_hsc, file = snakemake@output[["sce_output_hsc"]]) #  merging output
-saveRDS(sce_merged_str, file = snakemake@output[["sce_output_str"]]) #  merging output
+saveRDS(sce_merged_hsc, file = snakemake@output[["sce_output_hsc"]]) 
+saveRDS(sce_merged_str, file = snakemake@output[["sce_output_str"]]) 
+
+sessionInfo()

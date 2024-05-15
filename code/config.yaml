@@ -68,7 +68,7 @@ values:
       hsc: 2 # for nicer plots after batch correction
     seeds_umap_after:
       str: 2 # for nicer plots after subclustering
-      hsc: 6 # for nicer plots aafter subclustering
+      hsc: 10 # for nicer plots after subclustering # 10 was ok
     k_louvain: 77 # for louvain clustering resolution
     k_louvain_refs: 50 # for louvain clustering resolution
     ndge_padj_cutoff: 0.05 # below which nDGEs are significant

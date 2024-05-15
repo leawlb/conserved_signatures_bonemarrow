@@ -19,7 +19,7 @@ set.seed(37)
 library(Seurat)
 ```
 
-```{r}
+```{r load_source}
 #source("../../source/plotting.R")
 source(file = snakemake@params[["plotting"]])
 
@@ -35,6 +35,8 @@ source(file = snakemake@params[["plotting"]])
 
 score_df <- readRDS(snakemake@input[["score_df"]])
 
+wildcard_curr <- snakemake@wildcards[["reference"]] 
+
 seu_list <- readRDS(snakemake@input[["seu_list"]])
 #seu_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_conserved_EMF/04_rcls/reclustered_li_all_stromal_list")
 resolution_list <- snakemake@params[["resolution"]] 
@@ -44,14 +46,12 @@ resolution <- resolution_list[[snakemake@wildcards[["reference"]]]]
 seu_reclustered <- seu_list$seu_emf_cor[[as.character(resolution)]]
 ```
 
-
-
-```{r}
+```{r print}
 head(score_df)
 print(seu_reclustered)
 ```
 
-```{r}
+```{r calc}
 calculate_scores <- function(seu){
   
   seu <- seu 
@@ -96,12 +96,12 @@ calculate_scores <- function(seu){
 
 ```
 
-```{r}
+```{r df}
 res_df <- calculate_scores(seu_reclustered)
 res_df
 ```
 
-```{r}
+```{r score11}
 
 pval = length(which(score_df$score_1 > res_df$score_1))/nrow(score_df)
 
@@ -114,7 +114,20 @@ ggplot(score_df, aes(x = score_1))+
   annotate("text", x = 0.8, y = 0.8, label = paste0("pval = ", as.character(pval)))
 ```
 
-```{r}
+```{r score12, fig.width = 3.5, fig.height = 2.5}
+ggplot(score_df, aes(x = score_1))+
+  geom_histogram(binwidth = 0.04)+
+  geom_vline(xintercept = res_df$score_1, color = "blue")+
+  theme_classic()+
+  xlim(c(0,1))+
+  xlab("Score 1")+
+  ylab("Count")+
+  ggtitle("Score 1 (proportion of zeros)")+
+  annotate("text", x = 0.8, y = 10, label = paste0("pval = ", as.character(pval)))
+```
+
+
+```{r score21}
 
 pval = length(which(score_df$score_2 > res_df$score_2))/nrow(score_df)
 
@@ -127,7 +140,77 @@ ggplot(score_df, aes(x = score_2))+
   annotate("text", x = 0.8, y = 0.8, label = paste0("pval = ", as.character(pval)))
 ```
 
-```{r}
+```{r score22, fig.width = 3.5, fig.height = 2.5}
+ggplot(score_df, aes(x = score_2))+
+  geom_histogram(binwidth = 0.04)+
+  geom_vline(xintercept = res_df$score_2, color = "blue")+
+  theme_classic()+
+  xlim(c(0,1))+
+  xlab("Score 2")+
+  ylab("Count")+
+  ggtitle("Score 2 (mean cell proportions)")+
+  annotate("text", x = 0.8, y = 10, label = paste0("pval = ", as.character(pval)))
+```
+
+```{r vis_long}
+vis_perc_long_gg <- function(seu, correction_vec = NULL, title_add= NULL){
+  
+  mat <- t(table(seu$cell_type, seu$seurat_clusters))
+  
+  mat2 <- mat/rowSums(mat)*100
+  
+  if(!is.null(correction_vec)){
+    mat2 <- mat2[correction_vec,]
+  }
+  
+  df_vis <- as.data.frame(mat2)
+  df_vis$Var2 <- factor(df_vis$Var2, levels = levels(seu$cell_type))
+  df_vis$Var1 <- factor(df_vis$Var1, levels = rev(levels(df_vis$Var1)))
+  
+  plot_long <- ggplot(df_vis, aes(y = Var1, x = Var2, fill= Freq))+ 
+    geom_tile()+
+    scale_fill_continuous("% cells/cluster", 
+                          limits=c(0, 100), breaks=seq(0,100,by=20),
+                          low = "white", high = "blue")+
+    theme_classic()+
+    theme(axis.ticks = element_blank(),
+          axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1))+
+    ylab("new clusters")+
+    xlab("original cell types")+
+    ggtitle(paste("resolution", seu$resolution[1], title_add))
+
+  return(plot_long)
+}
+```
+
+```{r cluster_vec}
+cluster_vec <- vector()
+if(wildcard_curr == "ts_all_stromal"){
+
+  cluster_vec <- c(2, 3, 4, 5, 8, 10 , 11, 9, 7, 1, 6, 12)
+
+}else if(wildcard_curr == "ts_hsc_progenitors"){
+ 
+  cluster_vec <- c(3, 4, 5, 8, 2, 1, 10, 7, 6, 9)
+
+}else if(wildcard_curr == "ts_bone_marrow"){
+ 
+  cluster_vec <- c(4, 2, 6, 8, 3, 5, 7, 1, 9)
+
+}else if(wildcard_curr == "li_all_stromal"){
+
+  cluster_vec <- c(2, 6, 1, 7, 5, 3, 4)
+  #cluster_vec <- c(1:7)
+
+}
+```
+
+```{r heatmap, fig.width = 5, fig.height=6}
+seu_reclustered$resolution <- rep(resolution, ncol(seu_reclustered))
+vis_perc_long_gg(seu_reclustered, correction_vec = cluster_vec)
+```
+
+```{r session_info}
 sessionInfo()
 ```
 

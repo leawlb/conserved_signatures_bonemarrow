@@ -83,8 +83,6 @@ rule conserved_emf_summary:
         emf_list_str = OUTPUT_DAT + "/01_emfs/emf_list_str"
     output:
         OUTPUT_REP + "/conserved_emf_summary.html"
-    threads:
-        4
     params:
         colors_path = COLORS,
         functions = "../../source/sce_functions.R",

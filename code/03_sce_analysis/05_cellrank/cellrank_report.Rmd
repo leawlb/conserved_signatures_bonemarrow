@@ -39,26 +39,26 @@ colors_path <- snakemake@params[["colors_path"]]
 source(snakemake@params[["colors"]])
 ```
 
-```{r}
-nr_hvgs <- 2000
-gene_var <- modelGeneVar(sce_hsc) 
-hvgs_for_batch_correction <- getTopHVGs(gene_var, n = nr_hvgs)
-hvgs <- getTopHVGs(gene_var, n = nr_hvgs)
+```{r parameters}
+#nr_hvgs <- 2000
+#gene_var <- modelGeneVar(sce_hsc) 
+#hvgs_for_batch_correction <- getTopHVGs(gene_var, n = nr_hvgs)
+#hvgs <- getTopHVGs(gene_var, n = nr_hvgs)
 
-set.seed(5)
-  
-sce_hsc <- runUMAP(sce_hsc, dimred = "PCA", subset_row = hvgs)
-colnames(reducedDims(sce_hsc)$UMAP) <- c("X1", "X2")
-set.seed(37)
+#set.seed(5)
+#  
+#sce_hsc <- runUMAP(sce_hsc, dimred = "PCA", subset_row = hvgs)
+#colnames(reducedDims(sce_hsc)$UMAP) <- c("X1", "X2")
+#set.seed(37)
 ```
 
-```{r}
+```{r print}
 colData(sce_pseudotime)
 metadata(sce_pseudotime)
 reducedDims(sce_pseudotime)
 ```
 
-```{r}
+```{r separate}
 # transfer the data from the pseudotime object to the sce object with
 # correct UMAP coordinates and other metadata
 sce_hsc$pseudotime <- sce_pseudotime$dpt_pseudotime
@@ -71,44 +71,49 @@ sce_hsc$Neutrophil <-  reducedDims(sce_pseudotime)$lineages_fwd[,3]
 
 ## UMAPs
 
-```{r fig.width = 4, fig.height = 3}
+```{r umap_cont1, fig.width = 4, fig.height = 3}
 umap_cont(sce_hsc, color_by = "pseudotime")
 ```
 
-```{r fig.width = 3, fig.height = 3.8}
+```{r umap_cont2, fig.width = 3, fig.height = 3.8}
 umap_cont(sce_hsc, color_by = "pseudotime")+
   theme(legend.position = "top")
 ```
 
-```{r fig.width = 3, fig.height = 3.8}
+```{r umap_cont3, fig.width = 3, fig.height = 3.8}
 umap_cont(sce_hsc, color_by = "pseudotime")+
   theme(legend.position = "bottom")
 ```
 
-```{r fig.width = 4, fig.height = 3}
+```{r umap_cont4, fig.width = 4, fig.height = 3}
 umap_cont(sce_hsc, color_by = "Erythroid")
 ```
 
-```{r fig.width = 3, fig.height = 3.8}
+```{r umap_cont5 , fig.width = 3, fig.height = 3.8}
 umap_cont(sce_hsc, color_by = "Erythroid")+
   theme(legend.position = "bottom")
 ```
 
-```{r fig.width = 4, fig.height = 3}
+```{r umap_cont6, fig.width = 4, fig.height = 3}
 umap_cont(sce_hsc, color_by = "Neutrophil")
 ```
 
-```{r fig.width = 3, fig.height = 3.8}
+```{r umap_cont7, fig.width = 3, fig.height = 3.8}
 umap_cont(sce_hsc, color_by = "Neutrophil")+
   theme(legend.position = "bottom")
 ```
 
-```{r fig.width = 3, fig.height = 3.8}
+```{r umap_cont8, fig.width = 3, fig.height = 3.8}
+umap_cont(sce_hsc, color_by = "Lymphoid")+
+  theme(legend.position = "right")
+```
+
+```{r umap_cont9, fig.width = 3, fig.height = 3.8}
 umap_cont(sce_hsc, color_by = "Lymphoid")+
   theme(legend.position = "bottom")
 ```
 
-```{r}
+```{r make_df}
 
 dataframe <- as.data.frame(colData(sce_hsc))
 
@@ -163,7 +168,7 @@ sce_hsc$lineage <- dataframe$lineage
 sce_hsc$color <- dataframe$color
 ```
 
-```{r fig.height = 3, fig.width = 3}
+```{r three_lineages, fig.height = 3, fig.width = 3}
 
 ggplot(data.frame(reducedDims(sce_hsc)[["UMAP"]]),
                  aes(x = X1, y = X2))+
@@ -176,7 +181,7 @@ ggplot(data.frame(reducedDims(sce_hsc)[["UMAP"]]),
 
 ```
 
-```{r}
+```{r cut_off}
 # get the cut-off value for each branch
 # the cut-off value corresponds to the lower whisker of MPPs
 # basically, only lower outlier HSCs, MPPs, or Activated MPPs will be excluded
@@ -192,21 +197,32 @@ vals_neu <- sce_hsc$Neutrophil[sce_hsc$celltypes == "Early MPPs"]
 cut_off_neu <- summary(vals_neu)["1st Qu."] - 1.5*IQR(vals_neu)
 ```
 
-```{r}
+```{r cut_off_plot1, fig.width = 5, fig.height = 4}
 ggplot(as.data.frame(colData(sce_hsc)), aes(x = celltypes, y = Neutrophil))+
   geom_boxplot()+
   theme_classic()+
   geom_hline(yintercept = summary(colData(sce_hsc)$Neutrophil[
     colData(sce_hsc)$celltypes == "HSCs"])["1st Qu."],
              color = col_cts_hsc[names(col_cts_hsc) == "Neutrophil progs."],
-    linewidth = 2, linetype = "dashed")
+    linewidth = 2, linetype = "dashed")+
+  theme(axis.text.x = element_text(angle = 0))
 
 ggplot(as.data.frame(colData(sce_hsc)), aes(x = celltypes, y = Neutrophil))+
   geom_boxplot()+
   theme_classic()+
   geom_hline(yintercept = cut_off_neu,
              color = col_cts_hsc[names(col_cts_hsc) == "Neutrophil progs."],
-    linewidth = 2, linetype = "dashed")
+    linewidth = 2, linetype = "dashed")+
+  theme(axis.text.x = element_text(angle = 0))
+
+ggplot(as.data.frame(colData(sce_hsc)), aes(x = celltypes, y = Neutrophil))+
+  geom_violin(color = "grey70", fill = "grey70", scale = "width")+
+  geom_boxplot(color = "black", outlier.size = 0.4)+
+  theme_classic()+
+  geom_hline(yintercept = cut_off_neu,
+             color = col_cts_hsc[names(col_cts_hsc) == "Neutrophil progs."],
+    linewidth = 2, linetype = "dashed")+
+  theme(axis.text.x = element_text(angle = 90))
 
 ggplot(as.data.frame(colData(sce_hsc)), aes(x = celltypes, y = Erythroid))+
   geom_boxplot()+
@@ -214,14 +230,16 @@ ggplot(as.data.frame(colData(sce_hsc)), aes(x = celltypes, y = Erythroid))+
   geom_hline(yintercept = summary(colData(sce_hsc)$Erythroid[
     colData(sce_hsc)$celltypes == "HSCs"])["1st Qu."],
              color = col_cts_hsc[names(col_cts_hsc) == "Erythroid progs."],
-    linewidth = 2, linetype = "dashed")
+    linewidth = 2, linetype = "dashed")+
+  theme(axis.text.x = element_text(angle = 0))
 
 ggplot(as.data.frame(colData(sce_hsc)), aes(x = celltypes, y = Erythroid))+
   geom_boxplot()+
   theme_classic()+
   geom_hline(yintercept = cut_off_ery,
              color = col_cts_hsc[names(col_cts_hsc) == "Erythroid progs."],
-    linewidth = 2, linetype = "dashed")
+    linewidth = 2, linetype = "dashed")+
+  theme(axis.text.x = element_text(angle = 0))
 
 ggplot(as.data.frame(colData(sce_hsc)), aes(x = celltypes, y = log(Lymphoid)))+
   geom_boxplot()+
@@ -229,18 +247,20 @@ ggplot(as.data.frame(colData(sce_hsc)), aes(x = celltypes, y = log(Lymphoid)))+
   geom_hline(yintercept = log(summary(colData(sce_hsc)$Lymphoid[
     colData(sce_hsc)$celltypes == "HSCs"])["1st Qu."]),
              color = col_cts_hsc[names(col_cts_hsc) == "Lymphoid progs."],
-    linewidth = 2, linetype = "dashed")
+    linewidth = 2, linetype = "dashed")+
+  theme(axis.text.x = element_text(angle = 0))
 
 ggplot(as.data.frame(colData(sce_hsc)), aes(x = celltypes, y = log(Lymphoid)))+
   geom_boxplot()+
   theme_classic()+
   geom_hline(yintercept = log(cut_off_lym),
              color = col_cts_hsc[names(col_cts_hsc) == "Lymphoid progs."],
-    linewidth = 2, linetype = "dashed")
+    linewidth = 2, linetype = "dashed")+
+  theme(axis.text.x = element_text(angle = 0))
 ```
 
 
-```{r}
+```{r pseudotime_plot, fig.width = 4, fig.height = 4}
 ggplot(as.data.frame(colData(sce_hsc)), aes(x = pseudotime, y = Neutrophil,
                                          color = celltypes))+
   geom_point(size = 0.2)+
@@ -249,7 +269,8 @@ ggplot(as.data.frame(colData(sce_hsc)), aes(x = pseudotime, y = Neutrophil,
   geom_hline(yintercept = summary(colData(sce_hsc)$Neutrophil[
     colData(sce_hsc)$celltypes == "HSCs"])["1st Qu."],
              color = "black",
-    linewidth = 2, linetype = "dashed")
+    linewidth = 2, linetype = "dashed")+
+  theme(axis.text.x = element_text(angle = 0))
 
 ggplot(as.data.frame(colData(sce_hsc)), aes(x = pseudotime, y = Neutrophil,
                                          color = celltypes))+
@@ -258,7 +279,9 @@ ggplot(as.data.frame(colData(sce_hsc)), aes(x = pseudotime, y = Neutrophil,
   scale_color_manual(values = col_cts_hsc)+
   geom_hline(yintercept = cut_off_neu,
              color = "black",
-    linewidth = 2, linetype = "dashed")
+    linewidth = 2, linetype = "dashed")+
+  theme(axis.text.x = element_text(angle = 0),
+        legend.position = "none")
 
 ggplot(as.data.frame(colData(sce_hsc)), aes(x = pseudotime, y = Erythroid,
                                          color = celltypes))+
@@ -268,7 +291,8 @@ ggplot(as.data.frame(colData(sce_hsc)), aes(x = pseudotime, y = Erythroid,
   geom_hline(yintercept = summary(colData(sce_hsc)$Erythroid[
     colData(sce_hsc)$celltypes == "HSCs"])["1st Qu."],
              color = "black",
-    linewidth = 2, linetype = "dashed")
+    linewidth = 2, linetype = "dashed")+
+  theme(axis.text.x = element_text(angle = 0))
 
 ggplot(as.data.frame(colData(sce_hsc)), aes(x = pseudotime, y = Erythroid,
                                          color = celltypes))+
@@ -277,7 +301,8 @@ ggplot(as.data.frame(colData(sce_hsc)), aes(x = pseudotime, y = Erythroid,
   scale_color_manual(values = col_cts_hsc)+
   geom_hline(yintercept = cut_off_ery,
              color = "black",
-    linewidth = 2, linetype = "dashed")
+    linewidth = 2, linetype = "dashed")+
+  theme(axis.text.x = element_text(angle = 0))
 
 ggplot(as.data.frame(colData(sce_hsc)), aes(x = pseudotime, y = Lymphoid,
                                          color = celltypes))+
@@ -287,7 +312,8 @@ ggplot(as.data.frame(colData(sce_hsc)), aes(x = pseudotime, y = Lymphoid,
   geom_hline(yintercept = summary(colData(sce_hsc)$Lymphoid[
     colData(sce_hsc)$celltypes == "HSCs"])["1st Qu."],
              color = "black",
-    linewidth = 2, linetype = "dashed")
+    linewidth = 2, linetype = "dashed")+
+  theme(axis.text.x = element_text(angle = 0))
 
 ggplot(as.data.frame(colData(sce_hsc)), aes(x = pseudotime, y = Lymphoid,
                                          color = celltypes))+
@@ -296,18 +322,20 @@ ggplot(as.data.frame(colData(sce_hsc)), aes(x = pseudotime, y = Lymphoid,
   scale_color_manual(values = col_cts_hsc)+
   geom_hline(yintercept = cut_off_lym,
              color = "black",
-    linewidth = 2, linetype = "dashed")
+    linewidth = 2, linetype = "dashed")+
+  theme(axis.text.x = element_text(angle = 0))
 
 ggplot(as.data.frame(colData(sce_hsc)), aes(x = pseudotime, y = celltypes,
                                          color = celltypes))+
   geom_boxplot()+
   theme_classic()+
   scale_color_manual(values = col_cts_hsc)+
-  theme(legend.position = "none")
+  theme(legend.position = "none")+
+  theme(axis.text.x = element_text(angle = 0))
 ```
 
 
-```{r fig.width = 8, fig.height = 3.5}
+```{r qc, fig.width = 8, fig.height = 3.5}
 qcdf <- perCellQCMetrics(sce_hsc)
 sce_hsc$sum <- qcdf$sum
 
@@ -341,7 +369,7 @@ ggplot(data.frame(reducedDims(sce_hsc)[["UMAP"]]),
 
 ```
 
-```{r}
+```{r separation2}
 
 sce_ery <- sce_hsc[,sce_hsc$Erythroid > cut_off_ery]
 sce_lym <- sce_hsc[,sce_hsc$Lymphoid > cut_off_lym]
@@ -360,7 +388,7 @@ gene_list <- as.list(c("Gata1", "Hba-a1",
 
 ### Ery
 
-```{r}
+```{r erys}
 
 #sce_ery <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/05_bsce/sce_ery")
 #sce_lym <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/05_bsce/sce_lym")
@@ -401,7 +429,7 @@ plot_list
 
 ### Lymphoid
 
-```{r}
+```{r lymphs}
 umap_base(sce_lym, color_by = "celltypes")
 umap_cont(sce_lym, color_by = "pseudotime")
 umap_cont(sce_lym, color_by = "Erythroid")
@@ -414,7 +442,7 @@ plot_list
 
 ### Neutrophil
 
-```{r}
+```{r neutros}
 umap_base(sce_neu, color_by = "celltypes")
 umap_cont(sce_neu, color_by = "pseudotime")
 umap_cont(sce_neu, color_by = "Erythroid")

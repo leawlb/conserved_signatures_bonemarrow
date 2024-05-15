@@ -40,17 +40,9 @@ nr_celltypes <- length(unique(seu_list_all[[1]][[1]]$cell_type))
 
 ```
 
-```{r}
-#sei_test <- seu_list_all$seu_emf_cor$"0.1"
-
-#sei_test$cell_type
-#sei_test$seurat_clusters
-```
-
-
 ### Functions
 
-```{r}
+```{r res_info}
 # add resolution info to seurat objects for nicer visualisation
 add_res_info <- function(seu_list){
   print(names(seu_list))
@@ -61,7 +53,7 @@ add_res_info <- function(seu_list){
 }
 ```
 
-```{r}
+```{r wide_function}
 # heatmap vis
 vis_perc_wide_gg <- function(seu, correction_vec = NULL, title_add= NULL){
   
@@ -91,7 +83,7 @@ vis_perc_wide_gg <- function(seu, correction_vec = NULL, title_add= NULL){
 }
 ```
 
-```{r}
+```{r long_function}
 vis_perc_long_gg <- function(seu, correction_vec = NULL, title_add= NULL){
   
   mat <- t(table(seu$cell_type, seu$seurat_clusters))
@@ -122,7 +114,7 @@ vis_perc_long_gg <- function(seu, correction_vec = NULL, title_add= NULL){
 }
 ```
 
-```{r}
+```{r vis_per_cluster}
 # heatmap vis
 vis_perc_cluster <- function(seu, correction_vec = NULL, title_add= NULL){
   
@@ -154,7 +146,7 @@ vis_perc_cluster <- function(seu, correction_vec = NULL, title_add= NULL){
 }
 ```
 
-```{r}
+```{r values}
 get_reclustering_mat <- function(seu){
   
   mat <- table(seu$cell_type, seu$seurat_clusters)
@@ -253,6 +245,20 @@ vis_clustering_values <- function(results_list, title){
     geom_hline(yintercept = 0.5, color = "black")+
     ylim(c(0, 1))+
     ggtitle(title)
+  
+  plot5 <- ggplot(res_df, aes(x = nr_clusters, y= adjrand))+
+    geom_point(color = "green4", alpha = 0.6)+
+    theme_classic()+
+    ylim(c(0, 1))+
+    ggtitle(title)+
+    xlim(c(0, max(res_df$nr_clusters)))
+  
+  plot6 <- ggplot(vis_df_1, aes(x = nr_clusters, y= value, color = type))+
+    geom_point(alpha = 0.6)+
+    theme_classic()+
+    ylim(c(0, 2))+
+    ggtitle(title)+
+    xlim(c(0, max(res_df$nr_clusters)))
 
   vis_df_2 <- res_df
   vis_df_2 <- pivot_longer(vis_df_2, cols = c("mean_ct_per_cluster",
@@ -282,30 +288,30 @@ vis_clustering_values <- function(results_list, title){
     ylim(c(0, max(nr_celltypes, res_df$nr_clusters)))+
     ggtitle(title)
   
-  return(list(plot1, plot2, plot3, plot4))
+  return(list(plot1, plot2, plot3, plot4, plot5, plot6))
 }
 ```
 
 ## Correct EMFs
 
-```{r}
+```{r correct_emfs1}
 seu_emf_cor_list <- seu_list_all$seu_emf_cor
 seu_emf_cor_list <- add_res_info(seu_emf_cor_list)
 ```
 
-```{r fig.width = 9, fig.height=3}
+```{r correct_emfs2, fig.width = 9, fig.height=3}
 plot_listw <- lapply(seu_emf_cor_list, vis_perc_wide_gg, 
                     title_add = "correct EMFs")
 plot_listw
 ```
 
-```{r fig.height = 35, fig.width=12}
+```{r correct_emfs3, fig.height = 35, fig.width=12}
 plot_listl <- lapply(seu_emf_cor_list, vis_perc_long_gg, 
                     title_add = "correct EMFs")
 plot_grid(plotlist = plot_listl, ncol = 3)
 ```
 
-```{r fig.height = 3, fig.width = 8}
+```{r correct_emfs4, fig.height = 3, fig.width = 8}
 mat_list <- lapply(seu_emf_cor_list, get_reclustering_mat)
 res_list <- lapply(as.list(names(mat_list)), get_reclustering_values,
                    mat_list = mat_list, seu_list = seu_emf_cor_list)
@@ -316,24 +322,24 @@ plot_listv
 
 ## Reverse EMFs
 
-```{r}
+```{r reverse_emfs1}
 seu_emf_rev_list <- seu_list_all$seu_emf_rev
 seu_emf_rev_list <- add_res_info(seu_emf_rev_list)
 ```
 
-```{r fig.width = 9, fig.height=3}
+```{r reverse_emfs2, fig.width = 9, fig.height=3}
 plot_listw <- lapply(seu_emf_rev_list, vis_perc_wide_gg, 
                     title_add = "reverse EMFs")
 plot_listw
 ```
 
-```{r fig.height = 35, fig.width=12}
+```{r reverse_emfs3, fig.height = 35, fig.width=12}
 plot_listl <- lapply(seu_emf_rev_list, vis_perc_long_gg, 
                     title_add = "reverse EMFs")
 plot_grid(plotlist = plot_listl, ncol = 3)
 ```
 
-```{r fig.height = 3, fig.width = 8}
+```{r reverse_emfs4, fig.height = 3, fig.width = 8}
 mat_list <- lapply(seu_emf_rev_list, get_reclustering_mat)
 res_list <- lapply(as.list(names(mat_list)), get_reclustering_values,
                    mat_list = mat_list, seu_list = seu_emf_rev_list)
@@ -344,24 +350,24 @@ plot_listv
 
 ## Correct Markers
 
-```{r}
+```{r correct_markers1}
 seu_marker_list <- seu_list_all$seu_mark_cor
 seu_marker_list <- add_res_info(seu_marker_list)
 ```
 
-```{r fig.width = 9, fig.height=3}
+```{r correct_markers2, fig.width = 9, fig.height=3}
 plot_listw <- lapply(seu_marker_list, vis_perc_wide_gg, 
                     title_add = "correct Markers")
 plot_listw
 ```
 
-```{r fig.height = 35, fig.width=12}
+```{r correct_markers3, fig.height = 35, fig.width=12}
 plot_listl <- lapply(seu_marker_list, vis_perc_long_gg, 
                     title_add = "correct Marker")
 plot_grid(plotlist = plot_listl, ncol = 3)
 ```
 
-```{r fig.height = 3, fig.width = 8}
+```{r correct_markers4, fig.height = 3, fig.width = 8}
 mat_list <- lapply(seu_marker_list, get_reclustering_mat)
 res_list <- lapply(as.list(names(mat_list)), get_reclustering_values,
                    mat_list = mat_list, seu_list = seu_marker_list)
@@ -372,24 +378,24 @@ plot_listv
 
 ## Random
 
-```{r}
+```{r random1}
 seu_random_list <- seu_list_all$seu_random
 seu_random_list <- add_res_info(seu_random_list)
 ```
 
-```{r fig.width = 9, fig.height=3}
+```{r random2, fig.width = 9, fig.height=3}
 plot_listw <- lapply(seu_random_list, vis_perc_wide_gg, 
                     title_add = "random")
 plot_listw
 ```
 
-```{r fig.height = 35, fig.width=12}
+```{r random3, fig.height = 35, fig.width=12}
 plot_listl <- lapply(seu_random_list, vis_perc_long_gg, 
                     title_add = "random")
 plot_grid(plotlist = plot_listl, ncol = 3)
 ```
 
-```{r fig.height = 3, fig.width = 8}
+```{r random4, fig.height = 3, fig.width = 8}
 mat_list <- lapply(seu_random_list, get_reclustering_mat)
 res_list <- lapply(as.list(names(mat_list)), get_reclustering_values,
                    mat_list = mat_list, seu_list = seu_random_list)

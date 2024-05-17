@@ -1,12 +1,11 @@
 #-------------------------------------------------------------------------------
 # prepare for DESeq2 QC 
+# In this script, QC data is exported, including logr-transformed objects
+# for visualisation only, as well as detected hidden sources of variation (SVs)
 
 library(DESeq2, quietly = TRUE)
 library(sva, quietly = TRUE)
 set.seed(37)
-
-# In this script, QC data is exported, including logr-transformed objects
-# for visualisation only, as well as detected hidden sources of variation (SVs)
 
 #-------------------------------------------------------------------------------
 # load object
@@ -39,11 +38,13 @@ tdsq_list <- lapply(dsq_list, DESeq2::DESeq)
 sva_list <- lapply(tdsq_list, function(dsq){
   
   data <- counts(dsq, normalized = TRUE)
+  # I'm not sure why I subset using rowMeans
   data  <- data[which(rowMeans(data) > 2), ]
   
   mod <- model.matrix(~ batch + age + condition, colData(dsq))
   mod0 <- model.matrix(~ 1, colData(dsq))
   
+  # try two different methods
   n_sv_be <- sva::num.sv(data, mod, method = "be")  
   n_sv_lk <- sva::num.sv(data, mod, method = "leek")  
   

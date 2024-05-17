@@ -13,7 +13,8 @@ stopifnot(!is.na(sce$annotation_cluster))
 stopifnot(!is.na(sce$cluster_louvain))
 
 #-------------------------------------------------------------------------------
-# aggregate all cells with the same combination of Object ID and cell type 
+# aggregate all cells with the same combination of Object_ID (sample) and
+# annotation_cluster (cell type)
 agg <- scuttle::aggregateAcrossCells(sce,
                                      id=colData(sce)[,c("Object_ID",
                                                         "annotation_cluster")])
@@ -39,8 +40,9 @@ for(i in levels(agg$annotation_cluster)){
 # samples from each species and age
 
 #-------------------------------------------------------------------------------
-# convert to DeSeq2 object (sequence in design is not too important for now)
-# "batch" and "age" are covariates, "condition" the condition to be tested
+# convert to DeSeq2 object (sequence in design will be adjusted later)
+# "batch" and "age" are covariates, "condition" the condition to be tested 
+# = species
 
 dsq_list <- lapply(agg_list, function(agg){
   dsq <- DESeq2::DESeqDataSet(agg, design = ~ batch + age + condition) 

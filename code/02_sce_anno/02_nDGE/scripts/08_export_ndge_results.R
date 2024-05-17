@@ -1,12 +1,12 @@
 #-------------------------------------------------------------------------------
 # in this script, results from DESeq objects are exported for every 
-# combination of binary species comparisons
+# combination of binary species comparisons 
 # for non-differentially expressed genes
 
 library(DESeq2, quietly = TRUE)
 library(tidyverse, quietly = TRUE)
 set.seed(37)
-#library(ashr)
+#library(ashr) 
 
 #-------------------------------------------------------------------------------
 
@@ -71,7 +71,8 @@ names(res_list_list[[1]])
 saveRDS(res_list_list, file = snakemake@output[["cluster_res"]])
 
 #-------------------------------------------------------------------------------
-# Get results DF
+# Get results DFs
+# export multiple dataframes for easier handling  
 
 # add info
 res_df_list <- lapply(res_list_list, function(res_list){
@@ -95,6 +96,7 @@ saveRDS(res_df_list, file = snakemake@output[["cluster_res_dfs"]])
 
 #-------------------------------------------------------------------------------
 # make a list of genes shared between each species for each cell type
+# TODO: clean up the part below to keep only relevant exports
 
 # these are genes that are shared in the corresponding comparisons
 res_list_shared_comp <- lapply(res_df_list, function(res_df){

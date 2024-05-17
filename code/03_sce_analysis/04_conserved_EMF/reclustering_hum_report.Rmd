@@ -320,6 +320,10 @@ plot_listv <- vis_clustering_values(res_list, title = "correct EMFs")
 plot_listv
 ```
 
+```{r fig.width = 4, fig.height = 3}
+plot_listv
+```
+
 ## Reverse EMFs
 
 ```{r reverse_emfs1}

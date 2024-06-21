@@ -2,7 +2,7 @@ paths:
   # directory to store output data = cellranger files and SingleCellExperiment objects
   # paths to input data = fastq files are stored in metadata sheet 
   #output_dir: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis"
-  output_dir: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/test_new_caroli/main_analysis"
+  output_dir: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/test_new_reference/main_analysis"
   target_templates:
     # paths for each type of output file
     linked_files: "cellranger/linked_files/{0[Species_ID]}/{0[individual]}" 
@@ -13,7 +13,7 @@ paths:
     samples_sheet: "metadata.csv"
 references:
   #all_masked: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/00_alignment/nmasked_genome/GRCm38_masked_allStrains/"
-  all_masked: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/test_no4/maskfasta/reference_snvs/merged/GRCm38_masked_allStrains/"
+  all_masked: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/snp_masked_genome/maskfasta/merged/GRCm38_masked_allStrains/"
 metadata:
   table:
   # should have same format as or be based on OTP export sheet

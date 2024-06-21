@@ -1,6 +1,8 @@
 # using cellrank to obtain probabilities and branches from pseudotime
 # https://cellrank.readthedocs.io/en/latest/notebooks/tutorials/general/100_getting_started.html
 
+# use ../../envs/cellrank.yml
+
 #-------------------------------------------------------------------------------
 
 import sys

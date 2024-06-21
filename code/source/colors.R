@@ -8,6 +8,19 @@ library(dittoSeq, quietly = TRUE)
 marker1 <- "dodgerblue3"
 marker2 <- "darkgreen"
 
+# used for ggplot
+#scale_fill_continuous("% cells/cell type", 
+#                      limits=c(0, 100), breaks=seq(0,100,by=20),
+#                      low = "white", high = "blue")
+
+# used for pheatmap (looks different!)
+mycolors_to1 <- colorRampPalette(c("grey98", "blue"))(100)
+names(mycolors_to1) <- c(1:100)/100
+
+mycolors_to100 <- colorRampPalette(c("grey98", "blue"))(100)
+names(mycolors_to100) <- c(1:100)
+
+
 #-------------------------------------------------------------------------------
 
 # SAMPLES/CLUSTER

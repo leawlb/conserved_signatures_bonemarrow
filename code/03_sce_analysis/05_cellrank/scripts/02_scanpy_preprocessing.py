@@ -5,6 +5,8 @@
 # https://cellrank.readthedocs.io/en/latest/notebooks/tutorials/general/100_getting_started.html
 # https://scanpy.readthedocs.io
 
+# use ../../envs/cellrank.yml
+
 #-------------------------------------------------------------------------------
 
 import sys

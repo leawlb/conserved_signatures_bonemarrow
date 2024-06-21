@@ -5,7 +5,7 @@ date: '2024-04-15'
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -24,15 +24,29 @@ library(mclust)
 library(cowplot)
 ```
 
+```{r eval = FALSE}
+
+base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_conserved_EMF/04_rcls/"
+
+seu_list_all <- readRDS(paste0(base_path, "reclustered_ts_hsc_progenitors_list"))
+
+seu_list_all <- readRDS(paste0(base_path, "reclustered_ts_bone_marrow_list"))
+
+seu_list_all <- readRDS(paste0(base_path, "reclustered_ts_all_stromal_list"))
+seu_list_all <- readRDS(paste0(base_path, "reclustered_li_all_stromal_list"))
+
+
+colors_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt"
+source("../../source/colors.R")
+source("../../source/plotting.R")
+
+wildcard_curr <- "ts_hsc_progenitors"
+
+
+col_cts <- col_cts_hsc
+```
+
 ```{r load_objects}
-#base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_conserved_EMF/04_rcls/"
-
-#seu_list_all <- readRDS(paste0(base_path, "reclustered_ts_hsc_progenitors_list"))
-
-#seu_list_all <- readRDS(paste0(base_path, "reclustered_ts_bone_marrow_list"))
-
-#seu_list_all <- readRDS(paste0(base_path, "reclustered_ts_all_stromal_list"))
-#seu_list_all <- readRDS(paste0(base_path, "reclustered_li_all_stromal_list"))
 
 seu_list_all <- readRDS(snakemake@input[["seu_list"]])
 
@@ -95,8 +109,8 @@ vis_perc_long_gg <- function(seu, correction_vec = NULL, title_add= NULL){
   }
   
   df_vis <- as.data.frame(mat2)
-  df_vis$Var2 <- factor(df_vis$Var2, levels = levels(seu$cell_type))
-  df_vis$Var1 <- factor(df_vis$Var1, levels = rev(levels(df_vis$Var1)))
+  #df_vis$Var2 <- factor(df_vis$Var2, levels = levels(seu$cell_type))
+  #df_vis$Var1 <- factor(df_vis$Var1, levels = rev(levels(df_vis$Var1)))
   
   plot_long <- ggplot(df_vis, aes(y = Var1, x = Var2, fill= Freq))+ 
     geom_tile()+
@@ -127,8 +141,8 @@ vis_perc_cluster <- function(seu, correction_vec = NULL, title_add= NULL){
   }
   
   df_vis <- as.data.frame(mat2)
-  df_vis$Var2 <- factor(df_vis$Var2, levels = levels(seu$cell_type))
-  df_vis$Var1 <- factor(df_vis$Var1, levels = rev(levels(df_vis$Var1)))
+  #df_vis$Var2 <- factor(df_vis$Var2, levels = levels(seu$cell_type))
+  #df_vis$Var1 <- factor(df_vis$Var1, levels = rev(levels(df_vis$Var1)))
   
   plot_long <- ggplot(df_vis, aes(x = Var2, y = Var1, fill= Freq))+ 
     geom_tile()+
@@ -409,7 +423,7 @@ plot_listv
 ```
 
 ```{r}
-knitr::knit_exit()
+#knitr::knit_exit()
 ```
 
 ### compare all
@@ -421,7 +435,6 @@ resolution_chosen <- list()
 cluster_vec <- list()
 
 wildcard_curr <- snakemake@wildcards[["reference"]]
-# wildcard_curr <- "ts_bone_marrow"
 ```
 
 

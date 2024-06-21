@@ -1,6 +1,8 @@
-snakemake --cluster "bsub -n2 -q medium -R rusage[mem=15GB]" -p -j66 -c10 -s preprocessing_snakefile.py --configfile ../../config.yaml --latency-wait 60 -n 
+snakemake --cluster "bsub -n2 -q medium -R rusage[mem=17GB]" -p -j66 -c10 -s preprocessing_snakefile.py --configfile ../../config.yaml --latency-wait 60 -n 
 
-snakemake --cluster "bsub -n2 -q verylong -R rusage[mem=15GB]" -p -j5 -c10 -s preprocessing_snakefile.py --configfile ../../config.yaml --latency-wait 60 -n 
+snakemake --cluster "bsub -n2 -q long -R rusage[mem=17GB]" -p -j66 -c10 -s preprocessing_snakefile.py --configfile ../../config.yaml --latency-wait 60 -n 
 
-snakemake --cluster "bsub -n2 -q medium -R rusage[mem=15GB]" -p -j66 -c20 -s preprocessing_snakefile.py --configfile  ../../config.yaml --config run_preprocessing_summary=True --latency-wait 60 -n
+snakemake --cluster "bsub -n2 -q verylong -R rusage[mem=17GB]" -p -j5 -c10 -s preprocessing_snakefile.py --configfile ../../config.yaml --latency-wait 60 -n 
+
+snakemake --cluster "bsub -n2 -q medium -R rusage[mem=17GB]" -p -j66 -c20 -s preprocessing_snakefile.py --configfile  ../../config.yaml --config run_preprocessing_summary=True --latency-wait 60 -n
 

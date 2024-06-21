@@ -197,15 +197,15 @@ vals_neu <- sce_hsc$Neutrophil[sce_hsc$celltypes == "Early MPPs"]
 cut_off_neu <- summary(vals_neu)["1st Qu."] - 1.5*IQR(vals_neu)
 ```
 
-```{r cut_off_plot1, fig.width = 5, fig.height = 4}
+```{r cut_off_plot1, fig.width = 5, fig.height = 5}
 ggplot(as.data.frame(colData(sce_hsc)), aes(x = celltypes, y = Neutrophil))+
   geom_boxplot()+
   theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
   geom_hline(yintercept = summary(colData(sce_hsc)$Neutrophil[
     colData(sce_hsc)$celltypes == "HSCs"])["1st Qu."],
              color = col_cts_hsc[names(col_cts_hsc) == "Neutrophil progs."],
-    linewidth = 2, linetype = "dashed")+
-  theme(axis.text.x = element_text(angle = 0))
+    linewidth = 2, linetype = "dashed")
 
 ggplot(as.data.frame(colData(sce_hsc)), aes(x = celltypes, y = Neutrophil))+
   geom_boxplot()+
@@ -227,36 +227,36 @@ ggplot(as.data.frame(colData(sce_hsc)), aes(x = celltypes, y = Neutrophil))+
 ggplot(as.data.frame(colData(sce_hsc)), aes(x = celltypes, y = Erythroid))+
   geom_boxplot()+
   theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
   geom_hline(yintercept = summary(colData(sce_hsc)$Erythroid[
     colData(sce_hsc)$celltypes == "HSCs"])["1st Qu."],
              color = col_cts_hsc[names(col_cts_hsc) == "Erythroid progs."],
-    linewidth = 2, linetype = "dashed")+
-  theme(axis.text.x = element_text(angle = 0))
+    linewidth = 2, linetype = "dashed")
 
 ggplot(as.data.frame(colData(sce_hsc)), aes(x = celltypes, y = Erythroid))+
   geom_boxplot()+
   theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
   geom_hline(yintercept = cut_off_ery,
              color = col_cts_hsc[names(col_cts_hsc) == "Erythroid progs."],
-    linewidth = 2, linetype = "dashed")+
-  theme(axis.text.x = element_text(angle = 0))
+    linewidth = 2, linetype = "dashed")
 
 ggplot(as.data.frame(colData(sce_hsc)), aes(x = celltypes, y = log(Lymphoid)))+
   geom_boxplot()+
   theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
   geom_hline(yintercept = log(summary(colData(sce_hsc)$Lymphoid[
     colData(sce_hsc)$celltypes == "HSCs"])["1st Qu."]),
              color = col_cts_hsc[names(col_cts_hsc) == "Lymphoid progs."],
-    linewidth = 2, linetype = "dashed")+
-  theme(axis.text.x = element_text(angle = 0))
+    linewidth = 2, linetype = "dashed")
 
 ggplot(as.data.frame(colData(sce_hsc)), aes(x = celltypes, y = log(Lymphoid)))+
   geom_boxplot()+
   theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))+
   geom_hline(yintercept = log(cut_off_lym),
              color = col_cts_hsc[names(col_cts_hsc) == "Lymphoid progs."],
-    linewidth = 2, linetype = "dashed")+
-  theme(axis.text.x = element_text(angle = 0))
+    linewidth = 2, linetype = "dashed")
 ```
 
 

@@ -26,21 +26,22 @@ library(grDevices)
 source(file = snakemake@params[["plotting"]])
 ```
 
+```{r eval = FALSE}
+sce <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_conserved_EMF/02_clst/sce_hsc")
+
+fraction_curr <- "hsc"
+
+colors_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt"
+source("../../source/colors.R")
+source("../../source/plotting.R")
+
+col_cts <- col_cts_hsc
+```
+
+
 ```{r load_objects}
 sce <- readRDS(snakemake@input[["sce_input"]])
 
-#sce_baccin <- readRDS(snakemake@input[["sce_baccin"]])
-#sce_ref2 <- readRDS(snakemake@input[["sce_ref2"]])
-
-#sce_baccin <- readRDS(snakemake@input[["sce_baccin"]])
-#sce_dolgalev <- readRDS(snakemake@input[["sce_dolgalev"]])
-#sce_dahlin <- readRDS(snakemake@input[["sce_dahlin"]])
-#sce <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_conserved_EMF/02_clst/sce_str")
-
-#sce_ref2 <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_conserved_EMF/03_cref/sce_ref2_hsc")
-#sce_baccin <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/01_sce_prep/references_ready/ref_baccin_sce")
-#sce_dolgalev <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/01_sce_prep/references_ready/ref_dolgalev_sce")
-#sce_dahlin <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/metadata/01_sce_prep/references_ready/ref_dahlin_sce")
 fraction_curr <- snakemake@wildcards[["fraction"]]
 ```
 
@@ -90,7 +91,7 @@ for(i in 1:nrow(mat1)){
   mat1[i,] <- mat1[i,]/sum(mat1[i,])
 }
 
-mycolor <- colorRampPalette(c("grey98", "blue"))(100)
+mycolor <- mycolors_to1
 names(mycolor) <- c(1:100)/100
 
 # core conserved genes
@@ -198,6 +199,48 @@ pheatmap(mat2,
          fontsize = 12,
          drop_levels = FALSE)
 
+```
+
+```{r fig.height = 4, fig.width = 4}
+
+df_vis <- as.data.frame(mat2)
+df_vis$Freq <- df_vis$Freq*100
+#df_vis$Var2 <- factor(df_vis$Var2, levels = levels(seu$cell_type))
+#df_vis$Var1 <- factor(df_vis$Var1, levels = rev(levels(df_vis$Var1)))
+  
+  
+plot_long <- ggplot(df_vis, aes(x = Var2, y = Var1, fill= Freq))+ 
+    geom_tile()+
+    scale_fill_continuous("% cells/cluster", 
+                          limits=c(0, 100), breaks=seq(0,100,by=25),
+                          low = "white", high = "blue")+
+    theme_classic()+
+    theme(axis.ticks = element_blank(),
+          axis.text.x = element_text(angle = 90))+
+    ylab("new clusters")+
+    xlab("original cell types")
+plot_long
+```
+
+```{r fig.height = 4, fig.width = 6}
+
+df_vis <- as.data.frame(mat2)
+df_vis$Freq <- df_vis$Freq*100
+#df_vis$Var2 <- factor(df_vis$Var2, levels = levels(seu$cell_type))
+#df_vis$Var1 <- factor(df_vis$Var1, levels = rev(levels(df_vis$Var1)))
+  
+  
+plot_long <- ggplot(df_vis, aes(x = Var2, y = Var1, fill= Freq))+ 
+    geom_tile()+
+    scale_fill_continuous("% cells/cluster", 
+                          limits=c(0, 100), breaks=seq(0,100,by=25),
+                          low = "white", high = "blue")+
+    theme_classic()+
+    theme(axis.ticks = element_blank(),
+          axis.text.x = element_text(angle = 90))+
+    ylab("new clusters")+
+    xlab("original cell types")
+plot_long
 ```
 
 ```{r}
@@ -363,6 +406,21 @@ max <- round(max, 2)
          fontsize = 12,
          drop_levels = FALSE)
 }
+
+df_vis <- as.data.frame(mat2)
+#df_vis$Var1 <- factor(df_vis$Var1, levels= rev(levels(seu$cell_type)))
+  
+plot_wide <- ggplot(df_vis, aes(y = Var1, x = Var2, fill= Freq))+ 
+  geom_tile()+
+  scale_fill_continuous("% cells/cell type", 
+                        limits=c(0, 100), breaks=seq(0,100,by=20),
+                        low = "white", high = "blue")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle=0),
+        axis.ticks = element_blank())+
+  xlab("new clusters")+
+  ylab("original cell types")+
+  ggtitle(paste("resolution", seu$resolution[1], title_add))
 
 knitr::knit_exit()
 ```

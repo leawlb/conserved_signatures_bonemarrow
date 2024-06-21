@@ -1,6 +1,7 @@
 #-------------------------------------------------------------------------------
 
 # export SCE as adata.h5ad object using zellkonverter and basilisk
+# use ../../envs/zellkonverter_export.yml
 
 library(zellkonverter)
 library(basilisk)

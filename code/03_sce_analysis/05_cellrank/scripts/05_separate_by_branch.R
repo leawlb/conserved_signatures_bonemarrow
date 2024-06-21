@@ -7,6 +7,8 @@
 # each lineage -1.5 * IQR 
 # this will only remove few outliers from HSCs and MPPs from each branch
 
+# use standard environment
+
 set.seed(37)
 
 #-------------------------------------------------------------------------------

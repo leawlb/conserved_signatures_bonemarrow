@@ -17,16 +17,12 @@ Report on integrated datasets.
 set.seed(37)
 ```
 
-```{r load,  message = FALSE}
-#
-```
-
 ```{r source,  message = FALSE}
 source(snakemake@params[["plotting"]])
 ```
 
 ```{r load_objects, message = FALSE}
-sce_input <- readRDS(file = snakemake@input[["sce_input"]])
+sce_input <- base::readRDS(file = snakemake@input[["sce_input"]])
 sce_input
 ```
 
@@ -42,53 +38,61 @@ source(snakemake@params[["colors"]])
 make_plots <- function(sce, title){
   
   col_cts_baccin_clst <- col_cts_ref[
-    match(unique(sce$baccin_celltype_scmapclust), names(col_cts_ref))]
+    base::match(base::unique(sce$baccin_celltype_scmapclust), 
+                names(col_cts_ref))]
+  
   col_cts_dahlin_clst <- col_cts_ref[
-    match(unique(sce$dahlin_celltype_scmapclust), names(col_cts_ref))]
+    base::match(base::unique(sce$dahlin_celltype_scmapclust), 
+                names(col_cts_ref))]
+  
   col_cts_dolgalev_clst <- col_cts_ref[
-    match(unique(sce$dolgalev_celltype_scmapclust), names(col_cts_ref))]
+    base::match(base::unique(sce$dolgalev_celltype_scmapclust), 
+                names(col_cts_ref))]
   
-  if(title == "species"){title <- paste(title, sce$Species_ID[1])}
-  if(title == "condition"){title <- paste(title, sce$Species_ID[1], 
-                                          sce$Age_ID[1])}
+  if(title == "species"){title <- base::paste(title, 
+                                              sce$Species_ID[1])}
+  if(title == "condition"){title <- base::paste(title, 
+                                                sce$Species_ID[1], 
+                                                sce$Age_ID[1])}
   
+  # own function
   plot_1 <- umap_base(sce, color_by = "baccin_celltype_scmapclust")+ 
-    ggtitle(title)+
-    scale_color_manual("baccin_celltype_scmapclust",
-                       values = col_cts_baccin_clst)
+    ggplot2::ggtitle(title)+
+    ggplot2::scale_color_manual("baccin_celltype_scmapclust",
+                                values = col_cts_baccin_clst)
   plot_1l <- umap_legend(sce, color_by = "baccin_celltype_scmapclust")+
-    scale_color_manual("baccin_celltype_scmapclust", 
-                       values = col_cts_baccin_clst)
-  legend_1 <- get_legend(plot_1l)
+    ggplot2::scale_color_manual("baccin_celltype_scmapclust", 
+                                values = col_cts_baccin_clst)
+  legend_1 <- ggpubr::get_legend(plot_1l)
   
   plot_2 <- umap_base(sce, color_by = "dahlin_celltype_scmapclust")+ 
-    ggtitle(title)+
-    scale_color_manual("dahlin_celltype_scmapclust", 
-                       values = col_cts_dahlin_clst)
+    ggplot2::ggtitle(title)+
+    ggplot2::scale_color_manual("dahlin_celltype_scmapclust", 
+                                values = col_cts_dahlin_clst)
   plot_2l <- umap_legend(sce, color_by = "dahlin_celltype_scmapclust")+
-    scale_color_manual("dahlin_celltype_scmapclust", 
-                       values = col_cts_dahlin_clst)
-  legend_2 <- get_legend(plot_2l)
+    ggplot2::scale_color_manual("dahlin_celltype_scmapclust", 
+                                values = col_cts_dahlin_clst)
+  legend_2 <- ggpubr::get_legend(plot_2l)
 
   plot_3 <- umap_base(sce, color_by = "dolgalev_celltype_scmapclust")+ 
-    ggtitle(title)+
-    scale_color_manual("dolgalev_celltype_scmapclust", 
-                       values = col_cts_dolgalev_clst)
+    ggplot2::ggtitle(title)+
+    ggplot2::scale_color_manual("dolgalev_celltype_scmapclust", 
+                                values = col_cts_dolgalev_clst)
   plot_3l <- umap_legend(sce, color_by = "dolgalev_celltype_scmapclust")+
-    scale_color_manual("dolgalev_celltype_scmapclust", 
-                       values = col_cts_dolgalev_clst)
-  legend_3 <- get_legend(plot_3l)
+    ggplot2::scale_color_manual("dolgalev_celltype_scmapclust", 
+                                values = col_cts_dolgalev_clst)
+  legend_3 <- ggpubr::get_legend(plot_3l)
   
   plot_4 <- umap_base_l(sce, color_by = "Age_ID")+ 
-    ggtitle(title)
+    ggplot2::ggtitle(title)
   plot_5 <- umap_base_l(sce, color_by = "Species_ID")+ 
-    ggtitle(title)
+    ggplot2::ggtitle(title)
   plot_6 <- umap_base_l(sce, color_by = "Fraction_ID")+ 
-    ggtitle(title)
+    ggplot2::ggtitle(title)
   
-  PLOT_1 <- ggarrange(plot_1, legend_1)
-  PLOT_2 <- ggarrange(plot_2, legend_2)
-  PLOT_3 <- ggarrange(plot_3, legend_3)
+  PLOT_1 <- ggpubr::ggarrange(plot_1, legend_1)
+  PLOT_2 <- ggpubr::ggarrange(plot_2, legend_2)
+  PLOT_3 <- ggpubr::ggarrange(plot_3, legend_3)
 
 return(list(PLOT_1, PLOT_2, PLOT_3, plot_4, plot_5, plot_6))
 }
@@ -100,5 +104,5 @@ plotlist_species
 ```
 
 ```{r session_info}
-sessionInfo()
+utils::sessionInfo()
 ```

@@ -47,8 +47,10 @@ rule all:
         targets
         
 #-------------------------------------------------------------------------------
+# these scripts are almost identical with few exceptions.
+# explanations in 08_merge_datasets_fraction.R
 
-# Merge fractions (to be used for annotation)
+# Merge fractions (to be used for clustering, annotation)
 rule merge_datasets_fractions:
     input: 
         sce_input_path = expand(OUTPUT_DAT + "/07_rfan/{s}/", s = species)

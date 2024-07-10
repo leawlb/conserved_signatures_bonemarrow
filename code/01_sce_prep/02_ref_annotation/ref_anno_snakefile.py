@@ -42,7 +42,7 @@ rule all:
 """
 Preliminary cell type annotation using multiple reference datasets and
 scmapcell and scmapcluster.
-To get an overview of approx. cell type numbers and fraction contamination.
+To get an overview of approx. cell type numbers.
 The longest sample takes around 1h for total 6 annotations.
 """
 rule ref_anno: 

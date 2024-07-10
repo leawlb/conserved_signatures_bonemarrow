@@ -5,14 +5,15 @@
 library(scran, quietly = TRUE) 
 set.seed(37)
 
-sce <- readRDS(file = snakemake@input[["sce_input"]])
+sce <- base::readRDS(file = snakemake@input[["sce_input"]])
 
-quick_clust <- scran::quickCluster(sce) # quick clustering to accelerate calculation
+# quick clustering to accelerate calculation
+quick_clust <- scran::quickCluster(sce) 
 
-# must be COMPUTE not CALCULATE SumFactors to add directly to SCE
+# add sum factors (size factor equivalent) to SCE, normalize, log-transform
 sce <- scran::computeSumFactors(sce, cluster = quick_clust)
-sce <- scuttle::logNormCounts(sce) # log-transformation
+sce <- scuttle::logNormCounts(sce) 
 
-saveRDS(sce, file = snakemake@output[["sce_output"]])
+base::saveRDS(sce, file = snakemake@output[["sce_output"]])
 
-sessionInfo()
+utils::sessionInfo()

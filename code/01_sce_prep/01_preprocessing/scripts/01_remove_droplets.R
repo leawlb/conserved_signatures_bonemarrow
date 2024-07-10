@@ -1,33 +1,36 @@
 #-------------------------------------------------------------------------------
 # authors: Amy Danson, Lea Wölbert
-# remove empty droplets and add doublet score for doublet removal
+# remove empty dropletsm add doublet score for doublet removal, remove doublets
 # remove duplicated genes
 
 library(DropletUtils, quietly = TRUE) 
 library(scDblFinder, quietly = TRUE) 
+library(SingleCellExperiment, quietly = TRUE) 
 set.seed(37)
 
-sce <- readRDS(file = snakemake@input[["sce_input"]])
+# load objects and params defined in corresponding snakefile
+sce <- base::readRDS(file = snakemake@input[["sce_input"]])
+
 cutoff_umis <- snakemake@params[["cutoff_umis"]]
-cutoff_doublets <-  snakemake@params[["cutoff_doublets"]] 
+cutoff_doublets <- snakemake@params[["cutoff_doublets"]] 
 
 #-------------------------------------------------------------------------------
 
 # rename rowData, remove duplicated genes
 rownames(sce) <- rowData(sce)$Symbol
-sce <- sce[!duplicated(rownames(sce)),]
+sce <- sce[!base::duplicated(rownames(sce)),]
 
 # remove empty droplets
-set.seed(37)
-out  <- DropletUtils::emptyDrops(counts(sce), lower = cutoff_umis)
+out  <- DropletUtils::emptyDrops(counts(sce), 
+                                 lower = cutoff_umis)
 sce <- sce[,which(out$FDR <= 0.001)]
 
 # identify and remove possible doublets 
-set.seed(37)
 colData(sce)$doublet_score <- scDblFinder::computeDoubletDensity(sce)
 sce <- sce[,which(sce$doublet_score <= cutoff_doublets)]
 
 # save
-saveRDS(sce, file = snakemake@output[["sce_output"]])
+base::saveRDS(sce, file = snakemake@output[["sce_output"]])
 
-sessionInfo()
+# print session info
+utils::sessionInfo()

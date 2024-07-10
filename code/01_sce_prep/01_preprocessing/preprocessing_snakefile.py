@@ -21,6 +21,7 @@ FOURGENOMES_OUT = config["base"] + config["scRNAseq_data_paths"]["fourgenomes_ou
 # load metadata table to obtain species, individuals, fractions to be used
 METADATA = pd.read_csv(config["base"] + config["metadata_paths"]["table"])
 
+# function to extract the required variables
 def get_list(metadata, column):
   values = METADATA[column]
   values = values.drop_duplicates()
@@ -28,6 +29,7 @@ def get_list(metadata, column):
   values = values.tolist()
   return(values)
 
+# get required variables for targets and wildcards
 species = get_list(metadata = METADATA, column = "Species_ID")
 individuals = get_list(metadata = METADATA, column = "Object_ID")
 
@@ -181,8 +183,10 @@ rule make_dmg_reports:
         nr_hvgs = config["values"]["nr_hvgs"],
         plotting = "../../source/plotting.R" # path to source file
     script:
-        # .Rmd files should be stored in snakefile working directory, which is the directory of the snakefile
-        # the working directory of scripts in the /scripts folder is also the directory of the snakefile
+        # .Rmd files should be stored in snakefile working directory, 
+        # which is the directory of the snakefile
+        # the working directory of scripts in the /scripts folder 
+        # is also the directory of the snakefile
         "preprocessing_dmg_reports.Rmd" 
 
 # report file for QC

@@ -5,7 +5,7 @@ dmg_paths <- snakemake@input[["dmgs"]]
 
 dmg_list <- list()
 for(i in 1:length(dmg_paths)){
-  dmg_list[[i]] <- readRDS(file = dmg_paths[[i]])
+  dmg_list[[i]] <- base::readRDS(file = dmg_paths[[i]])
 }
 print(dmg_list)
 
@@ -15,10 +15,10 @@ for(i in 2:length(dmg_paths)){
   dmgs_exclude <- c(dmgs_exclude, rownames(dmg_list[[i]]))
 }
 
-dmgs_exclude <- unique(dmgs_exclude)
-dmgs_exclude <- sort(dmgs_exclude)
+dmgs_exclude <- base::unique(dmgs_exclude)
+dmgs_exclude <- base::sort(dmgs_exclude)
 print(dmgs_exclude)
 
-saveRDS(dmgs_exclude, file = snakemake@output[["dmg_list"]])
+base::saveRDS(dmgs_exclude, file = snakemake@output[["dmg_list"]])
 
-sessionInfo()
+utils::sessionInfo()

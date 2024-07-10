@@ -6,13 +6,12 @@ set.seed(37)
 source(file = snakemake@params[["functions"]])
 
 #-------------------------------------------------------------------------------
-sce <- readRDS(file = snakemake@input[["sce_input"]])
+sce <- base::readRDS(file = snakemake@input[["sce_input"]])
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
 
-# get highly variably genes
-# use own function summarizing the dimensionality reduction steps
+# use own function summarizing the basic dimensionality reduction steps
 sce <- reduce_dims(sce, nr_hvgs = nr_hvgs)
 
-saveRDS(sce, file = snakemake@output[["sce_output"]])
+base::saveRDS(sce, file = snakemake@output[["sce_output"]])
 
-sessionInfo()
+utils::sessionInfo()

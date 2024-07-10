@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-QC summary report for all objects at once.
+QC summary report for all samples at once.
 Some operations from the scripts must be repeated to generate relevant plots,
 but any new objects cannot be saved from an .Rmd script.
 
@@ -51,15 +51,19 @@ sce_list_01 <- list()
 for(s in species){
   for(i in individuals){
     if(grepl(s, i) == TRUE){
-      sce_list_01[[i]] <- readRDS(file = paste0(sce_01_path, "/", s,
-                                                "/sce_", i, "-01"))
+      sce_list_01[[i]] <- base::readRDS(file = base::paste0(sce_01_path, 
+                                                            "/", 
+                                                            s,
+                                                            "/sce_",
+                                                            i,
+                                                            "-01"))
     }
   }
 }
 
 qcdf_list_01 <- lapply(sce_list_01, function(sce){
   
-  mito_genes <- grep("mt-", rownames(sce))
+  mito_genes <- base::grep("mt-", rownames(sce))
 
   qcdf <- scuttle::perCellQCMetrics(sce, subsets=list(Mito=mito_genes))
   qcdf$Object_ID <- sce$Object_ID
@@ -82,12 +86,12 @@ qcdf_list_01 <- lapply(sce_list_01, function(sce){
   return(qcdf)
 })
 
-qcdf_gg <- DataFrame()
+qcdf_gg <- S4Vectors::DataFrame()
 
 for(i in qcdf_list_01){
-  qcdf_gg <- rbind(qcdf_gg, i)
+  qcdf_gg <- BiocGenerics::rbind(qcdf_gg, i)
 }
-qcdf_gg <- as.data.frame(qcdf_gg)
+qcdf_gg <- BiocGenerics::as.data.frame(qcdf_gg)
 
 qcdf_gg_print <- qcdf_gg[qcdf_gg$Keep_sample == TRUE,]
 print(median(qcdf_gg_print$sum))
@@ -96,188 +100,185 @@ print(median(qcdf_gg_print$detected))
 print(median(qcdf_gg_print$detected[qcdf_gg_print$removed == FALSE]))
 
 # by Sample
-ggplot(qcdf_gg, aes(x = Object_ID, y = sum,
-                    color = removed))+
-  geom_jitter(size = 0.1, alpha = 50)+
-  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 120000))+
-  ggtitle(paste("cutoff sum = ", cutoff_sum))+ 
-  scale_y_log10()+
-  scale_alpha_discrete("Samples to keep",
-                       range = c("FALSE" = 0.02, "TRUE" = 0.7))+
-  scale_color_manual("Cells to remove", 
-                     values = c("TRUE" = "orange", "FALSE" = "grey80"))
+ggplot2::ggplot(qcdf_gg, 
+                aes(x = Object_ID, y = sum, color = removed))+
+  ggplot2::geom_jitter(size = 0.1, alpha = 50)+
+  ggplot2::geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text = element_text(angle = 90))+
+  ggplot2::ylim(limits = c(0, 120000))+
+  ggplot2::ggtitle(paste("cutoff sum = ", cutoff_sum))+ 
+  ggplot2::scale_y_log10()+
+  ggplot2::scale_alpha_discrete("Samples to keep",
+                                range = c("FALSE" = 0.02, "TRUE" = 0.7))+
+  ggplot2::scale_color_manual("Cells to remove", 
+                              values = c("TRUE" = "orange", "FALSE" = "grey80"))
   
-
-ggplot(qcdf_gg, aes(x = Object_ID, y = detected, 
-                    color = removed))+
-  geom_jitter(size = 0.1, alpha = 50)+
-  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 10000))+
-  ggtitle(paste("cutoff detected = ", cutoff_detected))+ 
-  scale_y_log10()+
-  scale_alpha_discrete("Samples to keep",
-                       range = c("FALSE" = 0.02, "TRUE" = 0.7))+
-  scale_color_manual("Cells to remove", 
-                     values = c("TRUE" = "orange", "FALSE" = "grey80"))
+ggplot2::ggplot(qcdf_gg, 
+                aes(x = Object_ID, y = detected, color = removed))+
+  ggplot2::geom_jitter(size = 0.1, alpha = 50)+
+  ggplot2::geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text = element_text(angle = 90))+
+  ggplot2::ylim(limits = c(0, 10000))+
+  ggplot2::ggtitle(paste("cutoff detected = ", cutoff_detected))+ 
+  ggplot2::scale_y_log10()+
+  ggplot2::scale_alpha_discrete("Samples to keep",
+                                range = c("FALSE" = 0.02, "TRUE" = 0.7))+
+  ggplot2::scale_color_manual("Cells to remove", 
+                              values = c("TRUE" = "orange", "FALSE" = "grey80"))
 
 # by Species_ID
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,],
-       aes(x = Species_ID, y = sum, color = removed))+
-  geom_jitter(size = 0.1, alpha = 50)+
-  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 120000))+
-  ggtitle(paste("cutoff sum = ", cutoff_sum))+ 
-  scale_y_log10() +
-  scale_color_manual("Cells to remove", 
-                     values = c("TRUE" = "orange", "FALSE" = "grey80"))
+ggplot2::ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,],
+                aes(x = Species_ID, y = sum, color = removed))+
+  ggplot2::geom_jitter(size = 0.1, alpha = 50)+
+  ggplot2::geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text = element_text(angle = 90))+
+  ggplot2::ylim(limits = c(0, 120000))+
+  ggplot2::ggtitle(paste("cutoff sum = ", cutoff_sum))+ 
+  ggplot2::scale_y_log10()+
+  ggplot2::scale_color_manual("Cells to remove", 
+                              values = c("TRUE" = "orange", "FALSE" = "grey80"))
 
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], 
-       aes(x = Species_ID, y = detected, color = removed))+
-  geom_jitter(size = 0.1, alpha = 50)+
-  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 10000))+
-  ggtitle(paste("cutoff detected = ", cutoff_detected))+ 
-  scale_y_log10()+
-  scale_color_manual("Cells to remove",
-                     values = c("TRUE" = "orange", "FALSE" = "grey80"))
+ggplot2::ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], 
+                aes(x = Species_ID, y = detected, color = removed))+
+  ggplot2::geom_jitter(size = 0.1, alpha = 50)+
+  ggplot2::geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text = element_text(angle = 90))+
+  ggplot2::ylim(limits = c(0, 10000))+
+  ggplot2::ggtitle(paste("cutoff detected = ", cutoff_detected))+ 
+  ggplot2::scale_y_log10()+
+  ggplot2::scale_color_manual("Cells to remove",
+                              values = c("TRUE" = "orange", "FALSE" = "grey80"))
 
 # by Age
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], 
-       aes(x = Age, y = sum, color = removed))+
-  geom_jitter(size = 0.1, alpha = 50)+
-  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 120000))+
-  ggtitle(paste("cutoff sum = ", cutoff_sum))+ 
-  scale_y_log10()+
-  scale_color_manual("Cells to remove", 
-                     values = c("TRUE" = "orange", "FALSE" = "grey80")) 
+ggplot2::ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], 
+                aes(x = Age, y = sum, color = removed))+
+  ggplot2::geom_jitter(size = 0.1, alpha = 50)+
+  ggplot2::geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text = element_text(angle = 90))+
+  ggplot2::ylim(limits = c(0, 120000))+
+  ggplot2::ggtitle(paste("cutoff sum = ", cutoff_sum))+ 
+  ggplot2::scale_y_log10()+
+  ggplot2::scale_color_manual("Cells to remove", 
+                              values = c("TRUE" = "orange", "FALSE" = "grey80")) 
 
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], 
-       aes(x = Age, y = detected, color = removed))+
-  geom_jitter(size = 0.1, alpha = 50)+
-  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 10000))+
-  ggtitle(paste("cutoff detected = ", cutoff_detected))+ 
-  scale_y_log10() +
-  scale_color_manual("Cells to remove", 
-                     values = c("TRUE" = "orange", "FALSE" = "grey80"))
+ggplot2::ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], 
+                aes(x = Age, y = detected, color = removed))+
+  ggplot2::geom_jitter(size = 0.1, alpha = 50)+
+  ggplot2::geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text = element_text(angle = 90))+
+  ggplot2::ylim(limits = c(0, 10000))+
+  ggplot2::ggtitle(paste("cutoff detected = ", cutoff_detected))+ 
+  ggplot2::scale_y_log10() +
+  ggplot2::scale_color_manual("Cells to remove", 
+                              values = c("TRUE" = "orange", "FALSE" = "grey80"))
 
 # by Fraction
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], 
-       aes(x = Fraction, y = sum, color = removed))+
-  geom_jitter(size = 0.1, alpha = 50)+
-  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 120000))+
-  ggtitle(paste("cutoff sum = ", cutoff_sum))+ 
-  scale_y_log10() +
-  scale_color_manual("Cells to remove",
-                     values = c("TRUE" = "orange", "FALSE" = "grey80"))
+ggplot2::ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], 
+                aes(x = Fraction, y = sum, color = removed))+
+  ggplot2::geom_jitter(size = 0.1, alpha = 50)+
+  ggplot2::geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text = element_text(angle = 90))+
+  ggplot2::ylim(limits = c(0, 120000))+
+  ggplot2::ggtitle(paste("cutoff sum = ", cutoff_sum))+ 
+  ggplot2::scale_y_log10() +
+  ggplot2::scale_color_manual("Cells to remove",
+                              values = c("TRUE" = "orange", "FALSE" = "grey80"))
 
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], 
-       aes(x = Fraction, y = detected, color = removed))+
-  geom_jitter(size = 0.1, alpha = 50)+
-  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 10000))+
-  ggtitle(paste("cutoff detected = ", cutoff_detected))+ 
-  scale_y_log10() +
-  scale_color_manual("Cells to remove", 
-                     values = c("TRUE" = "orange", "FALSE" = "grey80"))
+ggplot2::ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], 
+                aes(x = Fraction, y = detected, color = removed))+
+  ggplot2::geom_jitter(size = 0.1, alpha = 50)+
+  ggplot2::geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text = element_text(angle = 90))+
+  ggplot2::ylim(limits = c(0, 10000))+
+  ggplot2::ggtitle(paste("cutoff detected = ", cutoff_detected))+ 
+  ggplot2::scale_y_log10() +
+  ggplot2::scale_color_manual("Cells to remove", 
+                              values = c("TRUE" = "orange", "FALSE" = "grey80"))
 
 # by Batch_exp_day
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], 
-       aes(x = Batch_exp_day, y = sum, color = removed))+
-  geom_jitter(size = 0.1, alpha = 50)+
-  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 120000))+
-  ggtitle(paste("cutoff sum = ", cutoff_sum)) + 
-  scale_y_log10() +
-  scale_color_manual("Cells to remove",
-                     values = c("TRUE" = "orange", "FALSE" = "grey80"))
+ggplot2::ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], 
+                aes(x = Batch_exp_day, y = sum, color = removed))+
+  ggplot2::geom_jitter(size = 0.1, alpha = 50)+
+  ggplot2::geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text = element_text(angle = 90))+
+  ggplot2::ylim(limits = c(0, 120000))+
+  ggplot2::ggtitle(paste("cutoff sum = ", cutoff_sum)) + 
+  ggplot2::scale_y_log10() +
+  ggplot2::scale_color_manual("Cells to remove",
+                              values = c("TRUE" = "orange", "FALSE" = "grey80"))
 
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], 
-       aes(x = Batch_exp_day, y = detected, color = removed))+
-  geom_jitter(size = 0.1, alpha = 50)+
-  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 10000))+
-  ggtitle(paste("cutoff detected = ", cutoff_detected))+ 
-  scale_y_log10() +
-  scale_color_manual("Cells to remove", 
-                     values = c("TRUE" = "orange", "FALSE" = "grey80"))
+ggplot2::ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], 
+                aes(x = Batch_exp_day, y = detected, color = removed))+
+  ggplot2::geom_jitter(size = 0.1, alpha = 50)+
+  ggplot2::geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text = element_text(angle = 90))+
+  ggplot2::ylim(limits = c(0, 10000))+
+  ggplot2::ggtitle(paste("cutoff detected = ", cutoff_detected))+ 
+  ggplot2::scale_y_log10() +
+  ggplot2::scale_color_manual("Cells to remove", 
+                              values = c("TRUE" = "orange", "FALSE" = "grey80"))
 
 # by Batch_sequencing
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], 
-       aes(x = Batch_sequencing, y = sum, color = removed))+
-  geom_jitter(size = 0.1, alpha = 50)+
-  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 120000))+
-  ggtitle(paste("cutoff sum = ", cutoff_sum))+ 
-  scale_y_log10()+
-  scale_color_manual("Cells to remove",
-                     values = c("TRUE" = "orange", "FALSE" = "grey80")) 
+ggplot2::ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], 
+                aes(x = Batch_sequencing, y = sum, color = removed))+
+  ggplot2::geom_jitter(size = 0.1, alpha = 50)+
+  ggplot2::geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text = element_text(angle = 90))+
+  ggplot2::ylim(limits = c(0, 120000))+
+  ggplot2::ggtitle(paste("cutoff sum = ", cutoff_sum))+ 
+  ggplot2::scale_y_log10()+
+  ggplot2::scale_color_manual("Cells to remove",
+                              values = c("TRUE" = "orange", "FALSE" = "grey80")) 
 
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Batch_sequencing, 
-                                                  y = detected, 
-                                                  color = removed))+
-  geom_jitter(size = 0.1, alpha = 50)+
-  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 10000))+
-  ggtitle(paste("cutoff detected = ", cutoff_detected))+ 
-  scale_y_log10() +
-  scale_color_manual("Cells to remove",
-                     values = c("TRUE" = "orange", "FALSE" = "grey80"))
+ggplot2::ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], 
+                aes(x = Batch_sequencing, y = detected, color = removed))+
+  ggplot2::geom_jitter(size = 0.1, alpha = 50)+
+  ggplot2::geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text = element_text(angle = 90))+
+  ggplot2::ylim(limits = c(0, 10000))+
+  ggplot2::ggtitle(paste("cutoff detected = ", cutoff_detected))+ 
+  ggplot2::scale_y_log10() +
+  ggplot2::scale_color_manual("Cells to remove",
+                              values = c("TRUE" = "orange", "FALSE" = "grey80"))
 
 # by Date_collected
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Date_collected, 
-                                                  y = sum, color = removed))+
-  geom_jitter(size = 0.1, alpha = 50)+
-  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 120000))+
-  ggtitle(paste("cutoff sum = ", cutoff_sum))+ 
-  scale_y_log10()+
-  scale_color_manual("Cells to remove", 
-                     values = c("TRUE" = "orange", "FALSE" = "grey80")) 
+ggplot2::ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], 
+                aes(x = Date_collected, y = sum, color = removed))+
+  ggplot2::geom_jitter(size = 0.1, alpha = 50)+
+  ggplot2::geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text = element_text(angle = 90))+
+  ggplot2::ylim(limits = c(0, 120000))+
+  ggplot2::ggtitle(paste("cutoff sum = ", cutoff_sum))+ 
+  ggplot2::scale_y_log10()+
+  ggplot2::scale_color_manual("Cells to remove", 
+                              values = c("TRUE" = "orange", "FALSE" = "grey80")) 
 
-ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,], aes(x = Date_collected, 
-                                                  y = detected, 
-                                                  color = removed))+
-  geom_jitter(size = 0.1, alpha = 50)+
-  geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
-  theme_classic()+
-  theme(axis.text = element_text(angle = 90))+
-  ylim(limits = c(0, 10000))+
-  ggtitle(paste("cutoff detected = ", cutoff_detected))+ 
-  scale_y_log10() +
-  scale_color_manual("Cells to remove", 
-                     values = c("TRUE" = "orange", "FALSE" = "grey80"))
+ggplot2::ggplot(qcdf_gg[qcdf_gg$Keep_sample == TRUE,],
+                aes(x = Date_collected, y = detected, color = removed))+
+  ggplot2::geom_jitter(size = 0.1, alpha = 50)+
+  ggplot2::geom_violin(color = "black", alpha = 0, draw_quantiles = 0.5)+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text = element_text(angle = 90))+
+  ggplot2::ylim(limits = c(0, 10000))+
+  ggplot2::ggtitle(paste("cutoff detected = ", cutoff_detected))+ 
+  ggplot2::scale_y_log10() +
+  ggplot2::scale_color_manual("Cells to remove", 
+                              values = c("TRUE" = "orange", "FALSE" = "grey80"))
 ```
 
 ```{r session_info}
-sessionInfo()
+utils::sessionInfo()
 ```

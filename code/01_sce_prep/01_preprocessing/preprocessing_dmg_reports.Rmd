@@ -1,5 +1,5 @@
 ---
-title: "Differentially mapped gene report per sample"
+title: "Differentially mapped gene (DMG) report per sample"
 author: "Lea Wölbert"
 date: '2023-03-31'
 output: html_document
@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Report QC for all samples separately (Object_ID).
 Check if both mappings result in similar quality.
+Repeat some steps for visualisation.
 
 #### Load libraries, source code 
 
@@ -30,22 +31,23 @@ source(file = snakemake@params[["plotting"]])
 ```
 
 ```{r load_objects, message = FALSE}
-sce_og <- readRDS(file = snakemake@input[["sce_input"]])
-sce_fg <- readRDS(file = snakemake@input[["sce_fg"]])
+sce_og <- base::readRDS(file = snakemake@input[["sce_input"]])
+sce_fg <- base::readRDS(file = snakemake@input[["sce_fg"]])
 
-dmg_list <- readRDS(file = snakemake@input[["dmg_list"]])
-dmgs <- readRDS(file = snakemake@input[["dmgs"]])
+dmg_list <- base::readRDS(file = snakemake@input[["dmg_list"]])
+dmgs <- base::readRDS(file = snakemake@input[["dmgs"]])
 
-ensembl_list_mspr <- readRDS(snakemake@input[["ensembl_list_mspr"]])
+ensembl_list_mspr <- base::readRDS(snakemake@input[["ensembl_list_mspr"]])
 
 name_curr <- colData(sce_og)$Object_ID[1] 
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
 species_curr <- snakemake@wildcards[["species"]]
 ```
 
-```{r susbet}
+```{r subset}
 # subset fg to sce_og
-sce_fg <- sce_fg[,which(!is.na(match(colnames(sce_fg), colnames(sce_og))))]
+sce_fg <- sce_fg[,which(!is.na(base::match(colnames(sce_fg), 
+                                           colnames(sce_og))))]
 sce_og
 sce_fg
 ```
@@ -58,19 +60,21 @@ from BioMart.
 
 if(grepl("mspr", name_curr)){
   
-  intersect_IDs <- intersect(
-    rowData(sce_fg)$Symbol, ensembl_list_mspr$ensembl_gene_id)
+  intersect_IDs <- BiocGenerics::intersect(
+    rowData(sce_fg)$Symbol, 
+    ensembl_list_mspr$ensembl_gene_id)
 
   ensembl_list_mspr <- ensembl_list_mspr[
     ensembl_list_mspr$ensembl_gene_id %in% intersect_IDs,]
   sce_fg <- sce_fg[rowData(sce_fg)$Symbol %in% intersect_IDs,]
 
   ensembl_list_mspr <- ensembl_list_mspr[
-    !duplicated(ensembl_list_mspr$ensembl_gene_id),]
-  sce_fg <- sce_fg[!duplicated(rowData(sce_fg)$Symbol),]
+    !base::duplicated(ensembl_list_mspr$ensembl_gene_id),]
+  sce_fg <- sce_fg[
+    !base::duplicated(rowData(sce_fg)$Symbol),]
 
   rowData(sce_fg)$Symbol[
-    match(
+    base::match(
       ensembl_list_mspr$ensembl_gene_id,
       rownames(sce_fg))] <- ensembl_list_mspr$mmusculus_homolog_associated_gene_name
 
@@ -81,33 +85,38 @@ if(grepl("mspr", name_curr)){
 ```
 
 Prepare combination of both SCE.
-RowData first, then colData.
+RowData first.
 
 ```{r prep_comb_row}
 
 head(rowData(sce_og))
 head(rowData(sce_fg))
 
-shared_genes <- intersect(rowData(sce_og)$Symbol, rowData(sce_fg)$Symbol)
+shared_genes <- BiocGenerics::intersect(rowData(sce_og)$Symbol, 
+                                        rowData(sce_fg)$Symbol)
 length(shared_genes)
 
 sce_og_shared <- sce_og[rowData(sce_og)$Symbol %in% shared_genes,]
 sce_fg_shared <- sce_fg[rowData(sce_fg)$Symbol %in% shared_genes,]
 
-sce_og_shared <- sce_og_shared[order(rowData(sce_og_shared)$Symbol),]
-sce_fg_shared <- sce_fg_shared[order(rowData(sce_fg_shared)$Symbol),]
+sce_og_shared <- sce_og_shared[base::order(rowData(sce_og_shared)$Symbol),]
+sce_fg_shared <- sce_fg_shared[base::order(rowData(sce_fg_shared)$Symbol),]
 
-sce_og_shared <- sce_og_shared[!duplicated(rowData(sce_og_shared)$Symbol),]
-sce_fg_shared <- sce_fg_shared[!duplicated(rowData(sce_fg_shared)$Symbol),]
+sce_og_shared <- sce_og_shared[
+  !base::duplicated(rowData(sce_og_shared)$Symbol),]
+sce_fg_shared <- sce_fg_shared[
+  !base::duplicated(rowData(sce_fg_shared)$Symbol),]
 ```
+
+Then colData.
 
 ```{r prep_comp_col}
 
-colnames(sce_og_shared) <- paste0(colnames(sce_og_shared), "_og")
-sce_og_shared$Genome <- rep("OneGenome", ncol(sce_og_shared))
+colnames(sce_og_shared) <- base::paste0(colnames(sce_og_shared), "_og")
+sce_og_shared$Genome <- base::rep("OneGenome", ncol(sce_og_shared))
 
-colnames(sce_fg_shared) <- paste0(colnames(sce_fg_shared), "_fg")
-sce_fg_shared$Genome <- rep("FourGenomes", ncol(sce_fg_shared))
+colnames(sce_fg_shared) <- base::paste0(colnames(sce_fg_shared), "_fg")
+sce_fg_shared$Genome <- base::rep("FourGenomes", ncol(sce_fg_shared))
 
 colnames(rowData(sce_og_shared))[
   colnames(rowData(sce_og_shared)) == "ID"] <- "ID_og"
@@ -120,90 +129,103 @@ rownames(sce_fg_shared) <- rowData(sce_fg_shared)$Symbol
 colData(sce_og_shared) <- colData(sce_og_shared)[,-20]
 ```
 
+Combine SCEs
+
 ```{r combine}
-# combine
-sce_tog <- cbind(sce_og_shared, sce_fg_shared)
+sce_tog <- BiocGenerics::cbind(sce_og_shared, sce_fg_shared)
 sce_tog
 ```
 
 ## General quality
 
 ```{r qc_metrics}
-qcdf_og <- perCellQCMetrics(sce_og_shared)
-qcdf_fg <- perCellQCMetrics(sce_fg_shared)
+qcdf_og <- scuttle::perCellQCMetrics(sce_og_shared)
+qcdf_fg <- scuttle::perCellQCMetrics(sce_fg_shared)
 ```
 
 ```{r qc_metrics_plot1}
 
-qcdf_gg <- as.data.frame(qcdf_og)
-qcdf_gg <- pivot_longer(qcdf_gg, 
-                        names_to = "metric", cols = c(1, 2, 3))
+qcdf_gg <- base::as.data.frame(qcdf_og)
+qcdf_gg <- tidyr::pivot_longer(qcdf_gg, 
+                               names_to = "metric", 
+                               cols = c(1, 2, 3))
 
-ggplot(qcdf_gg[qcdf_gg$metric == "sum",], aes(y = value, x = metric))+
-  theme_classic()+
+ggplot2::ggplot(qcdf_gg[qcdf_gg$metric == "sum",], 
+                aes(y = value, x = metric))+
+  ggplot2::theme_classic()+
   ggbeeswarm::geom_quasirandom(size = 0.1)+
-  geom_boxplot(alpha = 0)+
-  scale_color_manual("Removed", 
-                     values = c("FALSE" = "grey80", "TRUE" = "orange"))+
-  ylab("Library size")+
-  ggtitle("One genome")+
-  theme(axis.title.x = element_blank(), axis.text.x = element_blank())
+  ggplot2::geom_boxplot(alpha = 0, color = "orange")+
+  ggplot2::scale_color_manual("Removed", 
+                              values = c("FALSE" = "grey80",
+                                         "TRUE" = "orange"))+
+  ggplot2::ylab("Library size")+
+  ggplot2::ggtitle("One genome")+
+  ggplot2::theme(axis.title.x = element_blank(), 
+                 axis.text.x = element_blank())
 ```
 
 ```{r qc_metrics_plot2}
 
-qcdf_gg <- as.data.frame(qcdf_fg)
-qcdf_gg <- pivot_longer(qcdf_gg, 
-                        names_to = "metric", cols = c(1, 2, 3))
+qcdf_gg <- base::as.data.frame(qcdf_fg)
+qcdf_gg <- tidyr::pivot_longer(qcdf_gg, 
+                               names_to = "metric",
+                               cols = c(1, 2, 3))
 
-ggplot(qcdf_gg[qcdf_gg$metric == "sum",], aes(y = value, x = metric))+
-  theme_classic()+
+ggplot2::ggplot(qcdf_gg[qcdf_gg$metric == "sum",], 
+                aes(y = value, x = metric))+
+  ggplot2::theme_classic()+
   ggbeeswarm::geom_quasirandom(size = 0.1)+
-  geom_boxplot(alpha = 0)+
-  scale_color_manual("Removed", 
-                     values = c("FALSE" = "grey80", "TRUE" = "orange"))+
-  ylab("Library size")+
-  ggtitle("Four genomes")+
-  theme(axis.title.x = element_blank(), axis.text.x = element_blank())
+  ggplot2::geom_boxplot(alpha = 0, color = "orange")+
+  ggplot2::scale_color_manual("Removed", 
+                              values = c("FALSE" = "grey80", 
+                                         "TRUE" = "orange"))+
+  ggplot2::ylab("Library size")+
+  ggplot2::ggtitle("Four genomes")+
+  ggplot2::theme(axis.title.x = element_blank(), 
+                 axis.text.x = element_blank())
 ```
 
 ## Markergenes
 
-Calculate logcounts together for visualisation.
-DMGs = differentially mapped genes.
+Calculate logcounts together for visualisation only.
 
-```{r marker_genes}
-quick_clust <- scran::quickCluster(sce_tog) # to accelerate calculation
+```{r normalize}
+quick_clust <- scran::quickCluster(sce_tog) 
 sce_tog <- scran::computeSumFactors(sce_tog, cluster = quick_clust)
-sce_tog <- scuttle::logNormCounts(sce_tog) # log-transformation
+sce_tog <- scuttle::logNormCounts(sce_tog) 
 ```
 
 ### Sample heatmap
 
+Visualise all genes for a subset of the cells, if necessary.
+
 ```{r sample_heatmap}
 
-sce_tog_temp <- sce_tog[rowSums(assays(sce_tog)$counts) > 5,]
-# randomly subset to 2000 cells if necessary 
+sce_tog_allgenes <- sce_tog[
+  BiocGenerics::rowSums(SummarizedExperiment::assays(sce_tog)$counts) > 5,]
+
+# randomly subset to 1000 cells if necessary 
 # first half and second half of object should be subset identically
-if(ncol(sce_tog_temp) > 2000){
-  random_cols <- sample(1:(ncol(sce_tog_temp)/2), 1000)
+if(ncol(sce_tog_allgenes) > 1000){
+  
+  random_cols <- base::sample(1:(ncol(sce_tog_allgenes)/2), 500)
   random_cols_firsthalf <- random_cols
-  random_cols_secondhalf <- random_cols + (ncol(sce_tog_temp)/2)
-  sce_tog_temp <- sce_tog_temp[,c(random_cols_firsthalf, random_cols_secondhalf)]
+  random_cols_secondhalf <- random_cols + (ncol(sce_tog_allgenes)/2)
+  sce_tog_allgenes <- sce_tog_allgenes[,c(random_cols_firsthalf, 
+                                          random_cols_secondhalf)]
 }
 
-mat <- as.matrix(
-  assays(sce_tog_temp)$logcounts
-)
+mat <- base::as.matrix(SummarizedExperiment::assays(sce_tog_allgenes)$logcounts)
 
-anno_col <- data.frame(
-  features = colnames(sce_tog_temp),
-  Genome = colData(sce_tog_temp)$Genome)
+anno_col <- base::data.frame(
+  features = colnames(sce_tog_allgenes),
+  Genome = colData(sce_tog_allgenes)$Genome)
 
-anno_col <- column_to_rownames(anno_col, var = "features")
+anno_col <- tibble::column_to_rownames(anno_col, var = "features")
 
 pheatmap::pheatmap(
   mat,
+  main = "all genes, 1000 cells",
   cluster_cols = FALSE,
   treeheight_row = 0.1,  
   annotation_col = anno_col,
@@ -214,27 +236,28 @@ pheatmap::pheatmap(
 
 ### Sample-specific DMGs:
 
+The sample-specific dmgs were saved per individual and loaded as "dmgs".
+
 ```{r subset_dmgs}
-dmgs[,c(2, 3, 5)]
+dmgs[,c(2, 3, 5)] 
 if(nrow(dmgs) > 200){dmgs <- dmgs[1:200,]}
 ```
 
 ```{r heatmap, fig.height=14, fig.width=7}
 
-sce_tog_temp <- sce_tog[which(rownames(sce_tog) %in% rownames(dmgs)),]
+sce_tog_dmgs <- sce_tog[which(rownames(sce_tog) %in% rownames(dmgs)),]
 
-mat <- as.matrix(
-  assays(sce_tog_temp)$logcounts
-)
+mat <- base::as.matrix(SummarizedExperiment::assays(sce_tog_dmgs)$logcounts)
 
-anno_col <- data.frame(
-  features = colnames(sce_tog_temp),
-  Genome = colData(sce_tog_temp)$Genome)
+anno_col <- base::data.frame(
+  features = colnames(sce_tog_dmgs),
+  Genome = colData(sce_tog_dmgs)$Genome)
 
-anno_col <- column_to_rownames(anno_col, var = "features")
+anno_col <- tibble::column_to_rownames(anno_col, var = "features")
 
 pheatmap::pheatmap(
   mat,
+  main = "sample-specific dmgs",
   cluster_cols = FALSE,
   annotation_col = anno_col,
   show_colnames = FALSE
@@ -243,26 +266,33 @@ pheatmap::pheatmap(
 
 ### All combined DMGs
 
-```{r all_dmgs}
-print(dmg_list)
-```
+All dmgs were stored in dmg_list.
 
-```{r heatmap_all}
+```{r heatmap_all_dmglist}
 
-sce_tog_temp <- sce_tog[which(rownames(sce_tog) %in% dmg_list),]
+sce_tog_dmglist <- sce_tog[which(rownames(sce_tog) %in% dmg_list),]
 
-mat <- as.matrix(
-  assays(sce_tog_temp)$logcounts
-)
+# randomly subset to 1000 cells again
+if(ncol(sce_tog_dmglist) > 1000){
+  
+  random_cols <- base::sample(1:(ncol(sce_tog_dmglist)/2), 500)
+  random_cols_firsthalf <- random_cols
+  random_cols_secondhalf <- random_cols + (ncol(sce_tog_dmglist)/2)
+  sce_tog_dmglist <- sce_tog_dmglist[,c(random_cols_firsthalf, 
+                                          random_cols_secondhalf)]
+}
 
-anno_col <- data.frame(
-  features = colnames(sce_tog_temp),
-  Genome = colData(sce_tog_temp)$Genome)
+mat <- base::as.matrix(SummarizedExperiment::assays(sce_tog_dmglist)$logcounts)
 
-anno_col <- column_to_rownames(anno_col, var = "features")
+anno_col <- base::data.frame(
+  features = colnames(sce_tog_dmglist),
+  Genome = colData(sce_tog_dmglist)$Genome)
+
+anno_col <- tibble::column_to_rownames(anno_col, var = "features")
 
 pheatmap::pheatmap(
   mat,
+  main = "all dmgs, 1000 cells",
   treeheight_row = 0.1,
   cluster_cols = FALSE,
   cluster_rows = FALSE,
@@ -272,6 +302,10 @@ pheatmap::pheatmap(
 )
 ```
 
+```{r all_dmgs}
+print(dmg_list) 
+```
+
 ```{r session_info}
-sessionInfo()
+utils::sessionInfo()
 ```

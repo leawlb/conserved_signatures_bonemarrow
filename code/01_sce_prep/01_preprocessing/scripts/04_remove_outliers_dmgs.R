@@ -5,8 +5,8 @@
 library(scuttle, quietly = TRUE) 
 set.seed(37)
 
-sce <- readRDS(file = snakemake@input[["sce_input"]])
-dmg_list <- readRDS(file = snakemake@input[["dmg_list"]])
+sce <- base::readRDS(file = snakemake@input[["sce_input"]])
+dmg_list <- base::readRDS(file = snakemake@input[["dmg_list"]])
 
 # QC cutoffs 
 cutoff_sum <- snakemake@params[["cutoff_sum"]] 
@@ -23,10 +23,9 @@ print(sce)
 #-------------------------------------------------------------------------------
 
 # get percentage of mitochondrial genes
-mito_genes <- grep("mt-", rownames(sce))
+mito_genes <- base::grep("mt-", rownames(sce))
 print(mito_genes)
-qcdf<- scuttle::perCellQCMetrics(sce, 
-                                 subsets=list(Mito=mito_genes)) 
+qcdf<- scuttle::perCellQCMetrics(sce, subsets=list(Mito=mito_genes)) 
 
 # identify and remove cells below QC cutoffs 
 sum_out <- qcdf$sum < cutoff_sum 
@@ -39,6 +38,6 @@ print(sce)
 sce <- sce[,!remove_pos]
 print(sce)
 
-saveRDS(sce, file = snakemake@output[["sce_output"]])
+base::saveRDS(sce, file = snakemake@output[["sce_output"]])
 
-sessionInfo()
+utils::sessionInfo()

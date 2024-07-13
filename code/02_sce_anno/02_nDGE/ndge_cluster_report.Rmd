@@ -9,6 +9,8 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+Report on nDGEs per cell type, and possible nDGE candidates fpr subclustering.
+
 #### Load objects
 
 ```{r seed, message = FALSE}
@@ -17,6 +19,7 @@ set.seed(37)
 
 ```{r load, message = FALSE}
 library(EnhancedVolcano, quietly = TRUE)
+library(DESeq2, quietly = TRUE)
 ```
 
 ```{r source, message = FALSE}
@@ -27,13 +30,13 @@ source(file = snakemake@params[["plotting"]])
 fc_cutoff <- snakemake@params[["fc_cutoff"]]
 padj_cutoff <- snakemake@params[["padj_cutoff"]]
 
-sce <- readRDS(snakemake@input[["sce_input"]])
-sep <- readRDS(snakemake@input[["sep"]])
+sce <- base::readRDS(snakemake@input[["sce_input"]])
+sep <- base::readRDS(snakemake@input[["sep"]])
 
-cluster_res_list <- readRDS(snakemake@input[["cluster_res"]])
-shared_gene_list <- readRDS(snakemake@input[["cluster_res_list_shared"]])
+cluster_res_list <- base::readRDS(snakemake@input[["cluster_res"]])
+shared_gene_list <- base::readRDS(snakemake@input[["cluster_sharedgenes_list"]])
 
-cand_list <- read.csv(snakemake@input[["gene_list"]], 
+cand_list <- utils::read.csv(snakemake@input[["gene_list"]], 
   header = TRUE, 
   sep = ";", 
   check.names=FALSE, 
@@ -75,15 +78,24 @@ cluster_res_list <- cluster_res_list[[ct_curr]]
 
 ```{r pval_distr_function}
 see_pvals <- function(cluster_res, comparison){
+  
   plot1 <- EnhancedVolcano::EnhancedVolcano(
-      cluster_res, lab = "",
-      x = 'log2FoldChange',  y = 'pvalue', 
-      col = c("grey70", "grey70", "dodgerblue3", "grey70"),
-      subtitle = "", colAlpha = 0.9, pointSize = 0.5,
-      pCutoff = padj_cutoff, FCcutoff = fc_cutoff)+
-    theme_classic()+
-    ggtitle(paste(comparison))+
-    theme(legend.position="none", plot.subtitle = element_blank())
+    cluster_res,
+    lab = "",
+    x = 'log2FoldChange', 
+    y = 'pvalue', 
+    col = c("grey70", "grey70", "dodgerblue3", "grey70"),
+    subtitle = "", 
+    colAlpha = 0.9, 
+    pointSize = 0.5,
+    pCutoff = padj_cutoff, 
+    FCcutoff = fc_cutoff)+
+    ggplot2::theme_classic()+
+    ggplot2::ggtitle(comparison)+
+    ggplot2::theme(legend.position="none",
+                   plot.subtitle = element_blank())
+  
+  DESeq2::plotMA(cluster_res, main = comparison)
 
   print(plot1)
 }
@@ -132,17 +144,21 @@ res_df_comb_mspr_mcar <- cluster_res_list[["mspr-mcar"]]
 see_pvals(cluster_res = res_df_comb_mspr_mcar, comparison = "mspr-mcar")
 ```
 
-# Print lists
+# Subclustering genes
+
+Candidate genes are potential subclustering genes that were picked from
+literature or from computationally identified marker genes.
+These genes are here tested for their potential to separate certain cell types 
+into subpopulations.
+Only candidate genes that are nDGE in at least three of four species
+will be considered for subclustering.
 
 ```{r print}
-print(ct_curr)
-print(shared_gene_list$all)
-print(shared_gene_list$at_least_three)
+print(base::paste("comparison", ct_curr))
 
-print(paste("comparison", ct_curr))
-print(cand_list[which(cand_list$Gene %in% shared_gene_list$at_least_three),])
-
-remain_cand_list <- cand_list$Gene[which(cand_list$Gene %in% shared_gene_list$at_least_three)]
+remain_cand_list <- cand_list$Gene[
+  which(cand_list$Gene %in% shared_gene_list$three)]
+print(remain_cand_list)
 ```
 
 ## UMAPS of remaining candidate subclustering genes
@@ -151,31 +167,32 @@ remain_cand_list <- cand_list$Gene[which(cand_list$Gene %in% shared_gene_list$at
 gene_exps <- function(gene){
   
   sce_clust$Species_ID <- factor(sce_clust$Species_ID,
-                                   levels = c("mmus", "mcas", "mspr", "mcar"))
+                                 levels = c("mmus", "mcas", "mspr", "mcar"))
 
   sce$Species_ID <- factor(sce$Species_ID,
                            levels = c("mmus", "mcas", "mspr", "mcar"))
   
-  # Gene expression UMAP in cluster X
+  # Gene expression UMAP in cluster X, own function
   plot_1 <- umap_gene(sce_clust, gene)
 
   # Gene expression UMAP in cluster X, separated by species
   plot_2 <- umap_gene(sce_clust, gene)+
-    facet_grid(cols = vars(sce_clust$Species_ID))
+    ggplot2::facet_grid(cols = vars(sce_clust$Species_ID))
   
-  ggdf <- as.data.frame(colData(sce_clust))
-  logc <- assays(sce_clust)[["logcounts"]]
+  ggdf <- base::as.data.frame(colData(sce_clust))
+  logc <- SummarizedExperiment::assays(sce_clust)[["logcounts"]]
 
   ggdf$Species_ID <- factor(ggdf$Species_ID,
                             levels = c("mmus", "mcas", "mspr", "mcar"))
   
-  plot_3 <- ggplot(ggdf, aes(x = cluster_louvain,
-                             y = logc[rownames(logc) == gene,]))+
+  plot_3 <- ggplot2::ggplot(ggdf,
+                            aes(x = cluster_louvain,
+                                y = logc[rownames(logc) == gene,]))+
     ggbeeswarm::geom_quasirandom(size = 0.2, color = "grey60")+
-    theme_classic()+
-    geom_boxplot(color = "black", alpha = 0)+
-    ylab(paste0(gene, " expression"))+
-    facet_grid(cols = vars(sce_clust$Species_ID))
+    ggplot2::theme_classic()+
+    ggplot2::geom_boxplot(color = "black", alpha = 0)+
+    ggplot2::ylab(base::paste0(gene, " expression"))+
+    ggplot2::facet_grid(cols = vars(sce_clust$Species_ID))
   
   return(list(gene, plot_1, plot_2, plot_3))
 }
@@ -186,6 +203,12 @@ plotlist <- lapply(as.list(remain_cand_list), gene_exps)
 plotlist
 ```
 
+```{r}
+print(ct_curr)
+print(shared_gene_list$all)
+print(shared_gene_list$three)
+```
+
 ```{r session_info}
-sessionInfo()
+utils::sessionInfo()
 ```

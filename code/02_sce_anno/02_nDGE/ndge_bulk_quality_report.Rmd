@@ -9,6 +9,9 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+Report on the quality of each bulk of cell types to be subclustered using
+nDGEs.
+
 #### Load objects
 
 ```{r seed,  message = FALSE}
@@ -28,10 +31,10 @@ source(file =  snakemake@params[["plotting"]])
 ```{r load_objects, message = FALSE}
 cluster_curr <- snakemake@wildcards[["cluster"]]
 
-sce <- readRDS(snakemake@input[["sce_input"]])
-sep <- readRDS(snakemake@input[["sep"]])
+sce <- base::readRDS(snakemake@input[["sce_input"]])
+sep <- base::readRDS(snakemake@input[["sep"]])
 
-rlog_list <- readRDS(snakemake@input[["rlog"]])
+rlog_list <- base::readRDS(snakemake@input[["rlog"]])
 
 sce_clust <- sce[,sce$cluster_louvain == as.numeric(cluster_curr)]
 ct_curr <- sce_clust$annotation_cluster[1]
@@ -60,14 +63,16 @@ col_batch_exp_day <- col_alp[names(col_alp) %in% sce_clust$Batch_exp_day]
 
 # QC
 
+Distribution of the expression values, should be mostly uniform
+
 ```{r plot_pca}
 plot1 <- pcaExplorer::distro_expr(rld, plot_type = "boxplot")+
-  theme_classic()+
-  theme(axis.text.x = element_text(angle = 90))+
-  theme(legend.position = "none")
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text.x = element_text(angle = 90),
+                 legend.position = "none")
 plot1
 
-rld_pca <- prcomp(t(assay(rld)))
+rld_pca <- stats::prcomp(t(SummarizedExperiment::assay(rld)))
 rld_cor <- pcaExplorer::correlatePCs(rld_pca, colData(rld))
 
 pcaExplorer::plotPCcorrs(rld_cor)
@@ -75,7 +80,7 @@ pcaExplorer::plotPCcorrs(rld_cor)
 
 ```{r make_ggdf}
 
-ggdf <- as.data.frame(rld_pca$x)
+ggdf <- base::as.data.frame(rld_pca$x)
 ggdf$Antibody_combination <- colData(rld)$Antibody_combination
 ggdf$age <- colData(rld)$age
 ggdf$condition <- colData(rld)$condition
@@ -84,44 +89,45 @@ ggdf$Batch_sequencing <- colData(rld)$Batch_sequencing
 ggdf$sample <- colData(rld)$sample
 ggdf$ncells <- colData(rld)$ncells
 
-print(ggdf)
+head(ggdf)
 ```
 
 # PCAs
 
 ```{r plot}
-plot1 <- ggplot(ggdf, aes(x = PC1, y = PC2, color = condition))+
-  geom_point()+
-  theme_classic()+
-  theme(axis.text = element_blank(),
-        axis.ticks = element_blank())+
-  scale_color_manual("Species", values = col_spc)
+plot1 <- ggplot2::ggplot(ggdf, aes(x = PC1, y = PC2, color = condition))+
+  ggplot2::geom_point()+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text = element_blank(),
+                 axis.ticks = element_blank())+
+  ggplot2::scale_color_manual("Species", values = col_spc)
 
-plot2 <- ggplot(ggdf, aes(x = PC1, y = PC2, color = age))+
-  geom_point()+
-  theme_classic()+
-  theme(axis.text = element_blank(),
-        axis.ticks = element_blank())+
-  scale_color_manual("Age", values = col_age)
+plot2 <- ggplot2::ggplot(ggdf, aes(x = PC1, y = PC2, color = age))+
+  ggplot2::geom_point()+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text = element_blank(),
+                 axis.ticks = element_blank())+
+  ggplot2::scale_color_manual("Age", values = col_age)
 
-plot3 <- ggplot(ggdf, aes(x = PC1, y = PC2, color = batch))+
-  geom_point()+
-  theme_classic()+
-  theme(axis.text = element_blank(),
-        axis.ticks = element_blank())+
-  scale_color_manual("Batch_exp_day", values = col_batch_exp_day)
+plot3 <- ggplot2::ggplot(ggdf, aes(x = PC1, y = PC2, color = batch))+
+  ggplot2::geom_point()+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text = element_blank(),
+                 axis.ticks = element_blank())+
+  ggplot2::scale_color_manual("Batch_exp_day", values = col_batch_exp_day)
 
-plot4 <- ggplot(ggdf, aes(x = PC1, y = PC2, color = Antibody_combination))+
-  geom_point()+
-  theme_classic()+
-  theme(axis.text = element_blank(),
-        axis.ticks = element_blank())
+plot4 <- ggplot2::ggplot(ggdf, 
+                         aes(x = PC1, y = PC2, color = Antibody_combination))+
+  ggplot2::geom_point()+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text = element_blank(),
+                 axis.ticks = element_blank())
 
-plot5 <- ggplot(ggdf, aes(x = PC1, y = PC2, color = ncells))+
-  geom_point()+
-  theme_classic()+
-  theme(axis.text = element_blank(),
-        axis.ticks = element_blank())
+plot5 <- ggplot2::ggplot(ggdf, aes(x = PC1, y = PC2, color = ncells))+
+  ggplot2::geom_point()+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text = element_blank(),
+                 axis.ticks = element_blank())
 
 plot1
 plot2
@@ -131,7 +137,7 @@ plot5
 ```
 
 ```{r pca3}
-rld_pca <- prcomp(t(assay(rld)))
+rld_pca <- stats::prcomp(t(SummarizedExperiment::assay(rld)))
 plot3 <- pcaExplorer::pcascree(rld_pca, type="pev")
 print(plot3)
 ```
@@ -145,18 +151,26 @@ pcaExplorer::hi_loadings(rld_pca, topN = 20, whichpc = 2)
 ```
 
 ```{r pca6}
-sampleDists <- dist(t(assay(rld)))
-sampleDistMatrix <- as.matrix(sampleDists)
+sampleDists <- stats::dist(t(SummarizedExperiment::assay(rld)))
+sampleDistMatrix <- base::as.matrix(sampleDists)
 rownames(sampleDistMatrix) <- rld$condition
 colnames(sampleDistMatrix) <- NULL
-colors <- colorRampPalette(rev(
+
+colors <- grDevices::colorRampPalette(base::rev(
   RColorBrewer::brewer.pal(9, "Blues")))(255)
+
 pheatmap::pheatmap(sampleDistMatrix,
-         clustering_distance_rows=sampleDists,
-         clustering_distance_cols=sampleDists,
-         col=colors)
+                   clustering_distance_rows=sampleDists,
+                   clustering_distance_cols=sampleDists,
+                   col=colors)
+
+rownames(sampleDistMatrix) <- rld$sample
+pheatmap::pheatmap(sampleDistMatrix,
+                   clustering_distance_rows=sampleDists,
+                   clustering_distance_cols=sampleDists,
+                   col=colors)
 ```
 
 ```{r session_info}
-sessionInfo()
+utils::sessionInfo()
 ```

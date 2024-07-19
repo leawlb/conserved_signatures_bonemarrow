@@ -54,7 +54,7 @@ sce_bc <- batchelor::correctExperiments(
   correct.all = TRUE,
   PARAM = FastMnnParam(cos.norm = FALSE), # since it was previously normalized
   batch = colData(sce)[,batch_pos],
-  subset.row = hvgs_BC, 
+  subset.row = hvgs_BC,  
   assay.type = "logcounts") 
 sce_bc$Correction_method <- rep("FastMNN", ncol(sce_bc))
 
@@ -63,7 +63,7 @@ print(sce_bc)
 warnings() # warnings about "useNames = NA is deprecated" which seems ignorable
 
 #-------------------------------------------------------------------------------
-  
+
 # rename it "PCA" because orig PCA is now called PCA_before 
 # so all following functions use corrected PCA automatically
 reducedDimNames(sce_bc)[reducedDimNames(sce_bc) == "corrected"] <- "PCA"
@@ -71,7 +71,7 @@ colnames(reducedDim(sce_bc, type = "PCA")) <- c(1:ncol(
   reducedDim(sce_bc, type = "PCA")))
 colnames(reducedDim(sce_bc, type = "PCA")) <- paste0(
   "PC", colnames(reducedDim(sce_bc, type = "PCA")))
-  
+
 # calculate UMAP based on corrected PCA
 # no new hvg determination because logcounts_batchnorm is not corrected anyway
 seeds_umap <- snakemake@params[["seeds_umap"]]

@@ -15,10 +15,6 @@ knitr::opts_chunk$set(echo = TRUE)
 set.seed(37)
 ```
 
-```{r load,  message = FALSE}
-#
-```
-
 ```{r source, message = FALSE}
 source(file =  snakemake@params[["functions"]])
 source(file =  snakemake@params[["plotting"]])
@@ -27,26 +23,28 @@ source(file =  snakemake@params[["plotting"]])
 ```{r load objects}
 
 #load SCE objects
-sce <- readRDS(file = snakemake@input[["sce_input"]])
-cluster <- readRDS(file = snakemake@input[["sep"]])
+sce <- base::readRDS(file = snakemake@input[["sce_input"]])
+cluster <- base::readRDS(file = snakemake@input[["sep"]])
 cluster_curr <- snakemake@wildcards[["cluster"]]
-print(cluster == cluster_curr)
+
+stopifnot(cluster == cluster_curr)
+
 fraction_curr <- sce$Fraction_ID[1]
 
 sce_cluster <- sce[,sce$cluster_louvain == cluster]
 
 # load marker genes and results
-results_go <- readRDS(file = snakemake@input[["go"]])
-results_markers <- readRDS(file = snakemake@input[["markers"]])
+results_go <- base::readRDS(file = snakemake@input[["go"]])
+results_markers <- base::readRDS(file = snakemake@input[["markers"]])
 
-markers <- results_markers[[as.numeric(cluster_curr)]]
-go <- results_go[[as.numeric(cluster_curr)]]
+markers <- results_markers[[base::as.numeric(cluster_curr)]]
+go <- results_go[[base::as.numeric(cluster_curr)]]
 
 print(cluster_curr)
 print(sce)
 print(fraction_curr)
 
-gene_list <- read.csv(snakemake@input[["gene_list"]], 
+gene_list <- utils::read.csv(snakemake@input[["gene_list"]], 
   header = TRUE, 
   sep = ";", 
   check.names=FALSE, 
@@ -65,12 +63,12 @@ source(snakemake@params[["colors"]])
 sce <- factor_reference_cts(sce)
 sce_cluster <- factor_reference_cts(sce_cluster)
 
-col_cts_baccin <- col_cts_ref[match(levels(sce$baccin_celltype_scmapclust), 
-                                names(col_cts_ref))]
-col_cts_dahlin <- col_cts_ref[match(levels(sce$dahlin_celltype_scmapclust), 
-                                names(col_cts_ref))]
-col_cts_dolgalev <- col_cts_ref[match(levels(sce$dolgalev_celltype_scmapclust),
-                                  names(col_cts_ref))]
+col_cts_baccin <- col_cts_ref[base::match(
+  levels(sce$baccin_celltype_scmapclust), names(col_cts_ref))]
+col_cts_dahlin <- col_cts_ref[base::match(
+  levels(sce$dahlin_celltype_scmapclust), names(col_cts_ref))]
+col_cts_dolgalev <- col_cts_ref[base::match(
+  levels(sce$dolgalev_celltype_scmapclust), names(col_cts_ref))]
 
 col_clust_l <- col_num[names(col_num) %in% sce$cluster_louvain]
 
@@ -87,31 +85,32 @@ Cells were annotated with scmap and three reference datasets.
 identity_plots <- function(sce){
   
   plot_1 <- umap_base(sce, color_by = "baccin_celltype_scmapclust")+ 
-    ggtitle(paste0(fraction_curr))+
-    scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)
+    ggplot2::ggtitle(fraction_curr)+
+    ggplot2::scale_color_manual(values = col_cts_baccin)
   plot_1l <- umap_legend(sce, color_by = "baccin_celltype_scmapclust")+
-    scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)
-  legend_1 <- get_legend(plot_1l)
+    ggplot2::scale_color_manual("baccin_celltype_scmapclust", 
+                                values = col_cts_baccin)
+  legend_1 <- ggpubr::get_legend(plot_1l)
 
   plot_2 <- umap_base(sce, color_by = "dahlin_celltype_scmapclust")+
-    ggtitle(paste0(fraction_curr))+
-    scale_color_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin)
+    ggplot2::ggtitle(fraction_curr)+
+    ggplot2::scale_color_manual(values = col_cts_dahlin)
   plot_2l <- umap_legend(sce, color_by = "dahlin_celltype_scmapclust")+
-    scale_color_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin)
-  legend_2 <- get_legend(plot_2l)
+    ggplot2::scale_color_manual("dahlin_celltype_scmapclust", 
+                                values = col_cts_dahlin)
+  legend_2 <- ggpubr::get_legend(plot_2l)
   
   plot_3 <- umap_base(sce, color_by = "dolgalev_celltype_scmapclust")+ 
-    ggtitle(paste0(fraction_curr))+
-    scale_color_manual("dolgalev_celltype_scmapclust",
-                       values = col_cts_dolgalev)
+    ggplot2::ggtitle(fraction_curr)+
+    ggplot2::scale_color_manual(values = col_cts_dolgalev)
   plot_3l <- umap_legend(sce, color_by = "dolgalev_celltype_scmapclust")+
-    scale_color_manual("dolgalev_celltype_scmapclust", 
-                       values = col_cts_dolgalev)
-  legend_3 <- get_legend(plot_3l)
+    ggplot2::scale_color_manual("dolgalev_celltype_scmapclust", 
+                                values = col_cts_dolgalev)
+  legend_3 <- ggpubr::get_legend(plot_3l)
   
-  PLOT_1 <- ggarrange(plot_1, legend_1)
-  PLOT_2 <- ggarrange(plot_2, legend_2)
-  PLOT_3 <- ggarrange(plot_3, legend_3)
+  PLOT_1 <- ggpubr::ggarrange(plot_1, legend_1)
+  PLOT_2 <- ggpubr::ggarrange(plot_2, legend_2)
+  PLOT_3 <- ggpubr::ggarrange(plot_3, legend_3)
 
   return(list(PLOT_1, PLOT_2, PLOT_3))
 }
@@ -133,26 +132,20 @@ identity_plots
 ```{r cluster_plots, fig.width=8, fig.height=4}
 
 plot_1 <- umap_base(sce, color_by = "cluster_louvain")+ 
-  scale_color_manual("cluster (louvain)", values = col_clust_l)
+  ggplot2::scale_color_manual(values = col_clust_l)
 plot_1l <- umap_legend(sce, color_by = "cluster_louvain")+
-  scale_color_manual("cluster (louvain)", values = col_clust_l)
+  ggplot2::scale_color_manual("cluster (louvain)", values = col_clust_l)
 legend_1 <- get_legend(plot_1l)
 
 plot_2 <- pca_base2(sce, color_by = "cluster_louvain")+ 
-  scale_color_manual("cluster (louvain)", values = col_clust_l)
-plot_2l <- pca_legend(sce, color_by = "cluster_louvain")+
-  scale_color_manual("cluster (louvain)", values = col_clust_l)
-legend_2 <- get_legend(plot_2l)
+  ggplot2::scale_color_manual(values = col_clust_l)
 
 plot_3 <- pca_base3(sce, color_by = "cluster_louvain")+ 
-  scale_color_manual("cluster (louvain)", values = col_clust_l)
-plot_3l <- pca_legend(sce, color_by = "cluster_louvain")+
-  scale_color_manual("cluster (louvain)", values = col_clust_l)
-legend_3 <- get_legend(plot_3l)
+  ggplot2::scale_color_manual(values = col_clust_l)
 
-PLOT_1 <- ggarrange(plot_1, legend_1)
-PLOT_2 <- ggarrange(plot_2, legend_2)
-PLOT_3 <- ggarrange(plot_3, legend_3)
+PLOT_1 <- ggpubr::ggarrange(plot_1, legend_1)
+PLOT_2 <- ggpubr::ggarrange(plot_2, legend_1)
+PLOT_3 <- ggpubr::ggarrange(plot_3, legend_1)
   
 PLOT_1
 PLOT_2
@@ -168,7 +161,7 @@ markers[1:50,1:4]
 ```
 
 ```{r markers2}
-markers[order(markers$pct.1, decreasing = TRUE),][1:50,1:4]
+markers[base::order(markers$pct.1, decreasing = TRUE),][1:50,1:4]
 ```
 
 ## GO analysis
@@ -198,47 +191,50 @@ gene_exps <- function(gene){
 
   # Gene expression UMAP in cluster X, separated by species
   plot_2 <- umap_gene(sce_cluster, gene)+
-    facet_grid(cols = vars(sce_cluster$Species_ID),
-               rows = vars(sce_cluster$Age_ID))
+    ggplot2::facet_grid(cols = vars(sce_cluster$Species_ID),
+                        rows = vars(sce_cluster$Age_ID))
   
-  ggdf <- as.data.frame(colData(sce_cluster))
-  logc <- assays(sce_cluster)[["logcounts"]]
+  ggdf <- base::as.data.frame(colData(sce_cluster))
+  logc <- SummarizedExperiment::assays(sce_cluster)[["logcounts"]]
 
   ggdf$Species_ID <- factor(ggdf$Species_ID,
                             levels = c("mmus", "mcas", "mspr", "mcar"))
   
-  plot_3 <- ggplot(ggdf, aes(x = cluster_louvain,
-                             y = logc[rownames(logc) == gene,]))+
+  plot_3 <- ggplot2::ggplot(ggdf, 
+                            aes(x = cluster_louvain,
+                                y = logc[rownames(logc) == gene,]))+
     ggbeeswarm::geom_quasirandom(size = 0.2, color = "grey60")+
-    theme_classic()+
-    geom_boxplot(color = "black", alpha = 0)+
-    ylab(paste0(gene, " expression"))+
-    facet_grid(cols = vars(sce_cluster$Species_ID),
-               rows = vars(sce_cluster$Age_ID))
+    ggplot2::theme_classic()+
+    ggplot2::geom_boxplot(color = "black", alpha = 0)+
+    ggplot2::ylab(base::paste0(gene, " expression"))+
+    ggplot2::facet_grid(cols = vars(sce_cluster$Species_ID),
+                        rows = vars(sce_cluster$Age_ID))
   
-  ggdf_full <- as.data.frame(colData(sce))
-  logc_full <- assays(sce)[["logcounts"]]
+  ggdf_full <- base::as.data.frame(colData(sce))
+  logc_full <- SummarizedExperiment::assays(sce)[["logcounts"]]
   
   plot_4 <- umap_gene(sce, gene)
   
-  plot_5 <- ggplot(ggdf_full, aes(x = cluster_louvain,
-                           y = logc_full[rownames(logc_full) == gene,], 
-                           color = cluster_louvain))+
+  plot_5 <- ggplot2::ggplot(ggdf_full, 
+                            aes(x = cluster_louvain,
+                                y = logc_full[rownames(logc_full) == gene,], 
+                                color = cluster_louvain))+
     ggbeeswarm::geom_quasirandom(size = 0.2)+
-    theme_classic()+
-    scale_color_manual(values = col_clust_l)+
-    geom_boxplot(color = "black", alpha = 0)+
-    ylab(paste0(gene, " expression"))
+    ggplot2::theme_classic()+
+    ggplot2::scale_color_manual(values = col_clust_l)+
+    ggplot2::geom_boxplot(color = "black", alpha = 0)+
+    ggplot2::ylab(base::paste0(gene, " expression"))
 
   plot_6 <- umap_gene(sce, gene)+
-    facet_grid(cols = vars(sce$Species_ID))
+    ggplot2::facet_grid(cols = vars(sce$Species_ID))
   
-  plot_7 <- ggplot(ggdf_full, aes(x = Species_ID,
-                           y = logc_full[rownames(logc_full) == gene,]))+
+  plot_7 <- ggplot2::ggplot(ggdf_full, 
+                            aes(x = Species_ID,
+                                y = logc_full[rownames(logc_full) == gene,]))+
     ggbeeswarm::geom_quasirandom(size = 0.2, color = "grey60")+
-    theme_classic()+
-    geom_boxplot(color = "black", alpha = 0)+
-    ylab(paste0(gene, " expression"))
+    ggplot2::theme_classic()+
+    ggplot2::geom_boxplot(color = "black", alpha = 0)+
+    ggplot2::ylab(base::paste0(gene, " expression"))
   
   return(list(gene, plot_1, plot_2, plot_3, plot_4, plot_5, plot_6, plot_7))
 }
@@ -247,12 +243,12 @@ gene_exps <- function(gene){
 ```{r markers3}
 found_markers <- rownames(markers)[1:50]
 
-cluster_curr_char <- paste0("cluster_", cluster_curr)
+cluster_curr_char <- base::paste0("cluster_", cluster_curr)
 gene_markers <- gene_list$Gene[gene_list$Fraction == fraction_curr]
 print(gene_markers)
 
-all_markers <- unique(c(found_markers, gene_markers))
-all_markers <- as.list(sort(all_markers))
+all_markers <- base::unique(c(found_markers, gene_markers))
+all_markers <- as.list(base::sort(all_markers))
 print(all_markers[which(!all_markers %in% rownames(sce))])
 
 all_markers <- all_markers[which(all_markers %in% rownames(sce))]
@@ -267,5 +263,5 @@ plotlist
 ```
 
 ```{r session_info}
-sessionInfo()
+utils::sessionInfo()
 ```

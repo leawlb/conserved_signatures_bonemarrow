@@ -32,8 +32,8 @@ source(file =  snakemake@params[["plotting"]])
 batch_use <- snakemake@params[["batch_use"]]
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
 
-sce_input_raw <- readRDS(file = snakemake@input[["sce_input_raw"]])
-sce_mnn <- readRDS(file = snakemake@input[["sce_input_corrected"]])
+sce_input_raw <- base::readRDS(file = snakemake@input[["sce_input_raw"]])
+sce_mnn <- base::readRDS(file = snakemake@input[["sce_input_corrected"]])
 
 sce_list <- list(list(sce_input_raw, " after merging"),
                  list(sce_mnn, " MNN batch correction"))
@@ -46,7 +46,7 @@ sce_list <- lapply(sce_list, function(x){
 
 # randomize counts for nicer plots
 sce_list <- lapply(sce_list, function(x){
-  x[[1]] <- x[[1]][,sample(c(1:ncol(x[[1]])), size = ncol(x[[1]]))]
+  x[[1]] <- x[[1]][,base::sample(c(1:ncol(x[[1]])), size = ncol(x[[1]]))]
   return(x)
 })
 ```
@@ -56,7 +56,6 @@ colors_ref_path <- snakemake@params[["colors_ref_path"]]
 colors_path <- snakemake@params[["colors_path"]]
 source(snakemake@params[["colors"]])
 
-# use one sce for general colors
 fraction_curr <- sce_list[[1]][[1]]$Fraction_ID[1]
 
 if(fraction_curr == "hsc"){
@@ -65,17 +64,18 @@ if(fraction_curr == "hsc"){
   col_cts_ref["unassigned"] <- "mistyrose3"
 }
 
-col_cts_baccin <- col_cts_ref[match(
+col_cts_baccin <- col_cts_ref[base::match(
   levels(sce_list[[1]][[1]]$baccin_celltype_scmapclust), names(col_cts_ref))]
-col_cts_dahlin <- col_cts_ref[match(
+col_cts_dahlin <- col_cts_ref[base::match(
   levels(sce_list[[1]][[1]]$dahlin_celltype_scmapclust), names(col_cts_ref))]
-col_cts_dolgalev <- col_cts_ref[match(
+col_cts_dolgalev <- col_cts_ref[base::match(
   levels(sce_list[[1]][[1]]$dolgalev_celltype_scmapclust), names(col_cts_ref))]
 
 col_batch_exp_day <- col_alp[names(col_alp) %in%
                                sce_list[[1]][[1]]$Batch_exp_day]
 col_batch_seq <- col_num[names(col_num) %in% 
                            sce_list[[1]][[1]]$Batch_sequencing]
+
 col_age <- col_age[names(col_age) %in% sce_list[[1]][[1]]$Age_ID]
 col_frc <- col_frc[names(col_frc) %in% sce_list[[1]][[1]]$Fraction_ID]
 col_spc <- col_spc[names(col_spc) %in% sce_list[[1]][[1]]$Species_ID]
@@ -84,39 +84,41 @@ col_spc <- col_spc[names(col_spc) %in% sce_list[[1]][[1]]$Species_ID]
 # Reference cell types 
 
 Cells were annotated with scmapclust and three reference datasets.
+Own functions.
 
 ```{r plot_function}
 
 identity_plots <- function(sce, title){
   
-  sce <- sce[,sample(c(1:ncol(sce), ncol(sce)))]
+  title_full <- base::paste0(fraction_curr, title)
   
   plot_1 <- umap_base(sce, color_by = "baccin_celltype_scmapclust")+ 
-    ggtitle(paste0(fraction_curr, title))+
-    scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)
+    ggplot2::ggtitle(title_full)+
+    ggplot2::scale_color_manual(values = col_cts_baccin)
   plot_1l <- umap_legend(sce, color_by = "baccin_celltype_scmapclust")+
-    scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)
-  legend_1 <- get_legend(plot_1l)
+    ggplot2::scale_color_manual("baccin_celltype_scmapclust",
+                                values = col_cts_baccin)
+  legend_1 <- ggpubr::get_legend(plot_1l)
 
   plot_2 <- umap_base(sce, color_by = "dahlin_celltype_scmapclust")+
-    ggtitle(paste0(fraction_curr, title))+
-    scale_color_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin)
+    ggplot2::ggtitle(title_full)+
+    ggplot2::scale_color_manual(values = col_cts_dahlin)
   plot_2l <- umap_legend(sce, color_by = "dahlin_celltype_scmapclust")+
-    scale_color_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin)
-  legend_2 <- get_legend(plot_2l)
+    ggplot2::scale_color_manual("dahlin_celltype_scmapclust",
+                                values = col_cts_dahlin)
+  legend_2 <- ggpubr::get_legend(plot_2l)
   
   plot_3 <- umap_base(sce, color_by = "dolgalev_celltype_scmapclust")+
-    ggtitle(paste0(fraction_curr, title))+
-    scale_color_manual("dolgalev_celltype_scmapclust", 
-                       values = col_cts_dolgalev)
+    ggplot2::ggtitle(title_full)+
+    ggplot2::scale_color_manual(values = col_cts_dolgalev)
   plot_3l <- umap_legend(sce, color_by = "dolgalev_celltype_scmapclust")+
-    scale_color_manual("dolgalev_celltype_scmapclust",
-                       values = col_cts_dolgalev)
-  legend_3 <- get_legend(plot_3l)
+    ggplot2::scale_color_manual("dolgalev_celltype_scmapclust",
+                                values = col_cts_dolgalev)
+  legend_3 <- ggpubr::get_legend(plot_3l)
   
-  PLOT_1 <- ggarrange(plot_1, legend_1)
-  PLOT_2 <- ggarrange(plot_2, legend_2)
-  PLOT_3 <- ggarrange(plot_3, legend_3)
+  PLOT_1 <- ggpubr::ggarrange(plot_1, legend_1)
+  PLOT_2 <- ggpubr::ggarrange(plot_2, legend_2)
+  PLOT_3 <- ggpubr::ggarrange(plot_3, legend_3)
 
   return(list(PLOT_1, PLOT_2, PLOT_3))
 }
@@ -124,9 +126,9 @@ identity_plots <- function(sce, title){
 
 ```{r print_basic}
 print(fraction_curr)
-print(table(sce_input_raw$baccin_celltype_scmapclust))
-print(table(sce_input_raw$dahlin_celltype_scmapclust))
-print(table(sce_input_raw$dolgalev_celltype_scmapclust))
+print(base::table(sce_input_raw$baccin_celltype_scmapclust))
+print(base::table(sce_input_raw$dahlin_celltype_scmapclust))
+print(base::table(sce_input_raw$dolgalev_celltype_scmapclust))
 ```
 
 ### After merging
@@ -148,126 +150,115 @@ identity_plotlist
 
 qc_plots <- function(sce, title){
   
-  sce <- sce[,sample(c(1:ncol(sce), ncol(sce)))]
-  
-  plot_1 <- umap_base(sce, color_by = "Object_ID")+ # own function
-    ggtitle(paste0(fraction_curr, title))
+  title_full <- base::paste0(fraction_curr, title)
+
+  plot_1 <- umap_base(sce, color_by = "Object_ID")+
+    ggplot2::ggtitle(title_full)
   plot_1l <- umap_legend(sce, color_by = "Object_ID")+
-    scale_color_discrete("Object_ID")
-  legend_1 <- get_legend(plot_1l)
+    ggplot2::scale_color_discrete("Object_ID")
+  legend_1 <- ggpubr::get_legend(plot_1l)
   
   plot_2 <- umap_base(sce, color_by = "Batch_sequencing")+
-    scale_color_manual("Batch_sequencing", values = col_batch_seq)+
-    ggtitle(paste0(fraction_curr, title))
+    ggplot2::scale_color_manual(values = col_batch_seq)+
+    ggplot2::ggtitle(title_full)
   plot_2l <- umap_legend(sce, color_by = "Batch_sequencing")+
-    scale_color_manual("Batch_sequencing", values = col_batch_seq)
-  legend_2 <- get_legend(plot_2l)
+    ggplot2::scale_color_manual("Batch_sequencing", values = col_batch_seq)
+  legend_2 <- ggpubr::get_legend(plot_2l)
   
   plot_3 <- umap_base(sce, color_by = "Batch_exp_day")+ 
-    scale_color_manual("Batch_experimental_day",values =  col_batch_exp_day)+
-    ggtitle(paste0(fraction_curr, title))
+    ggplot2::scale_color_manual(values =  col_batch_exp_day)+
+    ggplot2::ggtitle(title_full)
   plot_3l <- umap_legend(sce, color_by = "Batch_exp_day")+
-    scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)
-  legend_3 <- get_legend(plot_3l)
+    ggplot2::scale_color_manual("Batch_experimental_day", 
+                                values = col_batch_exp_day)
+  legend_3 <- ggpubr::get_legend(plot_3l)
   
   plot_4 <- umap_base(sce, color_by = "Date_collected")+ 
-    ggtitle(paste0(fraction_curr, title))
+    ggplot2::ggtitle(title_full)
   plot_4l <- umap_legend(sce, color_by = "Date_collected")+
-    scale_color_discrete("Date of collection")
-  legend_4 <- get_legend(plot_4l)
+    ggplot2::scale_color_discrete("Date of collection")
+  legend_4 <- ggpubr::get_legend(plot_4l)
   
   # check everything else
   plot_5 <- umap_base(sce, color_by = "Species_ID")+ 
-    scale_color_manual("Species", values = col_spc)+
-    ggtitle(paste0(fraction_curr, title))
+    ggplot2::scale_color_manual(values = col_spc)+
+    ggplot2::ggtitle(title_full)
   plot_5l <- umap_legend(sce, color_by = "Species_ID")+
-    scale_color_manual("Species", values = col_spc)
-  legend_5 <- get_legend(plot_5l)
+    ggplot2::scale_color_manual("Species", values = col_spc)
+  legend_5 <- ggpubr::get_legend(plot_5l)
   
   plot_6 <- umap_base(sce, color_by = "Age_ID")+ 
-    scale_color_manual("Age", values = col_age)+
-    ggtitle(paste0(fraction_curr, title))
+    ggplot2::scale_color_manual(values = col_age)+
+    ggplot2::ggtitle(title_full)
   plot_6l <- umap_legend(sce, color_by = "Age_ID")+
-    scale_color_manual("Age", values = col_age)
-  legend_6 <- get_legend(plot_6l) 
+    ggplot2::scale_color_manual("Age", values = col_age)
+  legend_6 <- ggpubr::get_legend(plot_6l) 
   
   plot_7 <- umap_base(sce, color_by = "Fraction_ID")+ 
-    scale_color_manual("Fraction", values = col_frc)+
-    ggtitle(paste0(fraction_curr, title))
+    ggplot2::scale_color_manual(values = col_frc)+
+    ggplot2::ggtitle(title_full)
   plot_7l <- umap_legend(sce, color_by = "Fraction_ID")+
-    scale_color_manual("Fraction", values = col_frc)
-  legend_7 <- get_legend(plot_7l) 
+    ggplot2::scale_color_manual("Fraction", values = col_frc)
+  legend_7 <- ggpubr::get_legend(plot_7l) 
  
   plot_8 <- umap_base(sce, color_by = "Antibody_combination")+ 
-    ggtitle(paste0(fraction_curr, title))
+    ggplot2::ggtitle(title_full)
   plot_8l <- umap_legend(sce, color_by = "Antibody_combination")+
-    scale_color_discrete("Antibody combination")
-  legend_8 <- get_legend(plot_8l)
+    ggplot2::scale_color_discrete("Antibody combination")
+  legend_8 <- ggpubr::get_legend(plot_8l)
   
   plot_9 <- umap_base(sce, color_by = "doublet_score")+ 
-    ggtitle(paste0(fraction_curr, title))
+    ggplot2::ggtitle(title_full)
   plot_9l <- umap_legend(sce, color_by = "doublet_score")+
-    scale_color_continuous("Doublet score")
-  legend_9 <- get_legend(plot_9l)
+    ggplot2::scale_color_continuous("Doublet score")
+  legend_9 <- ggpubr::get_legend(plot_9l)
   
   plot_10 <- umap_base(sce, color_by = "Keep_sample")+ 
-    ggtitle(paste0(fraction_curr, title))
+    ggplot2::ggtitle(title_full)
   plot_10l <- umap_legend(sce, color_by = "Keep_sample")+
-    scale_color_discrete("Keep_sample")
-  legend_10 <- get_legend(plot_10l)
+    ggplot2::scale_color_discrete("Keep_sample")
+  legend_10 <- ggpubr::get_legend(plot_10l)
   
   qcdf <- scuttle::perCellQCMetrics(sce)
   sce$sum <- qcdf$sum
   sce$detected <- qcdf$detected
 
   plot_11 <- umap_base(sce, color_by = "sum")+
-    scale_color_gradientn("Library size", 
-                           limits = c(0, 100000),
-                           colors = c("black", "darkorange4", "darkorange3",
-                                      "darkorange1",
-                                      "orange", "orange", "gold1", "gold",
-                                      "lightgoldenrod", "lightgoldenrod", 
-                                      "lightgoldenrod", "lightgoldenrod", 
-                                      "lightgoldenrod", "lightgoldenrod"))+
-    ggtitle(paste0(fraction_curr, title))
+    ggplot2::scale_color_gradientn("Library size", 
+                                   limits = c(0, 100000),
+                                   colors = color_vector_sum)+
+    ggplot2::ggtitle(title_full)
   plot_11l <- umap_legend(sce, color_by = "sum")+
-    scale_color_gradientn("Library size", 
-                           limits = c(0, 1000000),
-                            colors = c("black", "darkorange4", "darkorange3", 
-                                       "darkorange1",
-                                      "orange", "orange", "gold1", "gold",
-                                      "lightgoldenrod", "lightgoldenrod", 
-                                      "lightgoldenrod", "lightgoldenrod", 
-                                      "lightgoldenrod", "lightgoldenrod"))
-  legend_11 <- get_legend(plot_11l)
+    ggplot2::scale_color_gradientn("Library size", 
+                                   limits = c(0, 1000000),
+                                   colors = color_vector_sum)
+  legend_11 <- ggpubr::get_legend(plot_11l)
 
   plot_12 <- umap_base(sce, color_by = "detected")+
-    scale_color_gradientn("Number of detected genes", 
-                           limits = c(0, 10000),
-                           colors = c("black", "darkorange3", "orange", 
-                                      "lightgoldenrod"))+
-    ggtitle(paste0(fraction_curr, title))
+    ggplot2::scale_color_gradientn("Number of detected genes", 
+                                   limits = c(0, 10000),
+                                   colors = color_vector_det)+
+    ggplot2::ggtitle(base::paste0(fraction_curr, title))
   plot_12l <- umap_legend(sce, color_by = "detected")+
-    scale_color_gradientn("Number of detected genes", 
-                           limits = c(0, 10000),
-                           colors = c("black", "darkorange3", "orange", 
-                                      "lightgoldenrod"))
-  legend_12 <- get_legend(plot_12l)
+    ggplot2::scale_color_gradientn("Number of detected genes", 
+                                   limits = c(0, 10000),
+                                   colors = color_vector_det)
+  legend_12 <- ggpubr::get_legend(plot_12l)
   
-  PLOT_12 <- ggarrange(plot_12, legend_12)
+  PLOT_12 <- ggpubr::ggarrange(plot_12, legend_12)
 
-  PLOT_1 <- ggarrange(plot_1, legend_1)
-  PLOT_2 <- ggarrange(plot_2, legend_2)
-  PLOT_3 <- ggarrange(plot_3, legend_3)
-  PLOT_4 <- ggarrange(plot_4, legend_4)
-  PLOT_5 <- ggarrange(plot_5, legend_5)
-  PLOT_6 <- ggarrange(plot_6, legend_6)
-  PLOT_7 <- ggarrange(plot_7, legend_7)
-  PLOT_8 <- ggarrange(plot_8, legend_8)
-  PLOT_9 <- ggarrange(plot_9, legend_9)
-  PLOT_10 <- ggarrange(plot_10, legend_10)
-  PLOT_11 <- ggarrange(plot_11, legend_11)
-  PLOT_12 <- ggarrange(plot_12, legend_12)
+  PLOT_1 <- ggpubr::ggarrange(plot_1, legend_1)
+  PLOT_2 <- ggpubr::ggarrange(plot_2, legend_2)
+  PLOT_3 <- ggpubr::ggarrange(plot_3, legend_3)
+  PLOT_4 <- ggpubr::ggarrange(plot_4, legend_4)
+  PLOT_5 <- ggpubr::ggarrange(plot_5, legend_5)
+  PLOT_6 <- ggpubr::ggarrange(plot_6, legend_6)
+  PLOT_7 <- ggpubr::ggarrange(plot_7, legend_7)
+  PLOT_8 <- ggpubr::ggarrange(plot_8, legend_8)
+  PLOT_9 <- ggpubr::ggarrange(plot_9, legend_9)
+  PLOT_10 <- ggpubr::ggarrange(plot_10, legend_10)
+  PLOT_11 <- ggpubr::ggarrange(plot_11, legend_11)
+  PLOT_12 <- ggpubr::ggarrange(plot_12, legend_12)
 
   plot_list <- list(PLOT_1, PLOT_2, PLOT_3, PLOT_4, PLOT_5, PLOT_6, PLOT_7,
                     PLOT_8, PLOT_9, PLOT_10, PLOT_11, PLOT_12)
@@ -297,205 +288,196 @@ Seurat.
 
 facet_plots <- function(sce, title){
   
-  sce <- sce[,sample(c(1:ncol(sce), ncol(sce)))]
-
+  title_full <- base::paste0(fraction_curr, title)
+  
   # VARS SPECIES
   plot_1 <- umap_base(sce, color_by = "Object_ID")+ 
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Species_ID))
+    ggplot2::ggtitle(title_full)+
+    ggplot2::facet_grid(cols = vars(sce$Species_ID))
   plot_1l <- umap_legend(sce, color_by = "Object_ID")+
-    scale_color_discrete("Object_ID")
-  legend_1 <- get_legend(plot_1l)
+    ggplot2::scale_color_discrete("Object_ID")
+  legend_1 <- ggpubr::get_legend(plot_1l)
   
   plot_2 <- umap_base(sce, color_by = "Batch_sequencing")+
-    scale_color_manual("Batch_sequencing", values = col_batch_seq)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Species_ID))
+    ggplot2::scale_color_manual(values = col_batch_seq)+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::facet_grid(cols = vars(sce$Species_ID))
   plot_2l <- umap_legend(sce, color_by = "Batch_sequencing")+
-    scale_color_manual("Batch_sequencing", values = col_batch_seq)
-  legend_2 <- get_legend(plot_2l)
+    ggplot2::scale_color_manual("Batch_sequencing", values = col_batch_seq)
+  legend_2 <- ggpubr::get_legend(plot_2l)
   
   plot_3 <- umap_base(sce, color_by = "Batch_exp_day")+
-    scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Species_ID))
+    ggplot2::scale_color_manual(values = col_batch_exp_day)+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::facet_grid(cols = vars(sce$Species_ID))
   plot_3l <- umap_legend(sce, color_by = "Batch_exp_day")+
-    scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)
-  legend_3 <- get_legend(plot_3l)
+    ggplot2::scale_color_manual("Batch_experimental_day", 
+                                values = col_batch_exp_day)
+  legend_3 <- ggpubr::get_legend(plot_3l)
   
   plot_19 <- umap_base(sce, color_by = "Age_ID")+
-    scale_color_manual("Age", values = col_age)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Species_ID))
+    ggplot2::scale_color_manual(values = col_age)+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::facet_grid(cols = vars(sce$Species_ID))
   plot_19l <- umap_legend(sce, color_by = "Age_ID")+
-    scale_color_manual("Age", values = col_age)
-  legend_19 <- get_legend(plot_19l)
+    ggplot2::scale_color_manual("Age", values = col_age)
+  legend_19 <- ggpubr::get_legend(plot_19l)
   
   plot_21 <- umap_base(sce, color_by = "Antibody_combination")+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Species_ID))
+    ggplot2::ggtitle(title_full)+
+    ggplot2::facet_grid(cols = vars(sce$Species_ID))
   plot_21l <- umap_legend(sce, color_by = "Antibody_combination")+
-    scale_color_discrete(name = "Antibody combination")
-  legend_21 <- get_legend(plot_21l)
+    ggplot2::scale_color_discrete(name = "Antibody combination")
+  legend_21 <- ggpubr::get_legend(plot_21l)
 
   # AGE
   plot_4 <- umap_base(sce, color_by = "Object_ID")+ 
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Age))
+    ggplot2::ggtitle(title_full)+
+    ggplot2::facet_grid(cols = vars(sce$Age))
   plot_4l <- umap_legend(sce, color_by = "Object_ID")+
-    scale_color_discrete("Object_ID")
-  legend_4 <- get_legend(plot_4l)
+    ggplot2::scale_color_discrete("Object_ID")
+  legend_4 <- ggpubr::get_legend(plot_4l)
   
   plot_5 <- umap_base(sce, color_by = "Batch_sequencing")+
-    scale_color_manual("Batch_sequencing", values = col_batch_seq)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Age))
+    ggplot2::scale_color_manual(values = col_batch_seq)+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::facet_grid(cols = vars(sce$Age))
   plot_5l <- umap_legend(sce, color_by = "Batch_sequencing")+
-    scale_color_manual("Batch_sequencing", values = col_batch_seq)
-  legend_5 <- get_legend(plot_5l)
+    ggplot2::scale_color_manual("Batch_sequencing", values = col_batch_seq)
+  legend_5 <- ggpubr::get_legend(plot_5l)
   
   plot_6 <- umap_base(sce, color_by = "Batch_exp_day")+
-    scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Age))
+    ggplot2::scale_color_manual(values = col_batch_exp_day)+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::facet_grid(cols = vars(sce$Age))
   plot_6l <- umap_legend(sce, color_by = "Batch_exp_day")+
-    scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)
-  legend_6 <- get_legend(plot_6l)
+    ggplot2::scale_color_manual("Batch_experimental_day",
+                                values = col_batch_exp_day)
+  legend_6 <- ggpubr::get_legend(plot_6l)
   
   plot_20 <- umap_base(sce, color_by = "Species_ID")+
-    scale_color_manual("Species_ID", values = col_spc)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Age))
+    ggplot2::scale_color_manual(values = col_spc)+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::facet_grid(cols = vars(sce$Age))
   plot_20l <- umap_legend(sce, color_by = "Species_ID")+
-    scale_color_manual("Species_ID", values = col_spc)
-  legend_20 <- get_legend(plot_20l)
+    ggplot2::scale_color_manual("Species_ID", values = col_spc)
+  legend_20 <- ggpubr::get_legend(plot_20l)
   
   # Identities
   plot_7 <- umap_base(sce, color_by = "baccin_celltype_scmapclust")+
-    scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Species_ID))
+    ggplot2::scale_color_manual(values = col_cts_baccin)+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::facet_grid(cols = vars(sce$Species_ID))
   plot_7l <- umap_legend(sce, color_by = "baccin_celltype_scmapclust")+
-    scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)
-  legend_baccin <- get_legend(plot_7l)
+    ggplot2::scale_color_manual("baccin_celltype_scmapclust", 
+                                values = col_cts_baccin)
+  legend_baccin <- ggpubr::get_legend(plot_7l)
   
   plot_8 <- umap_base(sce, color_by = "dahlin_celltype_scmapclust")+
-    scale_color_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Species_ID))
+    ggplot2::scale_color_manual(values = col_cts_dahlin)+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::facet_grid(cols = vars(sce$Species_ID))
   plot_8l <- umap_legend(sce, color_by = "dahlin_celltype_scmapclust")+
-    scale_color_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin)
-  legend_dahlin <- get_legend(plot_8l)
+    ggplot2::scale_color_manual("dahlin_celltype_scmapclust",
+                                values = col_cts_dahlin)
+  legend_dahlin <- ggpubr::get_legend(plot_8l)
   
   plot_9 <- umap_base(sce, color_by = "dolgalev_celltype_scmapclust")+
-    scale_color_manual("dolgalev_celltype_scmapclust",
-                       values = col_cts_dolgalev)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Species_ID))
+    ggplot2::scale_color_manual(values = col_cts_dolgalev)+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::facet_grid(cols = vars(sce$Species_ID))
   plot_9l <- umap_legend(sce, color_by = "dolgalev_celltype_scmapclust")+
-    scale_color_manual("dolgalev_celltype_scmapclust",
+    ggplot2::scale_color_manual("dolgalev_celltype_scmapclust",
                        values = col_cts_dolgalev)
-  legend_dolgalev <- get_legend(plot_9l)
+  legend_dolgalev <- ggpubr::get_legend(plot_9l)
   
   
   plot_10 <- umap_base(sce, color_by = "baccin_celltype_scmapclust")+
-    scale_color_manual("baccin_celltype_scmapclust",
-                       values = col_cts_baccin)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Age))
+    ggplot2::scale_color_manual(values = col_cts_baccin)+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::facet_grid(cols = vars(sce$Age))
   
   plot_11 <- umap_base(sce, color_by = "dahlin_celltype_scmapclust")+
-    scale_color_manual("dahlin_celltype_scmapclust",
-                       values = col_cts_dahlin)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Age))
+    ggplot2::scale_color_manual(values = col_cts_dahlin)+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::facet_grid(cols = vars(sce$Age))
   
   plot_12 <- umap_base(sce, color_by = "dolgalev_celltype_scmapclust")+
-    scale_color_manual("dolgalev_celltype_scmapclust", 
-                       values = col_cts_dolgalev)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Age))
+    ggplot2::scale_color_manual(values = col_cts_dolgalev)+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::facet_grid(cols = vars(sce$Age))
   
   
   plot_13 <- umap_base(sce, color_by = "baccin_celltype_scmapclust")+
-    scale_color_manual("baccin_celltype_scmapclust", 
-                       values = col_cts_baccin)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Batch_exp_day))
+    ggplot2::scale_color_manual(values = col_cts_baccin)+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::facet_grid(cols = vars(sce$Batch_exp_day))
   
   plot_14 <- umap_base(sce, color_by = "dahlin_celltype_scmapclust")+
-    scale_color_manual("dahlin_celltype_scmapclust", 
-                       values = col_cts_dahlin)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Batch_exp_day))
+    ggplot2::scale_color_manual(values = col_cts_dahlin)+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::facet_grid(cols = vars(sce$Batch_exp_day))
   
   plot_15 <- umap_base(sce, color_by = "dolgalev_celltype_scmapclust")+
-    scale_color_manual("dolgalev_celltype_scmapclust", 
-                       values = col_cts_dolgalev)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Batch_exp_day))
+    ggplot2::scale_color_manual(values = col_cts_dolgalev)+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::facet_grid(cols = vars(sce$Batch_exp_day))
   
   
   plot_16 <- umap_base(sce, color_by = "baccin_celltype_scmapclust")+
-    scale_color_manual("baccin_celltype_scmapclust", 
-                       values = col_cts_baccin)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Batch_sequencing))
+    ggplot2::scale_color_manual(values = col_cts_baccin)+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::facet_grid(cols = vars(sce$Batch_sequencing))
   
   plot_17 <- umap_base(sce, color_by = "dahlin_celltype_scmapclust")+
-    scale_color_manual("dahlin_celltype_scmapclust", 
-                       values = col_cts_dahlin)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Batch_sequencing))
+    ggplot2::scale_color_manual(values = col_cts_dahlin)+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::facet_grid(cols = vars(sce$Batch_sequencing))
   
   plot_18 <- umap_base(sce, color_by = "dolgalev_celltype_scmapclust")+
-    scale_color_manual("dolgalev_celltype_scmapclust", 
-                       values = col_cts_dolgalev)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Batch_sequencing)) 
+    ggplot2::scale_color_manual(values = col_cts_dolgalev)+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::facet_grid(cols = vars(sce$Batch_sequencing)) 
   
   plot_22 <- umap_base(sce, color_by = "baccin_celltype_scmapclust")+
-    scale_color_manual("baccin_celltype_scmapclust", 
-                       values = col_cts_baccin)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Antibody_combination))
+    ggplot2::scale_color_manual(values = col_cts_baccin)+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::facet_grid(cols = vars(sce$Antibody_combination))
   
   plot_23 <- umap_base(sce, color_by = "dahlin_celltype_scmapclust")+
-    scale_color_manual("dahlin_celltype_scmapclust", 
-                       values = col_cts_dahlin)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Antibody_combination))
+    ggplot2::scale_color_manual(values = col_cts_dahlin)+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::facet_grid(cols = vars(sce$Antibody_combination))
   
   plot_24 <- umap_base(sce, color_by = "dolgalev_celltype_scmapclust")+
-    scale_color_manual("dolgalev_celltype_scmapclust", 
-                       values = col_cts_dolgalev)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce$Antibody_combination)) 
+    ggplot2::scale_color_manual(values = col_cts_dolgalev)+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::facet_grid(cols = vars(sce$Antibody_combination)) 
 
-  PLOT_1 <- ggarrange(plot_1, legend_1, widths = c(3, 1))
-  PLOT_2 <- ggarrange(plot_2, legend_2, widths = c(3, 1))
-  PLOT_3 <- ggarrange(plot_3, legend_3, widths = c(3, 1))
-  PLOT_4 <- ggarrange(plot_4, legend_4, widths = c(3, 1))
-  PLOT_5 <- ggarrange(plot_5, legend_5, widths = c(3, 1))
-  PLOT_6 <- ggarrange(plot_6, legend_6, widths = c(3, 1))
-  PLOT_7 <- ggarrange(plot_7, legend_baccin, widths = c(3, 1))
-  PLOT_8 <- ggarrange(plot_8, legend_dahlin, widths = c(3, 1))
-  PLOT_9 <- ggarrange(plot_9, legend_dolgalev, widths = c(3, 1))
-  PLOT_10 <- ggarrange(plot_10, legend_baccin, widths = c(3, 1))
-  PLOT_11 <- ggarrange(plot_11, legend_dahlin, widths = c(3, 1))
-  PLOT_12 <- ggarrange(plot_12, legend_dolgalev, widths = c(3, 1))
-  PLOT_13 <- ggarrange(plot_13, legend_baccin, widths = c(3, 1))
-  PLOT_14 <- ggarrange(plot_14, legend_dahlin, widths = c(3, 1))
-  PLOT_15 <- ggarrange(plot_13, legend_dolgalev, widths = c(3, 1))
-  PLOT_16 <- ggarrange(plot_14, legend_baccin, widths = c(3, 1))
-  PLOT_17 <- ggarrange(plot_13, legend_dahlin, widths = c(3, 1))
-  PLOT_18 <- ggarrange(plot_14, legend_dolgalev, widths = c(3, 1))  
-  PLOT_19 <- ggarrange(plot_19, legend_19, widths = c(3, 1))  
-  PLOT_20 <- ggarrange(plot_20, legend_20, widths = c(3, 1))  
-  PLOT_21 <- ggarrange(plot_21, legend_21, widths = c(3, 1))  
-  PLOT_22 <- ggarrange(plot_22, legend_baccin, widths = c(3, 1))  
-  PLOT_23 <- ggarrange(plot_23, legend_dahlin, widths = c(3, 1))  
-  PLOT_24 <- ggarrange(plot_24, legend_dolgalev, widths = c(3, 1))  
+  PLOT_1 <- ggpubr::ggarrange(plot_1, legend_1, widths = c(3, 1))
+  PLOT_2 <- ggpubr::ggarrange(plot_2, legend_2, widths = c(3, 1))
+  PLOT_3 <- ggpubr::ggarrange(plot_3, legend_3, widths = c(3, 1))
+  PLOT_4 <- ggpubr::ggarrange(plot_4, legend_4, widths = c(3, 1))
+  PLOT_5 <- ggpubr::ggarrange(plot_5, legend_5, widths = c(3, 1))
+  PLOT_6 <- ggpubr::ggarrange(plot_6, legend_6, widths = c(3, 1))
+  PLOT_7 <- ggpubr::ggarrange(plot_7, legend_baccin, widths = c(3, 1))
+  PLOT_8 <- ggpubr::ggarrange(plot_8, legend_dahlin, widths = c(3, 1))
+  PLOT_9 <- ggpubr::ggarrange(plot_9, legend_dolgalev, widths = c(3, 1))
+  PLOT_10 <- ggpubr::ggarrange(plot_10, legend_baccin, widths = c(3, 1))
+  PLOT_11 <- ggpubr::ggarrange(plot_11, legend_dahlin, widths = c(3, 1))
+  PLOT_12 <- ggpubr::ggarrange(plot_12, legend_dolgalev, widths = c(3, 1))
+  PLOT_13 <- ggpubr::ggarrange(plot_13, legend_baccin, widths = c(3, 1))
+  PLOT_14 <- ggpubr::ggarrange(plot_14, legend_dahlin, widths = c(3, 1))
+  PLOT_15 <- ggpubr::ggarrange(plot_13, legend_dolgalev, widths = c(3, 1))
+  PLOT_16 <- ggpubr::ggarrange(plot_14, legend_baccin, widths = c(3, 1))
+  PLOT_17 <- ggpubr::ggarrange(plot_13, legend_dahlin, widths = c(3, 1))
+  PLOT_18 <- ggpubr::ggarrange(plot_14, legend_dolgalev, widths = c(3, 1))  
+  PLOT_19 <- ggpubr::ggarrange(plot_19, legend_19, widths = c(3, 1))  
+  PLOT_20 <- ggpubr::ggarrange(plot_20, legend_20, widths = c(3, 1))  
+  PLOT_21 <- ggpubr::ggarrange(plot_21, legend_21, widths = c(3, 1))  
+  PLOT_22 <- ggpubr::ggarrange(plot_22, legend_baccin, widths = c(3, 1))  
+  PLOT_23 <- ggpubr::ggarrange(plot_23, legend_dahlin, widths = c(3, 1))  
+  PLOT_24 <- ggpubr::ggarrange(plot_24, legend_dolgalev, widths = c(3, 1))  
   plot_list <- list(PLOT_1, PLOT_2, PLOT_3, PLOT_19, # Species
                     PLOT_7, PLOT_8, PLOT_9, PLOT_21, # Species
                     
@@ -519,171 +501,119 @@ facet_plotlist <- lapply(sce_list, function(x){
 facet_plotlist
 ```
 
-```{r big_grid_function}
-
-make_big_grid <- function(sce, title){
-  
-  sce <- sce[,sample(c(1:ncol(sce), ncol(sce)))]
-  
-  n_objects <- length(unique(sce$Object_ID))
-  sce_1 <- sce[,sce$Object_ID %in% 
-                 unique(sce$Object_ID)[1:as.integer(n_objects/5)]]
-  sce_2 <- sce[,sce$Object_ID %in%
-                 unique(sce$Object_ID)[(as.integer(n_objects/5)+1):
-                                         (as.integer(n_objects/5)*2)]]
-  sce_3 <- sce[,sce$Object_ID %in% 
-                 unique(sce$Object_ID)[(as.integer(n_objects/5)*2+1):
-                                         (as.integer(n_objects/5)*3)]]
-  sce_4 <- sce[,sce$Object_ID %in% 
-                 unique(sce$Object_ID)[(as.integer(n_objects/5)*3+1):
-                                         (as.integer(n_objects/5)*4)]]
-  sce_5 <- sce[,sce$Object_ID %in%
-                 unique(sce$Object_ID)[(as.integer(n_objects/5)*4+1):
-                                         n_objects]]
-  
-  plot_1 <- umap_base(sce_1, color_by = "baccin_celltype_scmapclust")+
-    scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce_1$Object_ID))
-  plot_2 <- umap_base(sce_2, color_by = "baccin_celltype_scmapclust")+
-    scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce_2$Object_ID))
-  plot_3 <- umap_base(sce_3, color_by = "baccin_celltype_scmapclust")+
-    scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce_3$Object_ID))
-  plot_4 <- umap_base(sce_4, color_by = "baccin_celltype_scmapclust")+
-    scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce_4$Object_ID)) 
-  plot_5 <- umap_base(sce_5, color_by = "baccin_celltype_scmapclust")+
-    scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
-    ggtitle(paste0(fraction_curr, title))+
-    facet_grid(cols = vars(sce_5$Object_ID)) 
-
-  return(list(plot_1, plot_2, plot_3, plot_4, plot_5))
-}
-
-#biggrid_plotlist <- lapply(sce_list, function(x){
-#  plotlist <- make_big_grid(x[[1]], title = x[[2]])
-#  return(plotlist)
-#})
-```
-
-```{r big_grids, fig.width=10, fig.height=4}
-#biggrid_plotlist
-```
-
 ## PCAs
 
 ```{r pca_function_pc2}
 
 make_qc_pcas2 <- function(sce, title){
   
+  title_full <- base::paste0(fraction_curr, title)
+
   plot_a <- pca_base2(sce, color_by = "baccin_celltype_scmapclust")+ 
-    ggtitle(paste0(fraction_curr, title))+
-    scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)
+    ggplot2::ggtitle(title_full)+
+    ggplot2::scale_color_manual(values = col_cts_baccin)
   plot_al <- pca_legend(sce, color_by = "baccin_celltype_scmapclust")+
-    scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)
-  legend_a <- get_legend(plot_al)
+    ggplot2::scale_color_manual("baccin_celltype_scmapclust", 
+                                values = col_cts_baccin)
+  legend_a <- ggpubr::get_legend(plot_al)
 
   plot_b <- pca_base2(sce, color_by = "dahlin_celltype_scmapclust")+ 
-    ggtitle(paste0(fraction_curr, title))+
-    scale_color_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin)
+    ggplot2::ggtitle(title_full)+
+    ggplot2::scale_color_manual(values = col_cts_dahlin)
   plot_bl <- pca_legend(sce, color_by = "dahlin_celltype_scmapclust")+
-    scale_color_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin)
-  legend_b <- get_legend(plot_bl)
+    ggplot2::scale_color_manual("dahlin_celltype_scmapclust", 
+                                values = col_cts_dahlin)
+  legend_b <- ggpubr::get_legend(plot_bl)
   
   plot_c <- pca_base2(sce, color_by = "dolgalev_celltype_scmapclust")+ 
-    ggtitle(paste0(fraction_curr, title))+
-    scale_color_manual("dolgalev_celltype_scmapclust", 
-                       values = col_cts_dolgalev)
+    ggplot2::ggtitle(title_full)+
+    ggplot2::scale_color_manual(values = col_cts_dolgalev)
   plot_cl <- pca_legend(sce, color_by = "dolgalev_celltype_scmapclust")+
-    scale_color_manual("dolgalev_celltype_scmapclust", 
-                       values = col_cts_dolgalev)
-  legend_c <- get_legend(plot_cl)
+    ggplot2::scale_color_manual("dolgalev_celltype_scmapclust", 
+                                values = col_cts_dolgalev)
+  legend_c <- ggpubr::get_legend(plot_cl)
   
   
   plot_1 <- pca_base2(sce, color_by = "Object_ID")+ 
-    ggtitle(paste0(fraction_curr, title))
+    ggplot2::ggtitle(title_full)
   plot_1l <- pca_legend(sce, color_by = "Object_ID")+
-    scale_color_discrete("Object_ID")
-  legend_1 <- get_legend(plot_1l)
+    ggplot2::scale_color_discrete("Object_ID")
+  legend_1 <- ggpubr::get_legend(plot_1l)
   
   plot_2 <- pca_base2(sce, color_by = "Batch_sequencing")+
-    scale_color_manual("Batch_sequencing", values = col_batch_seq)+
-    ggtitle(paste0(fraction_curr, title))
+    ggplot2::scale_color_manual(values = col_batch_seq)+
+    ggplot2::ggtitle(title_full)
   plot_2l <- pca_legend(sce, color_by = "Batch_sequencing")+
-    scale_color_manual("Batch_sequencing", values = col_batch_seq)
-  legend_2 <- get_legend(plot_2l)
+    ggplot2::scale_color_manual("Batch_sequencing", values = col_batch_seq)
+  legend_2 <- ggpubr::get_legend(plot_2l)
   
   plot_3 <- pca_base2(sce, color_by = "Batch_exp_day")+ 
-    scale_color_manual("Batch_experimental_day",values =  col_batch_exp_day)+
-    ggtitle(paste0(fraction_curr, title))
+    ggplot2::scale_color_manual(values = col_batch_exp_day)+
+    ggplot2::ggtitle(title_full)
   plot_3l <- pca_legend(sce, color_by = "Batch_exp_day")+
-    scale_color_manual("Batch_experimental_day", values = col_batch_exp_day)
-  legend_3 <- get_legend(plot_3l)
+    ggplot2::scale_color_manual("Batch_experimental_day", 
+                                values = col_batch_exp_day)
+  legend_3 <- ggpubr::get_legend(plot_3l)
   
   plot_4 <- pca_base2(sce, color_by = "Date_collected")+ 
-    ggtitle(paste0(fraction_curr, title))
+    ggplot2::ggtitle(title_full)
   plot_4l <- pca_legend(sce, color_by = "Date_collected")+
-    scale_color_discrete("Date of collection")
-  legend_4 <- get_legend(plot_4l)
+    ggplot2::scale_color_discrete("Date of collection")
+  legend_4 <- ggpubr::get_legend(plot_4l)
   
   # check everything else
   plot_5 <- pca_base2(sce, color_by = "Species_ID")+ 
-    scale_color_manual("Species", values = col_spc)+
-    ggtitle(paste0(fraction_curr, title))
+    ggplot2::scale_color_manual(values = col_spc)+
+    ggplot2::ggtitle(title_full)
   plot_5l <- pca_legend(sce, color_by = "Species_ID")+
-    scale_color_manual("Species", values = col_spc)
-  legend_5 <- get_legend(plot_5l)
+    ggplot2::scale_color_manual("Species", values = col_spc)
+  legend_5 <- ggpubr::get_legend(plot_5l)
   
   plot_6 <- pca_base2(sce, color_by = "Age_ID")+ 
-    scale_color_manual("Age", values = col_age)+
-    ggtitle(paste0(fraction_curr, title))
+    ggplot2::scale_color_manual(values = col_age)+
+    ggplot2::ggtitle(title_full)
   plot_6l <- pca_legend(sce, color_by = "Age_ID")+
-    scale_color_manual("Age", values = col_age)
-  legend_6 <- get_legend(plot_6l) 
+    ggplot2::scale_color_manual("Age", values = col_age)
+  legend_6 <- ggpubr::get_legend(plot_6l) 
   
   plot_7 <- pca_base2(sce, color_by = "Fraction_ID")+ 
-    scale_color_manual("Fraction", values = col_frc)+
-    ggtitle(paste0(fraction_curr, title))
+    ggplot2::scale_color_manual(values = col_frc)+
+    ggplot2::ggtitle(title_full)
   plot_7l <- pca_legend(sce, color_by = "Fraction_ID")+
-    scale_color_manual("Fraction", values = col_frc)
-  legend_7 <- get_legend(plot_7l) 
+    ggplot2::scale_color_manual("Fraction", values = col_frc)
+  legend_7 <- ggpubr::get_legend(plot_7l) 
  
   plot_8 <- pca_base2(sce, color_by = "Antibody_combination")+ 
-    ggtitle(paste0(fraction_curr, title))
+    ggplot2::ggtitle(title_full)
   plot_8l <- pca_legend(sce, color_by = "Antibody_combination")+
-    scale_color_discrete("Antibody combination")
-  legend_8 <- get_legend(plot_8l)
+    ggplot2::scale_color_discrete("Antibody combination")
+  legend_8 <- ggpubr::get_legend(plot_8l)
   
   plot_9 <- pca_base2(sce, color_by = "doublet_score")+ 
-    ggtitle(paste0(fraction_curr, title))
+    ggplot2::ggtitle(title_full)
   plot_9l <- pca_legend(sce, color_by = "doublet_score")+
-    scale_color_continuous("Doublet score")
-  legend_9 <- get_legend(plot_9l)
+    ggplot2::scale_color_continuous("Doublet score")
+  legend_9 <- ggpubr::get_legend(plot_9l)
   
   plot_10 <- pca_base2(sce, color_by = "Keep_sample")+ 
-    ggtitle(paste0(fraction_curr, title))
+    ggplot2::ggtitle(title_full)
   plot_10l <- pca_legend(sce, color_by = "Keep_sample")+
-    scale_color_discrete("Keep_sample")
-  legend_10 <- get_legend(plot_10l)
+    ggplot2::scale_color_discrete("Keep_sample")
+  legend_10 <- ggpubr::get_legend(plot_10l)
   
-  PLOT_A <- ggarrange(plot_a, legend_a)
-  PLOT_B <- ggarrange(plot_b, legend_b)
-  PLOT_C <- ggarrange(plot_c, legend_c)
-  PLOT_1 <- ggarrange(plot_1, legend_1)
-  PLOT_2 <- ggarrange(plot_2, legend_2)
-  PLOT_3 <- ggarrange(plot_3, legend_3)
-  PLOT_4 <- ggarrange(plot_4, legend_4)
-  PLOT_5 <- ggarrange(plot_5, legend_5)
-  PLOT_6 <- ggarrange(plot_6, legend_6)
-  PLOT_7 <- ggarrange(plot_7, legend_7)
-  PLOT_8 <- ggarrange(plot_8, legend_8)
-  PLOT_9 <- ggarrange(plot_9, legend_9)
-  PLOT_10 <- ggarrange(plot_10, legend_10)
+  PLOT_A <- ggpubr::ggarrange(plot_a, legend_a)
+  PLOT_B <- ggpubr::ggarrange(plot_b, legend_b)
+  PLOT_C <- ggpubr::ggarrange(plot_c, legend_c)
+  PLOT_1 <- ggpubr::ggarrange(plot_1, legend_1)
+  PLOT_2 <- ggpubr::ggarrange(plot_2, legend_2)
+  PLOT_3 <- ggpubr::ggarrange(plot_3, legend_3)
+  PLOT_4 <- ggpubr::ggarrange(plot_4, legend_4)
+  PLOT_5 <- ggpubr::ggarrange(plot_5, legend_5)
+  PLOT_6 <- ggpubr::ggarrange(plot_6, legend_6)
+  PLOT_7 <- ggpubr::ggarrange(plot_7, legend_7)
+  PLOT_8 <- ggpubr::ggarrange(plot_8, legend_8)
+  PLOT_9 <- ggpubr::ggarrange(plot_9, legend_9)
+  PLOT_10 <- ggpubr::ggarrange(plot_10, legend_10)
 
   plot_list <- list(PLOT_1, PLOT_2, PLOT_3, PLOT_4, PLOT_5, PLOT_6, PLOT_7,
                     PLOT_8, PLOT_9, PLOT_10, PLOT_A, PLOT_B, PLOT_C)
@@ -701,68 +631,6 @@ pca2_plotlist <- lapply(sce_list, function(x){
 pca2_plotlist
 ```
 
-## Check quality
-
-```{r qcumap_function}
-
-make_qc_umaps <- function(sce, title){
-  
-  sce <- sce[,sample(c(1:ncol(sce), ncol(sce)))]
-  
-  qcdf <- scuttle::perCellQCMetrics(sce)
-  sce$sum <- qcdf$sum
-  sce$detected <- qcdf$detected
-
-  plot_1 <- umap_base(sce, color_by = "sum")+
-    scale_color_gradientn("Library size", 
-                           limits = c(0, 100000),
-                           colors = c("black", "darkorange4", "darkorange3",
-                                      "darkorange1",
-                                      "orange", "orange", "gold1", "gold",
-                                      "lightgoldenrod", "lightgoldenrod", 
-                                      "lightgoldenrod", "lightgoldenrod", 
-                                      "lightgoldenrod", "lightgoldenrod"))+
-   ggtitle(title)  
-  plot_1l <- umap_legend(sce, color_by = "sum")+
-    scale_color_gradientn("Library size", 
-                           limits = c(0, 1000000),
-                            colors = c("black", "darkorange4", "darkorange3", 
-                                       "darkorange1",
-                                      "orange", "orange", "gold1", "gold",
-                                      "lightgoldenrod", "lightgoldenrod", 
-                                      "lightgoldenrod", "lightgoldenrod", 
-                                      "lightgoldenrod", "lightgoldenrod"))
-  legend_1 <- get_legend(plot_1l)
-  PLOT_1 <- ggarrange(plot_1, legend_1)
-
-  plot_2 <- umap_base(sce, color_by = "detected")+
-    scale_color_gradientn("Number of detected genes", 
-                           limits = c(0, 10000),
-                           colors = c("black", "darkorange3", "orange", 
-                                      "lightgoldenrod"))+
-    ggtitle(title)
-  plot_2l <- umap_legend(sce, color_by = "detected")+
-    scale_color_gradientn("Number of detected genes", 
-                           limits = c(0, 10000),
-                           colors = c("black", "darkorange3", "orange", 
-                                      "lightgoldenrod"))
-  legend_2 <- get_legend(plot_2l)
-  
-  PLOT_2 <- ggarrange(plot_2, legend_2)
-  return(list(PLOT_1, PLOT_2))
-}
-
-#qc_umap_plotlist <- lapply(sce_list, function(x){
-#  plotlist <- make_qc_umaps(x[[1]], title = x[[2]])
-#  return(plotlist)
-#})
-
-```
-
-```{r qcumaps, fig.width=10, fig.height=5}
-#qc_umap_plotlist
-```
-
 # Cell type proportions
 
 To get an idea of cell numbers (according to refernce dataset).
@@ -778,103 +646,118 @@ sce <- sce_list[[1]][[1]]
 
 ```{r ct_props, fig.width=10, fig.height=12}
 
-ggdf <- data.frame(colData(sce))
+ggdf <- base::data.frame(colData(sce))
 
 # BACCIN
-plot1 <- ggplot(ggdf, aes(x = Object_ID,
-                          fill=baccin_celltype_scmapclust, 
-                          color = baccin_celltype_scmapclust))+
-  geom_bar(position = "stack") + 
-  theme_classic()+
-  scale_fill_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
-  scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
-  theme(legend.position = "none",
-        axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)
+plot1 <- ggplot2::ggplot(ggdf,
+                         aes(x = Object_ID,
+                             fill=baccin_celltype_scmapclust, 
+                             color = baccin_celltype_scmapclust))+
+  ggplot2::geom_bar(position = "stack") + 
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_manual(values = col_cts_baccin)+
+  ggplot2::scale_color_manual(values = col_cts_baccin)+
+  ggplot2::theme(legend.position = "none",
+                 axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle(fraction_curr)
 
-plot_baccin_leg <- ggplot(ggdf, aes(x = Object_ID, 
-                                    y=baccin_celltype_scmapclust,
-                                    fill=baccin_celltype_scmapclust))+
-  geom_col()+
-  scale_fill_manual("baccin_celltype_scmapclust", values = col_cts_baccin)
-legend_baccin <- get_legend(plot_baccin_leg)
+plot_baccin_leg <- ggplot2::ggplot(ggdf, 
+                                   aes(x = Object_ID, 
+                                       y=baccin_celltype_scmapclust,
+                                       fill=baccin_celltype_scmapclust))+
+  ggplot2::geom_col()+
+  ggplot2::scale_fill_manual("baccin_celltype_scmapclust", 
+                             values = col_cts_baccin)
+legend_baccin <- ggpubr::get_legend(plot_baccin_leg)
 
-plot2 <- ggplot(ggdf, aes(x = Object_ID, 
-                          fill=baccin_celltype_scmapclust, 
-                          color = baccin_celltype_scmapclust))+
-  geom_bar(position = "fill") + 
-  theme_classic()+
-  scale_fill_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
-  scale_color_manual(values = col_cts_baccin)+
-  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)
+plot2 <- ggplot2::ggplot(ggdf, 
+                         aes(x = Object_ID, 
+                             fill=baccin_celltype_scmapclust, 
+                             color = baccin_celltype_scmapclust))+
+  ggplot2::geom_bar(position = "fill") + 
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_manual(values = col_cts_baccin)+
+  ggplot2::scale_color_manual(values = col_cts_baccin)+
+  ggplot2::theme(legend.position = "none", 
+                 axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle(fraction_curr)
 
 
 # DAHLIN
-plot3 <- ggplot(ggdf, aes(x = Object_ID, 
-                          fill=dahlin_celltype_scmapclust,
-                          color = dahlin_celltype_scmapclust))+
-  geom_bar(position = "stack") + 
-  theme_classic()+
-  scale_fill_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin)+
-  scale_color_manual(values = col_cts_dahlin)+
-  theme(legend.position = "none", 
-        axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)
+plot3 <- ggplot2::ggplot(ggdf, 
+                         aes(x = Object_ID, 
+                             fill=dahlin_celltype_scmapclust,
+                             color = dahlin_celltype_scmapclust))+
+  ggplot2::geom_bar(position = "stack") + 
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_manual(values = col_cts_dahlin)+
+  ggplot2::scale_color_manual(values = col_cts_dahlin)+
+  ggplot2::theme(legend.position = "none", 
+                 axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle(fraction_curr)
 
-plot_dahlin_leg <- ggplot(ggdf, aes(x = Object_ID, 
-                                  y=dahlin_celltype_scmapclust,
-                                  fill=dahlin_celltype_scmapclust))+
-  geom_col()+
-  scale_fill_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin)
-legend_dahlin <- get_legend(plot_dahlin_leg)
+plot_dahlin_leg <- ggplot2::ggplot(ggdf, 
+                                   aes(x = Object_ID, 
+                                       y=dahlin_celltype_scmapclust,
+                                       fill=dahlin_celltype_scmapclust))+
+  ggplot2::geom_col()+
+  ggplot2::scale_fill_manual("dahlin_celltype_scmapclust", 
+                             values = col_cts_dahlin)
+legend_dahlin <- ggpubr::get_legend(plot_dahlin_leg)
                     
-plot4 <- ggplot(ggdf, aes(x = Object_ID, 
-                          fill=dahlin_celltype_scmapclust, 
-                          color = dahlin_celltype_scmapclust))+
-  geom_bar(position = "fill") + 
-  theme_classic()+
-  scale_fill_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin)+
-  scale_color_manual(values = col_cts_dahlin)+
-  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)
+plot4 <- ggplot2::ggplot(ggdf, 
+                         aes(x = Object_ID, 
+                             fill=dahlin_celltype_scmapclust, 
+                             color = dahlin_celltype_scmapclust))+
+  ggplot2::geom_bar(position = "fill") + 
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_manual(values = col_cts_dahlin)+
+  ggplot2::scale_color_manual(values = col_cts_dahlin)+
+  ggplot2::theme(legend.position = "none",
+                 axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle(fraction_curr)
 
 
 # DOLGALEV
-plot5 <- ggplot(ggdf, aes(x = Object_ID, 
-                          fill=dolgalev_celltype_scmapclust,
-                          color = dolgalev_celltype_scmapclust))+
-  geom_bar(position = "stack") + 
-  theme_classic()+
-  scale_fill_manual("dolgalev_celltype_scmapclust", values = col_cts_dolgalev)+
-  scale_color_manual(values = col_cts_dolgalev)+
-  theme(legend.position = "none",
-        axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)
+plot5 <- ggplot2::ggplot(ggdf, 
+                         aes(x = Object_ID, 
+                             fill=dolgalev_celltype_scmapclust,
+                             color = dolgalev_celltype_scmapclust))+
+  ggplot2::geom_bar(position = "stack") + 
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_manual(values = col_cts_dolgalev)+
+  ggplot2::scale_color_manual(values = col_cts_dolgalev)+
+  ggplot2::theme(legend.position = "none",
+                 axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle(fraction_curr)
 
-plot_dolgalev_leg <- ggplot(ggdf, aes(x = Object_ID, 
-                                  y=dolgalev_celltype_scmapclust,
-                                  fill=dolgalev_celltype_scmapclust))+
-  geom_col()+
-  scale_fill_manual("dolgalev_celltype_scmapclust", values = col_cts_dolgalev)
-legend_dolgalev <- get_legend(plot_dolgalev_leg)
+plot_dolgalev_leg <- ggplot2::ggplot(ggdf, 
+                                     aes(x = Object_ID, 
+                                         y=dolgalev_celltype_scmapclust,
+                                         fill=dolgalev_celltype_scmapclust))+
+  ggplot2::geom_col()+
+  ggplot2::scale_fill_manual("dolgalev_celltype_scmapclust", 
+                             values = col_cts_dolgalev)
+legend_dolgalev <- ggpubr::get_legend(plot_dolgalev_leg)
                     
-plot6 <- ggplot(ggdf, aes(x = Object_ID, 
-                          fill=dolgalev_celltype_scmapclust, 
-                          color = dolgalev_celltype_scmapclust))+
-  geom_bar(position = "fill") + 
-  theme_classic()+
-  scale_fill_manual("dolgalev_celltype_scmapclust", values = col_cts_dolgalev)+
-  scale_color_manual(values = col_cts_dolgalev)+
-  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)
+plot6 <- ggplot2::ggplot(ggdf, 
+                         aes(x = Object_ID, 
+                             fill=dolgalev_celltype_scmapclust, 
+                             color = dolgalev_celltype_scmapclust))+
+  ggplot2::geom_bar(position = "fill") + 
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_manual(values = col_cts_dolgalev)+
+  ggplot2::scale_color_manual(values = col_cts_dolgalev)+
+  ggplot2::theme(legend.position = "none", 
+                 axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle(fraction_curr)
 
-PLOT1 <- ggarrange(plot1, legend_baccin, ncol = 1)
-PLOT2 <- ggarrange(plot2, legend_baccin, ncol = 1)
-PLOT3 <- ggarrange(plot3, legend_dahlin, ncol = 1)
-PLOT4 <- ggarrange(plot4, legend_dahlin, ncol = 1)
-PLOT5 <- ggarrange(plot5, legend_dolgalev, ncol = 1)
-PLOT6 <- ggarrange(plot6, legend_dolgalev, ncol = 1)
+PLOT1 <- ggpubr::ggarrange(plot1, legend_baccin, ncol = 1)
+PLOT2 <- ggpubr::ggarrange(plot2, legend_baccin, ncol = 1)
+PLOT3 <- ggpubr::ggarrange(plot3, legend_dahlin, ncol = 1)
+PLOT4 <- ggpubr::ggarrange(plot4, legend_dahlin, ncol = 1)
+PLOT5 <- ggpubr::ggarrange(plot5, legend_dolgalev, ncol = 1)
+PLOT6 <- ggpubr::ggarrange(plot6, legend_dolgalev, ncol = 1)
 
 PLOT1
 PLOT2
@@ -886,16 +769,19 @@ PLOT6
 
 ```{r plotx}
 
-plot_x <- ggplot(ggdf, aes(x = Object_ID, 
-                          fill=baccin_celltype_scmapclust, 
-                          color = baccin_celltype_scmapclust))+
-  geom_bar(position = "fill") + 
-  theme_classic()+
-  scale_fill_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
-  scale_color_manual(values = col_cts_baccin)+
-  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)+
-  facet_grid(cols = vars(ggdf$Antibody_combination))
+plot_x <- ggplot2::ggplot(ggdf, 
+                          aes(x = Object_ID, 
+                              fill=baccin_celltype_scmapclust, 
+                              color = baccin_celltype_scmapclust))+
+  ggplot2::geom_bar(position = "fill") + 
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_manual("baccin_celltype_scmapclust", 
+                             values = col_cts_baccin)+
+  ggplot2::scale_color_manual(values = col_cts_baccin)+
+  ggplot2::theme(legend.position = "none", 
+                 axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle(fraction_curr)+
+  ggplot2::facet_grid(cols = vars(ggdf$Antibody_combination))
 
 plot_x
 ```
@@ -905,79 +791,88 @@ plot_x
 ```{r per_experimental_day}
 
 # BACCIN
-plot1 <- ggplot(ggdf, aes(x = Batch_exp_day,
-                          fill=baccin_celltype_scmapclust, 
-                          color = baccin_celltype_scmapclust))+
-  geom_bar(position = "stack") + 
-  theme_classic()+
-  scale_fill_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
-  scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
-  theme(legend.position = "none", 
-        axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)
+plot1 <- ggplot2::ggplot(ggdf, 
+                         aes(x = Batch_exp_day,
+                             fill=baccin_celltype_scmapclust, 
+                             color = baccin_celltype_scmapclust))+
+  ggplot2::geom_bar(position = "stack") + 
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_manual(values = col_cts_baccin)+
+  ggplot2::scale_color_manual(values = col_cts_baccin)+
+  ggplot2::theme(legend.position = "none", 
+                 axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle(fraction_curr)
 
-plot2 <- ggplot(ggdf, aes(x = Batch_exp_day, 
-                          fill=baccin_celltype_scmapclust, 
-                          color = baccin_celltype_scmapclust))+
-  geom_bar(position = "fill") + 
-  theme_classic()+
-  scale_fill_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
-  scale_color_manual(values = col_cts_baccin)+
-  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)
+plot2 <- ggplot2::ggplot(ggdf, 
+                         aes(x = Batch_exp_day, 
+                             fill=baccin_celltype_scmapclust, 
+                             color = baccin_celltype_scmapclust))+
+  ggplot2::geom_bar(position = "fill") + 
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_manual(values = col_cts_baccin)+
+  ggplot2::scale_color_manual(values = col_cts_baccin)+
+  ggplot2::theme(legend.position = "none",
+                 axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle(fraction_curr)
 
 
 # DAHLIN
-plot3 <- ggplot(ggdf, aes(x = Batch_exp_day, 
-                          fill=dahlin_celltype_scmapclust,
-                          color = dahlin_celltype_scmapclust))+
-  geom_bar(position = "stack") + 
-  theme_classic()+
-  scale_fill_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin)+
-  scale_color_manual(values = col_cts_dahlin)+
-  theme(legend.position = "none", 
-        axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)
+plot3 <- ggplot2::ggplot(ggdf, 
+                         aes(x = Batch_exp_day, 
+                             fill=dahlin_celltype_scmapclust,
+                             color = dahlin_celltype_scmapclust))+
+  ggplot2::geom_bar(position = "stack") + 
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_manual(values = col_cts_dahlin)+
+  ggplot2::scale_color_manual(values = col_cts_dahlin)+
+  ggplot2::theme(legend.position = "none", 
+                 axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle(fraction_curr)
 
-plot4 <- ggplot(ggdf, aes(x = Batch_exp_day, 
-                          fill=dahlin_celltype_scmapclust, 
-                          color = dahlin_celltype_scmapclust))+
-  geom_bar(position = "fill") + 
-  theme_classic()+
-  scale_fill_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin)+
-  scale_color_manual(values = col_cts_dahlin)+
-  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)
+plot4 <- ggplot2::ggplot(ggdf, 
+                         aes(x = Batch_exp_day, 
+                             fill=dahlin_celltype_scmapclust, 
+                             color = dahlin_celltype_scmapclust))+
+  ggplot2::geom_bar(position = "fill") + 
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_manual(values = col_cts_dahlin)+
+  ggplot2::scale_color_manual(values = col_cts_dahlin)+
+  ggplot2::theme(legend.position = "none", 
+                 axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle(fraction_curr)
 
 
 # DOLGALEV
-plot5 <- ggplot(ggdf, aes(x = Batch_exp_day, 
-                          fill=dolgalev_celltype_scmapclust,
-                          color = dolgalev_celltype_scmapclust))+
-  geom_bar(position = "stack") + 
-  theme_classic()+
-  scale_fill_manual("dolgalev_celltype_scmapclust", values = col_cts_dolgalev)+
-  scale_color_manual(values = col_cts_dolgalev)+
-  theme(legend.position = "none", 
-        axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)
+plot5 <- ggplot2::ggplot(ggdf, 
+                         aes(x = Batch_exp_day, 
+                             fill=dolgalev_celltype_scmapclust,
+                             color = dolgalev_celltype_scmapclust))+
+  ggplot2::geom_bar(position = "stack") + 
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_manual(values = col_cts_dolgalev)+
+  ggplot2::scale_color_manual(values = col_cts_dolgalev)+
+  ggplot2::theme(legend.position = "none", 
+                 axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle(fraction_curr)
 
-plot6 <- ggplot(ggdf, aes(x = Batch_exp_day, 
-                          fill=dolgalev_celltype_scmapclust, 
-                          color = dolgalev_celltype_scmapclust))+
-  geom_bar(position = "fill") + 
-  theme_classic()+
-  scale_fill_manual("dolgalev_celltype_scmapclust", values = col_cts_dolgalev)+
-  scale_color_manual(values = col_cts_dolgalev)+
-  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)
+plot6 <- ggplot2::ggplot(ggdf,
+                         aes(x = Batch_exp_day, 
+                             fill=dolgalev_celltype_scmapclust, 
+                             color = dolgalev_celltype_scmapclust))+
+  ggplot2::geom_bar(position = "fill") + 
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_manual(values = col_cts_dolgalev)+
+  ggplot2::scale_color_manual(values = col_cts_dolgalev)+
+  ggplot2::theme(legend.position = "none",
+                 axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle(fraction_curr)
 
-PLOT1 <- ggarrange(plot1, legend_baccin)
-PLOT2 <- ggarrange(plot2, legend_baccin)
-PLOT3 <- ggarrange(plot3, legend_dahlin)
-PLOT4 <- ggarrange(plot4, legend_dahlin)
-PLOT5 <- ggarrange(plot5, legend_dolgalev)
-PLOT6 <- ggarrange(plot6, legend_dolgalev)
+PLOT1 <- ggpubr::ggarrange(plot1, legend_baccin)
+PLOT2 <- ggpubr::ggarrange(plot2, legend_baccin)
+PLOT3 <- ggpubr::ggarrange(plot3, legend_dahlin)
+PLOT4 <- ggpubr::ggarrange(plot4, legend_dahlin)
+PLOT5 <- ggpubr::ggarrange(plot5, legend_dolgalev)
+PLOT6 <- ggpubr::ggarrange(plot6, legend_dolgalev)
 
 PLOT1
 PLOT2
@@ -992,80 +887,89 @@ PLOT6
 ```{r per_species}
 
 # BACCIN
-plot1 <- ggplot(ggdf, aes(x = Species_ID,
-                          fill=baccin_celltype_scmapclust, 
-                          color = baccin_celltype_scmapclust))+
-  geom_bar(position = "stack") + 
-  theme_classic()+
-  scale_fill_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
-  scale_color_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
-  theme(legend.position = "none", 
-        axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)
+plot1 <- ggplot2::ggplot(ggdf, 
+                         aes(x = Species_ID,
+                             fill=baccin_celltype_scmapclust, 
+                             color = baccin_celltype_scmapclust))+
+  ggplot2::geom_bar(position = "stack") + 
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_manual(values = col_cts_baccin)+
+  ggplot2::scale_color_manual(values = col_cts_baccin)+
+  ggplot2::theme(legend.position = "none", 
+                 axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle(fraction_curr)
 
-plot2 <- ggplot(ggdf, aes(x = Species_ID, 
-                          fill=baccin_celltype_scmapclust, 
-                          color = baccin_celltype_scmapclust))+
-  geom_bar(position = "fill") + 
-  theme_classic()+
-  scale_fill_manual("baccin_celltype_scmapclust", values = col_cts_baccin)+
-  scale_color_manual(values = col_cts_baccin)+
-  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)
+plot2 <- ggplot2::ggplot(ggdf,
+                         aes(x = Species_ID, 
+                             fill=baccin_celltype_scmapclust, 
+                             color = baccin_celltype_scmapclust))+
+  ggplot2::geom_bar(position = "fill") + 
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_manual(values = col_cts_baccin)+
+  ggplot2::scale_color_manual(values = col_cts_baccin)+
+  ggplot2::theme(legend.position = "none",
+                 axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle(fraction_curr)
 
 
 # DAHLIN
-plot3 <- ggplot(ggdf, aes(x = Species_ID, 
-                          fill=dahlin_celltype_scmapclust,
-                          color = dahlin_celltype_scmapclust))+
-  geom_bar(position = "stack") + 
-  theme_classic()+
-  scale_fill_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin)+
-  scale_color_manual(values = col_cts_dahlin)+
-  theme(legend.position = "none", 
-        axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)
+plot3 <- ggplot2::ggplot(ggdf,
+                         aes(x = Species_ID, 
+                             fill=dahlin_celltype_scmapclust,
+                             color = dahlin_celltype_scmapclust))+
+  ggplot2::geom_bar(position = "stack")+ 
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_manual(values = col_cts_dahlin)+
+  ggplot2::scale_color_manual(values = col_cts_dahlin)+
+  ggplot2::theme(legend.position = "none", 
+                 axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle(fraction_curr)
 
 
-plot4 <- ggplot(ggdf, aes(x = Species_ID, 
-                          fill=dahlin_celltype_scmapclust, 
-                          color = dahlin_celltype_scmapclust))+
-  geom_bar(position = "fill") + 
-  theme_classic()+
-  scale_fill_manual("dahlin_celltype_scmapclust", values = col_cts_dahlin)+
-  scale_color_manual(values = col_cts_dahlin)+
-  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)
+plot4 <- ggplot2::ggplot(ggdf, 
+                         aes(x = Species_ID, 
+                             fill=dahlin_celltype_scmapclust, 
+                             color = dahlin_celltype_scmapclust))+
+  ggplot2::geom_bar(position = "fill") + 
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_manual(values = col_cts_dahlin)+
+  ggplot2::scale_color_manual(values = col_cts_dahlin)+
+  ggplot2::theme(legend.position = "none",
+                 axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle(fraction_curr)
 
 
 # DOLGALEV
-plot5 <- ggplot(ggdf, aes(x = Species_ID, 
-                          fill=dolgalev_celltype_scmapclust,
-                          color = dolgalev_celltype_scmapclust))+
-  geom_bar(position = "stack") + 
-  theme_classic()+
-  scale_fill_manual("dolgalev_celltype_scmapclust", values = col_cts_dolgalev)+
-  scale_color_manual(values = col_cts_dolgalev)+
-  theme(legend.position = "none",
-        axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)
+plot5 <- ggplot2::ggplot(ggdf,
+                         aes(x = Species_ID, 
+                             fill=dolgalev_celltype_scmapclust,
+                             color = dolgalev_celltype_scmapclust))+
+  ggplot2::geom_bar(position = "stack") + 
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_manual(values = col_cts_dolgalev)+
+  ggplot2::scale_color_manual(values = col_cts_dolgalev)+
+  ggplot2::theme(legend.position = "none",
+                 axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle(fraction_curr)
 
-plot6 <- ggplot(ggdf, aes(x = Species_ID, 
-                          fill=dolgalev_celltype_scmapclust, 
-                          color = dolgalev_celltype_scmapclust))+
-  geom_bar(position = "fill") + 
-  theme_classic()+
-  scale_fill_manual("dolgalev_celltype_scmapclust", values = col_cts_dolgalev)+
-  scale_color_manual(values = col_cts_dolgalev)+
-  theme(legend.position = "none", axis.text.x = element_text(angle = 90))+
-  ggtitle(fraction_curr)
+plot6 <- ggplot2::ggplot(ggdf, 
+                         aes(x = Species_ID, 
+                             fill=dolgalev_celltype_scmapclust, 
+                             color = dolgalev_celltype_scmapclust))+
+  ggplot2::geom_bar(position = "fill") + 
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_manual(values = col_cts_dolgalev)+
+  ggplot2::scale_color_manual(values = col_cts_dolgalev)+
+  ggplot2::theme(legend.position = "none", 
+                 axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle(fraction_curr)
 
-PLOT1 <- ggarrange(plot1, legend_baccin)
-PLOT2 <- ggarrange(plot2, legend_baccin)
-PLOT3 <- ggarrange(plot3, legend_dahlin)
-PLOT4 <- ggarrange(plot4, legend_dahlin)
-PLOT5 <- ggarrange(plot5, legend_dolgalev)
-PLOT6 <- ggarrange(plot6, legend_dolgalev)
+PLOT1 <- ggpubr::ggarrange(plot1, legend_baccin)
+PLOT2 <- ggpubr::ggarrange(plot2, legend_baccin)
+PLOT3 <- ggpubr::ggarrange(plot3, legend_dahlin)
+PLOT4 <- ggpubr::ggarrange(plot4, legend_dahlin)
+PLOT5 <- ggpubr::ggarrange(plot5, legend_dolgalev)
+PLOT6 <- ggpubr::ggarrange(plot6, legend_dolgalev)
 
 PLOT1
 PLOT2
@@ -1081,5 +985,5 @@ print(length(which(sce_mnn$Species_ID == "mspr")))
 ```
 
 ```{r session_info}
-sessionInfo()
+utils::sessionInfo()
 ```

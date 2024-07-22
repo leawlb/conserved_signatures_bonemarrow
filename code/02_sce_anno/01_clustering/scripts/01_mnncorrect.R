@@ -17,7 +17,6 @@ nr_hvgs_BC <- snakemake@params[["nr_hvgs_BC"]]
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
 
 seeds_umap <- snakemake@params[["seeds_umap"]]
-
 fraction_curr <- snakemake@wildcards[["fraction"]]
 
 print(seeds_umap)
@@ -30,24 +29,29 @@ print(seed)
 
 #-------------------------------------------------------------------------------
 # rename the already existent reduced dims and assays (to keep them)
-reducedDimNames(sce)[base::grep("PCA", reducedDimNames(sce))] <- "PCA_before_BC"
-reducedDimNames(sce)[base::grep("UMAP", reducedDimNames(sce))] <- "UMAP_before_BC"
-assays(sce)$counts_before_BC <- assays(sce)$counts
-assays(sce)$logcounts_before_BC <- assays(sce)$logcounts
+SingleCellExperiment::reducedDimNames(sce)[base::grep(
+  "PCA", SingleCellExperiment::reducedDimNames(sce))] <- "PCA_before_BC"
+SingleCellExperiment::reducedDimNames(sce)[base::grep(
+  "UMAP", SingleCellExperiment::reducedDimNames(sce))] <- "UMAP_before_BC"
+
+SummarizedExperiment::assays(sce)$counts_before_BC <- SummarizedExperiment::assays(sce)$counts
+SummarizedExperiment::assays(sce)$logcounts_before_BC <- SummarizedExperiment::assays(sce)$logcounts
 
 # add info on batch type used
-sce$Batch_type_used <- rep(batch_use, ncol(sce))
+sce$Batch_type_used <- base::rep(batch_use, ncol(sce))
 
 #-------------------------------------------------------------------------------
 
 # fastMNN recommends use of MultiBatchNorm
-# output in logcounts and logcounts_batchnorm (for reference)
-renorm_sce <- batchelor::multiBatchNorm(sce, batch = colData(sce)[,batch_pos])
-stopifnot(colnames(renorm_sce) == colnames(sce))
-assays(sce)$logcounts_batchnorm <- assays(renorm_sce)$logcounts
-assays(sce)$logcounts <- assays(renorm_sce)$logcounts
+# output in logcounts for downstream use and logcounts_batchnorm (for reference)
+renorm_sce <- batchelor::multiBatchNorm(sce, 
+                                        batch = colData(sce)[,batch_pos])
 
-print(sce)
+SummarizedExperiment::assays(sce)$logcounts_batchnorm <- SummarizedExperiment::assays(renorm_sce)$logcounts
+SummarizedExperiment::assays(sce)$logcounts <- SummarizedExperiment::assays(renorm_sce)$logcounts
+
+print(SingleCellExperiment::reducedDimNames(sce))
+print(SummarizedExperiment::assays(sce))
 
 #-------------------------------------------------------------------------------
 
@@ -85,7 +89,7 @@ warnings() # warnings about "useNames = NA is deprecated" which seems ignorable
 reducedDimNames(sce_bc)[reducedDimNames(sce_bc) == "corrected"] <- "PCA"
 colnames(reducedDim(sce_bc, type = "PCA")) <- c(1:ncol(
   reducedDim(sce_bc, type = "PCA")))
-colnames(reducedDim(sce_bc, type = "PCA")) <- paste0(
+colnames(reducedDim(sce_bc, type = "PCA")) <- base::paste0(
   "PC", colnames(reducedDim(sce_bc, type = "PCA")))
 
 print(reducedDim(sce_bc, type = "PCA")[1:5, 1:5])

@@ -47,6 +47,7 @@ hvgs <- scran::getTopHVGs(gene_var, n = nr_hvgs)
 #-------------------------------------------------------------------------------
 
 print("starting MNN")
+set.seed(37)
 
 # correct using MultiBatchNorm values in logcounts assay
 sce_bc <- batchelor::correctExperiments(
@@ -85,6 +86,8 @@ set.seed(seed)
 print(seed)
 sce_bc <- scater::runUMAP(sce_bc, dimred = "PCA", subset_row = hvgs)
 print(sce_bc)
+
+set.seed(37)
 
 #-------------------------------------------------------------------------------
 saveRDS(sce_bc, file = snakemake@output[["sce_output"]])

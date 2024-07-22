@@ -7,6 +7,7 @@ library(batchelor, quietly = TRUE)
 set.seed(37)
 
 #-------------------------------------------------------------------------------
+# objects and params
 
 sce <- base::readRDS(file = snakemake@input[["sce_input"]])
 
@@ -43,7 +44,9 @@ sce$Batch_type_used <- base::rep(batch_use, ncol(sce))
 #-------------------------------------------------------------------------------
 
 # fastMNN recommends use of MultiBatchNorm
-# output in logcounts for downstream use and logcounts_batchnorm (for reference)
+# output in "logcounts" for downstream use and
+# "logcounts_batchnorm" for reference
+set.seed(37)
 renorm_sce <- batchelor::multiBatchNorm(sce, 
                                         batch = colData(sce)[,batch_pos])
 
@@ -55,7 +58,7 @@ print(SummarizedExperiment::assays(sce))
 
 #-------------------------------------------------------------------------------
 
-# calculate hvgs 
+# calculate hvgs for batch correction and UMAP
 gene_var <- scran::modelGeneVar(sce)
 hvgs_BC <- scran::getTopHVGs(gene_var, n = nr_hvgs_BC)
 hvgs <- scran::getTopHVGs(gene_var, n = nr_hvgs)
@@ -76,7 +79,6 @@ sce_bc <- batchelor::correctExperiments(
   batch = colData(sce)[,batch_pos],
   subset.row = hvgs_BC,  
   assay.type = "logcounts") 
-#sce_bc$Correction_method <- rep("FastMNN", ncol(sce_bc))
 
 print("done MNN")
 print(sce_bc)
@@ -84,24 +86,33 @@ warnings() # warnings about "useNames = NA is deprecated" which seems ignorable
 
 #-------------------------------------------------------------------------------
 
-# rename it "PCA" because orig PCA is now called PCA_before 
-# so all following functions use corrected PCA automatically
-reducedDimNames(sce_bc)[reducedDimNames(sce_bc) == "corrected"] <- "PCA"
-colnames(reducedDim(sce_bc, type = "PCA")) <- c(1:ncol(
-  reducedDim(sce_bc, type = "PCA")))
-colnames(reducedDim(sce_bc, type = "PCA")) <- base::paste0(
-  "PC", colnames(reducedDim(sce_bc, type = "PCA")))
+# store corrected values in "PCA" slot which will be used by downstream
+# original PCA is still stored in "PCA_before_BC" slot
+SingleCellExperiment::reducedDimNames(sce_bc)[
+  SingleCellExperiment::reducedDimNames(sce_bc) == "corrected"] <- "PCA"
 
-print(reducedDim(sce_bc, type = "PCA")[1:5, 1:5])
+# rename PCA colnames
+colnames(SingleCellExperiment::reducedDim(sce_bc, type = "PCA")) <- c(1:ncol(
+  SingleCellExperiment::reducedDim(sce_bc, type = "PCA")))
+colnames(SingleCellExperiment::reducedDim(sce_bc, type = "PCA")) <- base::paste0(
+  "PC", colnames(SingleCellExperiment::reducedDim(sce_bc, type = "PCA")))
 
+print(SingleCellExperiment::reducedDim(sce_bc, type = "PCA")[1:5, 1:5])
+
+#-------------------------------------------------------------------------------
+# run umap with fraction-specific seed for nice looking plots
+# hvgs are calculated from normalised logcounts
 set.seed(seed)
-sce_bc <- scater::runUMAP(sce_bc, dimred = "PCA", subset_row = hvgs)
-print(sce_bc)
+sce_bc <- scater::runUMAP(sce_bc,
+                          dimred = "PCA", 
+                          subset_row = hvgs)
+
 set.seed(37)
 
 print(head(reducedDim(sce_bc, type = "UMAP")))
 
 #-------------------------------------------------------------------------------
+
 base::saveRDS(sce_bc, file = snakemake@output[["sce_output"]])
 
-sessionInfo()
+utils::sessionInfo()

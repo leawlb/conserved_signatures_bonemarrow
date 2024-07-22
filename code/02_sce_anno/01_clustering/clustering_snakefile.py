@@ -127,7 +127,8 @@ rule louvain_clustering:
     output:
         sce_output = OUTPUT_DAT + "/02_clst/louvn_clust/sce_{fraction}-02"
     params:
-        k_louvain = VALUES["k_louvain"]
+        k_graph_list = VALUES["k_graph_list"],
+        resolution_louvain_list = VALUES["resolution_louvain"]
     script:
         "scripts/02_louvain_clustering.R"
   

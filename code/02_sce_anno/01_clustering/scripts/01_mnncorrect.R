@@ -91,7 +91,7 @@ warnings() # warnings about "useNames = NA is deprecated" which seems ignorable
 SingleCellExperiment::reducedDimNames(sce_bc)[
   SingleCellExperiment::reducedDimNames(sce_bc) == "corrected"] <- "PCA"
 
-# rename PCA colnames
+# rename PCA colnames to "PC1"...
 colnames(SingleCellExperiment::reducedDim(sce_bc, type = "PCA")) <- c(1:ncol(
   SingleCellExperiment::reducedDim(sce_bc, type = "PCA")))
 colnames(SingleCellExperiment::reducedDim(sce_bc, type = "PCA")) <- base::paste0(
@@ -109,7 +109,7 @@ sce_bc <- scater::runUMAP(sce_bc,
 
 set.seed(37)
 
-print(head(reducedDim(sce_bc, type = "UMAP")))
+print(head(SingleCellExperiment::reducedDim(sce_bc, type = "UMAP")))
 
 #-------------------------------------------------------------------------------
 

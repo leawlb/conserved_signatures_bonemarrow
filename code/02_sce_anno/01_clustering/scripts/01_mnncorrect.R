@@ -16,6 +16,8 @@ batch_pos <- which(colnames(colData(sce)) == batch_use)
 nr_hvgs_BC <- snakemake@params[["nr_hvgs_BC"]] 
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
 
+seed <- snakemake@params[["seeds_umap"]]
+
 #-------------------------------------------------------------------------------
 # rename the already existent reduced dims and assays (to keep them)
 reducedDimNames(sce)[grep("PCA", reducedDimNames(sce))] <- "PCA_before_BC"
@@ -53,11 +55,14 @@ set.seed(37)
 sce_bc <- batchelor::correctExperiments(
   sce,
   correct.all = TRUE,
-  PARAM = FastMnnParam(cos.norm = FALSE), # since it was previously normalized
+  PARAM = FastMnnParam(
+    cos.norm = FALSE, # since it is already normalized
+    k=20, # default
+    d=50), # default
   batch = colData(sce)[,batch_pos],
   subset.row = hvgs_BC,  
   assay.type = "logcounts") 
-sce_bc$Correction_method <- rep("FastMNN", ncol(sce_bc))
+#sce_bc$Correction_method <- rep("FastMNN", ncol(sce_bc))
 
 print("done MNN")
 print(sce_bc)
@@ -73,6 +78,8 @@ colnames(reducedDim(sce_bc, type = "PCA")) <- c(1:ncol(
 colnames(reducedDim(sce_bc, type = "PCA")) <- paste0(
   "PC", colnames(reducedDim(sce_bc, type = "PCA")))
 
+print(reducedDim(sce_bc, type = "PCA")[1:5, 1:5])
+
 # calculate UMAP based on corrected PCA
 # no new hvg determination because logcounts_batchnorm is not corrected anyway
 seeds_umap <- snakemake@params[["seeds_umap"]]
@@ -86,6 +93,8 @@ set.seed(seed)
 print(seed)
 sce_bc <- scater::runUMAP(sce_bc, dimred = "PCA", subset_row = hvgs)
 print(sce_bc)
+
+print(head(reducedDim(sce_bc, type = "UMAP")))
 
 set.seed(37)
 

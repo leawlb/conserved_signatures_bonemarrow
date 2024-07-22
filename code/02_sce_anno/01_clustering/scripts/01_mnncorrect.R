@@ -8,7 +8,7 @@ set.seed(37)
 
 #-------------------------------------------------------------------------------
 
-sce <- readRDS(file = snakemake@input[["sce_input"]])
+sce <- base::readRDS(file = snakemake@input[["sce_input"]])
 
 batch_use <- snakemake@params[["batch_use"]]
 batch_pos <- which(colnames(colData(sce)) == batch_use)
@@ -30,8 +30,8 @@ print(seed)
 
 #-------------------------------------------------------------------------------
 # rename the already existent reduced dims and assays (to keep them)
-reducedDimNames(sce)[grep("PCA", reducedDimNames(sce))] <- "PCA_before_BC"
-reducedDimNames(sce)[grep("UMAP", reducedDimNames(sce))] <- "UMAP_before_BC"
+reducedDimNames(sce)[base::grep("PCA", reducedDimNames(sce))] <- "PCA_before_BC"
+reducedDimNames(sce)[base::grep("UMAP", reducedDimNames(sce))] <- "UMAP_before_BC"
 assays(sce)$counts_before_BC <- assays(sce)$counts
 assays(sce)$logcounts_before_BC <- assays(sce)$logcounts
 
@@ -93,12 +93,11 @@ print(reducedDim(sce_bc, type = "PCA")[1:5, 1:5])
 set.seed(seed)
 sce_bc <- scater::runUMAP(sce_bc, dimred = "PCA", subset_row = hvgs)
 print(sce_bc)
+set.seed(37)
 
 print(head(reducedDim(sce_bc, type = "UMAP")))
 
-set.seed(37)
-
 #-------------------------------------------------------------------------------
-saveRDS(sce_bc, file = snakemake@output[["sce_output"]])
+base::saveRDS(sce_bc, file = snakemake@output[["sce_output"]])
 
 sessionInfo()

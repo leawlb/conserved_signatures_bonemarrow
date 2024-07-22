@@ -5,13 +5,11 @@ base: "/omics/odcf/analysis/OE0538_projects/DO-0008"
   #cellranger_output: "/data/main_analysis/sce_objects/00_cellranger_output" 
   #fourgenomes_output: "/data/fourgenomes/sce_objects/00_cellranger_output" 
 scRNAseq_data_paths:
-  #main: "/data/scRNAseq/main_analysis"
-  main: "/data/test_new_reference/main_analysis"
-  #cellranger_output: "/data/scRNAseq/main_analysis/sce_objects/00_cellranger_output" 
-  cellranger_output: "/data/test_new_reference/main_analysis/sce_objects/00_cellranger_output" 
+  main: "/data/scRNAseq/main_analysis"
+  cellranger_output: "/data/scRNAseq/main_analysis/sce_objects/00_cellranger_output" 
   fourgenomes_output: "/data/scRNAseq/fourgenomes/sce_objects/00_cellranger_output" 
 metadata_paths: 
-  table: "/data/metadata/scRNAseq/00_alignment/OE0538_DO-0008_metadata_combined.csv"
+  table: "/data/metadata/scRNAseq/00_alignment/metadata.csv"
   colors: "/data/metadata/colors/colors.txt"
   colors_ref: "/data/metadata/colors/colors_references.txt"
   ensembl_mspr: "/data/metadata/scRNAseq/01_sce_prep/ensembl_mspr/ensembl_list_mspr"
@@ -22,6 +20,7 @@ metadata_paths:
   gene_list_subclustering: "/data/metadata/scRNAseq/02_sce_anno/gene_list_subclustering.txt"
   gene_list_dotplot: "/data/metadata/scRNAseq/02_sce_anno/gene_list_dotplot.txt"
   annotation_clusters: "/data/metadata/scRNAseq/02_sce_anno/annotation_clusters.txt"
+  sources_variation: "/data/metadata/scRNAseq/02_sce_anno/sources_variation.txt"
   annotation_subclusters: "/data/metadata/scRNAseq/02_sce_anno/annotation_subclusters.txt"
   annotation_final: "/data/metadata/scRNAseq/02_sce_anno/annotation_final.txt"
   ensembl_hum: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/ensembl_hum"
@@ -65,11 +64,17 @@ values:
     batch_use: "Object_ID" # if changed run ENTIRE batch_correction_snakefile
     seeds_umap:
       str: 6 # for nicer plots after batch correction
-      hsc: 2 # for nicer plots after batch correction
+      hsc: 7
     seeds_umap_after:
       str: 2 # for nicer plots after subclustering
-      hsc: 10 # for nicer plots after subclustering # 10 was ok
-    k_louvain: 77 # for louvain clustering resolution
+      hsc: 10 # for nicer plots after subclustering 
+    k_graph_list:
+      hsc: 10
+      str: 10 # for louvain clustering resolution
+    resolution_louvain_list:   
+      hsc: 0.3
+      str: 0.3
+    #k_louvain: 77 # for louvain clustering resolution
     k_louvain_refs: 50 # for louvain clustering resolution
     ndge_padj_cutoff: 0.05 # below which nDGEs are significant
     ndge_fc_cutoff: 1.5 # above which genes are excluded from nDGEs

@@ -16,7 +16,17 @@ batch_pos <- which(colnames(colData(sce)) == batch_use)
 nr_hvgs_BC <- snakemake@params[["nr_hvgs_BC"]] 
 nr_hvgs <- snakemake@params[["nr_hvgs"]]
 
-seed <- snakemake@params[["seeds_umap"]]
+seeds_umap <- snakemake@params[["seeds_umap"]]
+
+fraction_curr <- snakemake@wildcards[["fraction"]]
+
+print(seeds_umap)
+print(fraction_curr)
+print(nr_hvgs_BC)
+
+seed <- seeds_umap[[fraction_curr]]
+
+print(seed)
 
 #-------------------------------------------------------------------------------
 # rename the already existent reduced dims and assays (to keep them)
@@ -80,17 +90,7 @@ colnames(reducedDim(sce_bc, type = "PCA")) <- paste0(
 
 print(reducedDim(sce_bc, type = "PCA")[1:5, 1:5])
 
-# calculate UMAP based on corrected PCA
-# no new hvg determination because logcounts_batchnorm is not corrected anyway
-seeds_umap <- snakemake@params[["seeds_umap"]]
-if(sce_bc$Fraction_ID[1] == "hsc"){
-  seed <- seeds_umap[["hsc"]]
-}else if(sce_bc$Fraction_ID[1] == "str"){
-  seed <- seeds_umap[["str"]]
-}
-
 set.seed(seed)
-print(seed)
 sce_bc <- scater::runUMAP(sce_bc, dimred = "PCA", subset_row = hvgs)
 print(sce_bc)
 

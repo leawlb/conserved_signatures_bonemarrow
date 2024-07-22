@@ -8,7 +8,11 @@ set.seed(37)
 #-------------------------------------------------------------------------------
 
 sce <- readRDS(file = snakemake@input[["sce_input"]])
-k_louvain <- snakemake@params[["k_louvain"]]
+k_louvain_list <- snakemake@params[["k_louvain"]]
+fraction_curr <-  snakemake@wildcards[["fraction"]]
+
+k_louvain <- k_louvain_list[[fraction_curr]]
+print(k_louvain)
 
 louvain <- scran::clusterCells(sce, use.dimred="PCA", 
                                assay.type = NULL,

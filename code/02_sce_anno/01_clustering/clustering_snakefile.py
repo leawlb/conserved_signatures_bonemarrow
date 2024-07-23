@@ -35,10 +35,10 @@ fractions = get_list(metadata = METADATA, column = "Fraction_ID")
 ages = get_list(metadata = METADATA, column = "Age_ID")
 
 # cannot take from metadata since cluster number is dependent on fraction
-clusters_hsc = list(range(1,12))
+clusters_hsc = list(range(1,13))
 clusters_hsc = list(map(str, clusters_hsc))
 
-clusters_str = list(range(1,18))
+clusters_str = list(range(1,21))
 clusters_str = list(map(str, clusters_str))
 
 print(clusters_hsc)
@@ -52,13 +52,13 @@ for f in fractions:
   targets = targets + [OUTPUT_DAT + "/02_clst/louvn_clust/sce_" + f + "-02"]
   #targets = targets + [OUTPUT_REP + "/01_batch_correction/batch_correction_report_" + f + "_" + BATCH_USE + ".html"]
   targets = targets + [OUTPUT_REP + "/02_clustering/clustering_report_" + f +".html"]
- # targets = targets + [OUTPUT_DAT + "/04_annc/01_markers/markers_" + f]
- # targets = targets + [OUTPUT_DAT + "/04_annc/02_goan/go_" + f]
- # targets = targets + [OUTPUT_DAT + "/04_annc/03_sce/sce_" + f + "-04"]
+  #targets = targets + [OUTPUT_DAT + "/04_annc/01_markers/markers_" + f]
+  #targets = targets + [OUTPUT_DAT + "/04_annc/02_goan/go_" + f]
+  #targets = targets + [OUTPUT_DAT + "/04_annc/03_sce/sce_" + f + "-04"]
 
 #for c in clusters_hsc:
-  #targets = targets + [OUTPUT_DAT + "/03_sepd/hsc_cluster_" + c + "-sep"]
-  #targets = targets + [OUTPUT_REP + "/03_anno_clusters/annotation_hsc_cluster_" + c + ".html" ] 
+#  targets = targets + [OUTPUT_DAT + "/03_sepd/hsc_cluster_" + c + "-sep"]
+#  targets = targets + [OUTPUT_REP + "/03_anno_clusters/annotation_hsc_cluster_" + c + ".html" ] 
 
 #for c in clusters_str:
   #targets = targets + [OUTPUT_DAT + "/03_sepd/str_cluster_" + c + "-sep"]
@@ -128,7 +128,7 @@ rule louvain_clustering:
         sce_output = OUTPUT_DAT + "/02_clst/louvn_clust/sce_{fraction}-02"
     params:
         k_graph_list = VALUES["k_graph_list"],
-        resolution_louvain_list = VALUES["resolution_louvain"]
+        resolution_louvain_list = VALUES["resolution_louvain_list"]
     script:
         "scripts/02_louvain_clustering.R"
   

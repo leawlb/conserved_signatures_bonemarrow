@@ -29,7 +29,8 @@ clust <- igraph::cluster_louvain(graph,
 sce$cluster_louvain <- as.character(clust$membership)
 sce$cluster_louvain <- factor(sce$cluster_louvain, 
                               levels = sort(unique(sce$cluster_louvain))) 
-sce$k_louvain <- rep(k_louvain, ncol(sce))
+sce$k_louvain <- rep(k_graph, ncol(sce))
+sce$resolution_louvain <- rep(resolution_louvain, ncol(sce))
 
 print(sce)
 saveRDS(sce, file = snakemake@output[["sce_output"]])

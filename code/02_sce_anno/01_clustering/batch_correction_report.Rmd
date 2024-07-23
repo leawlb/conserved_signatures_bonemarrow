@@ -142,6 +142,7 @@ identity_plotlist <- lapply(sce_list, function(x){
 
 ```{r after_merging_plots2, fig.width=8, fig.height=4}
 identity_plotlist
+knitr::knit_exit()
 ```
 
 # All QC metrics

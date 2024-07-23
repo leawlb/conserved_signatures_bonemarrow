@@ -65,11 +65,14 @@ if(fraction_curr == "hsc"){
 }
 
 col_cts_baccin <- col_cts_ref[base::match(
-  levels(sce_list[[1]][[1]]$baccin_celltype_scmapclust), names(col_cts_ref))]
+  levels(sce_list[[1]][[1]]$baccin_celltype_scmapclust),
+  names(col_cts_ref))]
 col_cts_dahlin <- col_cts_ref[base::match(
-  levels(sce_list[[1]][[1]]$dahlin_celltype_scmapclust), names(col_cts_ref))]
+  levels(sce_list[[1]][[1]]$dahlin_celltype_scmapclust), 
+  names(col_cts_ref))]
 col_cts_dolgalev <- col_cts_ref[base::match(
-  levels(sce_list[[1]][[1]]$dolgalev_celltype_scmapclust), names(col_cts_ref))]
+  levels(sce_list[[1]][[1]]$dolgalev_celltype_scmapclust), 
+  names(col_cts_ref))]
 
 col_batch_exp_day <- col_alp[names(col_alp) %in%
                                sce_list[[1]][[1]]$Batch_exp_day]
@@ -142,7 +145,6 @@ identity_plotlist <- lapply(sce_list, function(x){
 
 ```{r after_merging_plots2, fig.width=8, fig.height=4}
 identity_plotlist
-knitr::knit_exit()
 ```
 
 # All QC metrics

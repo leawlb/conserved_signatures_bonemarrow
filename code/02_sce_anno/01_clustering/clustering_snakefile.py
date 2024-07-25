@@ -21,6 +21,8 @@ COLORS = config["base"] + config["metadata_paths"]["colors"]
 VALUES =  config["values"]["02_sce_anno"]
 BATCH_USE = VALUES["batch_use"] # which colData to use as batch
 
+RUN_ANNO_REPORTS = config["run_anno_reports"]
+
 METADATA = pd.read_csv(config["base"] + config["metadata_paths"]["table"])
 def get_list(metadata, column):
   values = METADATA[column]
@@ -58,11 +60,13 @@ for f in fractions:
 # 
 for c in clusters_hsc:
   targets = targets + [OUTPUT_DAT + "/03_sepd/hsc_cluster_" + c + "-sep"]
-  targets = targets + [OUTPUT_REP + "/03_anno_clusters/annotation_hsc_cluster_" + c + ".html" ]
+  if RUN_ANNO_REPORTS:
+    targets = targets + [OUTPUT_REP + "/03_anno_clusters/annotation_hsc_cluster_" + c + ".html" ]
  
 for c in clusters_str:
    targets = targets + [OUTPUT_DAT + "/03_sepd/str_cluster_" + c + "-sep"]
-   targets = targets + [OUTPUT_REP + "/03_anno_clusters/annotation_str_cluster_" + c + ".html"]
+   if RUN_ANNO_REPORTS:
+    targets = targets + [OUTPUT_REP + "/03_anno_clusters/annotation_str_cluster_" + c + ".html"]
 
 #for s in species:
 #  for f in fractions:
@@ -197,24 +201,25 @@ rule go_analysis:
     script:
         "scripts/04_go_clusters.R"
 
-# report on marker gene expression and GO 
-rule make_anno_report:
-    input: 
-        markers = rules.find_markers.output,
-        go = rules.go_analysis.output,
-        sep = OUTPUT_DAT + "/03_sepd/{fraction}_cluster_{cluster}-sep",
-        sce_input = rules.louvain_clustering.output,
-        gene_list = GENES_CLUSTERS
-    output:
-        OUTPUT_REP + "/03_anno_clusters/annotation_{fraction}_cluster_{cluster}.html"
-    params:
-        colors_ref_path = COLORS_REF,
-        colors_path = COLORS,
-        functions = "../../source/sce_functions.R",
-        plotting = "../../source/plotting.R",
-        colors = "../../source/colors.R"
-    script:
-        "cluster_anno_report.Rmd"
+if RUN_ANNO_REPORTS:
+  # report on marker gene expression and GO 
+  rule make_anno_report:
+      input: 
+          markers = rules.find_markers.output,
+          go = rules.go_analysis.output,
+          sep = OUTPUT_DAT + "/03_sepd/{fraction}_cluster_{cluster}-sep",
+          sce_input = rules.louvain_clustering.output,
+          gene_list = GENES_CLUSTERS
+      output:
+          OUTPUT_REP + "/03_anno_clusters/annotation_{fraction}_cluster_{cluster}.html"
+      params:
+          colors_ref_path = COLORS_REF,
+          colors_path = COLORS,
+          functions = "../../source/sce_functions.R",
+          plotting = "../../source/plotting.R",
+          colors = "../../source/colors.R"
+      script:
+          "cluster_anno_report.Rmd"
         
 # assign annotation labels informed from report
 rule assign_annotation:

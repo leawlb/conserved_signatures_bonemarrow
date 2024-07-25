@@ -64,7 +64,7 @@ values:
     batch_use: "Object_ID" # if changed run ENTIRE batch_correction_snakefile
     seeds_umap:
       str: 6 # for nicer plots after batch correction
-      hsc: 11 # 10 not too bad
+      hsc: 11 
     seeds_umap_after:
       str: 2 # for nicer plots after subclustering
       hsc: 10 # for nicer plots after subclustering 
@@ -72,9 +72,8 @@ values:
       hsc: 10
       str: 10 # for louvain clustering resolution
     resolution_louvain_list:   
-      hsc: 0.6 # 0.45 was actually pretty good
+      hsc: 0.6 
       str: 0.3
-    #k_louvain: 77 # for louvain clustering resolution
     k_louvain_refs: 50 # for louvain clustering resolution
     ndge_padj_cutoff: 0.05 # below which nDGEs are significant
     ndge_fc_cutoff: 1.5 # above which genes are excluded from nDGEs
@@ -95,3 +94,4 @@ values:
 # Conditions  
 # in caps for use in R, only first letter capitalized for use in Snakefile
 run_preprocessing_summary: False
+run_anno_reports: False

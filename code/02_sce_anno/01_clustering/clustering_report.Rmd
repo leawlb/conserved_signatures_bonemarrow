@@ -27,7 +27,6 @@ source(file =  snakemake@params[["plotting"]])
 ```
 
 ```{r load_objects}
-#sce_inp <- base::readRDS(file = snakemake@input[["sce_input"]])
 sce_l <- base::readRDS(file = snakemake@input[["sce_l"]])
 fraction_curr <- snakemake@wildcards[["fraction"]]
 ```
@@ -37,20 +36,17 @@ colors_ref_path <- snakemake@params[["colors_ref_path"]]
 colors_path <- snakemake@params[["colors_path"]]
 source(snakemake@params[["colors"]])
 
-#sce_inp <- factor_reference_cts(sce_inp)
 sce_l <- factor_reference_cts(sce_l)
 
 if(fraction_curr == "hsc"){
   col_cts_ref["unassigned"] <- "honeydew2"
-  col_num <- c(col_num, "DOWNSAMPLED" = "grey90")
+  #col_num <- c(col_num, "DOWNSAMPLED" = "grey90")
 }else if(fraction_curr == "str"){
   col_cts_ref["unassigned"] <- "mistyrose3"
 }
 
 # randomize counts for nicer plots
-#sce_inp[,base::sample(c(1:ncol(sce_inp)), size = ncol(sce_inp))]
 sce_l[,base::sample(c(1:ncol(sce_l)), size = ncol(sce_l))]
-
 
 col_cts_baccin <- col_cts_ref[base::match(
   levels(sce_l$baccin_celltype_scmapclust), 
@@ -74,7 +70,9 @@ Annotations for reference.
 
 ```{r plots_function}
 
-title_full <- base::paste0(fraction_curr, sce_l$k_louvain[1])
+title_full <- base::paste(fraction_curr,
+                          "resolution", 
+                          sce_l$resolution_louvain[1])
 
 identity_plots <- function(sce){
   
@@ -94,20 +92,19 @@ identity_plots <- function(sce){
                                 values = col_cts_dahlin)
   legend_2 <- ggpubr::get_legend(plot_2l)
   
-  # plot_3 <- umap_base(sce, color_by = "dolgalev_celltype_scmapclust")+
-  #   ggplot2::ggtitle(title_full)+
-  #   ggplot2::scale_color_manual(values = col_cts_dolgalev)
-  # plot_3l <- umap_legend(sce, color_by = "dolgalev_celltype_scmapclust")+
-  #   ggplot2::scale_color_manual("dolgalev_celltype_scmapclust",
-  #                               values = col_cts_dolgalev)
-  # legend_3 <- ggpubr::get_legend(plot_3l)
+  plot_3 <- umap_base(sce, color_by = "dolgalev_celltype_scmapclust")+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::scale_color_manual(values = col_cts_dolgalev)
+  plot_3l <- umap_legend(sce, color_by = "dolgalev_celltype_scmapclust")+
+    ggplot2::scale_color_manual("dolgalev_celltype_scmapclust",
+                                values = col_cts_dolgalev)
+  legend_3 <- ggpubr::get_legend(plot_3l)
   
   PLOT_1 <- ggpubr::ggarrange(plot_1, legend_1)
   PLOT_2 <- ggpubr::ggarrange(plot_2, legend_2)
-  #PLOT_3 <- ggpubr::ggarrange(plot_3, legend_3)
+  PLOT_3 <- ggpubr::ggarrange(plot_3, legend_3)
 
-  #return(list(PLOT_1, PLOT_2, PLOT_3))
-  return(list(PLOT_1, PLOT_2))
+  return(list(PLOT_1, PLOT_2, PLOT_3))
 }
 identity_plots <- identity_plots(sce_l)
 ```
@@ -128,24 +125,22 @@ print(base::table(sce_l$cluster_louvain, sce_l$Age_ID))
 
 ```{r plot_clusters, fig.width=8, fig.height=4}
 
-plot_title <- base::paste0(fraction_curr, sce_l$k_louvain[1])
-
 plot_1 <- umap_base(sce_l, color_by = "cluster_louvain")+ 
-  ggplot2::ggtitle(plot_title)+
+  ggplot2::ggtitle(title_full)+
   ggplot2::scale_color_manual(values = col_clust_l)
 plot_1l <- umap_legend(sce_l, color_by = "cluster_louvain")+
   ggplot2::scale_color_manual("cluster (louvain)", values = col_clust_l)
 legend_1 <- ggpubr::get_legend(plot_1l)
 
 plot_2 <- pca_base2(sce_l, color_by = "cluster_louvain")+ 
-  ggplot2::ggtitle(plot_title)+
+  ggplot2::ggtitle(title_full)+
   ggplot2::scale_color_manual(values = col_clust_l)
 plot_2l <- pca_legend(sce_l, color_by = "cluster_louvain")+
   ggplot2::scale_color_manual("cluster (louvain)", values = col_clust_l)
 legend_2 <- ggpubr::get_legend(plot_2l)
 
 plot_3 <- pca_base3(sce_l, color_by = "cluster_louvain")+ 
-  ggplot2::ggtitle(plot_title)+
+  ggplot2::ggtitle(title_full)+
   ggplot2::scale_color_manual(values = col_clust_l)
 plot_3l <- pca_legend(sce_l, color_by = "cluster_louvain")+
   ggplot2::scale_color_manual("cluster (louvain)", values = col_clust_l)
@@ -158,8 +153,6 @@ PLOT_3 <- ggpubr::ggarrange(plot_3, legend_3)
 PLOT_1
 PLOT_2
 PLOT_3
-knitr::knit_exit()
-
 ```
 
 ## QC
@@ -207,7 +200,7 @@ plot1a <- ggplot2::ggplot(ggdf,
   ggplot2::scale_fill_manual("Experimental day", values = col_batch_exp_day)+
   ggplot2::scale_color_manual("Experimental day", values = col_batch_exp_day)+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
-  ggplot2::ggtitle(plot_title)
+  ggplot2::ggtitle(title_full)
 
 plot1b <- ggplot2::ggplot(ggdf,
                           aes(x = cluster_louvain,
@@ -220,7 +213,7 @@ plot1b <- ggplot2::ggplot(ggdf,
   ggplot2::scale_color_manual("Experimental day",
                               values = col_batch_exp_day)+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
-  ggplot2::ggtitle(plot_title)
+  ggplot2::ggtitle(title_full)
 
 plot2a <- ggplot2::ggplot(ggdf,
                           aes(x = Batch_exp_day,
@@ -231,7 +224,7 @@ plot2a <- ggplot2::ggplot(ggdf,
   ggplot2::scale_fill_manual("Cluster (louvain)", values = col_clust_l)+
   ggplot2::scale_color_manual("Cluster (louvain)", values = col_clust_l)+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
-  ggplot2::ggtitle(plot_title)+
+  ggplot2::ggtitle(title_full)+
   ggplot2::facet_grid(cols = vars(ggdf$Fraction))
 
 plot2b <- ggplot2::ggplot(ggdf,
@@ -243,7 +236,7 @@ plot2b <- ggplot2::ggplot(ggdf,
   ggplot2::scale_fill_manual("Cluster (louvain)",  values = col_clust_l)+
   ggplot2::scale_color_manual("Cluster (louvain)", values = col_clust_l)+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
-  ggplot2::ggtitle(plot_title)+
+  ggplot2::ggtitle(title_full)+
   ggplot2::facet_grid(cols = vars(ggdf$Fraction))
 
 plot3a <- ggplot2::ggplot(ggdf,
@@ -255,7 +248,7 @@ plot3a <- ggplot2::ggplot(ggdf,
   ggplot2::scale_fill_manual("Age", values = col_age)+
   ggplot2::scale_color_manual("Age", values = col_age)+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
-  ggplot2::ggtitle(plot_title)
+  ggplot2::ggtitle(title_full)
 
 plot3b <- ggplot2::ggplot(ggdf,
                           aes(x = cluster_louvain,
@@ -266,7 +259,7 @@ plot3b <- ggplot2::ggplot(ggdf,
   ggplot2::scale_fill_manual("Age", values = col_age)+
   ggplot2::scale_color_manual("Age", values = col_age)+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
-  ggplot2::ggtitle(plot_title)
+  ggplot2::ggtitle(title_full)
 
 plot4a <- ggplot2::ggplot(ggdf,
                           aes(x = Age_ID,
@@ -277,7 +270,7 @@ plot4a <- ggplot2::ggplot(ggdf,
   ggplot2::scale_fill_manual("Cluster (louvain)", values = col_clust_l)+
   ggplot2::scale_color_manual("Cluster (louvain)", values = col_clust_l)+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
-  ggplot2::ggtitle(plot_title)
+  ggplot2::ggtitle(title_full)
 
 plot4b <- ggplot2::ggplot(ggdf,
                           aes(x = Age_ID,
@@ -289,7 +282,7 @@ plot4b <- ggplot2::ggplot(ggdf,
   ggplot2::scale_color_manual("Cluster (louvain)", values = col_clust_l)+
   ggplot2::theme(axis.text.y = element_blank(),
                  axis.text.x = element_text(angle = 90))+
-  ggplot2::ggtitle(plot_title)
+  ggplot2::ggtitle(title_full)
 
 plot1a
 plot1b
@@ -314,11 +307,10 @@ plot5a <- ggplot2::ggplot(ggdf,
   ggplot2::scale_color_manual("Age", values = col_spc)+
   ggplot2::theme(axis.text.x = element_text(angle = 90),
                  axis.title.y = element_blank())+
-  ggplot2::ggtitle(plot_title)
+  ggplot2::ggtitle(title_full)
 
 plot5a
 ```
-
 
 ```{r qc_plots_spec2, fig.width=8, fig.height=4}
 plot5b <- ggplot2::ggplot(ggdf,
@@ -331,7 +323,7 @@ plot5b <- ggplot2::ggplot(ggdf,
   ggplot2::scale_color_manual( "Age", values = col_spc)+
   ggplot2::theme(axis.text.x = element_text(angle = 90),
                  axis.title.y = element_blank())+
-  ggplot2::ggtitle(plot_title)
+  ggplot2::ggtitle(title_full)
 
 plot5b
 ```
@@ -347,7 +339,7 @@ plot6a <- ggplot2::ggplot(ggdf,
   ggplot2::scale_color_manual("Cluster (louvain)", values = col_clust_l)+
   ggplot2::theme(axis.text.x = element_text(angle = 90),
                 axis.title.y = element_blank())+
-  ggplot2::ggtitle(plot_title)
+  ggplot2::ggtitle(title_full)
 
 plot6a
 ```
@@ -364,7 +356,7 @@ plot6b <- ggplot2::ggplot(ggdf,
   ggplot2::theme(axis.text.y = element_blank(),
                  axis.text.x = element_text(angle = 90),
                  axis.title.y = element_blank())+
-  ggplot2::ggtitle(plot_title)
+  ggplot2::ggtitle(title_full)
 
 plot6b
 ```
@@ -383,7 +375,7 @@ plot7a <- ggplot2::ggplot(ggdf,
   ggplot2::theme(legend.position = "none",
                  axis.text.x = element_text(angle = 90),
                  axis.title.y = element_blank())+
-  ggplot2::ggtitle(plot_title)
+  ggplot2::ggtitle(title_full)
 
 plot7b <- ggplot2::ggplot(ggdf,
                           aes(x = cluster_louvain,
@@ -396,7 +388,7 @@ plot7b <- ggplot2::ggplot(ggdf,
   ggplot2::theme(legend.position = "none",
                  axis.text.x = element_text(angle = 90),
                  axis.title.y = element_blank())+
-  ggplot2::ggtitle(plot_title)
+  ggplot2::ggtitle(title_full)
 ```
 
 ```{r qc_plots_no_legend2, fig.width=8, fig.height=4}
@@ -411,7 +403,7 @@ plot8a <- ggplot2::ggplot(ggdf,
   ggplot2::theme(legend.position = "none",
                  axis.text.x = element_text(angle = 90),
                  axis.title.y = element_blank())+
-  ggplot2::ggtitle(plot_title)
+  ggplot2::ggtitle(title_full)
 
 plot8b <- ggplot2::ggplot(ggdf,
                           aes(x = cluster_louvain,
@@ -424,7 +416,7 @@ plot8b <- ggplot2::ggplot(ggdf,
   ggplot2::theme(legend.position = "none",
                  axis.text.x = element_text(angle = 90),
                  axis.title.y = element_blank())+
-  ggplot2::ggtitle(plot_title)
+  ggplot2::ggtitle(title_full)
 
 plot9a <- ggplot2::ggplot(ggdf,
                           aes(x = cluster_louvain,
@@ -437,7 +429,7 @@ plot9a <- ggplot2::ggplot(ggdf,
   ggplot2::theme(legend.position = "none",
                  axis.text.x = element_text(angle = 90),
                  axis.title.y = element_blank())+
-  ggplot2::ggtitle(plot_title)
+  ggplot2::ggtitle(title_full)
 
 plot9b <- ggplot2::ggplot(ggdf,
                           aes(x = cluster_louvain,
@@ -450,7 +442,7 @@ plot9b <- ggplot2::ggplot(ggdf,
   ggplot2::theme(legend.position = "none",
                  axis.text.x = element_text(angle = 90),
                  axis.title.y = element_blank())+
-  ggplot2::ggtitle(plot_title)
+  ggplot2::ggtitle(title_full)
 ```
 
 ```{r plots2, fig.width=8, fig.height = 11}

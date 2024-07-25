@@ -37,6 +37,7 @@ sce$cluster_louvain <- clust$membership
 sce$cluster_louvain <- base::factor(
   sce$cluster_louvain, 
   levels = base::sort(base::unique(sce$cluster_louvain)))
+print(head(sce$cluster_louvain))
 
 sce$k_graph <- base::rep(k_graph, ncol(sce))
 sce$resolution_louvain <- base::rep(resolution_louvain, ncol(sce))

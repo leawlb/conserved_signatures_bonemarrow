@@ -33,15 +33,15 @@ fractions = get_list(metadata = METADATA, column = "Fraction_ID")
 species = get_list(metadata = METADATA, column = "Species_ID")
 
 # clusters to be subclustered 
-# hsc clusters 2 and 4 will be merged later
-clusters_hsc = ["2", "7"]
-clusters_str = ["4"]
+# hsc clusters 2 and 4 are be merged and then subclustered again
+clusters_hsc = ["2", "5"]
+clusters_str = ["6"]
 
 # subclusters for dummy separation
-subclusters_hsc = list(range(1,13))
+subclusters_hsc = list(range(1,12))
 subclusters_hsc = list(map(str,subclusters_hsc))
 
-subclusters_str = list(range(1,9))
+subclusters_str = list(range(1,11))
 subclusters_str = list(map(str,subclusters_str))
 
 #-------------------------------------------------------------------------------
@@ -49,25 +49,25 @@ subclusters_str = list(map(str,subclusters_str))
 targets = []
 for c in clusters_hsc:
   targets = targets + [OUTPUT_DAT + "/09_sbcl/sce_hsc_cluster_" + c + "-09"]
-  targets = targets + [OUTPUT_REP + "/mclust/mclust_report_hsc_cluster_" + c + ".html"]
+  #targets = targets + [OUTPUT_REP + "/mclust/mclust_report_hsc_cluster_" + c + ".html"]
 
 for c in clusters_str:
   targets = targets + [OUTPUT_DAT + "/09_sbcl/sce_str_cluster_" + c + "-09"]
-  targets = targets + [OUTPUT_REP + "/mclust/mclust_report_str_cluster_" + c + ".html"]
+  #targets = targets + [OUTPUT_REP + "/mclust/mclust_report_str_cluster_" + c + ".html"]
 
-for f in fractions:
-  targets = targets + [OUTPUT_DAT + "/10_anns/sce_" + f + "-10"]
-  targets = targets + [OUTPUT_REP + "/results/results_report_" + f + ".html"]
-  targets = targets + [OUTPUT_DAT + "/12_anqc/01_markers/markers_" + f]
-  targets = targets + [OUTPUT_DAT + "/12_anqc/02_go/go_" + f]
-
-for s in subclusters_hsc:
-  targets = targets + [OUTPUT_DAT + "/11_sepc/hsc_subcluster_" + s + "-sep"]
-  #targets = targets + [OUTPUT_REP + "/markergenes/markergenes_report_hsc_subcluster_" + s + ".html"]
-  
-for s in subclusters_str:
-  targets = targets + [OUTPUT_DAT + "/11_sepc/str_subcluster_" + s + "-sep"]
-  #targets = targets + [OUTPUT_REP + "/markergenes/markergenes_report_str_subcluster_" + s + ".html"]
+# for f in fractions:
+#   targets = targets + [OUTPUT_DAT + "/10_anns/sce_" + f + "-10"]
+#   targets = targets + [OUTPUT_REP + "/results/results_report_" + f + ".html"]
+#   targets = targets + [OUTPUT_DAT + "/12_anqc/01_markers/markers_" + f]
+#   targets = targets + [OUTPUT_DAT + "/12_anqc/02_go/go_" + f]
+# 
+# for s in subclusters_hsc:
+#   targets = targets + [OUTPUT_DAT + "/11_sepc/hsc_subcluster_" + s + "-sep"]
+#   targets = targets + [OUTPUT_REP + "/markergenes/markergenes_report_hsc_subcluster_" + s + ".html"]
+#   
+# for s in subclusters_str:
+#   targets = targets + [OUTPUT_DAT + "/11_sepc/str_subcluster_" + s + "-sep"]
+#   targets = targets + [OUTPUT_REP + "/markergenes/markergenes_report_str_subcluster_" + s + ".html"]
 
 #-------------------------------------------------------------------------------
 
@@ -78,7 +78,7 @@ rule all:
         targets
         
 #-------------------------------------------------------------------------------
-# subclustering
+# supervised subclustering using mclust and specifies subclustering genes
 rule subclustering:
     input:
         sep = OUTPUT_DAT + "/03_sepd/{fraction}_cluster_{cluster}-sep",
@@ -107,11 +107,14 @@ rule subclustering_mclust_report:
         "subclustering_mclust_report.Rmd" 
 
 #-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+
 """
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# add subclusters to fraction object and annotate
-# these are the SCE objects that will be used for most downstream analyses
-# since they contain the final cell type annotation
+# This rule generates the SCE objects that will be used for most 
+# downstream analyses since they contain the final cell type annotation
+
+# add subclusters to SCE object and annotate
+# re-calculate UMAP coordinates for nicer looking plots
 """
 sce_subcl_input = expand(rules.subclustering.output, cluster = clusters_hsc, fraction = ["hsc"]) 
 sce_subcl_input = sce_subcl_input + expand(rules.subclustering.output, cluster = clusters_str, fraction = ["str"])
@@ -130,7 +133,6 @@ rule add_subclusters:
         "scripts/10_add_subclusters_anno.R" 
 
 """
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # report annotation results of entire fraction
 # I take many plots from this script for "main figure drafts", so it is quite 
 # long and under continuous processing/editing 
@@ -153,6 +155,8 @@ rule make_subclustering_results_report:
 #-------------------------------------------------------------------------------
 
 # Dummy rule to allow using subclusters as wildcard
+# using the total number of subclusters = cell types
+# only required for report
 output = expand(OUTPUT_DAT + "/11_sepc/hsc_subcluster_{subcluster}-sep", subcluster = subclusters_hsc)
 output = output + expand(OUTPUT_DAT + "/11_sepc/str_subcluster_{subcluster}-sep", subcluster = subclusters_str)
 print(output)

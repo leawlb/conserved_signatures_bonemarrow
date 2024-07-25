@@ -1,4 +1,9 @@
 
 snakemake --cluster "bsub -q medium -n6 -R rusage[mem=100GB]" -p -j40 -c20 -s subclustering_snakefile.py --configfile ../../config.yaml --latency-wait 30 -n
 
+# for testing
+
+snakemake --cluster "bsub -q medium -n6 -R rusage[mem=20GB]" -p -j40 -c20 -s subclustering_snakefile.py --configfile ../../config.yaml --latency-wait 30 -n
+
+
 

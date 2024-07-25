@@ -41,7 +41,6 @@ for(i in levels(agg$annotation_cluster)){
                                                       "condition", 
                                                       "sample",
                                                       "age",
-                                                      "annotation_cluster",
                                                       "ncells", 
                                                       "Antibody_combination", 
                                                       "Batch_sequencing")]
@@ -60,7 +59,6 @@ for(i in levels(agg$annotation_cluster)){
 dsq_list <- lapply(agg_list, function(agg){
   
   print(agg)
-  print(agg$annotation_cluster[1])
   dsq <- DESeq2::DESeqDataSet(agg, design = ~ batch + age + condition) 
   colnames(dsq) <- agg$sample
   

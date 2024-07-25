@@ -52,7 +52,7 @@ ct_curr <- sce_clust$annotation_cluster[1]
 
 rld <- rlog_list[[ct_curr]]
 # remove annotation cluster = cell type from rld so that it won't cause problems
-rld <- rld[,-which(colnames(rld) == "annotation_cluster")]
+# because all entries will be the same cell type
 ```
 
 ```{r print_objects, message = FALSE}
@@ -142,11 +142,18 @@ plot5 <- ggplot2::ggplot(ggdf, aes(x = PC1, y = PC2, color = ncells))+
   ggplot2::theme(axis.text = element_blank(),
                  axis.ticks = element_blank())
 
+plot6 <- ggplot2::ggplot(ggdf, aes(x = PC1, y = PC2, color = sample))+
+  ggplot2::geom_point()+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text = element_blank(),
+                 axis.ticks = element_blank())
+
 plot1
 plot2
 plot3
 plot4
 plot5
+plot6
 ```
 
 ```{r pca3}

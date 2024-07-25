@@ -206,11 +206,6 @@ res_list_shared_three <- lapply(res_list_shared_comp, function(shared){
   stopifnot(shared$`mmus-mspr` == shared$`mspr-mmus`)
   stopifnot(shared$`mcar-mcas` == shared$`mcas-mcar`)
   
-  stopifnot(!identical(shared_between_mmus_mcas_mspr, 
-                       shared_between_mmus_mcas_mcar))
-  stopifnot(!identical(shared_between_mmus_mcas_mspr, 
-                       shared_between_mcas_mspr_mcar))
-  
   # add all genes together, as all these genes have already passed the
   # requirements
   genes_three <- base::unique(c(

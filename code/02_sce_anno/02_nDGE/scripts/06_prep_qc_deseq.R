@@ -25,9 +25,9 @@ print(dsq_list)
 
 #-------------------------------------------------------------------------------
 # transform and save counts FOR VISUALISATION ONLY
-# log transformation and sequencing depth correction 
+# log transformation and sequencing depth correction, basically normalization
 
-rld_list <- lapply(dsq_list, DESeq2::rlog, blind = FALSE)
+rld_list <- lapply(dsq_list, DESeq2::rlog, blind = TRUE)
 print(rld_list)
 
 base::saveRDS(rld_list, snakemake@output[["rlog"]])
@@ -57,7 +57,7 @@ sva_list <- lapply(tdsq_list, function(dsq){
   # try two different methods
   n_sv_be <- sva::num.sv(data, mod, method = "be")  
   n_sv_lk <- sva::num.sv(data, mod, method = "leek")  
-  # n_sv_lk is so large that it usually doesn't work 
+  # one is so large that it usually doesn't work 
   
   svseq <- sva::svaseq(data, mod, mod0, n.sv = n_sv_be)
   print(c(n_sv_be, n_sv_lk))

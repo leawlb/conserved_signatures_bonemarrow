@@ -42,9 +42,11 @@ sce$annotation_cluster <- factor(
   levels = anno_clusters$Annotation[anno_clusters$Annotation != "remove"])
 
 # check
-base::table(is.na(sce$annotation_cluster))
+print(base::table(sce$annotation_cluster))
+print(sce$annotation_cluster[1:10])
 stopifnot(!is.na(sce$annotation_cluster))
 stopifnot(!is.na(sce$cluster_louvain))
+stopifnot(!base::grepl("remove", sce$annotation_cluster))
 
 #-------------------------------------------------------------------------------
 base::saveRDS(sce, file = snakemake@output[["sce_output"]])

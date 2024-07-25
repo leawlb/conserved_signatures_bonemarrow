@@ -22,6 +22,7 @@ agg <- scuttle::aggregateAcrossCells(
   id = colData(sce)[,c("Object_ID", "annotation_cluster")])
 
 print(agg)
+print(levels(agg$annotation_cluster))
 
 #-------------------------------------------------------------------------------
 # put each cell type object into a separate list item to perform analysis per ct
@@ -40,9 +41,13 @@ for(i in levels(agg$annotation_cluster)){
                                                       "condition", 
                                                       "sample",
                                                       "age",
+                                                      "annotation_cluster",
                                                       "ncells", 
                                                       "Antibody_combination", 
                                                       "Batch_sequencing")]
+  
+  print(i)
+  print(agg_list[[i]])
 }
 # each list item contains an object for each cell type, containing all 
 # samples from each species and age
@@ -54,6 +59,8 @@ for(i in levels(agg$annotation_cluster)){
 
 dsq_list <- lapply(agg_list, function(agg){
   
+  print(agg)
+  print(agg$annotation_cluster[1])
   dsq <- DESeq2::DESeqDataSet(agg, design = ~ batch + age + condition) 
   colnames(dsq) <- agg$sample
   

@@ -278,7 +278,7 @@ rule make_clustering_comparison_report:
         plotting = "../../source/plotting.R",
         colors = "../../source/colors.R"
     conda:
-        "../../envs/vis_ggalluvial.yml"
+        "../../envs/ggalluvial.yml"
     output:
         OUTPUT_REP + "/02_clustering/comparison/clustering_report_{species}_{fraction}.html"
     script:

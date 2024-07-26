@@ -20,12 +20,14 @@ specific clustering.
 set.seed(37)
 ```
 
-```{r}
-library(ggalluvial)
+```{r, message = FALSE}
+library(ggalluvial, quietly = TRUE)
+library(SummarizedExperiment, quietly = TRUE)
+library(SingleCellExperiment, quietly = TRUE)
+library(BiocSingular, quietly = TRUE)
 ```
 
 ```{r source, message = FALSE}
-#source(file =  snakemake@params[["functions"]])
 source(file =  snakemake@params[["plotting"]])
 ```
 
@@ -47,6 +49,8 @@ sce_ct <- base::readRDS(file = snakemake@input[["sce_l_celltypes"]])
 
 fraction_curr <- snakemake@wildcards[["fraction"]]
 species_curr <- snakemake@wildcards[["species"]]
+
+individual_curr <- base::paste0(species_curr, "_", fraction_curr)
 ```
 
 ```{r colors, meassage = FALSE}
@@ -58,7 +62,12 @@ sce_l <- sce_l[,base::sample(c(1:ncol(sce_l)), size = ncol(sce_l))]
 sce_ls <- sce_ls[,base::sample(c(1:ncol(sce_ls)), size = ncol(sce_ls))]
 sce_ct <- sce_ct[,base::sample(c(1:ncol(sce_ct)), size = ncol(sce_ct))]
 
-col_clust_l <- col_num[names(col_num) %in% sce_l$cluster_louvain]
+if(length(base::unique(sce_l$cluster_louvain)) >= 
+   length(base::unique(sce_ls$cluster_louvain))){
+  col_clust_l <- col_num[names(col_num) %in% sce_l$cluster_louvain]
+}else{
+  col_clust_l <- col_num[names(col_num) %in% sce_ls$cluster_louvain]
+}
 ```
 
 # Comparison
@@ -68,51 +77,87 @@ col_clust_l <- col_num[names(col_num) %in% sce_l$cluster_louvain]
 For all clusters (before removal and annotation).
 
 ```{r prepare_ggdf_cluster}
+# subset the merged object to the species-specific cells only
+# this will keep original UMAP coordinates 
 sce_gg_cl <- sce_l[,which(colnames(sce_l) %in% colnames(sce_ls))]
 
 sce_gg_cl$species_cluster_louvain <- vector(length = ncol(sce_gg_cl))
+# add info on species-specific clustering in species_cluster_louvain
 sce_gg_cl$species_cluster_louvain <- sce_ls$cluster_louvain[base::match(
   colnames(sce_gg_cl),
   colnames(sce_ls))]
 
-ggdf_cl <- base::as.data.frame(colData(sce_gg_cl))
+ggdf_cl <- base::as.data.frame(SummarizedExperiment::colData(sce_gg_cl))
 ggdf_cl$species_cluster_louvain <- base::paste0(ggdf_cl$species_cluster_louvain, 
                                                 "_species")
 ```
 
-```{r umap_clus}
-
+```{r umap_clus_legend}
 # make legend
 umap_l <- umap_legend(sce_l, color_by = "cluster_louvain")+
-  ggplot2::scale_color_manual("cluster", values = col_clust_l)
+  ggplot2::scale_color_manual("original cluster", values = col_clust_l)
 legend <- ggpubr::get_legend(umap_l)
 umap_l_species <- umap_legend(sce_gg_cl, color_by = "species_cluster_louvain")+
   ggplot2::scale_color_manual("cluster_species", values = col_clust_l)
 legend_species <- ggpubr::get_legend(umap_l_species)
+```
+
+```{r umap_clust1}
+
+base::table(sce_l$cluster_louvain)
 
 umap1 <- umap_base(sce_l, color_by = "cluster_louvain")+
   ggplot2::scale_color_manual(values = col_clust_l)+
-  ggplot2::ggtitle("original clusters")
+  ggplot2::ggtitle(base::paste(individual_curr, 
+                               "fraction merge, original clusters"))
 UMAP1 <- ggpubr::ggarrange(umap1, legend)
 UMAP1
+```
+
+```{r umap_clust2}
+
+base::table(sce_gg_cl$species_cluster_louvain)
 
 umap2 <- umap_base(sce_gg_cl, color_by = "cluster_louvain")+
   ggplot2::scale_color_manual(values = col_clust_l)+
-  ggplot2::ggtitle("original clusters, subset to current object")
+  ggplot2::ggtitle(base::paste(individual_curr,
+                               "species-specific cells, original clusters"))
 UMAP2 <- ggpubr::ggarrange(umap2, legend)
 UMAP2
 
 umap3 <- umap_base(sce_gg_cl, color_by = "species_cluster_louvain")+
-  ggplot2::scale_color_manual(values = col_clust_l)+
-  ggplot2::ggtitle("species clusters, subset to current object")
+  ggplot2::scale_color_manual(
+    values = col_clust_l[
+      names(col_clust_l) %in% sce_gg_cl$species_cluster_louvain])+
+  ggplot2::ggtitle(base::paste(individual_curr,
+                               "species-specific cells, species clusters"))
 UMAP3 <- ggpubr::ggarrange(umap3, legend_species)
 UMAP3
+```
 
+```{r umap_clust3}
 umap4 <- umap_base(sce_ls, color_by = "cluster_louvain")+
   ggplot2::scale_color_manual(values = col_clust_l)+
-  ggplot2::ggtitle("species clusters, current object")
+  ggplot2::ggtitle(base::paste(individual_curr, 
+                               "species-specific UMAP, species clusters"))
 UMAP4 <- ggpubr::ggarrange(umap4, legend_species)
 UMAP4
+
+# add original clusters to object with species-specific UMAP coordinates
+sce_ls$cluster_orig <- vector(length = ncol(sce_ls))
+sce_ls$cluster_orig[base::match(
+  colnames(sce_gg_cl),
+  colnames(sce_ls))] <- as.character(sce_gg_cl$cluster_louvain)
+
+
+umap5 <- umap_base(sce_ls, color_by = "cluster_orig")+
+  ggplot2::ggtitle(base::paste(
+    individual_curr, "species-specific UMAP, original clusters"))+
+  ggplot2::scale_color_manual(
+    "cluster", 
+    values = col_clust_l)
+UMAP5 <- ggpubr::ggarrange(umap5, legend)
+UMAP5
 ```
 
 ```{r prepare_ggtable_cluster}
@@ -138,19 +183,31 @@ ggplot2::ggplot(data = ggtable_cl,
                      aes(label = after_stat(stratum)))+
   ggplot2::scale_x_discrete(limits = c("cluster_louvain", 
                                        "species_cluster_louvain"),
-                             expand = c(0.15, 0.05))+
+                            expand = c(0.15, 0.05))+
   ggplot2::theme_void()+
-  ggplot2::theme(legend.position = "none")
+  ggplot2::theme(legend.position = "none")+
+  ggplot2::ggtitle(base::paste("species-specific cells", individual_curr))+
+  scale_fill_manual(values = col_clust_l)
 ```
 
 ```{r heatmap_clust}
-ggplot2::ggplot(ggtable_cl, aes(x = Var1, y = Var2, fill = Freq))+
+ggtable_cl_heatmap <- ggtable_cl
+ggtable_cl_heatmap$Var1 <- unfactor(ggtable_cl_heatmap$Var1)
+ggtable_cl_heatmap$Var2 <- unfactor(ggtable_cl_heatmap$Var2)
+
+ggplot2::ggplot(ggtable_cl_heatmap, aes(x = reorder(Var1, -Freq), 
+                                        y = reorder(Var2, -Freq), 
+                                        fill = Freq))+
   ggplot2::geom_tile()+
   ggplot2::theme_classic()+
   ggplot2::scale_fill_continuous("Frequency", 
                                  limits=c(0, base::max(ggtable_cl$Freq)),
-                                 breaks=seq(0,base::max(ggtable_cl$Freq), by=500),
-                                 low = "white", high = "red3")
+                                 breaks=seq(0,base::max(ggtable_cl$Freq), 
+                                            by = 1000),
+                                 low = "white", high = "red3")+
+  ggplot2::ggtitle(individual_curr)+
+  ggplot2::ylab("species clusters")+
+  ggplot2::xlab("original clusters")
 ```
 
 Add annotation if possible.
@@ -162,9 +219,11 @@ ggtable_cl$ct <- unfactor(sce_ct$annotation_cluster[base::match(
   ggtable_cl$Var1,
   sce_ct$cluster_louvain)])
 
-ggtable_cl$ct[is.na(ggtable_cl$ct)] <- base::paste0(
-  "removed_", 
-  unfactor(ggtable_cl$Var1[is.na(ggtable_cl$ct)]))
+ggtable_cl$ct[is.na(ggtable_cl$ct)] <- "removed"
+
+ggtable_cl$ct <- factor(ggtable_cl$ct,
+                        levels = c(levels(sce_ct$annotation_cluster),
+                                   "removed"))
 ```
 
 ```{r plot2_clust, fig.height = 5, fig.width = 4}
@@ -177,7 +236,9 @@ ggplot2::ggplot(data = ggtable_cl, aes(axis1 = Var2, axis2 = ct, y = Freq))+
                                        "species_cluster_louvain"),
                              expand = c(0.15, 0.05))+
   ggplot2::theme_void()+
-  ggplot2::theme(legend.position = "none")
+  ggplot2::theme(legend.position = "none")+
+  ggplot2::ggtitle(base::paste("species-specific", individual_curr))+
+  scale_fill_manual(values = col_clust_l)
 ```
 
 ## Only remaining cell types
@@ -191,43 +252,88 @@ sce_gg_ct$species_cluster_louvain <- sce_ls$cluster_louvain[base::match(
   colnames(sce_gg_ct),
   colnames(sce_ls))]
 
-ggdf_ct <- base::as.data.frame(colData(sce_gg_ct))
+ggdf_ct <- base::as.data.frame(SummarizedExperiment::colData(sce_gg_ct))
 
 ggdf_ct$species_cluster_louvain <- base::paste0(ggdf_ct$species_cluster_louvain, 
                                                 "_species")
 ```
 
-```{r umap_ct}
+```{r umap_ct_legend}
+
+intermed_col_ct <- c(col_num[1:length(base::unique(sce_ct$annotation_cluster))], "grey86")
+names(intermed_col_ct) <- c(levels(sce_ct$annotation_cluster), "removed")
 
 # make legend
 umap_l_ct <- umap_legend(sce_gg_ct, color_by = "annotation_cluster")+
-  ggplot2::scale_color_discrete("annotation_cluster")
+  ggplot2::scale_color_manual("annotation_cluster", values = intermed_col_ct)
 legend_ct <- ggpubr::get_legend(umap_l_ct)
+```
+
+```{r umap_ct1}
+
+base::table(sce_ct$annotation_cluster)
 
 umap1 <- umap_base(sce_ct, color_by = "annotation_cluster")+
-  ggplot2::ggtitle("original cell types")
+  ggplot2::ggtitle(base::paste(individual_curr, 
+                               "fraction merge, annotated cell types"))+
+  scale_color_manual(values = intermed_col_ct)
 UMAP1 <- ggpubr::ggarrange(umap1, legend_ct)
 UMAP1
+```
+
+```{r umap_ct2}
+base::table(sce_gg_ct$species_cluster_louvain)
 
 umap2 <- umap_base(sce_gg_ct, color_by = "annotation_cluster")+
-  ggplot2::ggtitle("original cell types, subset by current object")
+  ggplot2::ggtitle(base::paste(individual_curr,
+                               "species-specific cells, annotated cell types"))+
+  scale_color_manual(values = intermed_col_ct)
 UMAP2 <- ggpubr::ggarrange(umap2, legend_ct)
 UMAP2
 
 umap3 <- umap_base(sce_gg_ct, color_by = "species_cluster_louvain")+
-  ggplot2::ggtitle("species clusters, subset by current object")
+  ggplot2::scale_color_manual(
+    values = col_clust_l[
+      names(col_clust_l) %in% sce_gg_ct$species_cluster_louvain])+
+  ggplot2::ggtitle(base::paste(individual_curr,
+                               "species-specific cells, species clusters"))
 UMAP3 <- ggpubr::ggarrange(umap3, legend_species)
 UMAP3
+```
 
-# add cell type annotation to the species-specific objec
-sce_ls$annotation_cluster <- vector(length = ncol(sce_ls))
-sce_ls$annotation_cluster[which(!is.na(base::match(
-  colnames(sce_ls),
-  colnames(sce_gg_ct))))] <- sce_gg_ct$annotation_cluster
-sce_ls$annotation_cluster[sce_ls$annotation_cluster == FALSE] <- "removed"
-UMAP4 <- umap_base_l(sce_ls, color_by = "annotation_cluster")+
-  ggplot2::ggtitle("original cell types, current object")
+```{r umap_ct3}
+umap4 <- umap_base(sce_ls, color_by = "cluster_louvain")+
+  ggplot2::scale_color_manual(values = col_clust_l)+
+  ggplot2::ggtitle(base::paste(individual_curr, 
+                               "species-specific UMAP, species clusters"))
+UMAP4 <- ggpubr::ggarrange(umap4, legend_species)
 UMAP4
+
+# add annotated cell types to object with species-specific UMAP coordinates
+sce_ls$annotation_orig <- vector(length = ncol(sce_ls))
+
+base::table(sce_ls$cluster_louvain[match(
+  colnames(sce_gg_ct),
+  colnames(sce_ls))])
+
+base::table(sce_ls$annotation_orig[match(
+  colnames(sce_gg_ct),
+  colnames(sce_ls))])
+
+sce_ls$annotation_orig[match(
+  colnames(sce_gg_ct),
+  colnames(sce_ls))] <- unfactor(sce_gg_ct$annotation_cluster)
+
+sce_ls$annotation_orig[sce_ls$annotation_orig == FALSE] <- "removed"
+
+base::table(sce_ls$annotation_orig)
+
+umap5 <- umap_base(sce_ls, color_by = "annotation_orig")+
+  ggplot2::ggtitle(base::paste(
+    individual_curr, "species-specific UMAP, annotated cell types"))+
+  scale_color_manual(values = intermed_col_ct)
+UMAP5 <- ggpubr::ggarrange(umap5, legend_ct)
+UMAP5
 ```
 
 ```{r prepare_ggtable_ct}
@@ -251,19 +357,26 @@ ggplot2::ggplot(data = ggtable_ct, aes(axis1 = Var2, axis2 = Var1, y = Freq))+
                                        "species_cluster_louvain"),
                              expand = c(0.15, 0.05))+
   ggplot2::theme_void()+
-  ggplot2::theme(legend.position = "none")
+  ggplot2::theme(legend.position = "none")+
+  ggplot2::ggtitle(base::paste("species-specific", individual_curr))+
+  scale_fill_manual("annotated", values = intermed_col_ct)
 ```
 
 ```{r heatmap_ct}
-ggplot2::ggplot(ggtable_ct, aes(x = Var1, y = Var2, fill = Freq))+
+ggplot2::ggplot(ggtable_ct, aes(x = reorder(Var1, -Freq), 
+                                y = reorder(Var2, -Freq), 
+                                fill = Freq))+
   ggplot2::geom_tile()+
   ggplot2::theme_classic()+
   ggplot2::scale_fill_continuous("Frequency", 
                                  limits=c(0, base::max(ggtable_ct$Freq)),
                                  breaks=seq(0, base::max(ggtable_ct$Freq), 
-                                            by=500),
+                                            by = 250),
                                  low = "white", high = "red3")+
-  ggplot2::theme(axis.text.x = element_text(angle = 90))
+  ggplot2::theme(axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle(base::paste("species-specific",individual_curr))+
+  ggplot2::ylab("species clusters")+
+  ggplot2::xlab("original annotated cell types")
 ```
 
 ```{r session_info}

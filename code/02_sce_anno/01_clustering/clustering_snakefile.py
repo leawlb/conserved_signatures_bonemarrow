@@ -68,10 +68,11 @@ for c in clusters_str:
    if RUN_ANNO_REPORTS:
     targets = targets + [OUTPUT_REP + "/03_anno_clusters/annotation_str_cluster_" + c + ".html"]
 
-#for s in species:
-#  for f in fractions:
-#    targets = targets + [OUTPUT_DAT + "/01_mnnc/sce_" + s + "_" + f + "_" + BATCH_USE + "-01"]
-#    targets = targets + [OUTPUT_DAT + "/02_clst/louvn_clust/sce_" + s + "_" + f + "-02"]
+for s in species:
+  for f in fractions:
+    targets = targets + [OUTPUT_DAT + "/01_mnnc/comparison/sce_" + s + "_" + f + "_" + BATCH_USE + "-01"]
+    targets = targets + [OUTPUT_DAT + "/02_clst/comparison/sce_" + s + "_" + f + "-02"]
+    targets = targets + [OUTPUT_REP + "/02_clustering/comparison/clustering_report_" + s + "_" + f + ".html"]
   
 #-------------------------------------------------------------------------------
 
@@ -235,14 +236,14 @@ rule assign_annotation:
 """
 Cluster species separately and compare to original clustering
 Re-use the same scripts
-
+"""
 
 # batch correction
 rule run_mnncorrect_species:
     input:
         sce_input = OUTPUT_BASE + "/sce_objects/01_sce_prep/08_mrge/species/sce_{species}_{fraction}-08"
     output:
-        sce_output = OUTPUT_DAT + "/01_mnnc/sce_{species}_{fraction}_" + BATCH_USE + "-01"
+        sce_output = OUTPUT_DAT + "/01_mnnc/comparison/sce_{species}_{fraction}_" + BATCH_USE + "-01"
     params:
         batch_use = BATCH_USE,
         nr_hvgs_BC = VALUES["nr_hvgs_batch_correction"], 
@@ -251,38 +252,34 @@ rule run_mnncorrect_species:
     script:
         "scripts/01_mnncorrect.R"
 
-
 # clustering
 rule louvain_clustering_species:
     input: 
         sce_input = rules.run_mnncorrect_species.output
     output:
-        sce_output = OUTPUT_DAT + "/02_clst/sce_{species}_{fraction}-02"
+        sce_output = OUTPUT_DAT + "/02_clst/comparison/sce_{species}_{fraction}-02"
     params:
         k_graph_list = VALUES["k_graph_list"],
         resolution_louvain_list = VALUES["resolution_louvain_list"]
     script:
         "scripts/02_louvain_clustering.R"
-""" 
-        
+
 """
 Make clustering comparison reports 
-    
+"""    
         
 rule make_clustering_comparison_report:
     input:
-        sce_l = rules.assign_annotation.output
-        sce_l_species = rules.louvain_clustering_species.output
+        sce_l = rules.assign_annotation.output,
+        sce_l_species = rules.louvain_clustering_species.output,
+        sce_l_celltypes = rules.assign_annotation.output
     params:
-        colors_ref_path = COLORS_REF,
         colors_path = COLORS,
-        functions = "../../source/sce_functions.R",
         plotting = "../../source/plotting.R",
         colors = "../../source/colors.R"
     conda:
-        "../../envs/visual_ggalluvial"
+        "../../envs/vis_ggalluvial.yml"
     output:
-        OUTPUT_REP + "/02_clustering/clustering_report_{species}_{fraction}.html"
+        OUTPUT_REP + "/02_clustering/comparison/clustering_report_{species}_{fraction}.html"
     script:
         "clustering_comparison_report.Rmd"
-"""  

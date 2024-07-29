@@ -20,6 +20,12 @@ names(mycolors_to1) <- c(1:100)/100
 mycolors_to100 <- colorRampPalette(c("grey98", "blue"))(100)
 names(mycolors_to100) <- c(1:100)
 
+# used for visualising QC (sum and detected)
+color_vector_sum <- c("black", "darkorange4", "darkorange3", "darkorange1",
+                      "orange", "orange", "gold1", "gold",
+                      "lightgoldenrod", "lightgoldenrod",  "lightgoldenrod",
+                      "lightgoldenrod", "lightgoldenrod", "lightgoldenrod")
+color_vector_det <- c("black", "darkorange3", "orange", "lightgoldenrod")
 
 #-------------------------------------------------------------------------------
 
@@ -72,4 +78,13 @@ if(exists("colors_path")){
   
   col_cat_str <- colors_df_temp[colors_df_temp$fraction == "str",]$color
   names(col_cat_str) <- colors_df_temp[colors_df_temp$fraction == "str",]$level
+  
+  # antibodies per fraction
+  colors_df_temp <- colors_df[colors_df$purpose == "Antibody_combination",]
+  col_ab_hsc <- colors_df_temp[colors_df_temp$fraction == "hsc",]$color
+  names(col_ab_hsc) <- colors_df_temp[colors_df_temp$fraction == "hsc",]$level
+  
+  col_ab_str <- colors_df_temp[colors_df_temp$fraction == "str",]$color
+  names(col_ab_str) <- colors_df_temp[colors_df_temp$fraction == "str",]$level
+  
 }

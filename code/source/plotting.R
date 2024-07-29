@@ -10,35 +10,38 @@ library(tidyverse, quietly = TRUE)
 # basic UMAP, must contain a Dimred called "UMAP", must specify factor for color
 umap_base <- function(sce, color_by){
   
-  base <- ggplot(data.frame(reducedDims(sce)[["UMAP"]]),
-                 aes(x = X1, y = X2, 
-                     color = colData(sce)[,colnames(colData(sce)) == color_by]))+
-    geom_point(size = 0.01)+
-    theme_classic()+
-    theme(legend.position = "none", axis.text = element_blank(),
-          axis.ticks = element_blank())+
-    ylab("UMAP 2")+
-    xlab("UMAP 1")
+  base <- ggplot2::ggplot(
+    base::data.frame(
+      SingleCellExperiment::reducedDims(sce)[["UMAP"]]),
+    ggplot2::aes(x = X1, y = X2, 
+                 color = colData(sce)[,colnames(colData(sce)) == color_by]))+
+    ggplot2::geom_point(size = 0.01)+
+    ggplot2::theme_classic()+
+    ggplot2::theme(legend.position = "none", 
+                   axis.text = element_blank(),
+                   axis.ticks = element_blank())+
+    ggplot2::ylab("UMAP 2")+
+    ggplot2::xlab("UMAP 1")
   
   return(base)
-  
 }
 
 umap_base_l <- function(sce, color_by){
   
-  base <- ggplot(data.frame(reducedDims(sce)[["UMAP"]]),
-                 aes(x = X1, y = X2, 
-                     color = colData(sce)[,colnames(colData(sce)) == color_by]))+
-    geom_point(size = 0.01)+
-    theme_classic()+
-    theme(axis.text = element_blank(),
-          axis.ticks = element_blank())+
-    ylab("UMAP 2")+
-    xlab("UMAP 1")+
-    scale_color_discrete(name = color_by)
+  base <- ggplot2::ggplot(
+    base::data.frame(
+      SingleCellExperiment::reducedDims(sce)[["UMAP"]]),
+    ggplot2::aes(x = X1, y = X2, 
+                 color = colData(sce)[,colnames(colData(sce)) == color_by]))+
+    ggplot2::geom_point(size = 0.01)+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text = element_blank(),
+                   axis.ticks = element_blank())+
+    ggplot2::ylab("UMAP 2")+
+    ggplot2::xlab("UMAP 1")+
+    ggplot2::scale_color_discrete(name = color_by)
   
   return(base)
-  
 }
 
 #-------------------------------------------------------------------------------

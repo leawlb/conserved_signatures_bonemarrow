@@ -97,7 +97,7 @@ umap_l_species <- umap_legend(sce_gg_cl, color_by = "species_cluster_louvain")+
   ggplot2::scale_color_discrete("cluster_species")
 legend_species <- ggpubr::get_legend(umap_l_species)
 umap_l_species_full <- umap_legend(sce_ls, 
-                                   color_by = "species_cluster_louvain")+
+                                   color_by = "cluster_louvain")+
   ggplot2::scale_color_discrete("cluster_species")
 legend_species_full <- ggpubr::get_legend(umap_l_species_full)
 ```
@@ -136,7 +136,7 @@ UMAP3
 umap4 <- umap_base(sce_ls, color_by = "cluster_louvain")+
   ggplot2::ggtitle(base::paste(individual_curr, 
                                "species-specific UMAP, species clusters"))
-UMAP4 <- ggpubr::ggarrange(umap4, umap_l_species_full)
+UMAP4 <- ggpubr::ggarrange(umap4, legend_species_full)
 UMAP4
 
 # add original clusters to object with species-specific UMAP coordinates
@@ -186,7 +186,7 @@ ggplot2::ggplot(data = ggtable_cl,
   ggplot2::scale_fill_manual(values = col_clust_l)
 ```
 
-```{r plot1_clust, fig.height = 5, fig.width = 4}
+```{r plot1_clust_rev, fig.height = 5, fig.width = 4}
 ggplot2::ggplot(data = ggtable_cl,
                 aes(axis1 = reorder(Var2, -Freq),
                     axis2 = reorder(Var1, -Freq), 
@@ -216,7 +216,8 @@ ggplot2::ggplot(ggtable_cl_heatmap, aes(x = reorder(Var1, -Freq),
   ggplot2::theme_classic()+
   ggplot2::scale_fill_continuous("Frequency", 
                                  limits=c(0, base::max(ggtable_cl$Freq)),
-                                 breaks=seq(0,base::max(ggtable_cl$Freq)),
+                                 breaks=seq(0,base::max(ggtable_cl$Freq),
+                                            by = 300),
                                  low = "white", high = "red3")+
   ggplot2::ggtitle(individual_curr)+
   ggplot2::ylab("species clusters")+
@@ -254,7 +255,7 @@ ggplot2::ggplot(data = ggtable_cl, aes(axis1 = Var2, axis2 = ct, y = Freq))+
   ggplot2::scale_fill_manual(values = col_clust_l)
 ```
 
-```{r}
+```{r plot2_clust_rev, fig.height = 5, fig.width = 4}
 ggplot2::ggplot(data = ggtable_cl, aes(axis1 = reorder(Var2, -Freq), 
                                        axis2 = reorder(ct, -Freq),
                                        y = Freq))+
@@ -334,7 +335,7 @@ UMAP3
 umap4 <- umap_base(sce_ls, color_by = "cluster_louvain")+
   ggplot2::ggtitle(base::paste(individual_curr, 
                                "species-specific UMAP, species clusters"))
-UMAP4 <- ggpubr::ggarrange(umap4, umap_l_species_full)
+UMAP4 <- ggpubr::ggarrange(umap4, legend_species_full)
 UMAP4
 
 # add annotated cell types to object with species-specific UMAP coordinates
@@ -401,7 +402,7 @@ ggplot2::ggplot(ggtable_ct, aes(x = reorder(Var1, -Freq),
   ggplot2::scale_fill_continuous("Frequency", 
                                  limits=c(0, base::max(ggtable_ct$Freq)),
                                  breaks=seq(0, base::max(ggtable_ct$Freq), 
-                                            by = 250),
+                                            by = 300),
                                  low = "white", high = "red3")+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
   ggplot2::ggtitle(base::paste("species-specific",individual_curr))+

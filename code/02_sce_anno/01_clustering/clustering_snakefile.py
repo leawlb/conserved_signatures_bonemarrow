@@ -37,7 +37,7 @@ fractions = get_list(metadata = METADATA, column = "Fraction_ID")
 ages = get_list(metadata = METADATA, column = "Age_ID")
 
 # cannot take from metadata since cluster number is dependent on fraction
-clusters_hsc = list(range(1,14))
+clusters_hsc = list(range(1,15))
 clusters_hsc = list(map(str, clusters_hsc))
 
 clusters_str = list(range(1,21))
@@ -57,12 +57,12 @@ for f in fractions:
   targets = targets + [OUTPUT_DAT + "/04_annc/01_markers/markers_" + f]
   targets = targets + [OUTPUT_DAT + "/04_annc/02_goan/go_" + f]
   targets = targets + [OUTPUT_DAT + "/04_annc/03_sce/sce_" + f + "-04"]
-# 
+ 
 for c in clusters_hsc:
   targets = targets + [OUTPUT_DAT + "/03_sepd/hsc_cluster_" + c + "-sep"]
   if RUN_ANNO_REPORTS:
     targets = targets + [OUTPUT_REP + "/03_anno_clusters/annotation_hsc_cluster_" + c + ".html" ]
- 
+
 for c in clusters_str:
    targets = targets + [OUTPUT_DAT + "/03_sepd/str_cluster_" + c + "-sep"]
    if RUN_ANNO_REPORTS:

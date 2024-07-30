@@ -27,7 +27,7 @@ species = get_list(metadata = METADATA, column = "Species_ID")
 
 # only need to do nDGE analysis here for clusters to be subclustered
 # for all other clusters, nDGE is performed in 03_sce_analysis
-clusters_hsc = ["2", "4", "5"]
+clusters_hsc = ["2", "4", "6"]
 clusters_str = ["6"]
 
 PADJ_CUTOFF = config["values"]["02_sce_anno"]["ndge_padj_cutoff"]

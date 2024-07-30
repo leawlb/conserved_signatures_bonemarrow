@@ -19,6 +19,7 @@ metadata_paths:
   gene_list_clusters: "/data/metadata/scRNAseq/02_sce_anno/gene_list_clusters.txt"
   gene_list_subclustering: "/data/metadata/scRNAseq/02_sce_anno/gene_list_subclustering.txt"
   gene_list_dotplot: "/data/metadata/scRNAseq/02_sce_anno/gene_list_dotplot.txt"
+  gene_list_dotplot_short: "/data/metadata/scRNAseq/02_sce_anno/gene_list_dotplot_short.txt"
   annotation_clusters: "/data/metadata/scRNAseq/02_sce_anno/annotation_clusters.txt"
   sources_variation: "/data/metadata/scRNAseq/02_sce_anno/sources_variation.txt"
   annotation_subclusters: "/data/metadata/scRNAseq/02_sce_anno/annotation_subclusters.txt"
@@ -69,10 +70,10 @@ values:
       str: 2 # for nicer plots after subclustering
       hsc: 10 # for nicer plots after subclustering 
     k_graph_list:
-      hsc: 10
+      hsc: 20
       str: 10 # for louvain clustering resolution
     resolution_louvain_list:   
-      hsc: 0.6 
+      hsc: 0.65
       str: 0.3
     k_louvain_refs: 50 # for louvain clustering resolution
     ndge_padj_cutoff: 0.05 # below which nDGEs are significant
@@ -95,3 +96,4 @@ values:
 # in caps for use in R, only first letter capitalized for use in Snakefile
 run_preprocessing_summary: False
 run_anno_reports: False
+run_marker_reports: False

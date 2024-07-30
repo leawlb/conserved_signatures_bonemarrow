@@ -144,7 +144,7 @@ vis_df_ECs <- vis_df_all[vis_df_all$gene %in% gene_list_dtplt_ECs$gene,]
 
 vis_df_main$gene <- factor(
   vis_df_main$gene, 
-  levels = gene_list_dtplt$gene)
+  levels = gene_list_dtplt_main$gene)
 
 vis_df_short$gene <- factor(
   vis_df_short$gene, 
@@ -352,124 +352,19 @@ if(fraction_curr == "str"){standard_dotplot(vis_df_short)}
 
 ### ECs
 
-```{r vectors}
-c_arteries <- c(
-  "Gja4",
-  "Gja5",
-  "Efnb2",
-  "Cd34",
-  "Sox17",
-  "Dkk2",
-  "Dll4",
-  "Bmx",
-  "C1qtnf9",
-  "Tspan13",
-  "Slc9a3r2",
-  "Slc6a6",
-  "Fbln2",
-  "Ly6a",
-  "Tm4sf1",
-  "Sema3g",
-  "Ass1",
-  "Rbp7",
-  "S100a6",
-  "Nes"
-)
-
-c_arteriolar_short <- c(
- "Ly6a",     
- "Slc9a3r2",
- "Tspan13",
- "Efnb2"
-)
-
-c_capillary <- c(
-  "Car4",
-  "Rgcc",
-  "Fibin",
-  "Jag1",
-  "Timp4",
-  "Cd300lg",
-  "Aplnr",
-  "Lrg1",
-  "Cldn5",
-  "Slc6a6",
-  "Fibin",
-  "Jag1",
-  "Plaur",
-  "Gja1",
-  "Klhl21"
-)
-
-c_cap_short <- c(
-  "Car4",
-  "Rgcc",
-  "Timp4"
-)
-
-c_venous <- c(
-  "Ackr1",
-  "Vcam1",
-  "Icam1",
-  "Icam2",
-  "Icam3",
-  "Sele",
-  "Selp",
-  "Plvap",
-  "Ephb4",
-  "Emcn",
-  "Nr2f2",
-  "Vwf",
-  "Lrg1",
-  "Flt4",
-  "Cotl",
-  "Sox4"
-  
-)
-
-c_ven_short <- c(
-  "Vwf",
-  "Nr2f2",
-  "Selp",
-  "Icam1",
-  "Ackr1"
-)
-
-c_sinus <- c(
-  "Stab2",
-  "Tfpi",
-  "Ubd",
-  "Ctsl",
-  "Il6st",
-  "Sepp1",
-  "Adamts5", 
-  "Flt4", 
-  "Abcc9",
-  "Ackr1" 
- )
-
-c_sin_short <- c(
-  "Stab2",
-  "Tfpi",
-  "Ubd",
-  "Flt4"
- )
-
-c_lymph <- c(
-  "Flt4",
-  "Lyve1",
-  "Ccl21a",
-  "Pdpn",
-  "Prox1"
-)
-
-c_lym_short <- c(
-  "Lyve1",
-  "Ccl21a",
-  "Pdpn",
-  "Prox1"
-)
-
+```{r subset_ec_genes}
+c_arteries <- base::sort(
+  gene_list_dtplt_ECs$gene[gene_list_dtplt_ECs$marker_for == "A"])
+c_capillary <- base::sort(
+  gene_list_dtplt_ECs$gene[gene_list_dtplt_ECs$marker_for == "C"])
+c_venous <- base::sort(
+  gene_list_dtplt_ECs$gene[gene_list_dtplt_ECs$marker_for == "V"])
+c_sinus <- base::sort(
+  gene_list_dtplt_ECs$gene[gene_list_dtplt_ECs$marker_for == "S"])
+c_lymph <- base::sort(
+  gene_list_dtplt_ECs$gene[gene_list_dtplt_ECs$marker_for == "L"])
+c_others <- base::sort(
+  gene_list_dtplt_ECs$gene[gene_list_dtplt_ECs$marker_for == "?"])
 ```
 
 ```{r str_ggdotplot_ECs, fig.width = 15, fig.height = 3.3}
@@ -520,15 +415,28 @@ if(fraction_curr == "str"){
 }
 ```
 
+#### Others/Unknown
+
+```{r str_ggdotplot_others, fig.width = 8, fig.height = 3.3}
+if(fraction_curr == "str"){
+  vis_df_ECs_oth <- vis_df_ECs[vis_df_ECs$gene %in% c_others,]
+  standard_dotplot(vis_df_ECs_oth)
+}
+```
+
 ## Specific cell types for visualisation
 
-```{r agg_again}
+```{r fractionspecific}
 if(fraction_curr == "str"){
   cell_type <- "Adipo/CARs"
+  gene_list_dtplt_use <- gene_list_dtplt_short
 }else if(fraction_curr == "hsc"){
   cell_type <- "HSCs"
+  gene_list_dtplt_use <- gene_list_dtplt_main
 }
+```
 
+```{r agg_again}
 sce_temp <- sce[,sce$celltypes == cell_type]
 agg <- scuttle::aggregateAcrossCells(sce_temp,
                                      id=colData(sce_temp)[,c("Species_ID")], 
@@ -537,13 +445,14 @@ agg <- scuttle::aggregateAcrossCells(sce_temp,
 ```
 
 Separate given cell types by species.
-Do this only for the short list
+Do this only for the main list
 
 ```{r generate_vis_df_spec}
+
 vis_df_spec <- base::as.data.frame(
   t(SummarizedExperiment::assays(agg)$logcounts[
     rownames(SummarizedExperiment::assays(agg)$logcounts) %in% 
-      gene_list_dtplt_short$gene,]))
+      gene_list_dtplt_use$gene,]))
 
 vis_df_spec <- tibble::rownames_to_column(vis_df_spec, "species")
 vis_df_spec <- tidyr::pivot_longer(vis_df_spec,
@@ -560,7 +469,7 @@ vis_df_spec <- get_perc_expressed(vis_df_spec)
 vis_df_spec$species <- factor(vis_df_spec$species, 
                               levels = base::rev(names(col_spc)))
 vis_df_spec$gene <- factor(vis_df_spec$gene,
-                           levels = gene_list_dtplt_short$gene)
+                           levels = gene_list_dtplt_use$gene)
 
 ```
 

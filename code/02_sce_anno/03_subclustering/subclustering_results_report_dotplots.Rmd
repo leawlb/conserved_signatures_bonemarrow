@@ -28,8 +28,9 @@ source("../../source/plotting.R")
 colors_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt"
 source("../../source/colors.R")
 
-dtplt_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/02_sce_anno/gene_list_dotplot.txt"
+dtplt_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/02_sce_anno/gene_list_dotplot_temp.txt"
 dtplt_short_path<- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/02_sce_anno/gene_list_dotplot_short.txt"
+dtplt_short_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/02_sce_anno/gene_list_dotplot_temp.txt"
 
 source("../../source/colors.R")
 
@@ -44,11 +45,6 @@ umap_base_l(sce_anno, color_by = "celltypes")+
 library(scuttle, quietly = TRUE) 
 ```
 
-```{r sources, message = FALSE}
-#source(file = snakemake@params[["plotting"]])
-#source(file = snakemake@params[["functions"]])
-```
-
 ```{r load_objects, message = FALSE}
 #load SCE objects
 sce <- base::readRDS(file = snakemake@input[["sce_input"]])
@@ -58,11 +54,10 @@ fraction_curr <- snakemake@wildcards[["fraction"]]
 
 # load gene list for dotplots
 dtplt_path <- snakemake@input[["gene_list_dtplt"]]
-# load shorter gene list for prettier dotplots 
-dtplt_short_path <- snakemake@input[["gene_list_dtplt_short"]]
 ```
 
 ```{r load_objects_csv, message = FALSE}
+# load and subset
 gene_list_dtplt <- utils::read.csv(dtplt_path, 
   header = TRUE, 
   sep = ";", 
@@ -72,19 +67,13 @@ gene_list_dtplt <- utils::read.csv(dtplt_path,
   colClasses = "character")
 gene_list_dtplt <- gene_list_dtplt[gene_list_dtplt$fraction == fraction_curr,]
 
-gene_list_dtplt_short <- utils::read.csv(dtplt_short_path, 
-  header = TRUE, 
-  sep = ";", 
-  check.names=FALSE, 
-  stringsAsFactors=FALSE, 
-  as.is=TRUE, 
-  colClasses = "character")
-
 # subset to get list to annotate ECs
-gene_list_dtplt_ECs <- gene_list_dtplt_short[
-  gene_list_dtplt_short$use == "ECs",] 
-gene_list_dtplt_short <- gene_list_dtplt_short[
-  gene_list_dtplt_short$use == "short",] 
+gene_list_dtplt_main <- gene_list_dtplt[
+  gene_list_dtplt$use == "main",] 
+gene_list_dtplt_ECs <- gene_list_dtplt[
+  gene_list_dtplt$use == "ECs",] 
+gene_list_dtplt_short <- gene_list_dtplt[
+  gene_list_dtplt$use == "short",] 
 ```
 
 ```{r colors, message = FALSE}
@@ -120,9 +109,7 @@ agg <- scuttle::aggregateAcrossCells(
 
 ```{r vis_df_all}
 # generate a dataframe containing only genes that will be visualised
-all_genes <- base::unique(c(gene_list_dtplt$gene,
-                            gene_list_dtplt_short$gene, 
-                            gene_list_dtplt_ECs$gene))
+all_genes <- base::unique(gene_list_dtplt$gene)
 
 vis_df_all <- base::as.data.frame(
   t(SummarizedExperiment::assays(agg)$logcounts[
@@ -147,11 +134,11 @@ vis_df_all$celltypes <- factor(
   vis_df_all$celltypes, 
   levels = base::rev(names(col_cts)))
 
-gene_list_dtplt$gene[which(duplicated(gene_list_dtplt$gene))]
+gene_list_dtplt_main$gene[which(duplicated(gene_list_dtplt_main$gene))]
 gene_list_dtplt_short$gene[which(duplicated(gene_list_dtplt_short$gene))]
 gene_list_dtplt_ECs$gene[which(duplicated(gene_list_dtplt_ECs$gene))]
 
-vis_df_main <- vis_df_all[vis_df_all$gene %in% gene_list_dtplt$gene,]
+vis_df_main <- vis_df_all[vis_df_all$gene %in% gene_list_dtplt_main$gene,]
 vis_df_short <- vis_df_all[vis_df_all$gene %in% gene_list_dtplt_short$gene,]
 vis_df_ECs <- vis_df_all[vis_df_all$gene %in% gene_list_dtplt_ECs$gene,]
 
@@ -188,16 +175,14 @@ get_perc_expressed <- function(vis_df){
       
       vis_df$percent_expressed[
         which(vis_df$celltypes == ct & vis_df$gene == g)] <- perc_expr
-      
     }
   }
-  
   return(vis_df)
 }
 
 vis_df_main <- get_perc_expressed(vis_df_main)
 
-# only needs to be calculated for str
+# only needs to be calculated for str (for now)
 if(fraction_curr == "str"){
   vis_df_short <- get_perc_expressed(vis_df_short)
   vis_df_ECs <- get_perc_expressed(vis_df_ECs)
@@ -267,23 +252,22 @@ vis_df_normalized_per_celltype <- tidyr::pivot_longer(
 
 standard_dotplot <- function(vis_df){
   
-  plot_return <- ggplot(vis_df,
-         aes(x = gene,
-             y = celltypes,
-             color = percent_expressed,
-             size = expression))+
-    geom_point()+
-    theme_classic()+
-    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
-          #legend.position = "none",
-          axis.text.y = element_text(hjust = 0),
-          axis.title = element_blank())+
-    scale_size("logcounts", 
-               limits=c(0, max(vis_df$expression)),
-               range = c(0, 5))+
-    scale_color_continuous(limits = c(0, 100),
-                           low = "white",
-                           high = "blue")
+  plot_return <- ggplot2::ggplot(vis_df,
+                                 aes(x = gene,
+                                     y = celltypes,
+                                     color = percent_expressed,
+                                     size = expression))+
+    ggplot2::geom_point()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+                   axis.text.y = element_text(hjust = 0),
+                   axis.title = element_blank())+
+    ggplot2::scale_size("logcounts",
+                        limits=c(0, max(vis_df$expression)),
+                        range = c(0, 5))+
+    ggplot2::scale_color_continuous(limits = c(0, 100),
+                                    low = "white",
+                                    high = "blue")
   
   return(plot_return)
   
@@ -293,30 +277,34 @@ standard_dotplot <- function(vis_df){
 
 ## HSCs
 
-```{r hsc_ggdotplot1, fig.width = 7, fig.height = 3.5}
+```{r hsc_ggdotplot1, fig.width = 8.5, fig.height = 3.5}
 if(fraction_curr == "hsc"){standard_dotplot(vis_df_main)}
 ```
 
-```{r hsc_ggdotplot1_rev, fig.width = 7, fig.height = 3.5}
+```{r hsc_ggdotplot1_rev, fig.width = 8.5, fig.height = 3.5}
 if(fraction_curr == "hsc"){
   
-  ggplot(vis_df_main,
-           aes(x = gene,
-               y = celltypes,
-               color = expression,
-               size = percent_expressed))+
-      geom_point()+
-      theme_classic()+
-      theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
-            axis.text.y = element_text(hjust = 0),
-            axis.title = element_blank())+
-      scale_size("expression", 
-                 limits=c(0, max(vis_df_main$percent_expressed)),
-                 range = c(0, 5))+
-      scale_color_continuous("logcounts",
-                             limits = c(0, max(vis_df_main$expression)),
-                             low = "white",
-                             high = "blue")
+  ggplot2::ggplot(vis_df_main,
+                  ggplot2:: aes(x = gene,
+                                y = celltypes,
+                                color = expression,
+                                size = percent_expressed))+
+      ggplot2::geom_point()+
+      ggplot2::theme_classic()+
+      ggplot2::theme(axis.text.x = element_text(angle = 45, 
+                                                hjust = 1,
+                                                vjust = 1),
+                     axis.text.y = element_text(hjust = 0),
+                     axis.title = element_blank(),
+                     legend.text = element_text(size = 9),
+                     legend.title = element_text(size = 10))+
+      ggplot2::scale_size("expression", 
+                          limits=c(0, max(vis_df_main$percent_expressed)),
+                          range = c(0, 5))+
+      ggplot2::scale_color_continuous("logcounts",
+                                      limits = c(0, max(vis_df_main$expression)),
+                                      low = "white",
+                                      high = "blue")
   
 }
 ```
@@ -333,23 +321,25 @@ if(fraction_curr == "str"){standard_dotplot(vis_df_main)}
 ```{r str_ggdotplot1_rev, fig.width = 15, fig.height = 4}
 # for stromal all/main
 if(fraction_curr == "str"){
-  ggplot(vis_df_main,
-           aes(x = gene,
-               y = celltypes,
-               color = expression,
-               size = percent_expressed))+
-      geom_point()+
-      theme_classic()+
-      theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
-            axis.text.y = element_text(hjust = 0),
-            axis.title = element_blank())+
-      scale_size("expression", 
-                 limits=c(0, max(vis_df_main$percent_expressed)),
-                 range = c(0, 5))+
-      scale_color_continuous("logcounts",
-                             limits = c(0, max(vis_df_main$expression)),
-                             low = "white",
-                             high = "blue")
+  ggplot2::ggplot(vis_df_main,
+                  aes(x = gene,
+                      y = celltypes,
+                      color = expression,
+                      size = percent_expressed))+
+      ggplot2::geom_point()+
+      ggplot2::theme_classic()+
+      ggplot2::theme(axis.text.x = element_text(angle = 45, 
+                                                hjust = 1,
+                                                vjust = 1),
+                     axis.text.y = element_text(hjust = 0),
+                     axis.title = element_blank())+
+      ggplot2::scale_size("expression", 
+                          limits=c(0, max(vis_df_main$percent_expressed)),
+                          range = c(0, 5))+
+      ggplot2::scale_color_continuous("logcounts",
+                                      limits = c(0, max(vis_df_main$expression)),
+                                      low = "white",
+                                      high = "blue")
 }
 ```
 
@@ -482,7 +472,7 @@ c_lym_short <- c(
 
 ```
 
-```{r str_ggdotplot_ECs, fig.width = 15, fig.height = 3}
+```{r str_ggdotplot_ECs, fig.width = 15, fig.height = 3.3}
 # for endothelial cells
 if(fraction_curr == "str"){standard_dotplot(vis_df_ECs)}
 ```
@@ -498,7 +488,7 @@ if(fraction_curr == "str"){
 
 #### Capillary
 
-```{r str_ggdotplot_cap, fig.width = 7, fig.height = 3}
+```{r str_ggdotplot_cap, fig.width = 7, fig.height = 3.3}
 if(fraction_curr == "str"){
   vis_df_ECs_cap <- vis_df_ECs[vis_df_ECs$gene %in% c_capillary,]
   standard_dotplot(vis_df_ECs_cap)
@@ -507,14 +497,14 @@ if(fraction_curr == "str"){
 
 #### Sinusoidal/Venous
 
-```{r str_ggdotplot_ven, fig.width = 7, fig.height = 3}
+```{r str_ggdotplot_ven, fig.width = 7, fig.height = 3.3}
 if(fraction_curr == "str"){
   vis_df_ECs_ven <- vis_df_ECs[vis_df_ECs$gene %in% c_venous,]
   standard_dotplot(vis_df_ECs_ven)
 }
 ```
 
-```{r str_ggdotplot_sin, fig.width = 6, fig.height = 3}
+```{r str_ggdotplot_sin, fig.width = 6, fig.height = 3.3}
 if(fraction_curr == "str"){
   vis_df_ECs_ven <- vis_df_ECs[vis_df_ECs$gene %in% c_sinus,]
   standard_dotplot(vis_df_ECs_ven)
@@ -523,16 +513,11 @@ if(fraction_curr == "str"){
 
 #### Lymphatic
 
-```{r str_ggdotplot_lym, fig.width = 3, fig.height = 3}
+```{r str_ggdotplot_lym, fig.width = 5, fig.height = 3.3}
 if(fraction_curr == "str"){
   vis_df_ECs_lym <- vis_df_ECs[vis_df_ECs$gene %in% c_lymph,]
   standard_dotplot(vis_df_ECs_lym)
 }
-```
-
-
-```{r knitexit}
-knitr::knit_exit()
 ```
 
 ## Specific cell types for visualisation
@@ -565,6 +550,8 @@ vis_df_spec <- tidyr::pivot_longer(vis_df_spec,
                                    cols = c(2:ncol(vis_df_spec)), 
                                    values_to = "expression", 
                                    names_to = "gene")
+vis_df_spec$celltypes <- base::rep(cell_type, nrow(vis_df_spec))
+
 ```
 
 ```{r perc_expressed_spec}
@@ -574,41 +561,54 @@ vis_df_spec$species <- factor(vis_df_spec$species,
                               levels = base::rev(names(col_spc)))
 vis_df_spec$gene <- factor(vis_df_spec$gene,
                            levels = gene_list_dtplt_short$gene)
+
 ```
 
-```{r hsc_ggdotplot_spec, fig.width = 5.5, fig.height = 1.5}
+```{r hsc_ggdotplot_spec, fig.width = 7.6, fig.height = 1.5}
 if(fraction_curr == "hsc"){
-  standard_dotplot(vis_df_spec)+
-    ggplot2::ggtitle(cell_type)
-}
-```
-
-```{r hsc_ggdotplot_spec2, fig.width = 12, fig.height = 1.5}
-if(fraction_curr == "hsc"){
-  standard_dotplot(vis_df_spec)+
-    ggplot2::ggtitle(cell_type)
-}
-knitr::knit_exit()
-```
-
-```{r str_ggdotplot4, fig.width = 5.5, fig.height = 1.5}
-if(fraction_curr == "str"){
- 
-  ggplot2::ggplot(vis_df_short, 
-                  aes(x = gene, 
-                      y = species, 
-                      color = percent_expressed, 
+  
+  ggplot2::ggplot(vis_df_spec,
+                  aes(x = gene,
+                      y = species,
+                      color = percent_expressed,
                       size = expression))+
     ggplot2::geom_point()+
     ggplot2::theme_classic()+
-    ggplot2::theme(legend.position = "none",
-                   plot.title = element_text(size = 11),
-                   axis.text.x = element_blank(),
-                   axis.title.x = element_blank())+
-    ggplot2::scale_color_continuous(limits=c(0, 100), 
-                                    low = ("white"), 
+    ggplot2::theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+                   axis.text.y = element_text(hjust = 0),
+                   axis.title = element_blank(),
+                   legend.position = "none")+
+    ggplot2::scale_size("logcounts", 
+                        limits=c(0, max(vis_df_spec$expression)),
+                        range = c(0, 5))+
+    ggplot2::scale_color_continuous(limits = c(0, 100),
+                                    low = "white",
                                     high = "blue")+
-    ggplot2::scale_size("logcounts", limits=c(0, 9), range = c(0,4))+
+    ggplot2::ggtitle(cell_type)
+  
+}
+```
+
+```{r str_ggdotplot_spec, fig.width = 5.5, fig.height = 1.5}
+if(fraction_curr == "str"){
+ 
+  ggplot2::ggplot(vis_df_spec,
+                  aes(x = gene,
+                      y = species,
+                      color = percent_expressed,
+                      size = expression))+
+    ggplot2::geom_point()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+                   axis.text.y = element_text(hjust = 0),
+                   axis.title = element_blank(),
+                   legend.position = "none")+
+    ggplot2::scale_size("logcounts", 
+                        limits=c(0, max(vis_df_spec$expression)),
+                        range = c(0, 5))+
+    ggplot2::scale_color_continuous(limits = c(0, 100),
+                                    low = "white",
+                                    high = "blue")+
     ggplot2::ggtitle(cell_type)
 }
 ```

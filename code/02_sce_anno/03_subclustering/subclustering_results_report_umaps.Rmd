@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 Report on the results of the final annotation.
 This report is used to make many plots for presentations, etc., so it is 
 very chaotic and frequently adjusted.
-Only for generating pretty umaps of.
+Only for generating pretty umaps.
 
 Since I use a lot of plots from this report, there are many different
 more or less good-looking versions of the same plot in this script.
@@ -41,12 +41,11 @@ umap_base_l(sce_anno, color_by = "celltypes")+
 ```
 
 ```{r load, message = FALSE}
-#library(scuttle, quietly = TRUE) 
+library(scran, quietly = TRUE) 
 ```
 
 ```{r sources, message = FALSE}
 source(file = snakemake@params[["plotting"]])
-#source(file = snakemake@params[["functions"]])
 ```
 
 ```{r load_objects, message = FALSE}
@@ -164,23 +163,23 @@ if(fraction_curr == "hsc"){
 ```{r str_antibodies}
 if(fraction_curr == "str"){
   plot_ab <- umap_legend(sce, color_by = "Antibody_combination")+
-    scale_color_manual("Antibody combination", 
-                       values = col_ab_str)+
-    theme(legend.text= element_text(size = 11),
-          legend.title = element_text(size = 14, face = "bold"))
-  legend_ab <- get_legend(plot_ab)
+    ggplot2::scale_color_manual("Antibody combination", 
+                                values = col_ab_str)+
+    ggplot2::theme(legend.text= element_text(size = 11),
+                   legend.title = element_text(size = 14, face = "bold"))
+  legend_ab <- ggpubr::get_legend(plot_ab)
 
   
   plot_2 <- umap_base(sce, color_by = "Antibody_combination")+ 
-    ggtitle(paste(fraction_curr))+
-    scale_color_manual("Antibody combination", 
-                       values = col_ab_str)+
-    theme(axis.text = element_blank(),
-          axis.title = element_blank(),
-          axis.line = element_blank(),
-          plot.title = element_blank())
+    ggplot2::ggtitle(paste(fraction_curr))+
+    ggplot2::scale_color_manual("Antibody combination", 
+                                values = col_ab_str)+
+    ggplot2::theme(axis.text = element_blank(),
+                   axis.title = element_blank(),
+                   axis.line = element_blank(),
+                   plot.title = element_blank())
 
-    PLOT_2 <- ggarrange(plot_2, legend_ab, widths = c(2, 1))
+    PLOT_2 <- ggpubr::ggarrange(plot_2, legend_ab, widths = c(2, 1))
     PLOT_2
 }
 ```

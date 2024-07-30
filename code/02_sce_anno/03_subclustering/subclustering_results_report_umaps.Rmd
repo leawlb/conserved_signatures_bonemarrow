@@ -1,0 +1,300 @@
+---
+title: "Subclustering results report - UMAPs"
+author: "Lea Wölbert"
+date: '2023-07-24'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Report on the results of the final annotation.
+This report is used to make many plots for presentations, etc., so it is 
+very chaotic and frequently adjusted.
+Only for generating pretty umaps of.
+
+Since I use a lot of plots from this report, there are many different
+more or less good-looking versions of the same plot in this script.
+
+#### Load libraries, source code 
+
+```{r seed, message = FALSE}
+set.seed(37)
+```
+
+```{r eval = FALSE, include = FALSE}
+source("../../source/plotting.R")
+colors_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt"
+source("../../source/colors.R")
+
+dtplt_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/02_sce_anno/gene_list_dotplot.txt"
+dtplt_short_path<- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/02_sce_anno/gene_list_dotplot_short.txt"
+
+source("../../source/colors.R")
+
+#genelist_shared <- base::readRDS(file = snakemake@input[["genes_list_shared"]])
+sce <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10")
+umap_base_l(sce_anno, color_by = "celltypes")+
+  scale_color_manual(values = col_cts_str)
+
+```
+
+```{r load, message = FALSE}
+#library(scuttle, quietly = TRUE) 
+```
+
+```{r sources, message = FALSE}
+source(file = snakemake@params[["plotting"]])
+#source(file = snakemake@params[["functions"]])
+```
+
+```{r load_objects, message = FALSE}
+#load SCE objects
+sce <- base::readRDS(file = snakemake@input[["sce_input"]])
+fraction_curr <- snakemake@wildcards[["fraction"]]
+```
+
+```{r colors, message = FALSE}
+colors_path <- snakemake@params[["colors_path"]]
+source(snakemake@params[["colors"]])
+
+if(fraction_curr == "hsc"){
+  col_cat <- col_cat_hsc
+  col_cts <- col_cts_hsc
+}else if(fraction_curr == "str"){
+  col_cat <- col_cat_str
+  col_cts <- col_cts_str
+}
+
+# factorize as required
+sce$Species_ID <- factor(sce$Species_ID, levels = names(col_spc))
+
+# mix for nicer plots
+sce <- sce[,base::sample(1:ncol(sce), ncol(sce), replace = F)]
+```
+
+```{r legends}
+# make legends for later use
+plot_cat <- umap_legend(sce, color_by = "category")+
+  ggplot2::scale_color_manual("Category", values = col_cat)
+legend_cat <- ggpubr::get_legend(plot_cat)
+
+plot_cts <- umap_legend(sce, color_by = "celltypes")+
+  ggplot2::scale_color_manual("Cell types", values = col_cts)
+legend_cts <- ggpubr::get_legend(plot_cts)
+
+plot_species <- umap_legend(sce, color_by = "Species_ID")+
+  ggplot2:: scale_color_manual("species", 
+                              values = col_spc)+
+  ggplot2::theme(legend.text= element_text(size = 11),
+                 legend.title = element_text(size = 14, face = "bold"))
+legend_species <- ggpubr::get_legend(plot_species)
+```
+
+# Subclustering 
+
+## Overview
+
+### Category
+
+```{r overview_cat}
+# overview_cat
+plot <- umap_base(sce, color_by = "category")+ 
+  ggplot2::ggtitle(fraction_curr)+
+  ggplot2::scale_color_manual(values = col_cat)
+PLOT <- ggpubr::ggarrange(plot, legend_cat, widths = c(2, 1))
+PLOT
+```
+
+### Cell types
+
+```{r overview_cts}
+# overview_cts
+plot <- umap_base(sce, color_by = "celltypes")+ 
+  ggplot2::ggtitle(fraction_curr)+
+  ggplot2::scale_color_manual(values = col_cts)  
+PLOT <- ggpubr::ggarrange(plot, legend_cts, widths = c(2, 1))
+PLOT
+```
+
+```{r overview_cts2}
+# overview_cts2
+plot <- umap_base(sce, color_by = "celltypes")+ 
+  ggplot2::ggtitle(fraction_curr)+
+  ggplot2::scale_color_manual(values = col_cts)+
+  ggplot2::theme(axis.text = element_blank(),
+                 axis.title = element_blank(),
+                 axis.line = element_blank(),
+                 plot.title = element_blank())
+PLOT <- ggpubr::ggarrange(plot, legend_cts, widths = c(2, 1))
+PLOT
+```
+
+```{r overview_cts2_size, fig.width = 4, fig.height = 4}
+plot
+```
+
+### Antibodies
+
+```{r hsc_antibodies}
+
+if(fraction_curr == "hsc"){
+  
+  plot_ab <- umap_legend(sce, color_by = "Antibody_combination")+
+    ggplot2::scale_color_manual("Antibody combination", 
+                                values = col_ab_hsc)+
+    ggplot2::theme(legend.text= element_text(size = 11),
+                   legend.title = element_text(size = 14, face = "bold"))
+  legend_ab <- ggpubr::get_legend(plot_ab)
+  
+  plot_2 <- umap_base(sce, color_by = "Antibody_combination")+ 
+    ggplot2::ggtitle(fraction_curr)+
+    ggplot2::scale_color_manual(values = col_ab_hsc)+
+    ggplot2::theme(axis.text = element_blank(),
+                   axis.title = element_blank(),
+                   axis.line = element_blank(),
+                   plot.title = element_blank())
+  
+  PLOT_2 <- ggpubr::ggarrange(plot_2, legend_ab, widths = c(2, 1))
+  PLOT_2
+}
+```
+
+```{r str_antibodies}
+if(fraction_curr == "str"){
+  plot_ab <- umap_legend(sce, color_by = "Antibody_combination")+
+    scale_color_manual("Antibody combination", 
+                       values = col_ab_str)+
+    theme(legend.text= element_text(size = 11),
+          legend.title = element_text(size = 14, face = "bold"))
+  legend_ab <- get_legend(plot_ab)
+
+  
+  plot_2 <- umap_base(sce, color_by = "Antibody_combination")+ 
+    ggtitle(paste(fraction_curr))+
+    scale_color_manual("Antibody combination", 
+                       values = col_ab_str)+
+    theme(axis.text = element_blank(),
+          axis.title = element_blank(),
+          axis.line = element_blank(),
+          plot.title = element_blank())
+
+    PLOT_2 <- ggarrange(plot_2, legend_ab, widths = c(2, 1))
+    PLOT_2
+}
+```
+
+```{r antibody_plot_size, fig.width = 2, fig.height = 2}
+plot_2
+```
+
+### Cell types by species 
+
+```{r species_plots}
+# species_plots
+plot_2 <- umap_base(sce, color_by = "Species_ID")+ 
+  ggplot2::ggtitle(paste(fraction_curr))+
+  ggplot2::scale_color_manual(values = col_spc)+
+  ggplot2::theme(axis.text = element_blank(),
+                 axis.title = element_blank(),
+                 axis.line = element_blank(),
+                 plot.title = element_blank())
+
+PLOT_2 <- ggpubr::ggarrange(plot_2, legend_species, widths = c(2, 1))
+PLOT_2
+```
+
+```{r species_plots_size, fig.width = 2, fig.height = 2}
+# species_plots_size
+plot_2
+```
+
+```{r species_plots2}
+# species_plots_size
+coord_x <- c(base::min(SingleCellExperiment::reducedDims(sce)$UMAP[,1]), 
+             base::max(SingleCellExperiment::reducedDims(sce)$UMAP[,1]))
+coord_y <- c(base::min(SingleCellExperiment::reducedDims(sce)$UMAP[,2]), 
+             base::max(SingleCellExperiment::reducedDims(sce)$UMAP[,2]))
+
+plot_1 <- umap_base_l(sce[,sce$Species_ID == "mmus"], 
+                      color_by = "celltypes")+
+  ggplot2::ggtitle("mmus")+
+  ggplot2::scale_color_manual("Cell types", values = col_cts)+
+  ggplot2::theme(legend.position = "none")+
+  ggplot2::xlim(coord_x)+
+  ggplot2::ylim(coord_y)
+plot_2 <- umap_base_l(sce[,sce$Species_ID == "mcas"], 
+                      color_by = "celltypes")+
+  ggplot2::ggtitle("mcas")+
+  ggplot2::scale_color_manual("Cell types", values = col_cts)+
+  ggplot2::theme(legend.position = "none")+
+  ggplot2::xlim(coord_x)+
+  ggplot2::ylim(coord_y)
+plot_3 <- umap_base_l(sce[,sce$Species_ID == "mspr"], 
+                      color_by = "celltypes")+
+  ggplot2::ggtitle("mspr")+
+  ggplot2::scale_color_manual("Cell types", values = col_cts)+
+  ggplot2::theme(legend.position = "none")+
+  ggplot2::xlim(coord_x)+
+  ggplot2::ylim(coord_y)
+plot_4 <- umap_base_l(sce[,sce$Species_ID == "mcar"], 
+                      color_by = "celltypes")+
+  ggplot2::ggtitle("mcar")+
+  ggplot2::scale_color_manual("Cell types", values = col_cts)+
+  ggplot2::theme(legend.position = "none")+
+  ggplot2::xlim(coord_x)+
+  ggplot2::ylim(coord_y)
+
+PLOT_1 <- ggpubr::ggarrange(plot_1, legend_cts, widths = c(2, 1))
+PLOT_2 <- ggpubr::ggarrange(plot_2, legend_cts, widths = c(2, 1))
+PLOT_3 <- ggpubr::ggarrange(plot_3, legend_cts, widths = c(2, 1))
+PLOT_4 <- ggpubr::ggarrange(plot_4, legend_cts, widths = c(2, 1))
+
+PLOT_1
+PLOT_2
+PLOT_3
+PLOT_4
+```
+
+```{r species_separation2}
+#species_separation2
+print(base::table(sce$Species_ID, sce$celltypes))
+```
+
+```{r species_separation3}
+#species_separation3
+print(base::table(sce$Species_ID,
+                  sce$celltypes)/
+        BiocGenerics::rowSums(base::table(sce$Species_ID, 
+                                          sce$celltypes))*100)
+```
+
+```{r species_separation4, fig.width = 7, fig.height = 5}
+#species_separation4
+plot_a <- umap_base(sce, color_by = "celltypes")+ 
+  ggplot2::ggtitle(fraction_curr)+
+  ggplot2::scale_color_manual(values = col_cts)+
+  ggplot2::theme(axis.text = element_blank(),
+                 axis.title = element_blank(),
+                 axis.line = element_blank(),
+                 plot.title = element_blank())+
+  ggplot2::facet_wrap( ~ sce$Species_ID, ncol = 2)+
+  ggplot2::theme(strip.text = element_text(face = "bold", size = 14),
+                 strip.background = element_rect(linetype = 0))
+
+plot_a
+
+PLOT_all <- ggpubr::ggarrange(plot_a, legend_cts, widths = c(2.5, 1))
+PLOT_all
+```
+
+```{r species_separation5, fig.width = 8, fig.height = 5}
+#species_separation5
+PLOT_all <- ggpubr::ggarrange(plot_a, legend_cts, widths = c(2.5, 1.5))
+PLOT_all
+```
+
+```{r sessioninfo}
+utils::sessionInfo()
+```

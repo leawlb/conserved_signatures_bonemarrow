@@ -4,7 +4,6 @@ import pandas as pd
 
 #-------------------------------------------------------------------------------
 
-# paths from config
 OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/03_sce_analysis/01_DESeq2_crossage"
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/01_DESeq2_crossage"
@@ -36,22 +35,22 @@ targets = []
 for f in fractions:
   for s in species:
     targets = targets + [OUTPUT_DAT + "/01_desq/deseq_" + s + "_" + f]
-    #targets = targets + [OUTPUT_DAT + "/02_dsqc/rlog_" + s + "_" + f]
-    #targets = targets + [OUTPUT_DAT + "/02_dsqc/sva_" + s + "_"+ f]
+    targets = targets + [OUTPUT_DAT + "/02_dsqc/rlog_" + s + "_" + f]
+    targets = targets + [OUTPUT_DAT + "/02_dsqc/sva_" + s + "_"+ f]
     #targets = targets + [OUTPUT_DAT + "/03_tdsq/deseq_" + s + "_" + f]
     #targets = targets + [OUTPUT_DAT + "/04_dres/res_" + s + "_" + f]
-    #targets = targets + [OUTPUT_REP + "/bulk/bulk_quality_report_" + s + "_" + f + ".html"]
+    targets = targets + [OUTPUT_REP + "/bulk/bulk_quality_report_" + s + "_" + f + ".html"]
     #targets = targets + [OUTPUT_REP + "/dge/dge_report_" + s + "_" + f + ".html"]
+    #targets = targets + [OUTPUT_REP + "/sva/sva_report_" + s + "_" + f + ".html"]
 
 #-------------------------------------------------------------------------------
 
-wildcard_constraints: #should not contain ".", see rule cellranger_count
+wildcard_constraints: 
   fraction="[a-z]+"
 
 localrules: all  
 
-# define rules
-rule all: # must contain all possible output paths from all rules
+rule all: 
   input:
       targets
 
@@ -144,6 +143,19 @@ rule age_bulk_report:
         colors = "../../source/colors.R"
     script:
         "age_bulk_quality_report.Rmd"
+        
+rule sva_report:
+    input: 
+        sep = OUTPUT_DAT + "/03_sepd/{fraction}_cluster_{cluster}-sep",
+        sce_input = OUTPUT_DAT + "/04_annc/03_sce/sce_{fraction}-04",
+        dsq_list = rules.aggregate_convert.output,
+        sva_list = rules.qc_deseq.output.sva
+    output:
+        OUTPUT_REP + "/sva/sva_report_{cluster}_{fraction}.html"
+    params:
+        plotting = "../../source/plotting.R"
+    script:
+        "dge_sv_report.Rmd"
 
 rule dge_report:
     input: 

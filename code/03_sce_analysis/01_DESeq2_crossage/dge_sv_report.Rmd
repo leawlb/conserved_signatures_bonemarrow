@@ -1,0 +1,123 @@
+---
+title: "DGE report on hidden sources of variation"
+author: "Lea Wölbert"
+date: '2024-07-12'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+For each species and cell type, show the estimated hidden sources of variation
+from each sample.
+
+#### Load objects
+
+```{r seed,  message = FALSE}
+set.seed(37)
+```
+
+```{r load,  message = FALSE}
+library(DESeq2, quietly = TRUE)
+```
+
+```{r source, message = FALSE}
+source(file =  snakemake@params[["plotting"]])
+```
+
+```{r manual, eval = FALSE, include = FALSE}
+dsq_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/05_desq/deseq_hsc-05")
+
+sva_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/06_dsqc/sva_hsc")
+```
+
+```{r load_objects, message = FALSE}
+
+cluster_curr <- snakemake@wildcards[["cluster"]]
+species_curr <- nakemake@wildcards[["species"]]
+
+sce <- base::readRDS(snakemake@input[["sce_input"]])
+sep <- base::readRDS(snakemake@input[["sep"]])
+
+sce_clust <- sce[,sce$cluster_louvain == base::as.numeric(cluster_curr)]
+ct_curr <- sce_clust$annotation_cluster[1]
+
+dsq_list <- base::readRDS(snakemake@input[["dsq_list"]])
+sva_list <- base::readRDS(snakemake@input[["sva_list"]])
+
+print(names(dsq_list))
+print(names(sva_list))
+
+dsq <- dsq_list[[ct_curr]]
+sva <- sva_list[[ct_curr]][[2]]
+```
+
+```{r plotlist}
+
+# prepare data
+colnames(sva$sv) <- base::paste0("sva_", c(1:ncol(sva$sv)))
+
+sv_list <- as.list(colnames(sva$sv))
+
+# function for making plots
+plotlist <-lapply(sv_list, function(sv){
+  
+  ggdf <- base::as.data.frame(colData(dsq))
+  ggdf$SV <- sva$sv[,sv]
+  
+  title_full <- base::paste(species_curr, ct_curr, sv)
+  
+  plot1 <- ggplot2::ggplot(ggdf, aes(y = SV, x = sample))+
+    ggplot2::geom_point()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::geom_hline(yintercept = 0, color = "dodgerblue3")
+
+  plot2 <- ggplot2::ggplot(ggdf, aes(y = SV, x = batch))+
+    ggplot2::geom_point()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::geom_hline(yintercept = 0, color = "dodgerblue3")
+
+  plot3 <- ggplot2::ggplot(ggdf, aes(y = SV, x = condition))+
+    ggplot2::geom_point()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::geom_hline(yintercept = 0, color = "dodgerblue3")
+
+  plot4 <- ggplot2::ggplot(ggdf, aes(y = SV, x = ncells))+
+    ggplot2::geom_point()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::geom_hline(yintercept = 0, color = "dodgerblue3")
+
+  plot5 <- ggplot2::ggplot(ggdf, aes(y = SV, x = Antibody_combination))+
+    ggplot2::geom_point()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::geom_hline(yintercept = 0, color = "dodgerblue3")
+
+  plot6 <- ggplot2::ggplot(ggdf, aes(y = SV, x = Batch_sequencing))+
+    ggplot2::geom_point()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::geom_hline(yintercept = 0, color = "dodgerblue3")
+
+  return(list(plot1, plot2, plot3, plot4, plot5, plot6))
+})
+```
+
+```{r print_plots}
+print(plotlist)
+```
+
+```{r session_info}
+utils::sessionInfo()
+```

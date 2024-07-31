@@ -37,11 +37,11 @@ for f in fractions:
     targets = targets + [OUTPUT_DAT + "/01_desq/deseq_" + s + "_" + f]
     targets = targets + [OUTPUT_DAT + "/02_dsqc/rlog_" + s + "_" + f]
     targets = targets + [OUTPUT_DAT + "/02_dsqc/sva_" + s + "_"+ f]
+    targets = targets + [OUTPUT_REP + "/bulk/bulk_quality_report_" + s + "_" + f + ".html"]
+    targets = targets + [OUTPUT_REP + "/sva/sva_report_" + s + "_" + f + ".html"]
     #targets = targets + [OUTPUT_DAT + "/03_tdsq/deseq_" + s + "_" + f]
     #targets = targets + [OUTPUT_DAT + "/04_dres/res_" + s + "_" + f]
-    targets = targets + [OUTPUT_REP + "/bulk/bulk_quality_report_" + s + "_" + f + ".html"]
     #targets = targets + [OUTPUT_REP + "/dge/dge_report_" + s + "_" + f + ".html"]
-    #targets = targets + [OUTPUT_REP + "/sva/sva_report_" + s + "_" + f + ".html"]
 
 #-------------------------------------------------------------------------------
 
@@ -146,12 +146,11 @@ rule age_bulk_report:
         
 rule sva_report:
     input: 
-        sep = OUTPUT_DAT + "/03_sepd/{fraction}_cluster_{cluster}-sep",
         sce_input = OUTPUT_DAT + "/04_annc/03_sce/sce_{fraction}-04",
         dsq_list = rules.aggregate_convert.output,
         sva_list = rules.qc_deseq.output.sva
     output:
-        OUTPUT_REP + "/sva/sva_report_{cluster}_{fraction}.html"
+        OUTPUT_REP + "/sva/sva_report_{species}_{fraction}.html"
     params:
         plotting = "../../source/plotting.R"
     script:

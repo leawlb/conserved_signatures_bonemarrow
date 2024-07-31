@@ -15,13 +15,18 @@ stopifnot(!is.na(sce$cluster_louvain))
 stopifnot(!is.na(sce$celltypes))
 
 species <- snakemake@params["species"]
-ct_exclude <- snakemake@params["cell_types_exclude"]
+
+# some cell types are so small in some species that they cannot be analysed
+ct_exclude <- snakemake@params["cell_types_exclude"]$cell_types_exclude
 print(ct_exclude)
 
+print(table(!sce$celltypes %in% ct_exclude))
 sce <- sce[,!sce$celltypes %in% ct_exclude]
+
 sce$celltypes <- factor(
-  sce$celltype, 
+  sce$celltypes, 
   levels = levels(sce$celltypes)[!levels(sce$celltypes) %in% ct_exclude])
+
 print(levels(sce$celltypes))
 
 #-------------------------------------------------------------------------------
@@ -32,6 +37,7 @@ agg <- scuttle::aggregateAcrossCells(
   use.assay.type = "counts_before_BC", # raw counts before batch correction
   id=colData(sce)[,c("Object_ID", "celltypes")])
 
+print(levels(agg$celltypes))
 cts <- levels(agg$celltypes)
 
 #-------------------------------------------------------------------------------

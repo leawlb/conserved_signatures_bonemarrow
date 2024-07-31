@@ -34,88 +34,105 @@ sva_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/
 
 ```{r load_objects, message = FALSE}
 
-cluster_curr <- snakemake@wildcards[["cluster"]]
 species_curr <- nakemake@wildcards[["species"]]
 
 sce <- base::readRDS(snakemake@input[["sce_input"]])
-sep <- base::readRDS(snakemake@input[["sep"]])
-
-sce_clust <- sce[,sce$cluster_louvain == base::as.numeric(cluster_curr)]
-ct_curr <- sce_clust$annotation_cluster[1]
 
 dsq_list <- base::readRDS(snakemake@input[["dsq_list"]])
 sva_list <- base::readRDS(snakemake@input[["sva_list"]])
 
 print(names(dsq_list))
 print(names(sva_list))
-
-dsq <- dsq_list[[ct_curr]]
-sva <- sva_list[[ct_curr]][[2]]
 ```
 
-```{r plotlist}
+```{r subset_sva_list}
+return_list <- list()
 
-# prepare data
-colnames(sva$sv) <- base::paste0("sva_", c(1:ncol(sva$sv)))
+for(ct in names(sva_list)){
+  if(sva_list[[ct]][[2]]$sv[1] != 0){
+    print(sva_list[[ct]][[2]]$n.sv)
+    return_list[[ct]][["sva"]] <- sva_list[[ct]][[2]]$sv
+    return_list[[ct]][["dsq"]] <- dsq_list[[ct]]
+  }
+}
+names(return_list)
+names(return_list[[1]])
+print(return_list[[1]]$sva)
+```
 
-sv_list <- as.list(colnames(sva$sv))
+```{r plot_function}
 
-# function for making plots
-plotlist <-lapply(sv_list, function(sv){
+# function for making plots 
+make_plots <- function(return){
+
+  dsq <- return$dsq
+  sva <- return$sva
   
-  ggdf <- base::as.data.frame(colData(dsq))
-  ggdf$SV <- sva$sv[,sv]
+  # prepare data
+  colnames(sva) <- base::paste0("sva_", c(1:ncol(sva)))
+  sv_list <- as.list(colnames(sva))
   
-  title_full <- base::paste(species_curr, ct_curr, sv)
+  # in case there is more than one SV
+  plotlist <- lapply(sv_list, function(sv){
+    
+    ggdf <- base::as.data.frame(colData(dsq))
+    ggdf$SV <- sva[,sv]
+    
+    title_full <- base::paste(species_curr, sv)
+    
+    plot1 <- ggplot2::ggplot(ggdf, aes(y = SV, x = sample))+
+      ggplot2::geom_point()+
+      ggplot2::theme_classic()+
+      ggplot2::theme(axis.text.x = element_text(angle = 90))+
+      ggplot2::ggtitle(title_full)+
+      ggplot2::geom_hline(yintercept = 0, color = "dodgerblue3")
   
-  plot1 <- ggplot2::ggplot(ggdf, aes(y = SV, x = sample))+
-    ggplot2::geom_point()+
-    ggplot2::theme_classic()+
-    ggplot2::theme(axis.text.x = element_text(angle = 90))+
-    ggplot2::ggtitle(title_full)+
-    ggplot2::geom_hline(yintercept = 0, color = "dodgerblue3")
+    plot2 <- ggplot2::ggplot(ggdf, aes(y = SV, x = batch))+
+      ggplot2::geom_point()+
+      ggplot2::theme_classic()+
+      ggplot2::theme(axis.text.x = element_text(angle = 90))+
+      ggplot2::ggtitle(title_full)+
+      ggplot2::geom_hline(yintercept = 0, color = "dodgerblue3")
+  
+    plot3 <- ggplot2::ggplot(ggdf, aes(y = SV, x = condition))+
+      ggplot2::geom_point()+
+      ggplot2::theme_classic()+
+      ggplot2::theme(axis.text.x = element_text(angle = 90))+
+      ggplot2::ggtitle(title_full)+
+      ggplot2::geom_hline(yintercept = 0, color = "dodgerblue3")
+  
+    plot4 <- ggplot2::ggplot(ggdf, aes(y = SV, x = ncells))+
+      ggplot2::geom_point()+
+      ggplot2::theme_classic()+
+      ggplot2::theme(axis.text.x = element_text(angle = 90))+
+      ggplot2::ggtitle(title_full)+
+      ggplot2::geom_hline(yintercept = 0, color = "dodgerblue3")
+  
+    plot5 <- ggplot2::ggplot(ggdf, aes(y = SV, x = Antibody_combination))+
+      ggplot2::geom_point()+
+      ggplot2::theme_classic()+
+      ggplot2::theme(axis.text.x = element_text(angle = 90))+
+      ggplot2::ggtitle(title_full)+
+      ggplot2::geom_hline(yintercept = 0, color = "dodgerblue3")
+  
+    plot6 <- ggplot2::ggplot(ggdf, aes(y = SV, x = Batch_sequencing))+
+      ggplot2::geom_point()+
+      ggplot2::theme_classic()+
+      ggplot2::theme(axis.text.x = element_text(angle = 90))+
+      ggplot2::ggtitle(title_full)+
+      ggplot2::geom_hline(yintercept = 0, color = "dodgerblue3")
+  
+    return(list(plot1, plot2, plot3, plot4, plot5, plot6))
+  })
+  return(plotlist)
+}
 
-  plot2 <- ggplot2::ggplot(ggdf, aes(y = SV, x = batch))+
-    ggplot2::geom_point()+
-    ggplot2::theme_classic()+
-    ggplot2::theme(axis.text.x = element_text(angle = 90))+
-    ggplot2::ggtitle(title_full)+
-    ggplot2::geom_hline(yintercept = 0, color = "dodgerblue3")
+plots <- make_plots(return_list)
 
-  plot3 <- ggplot2::ggplot(ggdf, aes(y = SV, x = condition))+
-    ggplot2::geom_point()+
-    ggplot2::theme_classic()+
-    ggplot2::theme(axis.text.x = element_text(angle = 90))+
-    ggplot2::ggtitle(title_full)+
-    ggplot2::geom_hline(yintercept = 0, color = "dodgerblue3")
-
-  plot4 <- ggplot2::ggplot(ggdf, aes(y = SV, x = ncells))+
-    ggplot2::geom_point()+
-    ggplot2::theme_classic()+
-    ggplot2::theme(axis.text.x = element_text(angle = 90))+
-    ggplot2::ggtitle(title_full)+
-    ggplot2::geom_hline(yintercept = 0, color = "dodgerblue3")
-
-  plot5 <- ggplot2::ggplot(ggdf, aes(y = SV, x = Antibody_combination))+
-    ggplot2::geom_point()+
-    ggplot2::theme_classic()+
-    ggplot2::theme(axis.text.x = element_text(angle = 90))+
-    ggplot2::ggtitle(title_full)+
-    ggplot2::geom_hline(yintercept = 0, color = "dodgerblue3")
-
-  plot6 <- ggplot2::ggplot(ggdf, aes(y = SV, x = Batch_sequencing))+
-    ggplot2::geom_point()+
-    ggplot2::theme_classic()+
-    ggplot2::theme(axis.text.x = element_text(angle = 90))+
-    ggplot2::ggtitle(title_full)+
-    ggplot2::geom_hline(yintercept = 0, color = "dodgerblue3")
-
-  return(list(plot1, plot2, plot3, plot4, plot5, plot6))
-})
 ```
 
 ```{r print_plots}
-print(plotlist)
+print(plots)
 ```
 
 ```{r session_info}

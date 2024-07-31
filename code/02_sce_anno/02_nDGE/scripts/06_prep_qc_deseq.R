@@ -38,7 +38,7 @@ base::saveRDS(rld_list, snakemake@output[["rlog"]])
 #-------------------------------------------------------------------------------
 # get the number of hidden sources of variations
 # taken from this tutorial:
-#https://www.bioconductor.org/packages/devel/workflows/vignettes/rnaseqGene/inst/doc/rnaseqGene.html
+# https://www.bioconductor.org/packages/devel/workflows/vignettes/rnaseqGene/inst/doc/rnaseqGene.html
 
 # transformation is required for num.sv
 tdsq_list <- lapply(dsq_list, DESeq2::DESeq)
@@ -57,7 +57,7 @@ sva_list <- lapply(tdsq_list, function(dsq){
   # try two different methods
   n_sv_be <- sva::num.sv(data, mod, method = "be")  
   n_sv_lk <- sva::num.sv(data, mod, method = "leek")  
-  # one is so large that it usually doesn't work 
+  # n_sv_lk is so large that it usually doesn't work 
   
   svseq <- sva::svaseq(data, mod, mod0, n.sv = n_sv_be)
   print(c(n_sv_be, n_sv_lk))

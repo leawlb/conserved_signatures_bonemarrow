@@ -38,11 +38,11 @@ species = get_list(metadata = METADATA, column = "Species_ID")
 
 # clusters to be subclustered 
 # hsc clusters 2 and 4 are be merged and then subclustered again
-clusters_hsc = ["2", "5"]
+clusters_hsc = ["2", "6"]
 clusters_str = ["6"]
 
 # subclusters for dummy separation
-subclusters_hsc = list(range(1,12))
+subclusters_hsc = list(range(1,13))
 subclusters_hsc = list(map(str,subclusters_hsc))
 
 subclusters_str = list(range(1,11))
@@ -63,18 +63,18 @@ for f in fractions:
   targets = targets + [OUTPUT_DAT + "/10_anns/sce_" + f + "-10"]
   targets = targets + [OUTPUT_REP + "/results/results_report_" + f + "_dotplots.html"]
   targets = targets + [OUTPUT_REP + "/results/results_report_" + f + "_umaps.html"]
-#   targets = targets + [OUTPUT_DAT + "/12_anqc/01_markers/markers_" + f]
-#   targets = targets + [OUTPUT_DAT + "/12_anqc/02_go/go_" + f]
-# 
-# for s in subclusters_hsc:
-#   targets = targets + [OUTPUT_DAT + "/11_sepc/hsc_subcluster_" + s + "-sep"]
-#   if RUN_MARKER_REPORTS: 
-#     targets = targets + [OUTPUT_REP + "/markergenes/markergenes_report_hsc_subcluster_" + s + ".html"]
-#   
-# for s in subclusters_str:
-#   targets = targets + [OUTPUT_DAT + "/11_sepc/str_subcluster_" + s + "-sep"]
-#   if RUN_MARKER_REPORTS:
-#     targets = targets + [OUTPUT_REP + "/markergenes/markergenes_report_str_subcluster_" + s + ".html"]
+  targets = targets + [OUTPUT_DAT + "/12_anqc/01_markers/markers_" + f]
+  targets = targets + [OUTPUT_DAT + "/12_anqc/02_go/go_" + f]
+
+for s in subclusters_hsc:
+  targets = targets + [OUTPUT_DAT + "/11_sepc/hsc_subcluster_" + s + "-sep"]
+  if RUN_MARKER_REPORTS: 
+    targets = targets + [OUTPUT_REP + "/markergenes/markergenes_report_hsc_subcluster_" + s + ".html"]
+   
+for s in subclusters_str:
+  targets = targets + [OUTPUT_DAT + "/11_sepc/str_subcluster_" + s + "-sep"]
+  if RUN_MARKER_REPORTS:
+    targets = targets + [OUTPUT_REP + "/markergenes/markergenes_report_str_subcluster_" + s + ".html"]
 
 #-------------------------------------------------------------------------------
 
@@ -205,7 +205,6 @@ rule go_analysis:
     script:
         "scripts/12_go_subclusters.R"
 
-# TODO: fix this
 # report on marker gene expression and GO 
 rule make_subclustering_markers_report:
     input: 

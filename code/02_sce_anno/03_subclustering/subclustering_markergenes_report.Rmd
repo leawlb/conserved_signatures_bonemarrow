@@ -5,6 +5,9 @@ date: '2023-03-07'
 output: html_document
 ---
 
+Report on marker genes and their expression in the final annotated 
+cell types.
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -16,9 +19,6 @@ set.seed(37)
 ```
 
 ```{r load, message = FALSE}
-#library(DropletUtils, quietly = TRUE) 
-#library(scater, quietly = TRUE) 
-#library(scuttle, quietly = TRUE) 
 library(scran, quietly = TRUE) 
 ```
 
@@ -27,13 +27,19 @@ source(file =  snakemake@params[["plotting"]])
 ```
 
 ```{r load_objects, message = FALSE}
-#load SCE objects
-sce <- readRDS(file = snakemake@input[["sce_input"]])
-sep <- readRDS(file = snakemake@input[["sep"]])
+ 
+# load objects
+sce <- base::readRDS(file = snakemake@input[["sce_input"]])
+sep <- base::readRDS(file = snakemake@input[["sep"]])
+
 subcluster_curr <- snakemake@wildcards[["subcluster"]]
 fraction_curr <- snakemake@wildcards[["fraction"]]
 
-gene_list <- read.csv(snakemake@input[["gene_list_subcl"]], 
+stopifnot(sep == subcluster_curr)
+
+celltype_curr <- sce$celltypes[sce$cluster_after_sub == subcluster_curr]
+
+gene_list <- utils::read.csv(snakemake@input[["gene_list_subcl"]], 
   header = TRUE, 
   sep = ";", 
   check.names=FALSE, 
@@ -42,23 +48,23 @@ gene_list <- read.csv(snakemake@input[["gene_list_subcl"]],
   colClasses = "character")
 
 # load marker genes and results
-results_go <- readRDS(file = snakemake@input[["go"]])
-results_markers <- readRDS(file = snakemake@input[["markers"]])
+results_go <- base::readRDS(file = snakemake@input[["go"]])
+results_markers <- base::readRDS(file = snakemake@input[["markers"]])
 
-markers <- results_markers[[as.numeric(subcluster_curr)]]
-go <- results_go[[as.numeric(subcluster_curr)]]
+markers <- results_markers[[base::as.numeric(subcluster_curr)]]
+go <- results_go[[base::as.numeric(subcluster_curr)]]
 ```
 
 ```{r print_objects}
 print(sce)
 print(sep)
-head(sce$subcluster)
+print(base::unique(sce$cluster_after_sub))
 print(subcluster_curr)
 
-table(sce$subcluster, sce$celltypes)
+print(base::table(sce$cluster_after_sub, sce$celltypes))
 
-sce_subcluster <- sce[,which(sce$subcluster == sep)]
-celltypes <- unique(sce_subcluster$celltypes)
+sce_subcluster <- sce[,which(sce$cluster_after_sub == sep)]
+celltypes <- base::unique(sce_subcluster$celltypes)
 
 print(celltypes)
 print(fraction_curr)
@@ -68,6 +74,10 @@ head(gene_list)
 
 print(fraction_curr == "hsc")
 print(fraction_curr == "str")
+
+if(!sep %in% sce$cluster_after_sub){
+  knitr::knit_exit()
+}
 ```
 
 ```{r colors, meassage = FALSE}
@@ -82,7 +92,6 @@ if(fraction_curr == "hsc"){
 }else if(fraction_curr == "str"){
   col_cts <- col_cts_str
 }
-#knitr::knit_exit()
 ```
 
 # Identity plots
@@ -93,25 +102,25 @@ Cells were annotated with scmap and three reference datasets.
 
 ```{r identity_plots, fig.width=8, fig.height=4}
 
+# own functions
 plot_1 <- umap_base(sce, color_by = "celltypes")+ 
-  ggtitle(paste0(fraction_curr))+
-  scale_color_manual("Cell types", values = col_cts)
+  ggplot2::ggtitle(base::paste0(fraction_curr))+
+  ggplot2::scale_color_manual(values = col_cts)
 plot_1l <- umap_legend(sce, color_by = "celltypes")+
-   scale_color_manual("Cell types", values = col_cts)
-legend_1 <- get_legend(plot_1l)
+   ggplot2::scale_color_manual("Cell types", values = col_cts)
+legend_1 <- ggpubr::get_legend(plot_1l)
 
 plot_2 <- umap_base(sce_subcluster, color_by = "celltypes")+ 
-  ggtitle(paste0(fraction_curr))+
-  scale_color_manual("Cell types", values = col_cts)
+  ggplot2::ggtitle(base::paste0(fraction_curr))+
+  ggplot2::scale_color_manual(values = col_cts)
 plot_2l <- umap_legend(sce_subcluster, color_by = "celltypes")+
-   scale_color_manual("Cell types", values = col_cts)
-legend_2 <- get_legend(plot_2l)
+  ggplot2::scale_color_manual("Cell types", values = col_cts)
+legend_2 <- ggpubr::get_legend(plot_2l)
   
-PLOT_1 <- ggarrange(plot_1, legend_1)
-PLOT_2 <- ggarrange(plot_2, legend_2)
+PLOT_1 <- ggpubr::ggarrange(plot_1, legend_1)
+PLOT_2 <- ggpubr::ggarrange(plot_2, legend_2)
 PLOT_1
 PLOT_2
-knitr::knit_exit()
 ```
 
 # Marker genes
@@ -120,7 +129,7 @@ knitr::knit_exit()
 
 ```{r markers}
 markers[1:50,1:4]
-markers[order(markers$pct.1, decreasing = TRUE),][1:50,1:4]
+markers[base::order(markers$pct.1, decreasing = TRUE),][1:50,1:4]
 ```
 
 ## GO analysis
@@ -139,52 +148,54 @@ Prepare Plots
 
 gene_exps <- function(gene){
   
-  sce_subcluster$Species_ID <- factor(sce_subcluster$Species_ID,
-                                   levels = c("mmus", "mcas", "mspr", "mcar"))
+  sce_subcluster$Species_ID <- factor(
+    sce_subcluster$Species_ID, levels = c("mmus", "mcas", "mspr", "mcar"))
 
-  sce$Species_ID <- factor(sce$Species_ID,
-                           levels = c("mmus", "mcas", "mspr", "mcar"))
+  sce$Species_ID <- factor(
+    sce$Species_ID, levels = c("mmus", "mcas", "mspr", "mcar"))
   
   # Gene expression UMAP in cluster X
   plot_1 <- umap_gene(sce_subcluster, gene)
 
   # Gene expression UMAP in cluster X, separated by species
   plot_2 <- umap_gene(sce_subcluster, gene)+
-    facet_grid(cols = vars(sce_subcluster$Species_ID),
-               rows = vars(sce_subcluster$Age_ID))
+    ggplot2::facet_grid(cols = vars(sce_subcluster$Species_ID),
+                        rows = vars(sce_subcluster$Age_ID))
   
-  ggdf <- as.data.frame(colData(sce_subcluster))
-  logc <- assays(sce_subcluster)[["logcounts"]]
+  ggdf <- base::as.data.frame(colData(sce_subcluster))
+  logc <- SummarizedExperiment::assays(sce_subcluster)[["logcounts"]]
 
-  ggdf$Species_ID <- factor(ggdf$Species_ID,
-                            levels = c("mmus", "mcas", "mspr", "mcar"))
+  ggdf$Species_ID <- factor(
+    ggdf$Species_ID, levels = c("mmus", "mcas", "mspr", "mcar"))
   
-  plot_3 <- ggplot(ggdf, aes(x = celltypes,
-                             y = logc[rownames(logc) == gene,]))+
+  plot_3 <- ggplot2::ggplot(ggdf, 
+                            aes(x = celltypes,
+                                y = logc[rownames(logc) == gene,]))+
     ggbeeswarm::geom_quasirandom(size = 0.2, color = "grey60")+
-    theme_classic()+
-    geom_boxplot(color = "black", alpha = 0)+
-    ylab(paste0(gene, " expression"))+
-    facet_grid(cols = vars(sce_subcluster$Species_ID),
-               rows = vars(sce_subcluster$Age_ID))
+    ggplot2::theme_classic()+
+    ggplot2::geom_boxplot(color = "black", alpha = 0)+
+    ggplot2::ylab(paste0(gene, " expression"))+
+    ggplot2::facet_grid(cols = vars(sce_subcluster$Species_ID),
+                        rows = vars(sce_subcluster$Age_ID))
   
-  ggdf_full <- as.data.frame(colData(sce))
-  logc_full <- assays(sce)[["logcounts"]]
+  ggdf_full <- base::as.data.frame(colData(sce))
+  logc_full <- SummarizedExperiment::assays(sce)[["logcounts"]]
   
   plot_4 <- umap_gene(sce, gene)
   
-  plot_5 <- ggplot(ggdf_full, aes(x = celltypes,
-                           y = logc_full[rownames(logc_full) == gene,], 
-                           color = celltypes))+
+  plot_5 <- ggplot2::ggplot(ggdf_full, 
+                            aes(x = celltypes,
+                                y = logc_full[rownames(logc_full) == gene,], 
+                                color = celltypes))+
     ggbeeswarm::geom_quasirandom(size = 0.2)+
-    theme_classic()+
-    scale_color_manual(values = col_cts)+
-    geom_boxplot(color = "black", alpha = 0)+
-    ylab(paste0(gene, " expression"))+
-    theme(axis.text.x = element_text(angle = 90))
+    ggplot2::theme_classic()+
+    ggplot2::scale_color_manual(values = col_cts)+
+    ggplot2::geom_boxplot(color = "black", alpha = 0)+
+    ggplot2::ylab(paste0(gene, " expression"))+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))
 
   plot_6 <- umap_gene(sce, gene)+
-    facet_grid(cols = vars(sce$Species_ID))
+    ggplot2::facet_grid(cols = vars(sce$Species_ID))
   
   return(list(gene, plot_1, plot_2, plot_3, plot_4, plot_5, plot_6))
 }
@@ -194,14 +205,14 @@ gene_exps <- function(gene){
 ```{r found_markers}
 
 found_markers <- rownames(markers)[1:50]
+head(found_markers)
 
 gene_markers <- gene_list$Gene[gene_list$Fraction == fraction_curr]
-print(gene_markers)
+head(gene_markers)
 
-all_markers <- unique(c(found_markers, gene_markers))
+all_markers <- base::sort(base::unique(c(found_markers, gene_markers)))
 all_markers <- as.list(sort(all_markers))
 print(all_markers[which(!all_markers %in% rownames(sce))])
-
 all_markers <- all_markers[which(all_markers %in% rownames(sce))]
 print(all_markers)
 ```
@@ -214,5 +225,5 @@ plotlist
 ```
 
 ```{r session_info}
-sessionInfo()
+utils::sessionInfo()
 ```

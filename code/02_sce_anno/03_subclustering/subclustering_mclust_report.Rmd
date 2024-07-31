@@ -9,14 +9,13 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+Check the results of the supervised subclustering with mclust.
+Recapitulate the subclustering script.
+
 #### Load libraries, source code 
 
 ```{r seed, message = FALSE}
 set.seed(37)
-```
-
-```{r load, message = FALSE}
-#
 ```
 
 ```{r sources, message = FALSE}
@@ -31,11 +30,9 @@ if(cluster_curr == 2){cluster_curr <- "2_4"}
 
 ```{r sce, message = FALSE}
 #load SCE objects
-sce_clust <- readRDS(file = snakemake@input[["sce_input"]])
-celltypes <- unique(sce_clust$annotation_cluster)
+sce_clust <- base::readRDS(file = snakemake@input[["sce_input"]])
+celltypes <- base::unique(sce_clust$annotation_cluster)
 ```
-
-Subset SCE
 
 ```{r print_celltypes}
 print(celltypes)
@@ -44,7 +41,8 @@ print(celltypes)
 List of genes used for subclustering or evaluation
 
 ```{r gene_list}
-gene_list_sub <- read.csv(snakemake@input[["gene_list_subclustering"]], 
+gene_list_sub <- utils::read.csv(
+  snakemake@input[["gene_list_subclustering"]], 
   header = TRUE, 
   sep = ";", 
   check.names=FALSE, 
@@ -61,24 +59,26 @@ and cluster
 gene_list_sub <- gene_list_sub[gene_list_sub$fraction == fraction_curr,]
 gene_list_sub <- gene_list_sub[gene_list_sub$cluster == cluster_curr,]
 
-subcl <- unique(gene_list_sub$gene[gene_list_sub$purpose == "subclustering"])
+subcl <- base::unique(gene_list_sub$gene[
+  gene_list_sub$purpose == "subclustering"])
 print(subcl)
 ```
 
 List of genes that are shared by at least three of four species in this cluster
  
 ```{r shared_genes}
-genes_list_shared <- readRDS(file = snakemake@input[["genes_list_shared"]])
+genelist_shared <- base::readRDS(file = snakemake@input[["genes_list_shared"]])
 ```
 
 Subset shared gene list to the current cluster/cell type.
 
 ```{r subset_shared_genes}
 if(length(celltypes) == 1){
-  genes_shared <- genes_list_shared[[celltypes]]$at_least_three
+  genes_shared <- genelist_shared[[celltypes]]$three
 }else if(length(celltypes) == 2){
-  genes_shared <- intersect(genes_list_shared[[celltypes[1]]]$at_least_three, 
-                            genes_list_shared[[celltypes[2]]]$at_least_three)
+  genes_shared <- BiocGenerics::intersect(
+    genelist_shared[[celltypes[1]]]$three, 
+    genelist_shared[[celltypes[2]]]$three)
 }
 ```
 
@@ -90,96 +90,102 @@ configured correctly.
 Also print which genes are shared/could be used for subclustering in addition.
 
 ```{r print}
-print(paste("subcl genes used:", subcl[which(subcl %in% genes_shared)]))
-print(paste("subcl genes not shared, not used:", 
-            subcl[which(!subcl %in% genes_shared)]))
+print(base::paste("subcl genes used:",
+                  subcl[which(subcl %in% genes_shared)]))
+print(base::paste("subcl genes not shared, not used:", 
+                  subcl[which(!subcl %in% genes_shared)]))
 
-genes_all <- unique(gene_list_sub$gene)
+genes_all <- base::unique(gene_list_sub$gene)
 poss_subcl <- genes_all[which(genes_all %in% genes_shared)]
 
-print(paste("subcl genes possible:", poss_subcl))
+print(base::paste("subcl genes possible:", poss_subcl))
 ```
 
 # Subclustering QC
 
 ```{r qc_plots}
 
-coord_x <- c(min(reducedDims(sce_clust)$UMAP[,1]), 
-             max(reducedDims(sce_clust)$UMAP[,1]))
-coord_y <- c(min(reducedDims(sce_clust)$UMAP[,2]), 
-             max(reducedDims(sce_clust)$UMAP[,2]))
+coord_x <- c(base::min(SingleCellExperiment::reducedDims(sce_clust)$UMAP[,1]), 
+             base::max(SingleCellExperiment::reducedDims(sce_clust)$UMAP[,1]))
+coord_y <- c(base::min(SingleCellExperiment::reducedDims(sce_clust)$UMAP[,2]), 
+             base::max(SingleCellExperiment::reducedDims(sce_clust)$UMAP[,2]))
 
+# own function
 plot_1 <- umap_base_l(sce_clust[,sce_clust$Species_ID == "mmus"], 
                       color_by = "annotation_subcluster")+
-  ggtitle("mmus")+
-  xlim(coord_x)+
-  ylim(coord_y)
+  ggplot2::ggtitle("mmus")+
+  ggplot2::xlim(coord_x)+
+  ggplot2::ylim(coord_y)
   
 plot_2 <- umap_base_l(sce_clust[,sce_clust$Species_ID == "mcas"], 
                       color_by = "annotation_subcluster")+
-  ggtitle("mcas")+
-  xlim(coord_x)+
-  ylim(coord_y)
+  ggplot2::ggtitle("mcas")+
+  ggplot2::xlim(coord_x)+
+  ggplot2::ylim(coord_y)
   
 plot_3 <- umap_base_l(sce_clust[,sce_clust$Species_ID == "mspr"], 
                       color_by = "annotation_subcluster")+
-  ggtitle("mspr")+
-  xlim(coord_x)+
-  ylim(coord_y)
+  ggplot2::ggtitle("mspr")+
+  ggplot2::xlim(coord_x)+
+  ggplot2::ylim(coord_y)
     
 plot_4 <- umap_base_l(sce_clust[,sce_clust$Species_ID == "mcar"], 
                       color_by = "annotation_subcluster")+
-  ggtitle("mcar")+
-  xlim(coord_x)+
-  ylim(coord_y)
+  ggplot2::ggtitle("mcar")+
+  ggplot2::xlim(coord_x)+
+  ggplot2::ylim(coord_y)
 
 plot_5 <- umap_base_l(sce_clust, color_by = "annotation_subcluster")+
-      facet_grid(cols = vars(sce_clust$annotation_subcluster),
-                 rows = vars(sce_clust$Species_ID))
+  ggplot2::facet_grid(cols = vars(sce_clust$annotation_subcluster),
+                      rows = vars(sce_clust$Species_ID))
 
 plot_1
 plot_2
 plot_3
 plot_4
 plot_5
-knitr::knit_exit() # TODO: Find error in chunks below
 ```
 
 ```{r plot_function}
 make_plot_list <- function(gene){
   
-  print(gene)
-  
-  ggdf <- as.data.frame(colData(sce_clust))
-  logc <- assays(sce_clust)[["logcounts"]]
+  ggdf <- base::as.data.frame(colData(sce_clust))
+  logc <- SummarizedExperiment::assays(sce_clust)[["logcounts"]]
 
-  ggdf$Species_ID <- factor(ggdf$Species_ID,
-                            levels = c("mmus", "mcas", "mspr", "mcar"))
+  ggdf$Species_ID <- factor(
+    ggdf$Species_ID, levels = c("mmus", "mcas", "mspr", "mcar"))
+  sce_clust$Species_ID <- factor(
+    sce_clust$Species_ID, levels = c("mmus", "mcas", "mspr", "mcar"))
   
   plot1 <- umap_gene(sce_clust, gene)
 
   plot2 <- umap_gene(sce_clust, gene)+
-    facet_grid(cols = vars(sce_clust$Species_ID))
+    ggplot2::facet_grid(cols = vars(sce_clust$Species_ID))
 
-  plot3 <- ggplot(ggdf, aes(x = annotation_subcluster,
-                             y = logc[rownames(logc) == gene,]))+
-    geom_violin(fill = "grey60")+
-    theme_classic()+
-    geom_boxplot(color = "black", alpha = 0)+
-    ylab(paste0(gene, " expression"))+
-    facet_grid(cols = vars(sce_clust$Species_ID))+
-    theme(axis.text.x = element_text(angle = 90))+
-    ggtitle(gene)
-  
-  print(list(plot1, plot2, plot3))
+  plot3 <- ggplot(ggdf,
+                  aes(x = annotation_subcluster,
+                      y = logc[rownames(logc) == gene,]))+
+    ggplot2::geom_violin(fill = "grey60")+
+    ggplot2::theme_classic()+
+    ggplot2::geom_boxplot(color = "black", alpha = 0)+
+    ggplot2::ylab(base::paste0(gene, " expression"))+
+    ggplot2::facet_grid(cols = vars(ggdf$Species_ID))+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::ggtitle(gene)
+
+
+  return(list(gene, plot1, plot2, plot3))
 }
 ```
 
 ```{r plotlist}
-genes_all <- genes_all[genes_all %in% rownames(sce)]
-lapply(as.list(genes_all), make_plot_list)
+genes_all <- base::sort(
+  base::unique(genes_all[genes_all %in% rownames(sce_clust)]))
+
+plotlist <- lapply(as.list(genes_all), make_plot_list)
+plotlist
 ```
 
 ```{r session_info}
-sessionInfo()
+utils::sessionInfo()
 ```

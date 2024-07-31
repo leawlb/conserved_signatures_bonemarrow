@@ -28,16 +28,17 @@ source("../../source/plotting.R")
 colors_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt"
 source("../../source/colors.R")
 
-dtplt_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/02_sce_anno/gene_list_dotplot_temp.txt"
-dtplt_short_path<- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/02_sce_anno/gene_list_dotplot_short.txt"
-dtplt_short_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/02_sce_anno/gene_list_dotplot_temp.txt"
+dtplt_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/02_sce_anno/gene_list_dotplot.txt"
+
 
 source("../../source/colors.R")
 
 #genelist_shared <- base::readRDS(file = snakemake@input[["genes_list_shared"]])
 sce <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10")
-umap_base_l(sce_anno, color_by = "celltypes")+
-  scale_color_manual(values = col_cts_str)
+umap_base_l(sce, color_by = "celltypes")+
+  scale_color_manual(values = col_cts_hsc)
+
+umap_gene(sce, "Il6")
 
 ```
 
@@ -133,6 +134,8 @@ vis_df_all <- tidyr::pivot_longer(
 vis_df_all$celltypes <- factor(
   vis_df_all$celltypes, 
   levels = base::rev(names(col_cts)))
+
+stopifnot(!is.na(vis_df_all$celltypes))
 
 gene_list_dtplt_main$gene[which(duplicated(gene_list_dtplt_main$gene))]
 gene_list_dtplt_short$gene[which(duplicated(gene_list_dtplt_short$gene))]

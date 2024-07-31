@@ -78,9 +78,10 @@ values:
     k_louvain_refs: 50 # for louvain clustering resolution
     ndge_padj_cutoff: 0.05 # below which nDGEs are significant
     ndge_fc_cutoff: 1.5 # above which genes are excluded from nDGEs
-  03_sce_dge:
-    flayer_integrated_padj_cutoff: 0.05
-    flayer_integrated_fc_cutoff: 1.5
+  03_sce_analysis:
+    cell_types_exclude: 
+      - "Lymphatic ECs"
+      - "Chondrocytes"
   05_cci_prep:
     min_cells: 60 # min number of cells required per cell type to consider for cci
     min_perc: 0.05 # min percentage of cells per cell type a gene must be expressed in to consider for cci

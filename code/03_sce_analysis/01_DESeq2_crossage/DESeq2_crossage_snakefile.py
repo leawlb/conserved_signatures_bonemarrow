@@ -11,6 +11,9 @@ OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/01_DESeq2_cross
 
 COLORS = config["base"] + config["metadata_paths"]["colors"]
 
+CELL_TYPES_EXCLUDE = config["values"]["03_sce_analysis"]["cell_types_exclude"]
+print(CELL_TYPES_EXCLUDE)
+
 # objects from config
 METADATA = pd.read_csv(config["base"] + config["metadata_paths"]["table"])
 def get_list(metadata, column):
@@ -33,12 +36,12 @@ targets = []
 for f in fractions:
   for s in species:
     targets = targets + [OUTPUT_DAT + "/01_desq/deseq_" + s + "_" + f]
-    targets = targets + [OUTPUT_DAT + "/02_dsqc/rlog_" + s + "_" + f]
-    targets = targets + [OUTPUT_DAT + "/02_dsqc/sva_" + s + "_"+ f]
-    targets = targets + [OUTPUT_DAT + "/03_tdsq/deseq_" + s + "_" + f]
-    targets = targets + [OUTPUT_DAT + "/04_dres/res_" + s + "_" + f]
-    targets = targets + [OUTPUT_REP + "/bulk/bulk_quality_report_" + s + "_" + f + ".html"]
-    targets = targets + [OUTPUT_REP + "/dge/dge_report_" + s + "_" + f + ".html"]
+    #targets = targets + [OUTPUT_DAT + "/02_dsqc/rlog_" + s + "_" + f]
+    #targets = targets + [OUTPUT_DAT + "/02_dsqc/sva_" + s + "_"+ f]
+    #targets = targets + [OUTPUT_DAT + "/03_tdsq/deseq_" + s + "_" + f]
+    #targets = targets + [OUTPUT_DAT + "/04_dres/res_" + s + "_" + f]
+    #targets = targets + [OUTPUT_REP + "/bulk/bulk_quality_report_" + s + "_" + f + ".html"]
+    #targets = targets + [OUTPUT_REP + "/dge/dge_report_" + s + "_" + f + ".html"]
 
 #-------------------------------------------------------------------------------
 
@@ -75,6 +78,8 @@ rule aggregate_convert:
       sce_input = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10"
   output:
       deseq_output = expand(OUTPUT_DAT + "/01_desq/deseq_{species}_{{fraction}}", species = species)
+  params:
+      cell_types_exclude = CELL_TYPES_EXCLUDE
   script:
       "scripts/01_aggregate_convert.R"
 

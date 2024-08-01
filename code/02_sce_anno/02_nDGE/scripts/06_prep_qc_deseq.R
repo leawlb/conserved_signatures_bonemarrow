@@ -16,7 +16,7 @@ dsq_list <- base::readRDS(file = snakemake@input[["deseq_input"]])
 # filter out almost empty rows
 dsq_list <- lapply(dsq_list, function(dsq){
   
-  keep <- rowSums(counts(dsq)) >= 10
+  keep <- BiocGenerics::rowSums(BiocGenerics::counts(dsq)) >= 10
   dsq <- dsq[keep,]
   return(dsq)
   
@@ -47,7 +47,7 @@ tdsq_list <- lapply(dsq_list, DESeq2::DESeq)
 sva_list <- lapply(tdsq_list, function(dsq){
   
   data <- BiocGenerics::counts(dsq, normalized = TRUE)
-  data <- data[which(rowMeans(data) > 1), ] #subset like in the tutorial
+  data <- data[which(BiocGenerics::rowMeans(data) > 1), ] # like tutorial
   
   # full model matrix
   mod <- stats::model.matrix(~ batch + age + condition, colData(dsq))

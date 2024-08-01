@@ -29,12 +29,14 @@ print(agg)
 
 agg_list <- list()
 for(ct in levels(agg$celltypes)){
-  agg_list[[ct]] <- agg[,agg$celltypes==i]
   
-  agg_list[[ct]]$batch <- factor(agg_list[[i]]$Batch_exp_day)
-  agg_list[[ct]]$species <- factor(agg_list[[i]]$Species_ID)
-  agg_list[[ct]]$sample <- factor(agg_list[[i]]$Object_ID)
-  agg_list[[ct]]$age <- factor(agg_list[[i]]$Age_ID)
+  print(ct)
+  agg_list[[ct]] <- agg[,agg$celltypes==ct]
+  
+  agg_list[[ct]]$batch <- factor(agg_list[[ct]]$Batch_exp_day)
+  agg_list[[ct]]$species <- factor(agg_list[[ct]]$Species_ID)
+  agg_list[[ct]]$sample <- factor(agg_list[[ct]]$Object_ID)
+  agg_list[[ct]]$age <- factor(agg_list[[ct]]$Age_ID)
   
   colData(agg_list[[ct]]) <- colData(agg_list[[ct]])[,c("batch",
                                                         "species", 
@@ -68,10 +70,10 @@ dsq_list <- lapply(agg_list, function(agg){
     levels = c("yng", "old"))
   colData(dsq)$Antibody_combination <- factor(
     colData(dsq)$Antibody_combination,
-    levels = unique(colData(dsq)$Antibody_combination))
+    levels = base::unique(colData(dsq)$Antibody_combination))
   colData(dsq)$sample <- factor(
     colData(dsq)$sample,
-    levels = unique(colData(dsq)$sample))
+    levels = base::unique(colData(dsq)$sample))
   
   return(dsq)
 })

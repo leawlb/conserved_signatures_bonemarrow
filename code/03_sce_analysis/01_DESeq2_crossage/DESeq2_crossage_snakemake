@@ -1,1 +1,1 @@
-snakemake --cluster "bsub -n3 -q medium -R rusage[mem=50GB]" -p -j30 -c20 -s DESeq2_crossage_snakefile.py --latency-wait 60 --configfile ../../config.yaml -n
+snakemake --cluster "bsub -n5 -q medium -R rusage[mem=40GB]" -p -j24 -c5 -s DESeq2_crossage_snakefile.py --latency-wait 60 --configfile ../../config.yaml -n

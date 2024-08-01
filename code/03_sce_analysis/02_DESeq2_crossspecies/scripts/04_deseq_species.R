@@ -1,13 +1,12 @@
 #-------------------------------------------------------------------------------
-
-# In this script, Transformed DESeq2 objects are generated.
+# In this script, transformed DESeq2 objects are generated.
 # Hidden sources of variation are taken into account for transformation
+# after visual examination which SV to remove from data = add to design
 
 library(DESeq2, quietly = TRUE)
 set.seed(37)
 
 #-------------------------------------------------------------------------------
-# load object
 
 dsq_list <- base::readRDS(file = snakemake@input[["deseq_input"]])
 sva_list <- base::readRDS(file = snakemake@input[["sva"]])
@@ -25,7 +24,6 @@ sv_table <- utils::read.csv(
   colClasses = "character")
 
 print(sv_table)
-print(names(dsq_list))
 
 #-------------------------------------------------------------------------------
 # filtering out almost empty rows
@@ -39,13 +37,14 @@ print(dsq_list)
 
 #-------------------------------------------------------------------------------
 # add new design with correct number of SVs obtained from SVA
+
 for(ct in names(dsq_list)){
-
-  sva <- sva_list[[ct]][[2]]$sv
-  print(sva)
-
+  
+  print(ct)
+  sva <- sva_list[[ct]][[2]]
+  
   # when no SV is found, sva$sv is then 0 = numeric:
-  if(class(sva)[1] == "numeric"){
+  if(class(sva$sv)[1] == "numeric"){
     print("No SVs detected")
     
     # if there are SVs detected, but they shouldn't be removed:
@@ -53,7 +52,7 @@ for(ct in names(dsq_list)){
     print("No SVs to be removed after examination")
     
     # if there are SVs detected and should be removed:
-  }else if(ncol(sva) >= 1){
+  }else if(ncol(sva$sv) >= 1){
     
     # after examination, which SVs to remove from data -> add to design
     sv_table_temp <- sv_table[sv_table$cell_type == ct,]
@@ -62,7 +61,7 @@ for(ct in names(dsq_list)){
     print(base::paste("svs_to_remove:", svs_to_remove))
     
     # prepare sv_df
-    sv_df <- base::as.data.frame(sva)
+    sv_df <- base::as.data.frame(sva$sv)
     colnames(sv_df) <- base::paste0("sv", c(1:ncol(sv_df)))
     
     # keep only columns that should be removed = part of the design
@@ -87,14 +86,49 @@ for(ct in names(dsq_list)){
     # now, sv_df only contains SVs that should be added to the design
     # this means these SVs will be "removed" from the data
     if(ncol(sv_df_temp) == 1){
-      DESeq2::design(dsq_list[[ct]]) <- ~ SV1 + age 
+      DESeq2::design(dsq_list[[ct]]) <- ~ SV1 + batch + ncells + age + species
     }else if(ncol(sv_df_temp)== 2){
-      DESeq2::design(dsq_list[[ct]]) <- ~ SV1 + SV2 + age 
-    }else if(ncol(sv_df_temp) >= 3){
+      DESeq2::design(dsq_list[[ct]]) <- ~ SV1 + SV2 + batch + ncells + age + species
+    }else if(ncol(sv_df_temp)== 3){
+      DESeq2::design(dsq_list[[ct]]) <- ~ SV1 + SV2 + SV3 + batch + ncells + age + species
+    }else if(ncol(sv_df_temp) >= 4){
       stop("number of SVs larger than anticipated")
     }
+    
+    print(DESeq2::design(dsq_list[[ct]]))
   }
 }
+
+# for(i in 1:length(dsq_list)){
+# 
+#   sva <- sva_list[[i]][[2]]
+#   print(sva$sv)
+# 
+#   # sometimes, no SV is found, sva$sv is then 0
+#   if(class(sva$sv)[1] == "numeric"){
+#     print("No hidden variation: no design change required")
+#   }else if(ncol(sva$sv) >= 1){
+#     
+#     for(j in 1:ncol(sva$sv)){
+#       colData(dsq_list[[i]])[,ncol(colData(dsq_list[[i]]))+1] <- sva$sv[,j]
+#       colnames(colData(dsq_list[[i]]))[ncol(colData(dsq_list[[i]]))] <- paste0("SV", j)
+#     }
+#   
+#     if(ncol(sva$sv) == 1){
+#       design(dsq_list[[i]]) <- ~ SV1 + batch + age + species
+#     }else if(ncol(sva$sv) == 2){
+#       design(dsq_list[[i]]) <- ~ SV1 + SV2 + batch + age + species
+#     }else if(ncol(sva$sv) == 3){
+#       design(dsq_list[[i]]) <- ~ SV1 + SV2 + SV3 + batch + age + species
+#     }else if(ncol(sva$sv) == 4){
+#       design(dsq_list[[i]]) <- ~ SV1 + SV2 + SV3 + SV4 + batch + age + species
+#     }else if(ncol(sva$sv) >= 5){
+#       stop("number of SVs larger than anticipated")
+#     }
+#     print(i)
+#     print(design(dsq_list[[i]]))
+#   }
+# }
 
 # transform/calculate DGE (normalisation and statistics)
 tdsq_list <- lapply(dsq_list, DESeq2::DESeq)

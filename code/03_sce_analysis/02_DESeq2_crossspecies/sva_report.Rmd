@@ -1,0 +1,142 @@
+---
+title: "nDGE report on hidden sources of variations"
+author: "Lea Wölbert"
+date: '2024-07-12'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Report on hidden sources of variations as estimated by SVA.
+
+#### Load objects
+
+```{r seed,  message = FALSE}
+set.seed(37)
+```
+
+```{r load,  message = FALSE}
+library(DESeq2, quietly = TRUE)
+```
+
+```{r source, message = FALSE}
+source(file =  snakemake@params[["plotting"]])
+```
+
+```{r manual, eval = FALSE, include = FALSE}
+dsq_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/02_DESeq2_crossspecies/01_desq/deseq_str")
+
+sva_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/02_DESeq2_crossspecies/02_dsqc/sva_str")
+
+sep <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/02_DESeq2_crossspecies/03_sepd/hsc_Mk_progs-sep")
+
+sce <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10")
+
+```
+
+```{r load_objects, message = FALSE}
+
+# get current celltype - wildcard
+celltype <- snakemake@wildcards[["celltype"]]
+sep <- base::readRDS(snakemake@input[["sep"]])
+
+print(sep)
+print(celltype)
+
+stopifnot(sep == celltype)
+ct_curr <- sep
+
+# load object
+dsq_list <- base::readRDS(file = snakemake@input[["dsq_list"]])
+sva_list <- base::readRDS(snakemake@input[["sva_list"]])
+
+# change names to adjust to the wildcard
+names(dsq_list) <- base::gsub(" ", "_", names(dsq_list))
+names(dsq_list) <- base::gsub("/", "_", names(dsq_list))
+names(dsq_list) <- base::gsub("[.]", "", names(dsq_list))
+
+names(sva_list) <- base::gsub(" ", "_", names(sva_list))
+names(sva_list) <- base::gsub("/", "_", names(sva_list))
+names(sva_list) <- base::gsub("[.]", "", names(sva_list))
+print(names(sva_list))
+
+# subset to current cell type
+dsq <- dsq_list[[ct_curr]]
+sva <- sva_list[[ct_curr]][[2]]
+
+if(is.null(ncol(sva$sv))){
+  print("no SVs")
+  knitr::knit_exit()
+}
+```
+
+```{r plotlist}
+
+# prepare data
+colnames(sva$sv) <- base::paste0("sva_", c(1:ncol(sva$sv)))
+
+sv_list <- as.list(colnames(sva$sv))
+
+# function for making plots
+plotlist <-lapply(sv_list, function(sv){
+  
+  ggdf <- base::as.data.frame(colData(dsq))
+  ggdf$SV <- sva$sv[,sv]
+  
+  title_full <- base::paste(ct_curr, sv)
+  
+  plot1 <- ggplot2::ggplot(ggdf, aes(y = SV, x = sample))+
+    ggplot2::geom_point()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::geom_hline(yintercept = 0, color = "dodgerblue3")
+
+  plot2 <- ggplot2::ggplot(ggdf, aes(y = SV, x = batch))+
+    ggplot2::geom_point()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::geom_hline(yintercept = 0, color = "dodgerblue3")
+
+  plot3 <- ggplot2::ggplot(ggdf, aes(y = SV, x = species))+
+    ggplot2::geom_point()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::geom_hline(yintercept = 0, color = "dodgerblue3")
+
+  plot4 <- ggplot2::ggplot(ggdf, aes(y = SV, x = ncells))+
+    ggplot2::geom_point()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::geom_hline(yintercept = 0, color = "dodgerblue3")
+
+  plot5 <- ggplot2::ggplot(ggdf, aes(y = SV, x = Antibody_combination))+
+    ggplot2::geom_point()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::geom_hline(yintercept = 0, color = "dodgerblue3")
+
+  plot6 <- ggplot2::ggplot(ggdf, aes(y = SV, x = Batch_sequencing))+
+    ggplot2::geom_point()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::ggtitle(title_full)+
+    ggplot2::geom_hline(yintercept = 0, color = "dodgerblue3")
+
+  return(list(plot1, plot2, plot3, plot4, plot5, plot6))
+})
+```
+
+```{r print_plots}
+print(plotlist)
+```
+
+```{r session_info}
+utils::sessionInfo()
+```

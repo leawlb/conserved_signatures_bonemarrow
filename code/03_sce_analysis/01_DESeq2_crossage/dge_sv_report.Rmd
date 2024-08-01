@@ -23,20 +23,25 @@ library(DESeq2, quietly = TRUE)
 ```
 
 ```{r source, message = FALSE}
-source(file =  snakemake@params[["plotting"]])
+#source(file =  snakemake@params[["plotting"]])
 ```
 
 ```{r manual, eval = FALSE, include = FALSE}
-dsq_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/05_desq/deseq_hsc-05")
 
-sva_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/06_dsqc/sva_hsc")
+dsq_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/01_DESeq2_crossage/01_desq/deseq_mmus_str")
+
+sva_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/01_DESeq2_crossage/02_dsqc/sva_mmus_str")
+
+rlog_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/01_DESeq2_crossage/02_dsqc/rlog_mmus_str")
+
+sv_path <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/sources_variation.txt")
+
+
 ```
 
 ```{r load_objects, message = FALSE}
 
-species_curr <- nakemake@wildcards[["species"]]
-
-sce <- base::readRDS(snakemake@input[["sce_input"]])
+species_curr <- snakemake@wildcards[["species"]]
 
 dsq_list <- base::readRDS(snakemake@input[["dsq_list"]])
 sva_list <- base::readRDS(snakemake@input[["sva_list"]])
@@ -49,15 +54,21 @@ print(names(sva_list))
 return_list <- list()
 
 for(ct in names(sva_list)){
-  if(sva_list[[ct]][[2]]$sv[1] != 0){
+  if(!is.null(ncol(sva_list[[ct]][[2]]$sv[1]))){
     print(sva_list[[ct]][[2]]$n.sv)
     return_list[[ct]][["sva"]] <- sva_list[[ct]][[2]]$sv
+    
+    colData(dsq_list[[ct]])$cell_types <- base::rep(ct, ncol(dsq_list[[ct]]))
     return_list[[ct]][["dsq"]] <- dsq_list[[ct]]
   }
 }
 names(return_list)
-names(return_list[[1]])
-print(return_list[[1]]$sva)
+if(length(return_list) == 0){
+  knitr::knit_exit()
+}
+for(i in 1:length(return_list)){
+  print(return_list[[i]]$sva)
+}
 ```
 
 ```{r plot_function}
@@ -72,13 +83,15 @@ make_plots <- function(return){
   colnames(sva) <- base::paste0("sva_", c(1:ncol(sva)))
   sv_list <- as.list(colnames(sva))
   
+  ct <- colData(dsq)$cell_types[1]
+  
   # in case there is more than one SV
   plotlist <- lapply(sv_list, function(sv){
     
     ggdf <- base::as.data.frame(colData(dsq))
     ggdf$SV <- sva[,sv]
     
-    title_full <- base::paste(species_curr, sv)
+    title_full <- base::paste(species_curr, sv, ct)
     
     plot1 <- ggplot2::ggplot(ggdf, aes(y = SV, x = sample))+
       ggplot2::geom_point()+

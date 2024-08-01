@@ -8,7 +8,7 @@ library(DESeq2)
 
 #-------------------------------------------------------------------------------
 
-tdsq_list <- readRDS(file = snakemake@input[["deseq_input"]])
+tdsq_list <- base::readRDS(file = snakemake@input[["deseq_input"]])
 
 fraction_curr <- snakemake@wildcards[["fraction"]]
 species <- snakemake@params[["species"]]
@@ -31,6 +31,6 @@ names(res_list[[1]])
 
 #-------------------------------------------------------------------------------
 
-saveRDS(res_list, file = snakemake@output[["res_list"]])
+base::saveRDS(res_list, file = snakemake@output[["res_list"]])
 
-sessionInfo()
+utils::sessionInfo()

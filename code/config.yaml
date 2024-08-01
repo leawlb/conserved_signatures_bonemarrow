@@ -21,7 +21,9 @@ metadata_paths:
   gene_list_dotplot: "/data/metadata/scRNAseq/02_sce_anno/gene_list_dotplot.txt"
   gene_list_dotplot_short: "/data/metadata/scRNAseq/02_sce_anno/gene_list_dotplot_short.txt"
   annotation_clusters: "/data/metadata/scRNAseq/02_sce_anno/annotation_clusters.txt"
-  sources_variation: "/data/metadata/scRNAseq/02_sce_anno/sources_variation.txt"
+  sources_variation: 
+    annotation_species: "/data/metadata/scRNAseq/02_sce_anno/sources_variation.txt"
+    analysis_species: "/data/metadata/scRNAseq/03_sce_analysis/sources_variation_species.txt"
   annotation_subclusters: "/data/metadata/scRNAseq/02_sce_anno/annotation_subclusters.txt"
   annotation_final: "/data/metadata/scRNAseq/02_sce_anno/annotation_final.txt"
   ensembl_hum: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/ensembl_hum"

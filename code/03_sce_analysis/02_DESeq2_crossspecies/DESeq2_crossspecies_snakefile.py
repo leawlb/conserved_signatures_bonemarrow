@@ -11,6 +11,9 @@ OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/02_DESeq2_cross
 COLORS = config["base"] + config["metadata_paths"]["colors"]
 
 CELL_TYPES_EXCLUDE = config["values"]["03_sce_analysis"]["cell_types_exclude"]
+print(CELL_TYPES_EXCLUDE)
+SV_PATH = config["base"] + config["metadata_paths"]["sources_variation"]["analysis_species"]
+print(SV_PATH)
 
 METADATA = pd.read_csv(config["base"] + config["metadata_paths"]["table"])
 def get_list(metadata, column):
@@ -59,13 +62,13 @@ for f in fractions:
   targets = targets + [OUTPUT_DAT + "/01_desq/deseq_" + f]
   targets = targets + [OUTPUT_DAT + "/02_dsqc/rlog_" + f]
   targets = targets + [OUTPUT_DAT + "/02_dsqc/sva_" + f]
-  # targets = targets + [OUTPUT_DAT + "/03_tdsq/deseq_" + f]
-  # targets = targets + [OUTPUT_DAT + "/04_dres/res_" + f + "_celltype"]
-  # targets = targets + [OUTPUT_DAT + "/04_dres/res_" + f + "_celltype_dfs"]
-  # targets = targets + [OUTPUT_DAT + "/05_nres/" + tf + "/res_" + f + "_species"]
-  # targets = targets + [OUTPUT_DAT + "/05_nres/" + tf + "/res_" + f + "_celltype"]
-  # targets = targets + [OUTPUT_DAT + "/05_nres/" + tf + "/res_" + f + "_celltype_dfs"]
-  # targets = targets + [OUTPUT_DAT + "/05_nres/" + tf + "/res_" + f + "_celltype_shared"]
+  targets = targets + [OUTPUT_DAT + "/04_tdsq/deseq_" + f]
+  # targets = targets + [OUTPUT_DAT + "/05_dres/res_" + f + "_celltype"]
+  # targets = targets + [OUTPUT_DAT + "/05_dres/res_" + f + "_celltype_dfs"]
+  # targets = targets + [OUTPUT_DAT + "/06_nres/" + tf + "/res_" + f + "_species"]
+  # targets = targets + [OUTPUT_DAT + "/06_nres/" + tf + "/res_" + f + "_celltype"]
+  # targets = targets + [OUTPUT_DAT + "/06_nres/" + tf + "/res_" + f + "_celltype_dfs"]
+  # targets = targets + [OUTPUT_DAT + "/06_nres/" + tf + "/res_" + f + "_celltype_shared"]
 
 for c in celltypes_hsc:
   targets = targets + [OUTPUT_DAT + "/03_sepd/hsc_" + c + "-sep"]
@@ -138,7 +141,7 @@ rule separate_sce:
 #-------------------------------------------------------------------------------
 
 # check hidden sources of variations and decide which ones to add to design
-rule ndge_sv_report:
+rule celltype_sva_report:
     input: 
         sep = OUTPUT_DAT + "/03_sepd/{fraction}_{celltype}-sep",
         dsq_list = rules.aggregate_convert.output,
@@ -162,7 +165,7 @@ rule celltype_bulk_report:
         colors_path = COLORS,
         plotting = "../../source/plotting.R",
         colors = "../../source/colors.R",
-        ct_exlude = CELL_TYPES_EXCLUDE
+        cts_exclude = CELL_TYPES_EXCLUDE
     script:
         "bulk_quality_report.Rmd"
 
@@ -183,11 +186,12 @@ rule celltype_bulk_report:
 rule preprocessing_deseq:
     input:
         deseq_input = rules.aggregate_convert.output,
-        sva = rules.qc_deseq.output.sva
-    output:
-        deseq_output = OUTPUT_DAT + "/03_tdsq/deseq_{fraction}"
+        sva = rules.qc_deseq.output.sva,
+        sv_path = SV_PATH
+   output:
+        deseq_output = OUTPUT_DAT + "/04_tdsq/deseq_{fraction}"
     script:
-        "scripts/03_deseq_species.R"    
+        "scripts/04_deseq_species.R"    
 
 """
 # exporting DGE results

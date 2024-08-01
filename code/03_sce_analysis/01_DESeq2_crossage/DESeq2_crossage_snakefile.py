@@ -146,13 +146,10 @@ rule age_bulk_report:
         
 rule sva_report:
     input: 
-        sce_input = OUTPUT_DAT + "/04_annc/03_sce/sce_{fraction}-04",
-        dsq_list = rules.aggregate_convert.output,
+        dsq_list = OUTPUT_DAT + "/01_desq/deseq_{species}_{fraction}",
         sva_list = rules.qc_deseq.output.sva
     output:
         OUTPUT_REP + "/sva/sva_report_{species}_{fraction}.html"
-    params:
-        plotting = "../../source/plotting.R"
     script:
         "dge_sv_report.Rmd"
 

@@ -5,6 +5,8 @@ date: '2023-11-07'
 output: html_document
 ---
 
+Report on nDGE results at cell type level (annotated).
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -28,7 +30,7 @@ source(file = snakemake@params[["plotting"]])
 fc_cutoff <- snakemake@params[["fc_cutoff"]]
 padj_cutoff <- snakemake@params[["padj_cutoff"]]
 
-sce <- readRDS(snakemake@input[["sce_input"]])
+sce <- base::readRDS(snakemake@input[["sce_input"]])
 celltype <- snakemake@wildcards[["celltype"]]
 
 # alter celltypes to fit the wildcards for subsetting
@@ -37,55 +39,46 @@ sce$celltypes_alt <- gsub(" ", "_", sce$celltypes_alt)
 sce$celltypes_alt <- gsub("/", "_", sce$celltypes_alt)
 sce$celltypes_alt <- gsub("[.]", "", sce$celltypes_alt)
 
-sce_sep <- sce[,which(sce$celltypes_alt == celltype)]
-ct_curr <- sce_sep$celltypes[1]
-
-celltype_res_list <- readRDS(snakemake@input[["celltype_res"]])
-celltype_res_list_orig <- readRDS(snakemake@input[["celltype_res_orig"]])
-shared_gene_list <- readRDS(snakemake@input[["celltype_res_list_shared"]])
-shared_gene_list_orig <- readRDS(snakemake@input[["celltype_res_list_shared_orig"]])
-
-fraction_curr <- snakemake@wildcards[["fraction"]]
-
-print(sce_sep)
-print(levels(sce_sep$celltypes_copy))
-print(fraction_curr)
-
+sce_ct <- sce[,which(sce$celltypes_alt == celltype)]
+ct_curr <- sce_ct$celltypes[1]
+print(ct_curr)
 ```
 
-```{r}
+```{r load_subset}
+celltype_res_list <- base::readRDS(snakemake@input[["celltype_res"]])
+celltype_res_list_orig <- base::readRDS(snakemake@input[["celltype_res_orig"]])
+shared_gene_list <- base::readRDS(snakemake@input[["celltype_res_list_shared"]])
+shared_gene_list_orig <- base::readRDS(snakemake@input[["celltype_res_list_shared_orig"]])
+
 # subset objects to required cluster and fractions
 celltype_res_list <- celltype_res_list[[ct_curr]]
 shared_gene_list_ct <- shared_gene_list[[ct_curr]]
-```
-
-```{r}
-
-subclustered <- c("Osteo", "Fibro/Chondro", "HSCs", "Early MPPs", "Monocyte progs.", "Neutrophil progs." )
-
-if(!ct_curr %in% subclustered){
-  anno_curr <- unfactor(colData(sce_sep)$annotation_cluster[1])
-  celltype_res_list_orig <- celltype_res_list_orig[[anno_curr]]
-  shared_gene_list_ct_orig <- shared_gene_list_orig[[anno_curr]]
-}  
 ```
 
 # Show Pval distributions
 
 ```{r}
 see_pvals <- function(celltype_res, comparison){
-  plot1 <- EnhancedVolcano(celltype_res, lab = "",
-                           x = 'log2FoldChange',  y = 'pvalue', 
-                           col = c("grey70", "grey70", "dodgerblue3", "grey70"),
-                           subtitle = "", colAlpha = 0.9, pointSize = 0.5,
-                           pCutoff = padj_cutoff, FCcutoff = fc_cutoff)+
-    theme_classic()+
-    ggtitle(paste(comparison))+
-    theme(legend.position="none", plot.subtitle = element_blank())
+  plot1 <- EnhancedVolcano::EnhancedVolcano(celltype_res, 
+                                            lab = "",
+                                            x = 'log2FoldChange',
+                                            y = 'pvalue', 
+                                            col = c("grey70",
+                                                    "grey70", 
+                                                    "dodgerblue3",
+                                                    "grey70"),
+                                            subtitle = "",
+                                            colAlpha = 0.9, 
+                                            pointSize = 0.5,
+                                            pCutoff = padj_cutoff,
+                                            FCcutoff = fc_cutoff)+
+    ggplot2::theme_classic()+
+    ggplot2::ggtitle(paste(comparison))+
+    ggplot2::theme(legend.position="none", 
+                   plot.subtitle = element_blank())
 
   print(plot1)
 }
-
 ```
 
 ## MMUS MCAS
@@ -153,5 +146,5 @@ print(shared_gene_list_ct$at_least_three)
 ```
 
 ```{r}
-sessionInfo()
+utils::sessionInfo()
 ```

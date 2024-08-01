@@ -55,21 +55,6 @@ print(tf)
 
 targets = []
 
-for c in celltypes_hsc:
-  targets = targets + [OUTPUT_DAT + "/03_sepd/hsc_" + c + "-sep"]
-  targets = targets + [OUTPUT_REP + "/sva/sva_report_hsc_" + c + ".html"] 
-#   targets = targets + [OUTPUT_REP + "/bulk/bulk_quality_report_hsc_" + c + ".html"] 
-#   targets = targets + [OUTPUT_REP + "/dge/dge_report_hsc_" + c + ".html"] 
-#   targets = targets + [OUTPUT_REP + "/ndge/ndge_report_hsc_" + c + ".html"] 
-# 
-for c in celltypes_str:
-  targets = targets + [OUTPUT_DAT + "/03_sepd/str_" + c + "-sep"]
-  targets = targets + [OUTPUT_REP + "/sva/sva_report_str_" + c + ".html"] 
-#   targets = targets + [OUTPUT_REP + "/bulk/bulk_quality_report_str_" + c + ".html"] 
-#   targets = targets + [OUTPUT_REP + "/dge/dge_report_str_" + c + ".html"] 
-#   targets = targets + [OUTPUT_REP + "/ndge/ndge_report_str_" + c + ".html"] 
-
-
 for f in fractions:
   targets = targets + [OUTPUT_DAT + "/01_desq/deseq_" + f]
   targets = targets + [OUTPUT_DAT + "/02_dsqc/rlog_" + f]
@@ -81,6 +66,20 @@ for f in fractions:
   # targets = targets + [OUTPUT_DAT + "/05_nres/" + tf + "/res_" + f + "_celltype"]
   # targets = targets + [OUTPUT_DAT + "/05_nres/" + tf + "/res_" + f + "_celltype_dfs"]
   # targets = targets + [OUTPUT_DAT + "/05_nres/" + tf + "/res_" + f + "_celltype_shared"]
+
+for c in celltypes_hsc:
+  targets = targets + [OUTPUT_DAT + "/03_sepd/hsc_" + c + "-sep"]
+  targets = targets + [OUTPUT_REP + "/sva/sva_report_hsc_" + c + ".html"] 
+  targets = targets + [OUTPUT_REP + "/bulk/bulk_quality_report_hsc_" + c + ".html"] 
+#   targets = targets + [OUTPUT_REP + "/dge/dge_report_hsc_" + c + ".html"] 
+#   targets = targets + [OUTPUT_REP + "/ndge/ndge_report_hsc_" + c + ".html"] 
+# 
+for c in celltypes_str:
+  targets = targets + [OUTPUT_DAT + "/03_sepd/str_" + c + "-sep"]
+  targets = targets + [OUTPUT_REP + "/sva/sva_report_str_" + c + ".html"] 
+  targets = targets + [OUTPUT_REP + "/bulk/bulk_quality_report_str_" + c + ".html"] 
+#   targets = targets + [OUTPUT_REP + "/dge/dge_report_str_" + c + ".html"] 
+#   targets = targets + [OUTPUT_REP + "/ndge/ndge_report_str_" + c + ".html"] 
 
 #-------------------------------------------------------------------------------
 
@@ -95,7 +94,7 @@ rule all:
 
 #-------------------------------------------------------------------------------
 """
-# DESeq pre-processing and QC 
+# DESeq pre-processing and QC + Reports
 """
 
 """
@@ -125,12 +124,7 @@ rule qc_deseq:
     script:
         "scripts/02_prep_qc_deseq.R"  
         
-#-------------------------------------------------------------------------------
-"""
-Dummy rule to allow easy use of cell types as wildcard for reports
-Unfortunately this takes quite long
-"""
-
+# dummy rule to allow easy use of cell types as wildcard for reports
 output = expand(OUTPUT_DAT + "/03_sepd/hsc_{celltype}-sep", celltype = celltypes_hsc)
 output = output + expand(OUTPUT_DAT + "/03_sepd/str_{celltype}-sep", celltype = celltypes_str)
 rule separate_sce:
@@ -142,10 +136,8 @@ rule separate_sce:
         "scripts/03_separate_dummy.R"
         
 #-------------------------------------------------------------------------------
-"""
-check hidden sources of variations and decide which ones to add to DESeq2
-design
-"""
+
+# check hidden sources of variations and decide which ones to add to design
 rule ndge_sv_report:
     input: 
         sep = OUTPUT_DAT + "/03_sepd/{fraction}_{celltype}-sep",
@@ -157,10 +149,28 @@ rule ndge_sv_report:
         plotting = "../../source/plotting.R"
     script:
         "sva_report.Rmd"
-
+        
+# check quality of the pseudo-bulks at cell type level (annotated)       
+rule celltype_bulk_report:
+    input: 
+        sep = OUTPUT_DAT + "/03_sepd/{fraction}_{celltype}-sep",
+        sce_input = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10",
+        rlog = rules.qc_deseq.output.rlog
+    output:
+        OUTPUT_REP + "/bulk/bulk_quality_report_{fraction}_{celltype}.html"
+    params:
+        colors_path = COLORS,
+        plotting = "../../source/plotting.R",
+        colors = "../../source/colors.R",
+        ct_exlude = CELL_TYPES_EXCLUDE
+    script:
+        "bulk_quality_report.Rmd"
 
 #-------------------------------------------------------------------------------
 
+
+
+#-------------------------------------------------------------------------------
 """
 # Cross-species analysis
 """
@@ -226,19 +236,7 @@ rule export_results_ndge:
 # This part of the script was adjusted from 02_sce_anno/02_nDGE/
 """
 
-rule celltype_bulk_report:
-    input: 
-        sep = OUTPUT_DAT + "/06_sepd/{fraction}_{celltype}-sep",
-        sce_input = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10",
-        rlog = rules.qc_deseq.output.rlog
-    output:
-        OUTPUT_REP + "/bulk/bulk_quality_report_{fraction}_{celltype}.html"
-    params:
-        colors_path = COLORS,
-        plotting = "../../source/plotting.R",
-        colors = "../../source/colors.R"
-    script:
-        "bulk_quality_report.Rmd"
+
  
 rule celltype_dge_report:
     input: 

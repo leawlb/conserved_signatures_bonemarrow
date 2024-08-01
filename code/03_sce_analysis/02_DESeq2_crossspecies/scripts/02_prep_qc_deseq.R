@@ -50,7 +50,7 @@ sva_list <- lapply(tdsq_list, function(dsq){
   data <- data[which(BiocGenerics::rowMeans(data) > 1), ] # like tutorial
   
   # full model matrix
-  mod <- stats::model.matrix(~ batch + age + species, colData(dsq))
+  mod <- stats::model.matrix(~ batch + ncells + age + species, colData(dsq))
   # null model matrix
   mod0 <- stats::model.matrix(~ 1, colData(dsq))
   

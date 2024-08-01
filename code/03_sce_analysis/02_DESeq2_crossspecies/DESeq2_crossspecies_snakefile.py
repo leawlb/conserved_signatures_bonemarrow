@@ -57,12 +57,14 @@ targets = []
 
 for c in celltypes_hsc:
   targets = targets + [OUTPUT_DAT + "/03_sepd/hsc_" + c + "-sep"]
+  targets = targets + [OUTPUT_REP + "/sva/sva_report_hsc_" + c + ".html"] 
 #   targets = targets + [OUTPUT_REP + "/bulk/bulk_quality_report_hsc_" + c + ".html"] 
 #   targets = targets + [OUTPUT_REP + "/dge/dge_report_hsc_" + c + ".html"] 
 #   targets = targets + [OUTPUT_REP + "/ndge/ndge_report_hsc_" + c + ".html"] 
 # 
 for c in celltypes_str:
   targets = targets + [OUTPUT_DAT + "/03_sepd/str_" + c + "-sep"]
+  targets = targets + [OUTPUT_REP + "/sva/sva_report_str_" + c + ".html"] 
 #   targets = targets + [OUTPUT_REP + "/bulk/bulk_quality_report_str_" + c + ".html"] 
 #   targets = targets + [OUTPUT_REP + "/dge/dge_report_str_" + c + ".html"] 
 #   targets = targets + [OUTPUT_REP + "/ndge/ndge_report_str_" + c + ".html"] 
@@ -147,15 +149,14 @@ design
 rule ndge_sv_report:
     input: 
         sep = OUTPUT_DAT + "/03_sepd/{fraction}_{celltype}-sep",
-        sce_input = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10",
         dsq_list = rules.aggregate_convert.output,
         sva_list = rules.qc_deseq.output.sva
     output:
-        OUTPUT_REP + "/ndge/ndge_report_sv_{celltype}_{fraction}.html"
+        OUTPUT_REP + "/sva/sva_report_{fraction}_{celltype}.html"
     params:
-        #plotting = "../../source/plotting.R"
+        plotting = "../../source/plotting.R"
     script:
-        "ndge_sv_report.Rmd"
+        "sva_report.Rmd"
 
 
 #-------------------------------------------------------------------------------

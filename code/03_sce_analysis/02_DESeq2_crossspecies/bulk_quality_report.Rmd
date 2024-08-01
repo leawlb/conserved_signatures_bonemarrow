@@ -33,7 +33,8 @@ sce <- base::readRDS(snakemake@input[["sce_input"]])
 celltype <- snakemake@wildcards[["celltype"]]
 
 # these are cell types that are so small that usually they don't work
-ct_remove <- snakemake@params[["ct_remove"]]
+cts_exclude <- snakemake@params[["cts_exclude"]]
+print(cts_exclude)
 
 # alter celltypes to fit the wildcards for subsetting
 sce$celltypes_alt <- sce$celltypes
@@ -50,8 +51,8 @@ rld <- rlog_list[[ct_curr]]
 print(rld)
 print(ct_curr)
 
-if(ct_curr %in% ct_remove){
-  print("removed cell type")
+if(ct_curr %in% cts_exclude){
+  print("excluded cell type")
   knitr::knit_exit()
 }
 ```

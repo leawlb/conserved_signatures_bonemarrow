@@ -65,10 +65,9 @@ for f in fractions:
   targets = targets + [OUTPUT_DAT + "/04_tdsq/deseq_" + f]
   # targets = targets + [OUTPUT_DAT + "/05_dres/res_" + f + "_celltype"]
   # targets = targets + [OUTPUT_DAT + "/05_dres/res_" + f + "_celltype_dfs"]
-  # targets = targets + [OUTPUT_DAT + "/06_nres/" + tf + "/res_" + f + "_species"]
-  # targets = targets + [OUTPUT_DAT + "/06_nres/" + tf + "/res_" + f + "_celltype"]
-  # targets = targets + [OUTPUT_DAT + "/06_nres/" + tf + "/res_" + f + "_celltype_dfs"]
-  # targets = targets + [OUTPUT_DAT + "/06_nres/" + tf + "/res_" + f + "_celltype_shared"]
+  targets = targets + [OUTPUT_DAT + "/06_nres/" + tf + "/res_" + f + "_celltype"]
+  targets = targets + [OUTPUT_DAT + "/06_nres/" + tf + "/res_" + f + "_celltype_dfs"]
+  targets = targets + [OUTPUT_DAT + "/06_nres/" + tf + "/shared_genes_" + f + "_celltypes"]
 
 for c in celltypes_hsc:
   targets = targets + [OUTPUT_DAT + "/03_sepd/hsc_" + c + "-sep"]
@@ -188,7 +187,7 @@ rule preprocessing_deseq:
         deseq_input = rules.aggregate_convert.output,
         sva = rules.qc_deseq.output.sva,
         sv_path = SV_PATH
-   output:
+    output:
         deseq_output = OUTPUT_DAT + "/04_tdsq/deseq_{fraction}"
     script:
         "scripts/04_deseq_species.R"    
@@ -224,15 +223,15 @@ rule export_results_ndge:
         fc_cutoff = FC_CUTOFF,
         species = species
     output:
-        species_res = OUTPUT_DAT + "/05_nres/" + tf + "/res_{fraction}_species",
-        celltype_res = OUTPUT_DAT + "/05_nres/" + tf + "/res_{fraction}_celltype",
-        celltype_res_dfs = OUTPUT_DAT + "/05_nres/" + tf + "/res_{fraction}_celltype_dfs",
-        celltype_res_list_shared = OUTPUT_DAT + "/05_nres/" + tf + "/res_{fraction}_celltype_shared"
+        celltype_res = OUTPUT_DAT + "/06_nres/" + tf + "/res_{fraction}_celltype",
+        celltype_resdf_list = OUTPUT_DAT + "/06_nres/" + tf + "/res_{fraction}_celltype_dfs",
+        celltype_shared_genes_list = OUTPUT_DAT + "/06_nres/" + tf + "/shared_genes_{fraction}_celltypes"
+        #celltype_res_dfs = OUTPUT_DAT + "/05_nres/" + tf + "/res_{fraction}_celltype_dfs",
+        #celltype_res_list_shared = OUTPUT_DAT + "/05_nres/" + tf + "/res_{fraction}_celltype_shared"
     script:
-        "scripts/05_export_ndge_results.R"    
+        "scripts/06_export_ndge_results.R"    
 
 
-        
 #-------------------------------------------------------------------------------
 
 """   
@@ -258,14 +257,13 @@ rule celltype_dge_report:
     script:
         "dge_celltype_report.Rmd"
 
+"""
 rule celltype_ndge_report:
     input: 
         sep = OUTPUT_DAT + "/06_sepd/{fraction}_{celltype}-sep",
         sce_input = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10",
-        celltype_res_list_shared = rules.export_results_ndge.output.celltype_res_list_shared,
-        celltype_res_list_shared_orig = OUTPUT_BASE + "/sce_objects/02_sce_anno/08_nres/PC_0.05_FC_1.5/res_{fraction}_cluster_shared",
         celltype_res = rules.export_results_ndge.output.celltype_res,
-        celltype_res_orig = OUTPUT_BASE + "/sce_objects/02_sce_anno/08_nres/PC_0.05_FC_1.5/res_{fraction}_cluster",
+        celltype_shared_genes_list = rules.export_results_ndge.output.celltype_shared_genes_list,
     output:
         OUTPUT_REP + "/ndge/ndge_report_{fraction}_{celltype}.html"
     params:
@@ -276,3 +274,4 @@ rule celltype_ndge_report:
         colors = "../../source/colors.R"
     script:
         "ndge_celltype_report.Rmd"
+"""

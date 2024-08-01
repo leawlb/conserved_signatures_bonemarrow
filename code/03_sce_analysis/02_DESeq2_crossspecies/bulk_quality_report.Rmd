@@ -156,6 +156,7 @@ pcaExplorer::hi_loadings(rld_pca, topN = 20, whichpc = 2)
 ```{r make_dist_plot}
 sampleDists <- stats::dist(t(SummarizedExperiment::assay(rld)))
 sampleDistMatrix <- base::as.matrix(sampleDists)
+
 rownames(sampleDistMatrix) <- rld$species
 colnames(sampleDistMatrix) <- NULL
 

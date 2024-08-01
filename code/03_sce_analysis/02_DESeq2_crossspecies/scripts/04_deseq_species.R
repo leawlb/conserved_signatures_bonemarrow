@@ -11,6 +11,8 @@ set.seed(37)
 dsq_list <- base::readRDS(file = snakemake@input[["deseq_input"]])
 sva_list <- base::readRDS(file = snakemake@input[["sva"]])
 
+fraction_curr <- snakemake@wildcards[["fraction"]]
+
 sv_path <- snakemake@input[["sv_path"]]
 
 # info on which SVs to remove from data = put in design
@@ -22,8 +24,10 @@ sv_table <- utils::read.csv(
   stringsAsFactors=FALSE, 
   as.is=TRUE, 
   colClasses = "character")
+sv_table <- sv_table[sv_table$fraction == fraction_curr,]
 
 print(sv_table)
+stopifnot(sv_table$cell_type %in% names(sva_list))
 
 #-------------------------------------------------------------------------------
 # filtering out almost empty rows
@@ -81,8 +85,6 @@ for(ct in names(dsq_list)){
     colData(dsq_list[[ct]]) <- BiocGenerics::cbind(colData(dsq_list[[ct]]), 
                                                    sv_df_temp)
     
-    print(head(colData(dsq_list[[ct]])))
-    
     # now, sv_df only contains SVs that should be added to the design
     # this means these SVs will be "removed" from the data
     if(ncol(sv_df_temp) == 1){
@@ -98,37 +100,6 @@ for(ct in names(dsq_list)){
     print(DESeq2::design(dsq_list[[ct]]))
   }
 }
-
-# for(i in 1:length(dsq_list)){
-# 
-#   sva <- sva_list[[i]][[2]]
-#   print(sva$sv)
-# 
-#   # sometimes, no SV is found, sva$sv is then 0
-#   if(class(sva$sv)[1] == "numeric"){
-#     print("No hidden variation: no design change required")
-#   }else if(ncol(sva$sv) >= 1){
-#     
-#     for(j in 1:ncol(sva$sv)){
-#       colData(dsq_list[[i]])[,ncol(colData(dsq_list[[i]]))+1] <- sva$sv[,j]
-#       colnames(colData(dsq_list[[i]]))[ncol(colData(dsq_list[[i]]))] <- paste0("SV", j)
-#     }
-#   
-#     if(ncol(sva$sv) == 1){
-#       design(dsq_list[[i]]) <- ~ SV1 + batch + age + species
-#     }else if(ncol(sva$sv) == 2){
-#       design(dsq_list[[i]]) <- ~ SV1 + SV2 + batch + age + species
-#     }else if(ncol(sva$sv) == 3){
-#       design(dsq_list[[i]]) <- ~ SV1 + SV2 + SV3 + batch + age + species
-#     }else if(ncol(sva$sv) == 4){
-#       design(dsq_list[[i]]) <- ~ SV1 + SV2 + SV3 + SV4 + batch + age + species
-#     }else if(ncol(sva$sv) >= 5){
-#       stop("number of SVs larger than anticipated")
-#     }
-#     print(i)
-#     print(design(dsq_list[[i]]))
-#   }
-# }
 
 # transform/calculate DGE (normalisation and statistics)
 tdsq_list <- lapply(dsq_list, DESeq2::DESeq)

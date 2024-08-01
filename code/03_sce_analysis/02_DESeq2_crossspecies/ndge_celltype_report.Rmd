@@ -46,18 +46,18 @@ print(ct_curr)
 
 ```{r load_subset}
 celltype_res_list <- base::readRDS(snakemake@input[["celltype_res"]])
-celltype_res_list_orig <- base::readRDS(snakemake@input[["celltype_res_orig"]])
+#celltype_res_list_orig <- base::readRDS(snakemake@input[["celltype_res_orig"]])
 shared_gene_list <- base::readRDS(snakemake@input[["celltype_res_list_shared"]])
-shared_gene_list_orig <- base::readRDS(snakemake@input[["celltype_res_list_shared_orig"]])
+#shared_gene_list_orig <- base::readRDS(snakemake@input[["celltype_res_list_shared_orig"]])
 
 # subset objects to required cluster and fractions
-celltype_res_list <- celltype_res_list[[ct_curr]]
-shared_gene_list_ct <- shared_gene_list[[ct_curr]]
+celltype_res_ct <- celltype_res_list[[ct_curr]]
+shared_genes_ct <- shared_gene_list[[ct_curr]]
 ```
 
 # Show Pval distributions
 
-```{r}
+```{r pval_function}
 see_pvals <- function(celltype_res, comparison){
   plot1 <- EnhancedVolcano::EnhancedVolcano(celltype_res, 
                                             lab = "",
@@ -73,7 +73,7 @@ see_pvals <- function(celltype_res, comparison){
                                             pCutoff = padj_cutoff,
                                             FCcutoff = fc_cutoff)+
     ggplot2::theme_classic()+
-    ggplot2::ggtitle(paste(comparison))+
+    ggplot2::ggtitle(base::paste(comparison))+
     ggplot2::theme(legend.position="none", 
                    plot.subtitle = element_blank())
 
@@ -83,68 +83,54 @@ see_pvals <- function(celltype_res, comparison){
 
 ## MMUS MCAS
 
-```{r}
-print(celltype_res_list[["mmus-mcas"]])
-res_df_comb_mmus_mcas <- celltype_res_list[["mmus-mcas"]]
+```{r mmus_mcas}
+print(celltype_res_ct[["mmus-mcas"]])
+res_df_comb_mmus_mcas <- celltype_res_ct[["mmus-mcas"]]
 see_pvals(celltype_res = res_df_comb_mmus_mcas, comparison = "mmus-mcas")
 ```
 
 ## MMUS MSPR
 
-```{r}
-res_df_comb_mmus_mspr <- celltype_res_list[["mmus-mspr"]]
+```{r mmus_mspr}
+res_df_comb_mmus_mspr <- celltype_res_ct[["mmus-mspr"]]
 see_pvals(celltype_res = res_df_comb_mmus_mspr, comparison = "mmus-mspr")
 ```
 
 ## MMUS MCAR
 
-```{r}
-res_df_comb_mmus_mcar <- celltype_res_list[["mmus-mcar"]]
+```{r mmus_mcar}
+res_df_comb_mmus_mcar <- celltype_res_ct[["mmus-mcar"]]
 see_pvals(celltype_res = res_df_comb_mmus_mcar, comparison = "mmus-mcar")
 ```
 
 ## MCAS MSPR
 
-```{r}
-res_df_comb_mcas_mspr <- celltype_res_list[["mcas-mspr"]]
+```{r mcas_mspr}
+res_df_comb_mcas_mspr <- celltype_res_ct[["mcas-mspr"]]
 see_pvals(celltype_res = res_df_comb_mcas_mspr, comparison = "mcas-mspr")
 ```
 
 ## MCAS MCAR
 
-```{r}
-res_df_comb_mcas_mcar <- celltype_res_list[["mcas-mcar"]]
+```{r mcas_mcar}
+res_df_comb_mcas_mcar <- celltype_res_ct[["mcas-mcar"]]
 see_pvals(celltype_res = res_df_comb_mcas_mcar, comparison = "mcas-mcar")
 ```
 
 ## MSPR MCAR
 
-```{r}
-res_df_comb_mspr_mcar <- celltype_res_list[["mspr-mcar"]]
+```{r mspr_mcar}
+res_df_comb_mspr_mcar <- celltype_res_ct[["mspr-mcar"]]
 see_pvals(celltype_res = res_df_comb_mspr_mcar, comparison = "mspr-mcar")
 ```
 
 # Print lists
 
-If possible, compare if nDGE results are the same for clusters/cell types
-which have not been subclustered.
-
-```{r}
-if(!ct_curr %in% subclustered){
-  print(identical(celltype_res_list, celltype_res_list))
-  print(identical(shared_gene_list_ct$all, shared_gene_list_ct$all))
-  print(identical(shared_gene_list_ct$at_least_three,
-                  shared_gene_list_ct$at_least_three))
-}
-```
-
-
-```{r}
+```{r print_shared_genes}
 print(ct_curr)
-print(shared_gene_list_ct$all)
-print(shared_gene_list_ct$at_least_three)
+print(shared_genes_ct)
 ```
 
-```{r}
+```{r sessioninfo}
 utils::sessionInfo()
 ```

@@ -4,14 +4,14 @@ import pandas as pd
 
 #-------------------------------------------------------------------------------
 
-# paths from config
 OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/03_sce_analysis/02_DESeq2_crossspecies"
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/02_DESeq2_crossspecies"
 
 COLORS = config["base"] + config["metadata_paths"]["colors"]
 
-# objects from config
+CELL_TYPES_EXCLUDE = config["values"]["03_sce_analysis"]["cell_types_exclude"]
+
 METADATA = pd.read_csv(config["base"] + config["metadata_paths"]["table"])
 def get_list(metadata, column):
   values = METADATA[column]
@@ -27,7 +27,7 @@ print(fractions)
 
 CELLTYPES = pd.read_csv(config["base"] + config["metadata_paths"]["annotation_final"], sep = ";")
 
-# make cell types list from metadata
+# make cell types list from annotation
 values = CELLTYPES.iloc[:,1]
 values = values.drop_duplicates()
 values = values.squeeze()
@@ -39,8 +39,9 @@ converter = lambda x: x.replace('/', '_')
 celltypes = list(map(converter, celltypes))
 converter = lambda x: x.replace('.', '')
 celltypes = list(map(converter, celltypes))
+print(celltypes)
 celltypes_hsc = celltypes[0:12]
-celltypes_str = celltypes[12:20]
+celltypes_str = celltypes[12:22]
 
 print(celltypes_hsc)
 print(celltypes_str)
@@ -52,45 +53,41 @@ print(tf)
 
 #-------------------------------------------------------------------------------
 
-# construct paths for all possible outputs/targets, required for rule all
 targets = []
 
 for c in celltypes_hsc:
-  targets = targets + [OUTPUT_DAT + "/06_sepd/hsc_" + c + "-sep"] 
-  targets = targets + [OUTPUT_REP + "/bulk/bulk_quality_report_hsc_" + c + ".html"] 
-  targets = targets + [OUTPUT_REP + "/dge/dge_report_hsc_" + c + ".html"] 
-  targets = targets + [OUTPUT_REP + "/ndge/ndge_report_hsc_" + c + ".html"] 
-
+  targets = targets + [OUTPUT_DAT + "/03_sepd/hsc_" + c + "-sep"]
+#   targets = targets + [OUTPUT_REP + "/bulk/bulk_quality_report_hsc_" + c + ".html"] 
+#   targets = targets + [OUTPUT_REP + "/dge/dge_report_hsc_" + c + ".html"] 
+#   targets = targets + [OUTPUT_REP + "/ndge/ndge_report_hsc_" + c + ".html"] 
+# 
 for c in celltypes_str:
-  targets = targets + [OUTPUT_DAT + "/06_sepd/str_" + c + "-sep"] 
-  targets = targets + [OUTPUT_REP + "/bulk/bulk_quality_report_str_" + c + ".html"] 
-  targets = targets + [OUTPUT_REP + "/dge/dge_report_str_" + c + ".html"] 
-  targets = targets + [OUTPUT_REP + "/ndge/ndge_report_str_" + c + ".html"] 
+  targets = targets + [OUTPUT_DAT + "/03_sepd/str_" + c + "-sep"]
+#   targets = targets + [OUTPUT_REP + "/bulk/bulk_quality_report_str_" + c + ".html"] 
+#   targets = targets + [OUTPUT_REP + "/dge/dge_report_str_" + c + ".html"] 
+#   targets = targets + [OUTPUT_REP + "/ndge/ndge_report_str_" + c + ".html"] 
 
 
 for f in fractions:
   targets = targets + [OUTPUT_DAT + "/01_desq/deseq_" + f]
   targets = targets + [OUTPUT_DAT + "/02_dsqc/rlog_" + f]
   targets = targets + [OUTPUT_DAT + "/02_dsqc/sva_" + f]
-  targets = targets + [OUTPUT_DAT + "/03_tdsq/deseq_" + f]
-  targets = targets + [OUTPUT_DAT + "/04_dres/res_" + f + "_celltype"]
-  targets = targets + [OUTPUT_DAT + "/04_dres/res_" + f + "_celltype_dfs"]
-  targets = targets + [OUTPUT_DAT + "/05_nres/" + tf + "/res_" + f + "_species"]
-  targets = targets + [OUTPUT_DAT + "/05_nres/" + tf + "/res_" + f + "_celltype"]
-  targets = targets + [OUTPUT_DAT + "/05_nres/" + tf + "/res_" + f + "_celltype_dfs"]
-  targets = targets + [OUTPUT_DAT + "/05_nres/" + tf + "/res_" + f + "_celltype_shared"]
-
-#print(targets)
+  # targets = targets + [OUTPUT_DAT + "/03_tdsq/deseq_" + f]
+  # targets = targets + [OUTPUT_DAT + "/04_dres/res_" + f + "_celltype"]
+  # targets = targets + [OUTPUT_DAT + "/04_dres/res_" + f + "_celltype_dfs"]
+  # targets = targets + [OUTPUT_DAT + "/05_nres/" + tf + "/res_" + f + "_species"]
+  # targets = targets + [OUTPUT_DAT + "/05_nres/" + tf + "/res_" + f + "_celltype"]
+  # targets = targets + [OUTPUT_DAT + "/05_nres/" + tf + "/res_" + f + "_celltype_dfs"]
+  # targets = targets + [OUTPUT_DAT + "/05_nres/" + tf + "/res_" + f + "_celltype_shared"]
 
 #-------------------------------------------------------------------------------
 
-wildcard_constraints: #should not contain ".", see rule cellranger_count
+wildcard_constraints: 
   fraction="[a-z]+"
 
 localrules: all  
 
-# define rules
-rule all: # must contain all possible output paths from all rules
+rule all: 
   input:
       targets
 
@@ -125,6 +122,41 @@ rule qc_deseq:
         sva = OUTPUT_DAT + "/02_dsqc/sva_{fraction}"
     script:
         "scripts/02_prep_qc_deseq.R"  
+        
+#-------------------------------------------------------------------------------
+"""
+Dummy rule to allow easy use of cell types as wildcard for reports
+Unfortunately this takes quite long
+"""
+
+output = expand(OUTPUT_DAT + "/03_sepd/hsc_{celltype}-sep", celltype = celltypes_hsc)
+output = output + expand(OUTPUT_DAT + "/03_sepd/str_{celltype}-sep", celltype = celltypes_str)
+rule separate_sce:
+    input: 
+        sce_input = expand(OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10", fraction = fractions)
+    output:
+        output = output
+    script:
+        "scripts/03_separate_dummy.R"
+        
+#-------------------------------------------------------------------------------
+"""
+check hidden sources of variations and decide which ones to add to DESeq2
+design
+"""
+rule ndge_sv_report:
+    input: 
+        sep = OUTPUT_DAT + "/03_sepd/{fraction}_{celltype}-sep",
+        sce_input = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10",
+        dsq_list = rules.aggregate_convert.output,
+        sva_list = rules.qc_deseq.output.sva
+    output:
+        OUTPUT_REP + "/ndge/ndge_report_sv_{celltype}_{fraction}.html"
+    params:
+        #plotting = "../../source/plotting.R"
+    script:
+        "ndge_sv_report.Rmd"
+
 
 #-------------------------------------------------------------------------------
 
@@ -184,21 +216,7 @@ rule export_results_ndge:
     script:
         "scripts/05_export_ndge_results.R"    
 
-#-------------------------------------------------------------------------------
-"""
-Dummy rule to allow easy use of cell types as wildcard for reports
-Unfortunately this takes quite long
-"""
 
-output = expand(OUTPUT_DAT + "/06_sepd/hsc_{celltype}-sep", celltype = celltypes_hsc)
-output = output + expand(OUTPUT_DAT + "/06_sepd/str_{celltype}-sep", celltype = celltypes_str)
-rule separate_sce:
-    input: 
-        sce_input = expand(OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10", fraction = fractions)
-    output:
-        output = output
-    script:
-        "scripts/06_separate_dummy.R"
         
 #-------------------------------------------------------------------------------
 

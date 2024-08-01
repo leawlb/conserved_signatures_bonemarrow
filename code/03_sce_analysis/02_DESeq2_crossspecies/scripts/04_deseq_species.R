@@ -12,6 +12,7 @@ dsq_list <- base::readRDS(file = snakemake@input[["deseq_input"]])
 sva_list <- base::readRDS(file = snakemake@input[["sva"]])
 
 fraction_curr <- snakemake@wildcards[["fraction"]]
+print(fraction_curr)
 
 sv_path <- snakemake@input[["sv_path"]]
 
@@ -27,6 +28,7 @@ sv_table <- utils::read.csv(
 sv_table <- sv_table[sv_table$fraction == fraction_curr,]
 
 print(sv_table)
+print(names(sva_list))
 stopifnot(sv_table$cell_type %in% names(sva_list))
 
 #-------------------------------------------------------------------------------

@@ -25,6 +25,15 @@ library(EnhancedVolcano)
 source(file = snakemake@params[["plotting"]])
 ```
 
+```{r manual, include = FALSE, eval = FALSE}
+
+shared_gene_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/02_DESeq2_crossspecies/06_nres/PC_0.05_FC_1.5/shared_genes_hsc_celltypes")
+
+
+shared_gene_list$HSCs
+```
+
+
 ```{r load_objects}
 
 fc_cutoff <- snakemake@params[["fc_cutoff"]]
@@ -39,9 +48,16 @@ sce$celltypes_alt <- gsub(" ", "_", sce$celltypes_alt)
 sce$celltypes_alt <- gsub("/", "_", sce$celltypes_alt)
 sce$celltypes_alt <- gsub("[.]", "", sce$celltypes_alt)
 
+cts_exclude <- snakemake@params[["cts_exclude"]]
+
 sce_ct <- sce[,which(sce$celltypes_alt == celltype)]
 ct_curr <- sce_ct$celltypes[1]
 print(ct_curr)
+
+if(ct_curr %in% cts_exclude){
+  print("excluded cell type")
+  knitr::knit_exit()
+}
 ```
 
 ```{r load_subset}

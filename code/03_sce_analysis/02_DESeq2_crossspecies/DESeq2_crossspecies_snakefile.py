@@ -74,14 +74,14 @@ for c in celltypes_hsc:
   targets = targets + [OUTPUT_REP + "/sva/sva_report_hsc_" + c + ".html"] 
   targets = targets + [OUTPUT_REP + "/bulk/bulk_quality_report_hsc_" + c + ".html"] 
 #   targets = targets + [OUTPUT_REP + "/dge/dge_report_hsc_" + c + ".html"] 
-#   targets = targets + [OUTPUT_REP + "/ndge/ndge_report_hsc_" + c + ".html"] 
+  targets = targets + [OUTPUT_REP + "/ndge/ndge_report_hsc_" + c + ".html"] 
 # 
 for c in celltypes_str:
   targets = targets + [OUTPUT_DAT + "/03_sepd/str_" + c + "-sep"]
   targets = targets + [OUTPUT_REP + "/sva/sva_report_str_" + c + ".html"] 
   targets = targets + [OUTPUT_REP + "/bulk/bulk_quality_report_str_" + c + ".html"] 
 #   targets = targets + [OUTPUT_REP + "/dge/dge_report_str_" + c + ".html"] 
-#   targets = targets + [OUTPUT_REP + "/ndge/ndge_report_str_" + c + ".html"] 
+  targets = targets + [OUTPUT_REP + "/ndge/ndge_report_str_" + c + ".html"] 
 
 #-------------------------------------------------------------------------------
 
@@ -197,6 +197,8 @@ rule preprocessing_deseq:
 # per cell type, comparing across species
 # using classic DESeq2 function for each pairwise comparison across species
 # for each cell type
+
+# exclude cell types with low numbers here
 """
 rule export_results_dge:
     input:
@@ -221,7 +223,8 @@ rule export_results_ndge:
     params:
         padj_cutoff = PADJ_CUTOFF,
         fc_cutoff = FC_CUTOFF,
-        species = species
+        species = species,
+        cts_exclude = CELL_TYPES_EXCLUDE
     output:
         celltype_res = OUTPUT_DAT + "/06_nres/" + tf + "/res_{fraction}_celltype",
         celltype_resdf_list = OUTPUT_DAT + "/06_nres/" + tf + "/res_{fraction}_celltype_dfs",
@@ -257,10 +260,10 @@ rule celltype_dge_report:
     script:
         "dge_celltype_report.Rmd"
 
-"""
+
 rule celltype_ndge_report:
     input: 
-        sep = OUTPUT_DAT + "/06_sepd/{fraction}_{celltype}-sep",
+        sep = OUTPUT_DAT + "/03_sepd/{fraction}_{celltype}-sep",
         sce_input = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10",
         celltype_res = rules.export_results_ndge.output.celltype_res,
         celltype_shared_genes_list = rules.export_results_ndge.output.celltype_shared_genes_list,
@@ -271,7 +274,8 @@ rule celltype_ndge_report:
         fc_cutoff = FC_CUTOFF,
         colors_path = COLORS,
         plotting = "../../source/plotting.R",
-        colors = "../../source/colors.R"
+        colors = "../../source/colors.R",
+        cts_exclude = CELL_TYPES_EXCLUDE
     script:
         "ndge_celltype_report.Rmd"
-"""
+

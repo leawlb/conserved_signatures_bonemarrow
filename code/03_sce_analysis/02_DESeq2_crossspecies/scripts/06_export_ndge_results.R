@@ -16,6 +16,15 @@ padj_cutoff <- snakemake@params[["padj_cutoff"]]
 fraction_curr <- snakemake@wildcards[["fraction"]]
 species <- snakemake@params[["species"]]
 
+# these are cell types that are so small that usually they don't work
+cts_exclude <- snakemake@params[["cts_exclude"]]
+print(cts_exclude)
+
+#-------------------------------------------------------------------------------
+# remove objects from these cell types from the list
+if(!is.null(cts_exclude)){
+  tdsq_list <- tdsq_list[!names(tdsq_list) %in% cts_exclude]
+}
 celltypes <- names(tdsq_list)
 print(celltypes)
 
@@ -55,7 +64,7 @@ res_list_list <- lapply(tdsq_list, function(tdsq){
     res_lfcs <- DESeq2::results(tdsq,
                                 lfcThreshold=fc_cutoff, 
                                 altHypothesis="lessAbs", # it's log 2 FC
-                                contrast=c("condition", comb[1], comb[2]),
+                                contrast=c("species", comb[1], comb[2]),
                                 alpha = padj_cutoff)
     
     return(res_lfcs) 
@@ -69,8 +78,8 @@ res_list_list <- lapply(tdsq_list, function(tdsq){
   
   return(res_list)
 })
-names(res_list_list) <- clusters
-names(res_list_list[[1]])
+names(res_list_list) <- celltypes
+print(names(res_list_list[[1]]))
 
 base::saveRDS(res_list_list, file = snakemake@output[["celltype_res"]])
 
@@ -144,6 +153,7 @@ celltype_shared_list <- lapply(res_list_shared_comp, function(shared){
   # for each cell type get the intersect between all pairwise comparisons
   # all appear twice (a-b and b-a), but their intersection is identical
   shared_all <- BiocGenerics::Reduce(BiocGenerics::intersect, shared)
+  print(length(shared_all))
   
   return(shared_all)
 })

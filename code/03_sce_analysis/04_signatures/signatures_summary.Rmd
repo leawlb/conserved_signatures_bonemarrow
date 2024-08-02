@@ -93,38 +93,42 @@ Make one df specifically for upset plot
 
 ```{r prepare_upset}
 cons_large_df_up <- cons_large_df
-cons_large_df_up$mmus[!is.na(cons_large_df_up$mmus)] <- TRUE
-cons_large_df_up$mcas[!is.na(cons_large_df_up$mcas)] <- TRUE
-cons_large_df_up$mspr[!is.na(cons_large_df_up$mspr)] <- TRUE
-cons_large_df_up$mcar[!is.na(cons_large_df_up$mcar)] <- TRUE
-cons_large_df_up$mmus[is.na(cons_large_df_up$mmus)] <- FALSE
-cons_large_df_up$mcas[is.na(cons_large_df_up$mcas)] <- FALSE
-cons_large_df_up$mspr[is.na(cons_large_df_up$mspr)] <- FALSE
-cons_large_df_up$mcar[is.na(cons_large_df_up$mcar)] <- FALSE
+cons_large_df_up$mmus[which(!is.na(cons_large_df_up$mmus))] <- "TRUE"
+cons_large_df_up$mcas[which(!is.na(cons_large_df_up$mcas))] <- "TRUE"
+cons_large_df_up$mspr[which(!is.na(cons_large_df_up$mspr))] <- "TRUE"
+cons_large_df_up$mcar[which(!is.na(cons_large_df_up$mcar))] <- "TRUE"
+cons_large_df_up$mmus[which(is.na(cons_large_df_up$mmus))] <- "FALSE"
+cons_large_df_up$mcas[which(is.na(cons_large_df_up$mcas))] <- "FALSE"
+cons_large_df_up$mspr[which(is.na(cons_large_df_up$mspr))] <- "FALSE"
+cons_large_df_up$mcar[which(is.na(cons_large_df_up$mcar))] <- "FALSE"
 
 head(cons_large_df_up)
 base::table(cons_large_df_up$conserved_signature)
-knitr::knit_exit()
+
+base::table(base::duplicated(cons_large_df_up[
+  cons_large_df_up$ndge == TRUE,]))
+base::table(base::duplicated(cons_large_df_up[
+  cons_large_df_up$conserved_marker == TRUE,]))
+base::table(base::duplicated(cons_large_df_up[
+  cons_large_df_up$conserved_signature == TRUE,]))
 ```
 
 ```{r upset}
-ComplexUpset::upset(cons_large_df_up, 
-                    intersect = c("mmus", "mcas", "mspr",  "mcar"))+
-  xlab("")+
-  ggtitle("all marker genes")
-
-ComplexUpset::upset(cons_large_df_up[cons_large_df_up$ndge == TRUE,], 
-                    intersect = c("mmus", "mcas", "mspr",  "mcar"))+
+ComplexUpset::upset(cons_large_df_up[
+  cons_large_df_up$ndge == TRUE,], 
+  intersect = c("mmus", "mcas", "mspr",  "mcar"))+
   xlab("")+
   ggtitle("non-differentially expressed marker genes")
 
-ComplexUpset::upset(cons_large_df_up[cons_large_df_up$cons_marker == TRUE,], 
-                    intersect = c("mmus", "mcas", "mspr",  "mcar"))+
+ComplexUpset::upset(cons_large_df_up[
+  cons_large_df_up$conserved_marker == TRUE,], 
+  intersect = c("mmus", "mcas", "mspr",  "mcar"))+
   xlab("")+
   ggtitle("conserved marker genes")
 
-ComplexUpset::upset(cons_large_df_up[cons_large_df_up$cons_emf == TRUE,], 
-                    intersect = c("mmus", "mcas", "mspr",  "mcar"))+
+ComplexUpset::upset(cons_large_df_up[
+  cons_large_df_up$conserved_signature == TRUE,], 
+  intersect = c("mmus", "mcas", "mspr",  "mcar"))+
   xlab("")+
   ggtitle("signature genes")
 

@@ -83,21 +83,17 @@ qcdf_list_01 <- lapply(sce_list_01, function(sce){
   remove_pos <- sum_out | det_out | mito_out
   qcdf$removed <- remove_pos
   
+  qcdf <- BiocGenerics::as.data.frame(qcdf)
   return(qcdf)
 })
 
-qcdf_gg <- S4Vectors::DataFrame()
-
-for(i in qcdf_list_01){
-  qcdf_gg <- BiocGenerics::rbind(qcdf_gg, i)
-}
-qcdf_gg <- BiocGenerics::as.data.frame(qcdf_gg)
+qcdf_gg <- dplyr::bind_rows(qcdf_list_01)
 
 qcdf_gg_print <- qcdf_gg[qcdf_gg$Keep_sample == TRUE,]
-print(median(qcdf_gg_print$sum))
-print(median(qcdf_gg_print$sum[qcdf_gg_print$removed == FALSE]))
-print(median(qcdf_gg_print$detected))
-print(median(qcdf_gg_print$detected[qcdf_gg_print$removed == FALSE]))
+print(stats::median(qcdf_gg_print$sum))
+print(stats::median(qcdf_gg_print$sum[qcdf_gg_print$removed == FALSE]))
+print(stats::median(qcdf_gg_print$detected))
+print(stats::median(qcdf_gg_print$detected[qcdf_gg_print$removed == FALSE]))
 
 # by Sample
 ggplot2::ggplot(qcdf_gg, 

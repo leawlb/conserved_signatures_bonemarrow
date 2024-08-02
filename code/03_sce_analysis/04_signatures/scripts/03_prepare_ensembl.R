@@ -43,9 +43,9 @@ ndge <- base::unique(ndge)
 
 subclustering_genes <- vector()
 for(i in 1:length(signature_list)){
-  subclustering <- c(subclustering, signature_list[[i]]$genes_subclustering)
+  subclustering_genes <- c(subclustering_genes, signature_list[[i]]$genes_subclustering)
 }
-subclustering <- base::unique(subclustering)
+subclustering_genes <- base::unique(subclustering_genes)
 
 # remove subclustering genes from gene lists because they were manually picked
 consm <- consm[!consm %in% subclustering_genes]

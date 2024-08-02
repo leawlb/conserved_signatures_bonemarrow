@@ -5,8 +5,8 @@ import pandas as pd
 #-------------------------------------------------------------------------------
 
 OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
-OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/03_sce_analysis/04_conserved_EMF"
-OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/04_conserved_EMF"
+OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/03_sce_analysis/04_signatures"
+OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/04_signatures"
 
 COLORS_REF = config["base"] + config["metadata_paths"]["colors_ref"]
 COLORS = config["base"] + config["metadata_paths"]["colors"]
@@ -33,9 +33,9 @@ for f in fractions:
   targets = targets + [OUTPUT_DAT + "/02_rcls/sce_" + f]
 #   targets = targets + [OUTPUT_REP + "/clustering_own_report_" + f + ".html"] 
 # 
-#   targets = targets + [OUTPUT_DAT + "/03_ensm/ensembl_emfs_" + f]
-#   targets = targets + [OUTPUT_DAT + "/03_ensm/ensembl_mark_" + f]
-#   targets = targets + [OUTPUT_DAT + "/03_ensm/ensembl_ndge_" + f]
+  targets = targets + [OUTPUT_DAT + "/03_ensm/ensembl_sign_" + f]
+  targets = targets + [OUTPUT_DAT + "/03_ensm/ensembl_mark_" + f]
+  targets = targets + [OUTPUT_DAT + "/03_ensm/ensembl_ndge_" + f]
 #   
 # for r in references_human:
 #   targets = targets + [OUTPUT_DAT + "/04_rcls/reclustered_" + r + "_list"]
@@ -44,7 +44,7 @@ for f in fractions:
 #   targets = targets + [OUTPUT_DAT + "/05_perm/" + r + "_score_df"]
 #   targets = targets + [OUTPUT_REP + "/reclustering_permutation_report_" + r + ".html"]
 # 
-# targets = targets + [OUTPUT_REP + "/conserved_emf_summary.html"]
+targets = targets + [OUTPUT_REP + "/signatures_summary.html"]
 
 #-------------------------------------------------------------------------------
 
@@ -76,23 +76,23 @@ rule export_signature:
     script:
         "scripts/01_export_signatures.R"    
 
-"""
+
 # visualise signatures across species and cell types
-# this has become a very long report with many unneccessary plots
+# this has become a very long report with many plots
 rule signature_summary:
     input: 
-        signature_list_hsc = OUTPUT_DAT + "/01_emfs/emf_list_hsc",
-        signature_list_str = OUTPUT_DAT + "/01_emfs/emf_list_str"
+        signature_list_hsc = OUTPUT_DAT + "/01_sign/signature_list_hsc",
+        signature_list_str = OUTPUT_DAT + "/01_sign/signature_list_str"
     output:
-        OUTPUT_REP + "/conserved_emf_summary.html"
+        OUTPUT_REP + "/signatures_summary.html"
     params:
         colors_path = COLORS,
         functions = "../../source/sce_functions.R",
         plotting = "../../source/plotting.R",
         colors = "../../source/colors.R"
     script:
-        "conserved_emf_summary.Rmd"
-"""
+        "signatures_summary.Rmd"
+
 #-------------------------------------------------------------------------------
 """
 # Re-clustering our own data
@@ -137,22 +137,22 @@ rule reclustering_own_report:
 #
 # Additionally, perform permutation tests using random gene sets of the 
 # same number of genes for reclustering
-"""
+
 
 # prepare ensembl conversion tables human - mouse for each gene set to be tested
 rule prepare_ensembl:
     input:
-        emf_list_inp = rules.export_emf_genes.output,
+        signature_list = rules.export_signature.output,
         sce_inp = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10",
         ensembl_hum = config["base"] + config["metadata_paths"]["ensembl_hum"],
         ensembl_mus = config["base"] + config["metadata_paths"]["ensembl_mus"]
     output:
-        ensembl_emfs = OUTPUT_DAT + "/03_ensm/ensembl_emfs_{fraction}",
+        ensembl_emfs = OUTPUT_DAT + "/03_ensm/ensembl_sign_{fraction}",
         ensembl_mark = OUTPUT_DAT + "/03_ensm/ensembl_mark_{fraction}",
         ensembl_ndge = OUTPUT_DAT + "/03_ensm/ensembl_ndge_{fraction}"
     script:
         "scripts/03_prepare_ensembl.R"
-
+"""
 #-------------------------------------------------------------------------------
 # reclustering test dataset 1 ("All Stromal" from tabula sapiens)
 # standard Seurat approach with standard options from raw counts

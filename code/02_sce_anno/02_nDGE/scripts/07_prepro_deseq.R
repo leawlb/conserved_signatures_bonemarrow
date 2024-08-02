@@ -30,7 +30,7 @@ print(sv_table)
 # filtering out almost empty rows
 dsq_list <- lapply(dsq_list, function(dsq){
   
-  keep <- BiocGenerics::rowSums(counts(dsq)) >= 10
+  keep <- BiocGenerics::rowSums(BiocGenerics::counts(dsq)) >= 10
   dsq <- dsq[keep,]
   return(dsq)
   

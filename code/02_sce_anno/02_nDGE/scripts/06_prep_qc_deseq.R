@@ -54,11 +54,10 @@ sva_list <- lapply(tdsq_list, function(dsq){
   # null model matrix
   mod0 <- stats::model.matrix(~ 1, colData(dsq))
   
-  # try two different methods
+  # try two different methods but use BE
   n_sv_be <- sva::num.sv(data, mod, method = "be")  
   n_sv_lk <- sva::num.sv(data, mod, method = "leek")  
-  # n_sv_lk is so large that it usually doesn't work 
-  
+
   svseq <- sva::svaseq(data, mod, mod0, n.sv = n_sv_be)
   print(c(n_sv_be, n_sv_lk))
   

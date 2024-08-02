@@ -12,7 +12,7 @@ COLORS_REF = config["base"] + config["metadata_paths"]["colors_ref"]
 COLORS = config["base"] + config["metadata_paths"]["colors"]
 
 GENES_CLUSTERS = config["base"] + config["metadata_paths"]["gene_list_clusters"]
-SV_PATH = config["base"] + config["metadata_paths"]["sources_variation"]
+SV_PATH = config["base"] + config["metadata_paths"]["sources_variation"]["annotation_species"]
 
 METADATA = pd.read_csv(config["base"] + config["metadata_paths"]["table"])
 def get_list(metadata, column):
@@ -146,7 +146,7 @@ rule ndge_bulk_report:
     script:
         "ndge_bulk_quality_report.Rmd"
   
-# check hidden sources of variations and decide which ones to add to DESeq1
+# check hidden sources of variations and decide which ones to add to DESeq2
 # design
 rule ndge_sv_report:
     input: 

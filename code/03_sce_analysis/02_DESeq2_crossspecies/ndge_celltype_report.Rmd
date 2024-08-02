@@ -19,6 +19,7 @@ set.seed(37)
 
 ```{r load, message = FALSE}
 library(EnhancedVolcano)
+library(SingleCellExperiment)
 ```
 
 ```{r source, message = FALSE}
@@ -27,9 +28,12 @@ source(file = snakemake@params[["plotting"]])
 
 ```{r manual, include = FALSE, eval = FALSE}
 
-shared_gene_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/02_DESeq2_crossspecies/06_nres/PC_0.05_FC_1.5/shared_genes_hsc_celltypes")
+shared_gene_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/02_DESeq2_crossspecies/06_nres/PC_0.05_FC_1.5/shared_genes_str_celltypes")
 
+sce <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10")
 
+celltype_res_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/02_DESeq2_crossspecies/06_nres/PC_0.05_FC_1.5/res_str_celltype")
+names(celltype_res_list)
 shared_gene_list$HSCs
 ```
 
@@ -51,7 +55,7 @@ sce$celltypes_alt <- gsub("[.]", "", sce$celltypes_alt)
 cts_exclude <- snakemake@params[["cts_exclude"]]
 
 sce_ct <- sce[,which(sce$celltypes_alt == celltype)]
-ct_curr <- sce_ct$celltypes[1]
+ct_curr <- unfactor(sce_ct$celltypes[1])
 print(ct_curr)
 
 if(ct_curr %in% cts_exclude){
@@ -62,13 +66,18 @@ if(ct_curr %in% cts_exclude){
 
 ```{r load_subset}
 celltype_res_list <- base::readRDS(snakemake@input[["celltype_res"]])
-#celltype_res_list_orig <- base::readRDS(snakemake@input[["celltype_res_orig"]])
-shared_gene_list <- base::readRDS(snakemake@input[["celltype_res_list_shared"]])
-#shared_gene_list_orig <- base::readRDS(snakemake@input[["celltype_res_list_shared_orig"]])
+shared_gene_list <- base::readRDS(snakemake@input[["celltype_shared_genes_list"]])
+
+names(celltype_res_list)
+names(shared_gene_list)
+
+ct_curr %in% names(celltype_res_list)
+ct_curr %in% names(shared_gene_list)
 
 # subset objects to required cluster and fractions
 celltype_res_ct <- celltype_res_list[[ct_curr]]
 shared_genes_ct <- shared_gene_list[[ct_curr]]
+
 ```
 
 # Show Pval distributions
@@ -144,7 +153,7 @@ see_pvals(celltype_res = res_df_comb_mspr_mcar, comparison = "mspr-mcar")
 
 ```{r print_shared_genes}
 print(ct_curr)
-print(shared_genes_ct)
+print(base::sort(shared_genes_ct))
 ```
 
 ```{r sessioninfo}

@@ -90,11 +90,11 @@ for(ct in names(dsq_list)){
     # now, sv_df only contains SVs that should be added to the design
     # this means these SVs will be "removed" from the data
     if(ncol(sv_df_temp) == 1){
-      DESeq2::design(dsq_list[[ct]]) <- ~ SV1 + batch + ncells + age + species
+      DESeq2::design(dsq_list[[ct]]) <- ~ SV1 + batch + age + species
     }else if(ncol(sv_df_temp)== 2){
-      DESeq2::design(dsq_list[[ct]]) <- ~ SV1 + SV2 + batch + ncells + age + species
+      DESeq2::design(dsq_list[[ct]]) <- ~ SV1 + SV2 + batch + age + species
     }else if(ncol(sv_df_temp)== 3){
-      DESeq2::design(dsq_list[[ct]]) <- ~ SV1 + SV2 + SV3 + batch + ncells + age + species
+      DESeq2::design(dsq_list[[ct]]) <- ~ SV1 + SV2 + SV3 + batch + age + species
     }else if(ncol(sv_df_temp) >= 4){
       stop("number of SVs larger than anticipated")
     }

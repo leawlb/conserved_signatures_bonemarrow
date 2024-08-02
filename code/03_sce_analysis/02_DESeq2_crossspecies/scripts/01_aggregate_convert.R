@@ -59,7 +59,7 @@ dsq_list <- lapply(agg_list, function(agg){
   print(agg)
   
   # correcting for batch, nr of cells, and age
-  dsq <- DESeq2::DESeqDataSet(agg, design = ~ batch + ncells + age + species) 
+  dsq <- DESeq2::DESeqDataSet(agg, design = ~ batch + age + species) 
   colnames(dsq) <- agg$sample
   
   # factor columns

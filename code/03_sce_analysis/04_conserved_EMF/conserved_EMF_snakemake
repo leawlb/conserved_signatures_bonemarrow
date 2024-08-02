@@ -1,3 +1,0 @@
-snakemake --cluster "bsub -q medium -n20 -R rusage[mem=200GB]" -p -j10 -c20 -s conserved_EMF_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda -n
-
-snakemake --cluster "bsub -q long -n20 -R rusage[mem=200GB]" -p -j10 -c20 -s conserved_EMF_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda -n

@@ -11,6 +11,8 @@ OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/04_conserved_EM
 COLORS_REF = config["base"] + config["metadata_paths"]["colors_ref"]
 COLORS = config["base"] + config["metadata_paths"]["colors"]
 
+GENE_LIST_SUBCLUSTERING = config["base"] + config["metadata_paths"]["gene_list_subclustering"]
+
 METADATA = pd.read_csv(config["base"] + config["metadata_paths"]["table"])
 def get_list(metadata, column):
   values = METADATA[column]
@@ -27,22 +29,22 @@ references_human = ["ts_all_stromal", "ts_bone_marrow", "ts_hsc_progenitors", "l
 
 targets = []
 for f in fractions:
-  targets = targets + [OUTPUT_DAT + "/01_emfs/emf_list_" + f]
+  targets = targets + [OUTPUT_DAT + "/01_sign/signature_list_" + f]
   targets = targets + [OUTPUT_DAT + "/02_rcls/sce_" + f]
-  targets = targets + [OUTPUT_REP + "/clustering_own_report_" + f + ".html"] 
-
-  targets = targets + [OUTPUT_DAT + "/03_ensm/ensembl_emfs_" + f]
-  targets = targets + [OUTPUT_DAT + "/03_ensm/ensembl_mark_" + f]
-  targets = targets + [OUTPUT_DAT + "/03_ensm/ensembl_ndge_" + f]
-  
-for r in references_human:
-  targets = targets + [OUTPUT_DAT + "/04_rcls/reclustered_" + r + "_list"]
-  targets = targets + [OUTPUT_REP + "/reclustering_hum_eval_" + r + ".html"]
-  targets = targets + [OUTPUT_REP + "/reclustering_hum_report_" + r + ".html"]
-  targets = targets + [OUTPUT_DAT + "/05_perm/" + r + "_score_df"]
-  targets = targets + [OUTPUT_REP + "/reclustering_permutation_report_" + r + ".html"]
-
-targets = targets + [OUTPUT_REP + "/conserved_emf_summary.html"]
+#   targets = targets + [OUTPUT_REP + "/clustering_own_report_" + f + ".html"] 
+# 
+#   targets = targets + [OUTPUT_DAT + "/03_ensm/ensembl_emfs_" + f]
+#   targets = targets + [OUTPUT_DAT + "/03_ensm/ensembl_mark_" + f]
+#   targets = targets + [OUTPUT_DAT + "/03_ensm/ensembl_ndge_" + f]
+#   
+# for r in references_human:
+#   targets = targets + [OUTPUT_DAT + "/04_rcls/reclustered_" + r + "_list"]
+#   targets = targets + [OUTPUT_REP + "/reclustering_hum_eval_" + r + ".html"]
+#   targets = targets + [OUTPUT_REP + "/reclustering_hum_report_" + r + ".html"]
+#   targets = targets + [OUTPUT_DAT + "/05_perm/" + r + "_score_df"]
+#   targets = targets + [OUTPUT_REP + "/reclustering_permutation_report_" + r + ".html"]
+# 
+# targets = targets + [OUTPUT_REP + "/conserved_emf_summary.html"]
 
 #-------------------------------------------------------------------------------
 
@@ -61,26 +63,26 @@ rule all:
 # Get overlap with genes with conserved marker gene function (cons_markers)
 # provided by Veronica Busa
 
-# These genes are "genes with conserved Expression level and Marker Function"
-# = EMF
 """
 
-# export list of data on marker genes, EMFs, and nDGEs
-rule export_emf_genes:
+# export list of data on marker genes, conserved signatures, and nDGEs
+rule export_signature:
     input:
-        celltype_ndge_list = OUTPUT_BASE + "/sce_objects/03_sce_analysis/02_DESeq2_crossspecies/05_nres/PC_0.05_FC_1.5/res_{fraction}_celltype_shared",
-        marker_cons = OUTPUT_BASE + "/sce_objects/03_sce_analysis/03_marker_conservation/cons_markers_{fraction}.RData"
+        celltype_ndge_list = OUTPUT_BASE + "/sce_objects/03_sce_analysis/02_DESeq2_crossspecies/06_nres/PC_0.05_FC_1.5/shared_genes_{fraction}_celltypes",
+        marker_cons = OUTPUT_BASE + "/sce_objects/03_sce_analysis/03_marker_conservation/cons_markers_{fraction}.RData",
+        subclustering_genes = GENE_LIST_SUBCLUSTERING,
     output:
-        cons_EMF_list = OUTPUT_DAT + "/01_emfs/emf_list_{fraction}"
+        signature_list = OUTPUT_DAT + "/01_sign/signature_list_{fraction}"
     script:
-        "scripts/01_export_emfs.R"    
+        "scripts/01_export_signatures.R"    
 
-# visualise marker conservation across species and cell types
+"""
+# visualise signatures across species and cell types
 # this has become a very long report with many unneccessary plots
-rule conserved_emf_summary:
+rule signature_summary:
     input: 
-        emf_list_hsc = OUTPUT_DAT + "/01_emfs/emf_list_hsc",
-        emf_list_str = OUTPUT_DAT + "/01_emfs/emf_list_str"
+        signature_list_hsc = OUTPUT_DAT + "/01_emfs/emf_list_hsc",
+        signature_list_str = OUTPUT_DAT + "/01_emfs/emf_list_str"
     output:
         OUTPUT_REP + "/conserved_emf_summary.html"
     params:
@@ -90,30 +92,26 @@ rule conserved_emf_summary:
         colors = "../../source/colors.R"
     script:
         "conserved_emf_summary.Rmd"
-
+"""
 #-------------------------------------------------------------------------------
 """
-# Re-clustering our own data with only the genes that are:
-#
-# - non-differentially expressed 
-# - conserved marker genes
-# - core genes (rename later)
-#
-# To validate that the genes are useful
+# Re-clustering our own data
 """
 
-# reclustering using original clustering pipeline (louvain/bioconductor)
+# reclustering using original clustering pipeline (scater/igraph)
 rule reclustering_own:
     input:
         sce_input = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10",
-        core_cons_list = rules.export_emf_genes.output
-    params: 
-        k_louvain = config["values"]["02_sce_anno"]["k_louvain"]
+        signature_list = rules.export_signature.output
+    params:
+        k_graph_list = config["values"]["02_sce_anno"]["k_graph_list"],
+        resolution_louvain_list = config["values"]["02_sce_anno"]["resolution_louvain_list"]
     output:
         sce_output = OUTPUT_DAT + "/02_rcls/sce_{fraction}"
     script:
-        "scripts/02_reclustering_own.R"    
+        "scripts/02_reclustering_own.R"
 
+"""
 # visualise reclustered datasets
 rule reclustering_own_report:
     input: 
@@ -245,3 +243,4 @@ rule reclustering_permutation_report:
         OUTPUT_REP + "/reclustering_permutation_report_{reference}.html"
     script: 
         "reclustering_permutation_report.Rmd"
+"""

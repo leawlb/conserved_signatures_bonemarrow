@@ -36,7 +36,7 @@ targets = []
 for f in fractions:
   targets = targets + [OUTPUT_DAT + "/01_sign/signature_list_" + f]
   targets = targets + [OUTPUT_DAT + "/02_rcls/sce_" + f]
-#   targets = targets + [OUTPUT_REP + "/clustering_own_report_" + f + ".html"] 
+  targets = targets + [OUTPUT_REP + "/clustering_own_report_" + f + ".html"] 
 # 
   targets = targets + [ENSEMBL_MUS]
   targets = targets + [ENSEMBL_HUM]
@@ -86,13 +86,13 @@ rule export_signature:
     script:
         "scripts/01_export_signatures.R"    
 
-
 # visualise signatures across species and cell types
-# this has become a very long report with many plots
 rule signature_summary:
     input: 
         signature_list_hsc = OUTPUT_DAT + "/01_sign/signature_list_hsc",
-        signature_list_str = OUTPUT_DAT + "/01_sign/signature_list_str"
+        signature_list_str = OUTPUT_DAT + "/01_sign/signature_list_str",
+        sce_hsc = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_hsc-10",
+        sce_str = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_str-10"
     output:
         OUTPUT_REP + "/signatures_summary.html"
     params:
@@ -121,7 +121,7 @@ rule reclustering_own:
     script:
         "scripts/02_reclustering_own.R"
 
-"""
+
 # visualise reclustered datasets
 rule reclustering_own_report:
     input: 
@@ -130,7 +130,7 @@ rule reclustering_own_report:
         OUTPUT_REP + "/clustering_own_report_{fraction}.html"
     params:
         colors_path = COLORS,
-        functions = "../../source/sce_functions.R",
+        #functions = "../../source/sce_functions.R",
         plotting = "../../source/plotting.R",
         colors = "../../source/colors.R"
     script:
@@ -148,6 +148,7 @@ rule reclustering_own_report:
 #
 # Additionally, perform permutation tests using random gene sets of the 
 # same number of genes for reclustering
+"""
 
 # download ensembl conversion tables 
 # this is metadata

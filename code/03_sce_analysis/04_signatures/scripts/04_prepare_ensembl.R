@@ -17,13 +17,6 @@ ensembl_hum <- base::readRDS(snakemake@input[["ensembl_hum"]])
 ensembl_zeb <- base::readRDS(snakemake@input[["ensembl_zeb"]])
 ensembl_nmr <- base::readRDS(snakemake@input[["ensembl_nmr"]])
 
-# signature_list <- base::readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_conserved_EMF/01_sign/signature_list_hsc")
-# sce <- base::readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10")
-# ensembl_hum <- base::readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_hum")
-# ensembl_mus <- base::readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_mus")
-# ensembl_zeb <- base::readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_zeb")
-# ensembl_nmr <- base::readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_nmr")
-# 
 print(head(ensembl_mus))
 print(head(ensembl_hum))
 print(head(ensembl_zeb))
@@ -81,7 +74,6 @@ print(length(mouse_ids))
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 # prepare ensembl dataframe for all species
-
 
 ensembl_df <- ensembl_mus
 

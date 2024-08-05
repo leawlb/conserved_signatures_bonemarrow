@@ -27,6 +27,13 @@ color_vector_sum <- c("black", "darkorange4", "darkorange3", "darkorange1",
                       "lightgoldenrod", "lightgoldenrod", "lightgoldenrod")
 color_vector_det <- c("black", "darkorange3", "orange", "lightgoldenrod")
 
+col_mode <-c("marker" = "#EDE2D4",
+             "conserved_marker" = "#EB9523",
+             "conserved_signature" = "#DD5C00")
+col_mode_log <-c("FALSE" = "#EDE2D4",
+                 "TRUE" = "#DD5C00")
+
+
 #-------------------------------------------------------------------------------
 
 # SAMPLES/CLUSTER

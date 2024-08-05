@@ -135,37 +135,88 @@ ComplexUpset::upset(cons_large_df_up[
 knitr::knit_exit()
 ```
 
+## Categorize
+
 Make a df with categories of conservation for visualisation.
 
 ```{r}
-ggdf2 <- cons_emf_df
+ggdf_category <- cons_large_df
 
-ggdf2$marker_only <- vector(length = nrow(ggdf2))
-ggdf2$ndge_marker <- vector(length = nrow(ggdf2))
-ggdf2$conserved_marker <- vector(length = nrow(ggdf2))
-ggdf2$conserved_emf <- vector(length = nrow(ggdf2))
+ggdf_category$marker_only <- base::rep(FALSE, nrow(ggdf_category))
+ggdf_category$conserved_marker_only <- base::rep(FALSE, nrow(ggdf_category))
+ggdf_category$conserved_signature_only <- base::rep(FALSE, nrow(ggdf_category))
 
-ggdf2$marker_only[which(ggdf2$cons_marker == FALSE &
-                          ggdf2$cons_emf == FALSE &
-                          ggdf2$ndge == FALSE)] <- TRUE
+ggdf_category$marker_only[
+  which(ggdf_category$conserved_marker == FALSE &
+          ggdf_category$conserved_signature == FALSE)] <- TRUE
+base::table(ggdf_category$marker_only)
 
-ggdf2$ndge_marker[which(ggdf2$cons_marker == FALSE &
-                              ggdf2$cons_emf == FALSE &
-                              ggdf2$ndge == TRUE)] <- TRUE
+ggdf_category$conserved_marker_only[
+  which(ggdf_category$conserved_marker == TRUE &
+          ggdf_category$conserved_signature == FALSE)] <- TRUE
+base::table(ggdf_category$conserved_marker_only)
 
-ggdf2$conserved_marker[which(ggdf2$cons_marker == TRUE &
-                             ggdf2$cons_emf == FALSE &
-                             ggdf2$ndge == FALSE)] <- TRUE
+ggdf_category$conserved_signature_only[
+  which(ggdf_category$conserved_marker_only == FALSE &
+          ggdf_category$conserved_signature == TRUE)] <- TRUE
+base::table(ggdf_category$conserved_signature_only)
 
-ggdf2$conserved_emf[which(ggdf2$cons_marker == TRUE &
-                             ggdf2$cons_emf == TRUE &
-                             ggdf2$ndge == TRUE)] <- TRUE
+ggdf_category_long <- base::as.data.frame(tidyr::pivot_longer(
+  ggdf_category,
+  cols = c("marker_only",
+           "conserved_marker_only",
+           "conserved_signature_only"), 
+  names_to = "conservation_level", 
+  values_to = "is_true"))
 
-ggdf2 <- as.data.frame(pivot_longer(ggdf2, cols = c("marker_only",
-                                                    "ndge_marker",
-                                                    "conserved_marker",
-                                                    "conserved_emf"), 
-                                     names_to = "mode", values_to = "is_true"))
+ggdf_category_long$conservation_level <- base::gsub(
+  "_only", "", ggdf_category_long$conservation_level)
+
+ggdf_category_long <- ggdf_category_long[ggdf_category_long$is_true == TRUE,]
+base::table(ggdf_category_long$conservation_level[ggdf_category_long$cell_type == "Osteo"])
+```
+
+```{r}
+ggplot(ggdf_category_long, aes(fill = conservation_level, x = cell_type))+
+  geom_bar(position = "stack")+
+  theme_classic()+
+  ylab("Nr of detected marker genes")+
+  #scale_fill_manual("Marker genes", values = col_mode1)+
+  #facet_grid(cols = vars(cell_type))+
+  theme(strip.text.x = element_text(angle = 90),
+        axis.text.x = element_text(angle = 90),
+        legend.position = "bottom")+
+  xlab("Species")
+```
+
+
+
+```{r, eval = FALSE}
+ggdf_category <- cons_large_df
+
+ggdf_category$is_marker <- vector(length = nrow(ggdf_category))
+ggdf_category$is_conserved_marker <- vector(length = nrow(ggdf_category))
+ggdf_category$is_conserved_signature <- vector(length = nrow(ggdf_category))
+
+ggdf_category$is_marker[which(ggdf_category$cons_marker == FALSE &
+                          ggdf_category$ == FALSE &
+                          ggdf_category$ndge == FALSE)] <- TRUE
+
+ggdf_category$is_conserved_marker[which(ggdf_category$cons_marker == TRUE &
+                             ggdf_category$cons_emf == FALSE &
+                             ggdf_category$ndge == FALSE)] <- TRUE
+
+ggdf_category$is_conserved_signature[which(ggdf_category$cons_marker == TRUE &
+                             ggdf_category$cons_emf == TRUE &
+                             ggdf_category$ndge == TRUE)] <- TRUE
+
+ggdf_category <- base::as.data.frame(tidyr::pivot_longer(
+  ggdf_category,
+  cols = c("is_marker",
+           "is_conserved_marker",
+           "is_conserved_signature"), 
+  names_to = "mode", 
+  values_to = "is_true"))
 
 ggdf2 <- as.data.frame(pivot_longer(ggdf2, cols = c("mmus",
                                                     "mcas",

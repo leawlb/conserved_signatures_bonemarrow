@@ -13,6 +13,11 @@ COLORS = config["base"] + config["metadata_paths"]["colors"]
 
 GENE_LIST_SUBCLUSTERING = config["base"] + config["metadata_paths"]["gene_list_subclustering"]
 
+ENSEMBL_MUS = config["base"] + config["metadata_paths"]["ensembl_mus"],
+ENSEMBL_HUM = config["base"] + config["metadata_paths"]["ensembl_hum"],
+ENSEMBL_ZEB = config["base"] + config["metadata_paths"]["ensembl_zeb"],
+ENSEMBL_NMR = config["base"] + config["metadata_paths"]["ensembl_nmr"],
+
 METADATA = pd.read_csv(config["base"] + config["metadata_paths"]["table"])
 def get_list(metadata, column):
   values = METADATA[column]
@@ -33,9 +38,14 @@ for f in fractions:
   targets = targets + [OUTPUT_DAT + "/02_rcls/sce_" + f]
 #   targets = targets + [OUTPUT_REP + "/clustering_own_report_" + f + ".html"] 
 # 
-  targets = targets + [OUTPUT_DAT + "/03_ensm/ensembl_sign_" + f]
-  targets = targets + [OUTPUT_DAT + "/03_ensm/ensembl_mark_" + f]
-  targets = targets + [OUTPUT_DAT + "/03_ensm/ensembl_ndge_" + f]
+  targets = targets + [ENSEMBL_MUS]
+  targets = targets + [ENSEMBL_HUM]
+  targets = targets + [ENSEMBL_ZEB]
+  targets = targets + [ENSEMBL_NMR]
+  
+  # targets = targets + [OUTPUT_DAT + "/03_ensm/ensembl_sign_" + f]
+  # targets = targets + [OUTPUT_DAT + "/03_ensm/ensembl_mark_" + f]
+  # targets = targets + [OUTPUT_DAT + "/03_ensm/ensembl_ndge_" + f]
 #   
 # for r in references_human:
 #   targets = targets + [OUTPUT_DAT + "/04_rcls/reclustered_" + r + "_list"]
@@ -130,7 +140,8 @@ rule reclustering_own_report:
 #-------------------------------------------------------------------------------
 
 """
-# Reclustering human datasets (two for each fraction) using:
+# Reclustering datasets from other species (human, zebrafish, naked mole rat)
+# using:
 #
 # - conserved marker genes
 # - EMF genes 
@@ -138,6 +149,16 @@ rule reclustering_own_report:
 # Additionally, perform permutation tests using random gene sets of the 
 # same number of genes for reclustering
 
+# download ensembl conversion tables 
+# this is metadata
+rule download_ensembl:
+    output:
+        ensembl_mus = ENSEMBL_MUS,
+        ensembl_hum = ENSEMBL_HUM,
+        ensembl_zeb = ENSEMBL_ZEB,
+        ensembl_nmr = ENSEMBL_NMR
+    script:
+        "scripts/03_download_ensembl.R"
 
 # prepare ensembl conversion tables human - mouse for each gene set to be tested
 rule prepare_ensembl:
@@ -147,7 +168,7 @@ rule prepare_ensembl:
         ensembl_hum = config["base"] + config["metadata_paths"]["ensembl_hum"],
         ensembl_mus = config["base"] + config["metadata_paths"]["ensembl_mus"]
     output:
-        ensembl_emfs = OUTPUT_DAT + "/03_ensm/ensembl_sign_{fraction}",
+        ensembl_sign = OUTPUT_DAT + "/03_ensm/ensembl_sign_{fraction}",
         ensembl_mark = OUTPUT_DAT + "/03_ensm/ensembl_mark_{fraction}",
         ensembl_ndge = OUTPUT_DAT + "/03_ensm/ensembl_ndge_{fraction}"
     script:

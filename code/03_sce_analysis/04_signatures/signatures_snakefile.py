@@ -43,9 +43,9 @@ for f in fractions:
   targets = targets + [ENSEMBL_ZEB]
   targets = targets + [ENSEMBL_NMR]
   
-  # targets = targets + [OUTPUT_DAT + "/03_ensm/ensembl_sign_" + f]
-  # targets = targets + [OUTPUT_DAT + "/03_ensm/ensembl_mark_" + f]
-  # targets = targets + [OUTPUT_DAT + "/03_ensm/ensembl_ndge_" + f]
+  targets = targets + [OUTPUT_DAT + "/04_endf/ensembl_sign_" + f]
+  targets = targets + [OUTPUT_DAT + "/04_endf/ensembl_mark_" + f]
+  targets = targets + [OUTPUT_DAT + "/04_endf/ensembl_ndge_" + f]
 #   
 # for r in references_human:
 #   targets = targets + [OUTPUT_DAT + "/04_rcls/reclustered_" + r + "_list"]
@@ -160,19 +160,22 @@ rule download_ensembl:
     script:
         "scripts/03_download_ensembl.R"
 
-# prepare ensembl conversion tables human - mouse for each gene set to be tested
+# prepare ensembl conversion tables for each gene set to be tested
 rule prepare_ensembl:
     input:
         signature_list = rules.export_signature.output,
         sce_inp = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10",
-        ensembl_hum = config["base"] + config["metadata_paths"]["ensembl_hum"],
-        ensembl_mus = config["base"] + config["metadata_paths"]["ensembl_mus"]
+        ensembl_mus = ENSEMBL_MUS,
+        ensembl_hum = ENSEMBL_HUM,
+        ensembl_zeb = ENSEMBL_ZEB,
+        ensembl_nmr = ENSEMBL_NMR
     output:
-        ensembl_sign = OUTPUT_DAT + "/03_ensm/ensembl_sign_{fraction}",
-        ensembl_mark = OUTPUT_DAT + "/03_ensm/ensembl_mark_{fraction}",
-        ensembl_ndge = OUTPUT_DAT + "/03_ensm/ensembl_ndge_{fraction}"
+        ensembl_sign = OUTPUT_DAT + "/04_endf/ensembl_sign_{fraction}",
+        ensembl_mark = OUTPUT_DAT + "/04_endf/ensembl_mark_{fraction}",
+        ensembl_ndge = OUTPUT_DAT + "/04_endf/ensembl_ndge_{fraction}"
     script:
-        "scripts/03_prepare_ensembl.R"
+        "scripts/04_prepare_ensembl.R"
+        
 """
 #-------------------------------------------------------------------------------
 # reclustering test dataset 1 ("All Stromal" from tabula sapiens)

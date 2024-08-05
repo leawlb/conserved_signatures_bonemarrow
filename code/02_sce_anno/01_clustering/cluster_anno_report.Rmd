@@ -195,6 +195,7 @@ gene_exps <- function(gene){
                         rows = vars(sce_cluster$Age_ID))
   
   ggdf <- base::as.data.frame(colData(sce_cluster))
+  # normalized logcounts (multibatchnorm)
   logc <- SummarizedExperiment::assays(sce_cluster)[["logcounts"]]
 
   ggdf$Species_ID <- factor(ggdf$Species_ID,
@@ -211,6 +212,7 @@ gene_exps <- function(gene){
                         rows = vars(sce_cluster$Age_ID))
   
   ggdf_full <- base::as.data.frame(colData(sce))
+  # normalized logcounts (multibatchnorm)
   logc_full <- SummarizedExperiment::assays(sce)[["logcounts"]]
   
   plot_4 <- umap_gene(sce, gene)

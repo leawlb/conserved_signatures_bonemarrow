@@ -1,6 +1,6 @@
 paths:
   # directory to store output data = cellranger files and SingleCellExperiment objects
-  # paths to input data = fastq files are stored in metadata sheet (OTP export)
+  # paths to input data = fastq files are stored in metadata sheet 
   output_dir: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/fourgenomes"
   target_templates:
     # paths for each type of output file
@@ -15,7 +15,7 @@ references:
 metadata:
   table:
   # should have same format as or be based on OTP export sheet
-   - "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/00_alignment/OE0538_DO-0008_metadata_combined.csv"
+   - "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/00_alignment/metadata.csv"
   identifiers: 
   # define one or multiple column name(s) that uniquely define a sample/object 
     - Species_ID 

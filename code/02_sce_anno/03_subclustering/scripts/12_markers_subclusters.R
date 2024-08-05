@@ -14,7 +14,7 @@ nr_hvgs <- snakemake@params[["nr_hvgs"]]
 
 #-------------------------------------------------------------------------------
 # convert to seurat
-# use normalized logcounts
+# use normalized logcounts (multibatchnorm)
 seurat <- Seurat::as.Seurat(sce, counts = "counts", data = "logcounts",) 
 SeuratObject::Idents(seurat) <- sce$celltypes
 print(base::unique(sce$celltypes))

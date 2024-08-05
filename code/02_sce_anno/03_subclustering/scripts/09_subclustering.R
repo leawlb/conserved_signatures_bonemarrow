@@ -110,7 +110,7 @@ print(nr_subcl)
 #-------------------------------------------------------------------------------
 # perform clustering using mclust and the chosen subclustering genes
 
-data <- SingleCellExperiment::logcounts(sce_clust) # normalized 
+data <- SingleCellExperiment::logcounts(sce_clust) # normalized multibatchnorm
 print(base::paste("final print", subcl))
 data <- t(data[rownames(data) %in% subcl,])
 head(data)

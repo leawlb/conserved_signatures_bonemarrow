@@ -150,6 +150,7 @@ plot_5
 make_plot_list <- function(gene){
   
   ggdf <- base::as.data.frame(colData(sce_clust))
+  # normalised (multibatchnorm)
   logc <- SummarizedExperiment::assays(sce_clust)[["logcounts"]]
 
   ggdf$Species_ID <- factor(

@@ -112,6 +112,7 @@ agg <- scuttle::aggregateAcrossCells(
 # generate a dataframe containing only genes that will be visualised
 all_genes <- base::unique(gene_list_dtplt$gene)
 
+# normalized (MultiBatchNorm)
 vis_df_all <- base::as.data.frame(
   t(SummarizedExperiment::assays(agg)$logcounts[
     rownames(SummarizedExperiment::assays(agg)$logcounts) %in% all_genes,]))
@@ -169,6 +170,7 @@ get_perc_expressed <- function(vis_df){
   
   for(ct in cts){
     
+    # normalized (MultiBatchNorm)
     lc_temp <- SummarizedExperiment::assays(sce)$logcounts[,sce$celltypes == ct]
     
     for(g in gs){

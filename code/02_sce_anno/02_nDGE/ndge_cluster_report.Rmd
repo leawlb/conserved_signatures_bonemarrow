@@ -180,6 +180,7 @@ gene_exps <- function(gene){
     ggplot2::facet_grid(cols = vars(sce_clust$Species_ID))
   
   ggdf <- base::as.data.frame(colData(sce_clust))
+  # normalised logcounts (multibatchnorm)
   logc <- SummarizedExperiment::assays(sce_clust)[["logcounts"]]
 
   ggdf$Species_ID <- factor(ggdf$Species_ID,

@@ -10,40 +10,24 @@
 
 set.seed(37)
 library(tidyverse, quietly = TRUE)
+library(SingleCellExperiment, quietly = TRUE)
 
 #-------------------------------------------------------------------------------
 # load objects
 # conserved markers (from Veronica)
 load(snakemake@input[["marker_cons"]]) 
-
 marker_cons <- markers_conservation # loaded from input
 
 # non-differentially expressed genes
 ct_ndge_list <- base::readRDS(snakemake@input[["celltype_ndge_list"]])
 
 #-------------------------------------------------------------------------------
-# genes used for sub-clustering from some cell types
-# these might be excluded from downstream analysis as they were used 
-# for semi-supervised clustering/cell type identification
-fraction_curr <- snakemake@wildcards[["fraction"]]
 
-subclustering_genes_path <- snakemake@input[["subclustering_genes"]]
-print(subclustering_genes_path)
-genes_subcl_df <- utils::read.csv(file = subclustering_genes_path, 
-                                  header = TRUE, 
-                                  sep = ";", 
-                                  check.names=FALSE, 
-                                  stringsAsFactors=FALSE, 
-                                  as.is=TRUE, 
-                                  colClasses = "character")
-print(head(genes_subcl_df))
-genes_subcl_df <- genes_subcl_df[genes_subcl_df$fraction == fraction_curr,]
-genes_subcl_df <- genes_subcl_df[genes_subcl_df$purpose == "subclustering",]
-genes_subcl <- genes_subcl_df$gene
-
-#-------------------------------------------------------------------------------
-
-#sce <- readRDS(snakemake@input[["sce_input"]])
+# sce contains info on subclustering genes
+# genes used for sub-clustering from some cell types might be excluded from 
+# downstream analysis as they were used to define cell types
+sce <- base::readRDS(snakemake@input[["sce_input"]])
+print(sce)
 
 #-------------------------------------------------------------------------------
 
@@ -84,8 +68,13 @@ cons_signature_list <- lapply(cts_list, function(ct){
 
   # add info on genes used for subclustering to df
   # cell type names are chosen so that they cannot grep another cell type
-  # genes_subcl <- rowData(sce_ct)$Symbol[
-  #   base::grep(ct, rowData(sce_ct)$subclustering_genes)]
+  print(ct)
+  genes_subcl <- rowData(sce)$Symbol[
+    base::grep(ct, rowData(sce)$subclustering_genes)]
+  if(length(genes_subcl) == 0){
+    genes_subcl <- NULL
+  }
+  print(genes_subcl)
   
   marker_cons_ct$genes_subclustering <- vector(length = nrow(marker_cons_ct))
   marker_cons_ct$genes_subclustering[

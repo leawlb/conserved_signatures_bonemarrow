@@ -24,12 +24,23 @@ resolution_louvain <- resolution_louvain_list[[fraction_curr]]
 print(k_graph)
 print(resolution_louvain)
 
+# cell types that were not used to extract signature are excluded because
+# they cannot be separated after excluding them
+cts_exclude <- snakemake@params[["cts_exclude"]]
+print(cts_exclude)
+
 #-------------------------------------------------------------------------------
 # get the required gene sets
+# remove subclustering genes from gene sets in a cell-type specific manner
+# this allows for genes that were used to sub-cluster two cell types to
+# still be used for re-clustering if they are part of the conserved signature
+# of another cell type
 
 # get all conserved markers
 conserved_markers_list <- lapply(signature_list, function(sign){
   conserved_markers <- sign$conserved_markers
+  conserved_markers <- conserved_markers[
+    !conserved_markers %in% sign$subclustering_genes]
   return(conserved_markers)
 })
 consm <- base::unique(unlist(conserved_markers_list))
@@ -37,6 +48,7 @@ consm <- base::unique(unlist(conserved_markers_list))
 # get all ndges
 ndge_list <- lapply(signature_list, function(sign){
   ndges <- sign$ndges
+  ndges <- ndges[!ndges %in% sign$subclustering_genes]
   return(ndges)
 })
 ndges <- base::unique(unlist(ndge_list))
@@ -44,28 +56,24 @@ ndges <- base::unique(unlist(ndge_list))
 # get all signature genes
 conserved_signature_list <- lapply(signature_list, function(sign){
   conserved_signature <- sign$conserved_signature
+  conserved_signature <- conserved_signature[
+    !conserved_signature %in% sign$subclustering_genes]
   return(conserved_signature)
 })
 signt <- base::unique(unlist(conserved_signature_list))
 
-# get all subclustering genes
-subclustering_list <- lapply(signature_list, function(sign){
-  genes_subclustering <- sign$genes_subclustering
-  return(genes_subclustering)
-})
-subclustering_genes <- base::unique(unlist(subclustering_list))
-
-# remove subclustering genes from gene lists because they were manually picked
-consm <- consm[!consm %in% subclustering_genes]
-ndges <- ndges[!ndges %in% subclustering_genes]
-signt <- signt[!signt %in% subclustering_genes]
-
 #-------------------------------------------------------------------------------
-# subset to gene sets
+# subset to required cell types
+sce <- sce[,!sce$celltypes %in% cts_exclude]
 
+# subset to gene sets
 sce_consm <- sce[rownames(sce) %in% consm,]
 sce_ndges <- sce[rownames(sce) %in% ndges,]
 sce_signt <- sce[rownames(sce) %in% signt,]
+
+print(dim(sce_consm))
+print(dim(sce_ndges))
+print(dim(sce_signt))
 
 #-------------------------------------------------------------------------------
 # re-cluster and add clusters to SCE object
@@ -80,9 +88,9 @@ clustering_orig <- function(sce, k_graph, resolution_louvain){
   
   # run PCA 
   # re-calculate PCA (without batch correction)
-  # use logcounts assay, contains normalized logcounts using MultiBatchNorm
+  # use logcounts assay, contains normalized logcounts from multibatchnorm
   sce <- scater::runPCA(sce_consm, 
-                        ncomponents=25, 
+                        ncomponents = 25, 
                         exprs_values = "logcounts") 
   
   # get a graph of nearest neighbors
@@ -92,8 +100,7 @@ clustering_orig <- function(sce, k_graph, resolution_louvain){
                                 type = "rank")
   
   # community detection
-  clust <- igraph::cluster_louvain(graph, 
-                                   resolution = resolution_louvain)
+  clust <- igraph::cluster_louvain(graph, resolution = resolution_louvain)
   
   # add to sce object 
   sce$reclustered <- clust$membership
@@ -101,7 +108,7 @@ clustering_orig <- function(sce, k_graph, resolution_louvain){
   sce$reclustered <- base::factor(
     sce$reclustered, 
     levels = base::sort(base::unique(sce$reclustered)))
-  print(table(sce$reclustered))
+  print(base::table(sce$reclustered))
   
   sce$k_graph <- base::rep(k_graph, ncol(sce))
   sce$resolution_louvain <- base::rep(resolution_louvain, ncol(sce))
@@ -136,6 +143,7 @@ sce$cluster_consm <- clustered_list$sce_consm$reclustered
 sce$cluster_ndges <- clustered_list$sce_ndges$reclustered
 sce$cluster_signt <- clustered_list$sce_signt$reclustered
 
+print(head(colData(sce)))
 base::saveRDS(sce, file = snakemake@output[["sce_output"]])
 
 utils::sessionInfo()

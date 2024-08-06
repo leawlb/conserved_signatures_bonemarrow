@@ -12,6 +12,8 @@ COLORS_REF = config["base"] + config["metadata_paths"]["colors_ref"]
 COLORS = config["base"] + config["metadata_paths"]["colors"]
 
 GENE_LIST_SUBCLUSTERING = config["base"] + config["metadata_paths"]["gene_list_subclustering"]
+CELL_TYPES_EXCLUDE = config["values"]["03_sce_analysis"]["cell_types_exclude"]
+print(CELL_TYPES_EXCLUDE)
 
 ENSEMBL_MUS = config["base"] + config["metadata_paths"]["ensembl_mus"],
 ENSEMBL_HUM = config["base"] + config["metadata_paths"]["ensembl_hum"],
@@ -37,16 +39,16 @@ for f in fractions:
   targets = targets + [OUTPUT_DAT + "/01_sign/signature_list_" + f]
   targets = targets + [OUTPUT_DAT + "/02_rcls/sce_" + f]
   targets = targets + [OUTPUT_REP + "/clustering_own_report_" + f + ".html"] 
+# # 
+# targets = targets + [ENSEMBL_MUS]
+# targets = targets + [ENSEMBL_HUM]
+# targets = targets + [ENSEMBL_ZEB]
+# targets = targets + [ENSEMBL_NMR]
 # 
-  targets = targets + [ENSEMBL_MUS]
-  targets = targets + [ENSEMBL_HUM]
-  targets = targets + [ENSEMBL_ZEB]
-  targets = targets + [ENSEMBL_NMR]
-  
-  targets = targets + [OUTPUT_DAT + "/04_endf/ensembl_sign_" + f]
-  targets = targets + [OUTPUT_DAT + "/04_endf/ensembl_mark_" + f]
-  targets = targets + [OUTPUT_DAT + "/04_endf/ensembl_ndge_" + f]
-#   
+# targets = targets + [OUTPUT_DAT + "/04_endf/ensembl_sign_" + f]
+# targets = targets + [OUTPUT_DAT + "/04_endf/ensembl_mark_" + f]
+# targets = targets + [OUTPUT_DAT + "/04_endf/ensembl_ndge_" + f]
+
 # for r in references_human:
 #   targets = targets + [OUTPUT_DAT + "/04_rcls/reclustered_" + r + "_list"]
 #   targets = targets + [OUTPUT_REP + "/reclustering_hum_eval_" + r + ".html"]
@@ -54,7 +56,7 @@ for f in fractions:
 #   targets = targets + [OUTPUT_DAT + "/05_perm/" + r + "_score_df"]
 #   targets = targets + [OUTPUT_REP + "/reclustering_permutation_report_" + r + ".html"]
 # 
-targets = targets + [OUTPUT_REP + "/signatures_summary.html"]
+#targets = targets + [OUTPUT_REP + "/signatures_summary.html"]
 
 #-------------------------------------------------------------------------------
 
@@ -80,7 +82,7 @@ rule export_signature:
     input:
         celltype_ndge_list = OUTPUT_BASE + "/sce_objects/03_sce_analysis/02_DESeq2_crossspecies/06_nres/PC_0.05_FC_1.5/shared_genes_{fraction}_celltypes",
         marker_cons = OUTPUT_BASE + "/sce_objects/03_sce_analysis/03_marker_conservation/cons_markers_{fraction}.RData",
-        subclustering_genes = GENE_LIST_SUBCLUSTERING,
+        sce_input = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10"
     output:
         signature_list = OUTPUT_DAT + "/01_sign/signature_list_{fraction}"
     script:
@@ -103,52 +105,24 @@ rule signature_summary:
     script:
         "signatures_summary.Rmd"
 
-#-------------------------------------------------------------------------------
-"""
-# Re-clustering our own data
-"""
 
-# reclustering using original clustering pipeline (scater/igraph)
-rule reclustering_own:
-    input:
-        sce_input = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10",
-        signature_list = rules.export_signature.output
-    params:
-        k_graph_list = config["values"]["02_sce_anno"]["k_graph_list"],
-        resolution_louvain_list = config["values"]["02_sce_anno"]["resolution_louvain_list"]
-    output:
-        sce_output = OUTPUT_DAT + "/02_rcls/sce_{fraction}"
-    script:
-        "scripts/02_reclustering_own.R"
-
-
-# visualise reclustered datasets
-rule reclustering_own_report:
-    input: 
-        sce_input = rules.reclustering_own.output
-    output:
-        OUTPUT_REP + "/clustering_own_report_{fraction}.html"
-    params:
-        colors_path = COLORS,
-        #functions = "../../source/sce_functions.R",
-        plotting = "../../source/plotting.R",
-        colors = "../../source/colors.R"
-    script:
-        "reclustering_own_report.Rmd"
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
 """
-# Reclustering datasets from other species (human, zebrafish, naked mole rat)
+# Reclustering datasets to test the ability of our conserved signatures
+# to capture cell identity
+# our own datasets and from other species (human, zebrafish, naked mole rat)
 # using:
 #
 # - conserved marker genes
-# - EMF genes 
+# - nDGEs
+# - conserved signatures
 #
 # Additionally, perform permutation tests using random gene sets of the 
 # same number of genes for reclustering
-"""
+
 
 # download ensembl conversion tables 
 # this is metadata
@@ -178,11 +152,48 @@ rule prepare_ensembl:
         "scripts/04_prepare_ensembl.R"
         
 """
+
+#-------------------------------------------------------------------------------
+"""
+# Re-clustering our own data
+
+"""
+# reclustering using original clustering pipeline (scater/igraph)
+rule reclustering_own:
+    input:
+        sce_input = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10",
+        signature_list = rules.export_signature.output
+    params:
+        k_graph_list = config["values"]["02_sce_anno"]["k_graph_list"],
+        resolution_louvain_list = config["values"]["02_sce_anno"]["resolution_louvain_list"],
+        cts_exclude = CELL_TYPES_EXCLUDE
+    output:
+        sce_output = OUTPUT_DAT + "/02_rcls/sce_{fraction}"
+    script:
+        "scripts/02_reclustering_own.R"
+
+
+# visualise reclustered datasets
+rule reclustering_own_report:
+    input: 
+        sce_input = rules.reclustering_own.output
+    output:
+        OUTPUT_REP + "/clustering_own_report_{fraction}.html"
+    params:
+        colors_path = COLORS,
+        #functions = "../../source/sce_functions.R",
+        plotting = "../../source/plotting.R",
+        colors = "../../source/colors.R"
+    script:
+        "reclustering_own_report.Rmd"
+
+
+
 #-------------------------------------------------------------------------------
 # reclustering test dataset 1 ("All Stromal" from tabula sapiens)
 # standard Seurat approach with standard options from raw counts
 # but without HVGs
-
+"""
 rule reclustering_human:
     input:
         seu_input = config["base"] + config["metadata_paths"]["human_test_datasets"] + "/{reference}",

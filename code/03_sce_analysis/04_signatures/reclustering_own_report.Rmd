@@ -19,7 +19,8 @@ set.seed(37)
 ```
 
 ```{r load, message = FALSE}
-#library(tidyverse, quietly = TRUE)
+library(tidyverse, quietly = TRUE)
+library(SingleCellExperiment, quietly = TRUE)
 ```
 
 ```{r source, message = FALSE}
@@ -188,6 +189,8 @@ plot_ndge <- ggplot2::ggplot(ndge_df,
 
 plot_ndge
 ```
+
+TODO: Add clustering scores
 
 ```{r sessioninfo}
 utils::sessionInfo()

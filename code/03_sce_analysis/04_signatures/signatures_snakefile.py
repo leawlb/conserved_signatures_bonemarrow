@@ -15,10 +15,10 @@ GENE_LIST_SUBCLUSTERING = config["base"] + config["metadata_paths"]["gene_list_s
 CELL_TYPES_EXCLUDE = config["values"]["03_sce_analysis"]["cell_types_exclude"]
 print(CELL_TYPES_EXCLUDE)
 
-ENSEMBL_MUS = config["base"] + config["metadata_paths"]["ensembl_mus"],
-ENSEMBL_HUM = config["base"] + config["metadata_paths"]["ensembl_hum"],
-ENSEMBL_ZEB = config["base"] + config["metadata_paths"]["ensembl_zeb"],
-ENSEMBL_NMR = config["base"] + config["metadata_paths"]["ensembl_nmr"],
+ENSEMBL_MUS = config["base"] + config["metadata_paths"]["ensembl_mus"]
+ENSEMBL_HUM = config["base"] + config["metadata_paths"]["ensembl_hum"]
+ENSEMBL_ZEB = config["base"] + config["metadata_paths"]["ensembl_zeb"]
+ENSEMBL_NMR = config["base"] + config["metadata_paths"]["ensembl_nmr"]
 
 METADATA = pd.read_csv(config["base"] + config["metadata_paths"]["table"])
 def get_list(metadata, column):
@@ -37,9 +37,8 @@ references_human = ["ts_all_stromal", "ts_bone_marrow", "ts_hsc_progenitors", "l
 targets = []
 for f in fractions:
   targets = targets + [OUTPUT_DAT + "/01_sign/signature_list_" + f]
-  targets = targets + [OUTPUT_DAT + "/02_rcls/sce_" + f]
-  targets = targets + [OUTPUT_REP + "/clustering_own_report_" + f + ".html"] 
-# # 
+
+# targets = targets + [OUTPUT_REP + "/signatures_summary.html"]
 # targets = targets + [ENSEMBL_MUS]
 # targets = targets + [ENSEMBL_HUM]
 # targets = targets + [ENSEMBL_ZEB]
@@ -49,6 +48,11 @@ for f in fractions:
 # targets = targets + [OUTPUT_DAT + "/04_endf/ensembl_mark_" + f]
 # targets = targets + [OUTPUT_DAT + "/04_endf/ensembl_ndge_" + f]
 
+for f in fractions:
+  targets = targets + [OUTPUT_DAT + "/02_rcls/sce_" + f]
+  targets = targets + [OUTPUT_REP + "/clustering_own_report_" + f + ".html"] 
+# # 
+
 # for r in references_human:
 #   targets = targets + [OUTPUT_DAT + "/04_rcls/reclustered_" + r + "_list"]
 #   targets = targets + [OUTPUT_REP + "/reclustering_hum_eval_" + r + ".html"]
@@ -56,7 +60,6 @@ for f in fractions:
 #   targets = targets + [OUTPUT_DAT + "/05_perm/" + r + "_score_df"]
 #   targets = targets + [OUTPUT_REP + "/reclustering_permutation_report_" + r + ".html"]
 # 
-#targets = targets + [OUTPUT_REP + "/signatures_summary.html"]
 
 #-------------------------------------------------------------------------------
 
@@ -72,9 +75,9 @@ rule all:
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 """   
-# Get overlap with genes with conserved marker gene function (cons_markers)
-# provided by Veronica Busa
-
+# Get conserved signatures = 
+# genes that are conserved marker gene function provided by Veronica Busa and 
+# are also non-differentially expressed
 """
 
 # export list of data on marker genes, conserved signatures, and nDGEs
@@ -113,27 +116,16 @@ rule signature_summary:
 """
 # Reclustering datasets to test the ability of our conserved signatures
 # to capture cell identity
-# our own datasets and from other species (human, zebrafish, naked mole rat)
+# our own datasets + from other species (human, zebrafish, naked mole rat)
 # using:
 #
 # - conserved marker genes
 # - nDGEs
 # - conserved signatures
 #
-# Additionally, perform permutation tests using random gene sets of the 
-# same number of genes for reclustering
+# Additionally, permutation tests are performed using random gene sets of the 
+# same number of genes for reclustering for the three other species
 
-
-# download ensembl conversion tables 
-# this is metadata
-rule download_ensembl:
-    output:
-        ensembl_mus = ENSEMBL_MUS,
-        ensembl_hum = ENSEMBL_HUM,
-        ensembl_zeb = ENSEMBL_ZEB,
-        ensembl_nmr = ENSEMBL_NMR
-    script:
-        "scripts/03_download_ensembl.R"
 
 # prepare ensembl conversion tables for each gene set to be tested
 rule prepare_ensembl:
@@ -156,7 +148,11 @@ rule prepare_ensembl:
 #-------------------------------------------------------------------------------
 """
 # Re-clustering our own data
-
+# Data will be reclustered exactly as the original dataset with 2000 HVGs 
+# was clustered, based on batch-corrected PC coordinates.
+# Here, SCE object are subsetted to each gene set, PCA is performed again using
+# non-batch corrected values, then clustering is performed at identical
+# resolution and k = number of neighbors
 """
 # reclustering using original clustering pipeline (scater/igraph)
 rule reclustering_own:

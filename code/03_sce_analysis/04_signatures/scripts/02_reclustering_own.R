@@ -86,13 +86,15 @@ clustering_orig <- function(sce, k_graph, resolution_louvain){
   k_graph <- k_graph
   resolution_louvain <- resolution_louvain
   
+  print(nrow(sce))
   # run PCA 
   # re-calculate PCA (without batch correction)
   # use logcounts assay, contains normalized logcounts from multibatchnorm
-  sce <- scater::runPCA(sce_consm, 
+  sce <- scater::runPCA(sce, 
                         ncomponents = 25, 
                         exprs_values = "logcounts") 
   
+  print(nrow(sce))
   # get a graph of nearest neighbors
   graph <- scran::buildSNNGraph(sce, 
                                 k = k_graph, 

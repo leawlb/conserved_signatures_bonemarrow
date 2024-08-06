@@ -32,6 +32,8 @@ source(file = snakemake@params[["plotting"]])
 signature_list_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_sign/signature_list_hsc")
 signature_list_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_sign/signature_list_str")
 
+sce_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10")
+
 colors_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt"
 source("../../source/colors.R")
 
@@ -347,9 +349,12 @@ agg_str <- scuttle::aggregateAcrossCells(
 
 ```{r plot_hsc_signatures1, fig.height = 15, fig.width = 4}
 cts_hsc <- names(signature_list_hsc)
+# activated mpps only have one gene that is not worth to visualise
+cts_hsc <- cts_hsc[!cts_hsc == "Activated MPPs"]
 
 for(ct in cts_hsc){
   
+  print(ct)
   hsc_genes <- signature_list_hsc[[ct]]$conserved_signature
   
   hsc_genes_nosub <- hsc_genes[!hsc_genes %in%
@@ -376,7 +381,7 @@ for(ct in cts_hsc){
   ggplot2::scale_fill_continuous("average logcounts",
                                  low = "white", high = "blue2",
                                  limits = c(0, max(vis_df$expression)))+
-  ggplot2::ggtitle(base::paste0(ct, "markers"))+
+  ggplot2::ggtitle(base::paste(ct, "markers"))+
   ggplot2::theme(axis.title.y = element_blank(),
                  axis.title.x = element_blank(),
                  legend.position = "bottom",
@@ -400,7 +405,7 @@ for(ct in cts_hsc){
   ggplot2::scale_fill_continuous("average logcounts",
                                  low = "white", high = "blue2",
                                  limits = c(0, max(vis_df$expression)))+
-  ggplot2::ggtitle(base::paste0(ct, "markers"))+
+  ggplot2::ggtitle(base::paste(ct, "markers"))+
   ggplot2::theme(axis.title.y = element_blank(),
                  axis.title.x = element_blank(),
                  legend.position = "bottom",
@@ -554,7 +559,6 @@ plot4 <- ggplot2::ggplot(vis_df_hsc[vis_df_hsc$gene %in% hsc_markers_short,],
                                             hjust = 0.45),
                  axis.text.y = element_text(size = 12))
 plot4
-knitr::knit_exit()
 ```
 
 ```{r sessioninfo}

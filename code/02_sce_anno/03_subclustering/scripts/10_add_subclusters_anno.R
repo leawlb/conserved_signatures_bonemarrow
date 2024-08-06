@@ -60,6 +60,7 @@ print(head(final_anno))
 # add info
 
 sce$annotation_subcluster <- vector(length = ncol(sce))
+rowData(sce)$subclustering_genes <- vector(length = nrow(sce))
 
 # for each subclustered SCE object
 for(i in 1:length(sce_subcl_list)){
@@ -74,6 +75,15 @@ for(i in 1:length(sce_subcl_list)){
   sce$annotation_subcluster[
     base::match(colnames(sce_temp), 
                 colnames(sce))] <- sce_temp$annotation_subcluster
+  
+  # get info on which genes were used for subclustering which cell types
+  subcl <-  rowData(sce_temp)$Symbol[
+    rowData(sce_temp)$subclustering_genes != FALSE] 
+  
+  # add info to sce
+  rowData(sce)$subclustering_genes[
+    rowData(sce)$Symbol %in% subcl] <- rowData(sce_temp)$subclustering_genes[
+      rowData(sce_temp)$subclustering_genes != FALSE][1]
 }
 
 # fill empty slots with cluster names (cluster annotation = cell type names)
@@ -135,6 +145,8 @@ stopifnot(!is.na(sce$category))
 stopifnot(!is.na(sce$celltypes))
 stopifnot(!is.na(sce$cluster_after_sub))
 stopifnot(!is.na(sce$annotation_subcluster))
+
+print(base::table(rowData(sce)$subclustering_genes))
 
 #-------------------------------------------------------------------------------
 # re-calculate UMAP coordinates for better looking plots

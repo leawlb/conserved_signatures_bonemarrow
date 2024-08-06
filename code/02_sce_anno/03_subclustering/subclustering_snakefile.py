@@ -68,9 +68,9 @@ for f in fractions:
 
 for s in subclusters_hsc:
   targets = targets + [OUTPUT_DAT + "/11_sepc/hsc_subcluster_" + s + "-sep"]
-  if RUN_MARKER_REPORTS: 
+  if RUN_MARKER_REPORTS:
     targets = targets + [OUTPUT_REP + "/markergenes/markergenes_report_hsc_subcluster_" + s + ".html"]
-   
+
 for s in subclusters_str:
   targets = targets + [OUTPUT_DAT + "/11_sepc/str_subcluster_" + s + "-sep"]
   if RUN_MARKER_REPORTS:

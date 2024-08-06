@@ -5,20 +5,24 @@
 # - nDGEs
 # - genes used for subclustering
 # one item for each cell type and fraction
+# this will automatically exclude cell types for which Veronica did not 
+# calculate any marker genes
 
 set.seed(37)
-library(tidyverse)
+library(tidyverse, quietly = TRUE)
 
 #-------------------------------------------------------------------------------
 # load objects
 # conserved markers (from Veronica)
 load(snakemake@input[["marker_cons"]]) 
+
 marker_cons <- markers_conservation # loaded from input
 
 # non-differentially expressed genes
 ct_ndge_list <- base::readRDS(snakemake@input[["celltype_ndge_list"]])
 
-# genes used for subclustering from some cell types
+#-------------------------------------------------------------------------------
+# genes used for sub-clustering from some cell types
 # these might be excluded from downstream analysis as they were used 
 # for semi-supervised clustering/cell type identification
 fraction_curr <- snakemake@wildcards[["fraction"]]
@@ -39,11 +43,13 @@ genes_subcl <- genes_subcl_df$gene
 
 #-------------------------------------------------------------------------------
 
+#sce <- readRDS(snakemake@input[["sce_input"]])
+
+#-------------------------------------------------------------------------------
+
 cts <- names(ct_ndge_list)
 cts <- cts[cts %in% names(marker_cons)]
 cts_list <- as.list(cts)
-
-
 
 # make a function to collect data 
 cons_signature_list <- lapply(cts_list, function(ct){
@@ -77,6 +83,10 @@ cons_signature_list <- lapply(cts_list, function(ct){
     marker_cons_ct$gene %in% conserved_signature] <- TRUE
 
   # add info on genes used for subclustering to df
+  # cell type names are chosen so that they cannot grep another cell type
+  # genes_subcl <- rowData(sce_ct)$Symbol[
+  #   base::grep(ct, rowData(sce_ct)$subclustering_genes)]
+  
   marker_cons_ct$genes_subclustering <- vector(length = nrow(marker_cons_ct))
   marker_cons_ct$genes_subclustering[
     marker_cons_ct$gene %in% genes_subcl] <- TRUE

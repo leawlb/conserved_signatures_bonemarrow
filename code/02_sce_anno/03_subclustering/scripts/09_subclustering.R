@@ -154,6 +154,15 @@ print(base::unique(sce_clust$annotation_subcluster))
 # remove subcluster number again (is 1 or 2, could lead to confusion later)
 sce_clust$subcluster <- NULL
 
+# add info on subclustering genes into rowData
+rowData(sce_clust)$subclustering_genes <- vector(length = nrow(sce_clust))
+rowData(sce_clust)$subclustering_genes[
+  rowData(sce_clust)$Symbol %in% subcl] <- base::paste0(
+    base::unique(sce_clust$annotation_subcluster)[1], 
+    "_",
+    base::unique(sce_clust$annotation_subcluster)[2])
+print(table(rowData(sce_clust)$subclustering_genes))
+
 #-------------------------------------------------------------------------------
 
 # save only the sub-clustered portion of the original SCE object

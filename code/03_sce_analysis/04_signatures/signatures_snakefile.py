@@ -38,11 +38,7 @@ targets = []
 for f in fractions:
   targets = targets + [OUTPUT_DAT + "/01_sign/signature_list_" + f]
 
-# targets = targets + [OUTPUT_REP + "/signatures_summary.html"]
-# targets = targets + [ENSEMBL_MUS]
-# targets = targets + [ENSEMBL_HUM]
-# targets = targets + [ENSEMBL_ZEB]
-# targets = targets + [ENSEMBL_NMR]
+targets = targets + [OUTPUT_REP + "/signatures_summary.html"]
 # 
 # targets = targets + [OUTPUT_DAT + "/04_endf/ensembl_sign_" + f]
 # targets = targets + [OUTPUT_DAT + "/04_endf/ensembl_mark_" + f]
@@ -126,6 +122,8 @@ rule signature_summary:
 # Additionally, permutation tests are performed using random gene sets of the 
 # same number of genes for reclustering for the three other species
 
+
+#-------------------------------------------------------------------------------
 
 # prepare ensembl conversion tables for each gene set to be tested
 rule prepare_ensembl:

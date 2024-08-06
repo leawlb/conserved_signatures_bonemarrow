@@ -42,6 +42,9 @@ col_cts <- col_cts_str
 ```{r load_objects}
 sce <- base::readRDS(snakemake@input[["sce_input"]])
 fraction_curr <- snakemake@wildcards[["fraction"]]
+
+# reorder for nicer plots
+sce <- sce[,sample(c(1:ncol(sce)), ncol(sce))]
 ```
 
 ```{r colors, meassage = FALSE}

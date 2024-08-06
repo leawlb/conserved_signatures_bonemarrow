@@ -26,6 +26,7 @@ metadata_paths:
     analysis_species: "/data/metadata/scRNAseq/03_sce_analysis/sources_variation_species.txt"
   annotation_subclusters: "/data/metadata/scRNAseq/02_sce_anno/annotation_subclusters.txt"
   annotation_final: "/data/metadata/scRNAseq/02_sce_anno/annotation_final.txt"
+  reclustering: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm"
   ensembl_mus: "/data/metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_mus"
   ensembl_hum: "/data/metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_hum"
   ensembl_zeb: "/data/metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_zeb"
@@ -102,3 +103,4 @@ values:
 run_preprocessing_summary: False
 run_anno_reports: False
 run_marker_reports: False
+ran_li_ipynb: False

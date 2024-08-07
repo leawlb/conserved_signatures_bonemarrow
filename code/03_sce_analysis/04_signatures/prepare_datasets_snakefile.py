@@ -36,18 +36,18 @@ targets = targets + [DIR_RECLUSTERING + "/raw_hum/ts_bone_marrow"]
 targets = targets + [DIR_RECLUSTERING + "/raw_hum/ts_hscs_progenitors"]
 targets = targets + [DIR_RECLUSTERING + "/raw_hum/ts_all_stromal"]
 
-# pre-processed datasets (tabula sapiens)
-targets = targets + [DIR_RECLUSTERING + "/pre-processed/ts_bone_marrow"]
-targets = targets + [DIR_RECLUSTERING + "/pre-processed/ts_hscs_progenitors"]
-targets = targets + [DIR_RECLUSTERING + "/pre-processed/ts_all_stromal"]
+# prepared datasets (tabula sapiens)
+targets = targets + [DIR_RECLUSTERING + "/prepared/ts_bone_marrow"]
+targets = targets + [DIR_RECLUSTERING + "/prepared/ts_hscs_progenitors"]
+targets = targets + [DIR_RECLUSTERING + "/prepared/ts_all_stromal"]
 
-# pre-process dataset (Li) only after ipynb script was executed
+# prepared dataset (Li) only after ipynb script was executed for pre-processing
 if RAN_LI_IPYNB:
   targets = targets + [DIR_RECLUSTERING + "/Li/sce_li_only_counts"]
   targets = targets + [DIR_RECLUSTERING + "/Li/sce_li_nocounts"]
   targets = targets + [DIR_RECLUSTERING + "/Li/sce_li_all"]
   targets = targets + [DIR_RECLUSTERING + "/Li/sce_li_stromal"]
-  targets = targets + [DIR_RECLUSTERING + "/pre-processed/li_all_stromal"]
+  targets = targets + [DIR_RECLUSTERING + "/prepared/li_all_stromal"]
 
 # download exotic datasets
 targets = targets + [DIR_RECLUSTERING + "/raw_nmr/Seurat_hgl_sorted_BM.RData"]
@@ -66,8 +66,10 @@ for a in assays:
   for e in endings:
     targets = targets + [DIR_RECLUSTERING + "/raw_zeb/" + a + "/E-MTAB-5530." + a + e]
 
-# pre-processed exotic files
-targets = targets + [DIR_RECLUSTERING + "/pre-processed/zeb_all_hspc"]
+# prepare exotic files
+targets = targets + [DIR_RECLUSTERING + "/prepared/zeb_all_hspc"]
+targets = targets + [DIR_RECLUSTERING + "/prepared/nmr_sorted_hspc"]
+targets = targets + [DIR_RECLUSTERING + "/prepared/nmr_whole_hspc"]
 
 #-------------------------------------------------------------------------------
 
@@ -116,9 +118,9 @@ rule prepare_ts_datasets:
         ts_hsc_progenitors_input = rules.download_ts_datasets.output.tabula_sapiens_hsc_progenitors,
         ts_stromal_input = rules.download_ts_datasets.output.tabula_sapiens_stromal
     output:
-        ts_bone_marrow_output = DIR_RECLUSTERING + "/pre-processed/ts_bone_marrow",
-        ts_hsc_progenitors_output = DIR_RECLUSTERING + "/pre-processed/ts_hscs_progenitors",
-        ts_stromal_output = DIR_RECLUSTERING + "/pre-processed/ts_all_stromal"
+        ts_bone_marrow_output = DIR_RECLUSTERING + "/prepared/ts_bone_marrow",
+        ts_hsc_progenitors_output = DIR_RECLUSTERING + "/prepared/ts_hscs_progenitors",
+        ts_stromal_output = DIR_RECLUSTERING + "/prepared/ts_all_stromal"
     script:
         "prepare_datasets/prepare_ts_datasets.R"
 
@@ -142,7 +144,7 @@ rule prepare_ts_datasets:
 # Only execute this rule when Load_GEO_data_analyze_it.ipynb has been executed.
 """
 if RAN_LI_IPYNB:
-  rule preprocess_li:
+  rule prepare_li:
       input:
           h5ad_input = DIR_RECLUSTERING + "/Li/download/GSE190965_analyzed.h5ad",
           h5ad_raw_input = DIR_RECLUSTERING + "/Li/download/GSE190965_raw.h5ad"
@@ -151,7 +153,7 @@ if RAN_LI_IPYNB:
           sce_output_1 = DIR_RECLUSTERING + "/Li/sce_li_nocounts",
           sce_output_2 = DIR_RECLUSTERING + "/Li/sce_li_all",
           sce_output_3 = DIR_RECLUSTERING + "/Li/sce_li_stromal",
-          seurat_output = DIR_RECLUSTERING + "/pre-processed/li_all_stromal"
+          seurat_output = DIR_RECLUSTERING + "/prepared/li_all_stromal"
       conda:
           "../../envs/zellkonverter_li.yml"
       script:
@@ -191,9 +193,12 @@ rule unzip_zebrafish:
 rule prepare_exotic_datasets:
     input:
         assays = expand(rules.unzip_zebrafish.output, assay = assays),
-        zeb_clustering_file = rules.download_exotic_datasets.output.zeb_clustering_file
+        zeb_clustering_file = rules.download_exotic_datasets.output.zeb_clustering_file,
+        Seurat_hgl_sorted_BM = rules.download_exotic_datasets.output.Seurat_hgl_sorted_BM,
+        Seurat_hgl_whole_BM = rules.download_exotic_datasets.output.Seurat_hgl_whole_BM
     output:
-        zeb_seu = DIR_RECLUSTERING + "/pre-processed/zeb_all_hspc"
+        zeb_seu = DIR_RECLUSTERING + "/prepared/zeb_all_hspc",
+        nmr_sorted_hspc = DIR_RECLUSTERING + "/prepared/nmr_sorted_hspc",
+        nmr_whole_hspc = DIR_RECLUSTERING + "/prepared/nmr_whole_hspc"
     script:
         "prepare_datasets/prepare_exotic_datasets.R"
-

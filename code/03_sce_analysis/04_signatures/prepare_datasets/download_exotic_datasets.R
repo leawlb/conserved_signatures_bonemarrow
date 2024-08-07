@@ -6,6 +6,8 @@
 set.seed(37)
 options(timeout=1000)
 
+#-------------------------------------------------------------------------------
+
 # get output paths
 Seurat_hgl_sorted_BM <- snakemake@output[["Seurat_hgl_sorted_BM"]]
 Seurat_hgl_whole_BM <- snakemake@output[["Seurat_hgl_whole_BM"]]

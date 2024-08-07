@@ -7,8 +7,6 @@ library(biomaRt, quietly = TRUE)
 set.seed(37)
 options(timeout=300)
 
-#base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008"
-
 #-------------------------------------------------------------------------------
 
 # get ensembl mouse and human ID conversion table (download)
@@ -59,12 +57,11 @@ ensembl_nmr <- biomaRt::getBM(
 
 print("done")
 
-# base::saveRDS(ensembl_hum, base::paste0(base_path, "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/ensembl_hum"))
-# base::saveRDS(ensembl_mus, base::paste0(base_path, "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/ensembl_mus"))
-# base::saveRDS(ensembl_zeb, base::paste0(base_path, "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/ensembl_zeb"))
-# base::saveRDS(ensembl_nmr, base::paste0(base_path, "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/ensembl_nmr"))
+#-------------------------------------------------------------------------------
 
 base::saveRDS(ensembl_mus, snakemake@output[["ensembl_mus"]])
 base::saveRDS(ensembl_hum, snakemake@output[["ensembl_hum"]])
 base::saveRDS(ensembl_zeb, snakemake@output[["ensembl_zeb"]])
 base::saveRDS(ensembl_nmr, snakemake@output[["ensembl_nmr"]])
+
+utils::sessionInfo()

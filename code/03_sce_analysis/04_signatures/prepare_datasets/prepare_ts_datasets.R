@@ -1,10 +1,13 @@
 
-# pre-process datasets 
+#-------------------------------------------------------------------------------
+
+# prepare datasets from tabula sapiens for downstream analysis
 
 set.seed(37)
 
 library(Seurat, quietly = TRUE)
 
+#-------------------------------------------------------------------------------
 # get paths from snakemake
 
 ts_bone_marrow_input <- snakemake@input[["ts_bone_marrow_input"]]
@@ -123,3 +126,5 @@ ts_all_stromal@reductions <- list()
 dim(ts_all_stromal)
 
 base::saveRDS(ts_all_stromal, ts_stromal_output)
+
+utils::sessionInfo()

@@ -3,8 +3,6 @@
 # script to convert data from Li et al. publication to SCE via zellkonverter, 
 # then from SCE to Seurat for consistency with other test datasets
 
-# run from 'try_zellkonverter' conda env (for now) last run on 2024-04-25
-
 #-------------------------------------------------------------------------------
 # load libraries, objects
 
@@ -19,6 +17,7 @@ h5ad_input <- snakemake@input[["h5ad_input"]]
 h5ad_raw_input <- snakemake@input[["h5ad_raw_input"]]
 print(h5ad_input)
 print(h5ad_raw_input)
+
 #-------------------------------------------------------------------------------
 # conversion from h5ad format/adata object
 
@@ -41,10 +40,6 @@ SummarizedExperiment::assays(sce)$Mu <- NULL
 SummarizedExperiment::assays(sce)$Ms <- NULL
 SummarizedExperiment::assays(sce)$spliced <- NULL
 SummarizedExperiment::assays(sce)$unspliced <- NULL
-#assays(sce)$normalized <- assays(sce)$X
-
-# put in a placeholder for logcounts required for Seurat conversion
-#assays(sce_nh)$logcounts <- assays(sce_nh)$X
 
 # remove duplicated genes from the sce object
 dup_genes <- base::unique(rownames(sce)[which(base::duplicated(rownames(sce)))])
@@ -137,3 +132,5 @@ seu_nh$cell_type <- factor(seu_nh$cell_type,
 base::table(seu_nh$cell_type)
 
 base::saveRDS(seu_nh, snakemake@output[["seurat_output"]])
+
+utils::sessionInfo()

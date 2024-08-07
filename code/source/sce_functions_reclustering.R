@@ -2,7 +2,11 @@
 # function for a standard seurat pipeline clustering pipeline from counts
 # make it so that mapply can be used for list of different resolution(s)
 # used for reclustering, and for reclustering permutation
-standard_seu_pipeline <- function(resolution, features, seu, assay_use,
+standard_seu_pipeline <- function(resolution, 
+                                  features, 
+                                  seu, 
+                                  assay_use, # e.g. "RNA"
+                                  use_raw_counts = TRUE,
                                   calc_umap = FALSE){
   
   seu <- seu # seurat object
@@ -11,15 +15,36 @@ standard_seu_pipeline <- function(resolution, features, seu, assay_use,
   assay_use <- assay_use # assay to use as basis for clustering
   calc_umap <- calc_umap # whether umap coordinates should be calculated
   
-  seu <- Seurat::NormalizeData(seu, assay = assay_use, # "RNA" in my case
-                               verbose = FALSE)
-  seu <- Seurat::ScaleData(seu, verbose = FALSE)
-  seu <- Seurat::RunPCA(seu, verbose = FALSE, features = features)
-  seu <- Seurat::FindNeighbors(seu, dims = 1:30, verbose = FALSE)
-  seu <- Seurat::FindClusters(seu, resolution = resolution, verbose = FALSE) 
+  # NormalizeData normalizes "count data"
+  seu <- Seurat::NormalizeData(
+    seu,
+    assay = assay_use, 
+    verbose = FALSE)
+  
+  seu <- Seurat::ScaleData(
+    seu, 
+    verbose = FALSE)
+  
+  seu <- Seurat::RunPCA(
+    seu,
+    verbose = FALSE, 
+    features = features)
+  
+  seu <- Seurat::FindNeighbors(
+    seu, 
+    dims = 1:30, 
+    verbose = FALSE)
+  
+  seu <- Seurat::FindClusters(
+    seu, 
+    resolution = resolution, 
+    verbose = FALSE) 
   
   if(calc_umap == TRUE){
-    seu <- Seurat::RunUMAP(seu, dims = 1:30, verbose = FALSE)
+    seu <- Seurat::RunUMAP(
+      seu,
+      dims = 1:30,
+      verbose = FALSE)
   }
   
   return(seu)

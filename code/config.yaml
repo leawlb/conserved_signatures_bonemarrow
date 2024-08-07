@@ -31,11 +31,11 @@ metadata_paths:
   ensembl_hum: "/data/metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_hum"
   ensembl_zeb: "/data/metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_zeb"
   ensembl_nmr: "/data/metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_nmr"
-  human_test_datasets: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/pre-processed"
-  test_ts_all_stromal: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/pre-processed/ts_all_stromal"
-  test_ts_bone_marrow: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/pre-processed/ts_bone_marrow"
-  test_ts_hsc_progenitors: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/pre-processed/ts_hscs_progenitors"
-  test_li_all_stromal: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/pre-processed/li_all_stromal"
+  datasets_other_path: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared"
+  #test_ts_all_stromal: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_all_stromal"
+  #test_ts_bone_marrow: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_bone_marrow"
+  #test_ts_hsc_progenitors: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_hscs_progenitors"
+  #test_li_all_stromal: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/li_all_stromal"
   cell_cycle_genes: "/data/metadata/scRNAseq/03_sce_analysis/cell_cycle_genes/go_term_cellcycleprocess_mouse.csv"
   assignment: "/data/metadata/scRNAseq/05_cci_prep/assignment.txt"
   assignment_reverse: "/data/metadata/scRNAseq/05_cci_prep/assignment_reverse.txt"
@@ -104,3 +104,4 @@ run_preprocessing_summary: False
 run_anno_reports: False
 run_marker_reports: False
 ran_li_ipynb: False
+recluster_other: False

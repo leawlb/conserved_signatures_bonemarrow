@@ -20,6 +20,8 @@ ENSEMBL_HUM = config["base"] + config["metadata_paths"]["ensembl_hum"]
 ENSEMBL_ZEB = config["base"] + config["metadata_paths"]["ensembl_zeb"]
 ENSEMBL_NMR = config["base"] + config["metadata_paths"]["ensembl_nmr"]
 
+RECLUSTER_OTHER = config["recluster_other"]
+
 METADATA = pd.read_csv(config["base"] + config["metadata_paths"]["table"])
 def get_list(metadata, column):
   values = METADATA[column]
@@ -30,7 +32,7 @@ def get_list(metadata, column):
 print(METADATA)
 
 fractions = get_list(metadata = METADATA, column = "Fraction_ID")
-references_human = ["ts_all_stromal", "ts_bone_marrow", "ts_hsc_progenitors", "li_all_stromal"]
+datasets_other = ["ts_all_stromal", "ts_bone_marrow", "ts_hscs_progenitors", "li_all_stromal"]
 
 #-------------------------------------------------------------------------------
 
@@ -39,28 +41,24 @@ for f in fractions:
   targets = targets + [OUTPUT_DAT + "/01_sign/signature_list_" + f]
 
 targets = targets + [OUTPUT_REP + "/signatures_summary.html"]
-# 
-# targets = targets + [OUTPUT_DAT + "/04_endf/ensembl_sign_" + f]
-# targets = targets + [OUTPUT_DAT + "/04_endf/ensembl_mark_" + f]
-# targets = targets + [OUTPUT_DAT + "/04_endf/ensembl_ndge_" + f]
+targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_sign_" + f]
+targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_mark_" + f]
+targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_ndge_" + f]
 
-for f in fractions:
-  targets = targets + [OUTPUT_DAT + "/02_rcls/sce_" + f]
-  targets = targets + [OUTPUT_REP + "/clustering_own_report_" + f + ".html"] 
-# # 
+# for f in fractions:
+#   targets = targets + [OUTPUT_DAT + "/03_rclo/sce_" + f]
+#   targets = targets + [OUTPUT_REP + "/clustering_own_report_" + f + ".html"] 
 
-# for r in references_human:
-#   targets = targets + [OUTPUT_DAT + "/04_rcls/reclustered_" + r + "_list"]
-#   targets = targets + [OUTPUT_REP + "/reclustering_hum_eval_" + r + ".html"]
-#   targets = targets + [OUTPUT_REP + "/reclustering_hum_report_" + r + ".html"]
-#   targets = targets + [OUTPUT_DAT + "/05_perm/" + r + "_score_df"]
-#   targets = targets + [OUTPUT_REP + "/reclustering_permutation_report_" + r + ".html"]
-# 
+if RECLUSTER_OTHER:
+  for d in datasets_other:
+    targets = targets + [OUTPUT_DAT + "/04_rcls/reclustered_" + d + "_list"]
+  # targets = targets + [OUTPUT_REP + "/reclustering_hum_eval_" + d + ".html"]
+  # targets = targets + [OUTPUT_REP + "/reclustering_hum_report_" + r + ".html"]
+  # targets = targets + [OUTPUT_DAT + "/05_perm/" + r + "_score_df"]
+  # targets = targets + [OUTPUT_REP + "/reclustering_permutation_report_" + r + ".html"]
+
 
 #-------------------------------------------------------------------------------
-
-wildcard_constraints: 
-    fraction="[a-z]+"
 
 localrules: all  
 
@@ -104,8 +102,6 @@ rule signature_summary:
     script:
         "signatures_summary.Rmd"
 
-
-
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
@@ -121,11 +117,11 @@ rule signature_summary:
 #
 # Additionally, permutation tests are performed using random gene sets of the 
 # same number of genes for reclustering for the three other species
-
+"""
 
 #-------------------------------------------------------------------------------
-
 # prepare ensembl conversion tables for each gene set to be tested
+# ensembl datasets are downloaded in prepare_datasets_snakefile.py
 rule prepare_ensembl:
     input:
         signature_list = rules.export_signature.output,
@@ -135,24 +131,22 @@ rule prepare_ensembl:
         ensembl_zeb = ENSEMBL_ZEB,
         ensembl_nmr = ENSEMBL_NMR
     output:
-        ensembl_sign = OUTPUT_DAT + "/04_endf/ensembl_sign_{fraction}",
-        ensembl_mark = OUTPUT_DAT + "/04_endf/ensembl_mark_{fraction}",
-        ensembl_ndge = OUTPUT_DAT + "/04_endf/ensembl_ndge_{fraction}"
+        ensembl_sign = OUTPUT_DAT + "/02_endf/ensembl_sign_{fraction}",
+        ensembl_mark = OUTPUT_DAT + "/02_endf/ensembl_mark_{fraction}",
+        ensembl_ndge = OUTPUT_DAT + "/02_endf/ensembl_ndge_{fraction}"
     script:
-        "scripts/04_prepare_ensembl.R"
-        
-"""
-
+        "scripts/02_prepare_ensembl.R"
+      
 #-------------------------------------------------------------------------------
 """
-# Re-clustering our own data
+# RE-CLUSTERING OUR DATA
+
 # Data will be reclustered exactly as the original dataset with 2000 HVGs 
 # was clustered, based on batch-corrected PC coordinates.
 # Here, SCE object are subsetted to each gene set, PCA is performed again using
 # non-batch corrected values, then clustering is performed at identical
-# resolution and k = number of neighbors
+# resolution and k = number of neighbors using the original functions
 """
-# reclustering using original clustering pipeline (scater/igraph)
 rule reclustering_own:
     input:
         sce_input = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10",
@@ -162,9 +156,9 @@ rule reclustering_own:
         resolution_louvain_list = config["values"]["02_sce_anno"]["resolution_louvain_list"],
         cts_exclude = CELL_TYPES_EXCLUDE
     output:
-        sce_output = OUTPUT_DAT + "/02_rcls/sce_{fraction}"
+        sce_output = OUTPUT_DAT + "/03_rclo/sce_{fraction}"
     script:
-        "scripts/02_reclustering_own.R"
+        "scripts/03_reclustering_own.R"
 
 
 # visualise reclustered datasets
@@ -181,27 +175,32 @@ rule reclustering_own_report:
     script:
         "reclustering_own_report.Rmd"
 
-
-
 #-------------------------------------------------------------------------------
-# reclustering test dataset 1 ("All Stromal" from tabula sapiens)
-# standard Seurat approach with standard options from raw counts
-# but without HVGs
 """
-rule reclustering_human:
-    input:
-        seu_input = config["base"] + config["metadata_paths"]["human_test_datasets"] + "/{reference}",
-        ensembl_emfs = expand(rules.prepare_ensembl.output.ensembl_emfs, fraction = fractions),
-        ensembl_mark = expand(rules.prepare_ensembl.output.ensembl_mark, fraction = fractions)
-    params:
-        reclustering_functions = "../../source/sce_functions_reclustering.R",
-        cut_off_counts = 10,
-        nr_cores = 20
-    output:
-        seu_output = OUTPUT_DAT + "/04_rcls/reclustered_{reference}_list"
-    script: 
-        "scripts/04_reclustering_hum.R"
+# RE-CLUSTERING OTHER DATA
 
+# Datasets from other species are prepared for analysis using 
+# prepare_datasets_snakefile.py
+
+# Standard Seurat approach with standard options starting from raw counts
+# but with aforementioned gene sets instead of HVGs.
+"""
+if RECLUSTER_OTHER:
+  rule reclustering_other:
+      input:
+          seu_input = config["base"] + config["metadata_paths"]["datasets_other_path"] + "/{dataset}",
+          ensembl_sign = expand(rules.prepare_ensembl.output.ensembl_sign, fraction = fractions),
+          ensembl_mark = expand(rules.prepare_ensembl.output.ensembl_mark, fraction = fractions)
+      params:
+          reclustering_functions = "../../source/sce_functions_reclustering.R",
+          cut_off_counts = 5, # put into config later
+          nr_cores = 20 # put into config later
+      output:
+          seu_output = OUTPUT_DAT + "/04_rcls/reclustered_{dataset}_list"
+      script: 
+          "scripts/04_reclustering_other.R"
+
+"""
 # evaluate cluster silhuoette and purity of all re-clustering
 rule reclustering_hum_eval:
     input:

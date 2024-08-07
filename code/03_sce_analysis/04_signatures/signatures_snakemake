@@ -1,9 +1,1 @@
-snakemake --cluster "bsub -q medium -n20 -R rusage[mem=70GB]" -p -j10 -c20 -s signatures_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda -n
-
 snakemake --cluster "bsub -q long -n20 -R rusage[mem=70GB]" -p -j10 -c20 -s signatures_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda -n
-
-# testing
-snakemake --cluster "bsub -q medium -n10 -R rusage[mem=70GB]" -p -j10 -c10 -s signatures_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda -n
-
-# testing
-snakemake --cluster "bsub -q medium -n10 -R rusage[mem=50GB]" -p -j10 -c10 -s prepare_datasets_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda -n

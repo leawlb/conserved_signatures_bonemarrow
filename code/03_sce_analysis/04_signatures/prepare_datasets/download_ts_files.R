@@ -68,3 +68,5 @@ utils::download.file(
 # - manually downloaded Load_GEO_data_analyze_it.ipynb 2024-04-05 https://github.com/Hongzhe2022/MSC_BM_scripts/commit/0e06e526aac2ebb8ca276d3d165f1f7573e7cdbb
 # - made a data/ directory in line with github repository structure containing a copy of Hongzhe_clustering_and_2dUMAP_louvain11_merged_95_renamed.csv
 # - exported the micromamba environment required to run the jupyter notebook
+
+utils::sessionInfo()

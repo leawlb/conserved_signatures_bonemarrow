@@ -1,14 +1,27 @@
 #-------------------------------------------------------------------------------
 
-# download datasets containing bone marrow cells (2 human HSPC, 2 human stromal)
+# download datasets containing hematopoietic cells from naked mole rat (NMR)
+# and zebrafish (ZEB)
 
 set.seed(37)
 options(timeout=1000)
 
-# get input paths
-Seurat_hgl_sorted_BM <- snakemake@input[["Seurat_hgl_sorted_BM"]]
-Seurat_hgl_whole_BM <- snakemake@input[["Seurat_hgl_whole_BM"]]
+# get output paths
+Seurat_hgl_sorted_BM <- snakemake@output[["Seurat_hgl_sorted_BM"]]
+Seurat_hgl_whole_BM <- snakemake@output[["Seurat_hgl_whole_BM"]]
 
+zeb_clustering_file <- snakemake@output[["zeb_clustering_file"]]
+expression_tpm <- snakemake@output[["expression_tpm"]]
+aggregated_filtered_normalised_counts <- snakemake@output[["aggregated_filtered_normalised_counts"]]
+aggregated_filtered_counts <- snakemake@output[["aggregated_filtered_counts"]]
+
+print(Seurat_hgl_sorted_BM)
+print(Seurat_hgl_whole_BM)
+
+print(zeb_clustering_file)
+print(expression_tpm)
+print(aggregated_filtered_normalised_counts)
+print(aggregated_filtered_counts)
 
 #-------------------------------------------------------------------------------
 # naked mole rat = NMR = heterocephalus glaber = HGL
@@ -21,8 +34,8 @@ utils::download.file(
   destfile = Seurat_hgl_sorted_BM)
 
 utils::download.file(
-  url = "https://figshare.com/ndownloader/files/28484826",
-  destfile = Seurat_hgl_sorted_BM)
+  url = "https://figshare.com/ndownloader/files/28484889",
+  destfile = Seurat_hgl_whole_BM)
 
 #-------------------------------------------------------------------------------
 # zebrafish = zeb = danio rerio = dnr
@@ -32,27 +45,25 @@ utils::download.file(
 utils::download.file(
   url = "https://www.ebi.ac.uk/gxa/sc/experiment/E-MTAB-5530/download?fileType=cluster&accessKey=",
   destfile = zeb_clustering_file)
-
-#zeb_clustering_file <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/raw/zebrafish/zeb_clusters.tsv"
 # E-MTAB-5530.clusters.tsv
 
 utils::download.file(
   url = "https://www.ebi.ac.uk/gxa/sc/experiment/E-MTAB-5530/download/zip?fileType=quantification-filtered&accessKey=",
-  destfile = zeb_quantification_filtered_files)
-
-#zeb_quantification_filtered_files <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/raw/zebrafish//zeb_quantification_filtered_files.zip"
+  destfile = expression_tpm)
 # E-MTAB-5530-quantification-filtered-files.zip
+# also called "Filtered TPMs Files" on the website
+# TPM = transcript per million, apparently only used for QC 
 
 utils::download.file(
   url = "https://www.ebi.ac.uk/gxa/sc/experiment/E-MTAB-5530/download/zip?fileType=normalised&accessKey=",
-  destfile = zeb_normalised_files)
-
-#zeb_normalised_files <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/raw/zebrafish/zeb_normalised_files.zip"
+  destfile = aggregated_filtered_normalised_counts)
 # E-MTAB-5530-normalised-files.zip
+# also called Normalised Counts File" on the website
 
 utils::download.file(
   url = "https://www.ebi.ac.uk/gxa/sc/experiment/E-MTAB-5530/download/zip?fileType=quantification-raw&accessKey=",
-  destfile = zeb_quantification_raw_files)
-
-#zeb_quantification_raw_files <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/raw/zebrafish/zeb_quantification_raw_files.zip"
+  destfile = aggregated_filtered_counts)
 # E-MTAB-5530-quantification-raw-files.zip
+# also called "Raw Counts Files" on the website
+
+utils::sessionInfo()

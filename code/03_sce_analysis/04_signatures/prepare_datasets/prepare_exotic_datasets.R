@@ -118,6 +118,9 @@ seu_zeb$manually_annotated_ct[seu_zeb$selected_clustering == 9] <- "Lymphoid?"
 print(seu_zeb)
 print(head(seu_zeb@meta.data))
 
+# add info on which column of the ensembl data frame to use based on Features 
+seu_zeb@misc$ensembl_column_use <- "ENSG_ID" # zebrafish IDs
+
 #-------------------------------------------------------------------------------
 
 base::saveRDS(seu_zeb, snakemake@output[["zeb_seu"]])
@@ -140,9 +143,13 @@ seu_nmr_whl <- S.NOmp
 seu_nmr_srt <- seu_nmr_srt[,!seu_nmr_srt$celltype.combi %in% 
                              c("TC", "PC", "ERY", "MO", "DC", "PB-GC", "BC")]
 
+# add info on which column of the ensembl data frame to use based on Features 
+seu_nmr_srt@misc$ensembl_column_use <- "HGLABER_SYMBOL" # NMR symbols
+
 # will use sorted HSPCs for re-clustering, but also export whole HSPCs for
 # testing and other uses
 base::saveRDS(seu_nmr_srt, snakemake@output[["nmr_sorted_hspc"]])
 base::saveRDS(seu_nmr_whl, snakemake@output[["nmr_whole_hspc"]])
+
 
 utils::sessionInfo()

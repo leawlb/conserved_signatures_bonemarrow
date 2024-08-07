@@ -51,6 +51,9 @@ seu_ts_hscs_progenitors@reductions <- list()
 
 dim(seu_ts_hscs_progenitors)
 
+# add info on which column of the ensembl data frame to use based on Features 
+seu_ts_hscs_progenitors@misc$ensembl_column_use <- "ENSG_ID" # human IDs
+
 base::saveRDS(seu_ts_hscs_progenitors, ts_hsc_progenitors_output)
 
 #-------------------------------------------------------------------------------
@@ -89,6 +92,9 @@ seu_ts_bone_marrow@reductions <- list()
 
 dim(seu_ts_bone_marrow)
 
+# add info on which column of the ensembl data frame to use based on Features 
+seu_ts_bone_marrow@misc$ensembl_column_use <- "ENSG_ID" # human IDs
+
 base::saveRDS(seu_ts_bone_marrow, ts_bone_marrow_output)
 
 #-------------------------------------------------------------------------------
@@ -124,6 +130,9 @@ ts_all_stromal@neighbors <- list()
 ts_all_stromal@reductions <- list()
 
 dim(ts_all_stromal)
+
+# add info on which column of the ensembl data frame to use based on Features 
+ts_all_stromal@misc$ensembl_column_use <- "ENSG_ID" # human IDs
 
 base::saveRDS(ts_all_stromal, ts_stromal_output)
 

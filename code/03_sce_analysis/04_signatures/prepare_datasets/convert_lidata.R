@@ -131,6 +131,9 @@ seu_nh$cell_type <- factor(seu_nh$cell_type,
 
 base::table(seu_nh$cell_type)
 
+# add info on which column of the ensembl data frame to use based on Features 
+seu_nh@misc$ensembl_column_use <- "ENSG_ID" # human IDs
+
 base::saveRDS(seu_nh, snakemake@output[["seurat_output"]])
 
 utils::sessionInfo()

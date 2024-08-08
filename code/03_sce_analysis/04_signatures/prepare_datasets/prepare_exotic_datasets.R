@@ -115,8 +115,26 @@ seu_zeb$manually_annotated_ct[seu_zeb$selected_clustering == 7] <- "Ery precurso
 seu_zeb$manually_annotated_ct[seu_zeb$selected_clustering == 8] <- "Mono/Macro2"
 seu_zeb$manually_annotated_ct[seu_zeb$selected_clustering == 9] <- "Lymphoid?"
 
+# factorize cell types and put in correct slot for downstream analysis
+seu_zeb$manually_annotated_ct <- factor(
+  seu_zeb$manually_annotated_ct,
+  levels = c("Thrombo",
+             "Ery precursor",
+             "Ery1",
+             "Ery2",
+             "Active?",
+             "Neutro1",
+             "Neutro2",
+             "Mono/Macro1",
+             "Mono/Macro2",
+             "Lymphoid?"))
+
+stopifnot(!is.na(seu_zeb$manually_annotated_ct))
+
 print(seu_zeb)
 print(head(seu_zeb@meta.data))
+
+seu_zeb$cell_type <- seu_zeb$manually_annotated_ct
 
 # add info on which column of the ensembl data frame to use based on Features 
 seu_zeb@misc$ensembl_column_use <- "ENSDARG_ID" # zebrafish IDs
@@ -142,6 +160,17 @@ seu_nmr_whl <- S.NOmp
 # remove cell types that are not in our dataset/conserved signatures
 seu_nmr_srt <- seu_nmr_srt[,!seu_nmr_srt$celltype.combi %in% 
                              c("TC", "PC", "ERY", "MO", "DC", "PB-GC", "BC")]
+
+# factorize cell types and put in correct slot for downstream analysis
+seu_nmr_srt$celltype.combi <- factor(
+  seu_nmr_srt$celltype.combi,
+  levels = levels(seu_nmr_srt$celltype.combi)[
+    levels(seu_nmr_srt$celltype.combi) %in% base::unique(
+      seu_nmr_srt$celltype.combi)]
+)
+
+seu_nmr_srt$cell_type <- seu_nmr_srt$celltype.combi
+stopifnot(!is.na(seu_zeb$cell_type))
 
 # add info on which column of the ensembl data frame to use based on Features 
 seu_nmr_srt@misc$ensembl_column_use <- "HGLABER_SYMBOL" # NMR symbols

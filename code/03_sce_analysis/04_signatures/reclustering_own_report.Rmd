@@ -44,7 +44,7 @@ sce <- base::readRDS(snakemake@input[["sce_input"]])
 fraction_curr <- snakemake@wildcards[["fraction"]]
 
 # reorder for nicer plots
-sce <- sce[,base::sample(c(1:ncol(sce)), ncol(sce)), replace = FALSE]
+sce <- sce[,base::sample(c(1:ncol(sce)), ncol(sce), replace = FALSE)]
 ```
 
 ```{r colors, meassage = FALSE}

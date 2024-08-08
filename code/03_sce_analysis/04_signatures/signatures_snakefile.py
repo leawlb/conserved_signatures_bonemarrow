@@ -11,7 +11,7 @@ OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/04_signatures"
 COLORS_REF = config["base"] + config["metadata_paths"]["colors_ref"]
 COLORS = config["base"] + config["metadata_paths"]["colors"]
 
-GENE_LIST_SUBCLUSTERING = config["base"] + config["metadata_paths"]["gene_list_subclustering"]
+#GENE_LIST_SUBCLUSTERING = config["base"] + config["metadata_paths"]["gene_list_subclustering"]
 CELL_TYPES_EXCLUDE = config["values"]["03_sce_analysis"]["cell_types_exclude"]
 print(CELL_TYPES_EXCLUDE)
 
@@ -45,15 +45,15 @@ targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_sign_" + f]
 targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_mark_" + f]
 targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_ndge_" + f]
 
-# for f in fractions:
-#   targets = targets + [OUTPUT_DAT + "/03_rclo/sce_" + f]
-#   targets = targets + [OUTPUT_REP + "/clustering_own_report_" + f + ".html"] 
+for f in fractions:
+  targets = targets + [OUTPUT_DAT + "/03_rclo/sce_" + f]
+  targets = targets + [OUTPUT_REP + "/reclustering_own/reclustering_own_report_" + f + ".html"]
 
-if RECLUSTER_OTHER:
-  for d in datasets_other:
-    targets = targets + [OUTPUT_DAT + "/04_rcls/reclustered_" + d + "_list"]
+#if RECLUSTER_OTHER:
+for d in datasets_other:
+  targets = targets + [OUTPUT_DAT + "/04_rcls/reclustered_" + d + "_list"]
   # targets = targets + [OUTPUT_REP + "/reclustering_hum_eval_" + d + ".html"]
-  # targets = targets + [OUTPUT_REP + "/reclustering_hum_report_" + r + ".html"]
+  targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_report_" + d + ".html"]
   # targets = targets + [OUTPUT_DAT + "/05_perm/" + r + "_score_df"]
   # targets = targets + [OUTPUT_REP + "/reclustering_permutation_report_" + r + ".html"]
 
@@ -166,7 +166,7 @@ rule reclustering_own_report:
     input: 
         sce_input = rules.reclustering_own.output
     output:
-        OUTPUT_REP + "/clustering_own_report_{fraction}.html"
+        OUTPUT_REP + "/reclustering_own/reclustering_own_report_{fraction}.html"
     params:
         colors_path = COLORS,
         #functions = "../../source/sce_functions.R",
@@ -185,20 +185,20 @@ rule reclustering_own_report:
 # Standard Seurat approach with standard options starting from raw counts
 # but with aforementioned gene sets instead of HVGs.
 """
-if RECLUSTER_OTHER:
-  rule reclustering_other:
-      input:
-          seu_input = config["base"] + config["metadata_paths"]["datasets_other_path"] + "/{dataset}",
-          ensembl_sign = expand(rules.prepare_ensembl.output.ensembl_sign, fraction = fractions),
-          ensembl_mark = expand(rules.prepare_ensembl.output.ensembl_mark, fraction = fractions)
-      params:
-          reclustering_functions = "../../source/sce_functions_reclustering.R",
-          cut_off_counts = 5, # put into config later
-          nr_cores = 20 # put into config later
-      output:
-          seu_output = OUTPUT_DAT + "/04_rcls/reclustered_{dataset}_list"
-      script: 
-          "scripts/04_reclustering_other.R"
+#if RECLUSTER_OTHER:
+rule reclustering_other:
+    input:
+        seu_input = config["base"] + config["metadata_paths"]["datasets_other_path"] + "/{dataset}",
+        ensembl_sign = expand(rules.prepare_ensembl.output.ensembl_sign, fraction = fractions),
+        ensembl_mark = expand(rules.prepare_ensembl.output.ensembl_mark, fraction = fractions)
+    params:
+        reclustering_functions = "../../source/sce_functions_reclustering.R",
+        cut_off_counts = config["values"]["03_sce_analysis"]["reclustering_cutoff_counts"], 
+        nr_cores = config["values"]["03_sce_analysis"]["nr_cores"] 
+    output:
+        seu_output = OUTPUT_DAT + "/04_rcls/reclustered_{dataset}_list"
+    script: 
+        "scripts/04_reclustering_other.R"
 
 """
 # evaluate cluster silhuoette and purity of all re-clustering
@@ -214,21 +214,22 @@ rule reclustering_hum_eval:
         OUTPUT_REP + "/reclustering_hum_eval_{reference}.html"
     script: 
         "reclustering_hum_eval.Rmd"
-
+"""
 # visualise reclustered datasets using different gene sets
-rule reclustering_hum_report:
+rule reclustering_other_report:
     input:
-        seu_list = OUTPUT_DAT + "/04_rcls/reclustered_{reference}_list"
+        seu_list = OUTPUT_DAT + "/04_rcls/reclustered_{dataset}_list"
     params:
-        colors_path = COLORS,
-        functions = "../../source/sce_functions.R",
+        #colors_path = COLORS,
+        #functions = "../../source/sce_functions.R",
         plotting = "../../source/plotting.R",
-        colors = "../../source/colors.R"
+        #colors = "../../source/colors.R"
     output:
-        OUTPUT_REP + "/reclustering_hum_report_{reference}.html"
+        OUTPUT_REP + "/reclustering_other/reclustering_other_report_{dataset}.html"
     script: 
-        "reclustering_hum_report.Rmd"
+        "reclustering_other_report.Rmd"
 
+"""
 resolution_list = [
   {"li_all_stromal": 0.4},
   {"ts_all_stromal": 0.7},

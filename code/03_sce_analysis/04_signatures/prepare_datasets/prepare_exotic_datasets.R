@@ -119,7 +119,7 @@ print(seu_zeb)
 print(head(seu_zeb@meta.data))
 
 # add info on which column of the ensembl data frame to use based on Features 
-seu_zeb@misc$ensembl_column_use <- "ENSG_ID" # zebrafish IDs
+seu_zeb@misc$ensembl_column_use <- "ENSDARG_ID" # zebrafish IDs
 
 #-------------------------------------------------------------------------------
 

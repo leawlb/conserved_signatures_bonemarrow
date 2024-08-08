@@ -32,7 +32,7 @@ def get_list(metadata, column):
 print(METADATA)
 
 fractions = get_list(metadata = METADATA, column = "Fraction_ID")
-datasets_other = ["ts_all_stromal", "ts_bone_marrow", "ts_hscs_progenitors", "li_all_stromal"]
+datasets_other = ["ts_all_stromal", "ts_bone_marrow", "ts_hscs_progenitors", "li_all_stromal", "nmr_sorted_hspc", "zeb_all_hspc"]
 
 #-------------------------------------------------------------------------------
 

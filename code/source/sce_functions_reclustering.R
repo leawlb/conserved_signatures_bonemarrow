@@ -27,12 +27,20 @@ standard_seu_pipeline <- function(resolution,
   
   seu <- Seurat::RunPCA(
     seu,
+    npcs = 30,
     verbose = FALSE, 
     features = features)
   
+  if(ncol(seu@reductions$pca) == 30){
+    nr_pca <- 30
+  }else if(ncol(seu@reductions$pca) < 30){
+    nr_pca <- ncol(seu@reductions$pca)
+    print(base::paste("changed nr of pcr to maximum", nr_pca, "PCs"))
+  }
+  
   seu <- Seurat::FindNeighbors(
     seu, 
-    dims = 1:30, 
+    dims = 1:nr_pca, 
     verbose = FALSE)
   
   seu <- Seurat::FindClusters(
@@ -43,7 +51,7 @@ standard_seu_pipeline <- function(resolution,
   if(calc_umap == TRUE){
     seu <- Seurat::RunUMAP(
       seu,
-      dims = 1:30,
+      dims = 1:nr_pca,
       verbose = FALSE)
   }
   

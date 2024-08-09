@@ -91,6 +91,7 @@ seu_zeb <- SeuratObject::CreateSeuratObject(
   data = counts_normalised,
   project = "SeuratProject", 
   assay = "RNA")
+# no reduced dimensions
 
 print(seu_zeb)
 print("conversion done")
@@ -175,10 +176,23 @@ stopifnot(!is.na(seu_zeb$cell_type))
 # add info on which column of the ensembl data frame to use based on Features 
 seu_nmr_srt@misc$ensembl_column_use <- "HGLABER_SYMBOL" # NMR symbols
 
+print(seu_nmr_srt@reductions)
+
+# remove umap coordinates and neighbors
+seu_nmr_srt@neighbors <- list()
+# keep original PCA coordinates for comparison later but remove other reductions
+seu_nmr_srt_pca <- seu_nmr_srt
+seu_nmr_srt@reductions <- list()
+seu_nmr_srt@reductions$pca_orig <- seu_nmr_srt_pca@reductions$pca
+
+print("after removal")
+print(seu_nmr_srt@reductions)
+
+print(seu_nmr_srt@reductions)
+
 # will use sorted HSPCs for re-clustering, but also export whole HSPCs for
 # testing and other uses
 base::saveRDS(seu_nmr_srt, snakemake@output[["nmr_sorted_hspc"]])
 base::saveRDS(seu_nmr_whl, snakemake@output[["nmr_whole_hspc"]])
-
 
 utils::sessionInfo()

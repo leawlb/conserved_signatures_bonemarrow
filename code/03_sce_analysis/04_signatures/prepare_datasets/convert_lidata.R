@@ -109,7 +109,14 @@ seu_nh <- Seurat::as.Seurat(sce_nh)
 
 # consistency with other test datasets
 seu_nh@neighbors <- list()
+# keep original PCA coordinates for comparison later but remove other reductions
+print(seu_nh@reductions)
+seu_nh_pca <-seu_nh
 seu_nh@reductions <- list()
+seu_nh@reductions$pca_orig <- seu_nh_pca@reductions$pca
+
+print("after removal")
+print(seu_nh@reductions)
 
 RNA <- Seurat::CreateAssayObject(seu_nh@assays$originalexp$counts)
 seu_nh[['RNA']] <- RNA

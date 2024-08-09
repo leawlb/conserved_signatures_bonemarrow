@@ -46,7 +46,7 @@ fraction_curr <- snakemake@wildcards[["fraction"]]
 cts_exclude <- snakemake@params[["cts_exclude"]]
 
 # remove cts to exdlude and reorder for nicer plots
-sce <- sce[,!sce %in% cts_exclude]
+sce <- sce[,!sce$celltypes %in% cts_exclude]
 sce <- sce[,base::sample(c(1:ncol(sce)), ncol(sce), replace = FALSE)]
 ```
 

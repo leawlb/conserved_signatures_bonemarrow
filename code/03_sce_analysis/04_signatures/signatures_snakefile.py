@@ -74,14 +74,17 @@ rule all:
 # are also non-differentially expressed
 """
 
+print(CELL_TYPES_EXCLUDE)
 # export list of data on marker genes, conserved signatures, and nDGEs
 rule export_signature:
     input:
         celltype_ndge_list = OUTPUT_BASE + "/sce_objects/03_sce_analysis/02_DESeq2_crossspecies/06_nres/PC_0.05_FC_1.5/shared_genes_{fraction}_celltypes",
         marker_cons = OUTPUT_BASE + "/sce_objects/03_sce_analysis/03_marker_conservation/cons_markers_{fraction}.RData",
-        sce_input = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10"
+        sce_input = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10",
     output:
         signature_list = OUTPUT_DAT + "/01_sign/signature_list_{fraction}"
+    params:
+        cts_exclude = CELL_TYPES_EXCLUDE
     script:
         "scripts/01_export_signatures.R"    
 

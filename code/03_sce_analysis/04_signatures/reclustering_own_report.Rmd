@@ -28,7 +28,7 @@ source(file = snakemake@params[["plotting"]])
 ```
 
 ```{r eval = FALSE}
-sce <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_rcls/sce_str")
+sce <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/03_rclo/sce_str")
 
 fraction_curr <- "str"
 
@@ -43,7 +43,10 @@ col_cts <- col_cts_str
 sce <- base::readRDS(snakemake@input[["sce_input"]])
 fraction_curr <- snakemake@wildcards[["fraction"]]
 
-# reorder for nicer plots
+cts_exclude <- snakemake@params[["cts_exclude"]]
+
+# remove cts to exdlude and reorder for nicer plots
+sce <- sce[,!sce %in% cts_exclude]
 sce <- sce[,base::sample(c(1:ncol(sce)), ncol(sce), replace = FALSE)]
 ```
 
@@ -65,26 +68,25 @@ umap_base_l(sce, color_by = "celltypes")+
   ggplot2::ggtitle(base::paste(fraction_curr, "original cell types"))+
   ggplot2::scale_color_manual("celltypes", values = col_cts)
 
-# ndges
-umap_base_l(sce, color_by = "cluster_ndges")+ 
-  ggplot2::ggtitle(base::paste(sce$nr_nd[1], "non-differentially expressed genes"))+
-  ggplot2::scale_color_discrete("nDGEs") 
+# signature genes
+umap_base_l(sce, color_by = "cluster_signt")+ 
+  ggplot2::ggtitle(base::paste(sce$nr_cm[1], "conserved signature"))+
+  ggplot2::scale_color_discrete("conserved signature")
 
 # conserved markers
 umap_base_l(sce, color_by = "cluster_consm")+ 
   ggplot2::ggtitle(base::paste(sce$nr_cc[1], "conserved markers"))+
   ggplot2::scale_color_discrete("conserved markers")
 
-# signature genes
-umap_base_l(sce, color_by = "cluster_signt")+ 
-  ggplot2::ggtitle(base::paste(sce$nr_cm[1], "conserved signature"))+
-  ggplot2::scale_color_discrete("conserved signature")
-
 # BL6 markers
 umap_base_l(sce, color_by = "cluster_mmusm")+ 
   ggplot2::ggtitle(base::paste(sce$nr_cm[1], "all BL6 markers"))+
   ggplot2::scale_color_discrete("all BL6 markers")
 
+# ndges
+umap_base_l(sce, color_by = "cluster_ndges")+ 
+  ggplot2::ggtitle(base::paste(sce$nr_nd[1], "non-differentially expressed genes"))+
+  ggplot2::scale_color_discrete("nDGEs") 
 ```
 
 # Heatmaps
@@ -165,6 +167,44 @@ plot_mark <- ggplot2::ggplot(mark_df,
 plot_mark
 ```
 
+## all BL6 markers
+
+```{r plot_mmusm}
+
+mat_mmus <- base::table(sce$celltypes, sce$cluster_mmusm)
+for(i in 1:nrow(mat_mmus)){
+  mat_mmus[i,] <- mat_mmus[i,]/base::sum(mat_mmus[i,])
+}
+
+mat_mmus
+
+mmus_df <- base::as.data.frame(mat_mmus)
+mmus_df$Var1 <- factor(
+  mmus_df$Var1,
+  levels = base::unique(mmus_df[order(mmus_df$Freq, 
+                                      decreasing = TRUE),]$Var1))
+mmus_df$Var2 <- factor(
+  mmus_df$Var2,
+  levels = base::rev(base::unique(mmus_df[order(mmus_df$Freq,
+                                                decreasing = TRUE),]$Var2)))
+
+plot_mmus <- ggplot2::ggplot(mmus_df, 
+                aes(x = Var1, 
+                    y =Var2,
+                    fill = Freq))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  scale_fill_continuous("% cells/cell type", 
+                        limits=c(0, 1), 
+                        breaks=seq(0, 1, by= 0.20),
+                        low = "white", high = "blue")+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))+
+  ggplot2::xlab("Original cell types")+
+  ggplot2::ylab("Re-clustered with all BL6 markers")
+
+plot_mmus
+```
+
 ## nDGEs
 
 ```{r plot_ndges}
@@ -203,43 +243,6 @@ plot_ndge <- ggplot2::ggplot(ndge_df,
 plot_ndge
 ```
 
-## all BL6 markers
-
-```{r plot_mmusm}
-
-mat_mmus <- base::table(sce$celltypes, sce$cluster_mmusm)
-for(i in 1:nrow(mat_mmus)){
-  mat_mmus[i,] <- mat_mmus[i,]/base::sum(mat_mmus[i,])
-}
-
-mat_mmus
-
-mmus_df <- base::as.data.frame(mat_mmus)
-mmus_df$Var1 <- factor(
-  mmus_df$Var1,
-  levels = base::unique(mmus_df[order(mmus_df$Freq, 
-                                      decreasing = TRUE),]$Var1))
-mmus_df$Var2 <- factor(
-  mmus_df$Var2,
-  levels = base::rev(base::unique(mmus_df[order(mmus_df$Freq,
-                                                decreasing = TRUE),]$Var2)))
-
-plot_mmus <- ggplot2::ggplot(mmus_df, 
-                aes(x = Var1, 
-                    y =Var2,
-                    fill = Freq))+
-  ggplot2::geom_tile()+
-  ggplot2::theme_classic()+
-  scale_fill_continuous("% cells/cell type", 
-                        limits=c(0, 1), 
-                        breaks=seq(0, 1, by= 0.20),
-                        low = "white", high = "blue")+
-  ggplot2::theme(axis.text.x = element_text(angle = 90))+
-  ggplot2::xlab("Original cell types")+
-  ggplot2::ylab("Re-clustered with all BL6 markers")
-
-plot_mmus
-```
 
 TODO: Add clustering scores
 

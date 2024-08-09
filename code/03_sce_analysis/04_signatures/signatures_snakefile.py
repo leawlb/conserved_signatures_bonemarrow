@@ -46,9 +46,9 @@ targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_mark_" + f]
 targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_ndge_" + f]
 targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_mmms_" + f]
 
-for f in fractions:
-  targets = targets + [OUTPUT_DAT + "/03_rclo/sce_" + f]
-  targets = targets + [OUTPUT_REP + "/reclustering_own/reclustering_own_report_" + f + ".html"]
+# for f in fractions:
+#   targets = targets + [OUTPUT_DAT + "/03_rclo/sce_" + f]
+#   targets = targets + [OUTPUT_REP + "/reclustering_own/reclustering_own_report_" + f + ".html"]
 
 #if RECLUSTER_OTHER:
 for d in datasets_other:

@@ -44,6 +44,7 @@ targets = targets + [OUTPUT_REP + "/signatures_summary.html"]
 targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_sign_" + f]
 targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_mark_" + f]
 targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_ndge_" + f]
+targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_mmms_" + f]
 
 for f in fractions:
   targets = targets + [OUTPUT_DAT + "/03_rclo/sce_" + f]
@@ -136,7 +137,8 @@ rule prepare_ensembl:
     output:
         ensembl_sign = OUTPUT_DAT + "/02_endf/ensembl_sign_{fraction}",
         ensembl_mark = OUTPUT_DAT + "/02_endf/ensembl_mark_{fraction}",
-        ensembl_ndge = OUTPUT_DAT + "/02_endf/ensembl_ndge_{fraction}"
+        ensembl_ndge = OUTPUT_DAT + "/02_endf/ensembl_ndge_{fraction}",
+        ensembl_mmms = OUTPUT_DAT + "/02_endf/ensembl_mmms_{fraction}"
     script:
         "scripts/02_prepare_ensembl.R"
       
@@ -157,7 +159,8 @@ rule reclustering_own:
     params:
         k_graph_list = config["values"]["02_sce_anno"]["k_graph_list"],
         resolution_louvain_list = config["values"]["02_sce_anno"]["resolution_louvain_list"],
-        cts_exclude = CELL_TYPES_EXCLUDE
+        cts_exclude = CELL_TYPES_EXCLUDE,
+        nr_cores = config["values"]["03_sce_analysis"]["nr_cores"] 
     output:
         sce_output = OUTPUT_DAT + "/03_rclo/sce_{fraction}"
     script:
@@ -193,7 +196,8 @@ rule reclustering_other:
     input:
         seu_input = config["base"] + config["metadata_paths"]["datasets_other_path"] + "/{dataset}",
         ensembl_sign = expand(rules.prepare_ensembl.output.ensembl_sign, fraction = fractions),
-        ensembl_mark = expand(rules.prepare_ensembl.output.ensembl_mark, fraction = fractions)
+        ensembl_mark = expand(rules.prepare_ensembl.output.ensembl_mark, fraction = fractions),
+        ensembl_mmms = expand(rules.prepare_ensembl.output.ensembl_mmms, fraction = fractions)
     params:
         reclustering_functions = "../../source/sce_functions_reclustering.R",
         cut_off_counts = config["values"]["03_sce_analysis"]["reclustering_cutoff_counts"], 

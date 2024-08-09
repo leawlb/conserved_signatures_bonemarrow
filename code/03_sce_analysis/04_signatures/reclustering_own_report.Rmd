@@ -70,13 +70,21 @@ umap_base_l(sce, color_by = "cluster_ndges")+
   ggplot2::ggtitle(base::paste(sce$nr_nd[1], "non-differentially expressed genes"))+
   ggplot2::scale_color_discrete("nDGEs") 
 
+# conserved markers
 umap_base_l(sce, color_by = "cluster_consm")+ 
   ggplot2::ggtitle(base::paste(sce$nr_cc[1], "conserved markers"))+
   ggplot2::scale_color_discrete("conserved markers")
 
+# signature genes
 umap_base_l(sce, color_by = "cluster_signt")+ 
   ggplot2::ggtitle(base::paste(sce$nr_cm[1], "conserved signature"))+
   ggplot2::scale_color_discrete("conserved signature")
+
+# BL6 markers
+umap_base_l(sce, color_by = "cluster_mmusm")+ 
+  ggplot2::ggtitle(base::paste(sce$nr_cm[1], "all BL6 markers"))+
+  ggplot2::scale_color_discrete("all BL6 markers")
+
 ```
 
 # Heatmaps
@@ -157,6 +165,8 @@ plot_mark <- ggplot2::ggplot(mark_df,
 plot_mark
 ```
 
+## nDGEs
+
 ```{r plot_ndges}
 
 mat_ndge <- base::table(sce$celltypes, sce$cluster_ndges)
@@ -191,6 +201,44 @@ plot_ndge <- ggplot2::ggplot(ndge_df,
   ggplot2::ylab("Re-clustered with nDGEs")
 
 plot_ndge
+```
+
+## all BL6 markers
+
+```{r plot_mmusm}
+
+mat_mmus <- base::table(sce$celltypes, sce$cluster_mmusm)
+for(i in 1:nrow(mat_mmus)){
+  mat_mmus[i,] <- mat_mmus[i,]/base::sum(mat_mmus[i,])
+}
+
+mat_mmus
+
+mmus_df <- base::as.data.frame(mat_mmus)
+mmus_df$Var1 <- factor(
+  mmus_df$Var1,
+  levels = base::unique(mmus_df[order(mmus_df$Freq, 
+                                      decreasing = TRUE),]$Var1))
+mmus_df$Var2 <- factor(
+  mmus_df$Var2,
+  levels = base::rev(base::unique(mmus_df[order(mmus_df$Freq,
+                                                decreasing = TRUE),]$Var2)))
+
+plot_mmus <- ggplot2::ggplot(mmus_df, 
+                aes(x = Var1, 
+                    y =Var2,
+                    fill = Freq))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  scale_fill_continuous("% cells/cell type", 
+                        limits=c(0, 1), 
+                        breaks=seq(0, 1, by= 0.20),
+                        low = "white", high = "blue")+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))+
+  ggplot2::xlab("Original cell types")+
+  ggplot2::ylab("Re-clustered with all BL6 markers")
+
+plot_mmus
 ```
 
 TODO: Add clustering scores

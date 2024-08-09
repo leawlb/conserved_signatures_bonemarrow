@@ -620,14 +620,10 @@ hsc_markers <- hsc_df$gene[which(!is.na(hsc_df$mmus) &
                                    is.na(hsc_df$mcar))]
 
 hsc_markers_short <- hsc_markers[
-  hsc_markers %in% c("Ly6a", "Procr", "Tie1", "Alcam", "Kit", "Nrgn")
+  hsc_markers %in% c("Ly6a", "Procr", "Nrgn")
 ]
 
 hsc_markers_all <- hsc_df$gene[which(!is.na(hsc_df$mmus))]
-
-hsc_markers_short <- hsc_markers[
-  hsc_markers %in% c("Ly6a", "Procr", "Tie1", "Alcam", "Kit", "Nrgn")
-]
 
 vis_df_hsc <- base::as.data.frame(
   t(SummarizedExperiment::assays(agg_hsc_list[["HSCs"]])$logcounts))
@@ -642,7 +638,7 @@ vis_df_hsc$species <- factor(vis_df_hsc$species, levels = names(col_spc))
 ```
 
 ```{r get_hsc_signatures_hscplot1, fig.width = 4, fig.height= 8}
-plot3 <- ggplot2::ggplot(vis_df_hsc[vis_df_hsc$gene %in% hsc_markers], 
+plot3 <- ggplot2::ggplot(vis_df_hsc[vis_df_hsc$gene %in% hsc_markers,], 
                            aes(x = species, 
                                y = reorder(gene, expression), 
                                fill = expression))+

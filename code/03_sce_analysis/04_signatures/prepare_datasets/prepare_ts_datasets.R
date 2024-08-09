@@ -140,8 +140,10 @@ ts_all_stromal$cell_type <- factor(ts_all_stromal$cell_type,
 ts_all_stromal@neighbors <- list()
 # keep original PCA coordinates for comparison later but remove other reductions
 ts_all_stromal_pca <- ts_all_stromal
+print("check stromal before removal")
+print(ts_all_stromal_pca@reductions)
 ts_all_stromal@reductions <- list()
-ts_all_stromal@reductions$pca_orig <- ts_all_stromal@reductions$pca
+ts_all_stromal@reductions$pca_orig <- ts_all_stromal_pca@reductions$pca
 
 print("after removal")
 print(ts_all_stromal@reductions)

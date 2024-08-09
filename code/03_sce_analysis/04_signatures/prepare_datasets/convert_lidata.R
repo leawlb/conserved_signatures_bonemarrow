@@ -113,7 +113,7 @@ seu_nh@neighbors <- list()
 print(seu_nh@reductions)
 seu_nh_pca <-seu_nh
 seu_nh@reductions <- list()
-seu_nh@reductions$pca_orig <- seu_nh_pca@reductions$pca
+seu_nh@reductions$pca_orig <- seu_nh_pca@reductions$X_pca
 
 print("after removal")
 print(seu_nh@reductions)

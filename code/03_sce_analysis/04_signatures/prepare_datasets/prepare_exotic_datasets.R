@@ -188,8 +188,6 @@ seu_nmr_srt@reductions$pca_orig <- seu_nmr_srt_pca@reductions$pca
 print("after removal")
 print(seu_nmr_srt@reductions)
 
-print(seu_nmr_srt@reductions)
-
 # will use sorted HSPCs for re-clustering, but also export whole HSPCs for
 # testing and other uses
 base::saveRDS(seu_nmr_srt, snakemake@output[["nmr_sorted_hspc"]])

@@ -11,14 +11,12 @@
 
 import sys
 
-#import cellrank as cr
+
 import scanpy as sc
 import numpy as np
-
-#sc.settings.set_figure_params(frameon=False, dpi=100)
-#cr.settings.verbosity = 2
-
-#warnings.simplefilter("ignore", category=UserWarning)
+# import random
+# 
+# random.seed(37)
 
 #-------------------------------------------------------------------------------
 

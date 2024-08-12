@@ -57,7 +57,7 @@ for d in datasets_other:
   targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_report_" + d + ".html"]
   # targets = targets + [OUTPUT_DAT + "/05_perm/" + r + "_score_df"]
   # targets = targets + [OUTPUT_REP + "/reclustering_permutation_report_" + r + ".html"]
-
+  targets = targets + [OUTPUT_REP + "/reclustering_scores/test_reclustering_scores_" + d + ".html"]
 
 #-------------------------------------------------------------------------------
 
@@ -236,6 +236,17 @@ rule reclustering_other_report:
     script: 
         "reclustering_other_report.Rmd"
 
+# check potential scores
+rule test_reclustering_scores:
+    input: 
+        seu_list = OUTPUT_DAT + "/04_rcls/reclustered_{dataset}_list"
+    output:
+        OUTPUT_REP + "/reclustering_scores/test_reclustering_scores_{dataset}.html"
+    conda:
+        "../../envs/recl_scores.yml"
+    script:
+        "test_reclustering_scores.Rmd"
+        
 """
 resolution_list = [
   {"li_all_stromal": 0.4},

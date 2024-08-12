@@ -55,6 +55,8 @@ standard_seu_pipeline <- function(resolution,
       verbose = FALSE)
   }
   
+  seu@misc$resolution <- resolution
+  
   return(seu)
 }
 

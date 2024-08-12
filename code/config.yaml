@@ -88,7 +88,7 @@ values:
       - "Lymphatic ECs"
       - "Chondrocytes"
     reclustering_cutoff_counts: 5 # minimum number of counts for a gene to be used for re-clustering with random genes + permutation test
-    nr_cores: 20 # nr of cores for parallelization for reclustering and permutation
+    nr_cores: 10 # nr of cores for parallelization for reclustering and permutation
   05_cci_prep:
     min_cells: 60 # min number of cells required per cell type to consider for cci
     min_perc: 0.05 # min percentage of cells per cell type a gene must be expressed in to consider for cci

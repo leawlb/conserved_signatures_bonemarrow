@@ -13,13 +13,24 @@ library(tidyverse, quietly = TRUE)
 library(SingleCellExperiment, quietly = TRUE)
 
 #-------------------------------------------------------------------------------
+fraction_curr <- snakemake@wildcards[["fraction"]]
+
 # load objects
 # conserved markers (from Veronica)
 load(snakemake@input[["marker_cons"]]) 
-marker_cons <- markers_conservation # loaded from input
+if(fraction_curr == "hsc"){
+  marker_cons <- markers_conservation_hsc # loaded from input
+}else if(fraction_curr == "str"){
+  marker_cons <- markers_conservation_str # loaded from input
+}
 
 # non-differentially expressed genes
 ct_ndge_list <- base::readRDS(snakemake@input[["celltype_ndge_list"]])
+
+# cell types that were not used to extract signature are excluded because
+# they cannot be separated after excluding them
+cts_exclude <- snakemake@params[["cts_exclude"]]
+print(cts_exclude)
 
 #-------------------------------------------------------------------------------
 
@@ -33,6 +44,7 @@ print(sce)
 
 cts <- names(ct_ndge_list)
 cts <- cts[cts %in% names(marker_cons)]
+cts <- cts[!cts %in% cts_exclude]
 cts_list <- as.list(cts)
 
 # make a function to collect data 

@@ -1,6 +1,6 @@
-snakemake --cluster "bsub -q medium -n20 -R rusage[mem=60GB]" -p -j8 -c20 -s cellrank_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda -n
+snakemake --cluster "bsub -q medium -n10 -R rusage[mem=80GB]" -p -j8 -c10 -s cellrank_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda -n
 
-
+# for conda env creation
 snakemake --cluster "bsub -q long -n20 -R rusage[mem=50GB]" -p -j8 -c20 -s cellrank_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda --conda-create-envs-only
 
 

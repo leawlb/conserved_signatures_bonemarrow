@@ -67,7 +67,7 @@ rule cellrank:
         adata_output = OUTPUT_DAT + "/03_cllr/adata_hsc_03.h5ad",
         pdf_output = OUTPUT_REP + "/python_plots.pdf"
     params:
-        n_states_total = 7,
+        n_states_total = 6,
         n_states_terminal = 3
     conda:
         "../../envs/cellrank.yml"

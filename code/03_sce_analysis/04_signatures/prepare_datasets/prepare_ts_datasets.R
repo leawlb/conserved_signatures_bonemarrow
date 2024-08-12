@@ -47,8 +47,13 @@ seu_ts_hscs_progenitors$cell_type <- factor(seu_ts_hscs_progenitors$cell_type,
 
 # remove umap coordinates and neighbors
 seu_ts_hscs_progenitors@neighbors <- list()
+# keep original PCA coordinates for comparison later but remove other reductions
+seu_ts_hscs_progenitors_pca <- seu_ts_hscs_progenitors
 seu_ts_hscs_progenitors@reductions <- list()
+seu_ts_hscs_progenitors@reductions$pca_orig <- seu_ts_hscs_progenitors_pca@reductions$pca
 
+print("after removal")
+print(seu_ts_hscs_progenitors@reductions)
 dim(seu_ts_hscs_progenitors)
 
 # add info on which column of the ensembl data frame to use based on Features 
@@ -88,7 +93,13 @@ seu_ts_bone_marrow$cell_type <- factor(seu_ts_bone_marrow$cell_type,
 
 # remove umap coordinates and neighbors
 seu_ts_bone_marrow@neighbors <- list()
+# keep original PCA coordinates for comparison later but remove other reductions
+seu_ts_bone_marrow_pca <- seu_ts_bone_marrow
 seu_ts_bone_marrow@reductions <- list()
+seu_ts_bone_marrow@reductions$pca_orig <- seu_ts_bone_marrow_pca@reductions$pca
+
+print("after removal")
+print(seu_ts_bone_marrow@reductions)
 
 dim(seu_ts_bone_marrow)
 
@@ -127,7 +138,15 @@ ts_all_stromal$cell_type <- factor(ts_all_stromal$cell_type,
 
 # remove umap coordinates and neighbors
 ts_all_stromal@neighbors <- list()
+# keep original PCA coordinates for comparison later but remove other reductions
+ts_all_stromal_pca <- ts_all_stromal
+print("check stromal before removal")
+print(ts_all_stromal_pca@reductions)
 ts_all_stromal@reductions <- list()
+ts_all_stromal@reductions$pca_orig <- ts_all_stromal_pca@reductions$pca
+
+print("after removal")
+print(ts_all_stromal@reductions)
 
 dim(ts_all_stromal)
 

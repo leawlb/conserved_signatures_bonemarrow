@@ -13,6 +13,8 @@ library(Seurat, quietly = TRUE)
 
 set.seed(37)
 
+#-------------------------------------------------------------------------------
+
 h5ad_input <- snakemake@input[["h5ad_input"]]
 h5ad_raw_input <- snakemake@input[["h5ad_raw_input"]]
 print(h5ad_input)
@@ -64,6 +66,14 @@ SummarizedExperiment::assays(sce)$logcounts <- SummarizedExperiment::assays(sce)
 base::saveRDS(sce, snakemake@output[["sce_output_2"]])
 
 #-------------------------------------------------------------------------------
+# check metadata/annotation
+
+print(base::table(sce$sname))
+print(base::table(sce$louvain))
+print(base::table(sce$louvain11_merged.95_renamed))
+
+#-------------------------------------------------------------------------------
+
 # add cell type info from publication
 
 # add info on clusters from publication figures 1 and 2
@@ -107,7 +117,9 @@ base::saveRDS(sce_nh, snakemake@output[["sce_output_3"]])
 # convert 
 seu_nh <- Seurat::as.Seurat(sce_nh)
 
-# consistency with other test datasets
+#-------------------------------------------------------------------------------
+
+# remove neighbors and UMAP, just keep original pca coordinates
 seu_nh@neighbors <- list()
 # keep original PCA coordinates for comparison later but remove other reductions
 print(seu_nh@reductions)
@@ -118,28 +130,42 @@ seu_nh@reductions$pca_orig <- seu_nh_pca@reductions$X_pca
 print("after removal")
 print(seu_nh@reductions)
 
+#-------------------------------------------------------------------------------
+
+# put data in appropriate assay
 RNA <- Seurat::CreateAssayObject(seu_nh@assays$originalexp$counts)
 seu_nh[['RNA']] <- RNA
 Seurat::DefaultAssay(seu_nh) <- 'RNA'
 
+#-------------------------------------------------------------------------------
+
+# put annotation in "cell_type" slot for downstream compatibility and factorise
 seu_nh$cell_type <- seu_nh$cell_type_from_publication
 
-seu_nh$cell_type <- factor(seu_nh$cell_type, 
-                           levels = c('multipotent stromal stem cells',
-                                      'balanced prog.',
-                                      'highly adipocytic gene-expressing progenitors',
-                                      'pre-osteoblast',
-                                      'osteochondrogenic progenitors 1',
-                                      'osteochondrogenic progenitors 2',
-                                      'pre-fibroblast 1',
-                                      'pre-fibroblast 2',
-                                      'pre-fibroblast 3',
-                                      'endothelial'))
+seu_nh$cell_type <- factor(
+  seu_nh$cell_type, 
+  levels = c('multipotent stromal stem cells',
+             'balanced prog.',
+             'highly adipocytic gene-expressing progenitors',
+             'pre-osteoblast',
+             'osteochondrogenic progenitors 1',
+             'osteochondrogenic progenitors 2',
+             'pre-fibroblast 1',
+             'pre-fibroblast 2',
+             'pre-fibroblast 3',
+             'endothelial'))
 
-base::table(seu_nh$cell_type)
+print(base::table(seu_nh$cell_type))
+print(base::table(seu_nh$sname))
+
+stopifnot(!is.na(seu_nh$cell_type))
+
+#-------------------------------------------------------------------------------
 
 # add info on which column of the ensembl data frame to use based on Features 
 seu_nh@misc$ensembl_column_use <- "ENSG_ID" # human IDs
+
+#-------------------------------------------------------------------------------
 
 base::saveRDS(seu_nh, snakemake@output[["seurat_output"]])
 

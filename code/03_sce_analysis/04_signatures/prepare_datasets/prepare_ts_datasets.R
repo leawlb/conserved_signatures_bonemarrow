@@ -32,16 +32,22 @@ seu_ts_hscs_progenitors <- base::readRDS(ts_hsc_progenitors_input)
 # these are embryonic hematopoietic cells from Carnegie stage 13 to
 # 17th week post-fertilization human stage
 print(base::table(seu_ts_hscs_progenitors$sex))
+print(base::table(seu_ts_hscs_progenitors$tissue))
 print(base::table(seu_ts_hscs_progenitors$development_stage))
 print(base::table(seu_ts_hscs_progenitors$is_maternal_contaminant))
 print(base::table(seu_ts_hscs_progenitors$disease))
 print(base::table(seu_ts_hscs_progenitors$organism))
 print(base::table(seu_ts_hscs_progenitors$assay))
 
-print(base::table(seu_ts_hscs_progenitors$celltype_annotation,
-                  seu_ts_hscs_progenitors$cell_type))
+# print(base::table(seu_ts_hscs_progenitors$celltype_annotation,
+#                   seu_ts_hscs_progenitors$cell_type))
 
 #-------------------------------------------------------------------------------
+
+# keep only HSPCs that were derived from bone marrow 
+# some of the cells were derived from yolk sac etc.
+
+seu_ts_hscs_progenitors <- seu_ts_hscs_progenitors[,seu_ts_hscs_progenitors$tissue == "bone marrow"]
 
 # remove cell types not in our dataset, as we cannot separate them
 cts_to_remove <- c(
@@ -54,7 +60,6 @@ cts_to_remove <- c(
 seu_ts_hscs_progenitors <- seu_ts_hscs_progenitors[,!seu_ts_hscs_progenitors$cell_type %in% cts_to_remove]
 
 # re-factor cell types to desired order
-# will also keep cells that are not from tissue "bone marrow"
 # keep in "cell_type" slot for downstream compatibility
 seu_ts_hscs_progenitors$cell_type <- factor(
   seu_ts_hscs_progenitors$cell_type, 
@@ -72,8 +77,8 @@ seu_ts_hscs_progenitors$cell_type <- factor(
 print(base::table(is.na(seu_ts_hscs_progenitors$cell_type)))
 stopifnot(!is.na(seu_ts_hscs_progenitors$cell_type))
 
-print(base::table(seu_ts_hscs_progenitors$celltype_annotation,
-                  seu_ts_hscs_progenitors$cell_type))
+# print(base::table(seu_ts_hscs_progenitors$celltype_annotation,
+#                   seu_ts_hscs_progenitors$cell_type))
 
 #-------------------------------------------------------------------------------
 
@@ -109,8 +114,8 @@ print(base::table(seu_ts_bone_marrow$disease))
 print(base::table(seu_ts_bone_marrow$organism))
 print(base::table(seu_ts_bone_marrow$assay))
 
-print(base::table(seu_ts_bone_marrow$free_annotation,
-                  seu_ts_bone_marrow$cell_type))
+# print(base::table(seu_ts_bone_marrow$free_annotation,
+#                   seu_ts_bone_marrow$cell_type))
 
 #-------------------------------------------------------------------------------
 
@@ -142,8 +147,9 @@ seu_ts_bone_marrow$cell_type <- factor(seu_ts_bone_marrow$cell_type,
                                         ))
 
 stopifnot(!is.na(seu_ts_bone_marrow$cell_type))
-print(base::table(seu_ts_bone_marrow$free_annotation,
-                  seu_ts_bone_marrow$cell_type))
+
+# print(base::table(seu_ts_bone_marrow$free_annotation,
+#                   seu_ts_bone_marrow$cell_type))
 
 #-------------------------------------------------------------------------------
 
@@ -185,8 +191,8 @@ print(base::table(ts_all_stromal$assay))
 print(base::table(ts_all_stromal$is_maternal_contaminant))
 print(base::table(ts_all_stromal$tissue))
 
-print(base::table(ts_all_stromal$celltype_annotation,
-                  ts_all_stromal$cell_type))
+# print(base::table(ts_all_stromal$celltype_annotation,
+#                   ts_all_stromal$cell_type))
 
 #-------------------------------------------------------------------------------
 
@@ -217,8 +223,8 @@ ts_all_stromal$cell_type <- factor(ts_all_stromal$cell_type,
 
 stopifnot(!is.na(ts_all_stromal$cell_type))
 
-print(base::table(ts_all_stromal$celltype_annotation,
-                  ts_all_stromal$cell_type))
+# print(base::table(ts_all_stromal$celltype_annotation,
+#                   ts_all_stromal$cell_type))
 
 #-------------------------------------------------------------------------------
 

@@ -106,24 +106,24 @@ vis_perc_wide_gg <- function(seu, correction_vec = NULL, title_add= NULL){
     ggplot2::ylab("original cell types")+
     ggplot2::ggtitle(base::paste("resolution", seu$resolution[1], title_add))
   
-   plot_wide_ordered <- ggplot2::ggplot(df_vis, 
-                                        aes(y = reorder(Var1, -Freq),
-                                            x = reorder(Var2, Freq),
-                                            fill= Freq))+ 
-    ggplot2::geom_tile()+
-    ggplot2::scale_fill_continuous("% cells/cell type", 
-                                   limits = c(0, 100), 
-                                   breaks = seq(0, 100,by = 20),
-                                   low = "white",
-                                   high = "blue")+
-    ggplot2::theme_classic()+
-    ggplot2::theme(axis.text.x = element_text(angle=0),
-                   axis.ticks = element_blank())+
-    ggplot2::xlab("new clusters")+
-    ggplot2::ylab("original cell types")+
-    ggplot2::ggtitle(base::paste("resolution", seu$resolution[1], title_add))
+   # plot_wide_ordered <- ggplot2::ggplot(df_vis, 
+   #                                      aes(y = reorder(Var1, -Freq),
+   #                                          x = reorder(Var2, Freq),
+   #                                          fill= Freq))+ 
+   #  ggplot2::geom_tile()+
+   #  ggplot2::scale_fill_continuous("% cells/cell type", 
+   #                                 limits = c(0, 100), 
+   #                                 breaks = seq(0, 100,by = 20),
+   #                                 low = "white",
+   #                                 high = "blue")+
+   #  ggplot2::theme_classic()+
+   #  ggplot2::theme(axis.text.x = element_text(angle=0),
+   #                 axis.ticks = element_blank())+
+   #  ggplot2::xlab("new clusters")+
+   #  ggplot2::ylab("original cell types")+
+   #  ggplot2::ggtitle(base::paste("resolution", seu$resolution[1], title_add))
 
-  return(list(plot_wide, plot_wide_ordered))
+  return(plot_wide)
 }
 ```
 
@@ -365,11 +365,11 @@ seu_sign_list <- seu_list_all$seu_sign
 seu_sign_list <- add_res_info(seu_sign_list)
 ```
 
-```{r sign2, fig.width = 9, fig.height=3}
+```{r sign2, fig.width = 9, fig.height=30}
 plot_listw <- lapply(seu_sign_list,
                      vis_perc_wide_gg, 
                      title_add = "conserved signature genes")
-plot_listw
+cowplot::plot_grid(plotlist = plot_listw, ncol = 2)
 ```
 
 ```{r sign3, fig.height = 40, fig.width=12}

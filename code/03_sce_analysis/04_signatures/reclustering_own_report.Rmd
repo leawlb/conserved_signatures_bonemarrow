@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 Show how well re-clustering of our own dataset using the extracted gene
-sets worked-
+sets worked.
 
 #### Load objects
 
@@ -45,8 +45,12 @@ fraction_curr <- snakemake@wildcards[["fraction"]]
 
 cts_exclude <- snakemake@params[["cts_exclude"]]
 
-# remove cts to exdlude and reorder for nicer plots
+# remove cts to exclude and reorder for nicer plots
 sce <- sce[,!sce$celltypes %in% cts_exclude]
+sce$celltypes <- factor(
+  sce$celltypes,
+  levels = levels(sce$celltypes)[levels(sce$celltypes) %in% sce$celltypes])
+
 sce <- sce[,base::sample(c(1:ncol(sce)), ncol(sce), replace = FALSE)]
 ```
 
@@ -87,7 +91,8 @@ umap_base_l(sce, color_by = "cluster_mmusm")+
 
 # ndges
 umap_base_l(sce, color_by = "cluster_ndges")+ 
-  ggplot2::ggtitle(base::paste(sce$nr_nd[1], "non-differentially expressed genes"))+
+  ggplot2::ggtitle(base::paste(sce$nr_nd[1],
+                               "non-differentially expressed genes"))+
   ggplot2::scale_color_discrete("nDGEs") 
 ```
 
@@ -107,12 +112,13 @@ mat_sign
 sign_df <- base::as.data.frame(mat_sign)
 sign_df$Var1 <- factor(
   sign_df$Var1,
-  levels = base::unique(sign_df[order(sign_df$Freq, 
-                                      decreasing = TRUE),]$Var1))
+  levels = base::unique(sign_df[base::order(sign_df$Freq, 
+                                            decreasing = TRUE),]$Var1))
 sign_df$Var2 <- factor(
   sign_df$Var2,
-  levels = base::rev(base::unique(sign_df[order(sign_df$Freq,
-                                                decreasing = TRUE),]$Var2)))
+  levels = base::rev(base::unique(sign_df[base::order(
+    sign_df$Freq,
+    decreasing = TRUE),]$Var2)))
 
 plot_sign <- ggplot2::ggplot(sign_df, 
                 aes(x = Var1, 
@@ -145,12 +151,13 @@ mat_mark
 mark_df <- base::as.data.frame(mat_mark)
 mark_df$Var1 <- factor(
   mark_df$Var1,
-  levels = base::unique(mark_df[order(mark_df$Freq, 
-                                      decreasing = TRUE),]$Var1))
+  levels = base::unique(mark_df[base::order(mark_df$Freq, 
+                                            decreasing = TRUE),]$Var1))
 mark_df$Var2 <- factor(
   mark_df$Var2,
-  levels = base::rev(base::unique(mark_df[order(mark_df$Freq,
-                                                decreasing = TRUE),]$Var2)))
+  levels = base::rev(base::unique(mark_df[base::order(
+    mark_df$Freq,
+    decreasing = TRUE),]$Var2)))
 
 plot_mark <- ggplot2::ggplot(mark_df, 
                 aes(x = Var1, 
@@ -183,12 +190,13 @@ mat_mmus
 mmus_df <- base::as.data.frame(mat_mmus)
 mmus_df$Var1 <- factor(
   mmus_df$Var1,
-  levels = base::unique(mmus_df[order(mmus_df$Freq, 
-                                      decreasing = TRUE),]$Var1))
+  levels = base::unique(mmus_df[base::order(mmus_df$Freq, 
+                                            decreasing = TRUE),]$Var1))
 mmus_df$Var2 <- factor(
   mmus_df$Var2,
-  levels = base::rev(base::unique(mmus_df[order(mmus_df$Freq,
-                                                decreasing = TRUE),]$Var2)))
+  levels = base::rev(base::unique(mmus_df[base::order(
+    mmus_df$Freq,
+    decreasing = TRUE),]$Var2)))
 
 plot_mmus <- ggplot2::ggplot(mmus_df, 
                 aes(x = Var1, 
@@ -221,12 +229,13 @@ mat_ndge
 ndge_df <- base::as.data.frame(mat_ndge)
 ndge_df$Var1 <- factor(
   ndge_df$Var1,
-  levels = base::unique(ndge_df[order(ndge_df$Freq, 
-                                      decreasing = TRUE),]$Var1))
+  levels = base::unique(ndge_df[base::order(ndge_df$Freq, 
+                                            decreasing = TRUE),]$Var1))
 ndge_df$Var2 <- factor(
   ndge_df$Var2,
-  levels = base::rev(base::unique(ndge_df[order(ndge_df$Freq,
-                                                decreasing = TRUE),]$Var2)))
+  levels = base::rev(base::unique(ndge_df[base::order(
+    ndge_df$Freq,
+    decreasing = TRUE),]$Var2)))
 
 plot_ndge <- ggplot2::ggplot(ndge_df, 
                 aes(x = Var1, 

@@ -1,4 +1,4 @@
-name: recl_scores
+name: reclustering_scores
 channels:
 - conda-forge
 - bioconda

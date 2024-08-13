@@ -30,9 +30,9 @@ library(Seurat, quietly = TRUE)
 ```
 
 ```{r manual, include = FALSE, eval = FALSE}
-seu_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/04_rcls/reclustered_ts_bone_marrow_list")
+seu_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/04_rcls/reclustered_ts_hscs_progenitors_list")
 
-dataset_curr <- "ts_bone_marrow"
+dataset_curr <- "ts_hsc_progenitors"
 
 ```
 
@@ -48,15 +48,16 @@ dataset_curr <- snakemake@wilcards[["dataset"]]
 ```{r function_mat}
 calculate_scores_mat <- function(seu){
   
+  #seu <- seu_list_all$seu_mmms$"0.1"
   seu <- seu 
   # seurat objects with clusters in "seurat_clusters" slot and
   # cell type or identity to compare in "cell_type" slot
   
   # make a comparison matrix, then split into cells/celltype and cells/cluster
   mat <- base::table(seu$cell_type, seu$seurat_clusters)
-  mat_per_celltype <- mat/rowSums(mat)
+  mat_per_celltype <- mat/BiocGenerics::rowSums(mat)
   t_mat <- t(mat)
-  mat_per_cluster <- t(t_mat/rowSums(t_mat)) # keep format/orientation
+  mat_per_cluster <- t(t_mat/BiocGenerics::rowSums(t_mat)) # keep format
   
   #-----------------------------------------------------------------------------
   # score 1: proportions of 0
@@ -73,6 +74,7 @@ calculate_scores_mat <- function(seu){
   # That "max possible nr" is equivalent to all fields - max_nr
   
   score_1 <- length(which(mat == 0))/(ncol(mat)*nrow(mat)-max_nr)
+  stopifnot(score_1 <= 1)
   
   #-----------------------------------------------------------------------------
 
@@ -146,13 +148,13 @@ df_list_mat <- lapply(seu_list_all, function(seu_list){
   
   df_mat <- dplyr::bind_rows(res_mat_list)
   
-  gene_set_used <- names(seu_list[[1]]@misc)[6]
+  gene_set_used <- seu_list[[1]]@misc$used_genes[1]
   print(gene_set_used)
   df_mat$conservation_level <- base::rep(
     gene_set_used, 
     nrow(df_mat))
   df_mat$length_conservation_level <- base::rep(
-    length(seu_list[[1]]@misc[[6]]), 
+    length(seu_list[[1]]@misc$all_features_subclustering), 
     nrow(df_mat))
   
   return(df_mat)
@@ -186,7 +188,7 @@ mat_plots <- lapply(df_list_mat, function(df_mat){
       "prop_cells_per_cluster_median" = "cyan4",
       "prop_cells_per_cluster_mean" = "cyan2",
       "mean_ct_per_cluster_norm" = "indianred1"))+
-    ggplot2::ylim(c(0,1))+
+    ggplot2::ylim(c(0,1.2))+
     ggplot2::ggtitle(title)
   
   plot2 <- ggplot2::ggplot(
@@ -199,7 +201,7 @@ mat_plots <- lapply(df_list_mat, function(df_mat){
       "prop_cells_per_cluster_median" = "cyan4",
       "prop_cells_per_cluster_mean" = "cyan2",
       "mean_ct_per_cluster_norm" = "indianred1"))+
-    ggplot2::ylim(c(0,1))+
+    ggplot2::ylim(c(0,1.2))+
     ggplot2::ggtitle(title)
 
   df_mat_shorter <- df_mat[df_mat$type %in% c(
@@ -304,7 +306,7 @@ plot4 <- ggplot2::ggplot(
 plot4
 ```
 
-```{r mat_plots_all}
+```{r mat_plots_all_resolution}
 plot1 <- ggplot2::ggplot(
   df_mat[df_mat$type == "prop_of_zeros",],
   aes(x = resolution, y = value, color = conservation_level))+
@@ -373,7 +375,8 @@ calculate_scores_sil_pur <- function(seu){
   #-----------------------------------------------------------------------------
   # test the silhuoette width compared 
 
-  dist.matrix_recl <- stats::dist(x = SeuratObject::Embeddings(object = seu[["pca"]])) 
+  dist.matrix_recl <- stats::dist(x = SeuratObject::Embeddings(
+    object = seu[["pca"]])) 
   clusters_recl <- seu$seurat_clusters
   sil_recl <- cluster::silhouette(
     x = as.numeric(x = as.factor(x = clusters_recl)), 
@@ -422,12 +425,14 @@ df_list_sp <- lapply(seu_list_all, function(seu_list){
   res_sp <- lapply(seu_list, calculate_scores_sil_pur)
   
   df_sp <- dplyr::bind_rows(res_sp)
-  gene_set_used <- names(seu_list[[1]]@misc)[6]
+  
+  gene_set_used <- seu_list[[1]]@misc$used_genes[1]
+  print(gene_set_used)
   df_sp$conservation_level <- base::rep(
     gene_set_used, 
     nrow(df_sp))
   df_sp$length_conservation_level <- base::rep(
-    length(seu_list[[1]]@misc[[6]]), 
+    length(seu_list[[1]]@misc$all_features_subclustering), 
     nrow(df_sp))
   
   return(df_sp)
@@ -621,13 +626,18 @@ df_list_met <- lapply(seu_list_all, function(seu_list){
   res_met <- lapply(seu_list, calculate_scores_metrics)
   
   df_met <- dplyr::bind_rows(res_met)
-  gene_set_used <- names(seu_list[[1]]@misc)[6]
+  
+  gene_set_used <- seu_list[[1]]@misc$used_genes[1]
+  print(gene_set_used)
+  
   df_met$conservation_level <- base::rep(
     gene_set_used, 
     nrow(df_met))
+  
   df_met$length_conservation_level <- base::rep(
-    length(seu_list[[1]]@misc[[6]]), 
+    length(seu_list[[1]]@misc$all_features_subclustering), 
     nrow(df_met))
+  
   
   return(df_met)
 })

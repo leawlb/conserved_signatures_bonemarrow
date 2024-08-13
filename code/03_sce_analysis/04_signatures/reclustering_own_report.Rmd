@@ -27,7 +27,7 @@ library(SingleCellExperiment, quietly = TRUE)
 source(file = snakemake@params[["plotting"]])
 ```
 
-```{r eval = FALSE}
+```{r eval = FALSE, include = FALSE}
 sce <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/03_rclo/sce_str")
 
 fraction_curr <- "str"
@@ -59,6 +59,8 @@ if(fraction_curr == "hsc"){
 }else if(fraction_curr == "str"){
   col_cts <- col_cts_str
 }
+
+col_cts <- col_cts[!names(col_cts) %in% cts_exclude]
 ```
 
 # UMAPs

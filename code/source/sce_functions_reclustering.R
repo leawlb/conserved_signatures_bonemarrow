@@ -114,6 +114,101 @@ calculate_scores <- function(seu){
 #-----------------------------------------------------------------------------
 
 
+calculate_scores_long <- function(seu){
+  
+  #seu <- seu_list_all$seu_mmms$"0.1"
+  seu <- seu 
+  # seurat objects with clusters in "seurat_clusters" slot and
+  # cell type or identity to compare in "cell_type" slot
+  
+  # make a comparison matrix, then split into cells/celltype and cells/cluster
+  mat <- base::table(seu$cell_type, seu$seurat_clusters)
+  mat_per_celltype <- mat/Matrix::rowSums(mat)
+  t_mat <- t(mat)
+  mat_per_cluster <- t(t_mat/Matrix::rowSums(t_mat)) # keep format
+  
+  nr_celltypes <- nrow(mat)
+  nr_clusters <- ncol(mat)
+  
+  #-----------------------------------------------------------------------------
+  # score 1: proportions of 0
+  
+  # extract which nr is higher; nr of clusters or number of cell types  
+  if(nrow(mat) >= ncol(mat)){
+    max_nr <- nrow(mat)
+  }else if(nrow(mat) < ncol(mat)){
+    max_nr <- ncol(mat)
+  }
+  
+  # get the proportion of fields that are 0 from the max possible nr of fields
+  # that can be 0 in a theoretical perfect re-clustering. 
+  # That "max possible nr" is equivalent to all fields - max_nr
+  
+  score_1 <- length(which(mat == 0))/(ncol(mat)*nrow(mat)-max_nr)
+  stopifnot(score_1 <= 1)
+  
+  #-----------------------------------------------------------------------------
+  #-----------------------------------------------------------------------------
+  # score 2: mean proportion of cells of a cell type per cluster
+  
+  mat_per_cluster[mat_per_cluster == 0] <- NA
+  per_cluster_mean <- base::mean(mat_per_cluster, na.rm = TRUE)
+  
+  score_2 <- per_cluster_mean
+
+  #-----------------------------------------------------------------------------
+  #-----------------------------------------------------------------------------
+  # score 3: mean purity of new clusters
+  
+  mat_recl <- seu@reductions$pca@cell.embeddings[,1:10]
+  res_recl <- bluster::neighborPurity(mat_recl, 
+                                      clusters = seu$seurat_clusters, 
+                                      k = 50)
+  score_3 <- mean(res_recl$purity)
+  
+  #-----------------------------------------------------------------------------
+  #-----------------------------------------------------------------------------
+  # scores 4 - 6: established metrics for comparing two clusterings
+  
+  # Adjusted Rand index
+  score_4 <- mclust::adjustedRandIndex(seu$cell_type, seu$seurat_clusters)
+  
+  # Fowlkes-Mallows Index
+  score_5 <- dendextend::FM_index_R(seu$cell_type, seu$seurat_clusters)[1]
+  
+  # Variation of Information
+  score_6 <- mcclust::vi.dist(seu$cell_type, seu$seurat_clusters)
+
+  #-----------------------------------------------------------------------------
+  #-----------------------------------------------------------------------------
+  
+  return_df <- data.frame(
+    "type" = c("proportion_of_zeros", 
+               "mean_prop_cells/cluster",
+               "mean_cluster_purity",
+               "adjusted_rand_index",
+               "fowles_mallow_index",
+               "variation_information",
+               "nr_clusters",
+               "nr_celltypes"),
+    "value" = c(score_1, 
+                score_2,
+                score_3,
+                score_4, 
+                score_5,
+                score_6,
+                nr_clusters, 
+                nr_celltypes))
+  
+  return(return_df)
+}  
+
+
+
+#-------------------------------------------------------------------------------
+
+
+
 
 
 #-------------------------------------------------------------------------------
@@ -154,4 +249,6 @@ random_reclustering_scores <- function(iteration,
   
   return(res_df)
 }
+
+
 

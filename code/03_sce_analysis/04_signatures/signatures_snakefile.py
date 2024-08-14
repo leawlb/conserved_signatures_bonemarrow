@@ -54,7 +54,7 @@ for f in fractions:
 # reclustering other datasets
 for d in datasets_other:
   targets = targets + [OUTPUT_DAT + "/04_rcls/reclustered_" + d + "_list"]
-  targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_report_" + d + ".html"]
+  #targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_report_" + d + ".html"]
   targets = targets + [OUTPUT_REP + "/reclustering_scores/test_reclustering_scores_" + d + ".html"]
   # targets = targets + [OUTPUT_REP + "/reclustering_hum_eval_" + d + ".html"]
   # targets = targets + [OUTPUT_DAT + "/05_perm/" + r + "_score_df"]
@@ -229,7 +229,7 @@ rule test_reclustering_scores:
     output:
         OUTPUT_REP + "/reclustering_scores/test_reclustering_scores_{dataset}.html"
     conda:
-        "../../envs/recl_scores.yml"
+        "../../envs/reclustering_scores.yml"
     script:
         "test_reclustering_scores.Rmd"
         
@@ -242,12 +242,12 @@ rule test_reclustering_scores:
 # get the reclustering scores for our own re-clustered datasets
 rule reclustering_own_scores:
     input:
-        rules.reclustering_own.output,
+        sce_input = rules.reclustering_own.output,
     params:
         cts_exclude = CELL_TYPES_EXCLUDE,
         reclustering_functions = "../../source/sce_functions_reclustering.R",
     conda:
-        "../../envs/recl_scores.yml"
+        "../../envs/reclustering_scores.yml"
     output:
         score_df = OUTPUT_DAT + "/03_rclo/score_df_{fraction}"
     script:
@@ -256,7 +256,7 @@ rule reclustering_own_scores:
 # visualise re-clustering of other datasets, including scores
 rule reclustering_own_report:
     input: 
-        sce_input = rules.reclustering_own.output
+        sce_input = rules.reclustering_own.output,
         score_df = rules.reclustering_own_scores.output
     output:
         OUTPUT_REP + "/reclustering_own/reclustering_own_report_{fraction}.html"

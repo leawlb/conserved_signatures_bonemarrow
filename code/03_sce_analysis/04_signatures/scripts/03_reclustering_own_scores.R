@@ -18,7 +18,6 @@ source(file = snakemake@params[["reclustering_functions"]])
 # load SCE object with reclustered populations
 
 sce <- base::readRDS(snakemake@input[["sce_input"]])
-fraction_curr <- snakemake@wildcards[["fraction"]]
 
 cts_exclude <- snakemake@params[["cts_exclude"]]
 

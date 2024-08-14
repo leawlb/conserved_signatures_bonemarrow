@@ -101,7 +101,8 @@ vis_perc_wide_gg <- function(seu, correction_vec = NULL, title_add= NULL){
                                    high = "blue")+
     ggplot2::theme_classic()+
     ggplot2::theme(axis.text.x = element_text(angle=0),
-                   axis.ticks = element_blank())+
+                   axis.ticks = element_blank(),
+                   legend.position = "none")+
     ggplot2::xlab("new clusters")+
     ggplot2::ylab("original cell types")+
     ggplot2::ggtitle(base::paste("resolution", seu$resolution[1], title_add))
@@ -151,6 +152,7 @@ vis_perc_long_gg <- function(seu, correction_vec = NULL, title_add= NULL){
                                    high = "blue")+
     ggplot2::theme_classic()+
     ggplot2::theme(axis.ticks = element_blank(),
+                   legend.position = "none",
                    axis.text.x = element_text(angle = 60,
                                               vjust = 1, 
                                               hjust = 1))+
@@ -187,6 +189,7 @@ vis_perc_cluster <- function(seu, correction_vec = NULL, title_add= NULL){
                                    high = "blue")+
     ggplot2::theme_classic()+
     ggplot2::theme(axis.ticks = element_blank(),
+                   legend.position = "none",
                    axis.text.x = element_text(angle = 60, 
                                               vjust = 1, 
                                               hjust = 1))+
@@ -365,7 +368,7 @@ seu_sign_list <- seu_list_all$seu_sign
 seu_sign_list <- add_res_info(seu_sign_list)
 ```
 
-```{r sign2, fig.width = 9, fig.height=30}
+```{r sign2, fig.width = 20, fig.height=30}
 plot_listw <- lapply(seu_sign_list,
                      vis_perc_wide_gg, 
                      title_add = "conserved signature genes")
@@ -403,11 +406,11 @@ seu_marker_list <- seu_list_all$seu_mark
 seu_marker_list <- add_res_info(seu_marker_list)
 ```
 
-```{r markers2, fig.width = 9, fig.height=3}
+```{r markers2, fig.width = 14, fig.height=30}
 plot_listw <- lapply(seu_marker_list, 
                      vis_perc_wide_gg, 
                      title_add = "conserved Markers")
-plot_listw
+cowplot::plot_grid(plotlist = plot_listw, ncol = 2)
 ```
 
 ```{r markers3, fig.height = 40, fig.width=12}
@@ -438,11 +441,11 @@ seu_mmusm_list <- seu_list_all$seu_mmms
 seu_mmusm_list <- add_res_info(seu_mmusm_list)
 ```
 
-```{r bl6markers2, fig.width = 9, fig.height=3}
+```{r bl6markers2, fig.width = 14, fig.height=30}
 plot_listw <- lapply(seu_mmusm_list, 
                      vis_perc_wide_gg, 
                      title_add = "all BL6 Markers")
-plot_listw
+cowplot::plot_grid(plotlist = plot_listw, ncol = 2)
 ```
 
 ```{r bl6markers3, fig.height = 40, fig.width=12}
@@ -473,11 +476,11 @@ seu_random_list <- seu_list_all$seu_rand
 seu_random_list <- add_res_info(seu_random_list)
 ```
 
-```{r random2, fig.width = 9, fig.height=3}
+```{r random2, fig.width = 14, fig.height=30}
 plot_listw <- lapply(seu_random_list, 
                      vis_perc_wide_gg, 
                      title_add = "random")
-plot_listw
+cowplot::plot_grid(plotlist = plot_listw, ncol = 2)
 ```
 
 ```{r random3, fig.height = 40, fig.width=12}

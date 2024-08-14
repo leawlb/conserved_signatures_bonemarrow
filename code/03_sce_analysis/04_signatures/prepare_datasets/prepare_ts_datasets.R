@@ -31,6 +31,8 @@ seu_ts_hscs_progenitors <- base::readRDS(ts_hsc_progenitors_input)
 # check sex and age of donors (+ other data)
 # these are embryonic hematopoietic cells from Carnegie stage 13 to
 # 17th week post-fertilization human stage
+# some of the cells were derived from yolk sac etc.
+
 print(base::table(seu_ts_hscs_progenitors$sex))
 print(base::table(seu_ts_hscs_progenitors$tissue))
 print(base::table(seu_ts_hscs_progenitors$development_stage))
@@ -43,11 +45,6 @@ print(base::table(seu_ts_hscs_progenitors$assay))
 #                   seu_ts_hscs_progenitors$cell_type))
 
 #-------------------------------------------------------------------------------
-
-# keep only HSPCs that were derived from bone marrow 
-# some of the cells were derived from yolk sac etc.
-
-seu_ts_hscs_progenitors <- seu_ts_hscs_progenitors[,seu_ts_hscs_progenitors$tissue == "bone marrow"]
 
 # remove cell types not in our dataset, as we cannot separate them
 cts_to_remove <- c(

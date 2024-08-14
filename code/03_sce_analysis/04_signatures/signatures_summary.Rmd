@@ -37,7 +37,6 @@ sce_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/m
 
 colors_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt"
 source("../../source/colors.R")
-fraction_curr <- "hsc"
 ```
 
 ```{r load_objects}
@@ -46,8 +45,6 @@ sce_str <- base::readRDS(snakemake@input[["sce_str"]])
 
 signature_list_hsc <- base::readRDS(snakemake@input[["signature_list_hsc"]])
 signature_list_str <- base::readRDS(snakemake@input[["signature_list_str"]])
-
-#fraction_curr <- snakemake@wildcards[["fraction"]]
 ```
 
 ```{r colors, meassage = FALSE}
@@ -583,7 +580,7 @@ print(plotlist_str[["Fibro/Chondro"]])
 print(plotlist_str[["Fibroblasts"]])
 ```
 
-```{r plot_expr_aec, fig.height = 21, fig.width = 4}
+```{r plot_expr_aec, fig.height = 25, fig.width = 4}
 print(plotlist_str[["Arteriolar/Capillary ECs"]])
 ```
 
@@ -599,46 +596,37 @@ print(plotlist_str[["Sinusoidal ECs"]])
 print(plotlist_str[["Pericytes/Smooth Muscle"]])
 ```
 
-## Specific cell types, specific genes
+# All BL6 marker gene expression
 
-### HSCs
+Generate plots for each cell type.
+This will help us find interesting genes to validate using RNA-FISH (HCR).
 
-```{r get_hsc_signatures_hsc, fig.width = 4}
-hsc_df <- signature_list_hsc$HSCs$conserved_df
-hsc_genes <- signature_list_hsc$HSCs$conserved_signature
-hsc_genes <- hsc_genes[!hsc_genes %in% 
-                         signature_list_hsc$HSCs$genes_subclustering]
+```{r plot_hsc_bl6m1}
 
-print(hsc_df[which(!is.na(hsc_df$mmus) &
-                   is.na(hsc_df$mcas) &
-                   is.na(hsc_df$mspr) &
-                   is.na(hsc_df$mcar)),])
+plotlist_hsc_bl6_markers <- lapply(cts_hsc, function(ct){
 
-hsc_markers <- hsc_df$gene[which(!is.na(hsc_df$mmus) &
-                                   is.na(hsc_df$mcas) &
-                                   is.na(hsc_df$mspr) &
-                                   is.na(hsc_df$mcar))]
+  print(ct)
+  # get all BL6 markers per cell type
+  mmms_genes <- signature_list_hsc[[ct]]$conserved_df$gene[
+    which(!is.na(signature_list_hsc[[ct]]$conserved_df$mmus))]
+ 
+  mmms_genes_nosub <- mmms_genes[!mmms_genes %in%
+                                 signature_list_hsc[[ct]]$genes_subclustering]
+  
+  agg_hsc_ct <- agg_hsc_list[[ct]]
+  vis_df <- base::as.data.frame(
+    t(SummarizedExperiment::assays(agg_hsc_ct)$logcounts))
+  vis_df <- vis_df[,colnames(vis_df) %in% mmms_genes]
+  vis_df <- tibble::rownames_to_column(vis_df, "species")
+  vis_df <- tidyr::pivot_longer(vis_df, 
+                                cols = c(2:ncol(vis_df)),
+                                values_to = "expression",
+                                names_to = "gene")
 
-hsc_markers_short <- hsc_markers[
-  hsc_markers %in% c("Ly6a", "Procr", "Nrgn")
-]
-
-hsc_markers_all <- hsc_df$gene[which(!is.na(hsc_df$mmus))]
-
-vis_df_hsc <- base::as.data.frame(
-  t(SummarizedExperiment::assays(agg_hsc_list[["HSCs"]])$logcounts))
-vis_df_hsc <- vis_df_hsc[,colnames(vis_df_hsc) %in% hsc_markers_all]
-vis_df_hsc <- tibble::rownames_to_column(vis_df_hsc, "species")
-vis_df_hsc <- tidyr::pivot_longer(vis_df_hsc, 
-                                  cols = c(2:ncol(vis_df_hsc)),
-                                  values_to = "expression",
-                                  names_to = "gene")
-
-vis_df_hsc$species <- factor(vis_df_hsc$species, levels = names(col_spc))
-```
-
-```{r get_hsc_signatures_hscplot1, fig.width = 4, fig.height= 8}
-plot3 <- ggplot2::ggplot(vis_df_hsc[vis_df_hsc$gene %in% hsc_markers,], 
+  vis_df$species <- factor(vis_df$species, levels = names(col_spc))
+  
+  # make plots
+  plot1 <- ggplot2::ggplot(vis_df, 
                            aes(x = species, 
                                y = reorder(gene, expression), 
                                fill = expression))+
@@ -646,8 +634,8 @@ plot3 <- ggplot2::ggplot(vis_df_hsc[vis_df_hsc$gene %in% hsc_markers,],
   ggplot2::theme_classic()+
   ggplot2::scale_fill_continuous("average logcounts",
                                  low = "white", high = "blue2",
-                                 limits = c(0, max(vis_df_hsc$expression)))+
-  ggplot2::ggtitle("BL6-specific HSC markers")+
+                                 limits = c(0, max(vis_df$expression)))+
+  ggplot2::ggtitle(base::paste(ct, "markers"))+
   ggplot2::theme(axis.title.y = element_blank(),
                  axis.title.x = element_blank(),
                  legend.position = "bottom",
@@ -655,19 +643,121 @@ plot3 <- ggplot2::ggplot(vis_df_hsc[vis_df_hsc$gene %in% hsc_markers,],
                                             size = 12,
                                             hjust = 0.45),
                  axis.text.y = element_text(size = 12))
-plot3
+
+  plotlist <- list(plot1)
+  
+  if(!identical(mmms_genes, mmms_genes_nosub)){
+    vis_df <- vis_df[vis_df$gene %in% mmms_genes_nosub,]
+    vis_df <- vis_df[order(vis_df$expression),]
+    
+    plot2 <- ggplot2::ggplot(vis_df, 
+                             aes(x = species, 
+                                 y = reorder(gene, expression), 
+                                 fill = expression))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::scale_fill_continuous("average logcounts",
+                                   low = "white", high = "blue2",
+                                   limits = c(0, max(vis_df$expression)))+
+    ggplot2::ggtitle(base::paste(ct, "markers"))+
+    ggplot2::theme(axis.title.y = element_blank(),
+                   axis.title.x = element_blank(),
+                   legend.position = "bottom",
+                   axis.text.x = element_text(angle = 90, 
+                                              size = 12,
+                                              hjust = 0.45),
+                   axis.text.y = element_text(size = 12))
+    plotlist <- list(plot1, plot2)
+  }
+  return(plotlist)
+})
+names(plotlist_hsc_bl6_markers) <- names(signature_list_hsc)
 ```
 
-```{r get_hsc_signatures_hscplot2, fig.width = 4, fig.height = 3}
-plot4 <- ggplot2::ggplot(vis_df_hsc[vis_df_hsc$gene %in% hsc_markers_short,], 
+```{r plot_expr_hsc_bl6, fig.height = 13, fig.width = 4}
+print(plotlist_hsc_bl6_markers[["HSCs"]]) 
+```
+
+```{r plot_expr_earlympps_bl6, fig.height = 6, fig.width = 4}
+print(plotlist_hsc_bl6_markers[["Early MPPs"]])
+```
+
+```{r plot_expr_activatedympps_bl6, fig.height = 7, fig.width = 4}
+print(plotlist_hsc_bl6_markers[["Activated MPPs"]])
+```
+
+```{r plot_expr_earlymyeloid_bl6, fig.height = 13, fig.width = 4}
+print(plotlist_hsc_bl6_markers[["Early Myeloid"]])
+```
+
+```{r plot_expr_lymphoid_bl6, fig.height = 17, fig.width = 4}
+print(plotlist_hsc_bl6_markers[["Lymphoid"]])
+```
+
+```{r plot_expr_neutro_bl6, fig.height = 35, fig.width = 4}
+print(plotlist_hsc_bl6_markers[["Neutrophil progs."]])
+```
+
+```{r plot_expr_mono_bl6, fig.height = 35, fig.width = 4}
+print(plotlist_hsc_bl6_markers[["Monocyte progs."]])
+```
+
+```{r plot_expr_mk_bl6, fig.height = 10, fig.width = 4}
+print(plotlist_hsc_bl6_markers[["Mk progs."]])
+```
+
+```{r plot_expr_mkery_bl6, fig.height = 14, fig.width = 4}
+print(plotlist_hsc_bl6_markers[["Mk/Ery progs."]])
+```
+
+```{r plot_expr_bmprogs_bl6, fig.height = 14, fig.width = 4}
+print(plotlist_hsc_bl6_markers[["Baso/Mast progs."]])
+```
+
+```{r plot_expr_ery_bl6, fig.height = 40, fig.width = 4}
+print(plotlist_hsc_bl6_markers[["Erythroid progs."]])
+```
+
+```{r plot_expr_cycling_bl6, fig.height = 20, fig.width = 4}
+print(plotlist_hsc_bl6_markers[["Cycling"]])
+```
+
+```{r plot_str_bl6}
+cts_str <- as.list(names(signature_list_str))
+
+plotlist_allbl6_markers_str <- lapply(cts_str, function(ct){
+  
+  print(ct)
+   # get all BL6 markers per cell type
+  mmms_genes <- signature_list_str[[ct]]$conserved_df$gene[
+    which(!is.na(signature_list_str[[ct]]$conserved_df$mmus))]
+ 
+  mmms_genes_nosub <- mmms_genes[!mmms_genes %in%
+                                 signature_list_str[[ct]]$genes_subclustering]
+  
+  agg_str_ct <- agg_str_list[[ct]]
+  vis_df <- base::as.data.frame(
+    t(SummarizedExperiment::assays(agg_str_ct)$logcounts))
+  vis_df <- vis_df[,colnames(vis_df) %in% mmms_genes]
+  vis_df <- tibble::rownames_to_column(vis_df, "species")
+  vis_df <- tidyr::pivot_longer(vis_df, 
+                                cols = c(2:ncol(vis_df)),
+                                values_to = "expression",
+                                names_to = "gene")
+
+  vis_df$species <- factor(vis_df$species, levels = names(col_spc))
+  
+  # make plots
+  plot1 <- ggplot2::ggplot(vis_df, 
                            aes(x = species, 
                                y = reorder(gene, expression), 
                                fill = expression))+
   ggplot2::geom_tile()+
   ggplot2::theme_classic()+
   ggplot2::scale_fill_continuous("average logcounts",
-                                 low = "white", high = "blue2")+
-  ggplot2::ggtitle("BL6-specific HSC markers")+
+                                 low = "white", high = "blue2",
+                                 limits = c(0, max(vis_df$expression)))+
+  ggplot2::ggtitle(base::paste(ct, "markers"))+
   ggplot2::theme(axis.title.y = element_blank(),
                  axis.title.x = element_blank(),
                  legend.position = "bottom",
@@ -675,27 +765,67 @@ plot4 <- ggplot2::ggplot(vis_df_hsc[vis_df_hsc$gene %in% hsc_markers_short,],
                                             size = 12,
                                             hjust = 0.45),
                  axis.text.y = element_text(size = 12))
-plot4
+
+  plotlist <- list(plot1)
+  
+  if(!identical(mmms_genes, mmms_genes_nosub)){
+    vis_df <- vis_df[vis_df$gene %in% mmms_genes_nosub,]
+    vis_df <- vis_df[order(vis_df$expression),]
+    
+    plot2 <- ggplot2::ggplot(vis_df, 
+                             aes(x = species, 
+                                 y = reorder(gene, expression), 
+                                 fill = expression))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::scale_fill_continuous("average logcounts",
+                                   low = "white", high = "blue2",
+                                   limits = c(0, max(vis_df$expression)))+
+    ggplot2::ggtitle(base::paste(ct, "markers"))+
+    ggplot2::theme(axis.title.y = element_blank(),
+                   axis.title.x = element_blank(),
+                   legend.position = "bottom",
+                   axis.text.x = element_text(angle = 90, 
+                                              size = 12,
+                                              hjust = 0.45),
+                   axis.text.y = element_text(size = 12))
+  plotlist <- list(plot1, plot2)
+  }
+  return(plotlist)
+})
+names(plotlist_allbl6_markers_str) <- names(signature_list_str)
 ```
 
-```{r get_hsc_signatures_hscplot3, fig.width = 4, fig.height = 16}
-plot5 <- ggplot2::ggplot(vis_df_hsc[vis_df_hsc$gene %in% hsc_markers_all,], 
-                           aes(x = species, 
-                               y = reorder(gene, expression), 
-                               fill = expression))+
-  ggplot2::geom_tile()+
-  ggplot2::theme_classic()+
-  ggplot2::scale_fill_continuous("average logcounts",
-                                 low = "white", high = "blue2")+
-  ggplot2::ggtitle("BL6 HSC markers")+
-  ggplot2::theme(axis.title.y = element_blank(),
-                 axis.title.x = element_blank(),
-                 legend.position = "bottom",
-                 axis.text.x = element_text(angle = 90, 
-                                            size = 12,
-                                            hjust = 0.45),
-                 axis.text.y = element_text(size = 12))
-plot5
+```{r plot_expr_adipocars_bl6, fig.height = 60, fig.width = 4}
+print(plotlist_allbl6_markers_str[["Adipo/CARs"]])
+```
+
+```{r plot_expr_osteo_bl6, fig.height = 45, fig.width = 4}
+print(plotlist_allbl6_markers_str[["Osteo"]])
+```
+
+```{r plot_expr_fibrochondro_bl6, fig.height = 50, fig.width = 4}
+print(plotlist_allbl6_markers_str[["Fibro/Chondro"]])
+```
+
+```{r plot_expr_fibro_bl6, fig.height = 68, fig.width = 4}
+print(plotlist_allbl6_markers_str[["Fibroblasts"]])
+```
+
+```{r plot_expr_aec_bl6, fig.height = 70, fig.width = 4}
+print(plotlist_allbl6_markers_str[["Arteriolar/Capillary ECs"]])
+```
+
+```{r plot_expr_svec_bl6, fig.height = 50, fig.width = 4}
+print(plotlist_allbl6_markers_str[["Sinusoidal/Venular ECs"]])
+```
+
+```{r plot_expr_sinusoid_bl6, fig.height = 35, fig.width = 4}
+print(plotlist_allbl6_markers_str[["Sinusoidal ECs"]])
+```
+
+```{r plot_expr_perismooth_bl6, fig.height = 44, fig.width = 4}
+print(plotlist_allbl6_markers_str[["Pericytes/Smooth Muscle"]])
 ```
 
 ```{r sessioninfo}

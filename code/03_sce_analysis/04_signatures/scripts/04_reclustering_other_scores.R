@@ -1,0 +1,49 @@
+
+# get reclustering stores for reclustered datasets from other species
+
+#-------------------------------------------------------------------------------
+
+set.seed(37)
+
+library(mclust, quietly = TRUE)
+library(mcclust, quietly = TRUE)
+library(bluster, quietly = TRUE)
+library(cluster, quietly = TRUE)
+library(dendextend, quietly = TRUE)
+
+source(file = snakemake@params[["reclustering_functions"]])
+
+#-------------------------------------------------------------------------------
+# load seurat object lists with reclustered labels
+
+seu_list_all <- base::readRDS(snakemake@input[["seu_list"]])
+
+#-------------------------------------------------------------------------------
+# for each item of the nested list, calculate the reclustering scores 
+score_df_list_all <- lapply(seu_list_all, function(seu_list){
+  
+  score_df_list <- lapply(seu_list, function(seu){
+    
+    score_df <- calculate_scores_long(seu) # own function
+    
+    # add specific info
+    score_df$resolution <- base::rep(seu@misc$resolution, 
+                                     nrow(score_df))
+    score_df$conservation_level <- base::rep(seu@misc$used_genes,
+                                             nrow(score_df))
+    return(score_df)
+  })
+  names(score_df_list) <- names(seu_list)
+  return(score_df_list)
+})
+names(score_df_list_all) <- names(seu_list_all)
+
+# test
+print(score_df_list_all$seu_sign$"0.25")
+
+#-------------------------------------------------------------------------------
+
+base::saveRDS(snakemake@output[["score_df_list"]])
+
+utils::sessionInfo()
+

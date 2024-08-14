@@ -54,11 +54,14 @@ for f in fractions:
 # reclustering other datasets
 for d in datasets_other:
   targets = targets + [OUTPUT_DAT + "/04_rcls/reclustered_" + d + "_list"]
+  targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_" + d + "_list"]
   #targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_report_" + d + ".html"]
-  targets = targets + [OUTPUT_REP + "/reclustering_scores/test_reclustering_scores_" + d + ".html"]
   # targets = targets + [OUTPUT_REP + "/reclustering_hum_eval_" + d + ".html"]
   # targets = targets + [OUTPUT_DAT + "/05_perm/" + r + "_score_df"]
   # targets = targets + [OUTPUT_REP + "/reclustering_permutation_report_" + r + ".html"]
+
+  # testing reclustering scores
+  targets = targets + [OUTPUT_REP + "/reclustering_scores/test_reclustering_scores_" + d + ".html"]
 
 #-------------------------------------------------------------------------------
 
@@ -253,7 +256,7 @@ rule reclustering_own_scores:
     script:
         "scripts/03_reclustering_own_scores.R"
         
-# visualise re-clustering of other datasets, including scores
+# visualise re-clustering of own datasets, including scores
 rule reclustering_own_report:
     input: 
         sce_input = rules.reclustering_own.output,
@@ -269,10 +272,24 @@ rule reclustering_own_report:
 
 #-------------------------------------------------------------------------------  
 
+# get the reclustering scores for re-clustered datasets from other species
+rule reclustering_other_scores:
+    input:
+        seu_list = rules.reclustering_other.output,
+    params:
+        reclustering_functions = "../../source/sce_functions_reclustering.R"
+    conda:
+        "../../envs/reclustering_scores.yml"
+    output:
+        score_df_list = OUTPUT_DAT + "/04_rcls/score_df_{dataset}_list"
+    script:
+        "scripts/03_reclustering_own_scores.R"
+        
 # visualise re-clustering of other datasets, including with scores
 rule reclustering_other_report:
     input:
-        seu_list = OUTPUT_DAT + "/04_rcls/reclustered_{dataset}_list"
+        seu_list = OUTPUT_DAT + "/04_rcls/reclustered_{dataset}_list",
+        score_df_list = rules.reclustering_other_scores.output
     params:
         #colors_path = COLORS,
         #functions = "../../source/sce_functions.R",
@@ -282,6 +299,12 @@ rule reclustering_other_report:
         OUTPUT_REP + "/reclustering_other/reclustering_other_report_{dataset}.html"
     script: 
         "reclustering_other_report.Rmd"
+
+
+
+
+
+
 
 
         

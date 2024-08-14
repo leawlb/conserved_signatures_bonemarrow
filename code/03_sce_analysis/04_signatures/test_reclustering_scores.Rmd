@@ -31,7 +31,7 @@ library(ggplot2, quietly = TRUE)
 ```
 
 ```{r manual, include = FALSE, eval = FALSE}
-seu_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/04_rcls/reclustered_li_all_stromal_list")
+seu_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/04_rcls/reclustered_zeb_all_hspc_list")
 
 dataset_curr <- "li_all_stroma"
 
@@ -48,15 +48,15 @@ dataset_curr <- snakemake@wildcards[["dataset"]]
 
 Using a comparison matrix of this format:
 
-......ct1...ct2...ct3
+........ct1...ct2......ct3
 
-cl1...0.5...0.5....0
+cl1.....0.5...0.5.......0
 
-cl2....0.....0.....1
+cl2......0.....0........1
 
-cl3..0.33...0.33..0.33
+cl3....0.33...0.33..0.33
 
-cl4....0.....0.....1
+cl4....0.....0.........1
 
 
 with the values indicating the proportion of cells of a given cell type ct
@@ -268,8 +268,9 @@ mat_plots <- lapply(df_list_mat, function(df_mat){
                         color = "grey20", 
                         linetype = "dashed")+
     ggplot2::ggtitle(title)+
-    ggplot2::xlim(0, max(df_mat_short$nr_recl))+
-    ggplot2::ylim(0, max(df_mat_short$total_nr_cluster))
+    ggplot2::xlim(0, max(df_mat_shorter$nr_recl))+
+    ggplot2::ylim(0, max(c(df_mat_shorter$value), 
+                         df_mat$value[df_mat == "total_nr_ct"][1]))
   
   plot4 <- ggplot2::ggplot(
     df_mat_shorter,
@@ -284,7 +285,8 @@ mat_plots <- lapply(df_list_mat, function(df_mat){
                         color = "grey20", 
                         linetype = "dashed")+
     ggplot2::ggtitle(title)+
-    ggplot2::ylim(0, max(df_mat_short$total_nr_cluster))
+    ggplot2::ylim(0, max(c(df_mat_shorter$value), 
+                         df_mat$value[df_mat == "total_nr_ct"][1]))
   
   return(list(plot1, plot2, plot3, plot4))
 })
@@ -534,6 +536,8 @@ sp_plots <- lapply(df_list_sp, function(df_sp){
       "median_purity" = "goldenrod2",
       "mean_purity" = "goldenrod4"))+
     ggplot2::ggtitle(title)+
+    ggplot2::geom_hline(yintercept = 0.25,
+                        linetype = "dashed")+
     ggplot2::ylim(c(-1, 1))+
     ggplot2::xlim(0, max(df_sp$nr_recl))
   
@@ -548,7 +552,9 @@ sp_plots <- lapply(df_list_sp, function(df_sp){
       "median_purity" = "goldenrod2",
       "mean_purity" = "goldenrod4"))+
     ggplot2::ggtitle(title)+
-    ggplot2::ylim(c(-1, 1))
+    ggplot2::ylim(c(-1, 1))+
+    ggplot2::geom_hline(yintercept = 0.25,
+                        linetype = "dashed")
 
   return(list(plot1, plot2))
 })
@@ -890,6 +896,15 @@ plot3 <- ggplot2::ggplot(
     ggplot2::ylim(0, max(df_met$value))
 plot3
 ```
+
+Based on this report, we use as reclustering scores:
+
+ - proportion of 0s
+ - mean proportion of cells of a cell type per cluster
+ - mean purity
+ - adjusted rand index
+ - fowles mallow index
+ - variation of information
 
 ```{r sessioninfo}
 utils::sessionInfo()

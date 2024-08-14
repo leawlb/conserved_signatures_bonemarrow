@@ -114,15 +114,33 @@ calculate_scores <- function(seu){
 #-----------------------------------------------------------------------------
 
 
-calculate_scores_long <- function(seu){
+calculate_scores_long <- function(
+    seu = NULL, 
+    cluster_vector1 = NULL,
+    cluster_vector2 = NULL,
+    mat_pca = NULL){
   
-  #seu <- seu_list_all$seu_mmms$"0.1"
-  seu <- seu 
-  # seurat objects with clusters in "seurat_clusters" slot and
-  # cell type or identity to compare in "cell_type" slot
+  # can be seurat or two clustering vectors + pca matrix
+  
+  if(!is.null(seu)){
+    seu <- seu 
+    # seurat objects with clusters in "seurat_clusters" slot and
+    # cell type or identity to compare in "cell_type" slot
+  
+    cluster_vector1 <- seu$cell_type
+    cluster_vector2 <- seu$seurat_clusters
+    
+    mat_pca <- seu@reductions$pca@cell.embeddings[,1:10]
+  }else{
+    cluster_vector1 <- cluster_vector1 # old clustering
+    cluster_vector2 <- cluster_vector2 # new clustering
+    # purity will be calculated from cluster_vector2
+  
+    mat_pca <- mat_pca
+  }
   
   # make a comparison matrix, then split into cells/celltype and cells/cluster
-  mat <- base::table(seu$cell_type, seu$seurat_clusters)
+  mat <- base::table(cluster_vector1, cluster_vector2)
   mat_per_celltype <- mat/Matrix::rowSums(mat)
   t_mat <- t(mat)
   mat_per_cluster <- t(t_mat/Matrix::rowSums(t_mat)) # keep format
@@ -160,9 +178,8 @@ calculate_scores_long <- function(seu){
   #-----------------------------------------------------------------------------
   # score 3: mean purity of new clusters
   
-  mat_recl <- seu@reductions$pca@cell.embeddings[,1:10]
-  res_recl <- bluster::neighborPurity(mat_recl, 
-                                      clusters = seu$seurat_clusters, 
+  res_recl <- bluster::neighborPurity(mat_pca, 
+                                      clusters = cluster_vector2, 
                                       k = 50)
   score_3 <- mean(res_recl$purity)
   
@@ -171,13 +188,14 @@ calculate_scores_long <- function(seu){
   # scores 4 - 6: established metrics for comparing two clusterings
   
   # Adjusted Rand index
-  score_4 <- mclust::adjustedRandIndex(seu$cell_type, seu$seurat_clusters)
+  score_4 <- mclust::adjustedRandIndex(cluster_vector1, cluster_vector2)
   
   # Fowlkes-Mallows Index
-  score_5 <- dendextend::FM_index_R(seu$cell_type, seu$seurat_clusters)[1]
+  score_5 <- dendextend::FM_index_R(cluster_vector1, cluster_vector2)[1]
   
   # Variation of Information
-  score_6 <- mcclust::vi.dist(seu$cell_type, seu$seurat_clusters)
+  score_6 <- mcclust::vi.dist(unfactor(cluster_vector1),
+                              unfactor(cluster_vector2))
 
   #-----------------------------------------------------------------------------
   #-----------------------------------------------------------------------------

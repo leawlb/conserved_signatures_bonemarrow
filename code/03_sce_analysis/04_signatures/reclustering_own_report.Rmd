@@ -35,6 +35,7 @@ fraction_curr <- "str"
 colors_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt"
 source("../../source/colors.R")
 source("../../source/plotting.R")
+source("../../source/sce_functions_reclustering.R")
 
 col_cts <- col_cts_str
 ```
@@ -252,10 +253,46 @@ plot_ndge <- ggplot2::ggplot(ndge_df,
   ggplot2::ylab("Re-clustered with nDGEs")
 
 plot_ndge
+knitr::knit_exit()
+```
+
+## Re-clustering Scores
+
+```{r all_0_to_1, fig.width = 4, fig.height = 3.5}
+
+ggplot2::ggplot(
+  res_df_all[!res_df_all$type %in% c("variation_information", 
+                                     "nr_celltypes",
+                                     "nr_clusters"),], 
+  aes(y = value, x = type, color = conservation_level))+
+  ggplot2::geom_point(alpha = 0.7)+
+  ggplot2::theme_classic()+
+  ggplot2::ylim(c(0, 1))+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))+
+  ggplot2::scale_color_manual("conservation level", values = c(
+    "conserved_signature" = "yellowgreen",
+    "conserved_markers" = "darkgreen",
+    "mmusall_markers" = "blue2",
+    "ndges" = "orangered1"))+
+  ggplot2::ggtitle(base::paste("reclustering", fraction_curr))
 ```
 
 
-TODO: Add clustering scores
+```{r, fig.width = 3, fig.height = 3.5}
+ggplot2::ggplot(res_df_all[res_df_all$type == "variation_information",], 
+                aes(y = value, x = type, color = conservation_level))+
+  ggplot2::geom_point(alpha = 0.7)+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))+
+  ggplot2::scale_color_manual("conservation level", values = c(
+    "conserved_signature" = "yellowgreen",
+    "conserved_markers" = "darkgreen",
+    "mmusall_markers" = "blue2",
+    "ndges" = "orangered1"))+
+  ggplot2::ylim(c(0, max(res_df_all$value[
+    res_df_all$type == "variation_information"])))+
+  ggplot2::ggtitle(base::paste("reclustering", fraction_curr))
+```
 
 ```{r sessioninfo}
 utils::sessionInfo()

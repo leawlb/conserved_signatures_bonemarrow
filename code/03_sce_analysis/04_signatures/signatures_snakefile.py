@@ -11,7 +11,6 @@ OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/04_signatures"
 COLORS_REF = config["base"] + config["metadata_paths"]["colors_ref"]
 COLORS = config["base"] + config["metadata_paths"]["colors"]
 
-#GENE_LIST_SUBCLUSTERING = config["base"] + config["metadata_paths"]["gene_list_subclustering"]
 CELL_TYPES_EXCLUDE = config["values"]["03_sce_analysis"]["cell_types_exclude"]
 print(CELL_TYPES_EXCLUDE)
 
@@ -20,7 +19,7 @@ ENSEMBL_HUM = config["base"] + config["metadata_paths"]["ensembl_hum"]
 ENSEMBL_ZEB = config["base"] + config["metadata_paths"]["ensembl_zeb"]
 ENSEMBL_NMR = config["base"] + config["metadata_paths"]["ensembl_nmr"]
 
-RECLUSTER_OTHER = config["recluster_other"]
+#RECLUSTER_OTHER = config["recluster_other"]
 
 METADATA = pd.read_csv(config["base"] + config["metadata_paths"]["table"])
 def get_list(metadata, column):
@@ -46,18 +45,20 @@ targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_mark_" + f]
 targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_ndge_" + f]
 targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_mmms_" + f]
 
+# reclustering our own datasets
 for f in fractions:
   targets = targets + [OUTPUT_DAT + "/03_rclo/sce_" + f]
+  targets = targets + [OUTPUT_DAT + "/03_rclo/score_df_" + f]
   targets = targets + [OUTPUT_REP + "/reclustering_own/reclustering_own_report_" + f + ".html"]
 
-#if RECLUSTER_OTHER:
+# reclustering other datasets
 for d in datasets_other:
   targets = targets + [OUTPUT_DAT + "/04_rcls/reclustered_" + d + "_list"]
-  # targets = targets + [OUTPUT_REP + "/reclustering_hum_eval_" + d + ".html"]
   targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_report_" + d + ".html"]
+  targets = targets + [OUTPUT_REP + "/reclustering_scores/test_reclustering_scores_" + d + ".html"]
+  # targets = targets + [OUTPUT_REP + "/reclustering_hum_eval_" + d + ".html"]
   # targets = targets + [OUTPUT_DAT + "/05_perm/" + r + "_score_df"]
   # targets = targets + [OUTPUT_REP + "/reclustering_permutation_report_" + r + ".html"]
-  targets = targets + [OUTPUT_REP + "/reclustering_scores/test_reclustering_scores_" + d + ".html"]
 
 #-------------------------------------------------------------------------------
 
@@ -69,13 +70,15 @@ rule all:
         
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
+
 """   
+# EXTRACT SIGNATURES
+# 
 # Get conserved signatures = 
-# genes that are conserved marker gene function provided by Veronica Busa and 
+# genes that are conserved marker genes provided by Veronica Busa and that
 # are also non-differentially expressed
 """
 
-print(CELL_TYPES_EXCLUDE)
 # export list of data on marker genes, conserved signatures, and nDGEs
 rule export_signature:
     input:
@@ -108,16 +111,19 @@ rule signature_summary:
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
-
+       
 """
-# Reclustering datasets to test the ability of our conserved signatures
-# to capture cell identity
-# our own datasets + from other species (human, zebrafish, naked mole rat)
-# using:
+# RECLUSTERING
+# 
+# Reclustering datasets to test the ability of the conserved signatures
+# to capture cell identity.
+# Using our own datasets + from other species (human, zebrafish, naked mole rat)
+# with:
 #
 # - conserved marker genes
 # - nDGEs
 # - conserved signatures
+# - all BL6 marker genes
 #
 # Additionally, permutation tests are performed using random gene sets of the 
 # same number of genes for reclustering for the three other species
@@ -143,9 +149,10 @@ rule prepare_ensembl:
         "scripts/02_prepare_ensembl.R"
       
 #-------------------------------------------------------------------------------
+
 """
 # RE-CLUSTERING OUR DATA
-
+#
 # Data will be reclustered exactly as the original dataset with 2000 HVGs 
 # was clustered, based on batch-corrected PC coordinates.
 # Here, SCE object are subsetted to each gene set, PCA is performed again using
@@ -166,32 +173,17 @@ rule reclustering_own:
     script:
         "scripts/03_reclustering_own.R"
 
-
-# visualise reclustered datasets
-rule reclustering_own_report:
-    input: 
-        sce_input = rules.reclustering_own.output
-    output:
-        OUTPUT_REP + "/reclustering_own/reclustering_own_report_{fraction}.html"
-    params:
-        colors_path = COLORS,
-        #functions = "../../source/sce_functions.R",
-        plotting = "../../source/plotting.R",
-        colors = "../../source/colors.R"
-    script:
-        "reclustering_own_report.Rmd"
-
 #-------------------------------------------------------------------------------
+
 """
 # RE-CLUSTERING OTHER DATA
-
+#
 # Datasets from other species are prepared for analysis using 
 # prepare_datasets_snakefile.py
-
+#
 # Standard Seurat approach with standard options starting from raw counts
 # but with aforementioned gene sets instead of HVGs.
 """
-#if RECLUSTER_OTHER:
 rule reclustering_other:
     input:
         seu_input = config["base"] + config["metadata_paths"]["datasets_other_path"] + "/{dataset}",
@@ -207,22 +199,77 @@ rule reclustering_other:
     script: 
         "scripts/04_reclustering_other.R"
 
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+
 """
-# evaluate cluster silhuoette and purity of all re-clustering
-rule reclustering_hum_eval:
+# RE-CLUSTERING SCORES
+# 
+# In order to test how well a certain gene set was able to re-cluster a 
+# dataset, we test different established (and several new) metrics for
+# comparing two clusterings, or for evaluating the quality of clustering.
+# We use the re-clustered other datasets to test and evaluate each score.
+# We choose to use following metrics for evaluating re-clustering:
+#
+# - adjusted rand index
+# - fowlkes-mallows index
+# - variation of information
+# - mean cluster purity of reclustered labels
+# - proportion of fields that are 0 (own score)
+# - mean proportion of cells of a cell type per cluster (own score)
+#
+# We use many different scores because some of these scores increase or
+# decrease with a higher clustering resolution/nr of clusters and we aim to 
+# reduce this bias by using several different kinds of scores.
+"""
+
+rule test_reclustering_scores:
+    input: 
+        seu_list = OUTPUT_DAT + "/04_rcls/reclustered_{dataset}_list"
+    output:
+        OUTPUT_REP + "/reclustering_scores/test_reclustering_scores_{dataset}.html"
+    conda:
+        "../../envs/recl_scores.yml"
+    script:
+        "test_reclustering_scores.Rmd"
+        
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+"""
+# REPORTS
+"""
+
+# get the reclustering scores for our own re-clustered datasets
+rule reclustering_own_scores:
     input:
-        seu_list = OUTPUT_DAT + "/04_rcls/reclustered_{reference}_list"
+        rules.reclustering_own.output,
+    params:
+        cts_exclude = CELL_TYPES_EXCLUDE,
+        reclustering_functions = "../../source/sce_functions_reclustering.R",
+    conda:
+        "../../envs/recl_scores.yml"
+    output:
+        score_df = OUTPUT_DAT + "/03_rclo/score_df_{fraction}"
+    script:
+        "scripts/03_reclustering_own_scores.R"
+        
+# visualise re-clustering of other datasets, including scores
+rule reclustering_own_report:
+    input: 
+        sce_input = rules.reclustering_own.output
+        score_df = rules.reclustering_own_scores.output
+    output:
+        OUTPUT_REP + "/reclustering_own/reclustering_own_report_{fraction}.html"
     params:
         colors_path = COLORS,
-        functions = "../../source/sce_functions.R",
         plotting = "../../source/plotting.R",
         colors = "../../source/colors.R"
-    output:
-        OUTPUT_REP + "/reclustering_hum_eval_{reference}.html"
-    script: 
-        "reclustering_hum_eval.Rmd"
-"""
-# visualise reclustered datasets using different gene sets
+    script:
+        "reclustering_own_report.Rmd"
+
+#-------------------------------------------------------------------------------  
+
+# visualise re-clustering of other datasets, including with scores
 rule reclustering_other_report:
     input:
         seu_list = OUTPUT_DAT + "/04_rcls/reclustered_{dataset}_list"
@@ -236,16 +283,7 @@ rule reclustering_other_report:
     script: 
         "reclustering_other_report.Rmd"
 
-# check potential scores
-rule test_reclustering_scores:
-    input: 
-        seu_list = OUTPUT_DAT + "/04_rcls/reclustered_{dataset}_list"
-    output:
-        OUTPUT_REP + "/reclustering_scores/test_reclustering_scores_{dataset}.html"
-    conda:
-        "../../envs/recl_scores.yml"
-    script:
-        "test_reclustering_scores.Rmd"
+
         
 """
 resolution_list = [
@@ -292,3 +330,20 @@ rule reclustering_permutation_report:
     script: 
         "reclustering_permutation_report.Rmd"
 """
+
+"""
+# evaluate cluster silhuoette and purity of all re-clustering
+rule reclustering_hum_eval:
+    input:
+        seu_list = OUTPUT_DAT + "/04_rcls/reclustered_{reference}_list"
+    params:
+        colors_path = COLORS,
+        functions = "../../source/sce_functions.R",
+        plotting = "../../source/plotting.R",
+        colors = "../../source/colors.R"
+    output:
+        OUTPUT_REP + "/reclustering_hum_eval_{reference}.html"
+    script: 
+        "reclustering_hum_eval.Rmd"
+"""
+

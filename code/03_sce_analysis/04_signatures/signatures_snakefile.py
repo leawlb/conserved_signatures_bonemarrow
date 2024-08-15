@@ -55,13 +55,13 @@ for f in fractions:
 for d in datasets_other:
   targets = targets + [OUTPUT_DAT + "/04_rcls/reclustered_" + d + "_list"]
   targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_" + d + "_list"]
-  #targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_report_" + d + ".html"]
+  targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_report_" + d + ".html"]
   # targets = targets + [OUTPUT_REP + "/reclustering_hum_eval_" + d + ".html"]
   # targets = targets + [OUTPUT_DAT + "/05_perm/" + r + "_score_df"]
   # targets = targets + [OUTPUT_REP + "/reclustering_permutation_report_" + r + ".html"]
 
   # testing reclustering scores
-  targets = targets + [OUTPUT_REP + "/reclustering_scores/test_reclustering_scores_" + d + ".html"]
+  #targets = targets + [OUTPUT_REP + "/reclustering_scores/test_reclustering_scores_" + d + ".html"]
 
 #-------------------------------------------------------------------------------
 
@@ -283,17 +283,17 @@ rule reclustering_other_scores:
     output:
         score_df_list = OUTPUT_DAT + "/04_rcls/score_df_{dataset}_list"
     script:
-        "scripts/03_reclustering_own_scores.R"
+        "scripts/04_reclustering_other_scores.R"
         
 # visualise re-clustering of other datasets, including with scores
 rule reclustering_other_report:
     input:
-        seu_list = OUTPUT_DAT + "/04_rcls/reclustered_{dataset}_list",
+        seu_list = rules.reclustering_other.output,
         score_df_list = rules.reclustering_other_scores.output
-    params:
+    #params:
         #colors_path = COLORS,
         #functions = "../../source/sce_functions.R",
-        plotting = "../../source/plotting.R",
+       # plotting = "../../source/plotting.R",
         #colors = "../../source/colors.R"
     output:
         OUTPUT_REP + "/reclustering_other/reclustering_other_report_{dataset}.html"

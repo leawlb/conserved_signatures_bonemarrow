@@ -8,7 +8,6 @@ set.seed(37)
 library(mclust, quietly = TRUE)
 library(mcclust, quietly = TRUE)
 library(bluster, quietly = TRUE)
-library(cluster, quietly = TRUE)
 library(dendextend, quietly = TRUE)
 library(SingleCellExperiment, quietly = TRUE)
 

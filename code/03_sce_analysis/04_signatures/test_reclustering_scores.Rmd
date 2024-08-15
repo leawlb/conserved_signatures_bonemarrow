@@ -490,7 +490,7 @@ df_sp <- dplyr::bind_rows(df_list_sp)
 head(df_sp)
 ```
 
-```{r sp_df_plotfunction}
+```{r sp_df_plotfunction, fig.height = 3, fig.width = 7}
 sp_plots <- lapply(df_list_sp, function(df_sp){
   
   title <- base::paste(df_sp$length_conservation_level[1],
@@ -534,7 +534,7 @@ sp_plots <- lapply(df_list_sp, function(df_sp){
 sp_plots
 ```
 
-```{r sp_all_recl}
+```{r sp_all_recl, fig.height = 3, fig.width = 7}
 plot1 <- ggplot2::ggplot(
     df_sp[df_sp$type == "median_silhouette_width",],
     aes(x = nr_recl, y = value, color = conservation_level))+

@@ -120,7 +120,7 @@ calculate_scores_long <- function(
     cluster_vector2 = NULL,
     mat_pca = NULL){
   
-  # can be seurat or two clustering vectors + pca matrix
+  # can be seurat object, or two clustering vectors + pca matrix
   
   if(!is.null(seu)){
     seu <- seu 

@@ -22,17 +22,18 @@ set.seed(37)
 ```
 
 ```{r source, message = FALSE}
-source(file = snakemake@params[["plotting"]])
-source(file = snakemake@params[["reclustering_function"]])
+#source(file = snakemake@params[["plotting"]])
+#source(file = snakemake@params[["reclustering_function"]])
 ```
 
 ```{r load, message = FALSE}
 library(Seurat, quietly = TRUE)
-library(mclust, quietly = TRUE)
-library(mcclust, quietly = TRUE)
-library(bluster, quietly = TRUE)
-library(cluster, quietly = TRUE)
-library(dendextend, quietly = TRUE)
+library(tidyverse, quietly = TRUE)
+# library(mclust, quietly = TRUE)
+# library(mcclust, quietly = TRUE)
+# library(bluster, quietly = TRUE)
+# library(cluster, quietly = TRUE)
+# library(dendextend, quietly = TRUE)
 ```
 
 ```{r eval = FALSE, include = FALSE}
@@ -50,6 +51,7 @@ seu_list_all <- readRDS(paste0(base_path, "reclustered_li_all_stromal_list"))
 colors_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt"
 source("../../source/colors.R")
 source("../../source/plotting.R")
+source("../../source/sce_functions_reclustering.R")
 
 wildcard_curr <- "zeb_all_hspc"
 
@@ -63,6 +65,9 @@ col_cts <- col_cts_hsc
 
 ```{r load_objects}
 seu_list_all <- base::readRDS(snakemake@input[["seu_list"]])
+score_df_list_all <- base::readRDS(snakemake@input[["score_df_list"]])
+
+dataset_curr <- snakemake@wildcards[["dataset"]]
 ```
 
 ```{r nr_cts}
@@ -70,26 +75,22 @@ nr_celltypes <- length(base::unique(seu_list_all[[1]][[1]]$cell_type))
 print(nr_celltypes)
 ```
 
-### Functions
+## Functions
 
-```{r res_info}
-# add resolution info to seurat objects for nicer visualisation
-add_res_info <- function(seu_list){
-  print(names(seu_list))
-  for(res in names(seu_list)){
-    seu_list[[res]]$resolution <- base::rep(res, ncol(seu_list[[res]]))
-  }
-  return(seu_list)
-}
-```
+### Plotting from seurat object
+
+#### Wide
+
+Cell types on y axis.
+Proportions of cells of a cluster per cell type.
 
 ```{r wide_function, include = FALSE }
-# heatmap vis
+
 vis_perc_wide_gg <- function(seu, correction_vec = NULL, title_add= NULL){
   
   mat <- base::table(seu$cell_type, seu$seurat_clusters)
   
-  mat1 <- mat/BiocGenerics::rowSums(mat)*100
+  mat1 <- mat/rowSums(mat)*100
   if(!is.null(correction_vec)){
     mat1 <- mat1[,correction_vec]
   }
@@ -110,44 +111,33 @@ vis_perc_wide_gg <- function(seu, correction_vec = NULL, title_add= NULL){
                    legend.position = "none")+
     ggplot2::xlab("new clusters")+
     ggplot2::ylab("original cell types")+
-    ggplot2::ggtitle(base::paste("resolution", seu$resolution[1], title_add))
+    ggplot2::ggtitle(base::paste("resolution", 
+                                 seu@misc$resolution[1], 
+                                 title_add))
   
-   # plot_wide_ordered <- ggplot2::ggplot(df_vis, 
-   #                                      aes(y = reorder(Var1, -Freq),
-   #                                          x = reorder(Var2, Freq),
-   #                                          fill= Freq))+ 
-   #  ggplot2::geom_tile()+
-   #  ggplot2::scale_fill_continuous("% cells/cell type", 
-   #                                 limits = c(0, 100), 
-   #                                 breaks = seq(0, 100,by = 20),
-   #                                 low = "white",
-   #                                 high = "blue")+
-   #  ggplot2::theme_classic()+
-   #  ggplot2::theme(axis.text.x = element_text(angle=0),
-   #                 axis.ticks = element_blank())+
-   #  ggplot2::xlab("new clusters")+
-   #  ggplot2::ylab("original cell types")+
-   #  ggplot2::ggtitle(base::paste("resolution", seu$resolution[1], title_add))
-
   return(plot_wide)
 }
 ```
+
+#### Long
+
+Cell types on x axis.
+Proportion of cells of a cell type per cluster.
 
 ```{r long_function, include = FALSE}
 vis_perc_long_gg <- function(seu, correction_vec = NULL, title_add= NULL){
   
   mat <- t(base::table(seu$cell_type, seu$seurat_clusters))
   
-  mat2 <- mat/BiocGenerics::rowSums(mat)*100
+  mat2 <- mat/rowSums(mat)*100
   
   if(!is.null(correction_vec)){
     mat2 <- mat2[correction_vec,]
   }
   
   df_vis <- base::as.data.frame(mat2)
-  #df_vis$Var2 <- factor(df_vis$Var2, levels = levels(seu$cell_type))
-  #df_vis$Var1 <- factor(df_vis$Var1, levels = rev(levels(df_vis$Var1)))
-  
+  df_vis$Var2 <- factor(df_vis$Var2, levels = levels(seu$cell_type))
+
   plot_long <- ggplot2::ggplot(df_vis, aes(y = Var1, x = Var2, fill= Freq))+ 
     ggplot2::geom_tile()+
     ggplot2::scale_fill_continuous("% cells/cluster", 
@@ -163,7 +153,7 @@ vis_perc_long_gg <- function(seu, correction_vec = NULL, title_add= NULL){
                                               hjust = 1))+
     ggplot2::ylab("new clusters")+
     ggplot2::xlab("original cell types")+
-    ggplot2::ggtitle(base::paste("resolution", seu$resolution[1], title_add))
+    ggplot2::ggtitle(base::paste("resolution", seu@misc$resolution[1], title_add))
 
   return(plot_long)
 }
@@ -171,140 +161,177 @@ vis_perc_long_gg <- function(seu, correction_vec = NULL, title_add= NULL){
 
 ```{r vis_per_cluster, include = FALSE}
 # heatmap vis
-vis_perc_cluster <- function(seu, correction_vec = NULL, title_add= NULL){
-  
-  mat <- t(base::table(seu$cell_type, seu$seurat_clusters))
-  
-  mat2 <- mat/BiocGenerics::rowSums(mat)*100
-  
-  if(!is.null(correction_vec)){
-    mat2 <- mat2[correction_vec,]
-  }
-  
-  df_vis <- base::as.data.frame(mat2)
-  #df_vis$Var2 <- factor(df_vis$Var2, levels = levels(seu$cell_type))
-  #df_vis$Var1 <- factor(df_vis$Var1, levels = rev(levels(df_vis$Var1)))
-  
-  plot_long <- ggplot2::ggplot(df_vis, aes(x = Var2, y = Var1, fill= Freq))+ 
-    ggplot2::geom_tile()+
-    ggplot2::scale_fill_continuous("% cells/cluster", 
-                                   limits = c(0, 100),
-                                   breaks = seq(0, 100, by = 20),
-                                   low = "white", 
-                                   high = "blue")+
-    ggplot2::theme_classic()+
-    ggplot2::theme(axis.ticks = element_blank(),
-                   legend.position = "none",
-                   axis.text.x = element_text(angle = 60, 
-                                              vjust = 1, 
-                                              hjust = 1))+
-    ggplot2::ylab("new clusters")+
-    ggplot2::xlab("original cell types")+
-    ggplot2::ggtitle(base::paste("resolution", seu$resolution[1], title_add))
-
-  return(plot_long)
-}
+# vis_perc_cluster <- function(seu, correction_vec = NULL, title_add= NULL){
+#   
+#   mat <- t(base::table(seu$cell_type, seu$seurat_clusters))
+#   
+#   mat2 <- mat/rowSums(mat)*100
+#   
+#   if(!is.null(correction_vec)){
+#     mat2 <- mat2[correction_vec,]
+#   }
+#   
+#   df_vis <- base::as.data.frame(mat2)
+#   df_vis$Var2 <- factor(df_vis$Var2, levels = levels(seu$cell_type))
+# 
+#   plot_long <- ggplot2::ggplot(df_vis, aes(x = Var2, y = Var1, fill= Freq))+ 
+#     ggplot2::geom_tile()+
+#     ggplot2::scale_fill_continuous("% cells/cluster", 
+#                                    limits = c(0, 100),
+#                                    breaks = seq(0, 100, by = 20),
+#                                    low = "white", 
+#                                    high = "blue")+
+#     ggplot2::theme_classic()+
+#     ggplot2::theme(axis.ticks = element_blank(),
+#                    legend.position = "none",
+#                    axis.text.x = element_text(angle = 60, 
+#                                               vjust = 1, 
+#                                               hjust = 1))+
+#     ggplot2::ylab("new clusters")+
+#     ggplot2::xlab("original cell types")+
+#     ggplot2::ggtitle(base::paste("resolution", seu@misc$resolution[1], title_add))
+# 
+#   return(plot_long)
+# }
 ```
 
 ```{r values, include = FALSE}
-get_reclustering_mat <- function(seu){
-  
-  mat <- base::table(seu$cell_type, seu$seurat_clusters)
+# get_reclustering_mat <- function(seu){
+#   
+#   mat <- base::table(seu$cell_type, seu$seurat_clusters)
+# 
+#   mat1_raw <- mat
+#   prop_in_ct <- mat1_raw/BiocGenerics::rowSums(mat1_raw)
+# 
+#   mat2_raw <- t(mat)
+#   prop_in_clust <- mat2_raw/BiocGenerics::rowSums(mat2_raw)
+# 
+#   # get the average of both values for each field
+#   mat_val <- (t(prop_in_ct) + prop_in_clust)/2
+#   return(mat_val)
+# }
 
-  mat1_raw <- mat
-  prop_in_ct <- mat1_raw/BiocGenerics::rowSums(mat1_raw)
+# get_reclustering_scores <- function(resolution, df_list, seu_list){
+#   
+#   mat <- mat_list[[resolution]]
+#   seu <- seu_list[[resolution]]
+#   
+#   # extract which nr is higher; nr of clusters or number of cell types
+#   if(nrow(mat) >= ncol(mat)){
+#     max_nr <- nrow(mat)
+#   }else if(nrow(mat) < ncol(mat)){
+#     max_nr <- ncol(mat)
+#   }
+#   
+#   # get the proportion of fields that are 0 
+#   # from the max possible nr of fields that can be 0 in perfect re-clustering. 
+#   # That nr is equivalent to all fields - max_nr
+#   
+#   prop_zeros <- length(which(mat == 0))/(ncol(mat)*nrow(mat)-max_nr)
+# 
+#   # get the average of all proportion average, let's just call it "score"
+#   non_zeros <- mat[which(mat > 0)]
+#   score <- sum(non_zeros)/length(non_zeros)
+#   
+#   # let's also try to reduce the nr of cell types per cluster. 
+#   # because technically, 1 cluster containing all cell types would be a
+#   # good re-clustering, too according to prop_zeros and adjusted rand index
+#   
+#   nr_ct_per_cluster_all <- vector()
+#   for(cluster in rownames(mat)){
+#     nr_ct_per_cluster <- length(which(mat[cluster,] !=0))
+#     nr_ct_per_cluster_all <- c(nr_ct_per_cluster_all, nr_ct_per_cluster)
+#   }
+#   
+#   # same for clusters
+#   nr_clusters_per_ct_all <- vector()
+#   for(ct in colnames(mat)){
+#     nr_clusters_per_ct <- length(which(mat[,ct] !=0))
+#     nr_clusters_per_ct_all <- c(nr_clusters_per_ct_all, nr_clusters_per_ct)
+#   }
+# 
+#   # also calculate the adjusted rand index
+#   
+#   adjrand <- adjustedRandIndex(seu$cell_type, seu$seurat_clusters)
+# 
+#   return(
+#     base::data.frame(
+#       "prop_zeros" = prop_zeros,
+#       "score" = score,
+#       "adjrand" = adjrand,
+#       "mean_ct_per_cluster" = base::mean(nr_ct_per_cluster_all),
+#       "median_ct_per_cluster" = stats::median(nr_ct_per_cluster_all),
+#       "mean_cluster_per_ct" = base::mean(nr_clusters_per_ct_all),
+#       "median_cluster_per_ct" = stats::median(nr_clusters_per_ct_all),
+#       "nr_clusters" = nrow(mat),
+#       "resolution" = reso))
+# }
+#
+```
 
-  mat2_raw <- t(mat)
-  prop_in_clust <- mat2_raw/BiocGenerics::rowSums(mat2_raw)
+```{r score_vis_function, include = FALSE}
+vis_clustering_scores <- function(score_df_list, title){
+  
+  score_df <- dplyr::bind_rows(score_df_list)
+  title <- base::paste(title, score_df$conservation_level[1])
 
-  # get the average of both values for each field
-  mat_val <- (t(prop_in_ct) + prop_in_clust)/2
-  return(mat_val)
-}
-
-get_reclustering_values <- function(reso, mat_list, seu_list){
+  vis_df_1 <- score_df[score_df$type %in% c("proportion_of_zeros",
+                                            "mean_prop_cells/cluster",
+                                            "mean_cluster_purity"),]
   
-  mat <- mat_list[[reso]]
-  seu <- seu_list[[reso]]
-  
-  # extract which nr is higher; nr of clusters or number of cell types
-  if(nrow(mat) >= ncol(mat)){
-    max_nr <- nrow(mat)
-  }else if(nrow(mat) < ncol(mat)){
-    max_nr <- ncol(mat)
-  }
-  
-  # get the proportion of fields that are 0 
-  # from the max possible nr of fields that can be 0 in perfect re-clustering. 
-  # That nr is equivalent to all fields - max_nr
-  
-  prop_zeros <- length(which(mat == 0))/(ncol(mat)*nrow(mat)-max_nr)
-
-  # get the average of all proportion average, let's just call it "score"
-  non_zeros <- mat[which(mat > 0)]
-  score <- sum(non_zeros)/length(non_zeros)
-  
-  # let's also try to reduce the nr of cell types per cluster. 
-  # because technically, 1 cluster containing all cell types would be a
-  # good re-clustering, too according to prop_zeros and adjusted rand index
-  
-  nr_ct_per_cluster_all <- vector()
-  for(cluster in rownames(mat)){
-    nr_ct_per_cluster <- length(which(mat[cluster,] !=0))
-    nr_ct_per_cluster_all <- c(nr_ct_per_cluster_all, nr_ct_per_cluster)
-  }
-  
-  # same for clusters
-  nr_clusters_per_ct_all <- vector()
-  for(ct in colnames(mat)){
-    nr_clusters_per_ct <- length(which(mat[,ct] !=0))
-    nr_clusters_per_ct_all <- c(nr_clusters_per_ct_all, nr_clusters_per_ct)
-  }
-
-  # also calculate the adjusted rand index
-  
-  adjrand <- adjustedRandIndex(seu$cell_type, seu$seurat_clusters)
-
-  return(
-    base::data.frame(
-      "prop_zeros" = prop_zeros,
-      "score" = score,
-      "adjrand" = adjrand,
-      "mean_ct_per_cluster" = base::mean(nr_ct_per_cluster_all),
-      "median_ct_per_cluster" = stats::median(nr_ct_per_cluster_all),
-      "mean_cluster_per_ct" = base::mean(nr_clusters_per_ct_all),
-      "median_cluster_per_ct" = stats::median(nr_clusters_per_ct_all),
-      "nr_clusters" = nrow(mat),
-      "resolution" = reso))
-}
-
-vis_clustering_values <- function(results_list, title){
-  
-  res_df <- dplyr::bind_rows(results_list)
-
-  vis_df_1 <- res_df
-  vis_df_1$sum <- vis_df_1$prop_zeros + vis_df_1$score
-  vis_df_1 <- tidyr::pivot_longer(vis_df_1, 
-                                  cols = c("prop_zeros", "score", "sum"), 
-                                  names_to = "type",
-                                  values_to = "value")
+  col_vec1 <- c(
+    "proportion_of_zeros" = "goldenrod1",
+    "mean_prop_cells/cluster" = "steelblue2",
+    "mean_cluster_purity" = "olivedrab4"
+  )
   
   plot1 <- ggplot2::ggplot(vis_df_1, 
-                           aes(x = resolution, y= value, color = type))+
+                           aes(x = resolution, y = value, color = type))+
     ggplot2::geom_point()+
     ggplot2::theme_classic()+
-    ggplot2::geom_hline(yintercept = 0.5, color = "black")+
-    ggplot2::ylim(c(0, 2))+
-    ggplot2::ggtitle(title)
+    ggplot2::geom_hline(yintercept = 0.5,
+                        color = "grey20",
+                        linetype = "dashed")+
+    ggplot2::ylim(c(0, 1))+
+    ggplot2::ggtitle(title)+
+    ggplot2::scale_color_manual("score", values = col_vec1)
   
-  plot2 <- ggplot2::ggplot(vis_df_1, 
-                           aes(x = resolution, y= value, color = type))+
+  vis_df_2 <- score_df[score_df$type %in% c("adjusted_rand_index",
+                                            "fowles_mallow_index",
+                                            "variation_information"),]
+  
+  col_vec2 <-  c(
+    "adjusted_rand_index" = "orchid",
+    "fowles_mallow_index" = "darkblue",
+    "variation_information" = "orange")
+  
+  plot2 <- ggplot2::ggplot(vis_df_2, 
+                           aes(x = resolution, y = value, color = type))+
     ggplot2::geom_point()+
     ggplot2::theme_classic()+
-    ggplot2::geom_hline(yintercept = 0.5, color = "black")+
-    ggplot2::ggtitle(title)
+    ggplot2::geom_hline(yintercept = 0.5,
+                        color = "grey20",
+                        linetype = "dashed")+
+    ggplot2::ylim(c(0, max(vis_df_2$value)))+
+    ggplot2::ggtitle(title)+
+    ggplot2::scale_color_manual("score", values = col_vec2)
+  
+  return(list(plot1, plot2))
+  
+}
+plotlist <- lapply(score_df_list_all, 
+                   vis_clustering_scores, 
+                   title = dataset_curr)
+```
 
-  plot3 <- ggplot2::ggplot(res_df,
+```{r print_scores_plot1, fig.width = 7, fig.height = 3}
+plotlist
+knitr::knit_exit()
+```
+
+
+```{r score_vis_function_no, include = FALSE}
+plot3 <- ggplot2::ggplot(res_df,
                            aes(x = resolution, y= adjrand))+
     ggplot2::geom_point(color = "green4")+
     ggplot2::theme_classic()+

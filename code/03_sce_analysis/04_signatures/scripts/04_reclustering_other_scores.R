@@ -8,8 +8,8 @@ set.seed(37)
 library(mclust, quietly = TRUE)
 library(mcclust, quietly = TRUE)
 library(bluster, quietly = TRUE)
-library(cluster, quietly = TRUE)
 library(dendextend, quietly = TRUE)
+library(S4Vectors, quietly = TRUE)
 
 source(file = snakemake@params[["reclustering_functions"]])
 
@@ -38,12 +38,9 @@ score_df_list_all <- lapply(seu_list_all, function(seu_list){
 })
 names(score_df_list_all) <- names(seu_list_all)
 
-# test
-print(score_df_list_all$seu_sign$"0.25")
-
 #-------------------------------------------------------------------------------
 
-base::saveRDS(snakemake@output[["score_df_list"]])
+base::saveRDS(score_df_list_all, snakemake@output[["score_df_list"]])
 
 utils::sessionInfo()
 

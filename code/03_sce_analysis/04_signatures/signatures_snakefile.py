@@ -58,7 +58,7 @@ for d in datasets_other:
   targets = targets + [OUTPUT_DAT + "/04_rcls/reclustered_" + d + "_list"]
   targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_" + d + "_list"]
   targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_report_" + d + ".html"]
-  targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_report_selected_" + d + ".html"]
+  targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_selected_report_" + d + ".html"]
   # targets = targets + [OUTPUT_REP + "/reclustering_hum_eval_" + d + ".html"]
   # targets = targets + [OUTPUT_DAT + "/05_perm/" + r + "_score_df"]
   # targets = targets + [OUTPUT_REP + "/reclustering_permutation_report_" + r + ".html"]
@@ -305,6 +305,10 @@ rule reclustering_other_report:
 
 # visualise one chosen re-clustering of other datasets with the best combination
 # of scores
+# for random features, always the same resolution as the conserved signature, 
+# because each random set of genes (later for permutation) might have a dif-
+# ferent optimal resolution. So choosing the same as the conserved signature
+# is the easiest option
 rule reclustering_other_report_selected:
     input:
         seu_list = rules.reclustering_other.output,
@@ -316,7 +320,7 @@ rule reclustering_other_report_selected:
        # plotting = "../../source/plotting.R",
         #colors = "../../source/colors.R"
     output:
-        OUTPUT_REP + "/reclustering_other/reclustering_other_report_selected_{dataset}.html"
+        OUTPUT_REP + "/reclustering_other/reclustering_other_selected_report_{dataset}.html"
     script: 
         "reclustering_other_report_selected.Rmd"
 

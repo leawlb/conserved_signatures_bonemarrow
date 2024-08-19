@@ -287,7 +287,7 @@ ggplot2::ggplot(
   ggplot2::ggtitle(base::paste("reclustering", fraction_curr))
 ```
 
-```{r, fig.width = 3, fig.height = 3.5}
+```{r vi, fig.width = 3, fig.height = 3.5}
 ggplot2::ggplot(score_df[score_df$type == "variation_information",], 
                 aes(y = value, x = type, color = conservation_level))+
   ggplot2::geom_point(alpha = 0.7)+

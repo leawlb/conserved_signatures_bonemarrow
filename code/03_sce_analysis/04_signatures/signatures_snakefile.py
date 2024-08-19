@@ -12,7 +12,9 @@ COLORS_REF = config["base"] + config["metadata_paths"]["colors_ref"]
 COLORS = config["base"] + config["metadata_paths"]["colors"]
 
 CELL_TYPES_EXCLUDE = config["values"]["03_sce_analysis"]["cell_types_exclude"]
+RESOLUTION_OTHER = config["base"] + config["metadata_paths"]["resolution_other"]
 print(CELL_TYPES_EXCLUDE)
+print(RESOLUTION_OTHER)
 
 ENSEMBL_MUS = config["base"] + config["metadata_paths"]["ensembl_mus"]
 ENSEMBL_HUM = config["base"] + config["metadata_paths"]["ensembl_hum"]
@@ -56,6 +58,7 @@ for d in datasets_other:
   targets = targets + [OUTPUT_DAT + "/04_rcls/reclustered_" + d + "_list"]
   targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_" + d + "_list"]
   targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_report_" + d + ".html"]
+  targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_report_selected_" + d + ".html"]
   # targets = targets + [OUTPUT_REP + "/reclustering_hum_eval_" + d + ".html"]
   # targets = targets + [OUTPUT_DAT + "/05_perm/" + r + "_score_df"]
   # targets = targets + [OUTPUT_REP + "/reclustering_permutation_report_" + r + ".html"]
@@ -300,23 +303,28 @@ rule reclustering_other_report:
     script: 
         "reclustering_other_report.Rmd"
 
+# visualise one chosen re-clustering of other datasets with the best combination
+# of scores
+rule reclustering_other_report_selected:
+    input:
+        seu_list = rules.reclustering_other.output,
+        score_df_list = rules.reclustering_other_scores.output,
+        resolution_df = RESOLUTION_OTHER
+    #params:
+        #colors_path = COLORS,
+        #functions = "../../source/sce_functions.R",
+       # plotting = "../../source/plotting.R",
+        #colors = "../../source/colors.R"
+    output:
+        OUTPUT_REP + "/reclustering_other/reclustering_other_report_selected_{dataset}.html"
+    script: 
+        "reclustering_other_report_selected.Rmd"
 
 
 
 
 
-
-
-        
 """
-resolution_list = [
-  {"li_all_stromal": 0.4},
-  {"ts_all_stromal": 0.7},
-  {"ts_hsc_progenitors": 0.35},
-  {"ts_bone_marrow": 0.35}
-]
-
-print(resolution_list)
 
 #-------------------------------------------------------------------------------
 # perform permutation tests for random gene sets instead of 

@@ -21,7 +21,7 @@ Report on datasets from other species that were re-clustered using:
 set.seed(37)
 ```
 
-```{r source, message = FALSE}
+```{r source, message = FALSE, include = FALSE}
 #source(file = snakemake@params[["plotting"]])
 #source(file = snakemake@params[["reclustering_function"]])
 ```
@@ -83,6 +83,8 @@ Proportions of cells of a cluster per cell type.
 
 vis_perc_wide_gg <- function(seu, correction_vec = NULL, title_add= NULL){
   
+  title <- base::paste(seu@misc$used_genes, title_add)
+  
   mat <- base::table(seu$cell_type, seu$seurat_clusters)
   
   mat1 <- mat/rowSums(mat)*100
@@ -108,7 +110,7 @@ vis_perc_wide_gg <- function(seu, correction_vec = NULL, title_add= NULL){
     ggplot2::ylab("original cell types")+
     ggplot2::ggtitle(base::paste("resolution", 
                                  seu@misc$resolution[1], 
-                                 title_add))
+                                 title))
   
   return(plot_wide)
 }
@@ -122,6 +124,8 @@ Proportion of cells of a cell type per cluster.
 ```{r long_function, include = FALSE}
 vis_perc_long_gg <- function(seu, correction_vec = NULL, title_add= NULL){
   
+  title <- base::paste(seu@misc$used_genes, title_add)
+    
   mat <- t(base::table(seu$cell_type, seu$seurat_clusters))
   
   mat2 <- mat/rowSums(mat)*100
@@ -148,120 +152,10 @@ vis_perc_long_gg <- function(seu, correction_vec = NULL, title_add= NULL){
                                               hjust = 1))+
     ggplot2::ylab("new clusters")+
     ggplot2::xlab("original cell types")+
-    ggplot2::ggtitle(base::paste("resolution", seu@misc$resolution[1], title_add))
+    ggplot2::ggtitle(base::paste("resolution", seu@misc$resolution[1], title))
 
   return(plot_long)
 }
-```
-
-```{r vis_per_cluster, include = FALSE}
-# heatmap vis
-# vis_perc_cluster <- function(seu, correction_vec = NULL, title_add= NULL){
-#   
-#   mat <- t(base::table(seu$cell_type, seu$seurat_clusters))
-#   
-#   mat2 <- mat/rowSums(mat)*100
-#   
-#   if(!is.null(correction_vec)){
-#     mat2 <- mat2[correction_vec,]
-#   }
-#   
-#   df_vis <- base::as.data.frame(mat2)
-#   df_vis$Var2 <- factor(df_vis$Var2, levels = levels(seu$cell_type))
-# 
-#   plot_long <- ggplot2::ggplot(df_vis, aes(x = Var2, y = Var1, fill= Freq))+ 
-#     ggplot2::geom_tile()+
-#     ggplot2::scale_fill_continuous("% cells/cluster", 
-#                                    limits = c(0, 100),
-#                                    breaks = seq(0, 100, by = 20),
-#                                    low = "white", 
-#                                    high = "blue")+
-#     ggplot2::theme_classic()+
-#     ggplot2::theme(axis.ticks = element_blank(),
-#                    legend.position = "none",
-#                    axis.text.x = element_text(angle = 60, 
-#                                               vjust = 1, 
-#                                               hjust = 1))+
-#     ggplot2::ylab("new clusters")+
-#     ggplot2::xlab("original cell types")+
-#     ggplot2::ggtitle(base::paste("resolution", seu@misc$resolution[1], title_add))
-# 
-#   return(plot_long)
-# }
-```
-
-```{r values, include = FALSE}
-# get_reclustering_mat <- function(seu){
-#   
-#   mat <- base::table(seu$cell_type, seu$seurat_clusters)
-# 
-#   mat1_raw <- mat
-#   prop_in_ct <- mat1_raw/BiocGenerics::rowSums(mat1_raw)
-# 
-#   mat2_raw <- t(mat)
-#   prop_in_clust <- mat2_raw/BiocGenerics::rowSums(mat2_raw)
-# 
-#   # get the average of both values for each field
-#   mat_val <- (t(prop_in_ct) + prop_in_clust)/2
-#   return(mat_val)
-# }
-
-# get_reclustering_scores <- function(resolution, df_list, seu_list){
-#   
-#   mat <- mat_list[[resolution]]
-#   seu <- seu_list[[resolution]]
-#   
-#   # extract which nr is higher; nr of clusters or number of cell types
-#   if(nrow(mat) >= ncol(mat)){
-#     max_nr <- nrow(mat)
-#   }else if(nrow(mat) < ncol(mat)){
-#     max_nr <- ncol(mat)
-#   }
-#   
-#   # get the proportion of fields that are 0 
-#   # from the max possible nr of fields that can be 0 in perfect re-clustering. 
-#   # That nr is equivalent to all fields - max_nr
-#   
-#   prop_zeros <- length(which(mat == 0))/(ncol(mat)*nrow(mat)-max_nr)
-# 
-#   # get the average of all proportion average, let's just call it "score"
-#   non_zeros <- mat[which(mat > 0)]
-#   score <- sum(non_zeros)/length(non_zeros)
-#   
-#   # let's also try to reduce the nr of cell types per cluster. 
-#   # because technically, 1 cluster containing all cell types would be a
-#   # good re-clustering, too according to prop_zeros and adjusted rand index
-#   
-#   nr_ct_per_cluster_all <- vector()
-#   for(cluster in rownames(mat)){
-#     nr_ct_per_cluster <- length(which(mat[cluster,] !=0))
-#     nr_ct_per_cluster_all <- c(nr_ct_per_cluster_all, nr_ct_per_cluster)
-#   }
-#   
-#   # same for clusters
-#   nr_clusters_per_ct_all <- vector()
-#   for(ct in colnames(mat)){
-#     nr_clusters_per_ct <- length(which(mat[,ct] !=0))
-#     nr_clusters_per_ct_all <- c(nr_clusters_per_ct_all, nr_clusters_per_ct)
-#   }
-# 
-#   # also calculate the adjusted rand index
-#   
-#   adjrand <- adjustedRandIndex(seu$cell_type, seu$seurat_clusters)
-# 
-#   return(
-#     base::data.frame(
-#       "prop_zeros" = prop_zeros,
-#       "score" = score,
-#       "adjrand" = adjrand,
-#       "mean_ct_per_cluster" = base::mean(nr_ct_per_cluster_all),
-#       "median_ct_per_cluster" = stats::median(nr_ct_per_cluster_all),
-#       "mean_cluster_per_ct" = base::mean(nr_clusters_per_ct_all),
-#       "median_cluster_per_ct" = stats::median(nr_clusters_per_ct_all),
-#       "nr_clusters" = nrow(mat),
-#       "resolution" = reso))
-# }
-#
 ```
 
 ### Nr of clusters or cell types 
@@ -346,10 +240,6 @@ vis_nr_cl_nr_cell <- function(seu_list, title){
 plot_list_nr <- lapply(seu_list_all, vis_nr_cl_nr_cell, title = dataset_curr)
 ```
 
-```{r print_nr_plot1, fig.width = 7, fig.height = 3}
-plot_list_nr
-```
-
 ### Scores
 
 ```{r score_vis_function}
@@ -407,215 +297,118 @@ plotlist_scores <- lapply(score_df_list_all,
                           title = dataset_curr)
 ```
 
-```{r print_scores_plot1, fig.width = 7, fig.height = 3}
-plotlist
-knitr::knit_exit()
-```
-
-
-```{r score_vis_function_no, include = FALSE}
-plot3 <- ggplot2::ggplot(res_df,
-                           aes(x = resolution, y= adjrand))+
-    ggplot2::geom_point(color = "green4")+
-    ggplot2::theme_classic()+
-    ggplot2::geom_hline(yintercept = 0.5, color = "black")+
-    ggplot2::ylim(c(0, 1))+
-    ggplot2::ggtitle(title)
-  
-  plot5 <- ggplot2::ggplot(res_df, 
-                           aes(x = nr_clusters, y= adjrand))+
-    ggplot2::geom_point(color = "green4", alpha = 0.6)+
-    ggplot2::theme_classic()+
-    ggplot2::ylim(c(0, 1))+
-    ggplot2::ggtitle(title)+
-    ggplot2::xlim(c(0, max(res_df$nr_clusters)))
-  
-  plot6 <- ggplot2::ggplot(vis_df_1, 
-                           aes(x = nr_clusters, y= value, color = type))+
-    ggplot2::geom_point(alpha = 0.6)+
-    ggplot2::theme_classic()+
-    ggplot2::ylim(c(0, 2))+
-    ggplot2::ggtitle(title)+
-    ggplot2::xlim(c(0, max(res_df$nr_clusters)))
-
-  vis_df_2 <- res_df
-  vis_df_2 <- tidyr::pivot_longer(vis_df_2, 
-                                  cols = c("mean_ct_per_cluster",
-                                           "median_ct_per_cluster", 
-                                           "mean_cluster_per_ct",
-                                           "median_cluster_per_ct",
-                                           "nr_clusters"), 
-                                  names_to = "type",
-                                  values_to = "value")
-  vis_df_2$type <- factor(
-    vis_df_2$type,
-    levels = c("nr_clusters",
-               "mean_cluster_per_ct",
-               "median_cluster_per_ct",
-               "mean_ct_per_cluster",
-               "median_ct_per_cluster"))
-                            
-  plot4 <- ggplot2::ggplot(vis_df_2, 
-                           aes(x = resolution, y = value, color = type))+
-    ggplot2::geom_point(alpha = 0.7)+
-    ggplot2::scale_color_manual(
-      "",
-      values = c("mean_ct_per_cluster" = "pink4",
-                 "median_ct_per_cluster" = "pink1", 
-                 "mean_cluster_per_ct" = "green1",
-                 "median_cluster_per_ct" = "green4",
-                 "nr_clusters" = "black"))+
-    ggplot2::geom_hline(yintercept = nr_celltypes, 
-                        color = "grey60", 
-                        linetype = "dashed")+
-    ggplot2::theme_classic()+
-    ggplot2::ylim(c(0, max(nr_celltypes, res_df$nr_clusters)))+
-    ggplot2::ggtitle(title)
-  
-  return(list(plot1, plot2, plot3, plot4, plot5, plot6))
-}
-```
+# Plot
 
 ## Conserved Signature Genes
 
 ```{r sign1}
 seu_sign_list <- seu_list_all$seu_sign
-seu_sign_list <- add_res_info(seu_sign_list)
 ```
 
-```{r sign2, fig.width = 20, fig.height=30}
+```{r print_nr_plot_sign, fig.width = 7, fig.height = 3}
+plot_list_nr$seu_sign
+```
+
+```{r print_scores_sign, fig.width = 7, fig.height = 3}
+plotlist_scores$seu_sign
+```
+
+```{r sign2, fig.width = 15, fig.height=30}
 plot_listw <- lapply(seu_sign_list,
                      vis_perc_wide_gg, 
-                     title_add = "conserved signature genes")
+                     title_add = dataset_curr)
 cowplot::plot_grid(plotlist = plot_listw, ncol = 2)
 ```
 
 ```{r sign3, fig.height = 40, fig.width=12}
 plot_listl <- lapply(seu_sign_list, 
                      vis_perc_long_gg, 
-                     title_add = "conserved signature genes")
+                     title_add = dataset_curr)
 cowplot::plot_grid(plotlist = plot_listl, ncol = 3)
-```
-
-```{r sign4, fig.height = 3, fig.width = 8}
-mat_list <- lapply(seu_sign_list, get_reclustering_mat)
-
-res_list <- lapply(as.list(names(mat_list)),
-                   get_reclustering_values,
-                   mat_list = mat_list, 
-                   seu_list = seu_sign_list)
-
-plot_listv <- vis_clustering_values(res_list,
-                                    title = "conserved signature genes")
-plot_listv
-```
-
-```{r sign5, fig.width = 4, fig.height = 3}
-plot_listv
 ```
 
 # Conserved Markers
 
 ```{r markers1}
 seu_marker_list <- seu_list_all$seu_mark
-seu_marker_list <- add_res_info(seu_marker_list)
+```
+
+```{r print_nr_plot_mark, fig.width = 7, fig.height = 3}
+plot_list_nr$seu_mark
+```
+
+```{r print_scores_mark, fig.width = 7, fig.height = 3}
+plotlist_scores$seu_mark
 ```
 
 ```{r markers2, fig.width = 14, fig.height=30}
 plot_listw <- lapply(seu_marker_list, 
                      vis_perc_wide_gg, 
-                     title_add = "conserved Markers")
+                     title_add = dataset_curr)
 cowplot::plot_grid(plotlist = plot_listw, ncol = 2)
 ```
 
 ```{r markers3, fig.height = 40, fig.width=12}
 plot_listl <- lapply(seu_marker_list,
                      vis_perc_long_gg, 
-                     title_add = "conserved Markers")
+                     title_add = dataset_curr)
 cowplot::plot_grid(plotlist = plot_listl, ncol = 3)
-```
-
-```{r markers4, fig.height = 3, fig.width = 8}
-mat_list <- lapply(seu_marker_list, 
-                   get_reclustering_mat)
-
-res_list <- lapply(as.list(names(mat_list)), 
-                   get_reclustering_values,
-                   mat_list = mat_list, 
-                   seu_list = seu_marker_list)
-
-plot_listv <- vis_clustering_values(res_list,
-                                    title = "conserved Markers")
-plot_listv
 ```
 
 # All BL6 Markers
 
 ```{r bl6markers1}
 seu_mmusm_list <- seu_list_all$seu_mmms
-seu_mmusm_list <- add_res_info(seu_mmusm_list)
+```
+
+```{r print_nr_plot_mmms, fig.width = 7, fig.height = 3}
+plot_list_nr$seu_mmms
+```
+
+```{r print_scores_mmms, fig.width = 7, fig.height = 3}
+plotlist_scores$seu_mmms
 ```
 
 ```{r bl6markers2, fig.width = 14, fig.height=30}
 plot_listw <- lapply(seu_mmusm_list, 
                      vis_perc_wide_gg, 
-                     title_add = "all BL6 Markers")
+                     title_add = dataset_curr)
 cowplot::plot_grid(plotlist = plot_listw, ncol = 2)
 ```
 
 ```{r bl6markers3, fig.height = 40, fig.width=12}
 plot_listl <- lapply(seu_mmusm_list,
                      vis_perc_long_gg, 
-                     title_add = "all BL6 Markers")
+                     title_add = dataset_curr)
 cowplot::plot_grid(plotlist = plot_listl, ncol = 3)
-```
-
-```{r bl6markers4, fig.height = 3, fig.width = 8}
-mat_list <- lapply(seu_mmusm_list, 
-                   get_reclustering_mat)
-
-res_list <- lapply(as.list(names(mat_list)), 
-                   get_reclustering_values,
-                   mat_list = mat_list, 
-                   seu_list = seu_mmusm_list)
-
-plot_listv <- vis_clustering_values(res_list,
-                                    title = "all BL6 Markers")
-plot_listv
 ```
 
 ## Random
 
 ```{r random1}
 seu_random_list <- seu_list_all$seu_rand
-seu_random_list <- add_res_info(seu_random_list)
+```
+
+```{r print_nr_plot_rand, fig.width = 7, fig.height = 3}
+plot_list_nr$seu_rand
+```
+
+```{r print_scores_rand, fig.width = 7, fig.height = 3}
+plotlist_scores$seu_rand
 ```
 
 ```{r random2, fig.width = 14, fig.height=30}
 plot_listw <- lapply(seu_random_list, 
                      vis_perc_wide_gg, 
-                     title_add = "random")
+                     title_add = dataset_curr)
 cowplot::plot_grid(plotlist = plot_listw, ncol = 2)
 ```
 
 ```{r random3, fig.height = 40, fig.width=12}
 plot_listl <- lapply(seu_random_list, 
                      vis_perc_long_gg, 
-                     title_add = "random")
+                     title_add = dataset_curr)
 cowplot::plot_grid(plotlist = plot_listl, ncol = 3)
-```
-
-```{r random4, fig.height = 3, fig.width = 8}
-mat_list <- lapply(seu_random_list,
-                   get_reclustering_mat)
-
-res_list <- lapply(as.list(names(mat_list)), 
-                   get_reclustering_values,
-                   mat_list = mat_list,
-                   seu_list = seu_random_list)
-
-plot_listv <- vis_clustering_values(res_list, title = "random")
-plot_listv
 ```
 
 ```{r knit_exit_stop}

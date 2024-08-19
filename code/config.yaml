@@ -32,6 +32,7 @@ metadata_paths:
   ensembl_zeb: "/data/metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_zeb"
   ensembl_nmr: "/data/metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_nmr"
   datasets_other_path: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared"
+  resolution_other: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt"
   #test_ts_all_stromal: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_all_stromal"
   #test_ts_bone_marrow: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_bone_marrow"
   #test_ts_hsc_progenitors: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_hscs_progenitors"

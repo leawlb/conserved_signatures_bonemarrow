@@ -65,8 +65,8 @@ seu_ts_hscs_progenitors$cell_type <- factor(
     "hematopoietic multipotent progenitor cell",
     "common myeloid progenitor",
     "granulocyte monocyte progenitor cell",
-    "promyelocyte",
     "promonocyte",
+    "promyelocyte",
     "early lymphoid progenitor",
     "megakaryocyte-erythroid progenitor cell"
     ))
@@ -139,8 +139,8 @@ seu_ts_bone_marrow$cell_type <- factor(seu_ts_bone_marrow$cell_type,
                                         levels = c(
                                           "hematopoietic stem cell",
                                           "common myeloid progenitor",
-                                          "granulocyte",
-                                          "erythroid progenitor cell"
+                                          "erythroid progenitor cell",
+                                          "granulocyte"
                                         ))
 
 stopifnot(!is.na(seu_ts_bone_marrow$cell_type))

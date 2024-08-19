@@ -110,8 +110,8 @@ seu_zeb$manually_annotated_ct[seu_zeb$selected_clustering == 2] <- "Neutro1"
 seu_zeb$manually_annotated_ct[seu_zeb$selected_clustering == 5] <- "Neutro2"
 seu_zeb$manually_annotated_ct[seu_zeb$selected_clustering == 3] <- "Active?"
 seu_zeb$manually_annotated_ct[seu_zeb$selected_clustering == 4] <- "Mono/Macro1"
-seu_zeb$manually_annotated_ct[seu_zeb$selected_clustering == 6] <- "Ery1"
-seu_zeb$manually_annotated_ct[seu_zeb$selected_clustering == 10] <- "Ery2"
+seu_zeb$manually_annotated_ct[seu_zeb$selected_clustering == 6] <- "Ery2"
+seu_zeb$manually_annotated_ct[seu_zeb$selected_clustering == 10] <- "Ery1"
 seu_zeb$manually_annotated_ct[seu_zeb$selected_clustering == 7] <- "Ery precursor"
 seu_zeb$manually_annotated_ct[seu_zeb$selected_clustering == 8] <- "Mono/Macro2"
 seu_zeb$manually_annotated_ct[seu_zeb$selected_clustering == 9] <- "Lymphoid?"
@@ -123,12 +123,12 @@ seu_zeb$manually_annotated_ct <- factor(
              "Ery precursor",
              "Ery1",
              "Ery2",
+             "Lymphoid?",
              "Active?",
              "Neutro1",
              "Neutro2",
              "Mono/Macro1",
-             "Mono/Macro2",
-             "Lymphoid?"))
+             "Mono/Macro2"))
 
 print(seu_zeb)
 print(head(seu_zeb@meta.data))

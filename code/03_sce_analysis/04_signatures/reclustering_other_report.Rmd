@@ -15,15 +15,27 @@ Report on datasets from other species that were re-clustered using:
 - conserved signature genes
 - conserved marker genes
 
+This will also help picking a resolution. 
+
+1. Choose a frame of resolution where the number of cell types per cluster
+or clusters per cell types doesn't change much. 
+This ensures that changes in the scores are not mainly caused by large 
+differences in the number of clusters, since some scores are biased towards
+a smaller or a larger number of clusters.
+2. Pick a resolution with the best combined scores within the frame.
+3. If there are multiple resolutions with very similar scores, choose
+a higher resolution to get a higher number of potentially interesting clusters.
+4. Seurat objects re-clustered with random genes get the same resolution as 
+Seurat objects re-clustered with signature genes.
+This is because when getting multiple random sets of genes, the "optimal" 
+resolution may change each iteration (for permutation tests downstream). 
+choosing the same resolution as is therefore the easiest option for direct
+comparison.
+
 #### Load objects
 
 ```{r seed, message = FALSE}
 set.seed(37)
-```
-
-```{r source, message = FALSE, include = FALSE}
-#source(file = snakemake@params[["plotting"]])
-#source(file = snakemake@params[["reclustering_function"]])
 ```
 
 ```{r load, message = FALSE}
@@ -65,9 +77,21 @@ score_df_list_all <- base::readRDS(snakemake@input[["score_df_list"]])
 dataset_curr <- snakemake@wildcards[["dataset"]]
 ```
 
-```{r nr_cts}
-nr_celltypes <- length(base::unique(seu_list_all[[1]][[1]]$cell_type))
-print(nr_celltypes)
+```{r colors}
+# will put into colors.txt once color choice if more finalized
+cols_per <- c("mean_ct_per_cluster" = "pink4",
+              "median_ct_per_cluster" = "pink1", 
+              "mean_cluster_per_ct" = "green1",
+              "median_cluster_per_ct" = "green4",
+              "nr_clusters" = "black")
+
+col_vec1 <- c("proportion_of_zeros" = "goldenrod1",
+              "mean_prop_cells/cluster" = "steelblue2",
+              "mean_cluster_purity" = "olivedrab4")
+
+col_vec2 <-  c("adjusted_rand_index" = "orchid",
+               "fowles_mallow_index" = "darkblue",
+               "variation_information" = "orange")
 ```
 
 ## Functions
@@ -79,15 +103,16 @@ print(nr_celltypes)
 Cell types on y axis.
 Proportions of cells of a cluster per cell type.
 
-```{r wide_function, include = FALSE }
+```{r wide_function}
 
 vis_perc_wide_gg <- function(seu, correction_vec = NULL, title_add= NULL){
   
   title <- base::paste(seu@misc$used_genes, title_add)
   
   mat <- base::table(seu$cell_type, seu$seurat_clusters)
-  
   mat1 <- mat/rowSums(mat)*100
+  
+  # for nicer look, choose manually (downstream)
   if(!is.null(correction_vec)){
     mat1 <- mat1[,correction_vec]
   }
@@ -121,13 +146,12 @@ vis_perc_wide_gg <- function(seu, correction_vec = NULL, title_add= NULL){
 Cell types on x axis.
 Proportion of cells of a cell type per cluster.
 
-```{r long_function, include = FALSE}
+```{r long_function}
 vis_perc_long_gg <- function(seu, correction_vec = NULL, title_add= NULL){
   
   title <- base::paste(seu@misc$used_genes, title_add)
     
   mat <- t(base::table(seu$cell_type, seu$seurat_clusters))
-  
   mat2 <- mat/rowSums(mat)*100
   
   if(!is.null(correction_vec)){
@@ -160,11 +184,11 @@ vis_perc_long_gg <- function(seu, correction_vec = NULL, title_add= NULL){
 
 ### Nr of clusters or cell types 
 
-```{r nr_clusters_function}
+Get the mean and meadian nr of cell types per cluster and clusters per ct.
+This will help with picking a good resolution where these numbers are not 
+too extreme/relatively stable.
 
-# get the mean and meadian nr of cell types per cluster and clusters per ct
-# this will help with picking a good resolution where these numbers are not 
-# too extreme
+```{r nr_clusters_function}
 
 vis_nr_cl_nr_cell <- function(seu_list, title){
   
@@ -219,13 +243,7 @@ vis_nr_cl_nr_cell <- function(seu_list, title){
   plot1 <- ggplot2::ggplot(vis_df_all, 
                            aes(x = resolution, y = value, color = type))+
     ggplot2::geom_point(alpha = 0.7)+
-    ggplot2::scale_color_manual(
-      "",
-      values = c("mean_ct_per_cluster" = "pink4",
-                 "median_ct_per_cluster" = "pink1", 
-                 "mean_cluster_per_ct" = "green1",
-                 "median_cluster_per_ct" = "green4",
-                 "nr_clusters" = "black"))+
+    ggplot2::scale_color_manual("", values = cols_per)+
     ggplot2::geom_hline(yintercept = vis_df_all$nr_celltypes[1], 
                         color = "grey60", 
                         linetype = "dashed")+
@@ -237,6 +255,7 @@ vis_nr_cl_nr_cell <- function(seu_list, title){
   return(plot1)
 }
 
+# run the function but visualize later
 plot_list_nr <- lapply(seu_list_all, vis_nr_cl_nr_cell, title = dataset_curr)
 ```
 
@@ -252,12 +271,6 @@ vis_clustering_scores <- function(score_df_list, title){
                                             "mean_prop_cells/cluster",
                                             "mean_cluster_purity"),]
   
-  col_vec1 <- c(
-    "proportion_of_zeros" = "goldenrod1",
-    "mean_prop_cells/cluster" = "steelblue2",
-    "mean_cluster_purity" = "olivedrab4"
-  )
-  
   plot1 <- ggplot2::ggplot(vis_df_1, 
                            aes(x = resolution, y = value, color = type))+
     ggplot2::geom_point()+
@@ -272,12 +285,7 @@ vis_clustering_scores <- function(score_df_list, title){
   vis_df_2 <- score_df[score_df$type %in% c("adjusted_rand_index",
                                             "fowles_mallow_index",
                                             "variation_information"),]
-  
-  col_vec2 <-  c(
-    "adjusted_rand_index" = "orchid",
-    "fowles_mallow_index" = "darkblue",
-    "variation_information" = "orange")
-  
+
   plot2 <- ggplot2::ggplot(vis_df_2, 
                            aes(x = resolution, y = value, color = type))+
     ggplot2::geom_point()+
@@ -292,6 +300,7 @@ vis_clustering_scores <- function(score_df_list, title){
   return(list(plot1, plot2))
   
 }
+# run the function, visualize later
 plotlist_scores <- lapply(score_df_list_all, 
                           vis_clustering_scores, 
                           title = dataset_curr)
@@ -411,189 +420,6 @@ plot_listl <- lapply(seu_random_list,
 cowplot::plot_grid(plotlist = plot_listl, ncol = 3)
 ```
 
-```{r knit_exit_stop}
-knitr::knit_exit()
-```
-
-### compare all
-
-This has to be done manually
-
-```{r fig.width = 9, fig.height=3}
-resolution_chosen <- list()
-cluster_vec <- list()
-
-wildcard_curr <- snakemake@wildcards[["reference"]]
-```
-
-
-```{r}
-if(wildcard_curr == "ts_all_stromal"){
-  resolution_chosen[["correct_EMFs"]] <- "0.55"
-  resolution_chosen[["reverse_EMFs"]] <- "0.45"
-  resolution_chosen[["correct_markers"]] <- "0.45"
-  resolution_chosen[["random"]] <- "0.25"
-  
-  cluster_vec[["correct_EMFs"]] <- c(1, 4, 9, 5, 8, 7, 6, 2, 3, 10)
-  cluster_vec[["reverse_EMFs"]] <- c(1, 2, 5, 6, 7, 8, 3, 4)
-  cluster_vec[["correct_markers"]] <- c(2, 3, 5, 4, 7, 8, 9, 10, 1, 6)
-  cluster_vec[["random"]] <- c(1, 3, 5, 4, 2, 6)
-  
-}else if(wildcard_curr == "ts_hsc_progenitors"){
-  resolution_chosen[["correct_EMFs"]] <- "0.3"
-  resolution_chosen[["reverse_EMFs"]] <- "0.45"
-  resolution_chosen[["correct_markers"]] <- "0.3"
-  resolution_chosen[["random"]] <- "0.5"
-  
-  cluster_vec[["correct_EMFs"]] <- c(2, 4, 5, 8, 3, 1, 6, 7, 9)
-  cluster_vec[["reverse_EMFs"]] <- c(1, 4, 5, 8, 2, 3, 7, 6)
-  cluster_vec[["correct_markers"]] <- c(2, 5, 4, 3, 1, 6, 7, 8)
-  cluster_vec[["random"]] <- c(3, 5, 4, 2, 7, 8, 6, 1)
-  
-}else if(wildcard_curr == "ts_bone_marrow"){
-  resolution_chosen[["correct_EMFs"]] <- "0.45"
-  resolution_chosen[["reverse_EMFs"]] <- "0.85"
-  resolution_chosen[["correct_markers"]] <- "0.5"
-  resolution_chosen[["random"]] <- "0.15"
-  
-  cluster_vec[["correct_EMFs"]] <- c(3, 4, 6, 8, 2, 5, 7, 8, 1, 9)
-  cluster_vec[["reverse_EMFs"]] <- c(6, 8, 1, 9, 3, 5, 10, 2, 4, 13, 11, 12, 7)
-  cluster_vec[["correct_markers"]] <- c(4, 3, 6, 8, 9, 2, 5, 7, 1, 10)
-  cluster_vec[["random"]] <- c(3, 2, 1, 4)
-  
-}else if(wildcard_curr == "li_all_stromal"){
-  #knitr::knit_exit()
-  resolution_chosen[["correct_EMFs"]] <- "0.6"
-  resolution_chosen[["reverse_EMFs"]] <- "0.4"
-  resolution_chosen[["correct_markers"]] <- "0.9"
-  resolution_chosen[["random"]] <- "0.85"
-  
-  cluster_vec[["correct_EMFs"]] <- c(3, 1, 2, 4, 8, 7, 6, 5)
-  cluster_vec[["reverse_EMFs"]] <- c(1, 2, 5, 7, 8, 6, 4, 3)
-  cluster_vec[["correct_markers"]] <- c(2, 1, 3, 7, 6, 4, 10, 8, 5, 9)
-  cluster_vec[["random"]] <- c(4, 1, 3, 2, 7, 8, 10, 9, 5, 6)
-}
-```
-
-
-```{r fig.width = 9, fig.height=3}
-plot1 <- vis_perc_wide_gg(seu_emf_cor_list[[resolution_chosen[["correct_EMFs"]]]],
-                        title_add = "correct EMFs", 
-                        correction_vec = cluster_vec[["correct_EMFs"]])
-
-plot2 <- vis_perc_wide_gg(seu_emf_rev_list[[resolution_chosen[["reverse_EMFs"]]]],
-                        title_add = "reverse EMFs", 
-                        correction_vec = cluster_vec[["reverse_EMFs"]])
-
-plot3 <- vis_perc_wide_gg(seu_marker_list[[resolution_chosen[["correct_markers"]]]],
-                        title_add = "correct Markers", 
-                        correction_vec = cluster_vec[["correct_markers"]])
-
-plot4 <- vis_perc_wide_gg(seu_random_list[[resolution_chosen[["random"]]]],
-                        title_add = "random", 
-                        correction_vec = cluster_vec[["random"]])
-plot1
-plot2
-plot3
-plot4
-```
-
-```{r fig.height = 6, fig.width = 4}
-plot1 <- vis_perc_long_gg(seu_emf_cor_list[[resolution_chosen[["correct_EMFs"]]]],
-                        title_add = "correct EMFs", 
-                        correction_vec = cluster_vec[["correct_EMFs"]])
-
-plot2 <- vis_perc_long_gg(seu_emf_rev_list[[resolution_chosen[["reverse_EMFs"]]]],
-                        title_add = "reverse EMFs", 
-                        correction_vec = cluster_vec[["reverse_EMFs"]])
-
-plot3 <- vis_perc_long_gg(seu_marker_list[[resolution_chosen[["correct_markers"]]]],
-                        title_add = "correct Markers", 
-                        correction_vec = cluster_vec[["correct_markers"]])
-
-plot4 <- vis_perc_long_gg(seu_random_list[[resolution_chosen[["random"]]]],
-                        title_add = "random", 
-                        correction_vec = cluster_vec[["random"]])
-plot1
-plot2
-plot3
-plot4
-```
-
-```{r fig.width = 9, fig.height=3}
-plot1 <- vis_perc_cluster(seu_emf_cor_list[[resolution_chosen[["correct_EMFs"]]]],
-                        title_add = "correct EMFs", 
-                        correction_vec = cluster_vec[["correct_EMFs"]])
-
-plot2 <- vis_perc_cluster(seu_emf_rev_list[[resolution_chosen[["reverse_EMFs"]]]],
-                        title_add = "reverse EMFs", 
-                        correction_vec = cluster_vec[["reverse_EMFs"]])
-
-plot3 <- vis_perc_cluster(seu_marker_list[[resolution_chosen[["correct_markers"]]]],
-                        title_add = "correct Markers", 
-                        correction_vec = cluster_vec[["correct_markers"]])
-
-plot4 <- vis_perc_cluster(seu_random_list[[resolution_chosen[["random"]]]],
-                        title_add = "random", 
-                        correction_vec = cluster_vec[["random"]])
-plot1
-plot2
-plot3
-plot4
-```
-
-```{r fig.height = 6.2, fig.width = 3}
-if(wildcard_curr == "ts_hsc_progenitors"){
-  vis_perc_cluster(seu_emf_cor_list[[resolution_chosen[["correct_EMFs"]]]],
-                   title_add = "correct EMFs", 
-                   correction_vec = cluster_vec[["correct_EMFs"]])+
-    theme(legend.position = "none")+
-    theme(axis.text.x = element_text(angle = 90, size = 12),
-        axis.text.y = element_text(size = 12),
-        axis.title = element_blank(),
-        plot.title = element_blank())
-} 
-```
-
-```{r fig.height = 5, fig.width = 3}
-if(wildcard_curr == "ts_bone_marrow"){
-  vis_perc_cluster(seu_emf_cor_list[[resolution_chosen[["correct_EMFs"]]]],
-                   title_add = "correct EMFs", 
-                   correction_vec = cluster_vec[["correct_EMFs"]])+
-    theme(legend.position = "none")+
-    theme(axis.text.x = element_text(angle = 90, size = 12),
-        axis.text.y = element_text(size = 12),
-        axis.title = element_blank(),
-        plot.title = element_blank())
-} 
-```
-
-```{r fig.height = 6, fig.width = 3}
-if(wildcard_curr == "ts_all_stromal"){
-  vis_perc_cluster(seu_emf_cor_list[[resolution_chosen[["correct_EMFs"]]]],
-                   title_add = "correct EMFs", 
-                   correction_vec = cluster_vec[["correct_EMFs"]])+
-    theme(legend.position = "none")+
-    theme(axis.text.x = element_text(angle = 90, size = 12),
-        axis.text.y = element_text(size = 12),
-        axis.title = element_blank(),
-        plot.title = element_blank())
-} 
-```
-
-```{r fig.height = 6.4, fig.width = 3}
-if(wildcard_curr == "li_all_stromal"){
-  vis_perc_cluster(seu_emf_cor_list[[resolution_chosen[["correct_EMFs"]]]],
-                   title_add = "correct EMFs", 
-                   correction_vec = cluster_vec[["correct_EMFs"]])+
-    theme(legend.position = "none")+
-    theme(axis.text.x = element_text(angle = 90, size = 12),
-        axis.text.y = element_text(size = 12),
-        axis.title = element_blank(),
-        plot.title = element_blank())
-} 
-```
-
-```{r}
-knitr::knit_exit()
+```{r sessioninfo}
+utils::sessionInfo()
 ```

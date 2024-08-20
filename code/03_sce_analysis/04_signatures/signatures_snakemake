@@ -1,7 +1,5 @@
 snakemake --cluster "bsub -q medium -n10 -R rusage[mem=120GB]" -p -j20 -c10 -s signatures_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda  -n
 
-# for permutation 
-snakemake --cluster "bsub -q medium -n20 -R rusage[mem=200GB]" -p -j10 -c20 -s signatures_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda --config recluster_other=True -n
+# for permutation testing
+snakemake --cluster "bsub -q medium -n20 -R rusage[mem=200GB]" -p -j6 -c20 -s signatures_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda --config run_permutation_test=True -n
 
-# for testing
-snakemake --cluster "bsub -q medium -n20 -R rusage[mem=70GB]" -p -j10 -c20 -s signatures_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda --config recluster_other=True -n

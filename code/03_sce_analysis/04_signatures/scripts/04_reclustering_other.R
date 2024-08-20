@@ -28,12 +28,12 @@ dat_curr <- snakemake@wildcards[["dataset"]]
 print(dat_curr)
 
 # determine the current fraction to choose the correct gene sets
-if(dat_curr %in%  c("ts_all_stromal", "li_all_stromal")){
+if(dat_curr %in% c("ts_all_stromal", "li_all_stromal")){
   fraction_curr <- "str"
-}else if(dat_curr %in%  c("ts_bone_marrow", 
-                          "ts_hscs_progenitors",
-                          "nmr_sorted_hspc",
-                          "zeb_all_hspc")){
+}else if(dat_curr %in% c("ts_bone_marrow", 
+                         "ts_hscs_progenitors",
+                         "nmr_sorted_hspc",
+                         "zeb_all_hspc")){
   fraction_curr <- "hsc"
 }
 print(fraction_curr)

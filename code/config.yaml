@@ -81,7 +81,7 @@ values:
     resolution_louvain_list:   
       hsc: 0.65
       str: 0.3
-    k_louvain_refs: 50 # for louvain clustering resolution
+    #k_louvain_refs: 50 # for louvain clustering resolution
     ndge_padj_cutoff: 0.05 # below which nDGEs are significant
     ndge_fc_cutoff: 1.5 # above which genes are excluded from nDGEs
   03_sce_analysis:
@@ -90,16 +90,16 @@ values:
       - "Chondrocytes"
     reclustering_cutoff_counts: 5 # minimum number of counts for a gene to be used for re-clustering with random genes + permutation test
     nr_cores: 10 # nr of cores for parallelization for reclustering and permutation
-  05_cci_prep:
-    min_cells: 60 # min number of cells required per cell type to consider for cci
-    min_perc: 0.05 # min percentage of cells per cell type a gene must be expressed in to consider for cci
-    top_level: 300 # top level of ligand-receptor pairs to ensure even leveling of ranks and scores
-    colname_identity: celltypes
-    iterations: 250
-    min_sp_age_perc: 0.1 # % of iterations that must be successful for stats calc
-    nr_cores_age: 20
-    nr_cores_cts: 25
-    min_sp_cts: 3
+  # 05_cci_prep:
+  #   min_cells: 60 # min number of cells required per cell type to consider for cci
+  #   min_perc: 0.05 # min percentage of cells per cell type a gene must be expressed in to consider for cci
+  #   top_level: 300 # top level of ligand-receptor pairs to ensure even leveling of ranks and scores
+  #   colname_identity: celltypes
+  #   iterations: 250
+  #   min_sp_age_perc: 0.1 # % of iterations that must be successful for stats calc
+  #   nr_cores_age: 20
+  #   nr_cores_cts: 25
+  #   min_sp_cts: 3
 
 # Conditions  
 # in caps for use in R, only first letter capitalized for use in Snakefile
@@ -108,3 +108,4 @@ run_anno_reports: False
 run_marker_reports: False
 ran_li_ipynb: False
 recluster_other: False
+run_permutation_test: False

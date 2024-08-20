@@ -271,6 +271,8 @@ random_reclustering_scores <- function(iteration,
     seu,
     features = SeuratObject::Features(seu)[iteration_vector], 
     slot = "count")
+  print(nrow(seu_sub))
+  print(nrow(iteration_df))
   
   # re-cluster seurat object from raw counts, using basic seurat pipeline
   seu_rec <- standard_seu_pipeline(
@@ -280,8 +282,8 @@ random_reclustering_scores <- function(iteration,
     assay_use = assay_use)
   
   # calculate re-clustering scores as defined above
-  res_df <- calculate_scores_long(seu_rec)
-  res_df$iteration[1] <-iteration
+  res_df <- calculate_scores_long(seu_rec, for_permutation = TRUE)
+  res_df$iteration[1] <- iteration
   
   return(res_df)
 }

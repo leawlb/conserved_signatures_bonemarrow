@@ -16,6 +16,8 @@ RESOLUTION_OTHER = config["base"] + config["metadata_paths"]["resolution_other"]
 print(CELL_TYPES_EXCLUDE)
 print(RESOLUTION_OTHER)
 
+RUN_PERM_TEST = config["run_permutation_test"]
+
 ENSEMBL_MUS = config["base"] + config["metadata_paths"]["ensembl_mus"]
 ENSEMBL_HUM = config["base"] + config["metadata_paths"]["ensembl_hum"]
 ENSEMBL_ZEB = config["base"] + config["metadata_paths"]["ensembl_zeb"]
@@ -59,12 +61,16 @@ for d in datasets_other:
   targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_" + d + "_list"]
   targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_report_" + d + ".html"]
   targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_selected_report_" + d + ".html"]
-  # targets = targets + [OUTPUT_DAT + "/05_perm/" + r + "_score_df"]
-  # targets = targets + [OUTPUT_REP + "/reclustering_permutation_report_" + r + ".html"]
-
+ 
   # testing reclustering scores
-  targets = targets + [OUTPUT_REP + "/reclustering_scores/test_reclustering_scores_" + d + ".html"]
+  #targets = targets + [OUTPUT_REP + "/reclustering_scores/test_reclustering_scores_" + d + ".html"]
 
+  # permutation
+  #if RUN_PERM_TEST:
+    #targets = targets + [OUTPUT_DAT + "/05_perm/" + d + "_perm_score_df"]
+    #targets = targets + [OUTPUT_REP + "/reclustering_permutation_report_" + r + ".html"]
+
+ 
 #-------------------------------------------------------------------------------
 
 localrules: all  
@@ -321,31 +327,40 @@ rule reclustering_other_report_selected:
 
 
 
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+"""
+# PERMUTATION TEST
 
+# Do permutation tests to see if using conserved signature gene sets is 
+# significantly better than using the same number of random genes (as
+# background).
+# re-cluster seurat objects with random genes n = iteration times and compare
+# the re-clustering scores of the original seu-object to the normal distribu-
+# tion of the permuted scores.
 
 """
+if RUN_PERM_TEST:
 
-#-------------------------------------------------------------------------------
-# perform permutation tests for random gene sets instead of 
-# EMF sets to obtain a pval
+  # requires conda channel genomedk
+  rule permutation_test:
+      input:
+          seu_preprocessed = config["base"] + config["metadata_paths"]["reclustering"] + "/prepared/{dataset}",
+          ensembl_sign = expand(rules.prepare_ensembl.output.ensembl_sign, fraction = fractions)
+      params:
+          reclustering_functions = "../../source/sce_functions_reclustering.R",
+          iterations = 2,
+          resolution_df = RESOLUTION_OTHER,
+          nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
+          cut_off_counts = config["values"]["03_sce_analysis"]["reclustering_cutoff_counts"]       
+      conda:
+          "../../envs/reclustering_permutation.yml"
+      output:
+          perm_score_df = OUTPUT_DAT + "/05_perm/{dataset}_perm_score_df"
+      script: 
+          "scripts/05_permutation_test.R"
 
-# requires conda channel genomedk
-rule permutation_test:
-    input:
-        seu_preprocessed = config["base"] + config["metadata_paths"]["human_test_datasets"] + "/{reference}",
-        ensembl_emfs = expand(rules.prepare_ensembl.output.ensembl_emfs, fraction = fractions)
-    params:
-        reclustering_functions = "../../source/sce_functions_reclustering.R",
-        iterations = 2000,
-        nr_cores = 20,
-        cut_off_counts = 10,
-        resolution = resolution_list
-    conda:
-        "../../envs/reclustering_permutation.yml"
-    output:
-        perm_score_df = OUTPUT_DAT + "/05_perm/{reference}_score_df"
-    script: 
-        "scripts/05_permutation_test.R"
+"""
 
 # visualise reclustering permutation
 rule reclustering_permutation_report:

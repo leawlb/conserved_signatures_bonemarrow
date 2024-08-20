@@ -11,9 +11,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Report on datasets from other species that were re-clustered using:
 
-- random genes
 - conserved signature genes
 - conserved marker genes
+- all BL6 marker genes
+- random genes
 
 Using only the selected resolution with the best combination of markers.
 
@@ -21,11 +22,6 @@ Using only the selected resolution with the best combination of markers.
 
 ```{r seed, message = FALSE}
 set.seed(37)
-```
-
-```{r source, message = FALSE, include = FALSE}
-#source(file = snakemake@params[["plotting"]])
-#source(file = snakemake@params[["reclustering_function"]])
 ```
 
 ```{r load, message = FALSE}
@@ -61,6 +57,7 @@ col_cts <- col_cts_hsc
 
 ```{r load_objects}
 seu_list_all <- base::readRDS(snakemake@input[["seu_list"]])
+
 score_df_list_all <- base::readRDS(snakemake@input[["score_df_list"]])
 
 dataset_curr <- snakemake@wildcards[["dataset"]]
@@ -78,7 +75,7 @@ resolution_df <- resolution_df[resolution_df$dataset == dataset_curr,]
 ```
 
 ```{r subset_selected}
-
+# subset to selected resolution from resolution_df
 selected_seu_list <- lapply(seu_list_all, function(seu_list){
   
   conslev_curr <- seu_list[[1]]@misc$used_genes
@@ -112,10 +109,21 @@ selected_seu_list
 selected_score_df_list
 ```
 
+```{r colors}
+
+# put in colors.txt once color scheme a little more finalized
+col_vec_cons <- c(
+    "conserved_signature" = "yellowgreen",
+    "conserved_markers" = "darkgreen",
+    "mmusall_markers" = "blue2",
+    "random_features" = "purple2")
+
+```
+
 
 ## Functions
 
-### Plotting from seurat object
+### Plotting Mat
 
 #### Wide
 
@@ -132,8 +140,9 @@ vis_perc_wide_gg <- function(seu, correction_vec_list = NULL, title_add= NULL){
   print(seu@misc$used_genes)
   
   mat <- base::table(seu$cell_type, seu$seurat_clusters)
-  
   mat1 <- mat/rowSums(mat)*100
+  
+  # for nicer look, choose manually below
   if(!is.null(correction_vec_list)){
     correction_vec <- correction_vec_list[[seu@misc$used_genes]]
     mat1 <- mat1[,correction_vec]
@@ -177,7 +186,6 @@ vis_perc_long_gg <- function(seu, correction_vec_list = NULL, title_add= NULL){
   print(seu@misc$used_genes)
     
   mat <- t(base::table(seu$cell_type, seu$seurat_clusters))
-  
   mat2 <- mat/rowSums(mat)*100
   
   if(!is.null(correction_vec_list)){
@@ -209,7 +217,9 @@ vis_perc_long_gg <- function(seu, correction_vec_list = NULL, title_add= NULL){
 }
 ```
 
-# Scores
+# Plot
+
+## Scores
 
 ```{r score_df}
 score_df <- dplyr::bind_rows(selected_score_df_list)
@@ -218,12 +228,6 @@ score_df <- dplyr::bind_rows(selected_score_df_list)
 ```{r all_0_to_1, fig.width = 4, fig.height = 3.5}
 
 title <- base::paste(dataset_curr)
-
-col_vec_cons <- c(
-    "conserved_signature" = "yellowgreen",
-    "conserved_markers" = "darkgreen",
-    "mmusall_markers" = "blue2",
-    "random_features" = "purple2")
 
 ggplot2::ggplot(
   score_df[!score_df$type %in% c("variation_information", 
@@ -251,16 +255,18 @@ ggplot2::ggplot(score_df[score_df$type == "variation_information",],
   ggplot2::ggtitle(title)
 ```
 
-# Heatmaps
+## Heatmaps
 
-```{r wide1, fig.width = 8, fig.height = 4}
+```{r wide1, fig.width = 8, fig.height = 4, inclue = FALSE, eval = FALSE}
+# only for manually choosing the correction vector
 plot_list_wide <- lapply(selected_seu_list, 
                          vis_perc_wide_gg,
                          title_add = dataset_curr)
 plot_list_wide
 ```
 
-```{r long1, fig.width = 6, fig.height = 5}
+```{r long1, fig.width = 6, fig.height = 5, , inclue = FALSE, eval = FALSE}
+# only for manually choosing the correction vector
 plot_list_long <- lapply(selected_seu_list, 
                          vis_perc_long_gg,
                          title_add = dataset_curr)
@@ -284,9 +290,15 @@ if(dataset_curr == "zeb_all_hspc"){
   )
 }else if(dataset_curr == "nmr_sorted_hspc"){
   correction_vec_list <- list(
-    "conserved_signature" = c(2, 4, 6, 9, 13, 14, 9, 10, 16, 18, 20, 3, 5, 1, 7, 8, 5, 17, 15, 12, 19, 11, 22, 21, 23, 25, 26, 27, 24),
-    "conserved_markers" = c(4, 5, 16, 17, 18, 19, 20, 22, 24, 15, 1, 9, 7, 3, 6, 13, 28, 8, 10, 11, 12, 14, 25, 26, 2, 29, 21, 23, 27, 28),
-    "mmusall_markers" = c(1, 12, 15, 18, 19, 22, 27, 23, 2, 7, 13, 17, 16, 20, 3, 6, 8, 14, 4, 21, 24, 25, 26, 5),
+    "conserved_signature" = c(
+      2, 4, 6, 9, 13, 14, 9, 10, 16, 18, 20, 3, 5, 1, 7, 8, 5, 17, 15, 12, 19, 
+      11, 22, 21, 23, 25, 26, 27, 24),
+    "conserved_markers" = c(
+      4, 5, 16, 17, 18, 19, 20, 22, 24, 15, 1, 9, 7, 3, 6, 13, 28, 8, 10, 11, 
+      12, 14, 25, 26, 2, 29, 21, 23, 27, 28),
+    "mmusall_markers" = c(
+      1, 12, 15, 18, 19, 22, 27, 23, 2, 7, 13, 17, 16, 20, 3, 6, 8, 14, 4, 21,
+      24, 25, 26, 5),
     "random_features" = c(1:79)
   )   
 }else if(dataset_curr == "li_all_stromal"){

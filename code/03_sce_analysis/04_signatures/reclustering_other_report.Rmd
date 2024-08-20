@@ -11,9 +11,10 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Report on datasets from other species that were re-clustered using:
 
-- random genes
 - conserved signature genes
 - conserved marker genes
+- all BL6 marker genes
+- random genes
 
 This will also help picking a resolution. 
 
@@ -105,17 +106,12 @@ Proportions of cells of a cluster per cell type.
 
 ```{r wide_function}
 
-vis_perc_wide_gg <- function(seu, correction_vec = NULL, title_add= NULL){
+vis_perc_wide_gg <- function(seu, title_add= NULL){
   
   title <- base::paste(seu@misc$used_genes, title_add)
   
   mat <- base::table(seu$cell_type, seu$seurat_clusters)
   mat1 <- mat/rowSums(mat)*100
-  
-  # for nicer look, choose manually (downstream)
-  if(!is.null(correction_vec)){
-    mat1 <- mat1[,correction_vec]
-  }
   
   df_vis <- base::as.data.frame(mat1)
   df_vis$Var1 <- factor(df_vis$Var1, levels = base::rev(levels(seu$cell_type)))
@@ -147,16 +143,12 @@ Cell types on x axis.
 Proportion of cells of a cell type per cluster.
 
 ```{r long_function}
-vis_perc_long_gg <- function(seu, correction_vec = NULL, title_add= NULL){
+vis_perc_long_gg <- function(seu, title_add= NULL){
   
   title <- base::paste(seu@misc$used_genes, title_add)
     
   mat <- t(base::table(seu$cell_type, seu$seurat_clusters))
   mat2 <- mat/rowSums(mat)*100
-  
-  if(!is.null(correction_vec)){
-    mat2 <- mat2[correction_vec,]
-  }
   
   df_vis <- base::as.data.frame(mat2)
   df_vis$Var2 <- factor(df_vis$Var2, levels = levels(seu$cell_type))
@@ -238,7 +230,7 @@ vis_nr_cl_nr_cell <- function(seu_list, title){
                                       "median_cluster_per_ct",
                                       "nr_clusters"))
   
-  title <- base::paste(vis_df_all$conservation_level[1], title)
+  title <- base::paste(title, vis_df_all$conservation_level[1])
   
   plot1 <- ggplot2::ggplot(vis_df_all, 
                            aes(x = resolution, y = value, color = type))+
@@ -248,8 +240,8 @@ vis_nr_cl_nr_cell <- function(seu_list, title){
                         color = "grey60", 
                         linetype = "dashed")+
     ggplot2::theme_classic()+
-    ggplot2::ylim(c(0, max(vis_df_all$nr_celltypes[1], 
-                           vis_df_all$value)))+
+    ggplot2::ylim(c(0, base::max(vis_df_all$nr_celltypes[1], 
+                                 vis_df_all$value)))+
     ggplot2::ggtitle(title)
   
   return(plot1)
@@ -293,7 +285,7 @@ vis_clustering_scores <- function(score_df_list, title){
     ggplot2::geom_hline(yintercept = 0.5,
                         color = "grey20",
                         linetype = "dashed")+
-    ggplot2::ylim(c(0, max(vis_df_2$value)))+
+    ggplot2::ylim(c(0, base::max(vis_df_2$value)))+
     ggplot2::ggtitle(title)+
     ggplot2::scale_color_manual("score", values = col_vec2)
   

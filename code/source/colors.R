@@ -14,10 +14,10 @@ marker2 <- "darkgreen"
 #                      low = "white", high = "blue")
 
 # used for pheatmap (looks different!)
-mycolors_to1 <- colorRampPalette(c("grey98", "blue"))(100)
+mycolors_to1 <- grDevices::colorRampPalette(c("grey98", "blue"))(100)
 names(mycolors_to1) <- c(1:100)/100
 
-mycolors_to100 <- colorRampPalette(c("grey98", "blue"))(100)
+mycolors_to100 <- grDevices::colorRampPalette(c("grey98", "blue"))(100)
 names(mycolors_to100) <- c(1:100)
 
 # used for visualising QC (sum and detected)
@@ -37,24 +37,24 @@ col_mode_log <-c("FALSE" = "#EDE2D4",
 #-------------------------------------------------------------------------------
 
 # SAMPLES/CLUSTER
-col_num <- c(dittoColors()[2:35])
+col_num <- c(dittoSeq::dittoColors()[2:35])
 names(col_num) <- as.character(c(1:34))
 
-col_alp <- c(dittoColors()[12:19])
+col_alp <- c(dittoSeq::dittoColors()[12:19])
 names(col_alp) <- c("a", "b", "c", "d", "e", "f", "g")
 
 #-------------------------------------------------------------------------------
 
 # REFERENCE CELL TYPES
 if(exists("colors_ref_path")){
-  colors_ref_df <- read.csv(colors_ref_path, sep = ";", header = TRUE)
+  colors_ref_df <- utils::read.csv(colors_ref_path, sep = ";", header = TRUE)
   col_cts_ref <- colors_ref_df$color
   names(col_cts_ref) <- colors_ref_df$celltype
 }
 
 # ALL OTHER COLORS 
 if(exists("colors_path")){
-  colors_df <- read.csv(colors_path, sep = ";", header = TRUE)
+  colors_df <- utils::read.csv(colors_path, sep = ";", header = TRUE)
   
   col_age <- colors_df[colors_df$purpose == "Age_ID",]$color
   names(col_age) <- colors_df[colors_df$purpose == "Age_ID",]$level

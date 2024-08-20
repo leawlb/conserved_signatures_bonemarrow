@@ -2,6 +2,7 @@
 # function for a standard seurat pipeline clustering pipeline from counts
 # make it so that mapply can be used for list of different resolution(s)
 # used for reclustering, and for reclustering permutation
+
 standard_seu_pipeline <- function(resolution, 
                                   features, 
                                   seu, 
@@ -74,7 +75,7 @@ calculate_scores <- function(seu){
   # cell type or identity to compare in "cell_type" slot
   
   # make a comparison matrix, then split into cells/celltype and cells/cluster
-  mat <- table(seu$cell_type, seu$seurat_clusters)
+  mat <- base::table(seu$cell_type, seu$seurat_clusters)
   mat_per_celltype <- mat/rowSums(mat)
   t_mat <- t(mat)
   mat_per_cluster <- t(t_mat/rowSums(t_mat)) # keep format/orientation
@@ -118,7 +119,8 @@ calculate_scores_long <- function(
     seu = NULL, 
     cluster_vector1 = NULL,
     cluster_vector2 = NULL,
-    mat_pca = NULL){
+    mat_pca = NULL,
+    for_permutation = FALSE){
   
   # can be seurat object, or two clustering vectors + pca matrix
   
@@ -181,7 +183,7 @@ calculate_scores_long <- function(
   res_recl <- bluster::neighborPurity(mat_pca, 
                                       clusters = cluster_vector2, 
                                       k = 50)
-  score_3 <- mean(res_recl$purity)
+  score_3 <- base::mean(res_recl$purity)
   
   #-----------------------------------------------------------------------------
   #-----------------------------------------------------------------------------
@@ -200,29 +202,43 @@ calculate_scores_long <- function(
   #-----------------------------------------------------------------------------
   #-----------------------------------------------------------------------------
   
-  return_df <- data.frame(
-    "type" = c("proportion_of_zeros", 
-               "mean_prop_cells/cluster",
-               "mean_cluster_purity",
-               "adjusted_rand_index",
-               "fowles_mallow_index",
-               "variation_information",
-               "nr_clusters",
-               "nr_celltypes"),
-    "value" = c(score_1, 
-                score_2,
-                score_3,
-                score_4, 
-                score_5,
-                score_6,
-                nr_clusters, 
-                nr_celltypes))
+  # depending on what this function is used for, output differs slightly
+  if(!for_permutation){
+    
+    return_df <- base::data.frame(
+      "type" = c("proportion_of_zeros", 
+                 "mean_prop_cells/cluster",
+                 "mean_cluster_purity",
+                 "adjusted_rand_index",
+                 "fowles_mallow_index",
+                 "variation_information",
+                 "nr_clusters",
+                 "nr_celltypes"),
+      "value" = c(score_1, 
+                  score_2,
+                  score_3,
+                  score_4, 
+                  score_5,
+                  score_6,
+                  nr_clusters, 
+                  nr_celltypes))
+    
+  }else if(for_permutation){
+    
+    return_df <- base::data.frame(
+      "proportion_of_zeros" = score_1,
+      "mean_prop_cells/cluster" = score_2,
+      "mean_cluster_purity" = score_3,
+      "adjusted_rand_index" = score_4,
+      "fowles_mallow_index" = score_5,
+      "variation_information" = score_6,
+      "nr_clusters" = nr_clusters,
+      "nr_celltypes" = nr_celltypes) 
+  }
   
   return(return_df)
 }  
 
-
-
 #-------------------------------------------------------------------------------
 
 
@@ -230,7 +246,7 @@ calculate_scores_long <- function(
 
 
 #-------------------------------------------------------------------------------
-# function that combines the two previous functions to go through i
+# function that combines two previous functions to go through i
 # iterations of seurat re-clustering using i sets of random genes and
 # calculating the i sets of resulting scores
 # the function will only output the scores for direct comparison 
@@ -242,7 +258,6 @@ random_reclustering_scores <- function(iteration,
                                        assay_use){
   
   iteration <- iteration # list of iterations like: as.list(c(1:i))
-  #print(iteration)
   seu <- seu # seurat object to be reclustered 
   iteration_df <- iteration_df # dataframe with ncol=i and random sets of gene positions in each column
   resolution <- resolution # resolution to parse to FindClusters
@@ -252,17 +267,20 @@ random_reclustering_scores <- function(iteration,
   iteration_vector <- iteration_df[,iteration]
   #print(iteration_vector[1:10])
   
-  seu_sub <- subset(seu, features = Features(seu)[iteration_vector], 
-                    slot = "count")
+  seu_sub <- SeuratObject::subset(
+    seu,
+    features = SeuratObject::Features(seu)[iteration_vector], 
+    slot = "count")
   
   # re-cluster seurat object from raw counts, using basic seurat pipeline
-  seu_rec <- standard_seu_pipeline(seu = seu_sub, 
-                                   features = Features(seu_sub), 
-                                   resolution = resolution,
-                                   assay_use = assay_use)
+  seu_rec <- standard_seu_pipeline(
+    seu = seu_sub, 
+    features = SeuratObject::Features(seu_sub), 
+    resolution = resolution,
+    assay_use = assay_use)
   
   # calculate re-clustering scores as defined above
-  res_df <- calculate_scores(seu_rec)
+  res_df <- calculate_scores_long(seu_rec)
   res_df$iteration[1] <-iteration
   
   return(res_df)

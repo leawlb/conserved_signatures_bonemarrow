@@ -73,6 +73,12 @@ if(fraction_curr == "hsc"){
 }
 
 col_cts <- col_cts[!names(col_cts) %in% cts_exclude]
+
+# put into colors.txt once more established
+col_cons <- c("conserved_signature" = "yellowgreen",
+              "conserved_markers" = "darkgreen",
+              "mmusall_markers" = "blue2",
+              "ndges" = "orangered1")
 ```
 
 # UMAPs
@@ -174,10 +180,10 @@ plot_mark <- ggplot2::ggplot(mark_df,
                     fill = Freq))+
   ggplot2::geom_tile()+
   ggplot2::theme_classic()+
-  scale_fill_continuous("% cells/cell type", 
-                        limits=c(0, 1), 
-                        breaks=seq(0, 1, by= 0.20),
-                        low = "white", high = "blue")+
+  ggplot2::scale_fill_continuous("% cells/cell type", 
+                                 limits=c(0, 1), 
+                                 breaks=seq(0, 1, by= 0.20),
+                                 low = "white", high = "blue")+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
   ggplot2::xlab("Original cell types")+
   ggplot2::ylab("Re-clustered with conserved markers")+
@@ -214,10 +220,10 @@ plot_mmus <- ggplot2::ggplot(mmus_df,
                     fill = Freq))+
   ggplot2::geom_tile()+
   ggplot2::theme_classic()+
-  scale_fill_continuous("% cells/cell type", 
-                        limits=c(0, 1), 
-                        breaks=seq(0, 1, by= 0.20),
-                        low = "white", high = "blue")+
+  ggplot2::scale_fill_continuous("% cells/cell type", 
+                                 limits=c(0, 1), 
+                                 breaks=seq(0, 1, by= 0.20),
+                                 low = "white", high = "blue")+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
   ggplot2::xlab("Original cell types")+
   ggplot2::ylab("Re-clustered with all BL6 markers")+
@@ -254,10 +260,10 @@ plot_ndge <- ggplot2::ggplot(ndge_df,
                     fill = Freq))+
   ggplot2::geom_tile()+
   ggplot2::theme_classic()+
-  scale_fill_continuous("% cells/cell type", 
-                        limits=c(0, 1), 
-                        breaks=seq(0, 1, by= 0.20),
-                        low = "white", high = "blue")+
+  ggplot2::scale_fill_continuous("% cells/cell type", 
+                                 limits=c(0, 1), 
+                                 breaks=seq(0, 1, by= 0.20),
+                                 low = "white", high = "blue")+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
   ggplot2::xlab("Original cell types")+
   ggplot2::ylab("Re-clustered with nDGEs")+
@@ -279,11 +285,7 @@ ggplot2::ggplot(
   ggplot2::theme_classic()+
   ggplot2::ylim(c(0, 1))+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
-  ggplot2::scale_color_manual("conservation level", values = c(
-    "conserved_signature" = "yellowgreen",
-    "conserved_markers" = "darkgreen",
-    "mmusall_markers" = "blue2",
-    "ndges" = "orangered1"))+
+  ggplot2::scale_color_manual("conservation level", values = col_cons)+
   ggplot2::ggtitle(base::paste("reclustering", fraction_curr))
 ```
 
@@ -293,11 +295,7 @@ ggplot2::ggplot(score_df[score_df$type == "variation_information",],
   ggplot2::geom_point(alpha = 0.7)+
   ggplot2::theme_classic()+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
-  ggplot2::scale_color_manual("conservation level", values = c(
-    "conserved_signature" = "yellowgreen",
-    "conserved_markers" = "darkgreen",
-    "mmusall_markers" = "blue2",
-    "ndges" = "orangered1"))+
+  ggplot2::scale_color_manual("conservation level", values = col_cons)+
   ggplot2::ylim(c(0, max(score_df$value[
     score_df$type == "variation_information"])))+
   ggplot2::ggtitle(base::paste("reclustering", fraction_curr))

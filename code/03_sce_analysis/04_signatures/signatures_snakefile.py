@@ -59,12 +59,11 @@ for d in datasets_other:
   targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_" + d + "_list"]
   targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_report_" + d + ".html"]
   targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_selected_report_" + d + ".html"]
-  # targets = targets + [OUTPUT_REP + "/reclustering_hum_eval_" + d + ".html"]
   # targets = targets + [OUTPUT_DAT + "/05_perm/" + r + "_score_df"]
   # targets = targets + [OUTPUT_REP + "/reclustering_permutation_report_" + r + ".html"]
 
   # testing reclustering scores
-  #targets = targets + [OUTPUT_REP + "/reclustering_scores/test_reclustering_scores_" + d + ".html"]
+  targets = targets + [OUTPUT_REP + "/reclustering_scores/test_reclustering_scores_" + d + ".html"]
 
 #-------------------------------------------------------------------------------
 
@@ -295,8 +294,6 @@ rule reclustering_other_report:
         score_df_list = rules.reclustering_other_scores.output
     #params:
         #colors_path = COLORS,
-        #functions = "../../source/sce_functions.R",
-       # plotting = "../../source/plotting.R",
         #colors = "../../source/colors.R"
     output:
         OUTPUT_REP + "/reclustering_other/reclustering_other_report_{dataset}.html"
@@ -316,8 +313,6 @@ rule reclustering_other_report_selected:
         resolution_df = RESOLUTION_OTHER
     #params:
         #colors_path = COLORS,
-        #functions = "../../source/sce_functions.R",
-       # plotting = "../../source/plotting.R",
         #colors = "../../source/colors.R"
     output:
         OUTPUT_REP + "/reclustering_other/reclustering_other_selected_report_{dataset}.html"

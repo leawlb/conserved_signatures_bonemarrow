@@ -34,12 +34,37 @@ library(ggplot2, quietly = TRUE)
 seu_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/04_rcls/reclustered_zeb_all_hspc_list")
 
 dataset_curr <- "li_all_stroma"
-
 ```
 
 ```{r load_object}
 seu_list_all <- base::readRDS(snakemake@input[["seu_list"]])
 dataset_curr <- snakemake@wildcards[["dataset"]]
+```
+
+```{r colors}
+# put into colors.txt once more established
+col_vec_cons <- c("conserved_signature" = "yellowgreen",
+                  "conserved_markers" = "darkgreen",
+                  "mmusall_markers" = "blue2",
+                  "random_features" = "purple2")
+
+col_vec1 <- c("prop_of_zeros" = "goldenrod1",
+              "mean_ct_per_cluster_norm" = "indianred1",
+              "prop_cells_per_cluster_median" = "steelblue4",
+              "prop_cells_per_cluster_mean" = "steelblue1")
+  
+col_vec2 <- c("mean_ct_per_cluster" = "indianred3",
+              "mean_cluster_per_ct" = "seagreen2",
+              "total_nr_cluster" = "seagreen4")
+
+col_vec3 <- c("median_silhouette_width" = "goldenrod4",
+              "mean_silhouette_width" = "goldenrod2",
+              "median_purity" = "olivedrab4",
+              "mean_purity" = "olivedrab2")
+
+col_vec4 <-  c("adj_rand" = "orchid",
+               "fowlkes_mallows" = "darkblue",
+               "variation_information" = "orange")
 ```
 
 ## Functions
@@ -48,16 +73,27 @@ dataset_curr <- snakemake@wildcards[["dataset"]]
 
 Using a comparison matrix of this format:
 
-........ct1...ct2......ct3
+```{r fig.width = 4, fig.height = 4}
+df_ex <- base::data.frame("cluster" = c("cluster1", "cluster2",
+                                        "cluster3", "cluster4"),
+                          "ct1" = c(0.5, 0, 0.33, 0),
+                          "ct2" = c(0.5, 0, 0.33, 0),
+                          "ct3" = c(0, 1, 0.33, 1))
 
-cl1.....0.5...0.5.......0
+print(df_ex)
 
-cl2......0.....0........1
-
-cl3....0.33...0.33..0.33
-
-cl4......0.....0........1
-
+df_ex <- tidyr::pivot_longer(df_ex, c(2:4),
+                             values_to = "value", 
+                             names_to = "celltype")
+ggplot2::ggplot(df_ex, aes(x = celltype, y = cluster, fill = value))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_minimal()+
+  ggplot2::scale_fill_continuous("% cells/cluster", 
+                        limits=c(0, 1), 
+                        breaks=c(0, 0.5, 1),
+                        low = "white", high = "blue")+
+  ggplot2::theme(legend.position = "bottom")
+```
 
 with the values indicating the proportion of cells of a given cell type ct
 per cluster cl.
@@ -223,23 +259,12 @@ mat_plots <- lapply(df_list_mat, function(df_mat){
                        df_mat$conservation_level[1], 
                        dataset_curr)
   
-  col_vec1 <- c(
-      "prop_of_zeros" = "goldenrod1",
-      "mean_ct_per_cluster_norm" = "indianred1",
-      "prop_cells_per_cluster_median" = "steelblue4",
-      "prop_cells_per_cluster_mean" = "steelblue1")
-  
-  col_vec2 <- c(
-      "mean_ct_per_cluster" = "indianred3",
-      "mean_cluster_per_ct" = "seagreen2",
-      "total_nr_cluster" = "seagreen4")
-  
   plot1 <- ggplot2::ggplot(
     df_mat_short,
     aes(x = nr_recl, y = value, color = type))+
     ggplot2::geom_point(alpha = 0.7)+
     ggplot2::theme_classic()+
-    ggplot2::scale_color_manual("score type", col_vec1)+
+    ggplot2::scale_color_manual("score type", values = col_vec1)+
     ggplot2::ylim(c(0, 1))+
     ggplot2::ggtitle(title)+
     ggplot2::xlim(0, max(df_mat_short$nr_recl))
@@ -277,7 +302,7 @@ mat_plots <- lapply(df_list_mat, function(df_mat){
     aes(x = resolution, y = value, color = type))+
     ggplot2::geom_point(alpha = 0.7)+
     ggplot2::theme_classic()+
-    ggplot2::scale_color_manual("score type", col_vec2)+
+    ggplot2::scale_color_manual("score type", values = col_vec2)+
     ggplot2::geom_hline(yintercept = df_mat$value[df_mat == "total_nr_ct"][1],
                         color = "grey20", 
                         linetype = "dashed")+
@@ -294,12 +319,6 @@ mat_plots
 ```
 
 ```{r mat_plots_all, fig.height = 3, fig.width = 7}
-
-col_vec_cons <- c(
-    "conserved_signature" = "yellowgreen",
-    "conserved_markers" = "darkgreen",
-    "mmusall_markers" = "blue2",
-    "random_features" = "purple2")
 
 plot1 <- ggplot2::ggplot(
   df_mat[df_mat$type == "prop_of_zeros",],
@@ -319,7 +338,7 @@ plot2 <- ggplot2::ggplot(
   ggplot2::geom_point(alpha = 0.7)+
   ggplot2::geom_line()+
   ggplot2::theme_classic()+
-   ggplot2::scale_color_manual("conservation level", col_vec_cons)+
+   ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
   ggplot2::ggtitle("prop_cells_per_cluster_median")+
   ggplot2::ylim(c(0,1))+
   ggplot2::xlim(0, max(df_mat$nr_recl))
@@ -331,7 +350,7 @@ plot3 <- ggplot2::ggplot(
   ggplot2::geom_point(alpha = 0.7)+
   ggplot2::geom_line()+
   ggplot2::theme_classic()+
-  ggplot2::scale_color_manual("conservation level", col_vec_cons)+
+  ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
   ggplot2::ggtitle("prop_cells_per_cluster_mean")+
   ggplot2::ylim(c(0,1))+
   ggplot2::xlim(0, max(df_mat$nr_recl))
@@ -343,7 +362,7 @@ plot4 <- ggplot2::ggplot(
   ggplot2::geom_point(alpha = 0.7)+
   ggplot2::geom_line()+
   ggplot2::theme_classic()+
-  ggplot2::scale_color_manual("conservation level", col_vec_cons)+
+  ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
   ggplot2::ggtitle("mean_ct_per_cluster_norm")+
   ggplot2::ylim(c(0,1))+
   ggplot2::xlim(0, max(df_mat$nr_recl))
@@ -496,19 +515,13 @@ sp_plots <- lapply(df_list_sp, function(df_sp){
   title <- base::paste(df_sp$length_conservation_level[1],
                        df_sp$conservation_level[1], 
                        dataset_curr)
-  
-  col_vec <- c(
-    "median_silhouette_width" = "goldenrod4",
-    "mean_silhouette_width" = "goldenrod2",
-    "median_purity" = "olivedrab4",
-    "mean_purity" = "olivedrab2")
-  
+
   plot1 <- ggplot2::ggplot(
     df_sp,
     aes(x = nr_recl, y = value, color = type))+
     ggplot2::geom_point(alpha = 0.7)+
     ggplot2::theme_classic()+
-    ggplot2::scale_color_manual("score type", values = col_vec)+
+    ggplot2::scale_color_manual("score type", values = col_vec3)+
     ggplot2::ggtitle(title)+
     ggplot2::geom_hline(yintercept = 0.25,
                         linetype = "dashed")+
@@ -520,7 +533,7 @@ sp_plots <- lapply(df_list_sp, function(df_sp){
     aes(x = resolution, y = value, color = type))+
     ggplot2::geom_point(alpha = 0.7)+
     ggplot2::theme_classic()+
-    ggplot2::scale_color_manual("score type", values = col_vec)+
+    ggplot2::scale_color_manual("score type", values = col_vec3)+
     ggplot2::ggtitle(title)+
     ggplot2::ylim(c(-1, 1))+
     ggplot2::geom_hline(yintercept = 0.25,
@@ -705,17 +718,12 @@ met_plots <- lapply(df_list_met, function(df_met){
                        ",",
                        dataset_curr)
   
-  col_vec1 <-  c(
-    "adj_rand" = "orchid",
-    "fowlkes_mallows" = "darkblue",
-    "variation_information" = "orange")
-  
   plot1 <- ggplot2::ggplot(
     df_met,
     aes(x = nr_recl, y = value, color = type))+
     ggplot2::geom_point(alpha = 0.7)+
     ggplot2::theme_classic()+
-    ggplot2::scale_color_manual("score type", values = col_vec1)+
+    ggplot2::scale_color_manual("score type", values = col_vec4)+
     ggplot2::ggtitle(title)+
     ggplot2::xlim(0, max(df_met$nr_recl))+
     ggplot2::ylim(0, max(df_met$value))
@@ -725,7 +733,7 @@ met_plots <- lapply(df_list_met, function(df_met){
     aes(x = resolution, y = value, color = type))+
     ggplot2::geom_point(alpha = 0.7)+
     ggplot2::theme_classic()+
-    ggplot2::scale_color_manual("score type", values = col_vec1)+
+    ggplot2::scale_color_manual("score type", values = col_vec4)+
     ggplot2::ggtitle(title)+
     ggplot2::ylim(0, max(df_met$value))
   
@@ -744,11 +752,7 @@ plot1 <- ggplot2::ggplot(
     ggplot2::geom_point(alpha = 0.7)+
     ggplot2::geom_line()+
     ggplot2::theme_classic()+
-    ggplot2::scale_color_manual("conservation level", values = c(
-      "conserved_signature" = "yellowgreen",
-      "conserved_markers" = "darkgreen",
-      "mmusall_markers" = "blue2",
-      "random_features" = "purple2"))+
+    ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
     ggplot2::ggtitle("adj_rand")+
     ggplot2::xlim(0, max(df_met$nr_recl))+
     ggplot2::ylim(0, 1)
@@ -760,11 +764,7 @@ plot2 <- ggplot2::ggplot(
     ggplot2::geom_point(alpha = 0.7)+
     ggplot2::geom_line()+
     ggplot2::theme_classic()+
-    ggplot2::scale_color_manual("conservation level", values = c(
-      "conserved_signature" = "yellowgreen",
-      "conserved_markers" = "darkgreen",
-      "mmusall_markers" = "blue2",
-      "random_features" = "purple2"))+
+    ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
     ggplot2::ggtitle("fowlkes_mallows")+
     ggplot2::xlim(0, max(df_met$nr_recl))+
     ggplot2::ylim(0, 1)
@@ -776,11 +776,7 @@ plot3 <- ggplot2::ggplot(
     ggplot2::geom_point(alpha = 0.7)+
     ggplot2::geom_line()+
     ggplot2::theme_classic()+
-    ggplot2::scale_color_manual("conservation level", values = c(
-      "conserved_signature" = "yellowgreen",
-      "conserved_markers" = "darkgreen",
-      "mmusall_markers" = "blue2",
-      "random_features" = "purple2"))+
+    ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
     ggplot2::ggtitle("variation_information")+
     ggplot2::xlim(0, max(df_met$nr_recl))+
     ggplot2::ylim(0, max(df_met$value))
@@ -794,11 +790,7 @@ plot1 <- ggplot2::ggplot(
     ggplot2::geom_point(alpha = 0.7)+
     ggplot2::geom_line()+
     ggplot2::theme_classic()+
-    ggplot2::scale_color_manual("conservation level", values = c(
-      "conserved_signature" = "yellowgreen",
-      "conserved_markers" = "darkgreen",
-      "mmusall_markers" = "blue2",
-      "random_features" = "purple2"))+
+    ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
     ggplot2::ggtitle("adj_rand")+
     ggplot2::ylim(0, 1)
 plot1
@@ -809,11 +801,7 @@ plot2 <- ggplot2::ggplot(
     ggplot2::geom_point(alpha = 0.7)+
     ggplot2::geom_line()+
     ggplot2::theme_classic()+
-    ggplot2::scale_color_manual("conservation level", values = c(
-      "conserved_signature" = "yellowgreen",
-      "conserved_markers" = "darkgreen",
-      "mmusall_markers" = "blue2",
-      "random_features" = "purple2"))+
+    ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
     ggplot2::ggtitle("fowlkes_mallows")+
     ggplot2::ylim(0, 1)
 plot2
@@ -824,11 +812,7 @@ plot3 <- ggplot2::ggplot(
     ggplot2::geom_point(alpha = 0.7)+
     ggplot2::geom_line()+
     ggplot2::theme_classic()+
-    ggplot2::scale_color_manual("conservation level", values = c(
-      "conserved_signature" = "yellowgreen",
-      "conserved_markers" = "darkgreen",
-      "mmusall_markers" = "blue2",
-      "random_features" = "purple2"))+
+    ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
     ggplot2::ggtitle("variation_information")+
     ggplot2::ylim(0, max(df_met$value))
 plot3

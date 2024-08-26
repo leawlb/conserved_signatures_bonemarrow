@@ -175,8 +175,8 @@ calculate_scores_long <- function(
   score_5 <- dendextend::FM_index_R(cluster_vector1, cluster_vector2)[1]
   
   # Variation of Information
-  score_6 <- mcclust::vi.dist(unfactor(cluster_vector1),
-                              unfactor(cluster_vector2))
+  score_6 <- mcclust::vi.dist(S4Vectors::unfactor(cluster_vector1),
+                              S4Vectors::unfactor(cluster_vector2))
 
   print("score_4 to score_6")
   
@@ -188,7 +188,7 @@ calculate_scores_long <- function(
     
     return_df <- base::data.frame(
       "type" = c("proportion_of_zeros", 
-                 "mean_prop_cells/cluster",
+                 "mean_prop_cells_cluster",
                  "mean_cluster_purity",
                  "adjusted_rand_index",
                  "fowles_mallow_index",
@@ -208,7 +208,7 @@ calculate_scores_long <- function(
     
     return_df <- base::data.frame(
       "proportion_of_zeros" = score_1,
-      "mean_prop_cells/cluster" = score_2,
+      "mean_prop_cells_cluster" = score_2,
       "mean_cluster_purity" = score_3,
       "adjusted_rand_index" = score_4,
       "fowles_mallow_index" = score_5,

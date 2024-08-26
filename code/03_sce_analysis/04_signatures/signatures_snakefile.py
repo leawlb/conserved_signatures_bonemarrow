@@ -16,7 +16,8 @@ RESOLUTION_OTHER = config["base"] + config["metadata_paths"]["resolution_other"]
 print(CELL_TYPES_EXCLUDE)
 print(RESOLUTION_OTHER)
 
-RUN_PERM_TEST = config["run_permutation_test"]
+RUN_PERM_GENESETS = config["run_permutation_genesets"]
+RUN_PERM_BACKGROUND = config["run_permutation_background"]
 
 ENSEMBL_MUS = config["base"] + config["metadata_paths"]["ensembl_mus"]
 ENSEMBL_HUM = config["base"] + config["metadata_paths"]["ensembl_hum"]
@@ -59,17 +60,20 @@ for f in fractions:
 for d in datasets_other:
   targets = targets + [OUTPUT_DAT + "/04_rcls/reclustered_" + d + "_list"]
   targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_" + d + "_list"]
-  targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_report_" + d + ".html"]
-  targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_selected_report_" + d + ".html"]
+  #targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_report_" + d + ".html"]
+  #targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_selected_report_" + d + ".html"]
  
   # testing reclustering scores
   #targets = targets + [OUTPUT_REP + "/reclustering_scores/test_reclustering_scores_" + d + ".html"]
 
   # permutation
-  if RUN_PERM_TEST:
-    targets = targets + [OUTPUT_DAT + "/05_perm/" + d + "_perm_score_df"]
-    targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_permutation_report_" + d + ".html"]
+  if RUN_PERM_GENESETS:
+    targets = targets + [OUTPUT_DAT + "/05_perg/" + d + "_perm_score_df_mark"]
+    targets = targets + [OUTPUT_DAT + "/05_perg/" + d + "_perm_score_df_mmms"]
 
+  if RUN_PERM_BACKGROUND:
+    targets = targets + [OUTPUT_DAT + "/06_perb/" + d + "_perm_score_df"]
+    targets = targets + [OUTPUT_REP + "/permutation/reclustering_permutation_report_" + d + ".html"]
 
 #-------------------------------------------------------------------------------
 
@@ -86,7 +90,7 @@ rule all:
 # EXTRACT SIGNATURES
 # 
 # Get conserved signatures = 
-# genes that are conserved marker genes that are non-differentially expressed
+# genes that are conserved marker genes + non-differentially expressed
 """
 
 # export list of data on marker genes, conserved signatures, and nDGEs
@@ -167,8 +171,7 @@ rule prepare_ensembl:
 """
 # RE-CLUSTERING OUR DATA
 #
-# Data will be reclustered exactly as the original dataset (2000 HVGs,
-# batch-corrected PC coordinates).
+# Data will be reclustered as the original dataset (2000 HVGs, corrected PC).
 # Here, SCE object are subsetted to each gene set, PCA is performed again using
 # non-batch corrected values, then clustering is performed at identical
 # resolution and k = number of neighbors using the original functions
@@ -195,6 +198,7 @@ rule reclustering_own:
 #
 # Datasets from other species are prepared for analysis using 
 # prepare_datasets_snakefile.py
+# All data generated from prepare_datasets_snakefile.py is in metadata!
 #
 # Standard Seurat approach with standard options starting from raw counts
 # but with aforementioned gene sets instead of HVGs.
@@ -221,7 +225,7 @@ rule reclustering_other:
 # RE-CLUSTERING SCORES
 # 
 # In order to test how well a certain gene set was able to re-cluster a 
-# dataset, we test different established (and several new) metrics for
+# dataset, we test different established (and new) metrics for
 # comparing two clusterings, or for evaluating the quality of clustering.
 # We use the re-clustered other datasets to test and evaluate each score.
 # We choose to use following metrics for evaluating re-clustering:
@@ -340,13 +344,15 @@ rule reclustering_other_report:
 """
 #-------------------------------------------------------------------------------
 
-if RUN_PERM_TEST:
-
+if RUN_PERM_GENESETS:
+  
   # requires conda channel genomedk
-  rule permutation_test:
+  rule permutation_genesets:
       input:
           seu_preprocessed = config["base"] + config["metadata_paths"]["reclustering"] + "/prepared/{dataset}",
-          ensembl_paths = expand(rules.prepare_ensembl.output.ensembl_sign, fraction = fractions)
+          ensembl_sign = expand(rules.prepare_ensembl.output.ensembl_sign, fraction = fractions),
+          ensembl_mark = expand(rules.prepare_ensembl.output.ensembl_mark, fraction = fractions),
+          ensembl_mmms = expand(rules.prepare_ensembl.output.ensembl_mmms, fraction = fractions)
       params:
           reclustering_functions = "../../source/sce_functions_reclustering.R",
           iterations = 2,
@@ -357,21 +363,47 @@ if RUN_PERM_TEST:
       conda:
           "../../envs/reclustering_scores_permutation.yml"
       output:
-          perm_score_df = OUTPUT_DAT + "/05_perm/{dataset}_perm_score_df"
+          perm_score_df_mark = OUTPUT_DAT + "/05_perg/{dataset}_perm_score_df_mark",
+          perm_score_df_mmms = OUTPUT_DAT + "/05_perg/{dataset}_perm_score_df_mmms"
       script: 
-          "scripts/05_permutation_test.R"
+          "scripts/05_permutation_genesets.R"
+
+#-------------------------------------------------------------------------------
+
+if RUN_PERM_BACKGROUND:
+
+  # requires conda channel genomedk
+  rule permutation_background:
+      input:
+          seu_preprocessed = config["base"] + config["metadata_paths"]["reclustering"] + "/prepared/{dataset}",
+          ensembl_paths = expand(rules.prepare_ensembl.output.ensembl_sign, fraction = fractions)
+      params:
+          reclustering_functions = "../../source/sce_functions_reclustering.R",
+          iterations = 100,
+          resolution_df = RESOLUTION_OTHER,
+          #nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
+          nr_cores = 20,
+          cut_off_counts = config["values"]["03_sce_analysis"]["reclustering_cutoff_counts"]       
+      conda:
+          "../../envs/reclustering_scores_permutation.yml"
+      output:
+          perm_score_df = OUTPUT_DAT + "/06_perb/{dataset}_perm_score_df"
+      script: 
+          "scripts/06_permutation_background.R"
 
 
-# visualise reclustering permutation
-rule reclustering_permutation_report:
-    input:
-        seu_list = rules.reclustering_other.output,
-        score_df = rules.reclustering_other_scores.output,
-        resolution_df = RESOLUTION_OTHER
-    output:
-        OUTPUT_REP + "/permutation/reclustering_permutation_report_{dataset}.html"
-    script: 
-        "reclustering_permutation_report.Rmd"
+  # visualise reclustering permutation
+  rule reclustering_permutation_report:
+      input:
+          seu_list = rules.reclustering_other.output,
+          score_df_list = rules.reclustering_other_scores.output,
+          perm_score_df = rules.permutation_background.output
+      params:
+          resolution_df = RESOLUTION_OTHER,
+      output:
+          OUTPUT_REP + "/permutation/reclustering_permutation_report_{dataset}.html"
+      script: 
+          "reclustering_permutation_report.Rmd"
 
 
 #-------------------------------------------------------------------------------

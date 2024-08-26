@@ -9,6 +9,7 @@ set.seed(37)
 library(Seurat, quietly = TRUE)
 library(dplyr, quietly = TRUE)
 library(BiocGenerics, quietly = TRUE)
+library(S4Vectors, quietly = TRUE)
 
 # for using mclapply
 library(parallel, quietly = TRUE)
@@ -133,7 +134,8 @@ print(base::summary(rowSums(seu_preprocessed_sub@assays$RNA$counts)))
 
 #-------------------------------------------------------------------------------
 
-# generate i = iterations random sets of the same length as there are emfs
+# generate i = iterations random sets of the same length as there are signature
+# genes
 # always generate the same random numbers
 set.seed(37)
 base::RNGkind("L'Ecuyer-CMRG")
@@ -159,22 +161,22 @@ print("resl")
 print(resl)
 print("starting iteration")
 
-# res_df_list <- parallel::mclapply(X = as.list(c(1:iterations)),
-#                                   FUN = random_reclustering_scores,
-#                                   seu = seu_preprocessed_sub,
-#                                   assay_use = "RNA",
-#                                   iteration_df = iteration_df,
-#                                   resolution = resl,
-#                                   mc.preschedule = TRUE, 
-#                                   mc.cores = nr_cores,
-#                                   mc.silent = TRUE)
-
-res_df_list <- lapply(X = as.list(c(1:iterations)),
+res_df_list <- parallel::mclapply(X = as.list(c(1:iterations)),
                                   FUN = random_reclustering_scores,
                                   seu = seu_preprocessed_sub,
                                   assay_use = "RNA",
                                   iteration_df = iteration_df,
-                                  resolution = resl)
+                                  resolution = resl,
+                                  mc.preschedule = TRUE,
+                                  mc.cores = nr_cores,
+                                  mc.silent = TRUE)
+
+# res_df_list <- lapply(X = as.list(c(1:iterations)),
+#                                   FUN = random_reclustering_scores,
+#                                   seu = seu_preprocessed_sub,
+#                                   assay_use = "RNA",
+#                                   iteration_df = iteration_df,
+#                                   resolution = resl)
 
 score_df <- dplyr::bind_rows(res_df_list)
 print(head(score_df))

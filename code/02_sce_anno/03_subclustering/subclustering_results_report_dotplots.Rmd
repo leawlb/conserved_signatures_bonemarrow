@@ -525,7 +525,142 @@ if(fraction_curr == "str"){
                                     high = "blue")+
     ggplot2::ggtitle(cell_type)
 }
+knitr::knit_exit()
 ```
+
+### All Genes
+
+Check which genes are highly expressed (on average)
+
+```{r}
+vis_df_allall <- base::as.data.frame(
+  t(SummarizedExperiment::assays(agg)$logcounts[
+    rowSums(SummarizedExperiment::assays(agg)$logcounts) >= 1,]))
+
+vis_df_allall <- rownames_to_column(vis_df_allall, var = "celltype")
+vis_df_allall_long <- pivot_longer(vis_df_allall, c(2:ncol(vis_df_allall)),
+                                   names_to = "gene", values_to = "expression")
+
+vis_df_allall_long_hsc <- vis_df_allall_long[vis_df_allall_long$celltype == "HSCs",]
+vis_df_allall_long_hsc[order(vis_df_allall_long_hsc$expression, decreasing = TRUE),]
+head(vis_df_allall_long)
+
+ggplot(vis_df_allall_long, aes(x = celltype, y = expression))+
+  geom_jitter(size = 0.3)+
+  geom_violin(alpha = 0, color = "grey80")+
+  theme_classic()
+
+vis_df_allall_long$is_true <- vector(length = nrow(vis_df_allall_long))
+
+vis_df_allall_long$is_true[vis_df_allall_long$gene == "Cd34"] <- TRUE
+vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true, decreasing = TRUE),]
+ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
+                               size = is_true, alpha = is_true))+
+  geom_jitter()+
+  scale_size_discrete(range=c(0.3,2))+
+  scale_alpha_discrete(range=c(0.1,1))+
+  geom_violin(alpha = 0, color = "grey80")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))
+
+vis_df_allall_long$is_true <- vector(length = nrow(vis_df_allall_long))
+vis_df_allall_long$is_true[vis_df_allall_long$gene == "Prtn3"] <- TRUE
+vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true, decreasing = TRUE),]
+ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
+                               size = is_true, alpha = is_true))+
+  geom_jitter()+
+  scale_size_discrete(range=c(0.3,2))+
+  scale_alpha_discrete(range=c(0.1,1))+
+  geom_violin(alpha = 0, color = "grey80")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))
+
+
+vis_df_allall_long$is_true <- vector(length = nrow(vis_df_allall_long))
+vis_df_allall_long$is_true[vis_df_allall_long$gene == "Car2"] <- TRUE
+vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true, decreasing = TRUE),]
+ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
+                               size = is_true, alpha = is_true))+
+  geom_jitter()+
+  scale_size_discrete(range=c(0.3,2))+
+  scale_alpha_discrete(range=c(0.1,1))+
+  geom_violin(alpha = 0, color = "grey80")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))
+
+vis_df_allall_long$is_true <- vector(length = nrow(vis_df_allall_long))
+vis_df_allall_long$is_true[vis_df_allall_long$gene == "Myl10"] <- TRUE
+vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true, decreasing = TRUE),]
+ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
+                               size = is_true, alpha = is_true))+
+  geom_jitter()+
+  scale_size_discrete(range=c(0.3,2))+
+  scale_alpha_discrete(range=c(0.1,1))+
+  geom_violin(alpha = 0, color = "grey80")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))
+
+vis_df_allall_long$is_true <- vector(length = nrow(vis_df_allall_long))
+vis_df_allall_long$is_true[vis_df_allall_long$gene == "Mpo"] <- TRUE
+vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true, decreasing = TRUE),]
+ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
+                               size = is_true, alpha = is_true))+
+  geom_jitter()+
+  scale_size_discrete(range=c(0.3,2))+
+  scale_alpha_discrete(range=c(0.1,1))+
+  geom_violin(alpha = 0, color = "grey80")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))
+
+vis_df_allall_long$is_true <- vector(length = nrow(vis_df_allall_long))
+vis_df_allall_long$is_true[vis_df_allall_long$gene == "Hlf"] <- TRUE
+vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true, decreasing = TRUE),]
+ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
+                               size = is_true, alpha = is_true))+
+  geom_jitter()+
+  scale_size_discrete(range=c(0.3,2))+
+  scale_alpha_discrete(range=c(0.1,1))+
+  geom_violin(alpha = 0, color = "grey80")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))
+
+vis_df_allall_long$is_true <- vector(length = nrow(vis_df_allall_long))
+vis_df_allall_long$is_true[vis_df_allall_long$gene == "Lmo2"] <- TRUE
+vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true, decreasing = TRUE),]
+ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
+                               size = is_true, alpha = is_true))+
+  geom_jitter()+
+  scale_size_discrete(range=c(0.3,2))+
+  scale_alpha_discrete(range=c(0.1,1))+
+  geom_violin(alpha = 0, color = "grey80")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))
+
+vis_df_allall_long$is_true <- vector(length = nrow(vis_df_allall_long))
+vis_df_allall_long$is_true[vis_df_allall_long$gene == "Car1"] <- TRUE
+vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true, decreasing = TRUE),]
+ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
+                               size = is_true, alpha = is_true))+
+  geom_jitter()+
+  scale_size_discrete(range=c(0.3,2))+
+  scale_alpha_discrete(range=c(0.1,1))+
+  geom_violin(alpha = 0, color = "grey80")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))
+
+vis_df_allall_long$is_true <- vector(length = nrow(vis_df_allall_long))
+vis_df_allall_long$is_true[vis_df_allall_long$gene == "Car2"] <- TRUE
+vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true, decreasing = TRUE),]
+ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
+                               size = is_true, alpha = is_true))+
+  geom_jitter()+
+  scale_size_discrete(range=c(0.3,2))+
+  scale_alpha_discrete(range=c(0.1,1))+
+  geom_violin(alpha = 0, color = "grey80")+
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 90))
+```
+
 
 ```{r session_info}
 utils::sessionInfo()

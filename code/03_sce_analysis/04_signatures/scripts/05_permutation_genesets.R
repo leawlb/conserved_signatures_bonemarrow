@@ -201,6 +201,7 @@ iteration_df_mark <- base::data.frame(row.names = c(1:nr_random_mark))
 
 for(i in 1:iterations){
   # POSITIONS FROM ORIGINAL SEU_PREPROCESSED subsetted to a smaller list 
+  # basically, subset the vector of pool positions in random positions 
   iteration_df_mark[,i] <- POOL_POSITIONS[base::sample(1:length(gene_pool), 
                                                        nr_random_mark, 
                                                        replace = FALSE)]

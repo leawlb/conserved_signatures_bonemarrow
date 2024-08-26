@@ -29,7 +29,8 @@ dataset_curr <- "li_all_stromal"
 
 score_df_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/04_rcls/score_df_li_all_stromal_list")
 
-perm_score_df <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_perm/li_all_stromal_perm_score_df")
+perm_score_df_mark <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_perg/li_all_stromal_perm_score_df_mark")
+perm_score_df_mmms <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_perg/li_all_stromal_perm_score_df_mmms")
 
 resolution_df_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt"
 
@@ -43,7 +44,8 @@ dataset_curr <- snakemake@wildcards[["dataset"]]
 print(dataset_curr)
 
 # iteration dataframe, containing all scores per iteration
-perm_score_df <- base::readRDS(snakemake@input[["perm_score_df"]])
+perm_score_df_mark <- base::readRDS(snakemake@input[["perm_score_df_mark"]])
+perm_score_df_mmms <- base::readRDS(snakemake@input[["perm_score_df_mmms"]])
 
 # score dataframes, containing the calculated scores per re-clustered dataset
 score_df_list_all <- base::readRDS(snakemake@input[["score_df_list"]])
@@ -64,34 +66,155 @@ resolution_df <- utils::read.csv(file = resolution_df_path,
                                  colClasses = "character")
 
 resolution_df <- resolution_df[resolution_df$dataset == dataset_curr,]
-resl <- resolution_df$resolution[
-  resolution_df$conservation_level == "conserved_signature"]
+resl_mark <- resolution_df$resolution[
+  resolution_df$conservation_level == "conserved_markers"]
+resl_mmms <- resolution_df$resolution[
+  resolution_df$conservation_level == "mmusall_markers"]
 
 # subset
-seu_reclustered <- seu_list_all$seu_sign[[as.character(resl)]]
-score_df <- score_df_list_all$seu_sign[[as.character(resl)]]
+seu_mark <- seu_list_all$seu_mark[[as.character(resl_mark)]]
+seu_mmms <- seu_list_all$seu_mmms[[as.character(resl_mmms)]]
 
-iterations <- nrow(perm_score_df)
+score_df_mark <- score_df_list_all$seu_mark[[as.character(resl_mark)]]
+score_df_mmms <- score_df_list_all$seu_mmms[[as.character(resl_mmms)]]
+
+iterations <- nrow(perm_score_df_mmms)
 ```
 
 ```{r print}
-print(head(score_df))
-print(head(perm_score_df))
-print(seu_reclustered)
+print(head(score_df_mark))
+print(head(score_df_mmms))
+print(head(perm_score_df_mark))
+print(head(perm_score_df_mmms))
 ```
 
-# Histogram
+# Conserved Markers
+
+## Histograms
 
 ```{r perm_plots}
 
-scores <- base::unique(score_df$type)[1:6]
+scores <- base::unique(score_df_mark$type)[1:6]
 
 for(score in scores){
   
   print(score)
   
-  score_df_temp <- score_df[score_df$type == score,]
-  perm_scores <- perm_score_df[,which(colnames(perm_score_df) == score)]
+  score_df_temp <- score_df_mark[score_df_mark$type == score,]
+  perm_scores <- perm_score_df_mark[,which(
+    colnames(perm_score_df_mark) == score)]
+  
+  if(score != "variation_information"){
+    max <- 1
+    pval = length(which(perm_scores > score_df_temp$value))/length(perm_scores)
+    print(pval)
+  
+  }else{
+    max <- base::max(c(score_df_temp$value, perm_scores))
+    # for variation_information score, the smaller, the better
+    pval = length(which(perm_scores < score_df_temp$value))/length(perm_scores)
+  }
+  
+  plot1 <- ggplot2::ggplot(as.data.frame(perm_scores), aes(x = perm_scores))+
+    ggplot2::geom_histogram(binwidth = 0.02)+
+    ggplot2::geom_vline(xintercept = score_df_temp$value, color = "darkgreen")+
+    ggplot2::theme_classic()+
+    ggplot2::xlim(c(0, max))+
+    ggplot2::ggtitle(base::paste(score, 
+                                 dataset_curr, 
+                                 iterations,
+                                 "iterations"))+
+    annotate("text", 
+             x = 0.8,
+             y = 0.8, 
+             label = base::paste0("pval = ", as.character(pval)))
+  print(plot1)
+}
+```
+
+## In two plots
+
+All scores between 0 and 1
+
+```{r all1, fig.width = 2, fig.height = 4}
+
+score_df_temp <- score_df_mark[!score_df_mark$type %in% c(
+  "nr_celltypes",
+  "nr_clusters",
+  "variation_information"),]
+score_df_temp <- score_df_temp[
+  score_df_temp$conservation_level == "conserved_markers",]
+
+perm_score_df_temp <- pivot_longer(perm_score_df_mark,
+                                   c = 1:ncol(perm_score_df_mark),
+                                   values_to = "value",
+                                   names_to = "type")
+perm_score_df_temp <- perm_score_df_temp[!perm_score_df_temp$type %in% c(
+  "nr_celltypes",
+  "nr_clusters",
+  "variation_information",
+  "iteration"),]
+
+ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
+  ggplot2::geom_violin(data = perm_score_df_temp,
+                       scale = "width",
+                       position = position_nudge(x = 0.2, y = 0))+
+  ggplot2::geom_point(color = "darkgreen", 
+                      size = 2,
+                      position = position_nudge(x = -0.2, y = 0))+
+  ggplot2::ylim(c(0,1))+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle(base::paste(dataset_curr, 
+                               "\n" ,
+                               iterations,
+                               "iterations"))
+```
+
+```{r all2, fig.width = 1.2, fig.height = 4}
+
+score_df_temp <- score_df_mark[score_df_mark$type %in% c("variation_information"),]
+score_df_temp <- score_df_temp[
+  score_df_temp$conservation_level == "conserved_markers",]
+
+perm_score_df_temp <- pivot_longer(perm_score_df_mark, 
+                                   c = 1:ncol(perm_score_df_mark),
+                                   values_to = "value",
+                                   names_to = "type")
+perm_score_df_temp <- perm_score_df_temp[
+  perm_score_df_temp$type %in% c("variation_information"),]
+
+ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
+  ggplot2::geom_violin(data = perm_score_df_temp,
+                       scale = "width", 
+                       position = position_nudge(x = 0.2, y = 0))+
+  ggplot2::geom_point(color = "darkgreen", 
+                      size = 2,
+                      position = position_nudge(x = -0.2, y = 0))+
+  ggplot2::ylim(c(0, base::max(perm_score_df_temp$value)))+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle(base::paste(dataset_curr,
+                               "\n",
+                               iterations,
+                               "iterations"))
+```
+
+# All BL6 Markers
+
+## Histograms
+
+```{r perm_plots}
+
+scores <- base::unique(score_df_mmms$type)[1:6]
+
+for(score in scores){
+  
+  print(score)
+  
+  score_df_temp <- score_df_mmms[score_df_mmms$type == score,]
+  perm_scores <- perm_score_df_mmms[,which(
+    colnames(perm_score_df_mmms) == score)]
   
   if(score != "variation_information"){
     max <- 1
@@ -121,22 +244,21 @@ for(score in scores){
 }
 ```
 
-# In two plots
+## In two plots
 
 All scores between 0 and 1
 
 ```{r all1, fig.width = 2, fig.height = 4}
 
-score_df_temp <- score_df[!score_df$type %in% c(
+score_df_temp <- score_df_mmms[!score_df_mmms$type %in% c(
   "nr_celltypes",
   "nr_clusters",
-  "variation_information",
-  "mean_prop_cells/cluster"),]
+  "variation_information"),]
 score_df_temp <- score_df_temp[
-  score_df_temp$conservation_level == "conserved_signature",]
+  score_df_temp$conservation_level == "mmusall_markers",]
 
-perm_score_df_temp <- pivot_longer(perm_score_df,
-                                   c = 1:ncol(perm_score_df),
+perm_score_df_temp <- pivot_longer(perm_score_df_mmms,
+                                   c = 1:ncol(perm_score_df_mmms),
                                    values_to = "value",
                                    names_to = "type")
 perm_score_df_temp <- perm_score_df_temp[!perm_score_df_temp$type %in% c(
@@ -149,7 +271,7 @@ ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::geom_violin(data = perm_score_df_temp,
                        scale = "width",
                        position = position_nudge(x = 0.2, y = 0))+
-  ggplot2::geom_point(color = "yellowgreen", 
+  ggplot2::geom_point(color = "blue3", 
                       size = 2,
                       position = position_nudge(x = -0.2, y = 0))+
   ggplot2::ylim(c(0,1))+
@@ -163,12 +285,12 @@ ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
 
 ```{r all2, fig.width = 1.2, fig.height = 4}
 
-score_df_temp <- score_df[score_df$type %in% c("variation_information"),]
+score_df_temp <- score_df_mmms[score_df_mmms$type %in% c("variation_information"),]
 score_df_temp <- score_df_temp[
-  score_df_temp$conservation_level == "conserved_signature",]
+  score_df_temp$conservation_level == "mmusall_markers",]
 
-perm_score_df_temp <- pivot_longer(perm_score_df, 
-                                   c = 1:ncol(perm_score_df),
+perm_score_df_temp <- pivot_longer(perm_score_df_mmms, 
+                                   c = 1:ncol(perm_score_df_mmms),
                                    values_to = "value",
                                    names_to = "type")
 perm_score_df_temp <- perm_score_df_temp[
@@ -178,7 +300,7 @@ ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::geom_violin(data = perm_score_df_temp,
                        scale = "width", 
                        position = position_nudge(x = 0.2, y = 0))+
-  ggplot2::geom_point(color = "yellowgreen", 
+  ggplot2::geom_point(color = "blue3", 
                       size = 2,
                       position = position_nudge(x = -0.2, y = 0))+
   ggplot2::ylim(c(0, base::max(perm_score_df_temp$value)))+

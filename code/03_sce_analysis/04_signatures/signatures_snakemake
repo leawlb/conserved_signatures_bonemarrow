@@ -1,5 +1,12 @@
 snakemake --cluster "bsub -q medium -n10 -R rusage[mem=120GB]" -p -j20 -c10 -s signatures_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda  -n
 
+# for permutation genesets
+snakemake --cluster "bsub -q medium -n20 -R rusage[mem=100GB]" -p -j10 -c20 -s signatures_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda --config run_permutation_genesets=True -n
+
+# for testing permutation background
+snakemake --cluster "bsub -q medium -n5 -R rusage[mem=50GB]" -p -j10 -c5 -s signatures_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda --config run_permutation_genesets=True -n
+ 
+ 
 # for permutation background
 snakemake --cluster "bsub -q medium -n20 -R rusage[mem=100GB]" -p -j10 -c20 -s signatures_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda --config run_permutation_background=True -n
 

@@ -24,6 +24,8 @@ score_df_list_all <- lapply(seu_list_all, function(seu_list){
   
   score_df_list <- lapply(seu_list, function(seu){
     
+    print(seu@misc$used_genes)
+    print(seu@misc$resolution)
     score_df <- calculate_scores_long(seu) # own function
     
     # add specific info

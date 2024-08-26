@@ -16,15 +16,22 @@ standard_seu_pipeline <- function(resolution,
   assay_use <- assay_use # assay to use as basis for clustering
   calc_umap <- calc_umap # whether umap coordinates should be calculated
   
+  print(resolution)
+  print("......starting Seurat pipeline")
+  
   # NormalizeData normalizes "count data"
   seu <- Seurat::NormalizeData(
     seu,
     assay = assay_use, 
     verbose = FALSE)
   
+  print("NormalizeData")
+  
   seu <- Seurat::ScaleData(
     seu, 
     verbose = FALSE)
+ 
+  print("ScaleData")
   
   seu <- Seurat::RunPCA(
     seu,
@@ -32,22 +39,29 @@ standard_seu_pipeline <- function(resolution,
     verbose = FALSE, 
     features = features)
   
+  print("RunPCA")
+  
   if(ncol(seu@reductions$pca) == 30){
     nr_pca <- 30
   }else if(ncol(seu@reductions$pca) < 30){
     nr_pca <- ncol(seu@reductions$pca)
     print(base::paste("changed nr of pcr to maximum", nr_pca, "PCs"))
   }
+  print(nr_pca)
   
   seu <- Seurat::FindNeighbors(
     seu, 
     dims = 1:nr_pca, 
     verbose = FALSE)
   
+  print("FindNeighbors")
+  
   seu <- Seurat::FindClusters(
     seu, 
-    resolution = resolution, 
+    resolution = as.numeric(resolution), 
     verbose = FALSE) 
+  
+  print("FindClusters")
   
   if(calc_umap == TRUE){
     seu <- Seurat::RunUMAP(
@@ -56,6 +70,7 @@ standard_seu_pipeline <- function(resolution,
       verbose = FALSE)
   }
   
+  print(".....finished Seurat pipeline")
   seu@misc$resolution <- resolution
   
   return(seu)
@@ -64,58 +79,12 @@ standard_seu_pipeline <- function(resolution,
 #-----------------------------------------------------------------------------
 
 
-
-#-----------------------------------------------------------------------------
-# function for calculating reclustering "scores"
-
-calculate_scores <- function(seu){
-  
-  seu <- seu 
-  # seurat objects with clusters in "seurat_clusters" slot and
-  # cell type or identity to compare in "cell_type" slot
-  
-  # make a comparison matrix, then split into cells/celltype and cells/cluster
-  mat <- base::table(seu$cell_type, seu$seurat_clusters)
-  mat_per_celltype <- mat/rowSums(mat)
-  t_mat <- t(mat)
-  mat_per_cluster <- t(t_mat/rowSums(t_mat)) # keep format/orientation
-  
-  #-----------------------------------------------------------------------------
-  # score 1: proportions of 0
-  
-  # extract which nr is higher; nr of clusters or number of cell types  
-  if(nrow(mat) >= ncol(mat)){
-    max_nr <- nrow(mat)
-  }else if(nrow(mat) < ncol(mat)){
-    max_nr <- ncol(mat)
-  }
-  
-  # get the proportion of fields that are 0 from the max possible nr of fields
-  # that can be 0 in a theoretical perfect re-clustering. 
-  # That "max possible nr" is equivalent to all fields - max_nr
-  
-  score_1 <- length(which(mat == 0))/(ncol(mat)*nrow(mat)-max_nr)
-  
-  #-----------------------------------------------------------------------------
-  # score 2: mean proportion of cells/cell type and cells/cluster
-  
-  # for each field
-  mat_mean_prop <- (mat_per_celltype+mat_per_cluster)/2
-  
-  # average across all fields
-  non_zeros <- mat_mean_prop[which(mat_mean_prop > 0)]
-  score_2 <- sum(non_zeros)/length(non_zeros)
-  
-  return(
-    data.frame(
-      "score_1" = score_1,
-      "score_2" = score_2))
-}  
-
 #-----------------------------------------------------------------------------
 
+# calculate chosen scores for evaluating reclustering
 
 calculate_scores_long <- function(
+    
     seu = NULL, 
     cluster_vector1 = NULL,
     cluster_vector2 = NULL,
@@ -154,18 +123,24 @@ calculate_scores_long <- function(
   # score 1: proportions of 0
   
   # extract which nr is higher; nr of clusters or number of cell types  
-  if(nrow(mat) >= ncol(mat)){
-    max_nr <- nrow(mat)
-  }else if(nrow(mat) < ncol(mat)){
-    max_nr <- ncol(mat)
-  }
+  if(nr_clusters == 1){
+    score_1 <- 0
+  }else if(nr_clusters > 1){
+    if(nrow(mat) >= ncol(mat)){
+      max_nr <- nrow(mat)
+    }else if(nrow(mat) < ncol(mat)){
+      max_nr <- ncol(mat)
+    }
   
   # get the proportion of fields that are 0 from the max possible nr of fields
   # that can be 0 in a theoretical perfect re-clustering. 
   # That "max possible nr" is equivalent to all fields - max_nr
   
-  score_1 <- length(which(mat == 0))/(ncol(mat)*nrow(mat)-max_nr)
-  stopifnot(score_1 <= 1)
+    score_1 <- length(which(mat == 0))/(ncol(mat)*nrow(mat)-max_nr)
+    stopifnot(score_1 <= 1)
+  }
+  
+  print("score_1")
   
   #-----------------------------------------------------------------------------
   #-----------------------------------------------------------------------------
@@ -176,6 +151,8 @@ calculate_scores_long <- function(
   
   score_2 <- per_cluster_mean
 
+  print("score_2")
+  
   #-----------------------------------------------------------------------------
   #-----------------------------------------------------------------------------
   # score 3: mean purity of new clusters
@@ -184,6 +161,8 @@ calculate_scores_long <- function(
                                       clusters = cluster_vector2, 
                                       k = 50)
   score_3 <- base::mean(res_recl$purity)
+  
+  print("score_3")
   
   #-----------------------------------------------------------------------------
   #-----------------------------------------------------------------------------
@@ -199,6 +178,8 @@ calculate_scores_long <- function(
   score_6 <- mcclust::vi.dist(unfactor(cluster_vector1),
                               unfactor(cluster_vector2))
 
+  print("score_4 to score_6")
+  
   #-----------------------------------------------------------------------------
   #-----------------------------------------------------------------------------
   
@@ -267,20 +248,23 @@ random_reclustering_scores <- function(iteration,
   iteration_vector <- iteration_df[,iteration]
   #print(iteration_vector[1:10])
   
-  seu_sub <- SeuratObject::subset(
+  seu_sub <- BiocGenerics::subset(
     seu,
     features = SeuratObject::Features(seu)[iteration_vector], 
     slot = "count")
   print(nrow(seu_sub))
   print(nrow(iteration_df))
   
+  print("starting standard_seu_pipeline function")
   # re-cluster seurat object from raw counts, using basic seurat pipeline
   seu_rec <- standard_seu_pipeline(
     seu = seu_sub, 
     features = SeuratObject::Features(seu_sub), 
     resolution = resolution,
-    assay_use = assay_use)
-  
+    assay_use = assay_use,
+    calc_umap = FALSE)
+
+  print("starting calculate_scores_long function")
   # calculate re-clustering scores as defined above
   res_df <- calculate_scores_long(seu_rec, for_permutation = TRUE)
   res_df$iteration[1] <- iteration

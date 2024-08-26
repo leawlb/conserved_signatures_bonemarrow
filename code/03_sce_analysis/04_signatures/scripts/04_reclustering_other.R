@@ -96,7 +96,11 @@ print(base::table(base::duplicated(
 non_zero_features <- rownames(seu@assays$RNA)[
   BiocGenerics::rowSums(seu@assays$RNA) > cut_off_counts]
 
+
 # get the same nr of random non-0 genes as there are conserved signature genes
+# always generate the same random numbers
+set.seed(37)
+base::RNGkind("L'Ecuyer-CMRG")
 random_features <- non_zero_features[
   base::sample(1:length(non_zero_features), 
                length(conserved_signature_IDs),

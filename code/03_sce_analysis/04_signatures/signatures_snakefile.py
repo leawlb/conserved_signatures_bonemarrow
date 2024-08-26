@@ -66,8 +66,8 @@ for d in datasets_other:
   #targets = targets + [OUTPUT_REP + "/reclustering_scores/test_reclustering_scores_" + d + ".html"]
 
   # permutation
-  #if RUN_PERM_TEST:
-    #targets = targets + [OUTPUT_DAT + "/05_perm/" + d + "_perm_score_df"]
+  if RUN_PERM_TEST:
+    targets = targets + [OUTPUT_DAT + "/05_perm/" + d + "_perm_score_df"]
     #targets = targets + [OUTPUT_REP + "/reclustering_permutation_report_" + r + ".html"]
 
  
@@ -346,15 +346,16 @@ if RUN_PERM_TEST:
   rule permutation_test:
       input:
           seu_preprocessed = config["base"] + config["metadata_paths"]["reclustering"] + "/prepared/{dataset}",
-          ensembl_sign = expand(rules.prepare_ensembl.output.ensembl_sign, fraction = fractions)
+          ensembl_paths = expand(rules.prepare_ensembl.output.ensembl_sign, fraction = fractions)
       params:
           reclustering_functions = "../../source/sce_functions_reclustering.R",
           iterations = 2,
           resolution_df = RESOLUTION_OTHER,
-          nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
+          #nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
+          nr_cores = 2,
           cut_off_counts = config["values"]["03_sce_analysis"]["reclustering_cutoff_counts"]       
       conda:
-          "../../envs/reclustering_permutation.yml"
+          "../../envs/reclustering_scores_permutation.yml"
       output:
           perm_score_df = OUTPUT_DAT + "/05_perm/{dataset}_perm_score_df"
       script: 

@@ -4,15 +4,24 @@
 
 #-------------------------------------------------------------------------------
 set.seed(37)
+# base::RNGkind("L'Ecuyer-CMRG") is downstream
 
 library(Seurat, quietly = TRUE)
-library(parallel, quietly = TRUE)
 library(dplyr, quietly = TRUE)
+library(BiocGenerics, quietly = TRUE)
 
-set.seed(37)
-base::RNGkind("L'Ecuyer-CMRG") # for mclapply, generation of same random numbers
+# for using mclapply
+library(parallel, quietly = TRUE)
+
+# for calculating scores
+library(mclust, quietly = TRUE)
+library(mcclust, quietly = TRUE)
+library(bluster, quietly = TRUE)
+library(dendextend, quietly = TRUE)
+#library(S4Vectors, quietly = TRUE)
 
 source(snakemake@params[["reclustering_functions"]])
+#source("repositories/Interspecies_BM_phd/code/source/sce_functions_reclustering.R")
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -91,6 +100,9 @@ resl <- resolution_df$resolution[
 # extract conserved signature gene set, keep only genes that are also in the 
 # Seurat Object 
 ensembl_column_use <- seu_preprocessed@misc$ensembl_column_use
+print(dataset_curr)
+print("ensembl_column_use")
+print(ensembl_column_use)
 
 conserved_signature_IDs <- base::unique(
   ensembl_df[,which(colnames(ensembl_df) == ensembl_column_use)])
@@ -100,8 +112,8 @@ conserved_signature_IDs <- conserved_signature_IDs[
 # get the number of conserved signature genes, the same number of random genes 
 # will be used for the permutation test
 nr_recl_genes <- length(conserved_signature_IDs)
+print("nr_recl_genes")
 print(nr_recl_genes)
-print(dataset_curr)
 
 #-------------------------------------------------------------------------------
 
@@ -113,7 +125,7 @@ gene_pool <- rownames(seu_preprocessed)[
 print(length(gene_pool))
 
 # subset seurat object to these genes as the other genes won't be used
-seu_preprocessed_sub <- SeuratObject::subset(seu_preprocessed,
+seu_preprocessed_sub <- BiocGenerics::subset(seu_preprocessed,
                                              features = gene_pool,
                                              slot = "count")
 print(dim(seu_preprocessed_sub))
@@ -134,31 +146,35 @@ for(i in 1:iterations){
                                    replace = FALSE)
   colnames(iteration_df)[i] <- i
 }
-print(iteration_df[1:10,1:3])
+print(iteration_df[1:10,1:2])
 
 #-------------------------------------------------------------------------------
-# run standard seurat re-clustering pipeline (own function)
+# run standard seurat re-clustering pipeline (own function) i times
 
+print("nr_cores")
 print(nr_cores)
+print("cut_off_counts")
 print(cut_off_counts)
+print("resl")
 print(resl)
+print("starting iteration")
 
-res_df_list <- parallel::mclapply(X = as.list(c(1:iterations)),
-                                  FUN = random_reclustering_scores,
-                                  seu = seu_preprocessed_sub,
-                                  assay_use = "RNA",
-                                  iteration_df = iteration_df,
-                                  resolution = resl,
-                                  mc.preschedule = TRUE, 
-                                  mc.cores = nr_cores,
-                                  mc.silent = TRUE)
-
-# res_df_list <- lapply(X = as.list(c(1:iterations)),
+# res_df_list <- parallel::mclapply(X = as.list(c(1:iterations)),
 #                                   FUN = random_reclustering_scores,
 #                                   seu = seu_preprocessed_sub,
 #                                   assay_use = "RNA",
 #                                   iteration_df = iteration_df,
-#                                   resolution = resolution)
+#                                   resolution = resl,
+#                                   mc.preschedule = TRUE, 
+#                                   mc.cores = nr_cores,
+#                                   mc.silent = TRUE)
+
+res_df_list <- lapply(X = as.list(c(1:iterations)),
+                                  FUN = random_reclustering_scores,
+                                  seu = seu_preprocessed_sub,
+                                  assay_use = "RNA",
+                                  iteration_df = iteration_df,
+                                  resolution = resl)
 
 score_df <- dplyr::bind_rows(res_df_list)
 print(head(score_df))

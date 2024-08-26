@@ -68,9 +68,9 @@ for d in datasets_other:
   # permutation
   if RUN_PERM_TEST:
     targets = targets + [OUTPUT_DAT + "/05_perm/" + d + "_perm_score_df"]
-    #targets = targets + [OUTPUT_REP + "/reclustering_permutation_report_" + r + ".html"]
+    targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_permutation_report_" + d + ".html"]
 
- 
+
 #-------------------------------------------------------------------------------
 
 localrules: all  
@@ -86,8 +86,7 @@ rule all:
 # EXTRACT SIGNATURES
 # 
 # Get conserved signatures = 
-# genes that are conserved marker genes provided by Veronica Busa and that
-# are also non-differentially expressed
+# genes that are conserved marker genes that are non-differentially expressed
 """
 
 # export list of data on marker genes, conserved signatures, and nDGEs
@@ -131,15 +130,18 @@ rule signature_summary:
 # Using our own datasets + from other species (human, zebrafish, naked mole rat)
 # with:
 #
-# - conserved marker genes
-# - nDGEs
 # - conserved signatures
-# - all BL6 marker genes
+# - conserved marker genes
+# - all BL6 marker genes 
+# - nDGEs (own datasets only)
+# - random genes (other datasets only)
+# - all conserved markers - random genes (other datasets only)
+# - all BL6 markers - random genes (other datasets only)
 #
-# Additionally, permutation tests are performed using random gene sets of the 
-# same number of genes for reclustering for the three other species
+# Additionally, permutation tests are performed.
 """
 
+#-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 # prepare ensembl conversion tables for each gene set to be tested
 # ensembl datasets are downloaded in prepare_datasets_snakefile.py
@@ -160,12 +162,13 @@ rule prepare_ensembl:
         "scripts/02_prepare_ensembl.R"
       
 #-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
 """
 # RE-CLUSTERING OUR DATA
 #
-# Data will be reclustered exactly as the original dataset with 2000 HVGs 
-# was clustered, based on batch-corrected PC coordinates.
+# Data will be reclustered exactly as the original dataset (2000 HVGs,
+# batch-corrected PC coordinates).
 # Here, SCE object are subsetted to each gene set, PCA is performed again using
 # non-batch corrected values, then clustering is performed at identical
 # resolution and k = number of neighbors using the original functions
@@ -184,6 +187,7 @@ rule reclustering_own:
     script:
         "scripts/03_reclustering_own.R"
 
+#-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
 """
@@ -245,9 +249,9 @@ rule test_reclustering_scores:
         "test_reclustering_scores.Rmd"
         
 #-------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------
+
 """
-# REPORTS
+# REPORT OWN DATASET SCORES
 """
 
 # get the reclustering scores for our own re-clustered datasets
@@ -280,6 +284,10 @@ rule reclustering_own_report:
 
 #-------------------------------------------------------------------------------  
 
+"""
+# REPORT OTHER DATASET SCORES
+"""
+
 # get the reclustering scores for re-clustered datasets from other species
 rule reclustering_other_scores:
     input:
@@ -298,48 +306,40 @@ rule reclustering_other_report:
     input:
         seu_list = rules.reclustering_other.output,
         score_df_list = rules.reclustering_other_scores.output
-    #params:
-        #colors_path = COLORS,
-        #colors = "../../source/colors.R"
     output:
         OUTPUT_REP + "/reclustering_other/reclustering_other_report_{dataset}.html"
     script: 
         "reclustering_other_report.Rmd"
 
-# visualise one chosen re-clustering of other datasets with the best combination
-# of scores
-# for random features, always the same resolution as the conserved signature, 
-# because each random set of genes (later for permutation) might have a dif-
-# ferent optimal resolution. So choosing the same as the conserved signature
-# is the easiest option
-rule reclustering_other_report_selected:
-    input:
-        seu_list = rules.reclustering_other.output,
-        score_df_list = rules.reclustering_other_scores.output,
-        resolution_df = RESOLUTION_OTHER
-    #params:
-        #colors_path = COLORS,
-        #colors = "../../source/colors.R"
-    output:
-        OUTPUT_REP + "/reclustering_other/reclustering_other_selected_report_{dataset}.html"
-    script: 
-        "reclustering_other_report_selected.Rmd"
-
-
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
-"""
-# PERMUTATION TEST
-
-# Do permutation tests to see if using conserved signature gene sets is 
-# significantly better than using the same number of random genes (as
-# background).
-# re-cluster seurat objects with random genes n = iteration times and compare
-# the re-clustering scores of the original seu-object to the normal distribu-
-# tion of the permuted scores.
 
 """
+# PERMUTATION TESTS
+
+# 1. Do other gene sets perform better than conserved signature genes?
+#    Or is it just the larger number of genes?
+# Permutation tests to compare:
+# - conserved marker genes
+# - all BL6 marker genes
+# to gene sets comprised of conserved signature genes + x random genes 
+
+# 2. Do conserved signature genes perform significantly better than random?
+# Permutation tests to compare:
+# - conserved signature genes
+# to gene sets comprised of x random genes 
+
+# Re-cluster seurat objects with random genes n = iteration times and compare
+# the re-clustering scores of the original seurat object to the normal 
+# distribution of the permuted scores.
+
+# For permutation, the same resolution as the original gene set is chosen, 
+# because each random set of genes might have a different optimal resolution. 
+
+"""
+#-------------------------------------------------------------------------------
+
 if RUN_PERM_TEST:
 
   # requires conda channel genomedk
@@ -361,35 +361,42 @@ if RUN_PERM_TEST:
       script: 
           "scripts/05_permutation_test.R"
 
-"""
 
 # visualise reclustering permutation
 rule reclustering_permutation_report:
     input:
-        seu_list = OUTPUT_DAT + "/04_rcls/reclustered_{reference}_list",
-        score_df = rules.permutation_test.output.perm_score_df
-    params:
-        plotting = "../../source/plotting.R",
-        resolution = resolution_list
+        seu_list = rules.reclustering_other.output,
+        score_df = rules.reclustering_other_scores.output,
+        resolution_df = RESOLUTION_OTHER
     output:
-        OUTPUT_REP + "/reclustering_permutation_report_{reference}.html"
+        OUTPUT_REP + "/permutation/reclustering_permutation_report_{dataset}.html"
     script: 
         "reclustering_permutation_report.Rmd"
-"""
+
+
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
 """
-# evaluate cluster silhuoette and purity of all re-clustering
-rule reclustering_hum_eval:
-    input:
-        seu_list = OUTPUT_DAT + "/04_rcls/reclustered_{reference}_list"
-    params:
-        colors_path = COLORS,
-        functions = "../../source/sce_functions.R",
-        plotting = "../../source/plotting.R",
-        colors = "../../source/colors.R"
-    output:
-        OUTPUT_REP + "/reclustering_hum_eval_{reference}.html"
-    script: 
-        "reclustering_hum_eval.Rmd"
+FINAL REPORTS
+
+# visualise one chosen re-clustering of other datasets with the best combination
+# of scores
+# for random features, always the same resolution as the conserved signature, 
+# because each random set of genes (later for permutation) might have a dif-
+# ferent optimal resolution. So choosing the same as the conserved signature
+# is the easiest option
+
 """
+
+rule reclustering_other_report_selected:
+    input:
+        seu_list = rules.reclustering_other.output,
+        score_df_list = rules.reclustering_other_scores.output,
+        resolution_df = RESOLUTION_OTHER
+    output:
+        OUTPUT_REP + "/reclustering_other/reclustering_other_selected_report_{dataset}.html"
+    script: 
+        "reclustering_other_report_selected.Rmd"
 

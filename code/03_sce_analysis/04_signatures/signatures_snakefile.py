@@ -370,12 +370,16 @@ if RUN_PERM_GENESETS:
           "scripts/05_permutation_genesets.R"
 
   # visualise reclustering permutation
-  rule reclustering_permutation_report:
+  rule permutation_genesets_report:
       input:
-          seu_list = rules.reclustering_other.output,
+          #seu_list = rules.reclustering_other.output,
           score_df_list = rules.reclustering_other_scores.output,
+          seu_preprocessed = config["base"] + config["metadata_paths"]["reclustering"] + "/prepared/{dataset}",
           perm_score_df_mark = rules.permutation_genesets.output.perm_score_df_mark,
-          perm_score_df_mmms = rules.permutation_genesets.output.perm_score_df_mmms
+          perm_score_df_mmms = rules.permutation_genesets.output.perm_score_df_mmms,
+          ensembl_sign = expand(rules.prepare_ensembl.output.ensembl_sign, fraction = fractions),
+          ensembl_mark = expand(rules.prepare_ensembl.output.ensembl_mark, fraction = fractions),
+          ensembl_mmms = expand(rules.prepare_ensembl.output.ensembl_mmms, fraction = fractions)
       params:
           resolution_df = RESOLUTION_OTHER,
       output:
@@ -408,7 +412,7 @@ if RUN_PERM_BACKGROUND:
 
 
   # visualise reclustering permutation
-  rule reclustering_permutation_report:
+  rule permutation_background_report:
       input:
           seu_list = rules.reclustering_other.output,
           score_df_list = rules.reclustering_other_scores.output,

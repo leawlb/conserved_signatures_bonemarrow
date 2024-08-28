@@ -5,7 +5,7 @@ date: '2024-05-08'
 output: html_document
 ---
 
-Plotting the reclustered values for overview/quality assurance
+Plotting the reclustered values for overview/quality assurance.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -35,11 +35,33 @@ resolution_df_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadat
 
 ```
 
+```{r manualscript, include = FALSE, eval = FALSE}
+cut_off_counts <- 5
+nr_cores <- 1 
+iterations <- 2
+
+source("../../source/sce_functions_reclustering.R")
+
+dataset_curr <- "li_all_stromal"
+cons_level_use <- "conserved_markers"
+
+seu_preprocessed <- base::readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/li_all_stromal")
+
+# sign
+ensembl_paths <- c("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_endf/ensembl_sign_str")
+
+# mark
+ensembl_paths <- c("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_endf/ensembl_mark_str")
+
+resolution_df_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt"
+
+```
 
 ```{r load_objects}
 
 # current dataset
 dataset_curr <- snakemake@wildcards[["dataset"]] 
+cons_level_use <- snakemake@wildcards[["cons_level_use"]] 
 print(dataset_curr)
 
 # iteration dataframe, containing all scores per iteration
@@ -74,6 +96,19 @@ score_df <- score_df_list_all$seu_sign[[as.character(resl)]]
 iterations <- nrow(perm_score_df)
 ```
 
+```{r colors}
+
+# put in colors.txt once color scheme a little more finalized
+col_vec_cons <- c(
+    "conserved_signature" = "yellowgreen",
+    "conserved_markers" = "darkgreen",
+    "mmusall_markers" = "blue2",
+    "random_features" = "purple2")
+
+col_show <- col_vec_cons[names(col_vec_cons) == cons_level_use]
+print(col_show)
+```
+
 ```{r print}
 print(head(score_df))
 print(head(perm_score_df))
@@ -106,7 +141,7 @@ for(score in scores){
   
   plot1 <- ggplot2::ggplot(as.data.frame(perm_scores), aes(x = perm_scores))+
     ggplot2::geom_histogram(binwidth = 0.02)+
-    ggplot2::geom_vline(xintercept = score_df_temp$value, color = "blue")+
+    ggplot2::geom_vline(xintercept = score_df_temp$value, color = col_show)+
     ggplot2::theme_classic()+
     ggplot2::xlim(c(0, max))+
     ggplot2::ggtitle(base::paste(score, 
@@ -148,7 +183,7 @@ ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::geom_violin(data = perm_score_df_temp,
                        scale = "width",
                        position = position_nudge(x = 0.2, y = 0))+
-  ggplot2::geom_point(color = "yellowgreen", 
+  ggplot2::geom_point(color = col_show, 
                       size = 2,
                       position = position_nudge(x = -0.2, y = 0))+
   ggplot2::ylim(c(0,1))+
@@ -177,7 +212,7 @@ ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::geom_violin(data = perm_score_df_temp,
                        scale = "width", 
                        position = position_nudge(x = 0.2, y = 0))+
-  ggplot2::geom_point(color = "yellowgreen", 
+  ggplot2::geom_point(color = col_show, 
                       size = 2,
                       position = position_nudge(x = -0.2, y = 0))+
   ggplot2::ylim(c(0, base::max(perm_score_df_temp$value)))+
@@ -221,7 +256,8 @@ ggplot(score_df_temp, aes(x = type, y = value))+
   geom_half_boxplot(data = perm_score_df_temp, 
                     side = "r", 
                     position = position_nudge(x = 0.2, y = 0))+
-  geom_point(color = "yellowgreen", size = 2,
+  geom_point(color = col_show, 
+             size = 2,
              position = position_nudge(x = -0.2, y = 0))+
   ylim(c(0,1))+
   theme_classic()+
@@ -242,7 +278,7 @@ perm_score_df_temp <- perm_score_df_temp[perm_score_df_temp$type %in% c("variati
 ggplot(score_df_temp, aes(x = type, y = value))+
   geom_half_violin(data = perm_score_df_temp, side = "l", scale = "width", position = position_nudge(x = 0.2, y = 0))+
   geom_half_boxplot(data = perm_score_df_temp, side = "r", position = position_nudge(x = 0.2, y = 0))+
-  geom_point(color = "yellowgreen", size = 3, alpha = 0.7, position = position_nudge(x = -0.2, y = 0))+
+  geom_point(color = col_show, size = 3, alpha = 0.7, position = position_nudge(x = -0.2, y = 0))+
   ylim(c(0,max(perm_score_df_temp$value)))+
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))

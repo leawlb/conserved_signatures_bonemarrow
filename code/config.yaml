@@ -109,4 +109,5 @@ run_marker_reports: False
 ran_li_ipynb: False
 recluster_other: False
 run_permutation_genesets: False
-run_permutation_background: False
+run_permutation_background_sign: False
+run_permutation_background_mark: False

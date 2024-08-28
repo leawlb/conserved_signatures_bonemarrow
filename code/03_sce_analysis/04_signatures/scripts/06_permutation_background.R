@@ -19,10 +19,8 @@ library(mclust, quietly = TRUE)
 library(mcclust, quietly = TRUE)
 library(bluster, quietly = TRUE)
 library(dendextend, quietly = TRUE)
-#library(S4Vectors, quietly = TRUE)
 
 source(snakemake@params[["reclustering_functions"]])
-#source("repositories/Interspecies_BM_phd/code/source/sce_functions_reclustering.R")
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -30,20 +28,17 @@ source(snakemake@params[["reclustering_functions"]])
 
 # params for re-clustering and permutation test
 
-# cut_off_counts <- 5
-# nr_cores <- 1
-# iterations <- 2
-
 cut_off_counts <- snakemake@params[["cut_off_counts"]]
 nr_cores <- snakemake@params[["nr_cores"]]
 iterations <- snakemake@params[["iterations"]]
+
+# which conservation level to use
+cons_level_use <- snakemake@params[["cons_level_use"]]
 
 #-------------------------------------------------------------------------------
 
 # decide which gene sets to use for the current dataset (based on fraction)
 dataset_curr <- snakemake@wildcards[["dataset"]]
-
-# dataset_curr <- "li_all_stromal"
 
 if(dataset_curr %in% c("ts_all_stromal", "li_all_stromal")){
   fraction_curr <- "str"
@@ -59,14 +54,11 @@ if(dataset_curr %in% c("ts_all_stromal", "li_all_stromal")){
 # load the seurat object/dataset to be tested
 seu_preprocessed <- base::readRDS(snakemake@input[["seu_preprocessed"]])
 
-#seu_preprocessed <- base::readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/li_all_stromal")
-
 #-------------------------------------------------------------------------------
 
 # load ensembl IDs of specific gene set to be tested from correct fraction
 # this can be signature genes or all BL6 marker genes
 ensembl_paths <- snakemake@input[["ensembl_paths"]]
-#ensembl_paths <- c("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_endf/ensembl_sign_str")
 print(ensembl_paths)
 
 # this is the correct one for conserved_signature_genes
@@ -79,7 +71,6 @@ print(head(ensembl_df))
 # load the datafram which contains info on which resolution to use for
 # re-clustering
 resolution_df_path <- snakemake@params[["resolution_df"]] 
-#resolution_df_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt"
 
 resolution_df <- utils::read.csv(file = resolution_df_path, 
                                  header = TRUE, 
@@ -91,6 +82,7 @@ resolution_df <- utils::read.csv(file = resolution_df_path,
 
 resolution_df <- resolution_df[resolution_df$dataset == dataset_curr,]
 
+# always use the same resolution as for the original gene set
 resl <- resolution_df$resolution[
   resolution_df$conservation_level == "random_features"]
 
@@ -98,27 +90,28 @@ resl <- resolution_df$resolution[
 #-------------------------------------------------------------------------------
 # PREPARE
 
-# extract conserved signature gene set, keep only genes that are also in the 
+# extract gene set to be tested, keep only genes that are also in the 
 # Seurat Object 
 ensembl_column_use <- seu_preprocessed@misc$ensembl_column_use
 print(dataset_curr)
 print("ensembl_column_use")
 print(ensembl_column_use)
 
-conserved_signature_IDs <- base::unique(
+test_IDs <- base::unique(
   ensembl_df[,which(colnames(ensembl_df) == ensembl_column_use)])
-conserved_signature_IDs <- conserved_signature_IDs[
-  conserved_signature_IDs %in% rownames(seu_preprocessed)]
+test_IDs <- test_IDs[
+  test_IDs %in% rownames(seu_preprocessed)]
 
 # get the number of conserved signature genes, the same number of random genes 
 # will be used for the permutation test
-nr_recl_genes <- length(conserved_signature_IDs)
+nr_recl_genes <- length(test_IDs)
 print("nr_recl_genes")
 print(nr_recl_genes)
 
 #-------------------------------------------------------------------------------
 
 # get only genes that have a count of at least n = cut_off_counts
+# test genes can be randomly sampled
 print(base::summary(rowSums(seu_preprocessed@assays$RNA$counts)))
 
 gene_pool <- rownames(seu_preprocessed)[
@@ -134,14 +127,13 @@ print(base::summary(rowSums(seu_preprocessed_sub@assays$RNA$counts)))
 
 #-------------------------------------------------------------------------------
 
-# generate i = iterations random sets of the same length as there are signature
-# genes
+# generate i=iterations random sets of the same length as there are test genes
 # always generate the same random numbers
-set.seed(37)
-base::RNGkind("L'Ecuyer-CMRG")
 
 iteration_df <- base::data.frame(row.names = c(1:nr_recl_genes))
 
+set.seed(37)
+base::RNGkind("L'Ecuyer-CMRG")
 for(i in 1:iterations){
   iteration_df[,i] <- base::sample(1:length(gene_pool), 
                                    nr_recl_genes, 

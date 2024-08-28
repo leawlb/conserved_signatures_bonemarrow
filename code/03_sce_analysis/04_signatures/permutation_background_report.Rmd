@@ -61,7 +61,7 @@ resolution_df_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadat
 
 # current dataset
 dataset_curr <- snakemake@wildcards[["dataset"]] 
-cons_level_use <- snakemake@wildcards[["cons_level_use"]] 
+cons_level_use <- snakemake@params[["cons_level_use"]] 
 print(dataset_curr)
 
 # iteration dataframe, containing all scores per iteration

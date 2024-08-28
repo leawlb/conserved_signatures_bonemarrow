@@ -37,17 +37,16 @@ iterations <- snakemake@params[["iterations"]]
 # determine which gene sets to use for the current dataset (based on fraction)
 dataset_curr <- snakemake@wildcards[["dataset"]]
 
-if(dataset_curr %in% 
-   c("ts_all_stromal", 
-     "li_all_stromal")){
+# determine the current fraction to choose the correct gene sets
+datasets_other_hsc <- snakemake@params[["datasets_other_hsc"]]
+datasets_other_str <- snakemake@params[["datasets_other_str"]]
+
+if(dat_curr %in% datasets_other_str){
   fraction_curr <- "str"
-}else if(dataset_curr %in% 
-   c("ts_bone_marrow", 
-     "ts_hscs_progenitors",
-     "nmr_sorted_hspc", 
-     "zeb_all_hspc")){
+}else if(dat_curr %in% datasets_other_hsc){
   fraction_curr <- "hsc"
 }
+print(fraction_curr)
 
 #-------------------------------------------------------------------------------
 

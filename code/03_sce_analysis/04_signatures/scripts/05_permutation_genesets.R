@@ -480,8 +480,8 @@ res_df_list_mmms_mark <- parallel::mclapply(
   mc.cores = nr_cores,
   mc.silent = TRUE)
 
-score_df_mmms <- dplyr::bind_rows(res_df_list_mmms)
-print(head(score_df_mmms))
+score_df_mmms_mark <- dplyr::bind_rows(res_df_list_mmms_mark)
+print(head(score_df_mmms_mark))
 
 #-------------------------------------------------------------------------------
 

@@ -14,6 +14,8 @@
 
 DIR_RECLUSTERING = config["base"] + config["metadata_paths"]["reclustering"]
 
+OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/04_signatures"
+
 RAN_LI_IPYNB = config["ran_li_ipynb"]
 
 ENSEMBL_MUS = config["base"] + config["metadata_paths"]["ensembl_mus"]
@@ -161,6 +163,35 @@ if RAN_LI_IPYNB:
         
 #-------------------------------------------------------------------------------
 """
+Mouse
+"""
+
+# download harris atlas loom file
+rule download_harris_atlas:
+    input:
+        "https://labshare.cshl.edu/shares/gillislab/resource/HSC_atlas/processed_droplet_data.loom"
+    output:
+        DIR_RECLUSTERING + "/raw_mus/harris_atlas/processed_droplet_data.loom"
+    shell:
+        """
+        wget {input} 
+        """
+
+# TABULA MURIS
+# download the zipped folder with counts csv
+# other data are downloaded in download_tm_R
+rule download_tm_zipped:
+    input:
+        "https://figshare.com/ndownloader/files/10700143"
+    output:
+        DIR_RECLUSTERING + "/raw_mus/tabula_muris/FACS/Marrow-counts.csv"
+    shell:
+        """
+        wget {input} 
+        """
+
+#-------------------------------------------------------------------------------
+"""
 NMR & Zebrafish
 """
 
@@ -202,3 +233,19 @@ rule prepare_exotic_datasets:
         nmr_whole_hspc = DIR_RECLUSTERING + "/prepared/nmr_whole_hspc"
     script:
         "prepare_datasets/prepare_exotic_datasets.R"
+        
+#-------------------------------------------------------------------------------
+
+rule report_datasets:
+    input:
+        zeb_seu = rules.prepare_exotic_datasets.output.zeb_seu,
+        nmr_sorted_hspc = rules.prepare_exotic_datasets.output.nmr_sorted_hspc,
+        li_all_stromal = rule.prepare_li.output.seurat_output,
+        ts_bone_marrow = rules.prepare_ts_datasets.output,ts_bone_marrow_output,
+        ts_hsc_progenitors = rules.prepare_ts_datasets.output,ts_hsc_progenitors_output,
+        ts_stromal = rules.prepare_ts_datasets.output,ts_stromal_output
+    output:
+        OUTPUT_REP + "/report_other_datasets.html"
+    script:
+        "report_other_datasets.Rmd"
+

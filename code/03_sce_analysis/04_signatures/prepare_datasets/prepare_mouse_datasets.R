@@ -53,6 +53,7 @@ for(c in 1:ncol(counts_marrow)){
 # convert to sparse matrix
 counts_marrow <- base::as.matrix(counts_marrow)
 counts_marrow <- as(counts_marrow, "dgCMatrix")
+print(counts_marrow[1:10, 1:10])
 
 #-------------------------------------------------------------------------------
 
@@ -73,6 +74,9 @@ annotation_all <- utils::read.csv(
 
 print(annotation_all[1:5,1:5])
 print(dim(annotation_all))
+print(colnames(annotation_all))
+print(annotation_all[1:5,1:2])
+annotation_all <- annotation_all[,-c(1,2)]
 
 print(base::table(!is.na(base::match(colnames(counts_marrow),
                                      annotation_all$cell))))
@@ -109,25 +113,29 @@ print(dim(metadata_all))
 
 #-------------------------------------------------------------------------------
 # generate seurat object
-print("generating seurat")
+
+print("preparing for generating seurat")
 
 print(annotation_marrow[1:4, 1:4])
 print(counts_marrow[1:4, 1:4])
+
+print("generating seurat")
 
 seu_tmu <- SeuratObject::CreateSeuratObject(
   meta.data = annotation_marrow,
   counts = counts_marrow, 
   project = "SeuratProject", 
   assay = "RNA")
-# no reduced dimensions, no logcounts
+# no reduced dimensions, no logcounts, only raw counts
 
-print(head(seu_tmu@assays$RNA$counts))
+print(seu_tmu)
+print(seu_tmu@assays)
 print(head(seu_tmu@meta.data))
 
 #-------------------------------------------------------------------------------
 # prepare seurat object
 
-base::table(seu_tmu$cell_ontology_class)
+base::table(seu_tmu@meta.data$cell_ontology_class)
 
 ct_remove <- c(
   "B cell",
@@ -181,7 +189,7 @@ seu_tmu@misc$ensembl_column_use <- "MMUS_SYMBOL" # mouse gene symbols
 #-------------------------------------------------------------------------------
 
 #base::saveRDS(seu_tmu, "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/tm_bone_marrow")
-base::saveRDS(seu_tmu, snakemake@output[["seu_tmu_bonemarrow"]])
+base::saveRDS(seu_tmu, snakemake@output[["mus_tm_bonemarrow"]])
 
 
 #-------------------------------------------------------------------------------
@@ -190,6 +198,8 @@ base::saveRDS(seu_tmu, snakemake@output[["seu_tmu_bonemarrow"]])
 
 # WEINREB
 
+print("WEINREB")
+
 #-------------------------------------------------------------------------------
 # load metadata file with annotations
 
@@ -197,9 +207,10 @@ base::saveRDS(seu_tmu, snakemake@output[["seu_tmu_bonemarrow"]])
 path_weinreb_base <- snakemake@input[["path_weinreb_base"]]
 print(path_weinreb_base)
 
+print("metadata")
 # use in vivo data = hscs that were partly differentiated in recipient mice
 metadata <- utils::read.table(
-  base::paste0(path_weinreb_base, "GSM4185643_stateFate_inVivo_metadata.txt.gz"), 
+  base::paste0(path_weinreb_base, "/GSM4185643_stateFate_inVivo_metadata.txt.gz"), 
   stringsAsFactors = FALSE,
   header = TRUE,
   sep = "\t")
@@ -209,8 +220,9 @@ print(base::table(metadata$Cell.type.annotation))
 #-------------------------------------------------------------------------------
 # load library names (maybe not required)
 
+print("library_names")
 library_names <- utils::read.table(
-  base::paste0(path_weinreb_base, "GSM4185643_stateFate_inVivo_library_names.txt.gz"), 
+  base::paste0(path_weinreb_base, "/GSM4185643_stateFate_inVivo_library_names.txt.gz"), 
   stringsAsFactors = FALSE,
   sep = "\t")
 
@@ -221,10 +233,11 @@ print(base::table(library_names[,1]))
 #-------------------------------------------------------------------------------
 # load normalized counts
 
+print("normed_counts_matrix")
 normed_counts_matrix <- Seurat::ReadMtx(
-  mtx = base::paste0(path_weinreb_base, "GSM4185643_stateFate_inVivo_normed_counts.mtx.gz"), 
-  cells = base::paste0(path_weinreb_base, "GSM4185643_stateFate_inVivo_cell_barcodes.txt.gz"),
-  features = paste0(path_weinreb_base, "GSM4185643_stateFate_inVivo_gene_names.txt.gz"),
+  mtx = base::paste0(path_weinreb_base, "/GSM4185643_stateFate_inVivo_normed_counts.mtx.gz"), 
+  cells = base::paste0(path_weinreb_base, "/GSM4185643_stateFate_inVivo_cell_barcodes.txt.gz"),
+  features = paste0(path_weinreb_base, "/GSM4185643_stateFate_inVivo_gene_names.txt.gz"),
   feature.column = 1,
   mtx.transpose = TRUE)
 
@@ -269,6 +282,7 @@ colnames(normed_counts_matrix) <- metadata$unique_barcode
 #-------------------------------------------------------------------------------
 # create Seurat object
 
+print("generating seurat object")
 seu_wrb <- SeuratObject::CreateSeuratObject(
   meta.data = metadata,
   counts = normed_counts_matrix, 
@@ -276,7 +290,8 @@ seu_wrb <- SeuratObject::CreateSeuratObject(
   assay = "RNA")
 # no reduced dimensions, counts are NORMALIZED!
 
-print(head(seu_wrb@assays$RNA$counts[,1:10]))
+print(seu_wrb)
+print(head(seu_wrb@assays))
 print(head(seu_wrb@meta.data))
 
 #-------------------------------------------------------------------------------
@@ -324,5 +339,6 @@ seu_wrb@misc$ensembl_column_use <- "MMUS_SYMBOL" # mouse gene symbols
 #-------------------------------------------------------------------------------
 
 #base::saveRDS(seu_wrb, "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/weinreb_hspc")
-base::saveRDS(seu_wrb, snakemake@output[["seu_wrb_hspc"]])
+base::saveRDS(seu_wrb, snakemake@output[["mus_weinreb_hspc"]])
 
+utils::sessionInfo()

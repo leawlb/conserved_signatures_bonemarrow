@@ -17,9 +17,9 @@ ts_hsc_progenitors_input <- snakemake@input[["ts_hsc_progenitors_input"]]
 ts_bone_marrow_input <- snakemake@input[["ts_bone_marrow_input"]]
 ts_stromal_input <- snakemake@input[["ts_stromal_input"]]
 
-ts_hsc_progenitors_output<- snakemake@output[["ts_hsc_progenitors_output"]]
-ts_bone_marrow_output <- snakemake@output[["ts_bone_marrow_output"]]
-ts_stromal_output <- snakemake@output[["ts_stromal_output"]]
+ts_hsc_progenitors_output<- snakemake@output[["ts_hscs_progenitors"]]
+ts_bone_marrow_output <- snakemake@output[["ts_bone_marrow"]]
+ts_stromal_output <- snakemake@output[["ts_all_stromal"]]
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------

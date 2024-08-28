@@ -167,6 +167,6 @@ seu_nh@misc$ensembl_column_use <- "ENSG_ID" # human IDs
 
 #-------------------------------------------------------------------------------
 
-base::saveRDS(seu_nh, snakemake@output[["seurat_output"]])
+base::saveRDS(seu_nh, snakemake@output[["li_all_stromal"]])
 
 utils::sessionInfo()

@@ -7,7 +7,7 @@ standard_seu_pipeline <- function(resolution,
                                   features, 
                                   seu, 
                                   assay_use, # e.g. "RNA"
-                                  use_raw_counts = TRUE,
+                                  use_raw_counts = TRUE, # DO SOMETHING WITH THIS
                                   calc_umap = FALSE){
   
   seu <- seu # seurat object

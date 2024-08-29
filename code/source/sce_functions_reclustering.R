@@ -6,40 +6,42 @@
 standard_seu_pipeline <- function(resolution, 
                                   features, 
                                   seu, 
-                                  assay_use, # e.g. "RNA"
-                                  use_raw_counts = TRUE, # DO SOMETHING WITH THIS
+                                  data_use, 
                                   calc_umap = FALSE){
   
   seu <- seu # seurat object
   features <- features # features for re-clustering (all Features(seu))
   resolution <- resolution # resolution for FindClusters
-  assay_use <- assay_use # assay to use as basis for clustering
+  data_use <- data_use # assay to use as basis for clustering
   calc_umap <- calc_umap # whether umap coordinates should be calculated
   
   print(resolution)
+  print(data_use)
   print("......starting Seurat pipeline")
   
-  # NormalizeData normalizes "count data"
-  seu <- Seurat::NormalizeData(
-    seu,
-    assay = assay_use, 
-    verbose = FALSE)
+  if(data_use == "raw_counts"){
+    
+    # remove data slot as counts from counts slot are being used
+    #seu@assays$RNA@data <- NULL
+    
+    # NormalizeData normalizes "count data"
+    seu <- Seurat::NormalizeData(
+      seu,
+      assay = "RNA", 
+      verbose = FALSE)
+  }
   
-  print("NormalizeData")
-  
+  # data needs to be scaled either way
   seu <- Seurat::ScaleData(
     seu, 
     verbose = FALSE)
- 
-  print("ScaleData")
   
+  # uses scaled data
   seu <- Seurat::RunPCA(
     seu,
     npcs = 30,
     verbose = FALSE, 
     features = features)
-  
-  print("RunPCA")
   
   if(ncol(seu@reductions$pca) == 30){
     nr_pca <- 30
@@ -49,21 +51,22 @@ standard_seu_pipeline <- function(resolution,
   }
   print(nr_pca)
   
+  # requires PC coordinates
   seu <- Seurat::FindNeighbors(
     seu, 
+    reduction = "pca",
     dims = 1:nr_pca, 
+    features = features,
     verbose = FALSE)
   
-  print("FindNeighbors")
-  
+  # requires neighbors
   seu <- Seurat::FindClusters(
     seu, 
     resolution = as.numeric(resolution), 
     verbose = FALSE) 
   
-  print("FindClusters")
-  
   if(calc_umap == TRUE){
+    print("calculating umap")
     seu <- Seurat::RunUMAP(
       seu,
       dims = 1:nr_pca,
@@ -236,13 +239,13 @@ random_reclustering_scores <- function(iteration,
                                        seu, 
                                        iteration_df, 
                                        resolution,
-                                       assay_use){
+                                       data_use){
   
   iteration <- iteration # list of iterations like: as.list(c(1:i))
   seu <- seu # seurat object to be reclustered 
   iteration_df <- iteration_df # dataframe with ncol=i and random sets of gene positions in each column
   resolution <- resolution # resolution to parse to FindClusters
-  assay_use <- assay_use # the assay to be used for reclustering ("RNA" in my case)
+  data_use <- data_use # the assay to be used for reclustering ("RNA" in my case)
   
   # subset object to previously generated random list of genes from iteration_df
   iteration_vector <- iteration_df[,iteration]
@@ -261,7 +264,7 @@ random_reclustering_scores <- function(iteration,
     seu = seu_sub, 
     features = SeuratObject::Features(seu_sub), 
     resolution = resolution,
-    assay_use = assay_use,
+    data_use = data_use,
     calc_umap = FALSE)
 
   print("starting calculate_scores_long function")

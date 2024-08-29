@@ -15,7 +15,7 @@
 
 DIR_RECLUSTERING = config["base"] + config["metadata_paths"]["reclustering"]
 
-#OUTPUT_REP = config["base"] + config["main"] + "/sce_objects/reports/03_sce_analysis/04_signatures"
+OUTPUT_REP = config["base"] + config["scRNAseq_data_paths"]["main"] + "/sce_objects/reports/03_sce_analysis/04_signatures"
 
 RAN_LI_IPYNB = config["ran_li_ipynb"]
 
@@ -119,12 +119,15 @@ targets = targets + [DIR_RECLUSTERING + "/prepared/zeb_all_hspc"]
 targets = targets + [DIR_RECLUSTERING + "/prepared/nmr_sorted_hspc"]
 targets = targets + [DIR_RECLUSTERING + "/prepared/nmr_whole_hspc"]
 
+# report
+targets = targets + [OUTPUT_REP + "/prepare_datasets_report.html"]
+
 #-------------------------------------------------------------------------------
 
 wildcard_constraints: 
     fraction="[a-z]+"
 
-localrules: all, unzip_zebrafish, untar_weinreb, download_ts_datasets, download_mouse_datasets, download_exotic_datasets
+localrules: all, unzip_zebrafish, untar_weinreb, download_ts_datasets, download_mouse_datasets, download_exotic_datasets, report_datasets
 
 rule all: 
     input:
@@ -313,18 +316,19 @@ rule prepare_exotic_datasets:
 Report
 """
 
-# 
-# rule report_datasets:
-#     input:
-#         li_all_stromal = rule.prepare_li.output.li_all_stromal,
-#         ts_all_stromal = rules.prepare_ts_datasets.output.ts_all_stromal,
-#         ts_bone_marrow = rules.prepare_ts_datasets.output.ts_bone_marrow,
-#         ts_hscs_progenitors = rules.prepare_ts_datasets.output.ts_hscs_progenitors,
-#         mus_tm_bonemarrow = rules.prepare_mouse_datasets.mus_tm_bonemarrow,
-#         mus_weinreb_hspc = rules.prepare_mouse_datasets.mus_weinreb_hspc"
-#         zeb_all_hspc = rules.prepare_exotic_datasets.output.zeb_all_hspc,
-#         nmr_sorted_hspc = rules.prepare_exotic_datasets.output.nmr_sorted_hspc,
-#     output:
-#         OUTPUT_REP + "/prepare_datasets_report.html"
-#     script:
-#         "prepare_datasets_report.Rmd"
+rule report_datasets:
+    input:
+        li_all_stromal = rules.prepare_li.output.li_all_stromal,
+        ts_all_stromal = rules.prepare_ts_datasets.output.ts_all_stromal,
+        ts_bone_marrow = rules.prepare_ts_datasets.output.ts_bone_marrow,
+        ts_hscs_progenitors = rules.prepare_ts_datasets.output.ts_hscs_progenitors,
+        mus_tm_bonemarrow = rules.prepare_mouse_datasets.output.mus_tm_bonemarrow,
+        mus_weinreb_hspc = rules.prepare_mouse_datasets.output.mus_weinreb_hspc,
+        zeb_all_hspc = rules.prepare_exotic_datasets.output.zeb_all_hspc,
+        nmr_sorted_hspc = rules.prepare_exotic_datasets.output.nmr_sorted_hspc
+    params:
+        reclustering_functions = "../../source/sce_functions_reclustering.R",
+    output:
+        OUTPUT_REP + "/prepare_datasets_report.html"
+    script:
+        "prepare_datasets_report.Rmd"

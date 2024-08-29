@@ -44,9 +44,9 @@ dataset_curr <- snakemake@wildcards[["dataset"]]
 datasets_other_hsc <- snakemake@params[["datasets_other_hsc"]]
 datasets_other_str <- snakemake@params[["datasets_other_str"]]
 
-if(dat_curr %in% datasets_other_str){
+if(dataset_curr %in% datasets_other_str){
   fraction_curr <- "str"
-}else if(dat_curr %in% datasets_other_hsc){
+}else if(dataset_curr %in% datasets_other_hsc){
   fraction_curr <- "hsc"
 }
 print(fraction_curr)
@@ -155,15 +155,16 @@ print("resl")
 print(resl)
 print("starting iteration")
 
-res_df_list <- parallel::mclapply(X = as.list(c(1:iterations)),
-                                  FUN = random_reclustering_scores,
-                                  seu = seu_preprocessed_sub,
-                                  assay_use = "RNA",
-                                  iteration_df = iteration_df,
-                                  resolution = resl,
-                                  mc.preschedule = TRUE,
-                                  mc.cores = nr_cores,
-                                  mc.silent = TRUE)
+res_df_list <- parallel::mclapply(
+  X = as.list(c(1:iterations)),
+  FUN = random_reclustering_scores,
+  seu = seu_preprocessed_sub,
+  data_use = seu_preprocessed_sub@misc$data_use,
+  iteration_df = iteration_df,
+  resolution = resl,
+  mc.preschedule = TRUE,
+  mc.cores = nr_cores,
+  mc.silent = TRUE)
 
 # res_df_list <- lapply(X = as.list(c(1:iterations)),
 #                                   FUN = random_reclustering_scores,

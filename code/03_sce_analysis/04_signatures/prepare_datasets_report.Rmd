@@ -22,36 +22,43 @@ library(tidyverse, quietly = TRUE)
 library(Seurat, quietly = TRUE)
 ```
 
-```{r manual, eval = FALSE, include = FALSE}
-
-mus_weinreb_hspc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/mus_weinreb_hspc")
-
+```{r source}
+source(snakemake@params[["reclustering_functions"]])
 ```
 
+```{r manual, eval = FALSE, include = FALSE}
+li_all_stromal <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/li_all_stromal")
+```
 
 ```{r load_objects}
+# human stromal fraction
+li_all_stromal <- base::readRDS(snakemake@input[["li_all_stromal"]]) 
+ts_all_stromal <- base::readRDS(snakemake@input[["ts_all_stromal"]]) 
 
-li_all_stromal <- snakemake@input[["li_all_stromal"]] # human stromal
-ts_all_stromal <- snakemake@input[["ts_all_stromal"]] # human stromal
-ts_bone_marrow <- snakemake@input[["ts_bone_marrow"]] # human HSPC fraction
-ts_hscs_progenitors <- snakemake@input[["ts_hscs_progenitors"]] # human HSPC fraction
+# human HSPC fraction
+ts_bone_marrow <- base::readRDS(snakemake@input[["ts_bone_marrow"]]) 
+ts_hscs_progenitors <- base::readRDS(snakemake@input[["ts_hscs_progenitors"]]) 
 
-mus_weinreb_hspc <- snakemake@input[["mus_weinreb_hspc"]] # mouse HSPC fraction
-mus_tm_bonemarrow <- snakemake@input[["mus_tm_bonemarrow"]] # mouse HSPC fraction
+# mouse HSPC fraction
+mus_weinreb_hspc <- base::readRDS(snakemake@input[["mus_weinreb_hspc"]]) 
+mus_tm_bonemarrow <- base::readRDS(snakemake@input[["mus_tm_bonemarrow"]]) 
 
-zeb_all_hspc <- snakemake@input[["zeb_all_hspc"]] # zebrafish HSPC fraction
-nmr_sorted_hspc <- snakemake@input[["nmr_sorted_hspc"]] # naked mole rat HSPC fraction
+# zebrafish HSPC fraction
+zeb_all_hspc <- base::readRDS(snakemake@input[["zeb_all_hspc"]]) 
 
+# naked mole rat HSPC fraction
+nmr_sorted_hspc <- base::readRDS(snakemake@input[["nmr_sorted_hspc"]]) 
 ```
 
 ## li_all_stromal
 
 ```{r li_all_stromal}
 li_all_stromal
+ncol(li_all_stromal)
 li_all_stromal@assays
 li_all_stromal@assays$RNA
-li_all_stromal@assays$RNA$counts[90:100,1:10] # RAW COUNTS
-li_all_stromal@assays$RNA$data[90:100,1:10] # RAW COUNTSs
+li_all_stromal@assays$RNA@counts[90:100,1:10] # RAW COUNTS
+li_all_stromal@assays$RNA@data[90:100,1:10] # RAW COUNTSs
 
 li_all_stromal@misc
 
@@ -61,14 +68,38 @@ li_all_stromal@reductions # has original PCA
 DimPlot(li_all_stromal, group.by = "cell_type")
 ```
 
+Try reclustering with standard seurat pipeline.
+This is just to try the process so just use the first 300 genes as the
+actual clusters don't matter.
+
+```{r li_all_stromal_pca}
+li_all_stromal_reclustered <- standard_seu_pipeline(
+  seu = li_all_stromal,
+  resolution = 0.5,
+  features = rownames(li_all_stromal)[1:300],
+  data_use = li_all_stromal@misc$data_use
+)
+
+print(li_all_stromal@misc$data_use)
+li_all_stromal@assays
+li_all_stromal_reclustered@assays$RNA@counts[90:100,1:10] # RAW COUNTS
+li_all_stromal_reclustered@assays$RNA@data[90:100,1:10] # Normalised counts
+li_all_stromal_reclustered@reductions # has original PCA and new PCA
+base::table(li_all_stromal_reclustered$seurat_clusters)
+
+rm(li_all_stromal)
+rm(li_all_stromal_reclustered)
+```
+
 ## ts_all_stromal
 
 ```{r ts_all_stromal}
 ts_all_stromal
+ncol(ts_all_stromal)
 ts_all_stromal@assays
 ts_all_stromal@assays$RNA
-ts_all_stromal@assays$RNA$counts[90:100,1:10] # RAW COUNTS
-ts_all_stromal@assays$RNA$data[90:100,1:10] # NORMALISED/LOGCOUNTSs
+ts_all_stromal@assays$RNA@counts[90:100,1:10] # RAW COUNTS
+ts_all_stromal@assays$RNA@counts[90:100,1:10] # NORMALISED/LOGCOUNTSs
 
 ts_all_stromal@misc
 
@@ -77,14 +108,33 @@ head(ts_all_stromal@meta.data)
 ts_all_stromal@reductions # NO REDUCTIONS
 ```
 
+```{r ts_all_stromal_pca}
+ts_all_stromal_reclustered <- standard_seu_pipeline(
+  seu = ts_all_stromal,
+  resolution = 0.5,
+  features = rownames(ts_all_stromal)[1:300],
+  data_use = ts_all_stromal@misc$data_use
+)
+
+print(ts_all_stromal@misc$data_use)
+ts_all_stromal_reclustered@assays$RNA@counts[90:100,1:10] # RAW COUNTS
+ts_all_stromal_reclustered@assays$RNA@data[90:100,1:10] # other normalised data as before
+ts_all_stromal_reclustered@reductions # has only new PCA
+base::table(ts_all_stromal_reclustered$seurat_clusters)
+
+rm(ts_all_stromal)
+rm(ts_all_stromal_reclustered)
+```
+
 ## ts_bone_marrow
 
 ```{r ts_bone_marrow}
 ts_bone_marrow
+ncol(ts_bone_marrow)
 ts_bone_marrow@assays
 ts_bone_marrow@assays$RNA
-ts_bone_marrow@assays$RNA$counts[90:100,1:10] # RAW COUNTS
-ts_bone_marrow@assays$RNA$data[90:100,1:10] # NORMALISED/LOGCOUNTSs
+ts_bone_marrow@assays$RNA@counts[90:100,1:10] # RAW COUNTS
+ts_bone_marrow@assays$RNA@data[90:100,1:10] # NORMALISED/LOGCOUNTSs
 
 ts_bone_marrow@misc
 
@@ -94,14 +144,33 @@ ts_bone_marrow@reductions # has original PCs
 DimPlot(ts_bone_marrow, group.by = "cell_type")
 ```
 
+```{r ts_bone_marrow_pca}
+ts_bone_marrow_reclustered <- standard_seu_pipeline(
+  seu = ts_bone_marrow,
+  resolution = 0.5,
+  features = rownames(ts_bone_marrow)[1:300],
+  data_use = ts_bone_marrow@misc$data_use
+)
+
+print(ts_bone_marrow@misc$data_use)
+ts_bone_marrow_reclustered@assays$RNA@counts[90:100,1:10] # RAW COUNTS
+ts_bone_marrow_reclustered@assays$RNA@data[90:100,1:10] # different logcounts than before
+ts_bone_marrow_reclustered@reductions # has original PCA
+base::table(ts_bone_marrow_reclustered$seurat_clusters)
+
+rm(ts_bone_marrow)
+rm(ts_bone_marrow_reclustered)
+```
+
 ## ts_hscs_progenitors
 
 ```{r ts_hscs_progenitors}
 ts_hscs_progenitors
+ncol(ts_hscs_progenitors)
 ts_hscs_progenitors@assays
 ts_hscs_progenitors@assays$RNA
-ts_hscs_progenitors@assays$RNA$counts[90:100,1:10] # RAW COUNTS
-ts_hscs_progenitors@assays$RNA$data[90:100,1:10] # NORMALISED/LOGCOUNTSs
+ts_hscs_progenitors@assays$RNA@counts[90:100,1:10] # RAW COUNTS
+ts_hscs_progenitors@assays$RNA@data[90:100,1:10] # NORMALISED/LOGCOUNTSs
 
 ts_hscs_progenitors@misc
 
@@ -110,14 +179,32 @@ head(ts_hscs_progenitors@meta.data)
 ts_hscs_progenitors@reductions # NO REDUCED DIMS
 ```
 
+```{r ts_hscs_progenitors_pca}
+ts_hscs_progenitors_reclustered <- standard_seu_pipeline(
+  seu = ts_hscs_progenitors,
+  resolution = 0.5,
+  features = rownames(ts_hscs_progenitors)[1:300],
+  data_use = ts_hscs_progenitors@misc$data_use
+)
+
+print(ts_hscs_progenitors@misc$data_use)
+ts_hscs_progenitors_reclustered@assays$RNA@counts[90:100,1:10] # RAW COUNTS
+ts_hscs_progenitors_reclustered@assays$RNA@data[90:100,1:10] # new normalised data
+ts_hscs_progenitors_reclustered@reductions # only new PCA
+
+rm(ts_hscs_progenitors)
+rm(ts_hscs_progenitors_reclustered)
+```
+
 ## mus_weinreb_hspc
 
 ```{r mus_weinreb_hspc}
 mus_weinreb_hspc
+ncol(mus_weinreb_hspc)
 mus_weinreb_hspc@assays
 mus_weinreb_hspc@assays$RNA
-mus_weinreb_hspc@assays$RNA$counts[1:10,1:10] # NORMALISED/LOGCOUNTSs
-mus_weinreb_hspc@assays$RNA$data[1:10,1:10] # NORMALISED/LOGCOUNTSs
+mus_weinreb_hspc@assays$RNA@counts[1:10,1:10] # NORMALISED/LOGCOUNTSs
+mus_weinreb_hspc@assays$RNA@data[1:10,1:10] # NORMALISED/LOGCOUNTSs
 
 mus_weinreb_hspc@misc
 
@@ -126,14 +213,33 @@ head(mus_weinreb_hspc@meta.data)
 mus_weinreb_hspc@reductions # NO REDUCED DIMS
 ```
 
+```{r mus_weinreb_hspc_pca}
+mus_weinreb_hspc_reclustered <- standard_seu_pipeline(
+  seu = mus_weinreb_hspc,
+  resolution = 0.5,
+  features = rownames(mus_weinreb_hspc)[1:300],
+  data_use = mus_weinreb_hspc@misc$data_use
+)
+
+print(mus_weinreb_hspc@misc$data_use)
+mus_weinreb_hspc_reclustered@assays$RNA@counts[1:10,1:10] 
+mus_weinreb_hspc_reclustered@assays$RNA@data[1:10,1:10] # the same
+mus_weinreb_hspc_reclustered@assays$RNA@scale.data[1:10,1:10] # scale is new
+mus_weinreb_hspc_reclustered@reductions # has new PCA
+
+rm(mus_weinreb_hspc)
+rm(mus_weinreb_hspc_reclustered)
+```
+
 ## zeb_all_hspc
 
 ```{r zeb_all_hspc}
 zeb_all_hspc
+ncol(zeb_all_hspc)
 zeb_all_hspc@assays
 zeb_all_hspc@assays$RNA
-zeb_all_hspc@assays$RNA$counts[90:100,1:10] # RAW COUNTS
-zeb_all_hspc@assays$RNA$data[90:100,1:10] # RAW COUNTS
+zeb_all_hspc@assays$RNA@counts[90:100,1:10] # RAW COUNTS
+zeb_all_hspc@assays$RNA@data[90:100,1:10] # RAW COUNTS
 
 zeb_all_hspc@misc
 
@@ -142,14 +248,32 @@ head(zeb_all_hspc@meta.data)
 zeb_all_hspc@reductions # NO REDUCED DIMS
 ```
 
+```{r zeb_all_hspc_pca}
+zeb_all_hspc_reclustered <- standard_seu_pipeline(
+  seu = zeb_all_hspc,
+  resolution = 0.5,
+  features = rownames(zeb_all_hspc)[1:300],
+  data_use = zeb_all_hspc@misc$data_use
+)
+
+print(zeb_all_hspc@misc$data_use)
+zeb_all_hspc_reclustered@assays$RNA@counts[90:100,1:10] # RAW COUNTS
+zeb_all_hspc_reclustered@assays$RNA@data[90:100,1:10] # normalised
+zeb_all_hspc_reclustered@reductions # has new PCA
+
+rm(zeb_all_hspc)
+rm(zeb_all_hspc_reclustered)
+```
+
 ## nmr_sorted_hspc
 
 ```{r nmr_sorted_hspc}
 nmr_sorted_hspc
+ncol(nmr_sorted_hspc)
 nmr_sorted_hspc@assays
 nmr_sorted_hspc@assays$RNA
-nmr_sorted_hspc@assays$RNA$counts[80:90,1:10] # RAW COUNTS
-nmr_sorted_hspc@assays$RNA$data[80:90,1:10] # NORMALISED/LOGCOUNTS COUNTS
+nmr_sorted_hspc@assays$RNA@counts[80:90,1:10] # RAW COUNTS
+nmr_sorted_hspc@assays$RNA@data[80:90,1:10] # NORMALISED/LOGCOUNTS COUNTS
 
 nmr_sorted_hspc@misc
 
@@ -157,6 +281,20 @@ head(nmr_sorted_hspc@meta.data)
 
 nmr_sorted_hspc@reductions # has orig PCA
 DimPlot(nmr_sorted_hspc, group.by = "cell_type")
+```
+
+```{r nmr_sorted_hspc_pca}
+nmr_sorted_hspc_reclustered <- standard_seu_pipeline(
+  seu = nmr_sorted_hspc,
+  resolution = 0.5,
+  features = rownames(nmr_sorted_hspc)[1:300],
+  data_use = nmr_sorted_hspc@misc$data_use
+)
+
+print(nmr_sorted_hspc@misc$data_use)
+nmr_sorted_hspc_reclustered@assays$RNA@counts[90:100,1:10] # RAW COUNTS
+nmr_sorted_hspc_reclustered@assays$RNA@data[90:100,1:10] 
+nmr_sorted_hspc_reclustered@reductions # has original PCA
 ```
 
 ```{r sessioninfo}

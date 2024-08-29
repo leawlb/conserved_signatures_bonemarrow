@@ -145,8 +145,12 @@ stopifnot(!is.na(seu_zeb$cell_type))
 stopifnot(!is.na(seu_zeb$manually_annotated_ct))
 
 #-------------------------------------------------------------------------------
+# add info on which assay should be used for reclustering
+seu_zeb@misc$data_use <- "raw_counts"
 
-base::saveRDS(seu_zeb, snakemake@output[["zeb_seu"]])
+#-------------------------------------------------------------------------------
+
+base::saveRDS(seu_zeb, snakemake@output[["zeb_all_hspc"]])
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -218,6 +222,20 @@ seu_nmr_srt@reductions$pca_orig <- seu_nmr_srt_pca@reductions$pca
 
 print("after removal")
 print(seu_nmr_srt@reductions)
+
+#-------------------------------------------------------------------------------
+
+# remove ADT assays
+print(seu_nmr_srt@assays)
+
+seu_nmr_srt@assays <- list("RNA" = seu_nmr_srt@assays$RNA)
+ 
+print(seu_nmr_srt@assays)
+
+#-------------------------------------------------------------------------------
+
+# add info on which type of data to use for re-clustering pipeline
+seu_nmr_srt@misc$data_use <- "raw_counts" # NMR symbols
 
 #-------------------------------------------------------------------------------
 

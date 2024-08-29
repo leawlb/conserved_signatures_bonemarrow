@@ -137,6 +137,10 @@ RNA <- Seurat::CreateAssayObject(seu_nh@assays$originalexp$counts)
 seu_nh[['RNA']] <- RNA
 Seurat::DefaultAssay(seu_nh) <- 'RNA'
 
+seu_nh@assays <- list("RNA" = seu_nh@assays$RNA)
+print(seu_nh@assays$RNA@counts)
+(seu_nh@assays$RNA@data)
+
 #-------------------------------------------------------------------------------
 
 # put annotation in "cell_type" slot for downstream compatibility and factorise
@@ -164,6 +168,10 @@ stopifnot(!is.na(seu_nh$cell_type))
 
 # add info on which column of the ensembl data frame to use based on Features 
 seu_nh@misc$ensembl_column_use <- "ENSG_ID" # human IDs
+
+#-------------------------------------------------------------------------------
+# add info on which assay should be used for reclustering
+seu_nh@misc$data_use <- "raw_counts"
 
 #-------------------------------------------------------------------------------
 

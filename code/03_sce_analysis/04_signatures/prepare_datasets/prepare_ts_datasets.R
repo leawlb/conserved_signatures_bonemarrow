@@ -93,6 +93,10 @@ dim(seu_ts_hscs_progenitors)
 seu_ts_hscs_progenitors@misc$ensembl_column_use <- "ENSG_ID" # human IDs
 
 #-------------------------------------------------------------------------------
+# add info on which assay should be used for reclustering
+seu_ts_hscs_progenitors@misc$data_use <- "raw_counts"
+
+#-------------------------------------------------------------------------------
 
 base::saveRDS(seu_ts_hscs_progenitors, ts_hsc_progenitors_output)
 
@@ -167,6 +171,10 @@ dim(seu_ts_bone_marrow)
 seu_ts_bone_marrow@misc$ensembl_column_use <- "ENSG_ID" # human IDs
 
 #-------------------------------------------------------------------------------
+# add info on which assay should be used for reclustering
+seu_ts_bone_marrow@misc$data_use <- "raw_counts"
+
+#-------------------------------------------------------------------------------
 
 base::saveRDS(seu_ts_bone_marrow, ts_bone_marrow_output)
 
@@ -237,6 +245,10 @@ dim(ts_all_stromal)
 
 # add info on which column of the ensembl data frame to use based on Features 
 ts_all_stromal@misc$ensembl_column_use <- "ENSG_ID" # human IDs
+
+#-------------------------------------------------------------------------------
+# add info on which assay should be used for reclustering
+ts_all_stromal@misc$data_use <- "raw_counts"
 
 #-------------------------------------------------------------------------------
 

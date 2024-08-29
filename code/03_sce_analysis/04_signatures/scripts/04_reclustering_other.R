@@ -24,16 +24,16 @@ nr_cores <- snakemake@params[["nr_cores"]]
 
 seu <- base::readRDS(snakemake@input[["seu_input"]])
 
-dat_curr <- snakemake@wildcards[["dataset"]]
-print(dat_curr)
+dataset_curr <- snakemake@wildcards[["dataset"]]
+print(dataset_curr)
 
 # determine the current fraction to choose the correct gene sets
 datasets_other_hsc <- snakemake@params[["datasets_other_hsc"]]
 datasets_other_str <- snakemake@params[["datasets_other_str"]]
 
-if(dat_curr %in% datasets_other_str){
+if(dataset_curr %in% datasets_other_str){
   fraction_curr <- "str"
-}else if(dat_curr %in% datasets_other_hsc){
+}else if(dataset_curr %in% datasets_other_hsc){
   fraction_curr <- "hsc"
 }
 print(fraction_curr)
@@ -171,7 +171,8 @@ seu_sign_list_reclustered <- mclapply(
   X = resolution_list,
   FUN = standard_seu_pipeline, # from source, own function
   seu = seu_sign,
-  assay_use = "RNA",
+  #assay_use = "RNA",
+  data_use = seu_sign@misc$data_use,
   calc_umap = TRUE,
   features = conserved_signature_IDs,
   mc.preschedule = TRUE, 
@@ -185,7 +186,8 @@ seu_mark_list_reclustered <- mclapply(
   X = resolution_list,
   FUN = standard_seu_pipeline, 
   seu = seu_mark,
-  assay_use = "RNA",
+  #assay_use = "RNA",
+  data_use = seu_mark@misc$data_use,
   calc_umap = TRUE,
   features = conserved_marker_IDs,
   mc.preschedule = TRUE, 
@@ -199,7 +201,8 @@ seu_mmms_list_reclustered <- mclapply(
   X = resolution_list,
   FUN = standard_seu_pipeline, 
   seu = seu_mmms,
-  assay_use = "RNA",
+  #assay_use = "RNA",
+  data_use = seu_mmms@misc$data_use,
   calc_umap = TRUE,
   features = mmusall_marker_IDs,
   mc.preschedule = TRUE, 
@@ -213,7 +216,8 @@ seu_rand_list_reclustered <- mclapply(
   X = resolution_list,
   FUN = standard_seu_pipeline, 
   seu = seu_rand,
-  assay_use = "RNA",
+  #assay_use = "RNA",
+  data_use = seu_rand@misc$data_use,
   calc_umap = TRUE,
   features = random_features,
   mc.preschedule = TRUE, 

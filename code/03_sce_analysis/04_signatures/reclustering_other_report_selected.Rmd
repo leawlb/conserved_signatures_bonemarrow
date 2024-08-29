@@ -257,7 +257,7 @@ ggplot2::ggplot(score_df[score_df$type == "variation_information",],
 
 ## Heatmaps
 
-```{r wide1, fig.width = 8, fig.height = 4, include = FALSE, eval = FALSE}
+```{r wide1, fig.width = 8, fig.height = 4}
 # include = FALSE, eval = FALSE
 # only for manually choosing the correction vector
 plot_list_wide <- lapply(selected_seu_list, 
@@ -266,12 +266,13 @@ plot_list_wide <- lapply(selected_seu_list,
 plot_list_wide
 ```
 
-```{r long1, fig.width = 6, fig.height = 5, include = FALSE, eval = FALSE}
+```{r long1, fig.width = 6, fig.height = 5}
 # only for manually choosing the correction vector
 plot_list_long <- lapply(selected_seu_list, 
                          vis_perc_long_gg,
                          title_add = dataset_curr)
 plot_list_long
+knitr::knit_exit()
 ```
 
 ```{r correction_vec}

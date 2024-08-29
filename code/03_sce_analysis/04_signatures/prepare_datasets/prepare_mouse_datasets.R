@@ -5,6 +5,7 @@ library(Matrix)
 library(Seurat)
 
 set.seed(37)
+base::RNGkind("L'Ecuyer-CMRG")
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -187,6 +188,10 @@ rownames(seu_tmu)[!grepl("Rik", rownames(seu_tmu))][200:230]
 seu_tmu@misc$ensembl_column_use <- "MMUS_SYMBOL" # mouse gene symbols
 
 #-------------------------------------------------------------------------------
+# add info on which assay should be used for reclustering
+seu_tmu@misc$data_use <- "raw_counts"
+
+#-------------------------------------------------------------------------------
 
 #base::saveRDS(seu_tmu, "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/tm_bone_marrow")
 base::saveRDS(seu_tmu, snakemake@output[["mus_tm_bonemarrow"]])
@@ -335,6 +340,19 @@ rownames(seu_wrb)[!grepl("Rik", rownames(seu_wrb))][200:230]
 
 # add info on which column of the ensembl data frame to use based on Features 
 seu_wrb@misc$ensembl_column_use <- "MMUS_SYMBOL" # mouse gene symbols
+
+
+#-------------------------------------------------------------------------------
+# add info on which assay should be used for reclustering
+seu_wrb@misc$data_use <- "logcounts" # only has normalised counts, so start from there
+
+#-------------------------------------------------------------------------------
+
+# subset to 30,000 random cells
+subset_pos <- base::sample(c(1:ncol(seu_wrb)), 30000, replace = FALSE)
+
+seu_wrb <- seu_wrb[,subset_pos]
+print(dim(seu_wrb))
 
 #-------------------------------------------------------------------------------
 

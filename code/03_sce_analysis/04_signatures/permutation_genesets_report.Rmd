@@ -120,9 +120,9 @@ seu_preprocessed <- base::readRDS(snakemake@input[["seu_preprocessed"]])
 datasets_other_hsc <- snakemake@params[["datasets_other_hsc"]]
 datasets_other_str <- snakemake@params[["datasets_other_str"]]
 
-if(dat_curr %in% datasets_other_str){
+if(dataset_curr %in% datasets_other_str){
   fraction_curr <- "str"
-}else if(dat_curr %in% datasets_other_hsc){
+}else if(dataset_curr %in% datasets_other_hsc){
   fraction_curr <- "hsc"
 }
 print(fraction_curr)

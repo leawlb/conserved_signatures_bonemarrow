@@ -1,0 +1,369 @@
+---
+title: "Figure 1"
+date: '2024-08-29'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Generate Figure 1, current title:
+"Single-cell RNA-seq is able to identify expected bone marrow cell types".
+
+#### Load objects
+
+```{r seed, message = FALSE}
+set.seed(37)
+base::RNGkind(kind = "L'Ecuyer-CMRG")
+```
+
+```{r load, message = FALSE}
+library(tidyverse, quietly = TRUE)
+library(SingleCellExperiment, quietly = TRUE)
+library(ggpubr, quietly = TRUE)
+```
+
+```{r load_manual, eval = FALSE, include = FALSE}
+
+# load data for manual use here
+
+base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/"
+
+sce_hsc <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10"))
+sce_str <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10"))
+
+colors_path <- base::paste0(
+  base_path, 
+  "/metadata/colors/colors.txt")
+
+source("../source/colors.R")
+
+```
+
+```{r load_snakemake}
+
+# annotated SCE objects
+sce_input_list_path <- snakemake@input[["sce_input_list"]] 
+sce_hsc <- base::readRDS(sce_input_list_path[[
+  base::grep("hsc", sce_input_list_path)]])
+sce_str <- base::readRDS(sce_input_list_path[[
+  base::grep("str", sce_input_list_path)]])
+
+# colors
+colors_path <- snakemake@params[["colors_path"]]
+colors_source <- snakemake@params[["colors"]]
+source(colors_source)
+
+print(sce_input_list_path)
+print(colors_path)
+print(colors_source)
+
+#knitr::knit_exit()
+```
+
+```{r colors}
+
+
+```
+
+```{r params}
+# determine params that may be changed 
+
+umap_point_size <- 0.3
+umap_point_alpha <- 1
+umap_legend_point_size <- 3
+umap_legend_point_alpha <- 1
+
+legend_title_face <- "plain"
+legend_title_size <- 16
+legend_title_color <- "black"
+
+legend_text_face <- "plain"
+legend_text_size <- 14
+legend_text_color <- "black"
+```
+
+## A
+
+A: Model of experimental design. HSPCs were extracted by flushing and Niche 
+cells were extracted by crushing and digesting the bone followed by FACS 
+sorting and sequencing.
+
+## B
+
+HSPCs (left) and Niche cells (right) clustered in UMAP space, 
+colored by cell type.
+
+#### Plot Components
+
+```{r b_prep}
+hsc_umap <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_hsc, type = "UMAP"))
+hsc_umap$color_by <- sce_hsc$celltypes
+hsc_umap <- hsc_umap[base::sample(
+  1:nrow(hsc_umap),
+  nrow(hsc_umap),
+  replace = FALSE),]
+
+str_umap <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_str, type = "UMAP"))
+str_umap$color_by <- sce_str$celltypes
+str_umap <- str_umap[base::sample(
+  1:nrow(str_umap),
+  nrow(str_umap),
+  replace = FALSE),]
+```
+
+```{r b_base_plot_left}
+b_base_plot_left <- ggplot2::ggplot(
+  hsc_umap, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(hsc_umap$X1)-1, base::max(hsc_umap$X1))+1)+
+  ggplot2::ylim(c(base::min(hsc_umap$X2)-1, base::max(hsc_umap$X2))+1)+
+  ggplot2::scale_color_manual("Cell type", values = col_cts_hsc)
+```
+
+```{r b_base_plot_left_theme}
+b_theme_plot_left <- b_base_plot_left+
+  cowplot::theme_nothing()
+```
+
+```{r b_base_plot_right}
+b_base_plot_right <- ggplot2::ggplot(
+  str_umap, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(str_umap$X1)-1, base::max(str_umap$X1))+1)+
+  ggplot2::ylim(c(base::min(str_umap$X2)-1, base::max(str_umap$X2))+1)+
+  ggplot2::scale_color_manual("Cell type", values = col_cts_str)
+```
+
+```{r b_base_plot_right_theme}
+b_theme_plot_right <- b_base_plot_right+
+  cowplot::theme_nothing()
+```
+
+#### Legend
+
+```{r b_legend_plot_left}
+b_legend_plot_left <- ggplot2::ggplot(
+  hsc_umap, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_legend_point_size,
+    alpha = umap_legend_point_alpha)+
+  ggplot2::scale_color_manual("Cell type", values = col_cts_hsc)
+```
+
+```{r b_legend_plot_right}
+b_legend_plot_right <- ggplot2::ggplot(
+  str_umap, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_legend_point_size,
+    alpha = umap_legend_point_alpha)+
+  ggplot2::scale_color_manual("Cell type", values = col_cts_str)
+```
+
+```{r b_legend_plot_left_theme}
+b_legend_theme_plot_left <- b_legend_plot_left+
+  ggplot2::theme_minimal()+
+  ggplot2::theme(
+    legend.title = element_blank(),
+    legend.text = element_text(
+      face = legend_text_face,
+      size = legend_text_size,
+      color = legend_text_color),
+    legend.key.height = unit(0.3, "lines")
+  )
+b_legend_left <- ggpubr::get_legend(b_legend_theme_plot_left)
+```
+
+```{r b_legend_plot_right_theme}
+b_legend_theme_plot_right <- b_legend_plot_right+
+  ggplot2::theme_minimal()+
+  ggplot2::theme(
+    legend.title = element_blank(),
+    legend.text = element_text(
+      face = legend_text_face,
+      size = legend_text_size,
+      color = legend_text_color),
+    legend.key.height = unit(0.3, "lines")
+  )
+b_legend_right <- ggpubr::get_legend(b_legend_theme_plot_right)
+```
+
+#### Construct
+
+```{r b_theme_plot, fig.width = 14, fig.height = 6}
+b_theme_plot <- ggpubr::ggarrange(
+  b_theme_plot_left, 
+  b_theme_plot_right)
+
+b_theme_plot
+```
+
+```{r b_theme_legend, fig.height = 6, fig.width = 2}
+b_theme_legend <- ggpubr::ggarrange(
+  ncol = 1,
+  align = "v",
+  b_legend_left,
+  b_legend_right)
+
+b_theme_legend
+```
+
+## C
+
+HSPCs (left) and Niche cells (right) clustered in UMAP space, 
+colored by mouse species
+
+#### Plot Components
+
+```{r c_prep}
+# TODO: change Species_ID once abbreviation for species was decided and 
+# use that
+hsc_umap <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_hsc, type = "UMAP"))
+hsc_umap$color_by <- sce_hsc$Species_ID 
+hsc_umap <- hsc_umap[base::sample(
+  1:nrow(hsc_umap),
+  nrow(hsc_umap),
+  replace = FALSE),]
+hsc_umap$color_by <- factor(
+  hsc_umap$color_by,
+  levels = names(col_spc)
+)
+
+str_umap <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_str, type = "UMAP"))
+str_umap$color_by <- sce_str$Species_ID
+str_umap <- str_umap[base::sample(
+  1:nrow(str_umap),
+  nrow(str_umap),
+  replace = FALSE),]
+str_umap$color_by <- factor(
+  str_umap$color_by,
+  levels = names(col_spc)
+)
+```
+
+```{r c_base_plot_left}
+c_base_plot_left <- ggplot2::ggplot(
+  hsc_umap, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(hsc_umap$X1)-1, base::max(hsc_umap$X1))+1)+
+  ggplot2::ylim(c(base::min(hsc_umap$X2)-1, base::max(hsc_umap$X2))+1)+
+  ggplot2::scale_color_manual("Mouse species", values = col_spc)
+```
+
+```{r c_theme_plot_left}
+c_theme_plot_left <- c_base_plot_left+
+  cowplot::theme_nothing()
+```
+
+```{r c_base_plot_right}
+c_base_plot_right <- ggplot2::ggplot(
+  str_umap, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(str_umap$X1)-1, base::max(str_umap$X1))+1)+
+  ggplot2::ylim(c(base::min(str_umap$X2)-1, base::max(str_umap$X2))+1)+
+  ggplot2::scale_color_manual("Mouse species", values = col_spc)
+```
+
+```{r c_theme_plot_right}
+c_theme_plot_right <- c_base_plot_right+
+  cowplot::theme_nothing()
+```
+
+#### Legend
+
+only one required
+
+```{r c_legend_plot}
+c_legend_plot <- ggplot2::ggplot(
+  hsc_umap, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_legend_point_size,
+    alpha = umap_legend_point_alpha)+
+  ggplot2::scale_color_manual("Mouse species", values = col_spc)
+```
+
+```{r c_legend_theme_plot}
+c_legend_theme_plot <- c_legend_plot+
+  ggplot2::theme_minimal()+
+  ggplot2::theme(
+    legend.title = element_blank(),
+    legend.text = element_text(
+      face = legend_text_face,
+      size = legend_text_size,
+      color = legend_text_color),
+    legend.key.height = unit(0.3, "lines")
+  )
+c_legend <- ggpubr::get_legend(c_legend_theme_plot)
+```
+
+#### Construct
+
+```{r c_theme_plot, fig.width = 7, fig.height = 3}
+c_theme_plot <- ggpubr::ggarrange(
+  c_theme_plot_left, 
+  c_theme_plot_right)
+
+c_theme_plot
+```
+
+```{r c_theme_legend, fig.height = 2, fig.width = 2}
+c_theme_legend <- ggpubr::ggarrange(
+  ncol = 1,
+  align = "v",
+  c_legend)
+
+c_theme_legend
+```
+
+
+
+
+
+
+
+
+
+
+

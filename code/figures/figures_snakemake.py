@@ -76,11 +76,14 @@ rule all: # must contain all possible output paths from all rules below and must
 """
 Figure 1
 """
+# list of genes (in sequence) for dotplots
+GENE_LIST_DOTPLOT = config["base"] + config["metadata_paths"]["gene_list_dotplot"]
 
 rule figure1:
   input:
       # fully annotated SCE objects, one per fraction (02_/03_/)
-      sce_input_list = expand(OUTPUT_BASE + "/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10", fraction = fractions)
+      sce_input_list = expand(OUTPUT_BASE + "/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10", fraction = fractions),
+      gene_list_dtplt = GENE_LIST_DOTPLOT
   output:
       OUTPUT_REP + "/figure1.html"
   params:

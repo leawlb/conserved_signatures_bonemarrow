@@ -22,6 +22,7 @@ base::RNGkind(kind = "L'Ecuyer-CMRG")
 library(tidyverse, quietly = TRUE)
 library(SingleCellExperiment, quietly = TRUE)
 library(ggpubr, quietly = TRUE)
+library(scuttle, quietly = TRUE)
 ```
 
 ```{r load_manual, eval = FALSE, include = FALSE}
@@ -43,6 +44,16 @@ colors_path <- base::paste0(
 
 source("../source/colors.R")
 
+gene_list_dtplt <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/02_sce_anno/gene_list_dotplot.txt"
+
+gene_df <- utils::read.csv(gene_list_dtplt, 
+  header = TRUE, 
+  sep = ";", 
+  check.names=FALSE, 
+  stringsAsFactors=FALSE, 
+  as.is=TRUE, 
+  colClasses = "character")
+
 ```
 
 ```{r load_snakemake}
@@ -53,6 +64,17 @@ sce_hsc <- base::readRDS(sce_input_list_path[[
   base::grep("hsc", sce_input_list_path)]])
 sce_str <- base::readRDS(sce_input_list_path[[
   base::grep("str", sce_input_list_path)]])
+
+# gene list for dotplot 
+gene_list_dtplt <- snakemake@input[["gene_list_dtplt"]] 
+
+gene_df <- utils::read.csv(gene_list_dtplt, 
+  header = TRUE, 
+  sep = ";", 
+  check.names=FALSE, 
+  stringsAsFactors=FALSE, 
+  as.is=TRUE, 
+  colClasses = "character")
 
 # colors
 colors_path <- snakemake@params[["colors_path"]]
@@ -86,6 +108,10 @@ legend_title_color <- "black"
 legend_text_face <- "plain"
 legend_text_size <- 14
 legend_text_color <- "black"
+
+ct_hsc <- "HSCs"
+ct_str <- "Adipo/CARs"
+
 ```
 
 ## A
@@ -357,11 +383,181 @@ c_theme_legend <- ggpubr::ggarrange(
 c_theme_legend
 ```
 
+## D
+
+Average gene expression of well-known marker genes that were not used for
+cell type sub-clustering per species for HSCs (top left) and Adipo/CARs 
+(top right) or per cell type for HSPC fraction (bottom left) or Niche fraction 
+(bottom right).
+
+#### Prepare
+
+```{r d_prepare}
+# get genes
+gene_df_hsc <- gene_df[gene_df$fraction == "hsc",]
+genes_hsc <- gene_df_hsc$gene
+
+gene_df_str <- gene_df[which(gene_df$fraction == "str" & 
+                               gene_df$use == "short"),]
+genes_str <- gene_df_str$gene
+
+# agrgegate across cell types, get average expression, use normalized counts
+agg_hsc <- scuttle::aggregateAcrossCells(
+  sce_hsc, 
+  id=colData(sce_hsc)[,c("celltypes")], 
+  statistics = "mean",
+  use.assay.type = "logcounts")
+
+agg_str <- scuttle::aggregateAcrossCells(
+  sce_str, 
+  id=colData(sce_str)[,c("celltypes")], 
+  statistics = "mean",
+  use.assay.type = "logcounts")
+
+# make data frames for visualisation
+vis_df_hsc <- base::as.data.frame(
+  t(SummarizedExperiment::assays(agg_hsc)$logcounts[
+    rownames(SummarizedExperiment::assays(agg_hsc)$logcounts) %in% genes_hsc,]))
+
+vis_df_str <- base::as.data.frame(
+  t(SummarizedExperiment::assays(agg_str)$logcounts[
+    rownames(SummarizedExperiment::assays(agg_str)$logcounts) %in% genes_str,]))
+
+# format data frames
+vis_df_hsc <- tibble::rownames_to_column(vis_df_hsc, "celltypes")
+vis_df_hsc <- tidyr::pivot_longer(
+  vis_df_hsc, 
+  cols = c(2:ncol(vis_df_hsc)), 
+  values_to = "expression", 
+  names_to = "gene")
+
+vis_df_str <- tibble::rownames_to_column(vis_df_str, "celltypes")
+vis_df_str <- tidyr::pivot_longer(
+  vis_df_str, 
+  cols = c(2:ncol(vis_df_str)), 
+  values_to = "expression", 
+  names_to = "gene")
+
+# factor cell types for correct order
+vis_df_hsc$celltypes <- factor(
+  vis_df_hsc$celltypes, 
+  levels = base::rev(names(col_cts_hsc)))
+
+vis_df_str$celltypes <- factor(
+  vis_df_str$celltypes, 
+  levels = base::rev(names(col_cts_str)))
+
+# factor genes for correct order
+vis_df_hsc$gene <- factor(
+  vis_df_hsc$gene, 
+  levels = gene_df_hsc$gene)
+
+vis_df_str$gene <- factor(
+  vis_df_str$gene, 
+  levels = gene_df_str$gene)
+```
+
+```{r d_function}
+get_perc_expressed <- function(vis_df, sce){
+  
+  vis_df <- vis_df
+  sce <- sce
+  
+  vis_df$percent_expressed <- vector(length = nrow(vis_df))
+  
+  cts <- base::unique(vis_df$celltypes)
+  gs <- base::unique(vis_df$gene)
+  
+  for(ct in cts){
+    
+    # normalized (MultiBatchNorm)
+    lc_temp <- SummarizedExperiment::assays(sce)$logcounts[,sce$celltypes == ct]
+    
+    for(g in gs){
+      
+      # the number of cells expressing g > 0 times / absolute cells * 100 per ct
+      perc_expr <- length(which(lc_temp[
+        rownames(lc_temp) == g,] > 0))/ncol(lc_temp)*100
+      
+      vis_df$percent_expressed[
+        which(vis_df$celltypes == ct & vis_df$gene == g)] <- perc_expr
+    }
+  }
+  return(vis_df)
+}
+
+vis_df_hsc <- get_perc_expressed(vis_df_hsc, sce_hsc)
+vis_df_str <- get_perc_expressed(vis_df_hsc, sce_str)
+```
+
+```{r d_prepare_ct}
+# aggregate
+sce_hsc_ct <- sce_hsc[,sce_hsc$celltypes == ct_hsc]
+agg_ct_hsc <- scuttle::aggregateAcrossCells(
+  sce_hsc_ct,
+  id=colData(sce_hsc_ct)[,c("Species_ID")], 
+  statistics = "mean",
+  use.assay.type = "logcounts")
+
+sce_str_ct <- sce_str[,sce_str$celltypes == ct_str]
+agg_ct_str <- scuttle::aggregateAcrossCells(
+  sce_str_ct,
+  id=colData(sce_str_ct)[,c("Species_ID")], 
+  statistics = "mean",
+  use.assay.type = "logcounts")
+
+# make vis_dfs
+vis_df_ct_hsc <- base::as.data.frame(
+  t(SummarizedExperiment::assays(agg_ct_hsc)$logcounts[
+    rownames(SummarizedExperiment::assays(agg_ct_hsc)$logcounts) %in% 
+      genes_hsc,]))
+
+vis_df_ct_str <- base::as.data.frame(
+  t(SummarizedExperiment::assays(agg_ct_str)$logcounts[
+    rownames(SummarizedExperiment::assays(agg_ct_str)$logcounts) %in% 
+      genes_str,]))
+
+# format
+vis_df_ct_hsc <- tibble::rownames_to_column(vis_df_ct_hsc, "species")
+vis_df_ct_hsc <- tidyr::pivot_longer(
+  vis_df_ct_hsc,
+  cols = c(2:ncol(vis_df_ct_hsc)), 
+  values_to = "expression", 
+  names_to = "gene")
+
+vis_df_ct_str <- tibble::rownames_to_column(vis_df_ct_str, "species")
+vis_df_ct_str <- tidyr::pivot_longer(
+  vis_df_ct_str,
+  cols = c(2:ncol(vis_df_ct_str)), 
+  values_to = "expression", 
+  names_to = "gene")
+
+vis_df_ct_hsc$celltypes <- base::rep(ct_hsc, nrow(vis_df_ct_hsc))
+vis_df_ct_str$celltypes <- base::rep(ct_str, nrow(vis_df_ct_str))
+
+# factor
+vis_df_ct_hsc$species <- factor(vis_df_ct_hsc$species, 
+                                levels = base::rev(names(col_spc)))
+vis_df_ct_hsc$gene <- factor(vis_df_ct_hsc$gene,
+                             levels = gene_df_hsc$gene)
+
+vis_df_ct_str$species <- factor(vis_df_ct_str$species, 
+                              levels = base::rev(names(col_spc)))
+vis_df_ct_str$gene <- factor(vis_df_ct_str$gene,
+                             levels = gene_df_str$gene)
+
+# perc expressed
+vis_df_ct_hsc <- get_perc_expressed(vis_df_ct_hsc, sce_hsc)
+vis_df_ct_str <- get_perc_expressed(vis_df_ct_str, sce_str)
+```
+
+#### Plots
 
 
 
-
-
+```{r sessioninfo}
+utils::sessionInfo()
+```
 
 
 

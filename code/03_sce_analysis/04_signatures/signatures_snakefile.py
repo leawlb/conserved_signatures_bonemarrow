@@ -65,7 +65,7 @@ for d in datasets_other:
   targets = targets + [OUTPUT_DAT + "/04_rcls/reclustered_" + d + "_list"]
   targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_" + d + "_list"]
   targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_report_" + d + ".html"]
-  #targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_selected_report_" + d + ".html"]
+  targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_selected_report_" + d + ".html"]
  
   # testing reclustering scores
   #targets = targets + [OUTPUT_REP + "/reclustering_scores/test_reclustering_scores_" + d + ".html"]

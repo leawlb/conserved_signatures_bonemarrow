@@ -94,8 +94,7 @@ print(base::table(base::duplicated(
 # random genes
 # all genes with non-zero expression (above a defined threshold)
 non_zero_features <- rownames(seu@assays$RNA)[
-  BiocGenerics::rowSums(seu@assays$RNA) > cut_off_counts]
-
+  rowSums(seu@assays$RNA) > cut_off_counts]
 
 # get the same nr of random non-0 genes as there are conserved signature genes
 # always generate the same random numbers
@@ -178,6 +177,16 @@ seu_sign_list_reclustered <- mclapply(
   mc.preschedule = TRUE, 
   mc.cores = nr_cores,
   mc.silent = TRUE)
+
+# seu_sign_list_reclustered <- lapply(
+#   X = resolution_list,
+#   FUN = standard_seu_pipeline, # from source, own function
+#   seu = seu_sign,
+#   #assay_use = "RNA",
+#   data_use = seu_sign@misc$data_use,
+#   calc_umap = TRUE,
+#   features = conserved_signature_IDs)
+
 names(seu_sign_list_reclustered) <- base::as.character(unlist(resolution_list))
 
 print("done signature gene reclustering")

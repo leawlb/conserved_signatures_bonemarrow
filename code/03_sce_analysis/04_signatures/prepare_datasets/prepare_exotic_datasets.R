@@ -208,6 +208,10 @@ stopifnot(!is.na(seu_nmr_srt$cell_type))
 
 #-------------------------------------------------------------------------------
 
+seu_nmr_srt@assays$RNA@data <- seu_nmr_srt@assays$RNA@counts
+
+#-------------------------------------------------------------------------------
+
 # add info on which column of the ensembl data frame to use based on Features 
 seu_nmr_srt@misc$ensembl_column_use <- "HGLABER_SYMBOL" # NMR symbols
 

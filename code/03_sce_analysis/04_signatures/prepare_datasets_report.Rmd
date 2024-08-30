@@ -43,6 +43,10 @@ ts_hscs_progenitors <- base::readRDS(snakemake@input[["ts_hscs_progenitors"]])
 mus_weinreb_hspc <- base::readRDS(snakemake@input[["mus_weinreb_hspc"]]) 
 mus_tm_bonemarrow <- base::readRDS(snakemake@input[["mus_tm_bonemarrow"]]) 
 
+# mouse stromal fraction
+mus_tik_stromal <- base::readRDS(snakemake@input[["mus_tik_stromal"]]) 
+mus_bar_stromal <- base::readRDS(snakemake@input[["mus_bar_stromal"]]) 
+
 # zebrafish HSPC fraction
 zeb_all_hspc <- base::readRDS(snakemake@input[["zeb_all_hspc"]]) 
 
@@ -231,6 +235,77 @@ rm(mus_weinreb_hspc)
 rm(mus_weinreb_hspc_reclustered)
 ```
 
+## mus_tik_stromal
+
+```{r mus_weinreb_hspc}
+mus_tik_stromal
+ncol(mus_tik_stromal)
+mus_tik_stromal@assays
+mus_tik_stromal@assays$RNA
+mus_tik_stromal@assays$RNA@counts[1:10,1:10] # NORMALISED/LOGCOUNTSs
+mus_tik_stromal@assays$RNA@data[1:10,1:10] # NORMALISED/LOGCOUNTSs
+
+mus_tik_stromal@misc
+
+head(mus_tik_stromal@meta.data)
+
+mus_tik_stromal@reductions # 
+```
+
+```{r mus_weinreb_hspc_pca}
+mus_tik_stromal_reclustered <- standard_seu_pipeline(
+  seu = mus_tik_stromal,
+  resolution = 0.5,
+  features = rownames(mus_tik_stromal)[1:300],
+  data_use = mus_tik_stromal@misc$data_use
+)
+
+print(mus_tik_stromal@misc$data_use)
+mus_tik_stromal_reclustered@assays$RNA@counts[1:10,1:10] 
+mus_tik_stromal_reclustered@assays$RNA@data[1:10,1:10] # the same
+mus_tik_stromal_reclustered@assays$RNA@scale.data[1:10,1:10] # scale is new
+mus_tik_stromal_reclustered@reductions # has new PCA
+
+rm(mus_tik_stromal)
+rm(mus_tik_stromal_reclustered)
+```
+
+
+## mus_bar_stromal
+
+```{r mus_weinreb_hspc}
+mus_bar_stromal
+ncol(mus_bar_stromal)
+mus_bar_stromal@assays
+mus_bar_stromal@assays$RNA
+mus_bar_stromal@assays$RNA@counts[1:10,1:10] # NORMALISED/LOGCOUNTSs
+mus_bar_stromal@assays$RNA@data[1:10,1:10] # NORMALISED/LOGCOUNTSs
+
+mus_bar_stromal@misc
+
+head(mus_bar_stromal@meta.data)
+
+mus_bar_stromal@reductions # 
+```
+
+```{r mus_weinreb_hspc_pca}
+mus_bar_stromal_reclustered <- standard_seu_pipeline(
+  seu = mus_bar_stromal,
+  resolution = 0.5,
+  features = rownames(mus_bar_stromal)[1:300],
+  data_use = mus_bar_stromal@misc$data_use
+)
+
+print(mus_bar_stromal@misc$data_use)
+mus_bar_stromal_reclustered@assays$RNA@counts[1:10,1:10] 
+mus_bar_stromal_reclustered@assays$RNA@data[1:10,1:10] # the same
+mus_bar_stromal_reclustered@assays$RNA@scale.data[1:10,1:10] # scale is new
+mus_bar_stromal_reclustered@reductions # has new PCA
+
+rm(mus_bar_stromal)
+rm(mus_bar_stromal_reclustered)
+```
+
 ## zeb_all_hspc
 
 ```{r zeb_all_hspc}
@@ -292,8 +367,8 @@ nmr_sorted_hspc_reclustered <- standard_seu_pipeline(
 )
 
 print(nmr_sorted_hspc@misc$data_use)
-nmr_sorted_hspc_reclustered@assays$RNA@counts[90:100,1:10] # RAW COUNTS
-nmr_sorted_hspc_reclustered@assays$RNA@data[90:100,1:10] 
+nmr_sorted_hspc_reclustered@assays$RNA@counts[80:90,1:10] # RAW COUNTS
+nmr_sorted_hspc_reclustered@assays$RNA@data[80:90,1:10] 
 nmr_sorted_hspc_reclustered@reductions # has original PCA
 ```
 

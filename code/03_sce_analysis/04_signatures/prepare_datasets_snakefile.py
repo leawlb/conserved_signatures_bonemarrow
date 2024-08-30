@@ -95,6 +95,9 @@ for o in weinreb_outputs:
 targets = targets + [DIR_RECLUSTERING + "/prepared/mus_tm_bonemarrow"]
 targets = targets + [DIR_RECLUSTERING + "/prepared/mus_weinreb_hspc"]
  
+targets = targets + [DIR_RECLUSTERING + "/prepared/mus_tik_stromal"]
+targets = targets + [DIR_RECLUSTERING + "/prepared/mus_bar_stromal"]
+
 #-------------------------------------------------------------------------------
 
 # downloaded exotic datasets (zebrafish and naked mole rat)
@@ -120,14 +123,15 @@ targets = targets + [DIR_RECLUSTERING + "/prepared/nmr_sorted_hspc"]
 targets = targets + [DIR_RECLUSTERING + "/prepared/nmr_whole_hspc"]
 
 # report
-targets = targets + [OUTPUT_REP + "/prepare_datasets_report.html"]
+if RAN_LI_IPYNB:
+  targets = targets + [OUTPUT_REP + "/prepare_datasets_report.html"]
 
 #-------------------------------------------------------------------------------
 
 wildcard_constraints: 
     fraction="[a-z]+"
 
-localrules: all, unzip_zebrafish, untar_weinreb, download_ts_datasets, download_mouse_datasets, download_exotic_datasets, report_datasets
+localrules: all, unzip_zebrafish, untar_weinreb, download_ts_datasets, download_mouse_datasets, download_exotic_datasets
 
 rule all: 
     input:
@@ -250,7 +254,7 @@ rule untar_weinreb:
         """
         
 # prepare tabula muris dataset and weinreb dataset
-rule prepare_mouse_datasets:
+rule prepare_mouse_datasets_hspc:
     input:
         path_counts_marrow = DIR_RECLUSTERING + "/raw_mus/tabula_muris/FACS/Marrow-counts.csv", # manually downloaded
         path_metadata_all = rules.download_mouse_datasets.output.path_metadata_all,
@@ -260,7 +264,18 @@ rule prepare_mouse_datasets:
         mus_tm_bonemarrow = DIR_RECLUSTERING + "/prepared/mus_tm_bonemarrow",
         mus_weinreb_hspc = DIR_RECLUSTERING + "/prepared/mus_weinreb_hspc"
     script:
-        "prepare_datasets/prepare_mouse_datasets.R"
+        "prepare_datasets/prepare_mouse_datasets_hspc.R"
+        
+# prepare tikhonova and baryawno dataset
+# use the merged dataset from dolgalev reference dataset as input
+rule prepare_mouse_datasets_stromal:
+    input:
+        seu_mus_str_ref = config["base"] + "/data/metadata/scRNAseq/01_sce_prep/references_raw/bone-marrow-seurat.rds" # manually downloaded
+    output:
+        mus_tik_stromal = DIR_RECLUSTERING + "/prepared/mus_tik_stromal",
+        mus_bar_stromal = DIR_RECLUSTERING + "/prepared/mus_bar_stromal"
+    script:
+        "prepare_datasets/prepare_mouse_datasets_stromal.R"
         
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -315,20 +330,22 @@ rule prepare_exotic_datasets:
 """
 Report
 """
-
-rule report_datasets:
-    input:
-        li_all_stromal = rules.prepare_li.output.li_all_stromal,
-        ts_all_stromal = rules.prepare_ts_datasets.output.ts_all_stromal,
-        ts_bone_marrow = rules.prepare_ts_datasets.output.ts_bone_marrow,
-        ts_hscs_progenitors = rules.prepare_ts_datasets.output.ts_hscs_progenitors,
-        mus_tm_bonemarrow = rules.prepare_mouse_datasets.output.mus_tm_bonemarrow,
-        mus_weinreb_hspc = rules.prepare_mouse_datasets.output.mus_weinreb_hspc,
-        zeb_all_hspc = rules.prepare_exotic_datasets.output.zeb_all_hspc,
-        nmr_sorted_hspc = rules.prepare_exotic_datasets.output.nmr_sorted_hspc
-    params:
-        reclustering_functions = "../../source/sce_functions_reclustering.R",
-    output:
-        OUTPUT_REP + "/prepare_datasets_report.html"
-    script:
-        "prepare_datasets_report.Rmd"
+if RAN_LI_IPYNB:
+  rule report_datasets:
+      input:
+          li_all_stromal = rules.prepare_li.output.li_all_stromal,
+          ts_all_stromal = rules.prepare_ts_datasets.output.ts_all_stromal,
+          ts_bone_marrow = rules.prepare_ts_datasets.output.ts_bone_marrow,
+          ts_hscs_progenitors = rules.prepare_ts_datasets.output.ts_hscs_progenitors,
+          mus_tm_bonemarrow = rules.prepare_mouse_datasets_hspc.output.mus_tm_bonemarrow,
+          mus_weinreb_hspc = rules.prepare_mouse_datasets_hspc.output.mus_weinreb_hspc,
+          mus_tik_stromal = rules.prepare_mouse_datasets_stromal.output.mus_tik_stromal,
+          mus_bar_stromal = rules.prepare_mouse_datasets_stromal.output.mus_bar_stromal,
+          zeb_all_hspc = rules.prepare_exotic_datasets.output.zeb_all_hspc,
+          nmr_sorted_hspc = rules.prepare_exotic_datasets.output.nmr_sorted_hspc
+      params:
+          reclustering_functions = "../../source/sce_functions_reclustering.R",
+      output:
+          OUTPUT_REP + "/prepare_datasets_report.html"
+      script:
+          "prepare_datasets_report.Rmd"

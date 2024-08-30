@@ -137,9 +137,13 @@ RNA <- Seurat::CreateAssayObject(seu_nh@assays$originalexp$counts)
 seu_nh[['RNA']] <- RNA
 Seurat::DefaultAssay(seu_nh) <- 'RNA'
 
-seu_nh@assays <- list("RNA" = seu_nh@assays$RNA)
-print(seu_nh@assays$RNA@counts)
-(seu_nh@assays$RNA@data)
+# seu_nh@assays <- list("RNA" = seu_nh@assays$RNA)
+# print(seu_nh@assays$RNA@counts)
+# (seu_nh@assays$RNA@data)
+
+# make sure that the same raw data is in all four slots so that the correct
+# one HAS to be used
+seu_nh@assays$originalexp@data <- seu_nh@assays$originalexp@counts
 
 #-------------------------------------------------------------------------------
 

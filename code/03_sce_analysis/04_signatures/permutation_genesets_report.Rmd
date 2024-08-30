@@ -544,8 +544,8 @@ ggplot2::ggplot(vis_df_mark, aes(x = type1, y = number, fill = type2))+
 # All BL6 Markers vs Conserved Markers + Random
 
 ```{r print_again}
-perm_score_df_mmms
-perm_score_df_mmms_mark
+head(perm_score_df_mmms)
+head(perm_score_df_mmms_mark)
 ```
 
 ## Histograms

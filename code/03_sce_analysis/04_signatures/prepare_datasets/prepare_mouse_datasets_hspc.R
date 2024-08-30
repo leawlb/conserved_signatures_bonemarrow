@@ -349,7 +349,7 @@ seu_wrb@misc$data_use <- "logcounts" # only has normalised counts, so start from
 #-------------------------------------------------------------------------------
 
 # subset to 30,000 random cells
-subset_pos <- base::sample(c(1:ncol(seu_wrb)), 30000, replace = FALSE)
+subset_pos <- base::sample(c(1:ncol(seu_wrb)), 25000, replace = FALSE)
 
 seu_wrb <- seu_wrb[,subset_pos]
 print(dim(seu_wrb))

@@ -70,7 +70,7 @@ print(head(ensembl_df))
 
 #-------------------------------------------------------------------------------
 
-# load the datafram which contains info on which resolution to use for
+# load the dataframe which contains info on which resolution to use for
 # re-clustering
 resolution_df_path <- snakemake@params[["resolution_df"]] 
 
@@ -104,7 +104,7 @@ test_IDs <- base::unique(
 test_IDs <- test_IDs[
   test_IDs %in% rownames(seu_preprocessed)]
 
-# get the number of conserved signature genes, the same number of random genes 
+# get the number of test genes, the same number of random genes 
 # will be used for the permutation test
 nr_recl_genes <- length(test_IDs)
 print("nr_recl_genes")

@@ -27,7 +27,7 @@ source(snakemake@params[["reclustering_functions"]])
 ```
 
 ```{r manual, eval = FALSE, include = FALSE}
-li_all_stromal <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/li_all_stromal")
+mus_tik_stromal <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/mus_tik_stromal")
 ```
 
 ```{r load_objects}
@@ -63,6 +63,8 @@ li_all_stromal@assays
 li_all_stromal@assays$RNA
 li_all_stromal@assays$RNA@counts[90:100,1:10] # RAW COUNTS
 li_all_stromal@assays$RNA@data[90:100,1:10] # RAW COUNTSs
+li_all_stromal@assays$originalexp@counts[90:100,1:10] # RAW COUNTS
+li_all_stromal@assays$originalexp@data[90:100,1:10] # RAW COUNTSs
 
 li_all_stromal@misc
 
@@ -237,7 +239,7 @@ rm(mus_weinreb_hspc_reclustered)
 
 ## mus_tik_stromal
 
-```{r mus_weinreb_hspc}
+```{r mus_tik_stromal}
 mus_tik_stromal
 ncol(mus_tik_stromal)
 mus_tik_stromal@assays
@@ -252,7 +254,7 @@ head(mus_tik_stromal@meta.data)
 mus_tik_stromal@reductions # 
 ```
 
-```{r mus_weinreb_hspc_pca}
+```{r mus_tik_stromal_pca}
 mus_tik_stromal_reclustered <- standard_seu_pipeline(
   seu = mus_tik_stromal,
   resolution = 0.5,
@@ -273,7 +275,7 @@ rm(mus_tik_stromal_reclustered)
 
 ## mus_bar_stromal
 
-```{r mus_weinreb_hspc}
+```{r mus_bar_stromal}
 mus_bar_stromal
 ncol(mus_bar_stromal)
 mus_bar_stromal@assays
@@ -288,7 +290,7 @@ head(mus_bar_stromal@meta.data)
 mus_bar_stromal@reductions # 
 ```
 
-```{r mus_weinreb_hspc_pca}
+```{r mus_bar_stromal_pca}
 mus_bar_stromal_reclustered <- standard_seu_pipeline(
   seu = mus_bar_stromal,
   resolution = 0.5,

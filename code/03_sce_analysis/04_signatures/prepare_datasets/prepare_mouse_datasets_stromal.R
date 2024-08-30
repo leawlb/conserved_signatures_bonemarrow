@@ -54,6 +54,8 @@ seu_mus_tikhonova@misc$ensembl_column_use <- "MMUS_SYMBOL" # mouse gene symbols
 
 # check assays
 
+Seurat::DefaultAssay(seu_mus_tikhonova) <- "RNA"
+
 print(seu_mus_tikhonova@assays)
 print(seu_mus_tikhonova@assays$RNA)
 print(seu_mus_tikhonova@assays$RNA@data[1:10,1:10])
@@ -81,7 +83,7 @@ seu_mus_tikhonova@neighbors <- list()
 # keep original PCA coordinates but remove other reductions
 seu_mus_tikhonova_pca <- seu_mus_tikhonova
 seu_mus_tikhonova@reductions <- list()
-seu_mus_tikhonova@reductions$pca_orig <- seu_mus_tikhonova_pca@reductions$pca
+#seu_mus_tikhonova@reductions$pca_orig <- seu_mus_tikhonova_pca@reductions$pca
 
 print("after removal")
 print(seu_mus_tikhonova@reductions)
@@ -148,6 +150,7 @@ seu_mus_baryawno@misc$ensembl_column_use <- "MMUS_SYMBOL" # mouse gene symbols
 # check assays
 
 # no counts assay, no raw counts
+Seurat::DefaultAssay(seu_mus_baryawno) <- "RNA"
 
 print(seu_mus_baryawno@assays)
 print(seu_mus_baryawno@assays$RNA)
@@ -176,7 +179,7 @@ seu_mus_baryawno@neighbors <- list()
 # keep original PCA coordinates but remove other reductions
 seu_mus_baryawno_pca <- seu_mus_baryawno
 seu_mus_baryawno@reductions <- list()
-seu_mus_baryawno@reductions$pca_orig <- seu_mus_baryawno_pca@reductions$pca
+#seu_mus_baryawno@reductions$pca_orig <- seu_mus_baryawno_pca@reductions$pca
 
 print(seu_mus_baryawno@reductions)
 

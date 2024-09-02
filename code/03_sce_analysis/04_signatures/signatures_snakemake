@@ -22,7 +22,12 @@ snakemake --cluster "bsub -q medium -n5 -R rusage[mem=90GB]" -p -j10 -c5 -s sign
 # for testing permutation background or reports only CONSERVED MARKERS
 snakemake --cluster "bsub -q medium -n5 -R rusage[mem=50GB]" -p -j10 -c5 -s signatures_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda --config run_permutation_background_mark=True -n
 
+# OWN
+snakemake --cluster "bsub -q medium -n5 -R rusage[mem=50GB]" -p -j10 -c5 -s signatures_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda --config run_own_permutation_background_sign=True -n
+
 # ALL
 
 snakemake --cluster "bsub -q medium -n5 -R rusage[mem=90GB]" -p -j40 -c5 -s signatures_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda --config run_permutation_background_mark=True  run_permutation_background_sign=True run_permutation_genesets=True -n
+
+
 

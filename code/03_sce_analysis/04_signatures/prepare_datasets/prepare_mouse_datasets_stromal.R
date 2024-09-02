@@ -11,6 +11,8 @@ library(Seurat, quietly = TRUE)
 #seu_mus_str_ref <- base::readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/01_sce_prep/references_raw/bone-marrow-seurat.rds")
 seu_mus_str_ref <- base::readRDS(snakemake@input[["seu_mus_str_ref"]])
 
+seu_mus_str_ref <- Seurat::UpdateSeuratObject(seu_mus_str_ref)
+
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------

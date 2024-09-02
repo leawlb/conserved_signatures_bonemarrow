@@ -87,11 +87,16 @@ resolution_df <- utils::read.csv(file = resolution_df_path,
 
 resolution_df <- resolution_df[resolution_df$dataset == dataset_curr,]
 resl <- resolution_df$resolution[
-  resolution_df$conservation_level == "conserved_signature"]
+  resolution_df$conservation_level == cons_level_use]
 
 # subset
-seu_reclustered <- seu_list_all$seu_sign[[as.character(resl)]]
-score_df <- score_df_list_all$seu_sign[[as.character(resl)]]
+if(cons_level_use == "conserved_signature"){
+  seu_reclustered <- seu_list_all$seu_sign[[as.character(resl)]]
+  score_df <- score_df_list_all$seu_sign[[as.character(resl)]]  
+}else if(cons_level_use == "conserved_markers"){
+  seu_reclustered <- seu_list_all$seu_mark[[as.character(resl)]]
+  score_df <- score_df_list_all$seu_mark[[as.character(resl)]]    
+}
 
 iterations <- nrow(perm_score_df)
 ```
@@ -167,7 +172,7 @@ score_df_temp <- score_df[!score_df$type %in% c(
   "nr_clusters",
   "variation_information"),]
 score_df_temp <- score_df_temp[
-  score_df_temp$conservation_level == "conserved_signature",]
+  score_df_temp$conservation_level == cons_level_use,]
 
 perm_score_df_temp <- pivot_longer(perm_score_df,
                                    c = 1:ncol(perm_score_df),
@@ -199,7 +204,7 @@ ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
 
 score_df_temp <- score_df[score_df$type %in% c("variation_information"),]
 score_df_temp <- score_df_temp[
-  score_df_temp$conservation_level == "conserved_signature",]
+  score_df_temp$conservation_level == cons_level_use,]
 
 perm_score_df_temp <- pivot_longer(perm_score_df, 
                                    c = 1:ncol(perm_score_df),
@@ -238,7 +243,7 @@ score_df_temp <- score_df[!score_df$type %in% c("nr_celltypes",
                                                 "nr_clusters",
                                                 "variation_information",
                                                 "mean_prop_cells/cluster"),]
-score_df_temp <- score_df_temp[score_df_temp$conservation_level == "conserved_signature",]
+score_df_temp <- score_df_temp[score_df_temp$conservation_level == cons_level_use,]
 perm_score_df_temp <- pivot_longer(perm_score_df, c = 1:ncol(perm_score_df),
                                    values_to = "value",
                                    names_to = "type")
@@ -269,7 +274,7 @@ ggplot(score_df_temp, aes(x = type, y = value))+
 ```{r fig.width = 1.2, fig.height = 4}
 
 score_df_temp <- score_df[score_df$type %in% c("variation_information"),]
-score_df_temp <- score_df_temp[score_df_temp$conservation_level == "conserved_signature",]
+score_df_temp <- score_df_temp[score_df_temp$conservation_level == cons_level_use,]
 perm_score_df_temp <- pivot_longer(perm_score_df, c = 1:ncol(perm_score_df),
                                    values_to = "value",
                                    names_to = "type")

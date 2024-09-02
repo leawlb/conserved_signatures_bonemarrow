@@ -19,6 +19,7 @@ print(RESOLUTION_OTHER)
 RUN_PERM_GENESETS = config["run_permutation_genesets"]
 RUN_PERM_BACKGROUND_SIGN = config["run_permutation_background_sign"]
 RUN_PERM_BACKGROUND_MARK = config["run_permutation_background_mark"]
+RUN_OWN_BACKGROUND_SIGN = config["run_own_permutation_background_sign"]
 
 ENSEMBL_MUS = config["base"] + config["metadata_paths"]["ensembl_mus"]
 ENSEMBL_HUM = config["base"] + config["metadata_paths"]["ensembl_hum"]
@@ -38,7 +39,7 @@ print(METADATA)
 
 fractions = get_list(metadata = METADATA, column = "Fraction_ID")
 datasets_other_hsc = ["ts_hscs_progenitors", "ts_bone_marrow", "mus_weinreb_hspc", "mus_tm_bonemarrow", "nmr_sorted_hspc", "zeb_all_hspc"]
-datasets_other_str = ["ts_all_stromal", "li_all_stromal"]
+datasets_other_str = ["ts_all_stromal", "li_all_stromal", "mus_tik_stromal", "mus_bar_stromal"]
 datasets_other = datasets_other_hsc + datasets_other_str
 print(datasets_other)
 
@@ -54,18 +55,22 @@ targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_mark_" + f]
 targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_ndge_" + f]
 targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_mmms_" + f]
 
-# reclustering our own datasets
+# reclustering own datasets
 for f in fractions:
   targets = targets + [OUTPUT_DAT + "/03_rclo/sce_" + f]
   targets = targets + [OUTPUT_DAT + "/03_rclo/score_df_" + f]
   targets = targets + [OUTPUT_REP + "/reclustering_own/reclustering_own_report_" + f + ".html"]
-
+  
+  # permutation of own datasets
+  if RUN_OWN_BACKGROUND_SIGN:
+     targets = targets + [OUTPUT_DAT + "/08_test/perm_score_df_" + f]
+     
 # reclustering other datasets
 for d in datasets_other:
   targets = targets + [OUTPUT_DAT + "/04_rcls/reclustered_" + d + "_list"]
+  targets = targets + [OUTPUT_REP + "/reclustering_other/all/reclustering_other_report_" + d + ".html"]
   targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_" + d + "_list"]
-  targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_report_" + d + ".html"]
-  targets = targets + [OUTPUT_REP + "/reclustering_other/reclustering_other_selected_report_" + d + ".html"]
+  targets = targets + [OUTPUT_REP + "/reclustering_other/final/reclustering_other_final_report_" + d + ".html"]
  
   # testing reclustering scores
   #targets = targets + [OUTPUT_REP + "/reclustering_scores/test_reclustering_scores_" + d + ".html"]
@@ -74,15 +79,17 @@ for d in datasets_other:
   if RUN_PERM_GENESETS:
     targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mark_" + d]
     targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mmms_" + d]
-    targets = targets + [OUTPUT_REP + "/permutation/permutation_genesets_report_" + d + ".html"]
+    targets = targets + [OUTPUT_REP + "/permutation/genesets/permutation_genesets_report_" + d + ".html"]
 
   if RUN_PERM_BACKGROUND_SIGN:
     targets = targets + [OUTPUT_DAT + "/06_psig/perm_score_df_" + d]
-    targets = targets + [OUTPUT_REP + "/permutation/permutation_report_signature_" + d + ".html"]
+    targets = targets + [OUTPUT_REP + "/permutation/conserved_signature/permutation_report_signature_" + d + ".html"]
 
   if RUN_PERM_BACKGROUND_MARK:
     targets = targets + [OUTPUT_DAT + "/07_pmrk/perm_score_df_" + d]
-    targets = targets + [OUTPUT_REP + "/permutation/permutation_report_consmarkers_" + d + ".html"]
+    targets = targets + [OUTPUT_REP + "/permutation/conserved_markers/permutation_report_consmarkers_" + d + ".html"]
+
+
 
 #-------------------------------------------------------------------------------
 
@@ -322,7 +329,7 @@ rule reclustering_other_report:
         seu_list = rules.reclustering_other.output,
         score_df_list = rules.reclustering_other_scores.output
     output:
-        OUTPUT_REP + "/reclustering_other/reclustering_other_report_{dataset}.html"
+        OUTPUT_REP + "/reclustering_other/all/reclustering_other_report_{dataset}.html"
     script: 
         "reclustering_other_report.Rmd"
 
@@ -399,7 +406,7 @@ if RUN_PERM_GENESETS:
           datasets_other_hsc = datasets_other_hsc,
           datasets_other_str = datasets_other_str
       output:
-          OUTPUT_REP + "/permutation/permutation_genesets_report_{dataset}.html"
+          OUTPUT_REP + "/permutation/genesets/permutation_genesets_report_{dataset}.html"
       script: 
           "permutation_genesets_report.Rmd"
           
@@ -440,7 +447,7 @@ if RUN_PERM_BACKGROUND_SIGN:
           resolution_df = RESOLUTION_OTHER,
           cons_level_use = "conserved_signature"
       output:
-          OUTPUT_REP + "/permutation/permutation_report_signature_{dataset}.html"
+          OUTPUT_REP + "/permutation/conserved_signature/permutation_report_signature_{dataset}.html"
       script: 
           "permutation_background_report.Rmd"
 
@@ -480,9 +487,37 @@ if RUN_PERM_BACKGROUND_MARK:
           resolution_df = RESOLUTION_OTHER,
           cons_level_use = "conserved_markers"
       output:
-          OUTPUT_REP + "/permutation/permutation_report_consmarkers_{dataset}.html"
+          OUTPUT_REP + "/permutation/conserved_markers/permutation_report_consmarkers_{dataset}.html"
       script: 
           "permutation_background_report.Rmd"
+
+
+#-------------------------------------------------------------------------------
+
+if RUN_OWN_BACKGROUND_SIGN:
+
+  # requires conda channel genomedk
+  rule permutation_own_background_sign:
+      input:
+          sce_input = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10",
+          ensembl = rules.prepare_ensembl.output.ensembl_sign
+      params:
+          k_graph_list = config["values"]["02_sce_anno"]["k_graph_list"],
+          resolution_louvain_list = config["values"]["02_sce_anno"]["resolution_louvain_list"],
+          cts_exclude = CELL_TYPES_EXCLUDE,       
+          reclustering_functions = "../../source/sce_functions_reclustering.R",
+          iterations = 100,
+          resolution_df = RESOLUTION_OTHER,
+          #nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
+          nr_cores = 5,
+          cut_off_counts = config["values"]["03_sce_analysis"]["reclustering_cutoff_counts"],
+          cons_level_use = "conserved_signature"      
+      conda:
+          "../../envs/reclustering_scores_permutation_bioconductor.yml"
+      output:
+          perm_score_df = OUTPUT_DAT + "/08_test/perm_score_df_{fraction}"
+      script: 
+          "scripts/test_own_permutation.R"
 
 
 #-------------------------------------------------------------------------------
@@ -507,7 +542,7 @@ rule reclustering_other_report_selected:
         score_df_list = rules.reclustering_other_scores.output,
         resolution_df = RESOLUTION_OTHER
     output:
-        OUTPUT_REP + "/reclustering_other/reclustering_other_selected_report_{dataset}.html"
+        OUTPUT_REP + "/reclustering_other/final/reclustering_other_final_report_{dataset}.html"
     script: 
         "reclustering_other_report_selected.Rmd"
 

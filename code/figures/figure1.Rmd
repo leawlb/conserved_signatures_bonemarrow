@@ -112,6 +112,15 @@ legend_text_color <- "black"
 ct_hsc <- "HSCs"
 ct_str <- "Adipo/CARs"
 
+axis_title_face <- "plain"
+axis_title_size <- 16
+axis_title_color <- "black"
+
+axis_text_face <- "plain"
+axis_text_size <- 14
+axus_text_color <- "black"
+
+max_size_dotplots <- 4
 ```
 
 ## A
@@ -487,7 +496,7 @@ get_perc_expressed <- function(vis_df, sce){
 }
 
 vis_df_hsc <- get_perc_expressed(vis_df_hsc, sce_hsc)
-vis_df_str <- get_perc_expressed(vis_df_hsc, sce_str)
+vis_df_str <- get_perc_expressed(vis_df_str, sce_str)
 ```
 
 ```{r d_prepare_ct}
@@ -552,6 +561,238 @@ vis_df_ct_str <- get_perc_expressed(vis_df_ct_str, sce_str)
 ```
 
 #### Plots
+
+```{r d_base_plot_top_left}
+d_base_plot_top_left <- ggplot2::ggplot(
+  vis_df_ct_hsc, 
+  aes(x = gene,
+      y = species,
+      color = percent_expressed,
+      size = expression))+
+  ggplot2::geom_point()
+```
+
+```{r d_theme_plot_top_left}
+d_theme_plot_top_left <- d_base_plot_top_left+
+  ggplot2::theme_classic()+
+  ggplot2::theme(
+    axis.title.y = element_text(
+      face = axis_title_face,
+      size = axis_title_size,
+      color = axis_title_color),
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_text(
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axus_text_color),
+    legend.position = "none")+
+  ggplot2::ylab("Species")+
+  ggplot2::scale_size_area(
+    "logcounts",
+    max_size = max_size_dotplots,
+    limits = c(0, base::max(vis_df_hsc$expression)))+
+  ggplot2::scale_colour_gradientn(
+     "% expressed",
+     colors = mycolors_to100,
+     limits = c(0, 100)
+  )
+```
+
+```{r d_base_plot_top_right}
+d_base_plot_top_right <- ggplot2::ggplot(
+  vis_df_ct_str, 
+  aes(x = gene,
+      y = species,
+      color = percent_expressed,
+      size = expression))+
+  ggplot2::geom_point()
+```
+
+```{r d_theme_plot_top_right}
+d_theme_plot_top_right <- d_base_plot_top_right+
+  ggplot2::theme_classic()+
+  ggplot2::theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.y = element_text(
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axus_text_color),
+    axis.text.x = element_blank(),
+    legend.position = "none")+
+  ggplot2::ylab("Species")+
+  ggplot2::scale_size_area(
+    "logcounts",
+    max_size = max_size_dotplots,
+    limits = c(0, base::max(vis_df_ct_str$expression)))+
+  ggplot2::scale_colour_gradientn(
+     "% expressed",
+     colors = mycolors_to100,
+     limits = c(0, 100)
+  )
+```
+
+```{r d_base_plot_bottom_left}
+d_base_plot_bottom_left <- ggplot2::ggplot(
+  vis_df_hsc, 
+  aes(x = gene,
+      y = celltypes,
+      color = percent_expressed,
+      size = expression))+
+  ggplot2::geom_point()
+```
+
+```{r d_theme_plot_bottom_left}
+d_theme_plot_bottom_left <- d_base_plot_bottom_left+
+  ggplot2::theme_classic()+
+  ggplot2::theme(
+    axis.title.y = element_text(
+      face = axis_title_face,
+      size = axis_title_size,
+      color = axis_title_color),
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axus_text_color,
+      angle = 90,
+      hjust = 1),
+    axis.text.y = element_text(
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axus_text_color),
+    legend.position = "none")+
+  ggplot2::ylab("Cell type")+
+  ggplot2::xlab("Gene")+
+  ggplot2::scale_size_area(
+    "logcounts",
+    max_size = max_size_dotplots,
+    limits = c(0, base::max(vis_df_hsc$expression))
+  )+
+  ggplot2::scale_colour_gradientn(
+     "% expressed",
+     colors = mycolors_to100,
+     limits = c(0, 100)
+  )
+```
+
+```{r d_base_plot_bottom_right}
+d_base_plot_bottom_right <- ggplot2::ggplot(
+  vis_df_str, 
+  aes(x = gene,
+      y = celltypes,
+      color = percent_expressed,
+      size = expression))+
+  ggplot2::geom_point()
+```
+
+```{r d_theme_plot_bottom_right}
+d_theme_plot_bottom_right <- d_base_plot_bottom_right+
+  ggplot2::theme_classic()+
+  ggplot2::theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axus_text_color,
+      angle = 90,
+      hjust = 1),
+    axis.text.y = element_text(
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axus_text_color),
+    legend.position = "none")+
+  ggplot2::ylab("Cell type")+
+  ggplot2::xlab("Gene")+
+  ggplot2::scale_size_area(
+    "logcounts",
+    max_size = max_size_dotplots,
+    limits = c(0, base::max(vis_df_ct_str$expression)))+
+  ggplot2::scale_colour_gradientn(
+     "% expressed",
+     colors = mycolors_to100,
+     limits = c(0, 100)
+  )
+```
+
+#### Legends
+
+Since logcounts have different upper limits in HSPCs vs Niche, need two.
+
+```{r d_legend_theme_plot_left}
+d_legend_theme_plot_left <- d_base_plot_bottom_left+
+  ggplot2::theme_classic()+
+  ggplot2::theme(legend.title = element_text(
+      face = legend_title_face,
+      size = legend_title_size,
+      color = legend_title_color),
+      legend.title.position = "top",
+      legend.text = element_text(
+      face = legend_text_face,
+      size = legend_text_size,
+      color = legend_text_color),
+      legend.box.just = "left",
+      legend.position = "bottom",
+      legend.box = "vertical", # Stack legends vertically
+      legend.spacing.y = unit(0.5, 'cm'))+
+  ggplot2::scale_size_area(
+    "logcounts",
+    max_size = max_size_dotplots,
+    limits = c(0, base::max(vis_df_hsc$expression)))+
+  ggplot2::scale_colour_gradientn(
+     "% expressed",
+      breaks = c(0, 50, 100),
+      colors = mycolors_to100,
+      limits = c(0, 100)
+  )
+d_legend_left <- ggpubr::get_legend(d_legend_theme_plot_left)
+```
+
+```{r d_legend_theme_plot_right}
+d_legend_theme_plot_right <- d_base_plot_bottom_right+
+  ggplot2::theme_classic()+
+  ggplot2::theme(legend.title = element_text(
+      face = legend_title_face,
+      size = legend_title_size,
+      color = legend_title_color),
+      legend.title.position = "top",
+      legend.text = element_text(
+      face = legend_text_face,
+      size = legend_text_size,
+      color = legend_text_color),
+      legend.box.just = "left",
+      legend.position = "bottom",
+      legend.box = "vertical", # Stack legends vertically
+      legend.spacing.y = unit(0.5, 'cm'))+
+  ggplot2::scale_size_area(
+    "logcounts",
+    max_size = max_size_dotplots,
+    limits = c(0, base::max(vis_df_ct_str$expression)))+
+  ggplot2::scale_colour_gradientn(
+     "% expressed",
+      breaks = c(0, 50, 100),
+      colors = mycolors_to100,
+      limits = c(0, 100)
+  )
+d_legend_right <- ggpubr::get_legend(d_legend_theme_plot_right)
+```
+
+#### Construct
+
+```{r d_theme_plot, fig.width = 16, fig.height = 5}
+d_theme_plot <- ggpubr::ggarrange(
+  d_theme_plot_top_left+theme(plot.margin = unit(c(1, 1, 0.5, 1), "cm")), 
+  d_theme_plot_top_right,
+  d_theme_plot_bottom_left,
+  d_theme_plot_bottom_right,
+  heights = c(1,4),
+  align = "v")
+
+d_theme_plot
+```
+
 
 
 

@@ -119,6 +119,7 @@ axis_title_color <- "black"
 axis_text_face <- "plain"
 axis_text_size <- 14
 axus_text_color <- "black"
+axis_text_size_small <- 10
 
 max_size_dotplots <- 4
 ```
@@ -258,7 +259,7 @@ b_theme_plot <- ggpubr::ggarrange(
 b_theme_plot
 ```
 
-```{r b_theme_legend, fig.height = 6, fig.width = 2}
+```{r b_theme_legend, fig.height = 6, fig.width = 4}
 b_theme_legend <- ggpubr::ggarrange(
   ncol = 1,
   align = "v",
@@ -563,31 +564,86 @@ vis_df_ct_str <- get_perc_expressed(vis_df_ct_str, sce_str)
 #### Plots
 
 ```{r d_base_plot_top_left}
+
+# make background grid
+background_hsc <- data.frame(
+  xmin = c(
+    1,
+    9,
+    11,
+    15,
+    16,
+    18,
+    22,
+    25,
+    30,
+    32,
+    39),  # start of each segment (character values)
+  xmax = c(
+    8,
+    10,
+    14,
+    15,
+    17,
+    21,
+    24,
+    29,
+    31,
+    38,
+    41
+  ),  # end of each segment (character values)
+  ymin = -Inf,              # covers full height
+  ymax = Inf,
+  fill = c(
+    "white",
+    rep(c("grey80", "white"),  5))  # alternating colors
+)
+
 d_base_plot_top_left <- ggplot2::ggplot(
   vis_df_ct_hsc, 
   aes(x = gene,
       y = species,
       color = percent_expressed,
       size = expression))+
+  ggplot2::geom_rect(
+    data = background_hsc, 
+    aes(xmin = xmin - 0.5,
+        xmax = xmax + 0.5, 
+        ymin = ymin,
+        ymax = ymax),
+    fill = background_hsc$fill,
+    inherit.aes = FALSE, 
+    alpha = 0.2)+
   ggplot2::geom_point()
 ```
 
 ```{r d_theme_plot_top_left}
 d_theme_plot_top_left <- d_base_plot_top_left+
   ggplot2::theme_classic()+
+  ggplot2::scale_x_discrete(position = "top")+
   ggplot2::theme(
     axis.title.y = element_text(
       face = axis_title_face,
       size = axis_title_size,
       color = axis_title_color),
-    axis.title.x = element_blank(),
-    axis.text.x = element_blank(),
+    axis.title.x = element_text(
+      face = axis_title_face,
+      size = axis_title_size,
+      color = axis_title_color),
+    axis.text.x.top = element_text(
+      hjust = 0,
+      vjust = 0.5,
+      face = axis_text_face,
+      size = axis_text_size_small,
+      color = axus_text_color,
+      angle = 90),
     axis.text.y = element_text(
       face = axis_text_face,
       size = axis_text_size,
       color = axus_text_color),
     legend.position = "none")+
   ggplot2::ylab("Species")+
+  ggplot2::xlab("Gene")+
   ggplot2::scale_size_area(
     "logcounts",
     max_size = max_size_dotplots,
@@ -595,17 +651,61 @@ d_theme_plot_top_left <- d_base_plot_top_left+
   ggplot2::scale_colour_gradientn(
      "% expressed",
      colors = mycolors_to100,
-     limits = c(0, 100)
-  )
+     limits = c(0, 100))
 ```
 
 ```{r d_base_plot_top_right}
+# make background grid
+background_str <- data.frame(
+  xmin = c(
+    1,
+    4,
+    7,
+    12,
+    16,
+    18,
+    21,
+    24,
+    30,
+    34,
+    38
+    ),  # start of each segment (character values)
+  xmax = c(
+    3,
+    6,
+    11,
+    15,
+    17,
+    20,
+    23,
+    29,
+    33,
+    37,
+    42
+  ),  # end of each segment (character values)
+  ymin = -Inf,              # covers full height
+  ymax = Inf,
+  fill = c(
+    "white",
+    rep(c("grey80", "white"),  5))  # alternating colors
+)
+
 d_base_plot_top_right <- ggplot2::ggplot(
   vis_df_ct_str, 
   aes(x = gene,
       y = species,
       color = percent_expressed,
       size = expression))+
+  ggplot2::geom_rect(
+    data = background_str, 
+    aes(xmin = xmin - 0.5,
+        xmax = xmax + 0.5, 
+        ymin = ymin,
+        ymax = ymax),
+    fill = background_str$fill,
+    inherit.aes = FALSE, 
+    alpha = 0.2)+
+  ggplot2::scale_x_discrete(position = "top")+
   ggplot2::geom_point()
 ```
 
@@ -613,15 +713,24 @@ d_base_plot_top_right <- ggplot2::ggplot(
 d_theme_plot_top_right <- d_base_plot_top_right+
   ggplot2::theme_classic()+
   ggplot2::theme(
-    axis.title.x = element_blank(),
     axis.title.y = element_blank(),
+    axis.title.x = element_text(
+      face = axis_title_face,
+      size = axis_title_size,
+      color = axis_title_color),
+    axis.text.x.top = element_text(
+      hjust = 0,
+      vjust = 0.5,
+      face = axis_text_face,
+      size = axis_text_size_small,
+      color = axus_text_color,
+      angle = 90),
     axis.text.y = element_text(
       face = axis_text_face,
       size = axis_text_size,
       color = axus_text_color),
-    axis.text.x = element_blank(),
     legend.position = "none")+
-  ggplot2::ylab("Species")+
+  ggplot2::xlab("Gene")+
   ggplot2::scale_size_area(
     "logcounts",
     max_size = max_size_dotplots,
@@ -640,6 +749,15 @@ d_base_plot_bottom_left <- ggplot2::ggplot(
       y = celltypes,
       color = percent_expressed,
       size = expression))+
+  ggplot2::geom_rect(
+    data = background_hsc, 
+    aes(xmin = xmin - 0.5,
+        xmax = xmax + 0.5, 
+        ymin = ymin,
+        ymax = ymax),
+    fill = background_hsc$fill,
+    inherit.aes = FALSE, 
+    alpha = 0.2)+
   ggplot2::geom_point()
 ```
 
@@ -652,24 +770,18 @@ d_theme_plot_bottom_left <- d_base_plot_bottom_left+
       size = axis_title_size,
       color = axis_title_color),
     axis.title.x = element_blank(),
-    axis.text.x = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axus_text_color,
-      angle = 90,
-      hjust = 1),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
     axis.text.y = element_text(
       face = axis_text_face,
       size = axis_text_size,
       color = axus_text_color),
     legend.position = "none")+
   ggplot2::ylab("Cell type")+
-  ggplot2::xlab("Gene")+
   ggplot2::scale_size_area(
     "logcounts",
     max_size = max_size_dotplots,
-    limits = c(0, base::max(vis_df_hsc$expression))
-  )+
+    limits = c(0, base::max(vis_df_hsc$expression)))+
   ggplot2::scale_colour_gradientn(
      "% expressed",
      colors = mycolors_to100,
@@ -684,6 +796,15 @@ d_base_plot_bottom_right <- ggplot2::ggplot(
       y = celltypes,
       color = percent_expressed,
       size = expression))+
+  ggplot2::geom_rect(
+    data = background_str, 
+    aes(xmin = xmin - 0.5,
+        xmax = xmax + 0.5, 
+        ymin = ymin,
+        ymax = ymax),
+    fill = background_str$fill,
+    inherit.aes = FALSE, 
+    alpha = 0.2)+
   ggplot2::geom_point()
 ```
 
@@ -693,19 +814,14 @@ d_theme_plot_bottom_right <- d_base_plot_bottom_right+
   ggplot2::theme(
     axis.title.y = element_blank(),
     axis.title.x = element_blank(),
-    axis.text.x = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axus_text_color,
-      angle = 90,
-      hjust = 1),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
     axis.text.y = element_text(
       face = axis_text_face,
       size = axis_text_size,
       color = axus_text_color),
     legend.position = "none")+
   ggplot2::ylab("Cell type")+
-  ggplot2::xlab("Gene")+
   ggplot2::scale_size_area(
     "logcounts",
     max_size = max_size_dotplots,
@@ -781,20 +897,46 @@ d_legend_right <- ggpubr::get_legend(d_legend_theme_plot_right)
 
 #### Construct
 
-```{r d_theme_plot, fig.width = 16, fig.height = 5}
+```{r d_theme_plot, fig.width = 16, fig.height = 6}
 d_theme_plot <- ggpubr::ggarrange(
-  d_theme_plot_top_left+theme(plot.margin = unit(c(1, 1, 0.5, 1), "cm")), 
+  d_theme_plot_top_left, 
   d_theme_plot_top_right,
   d_theme_plot_bottom_left,
   d_theme_plot_bottom_right,
-  heights = c(1,4),
+  heights = c(1,1.8),
+  widths = c(1, 1.1),
   align = "v")
 
 d_theme_plot
 ```
 
+```{r d_theme_plot2, fig.width = 16, fig.height = 6}
+d_theme_plot <- ggpubr::ggarrange(
+  d_theme_plot_top_left + theme(plot.margin = margin(t = 5, r = 5, b = 20, l = 5)), 
+  d_theme_plot_top_right + theme(plot.margin = margin(t = 5, r = 5, b = 20, l = 5)),
+  d_theme_plot_bottom_left,
+  d_theme_plot_bottom_right,
+  heights = c(1,1.8),
+  widths = c(1, 1.1))
 
+d_theme_plot
+```
 
+```{r d_theme_legend_left, fig.width = 2, fig.height = 2}
+d_theme_legend_left <- ggpubr::ggarrange(
+  d_legend_left
+  )
+
+d_theme_legend_left
+```
+
+```{r d_theme_legend_right, fig.width = 2, fig.height = 2}
+d_theme_legend_right <- ggpubr::ggarrange(
+  d_legend_right
+  )
+
+d_theme_legend_right
+```
 
 ```{r sessioninfo}
 utils::sessionInfo()

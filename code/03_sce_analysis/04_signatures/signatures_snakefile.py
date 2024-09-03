@@ -496,6 +496,7 @@ if RUN_PERM_BACKGROUND_MARK:
 
 if RUN_OWN_BACKGROUND_SIGN:
 
+  print(OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10")
   # requires conda channel genomedk
   rule permutation_own_background_sign:
       input:
@@ -506,14 +507,14 @@ if RUN_OWN_BACKGROUND_SIGN:
           resolution_louvain_list = config["values"]["02_sce_anno"]["resolution_louvain_list"],
           cts_exclude = CELL_TYPES_EXCLUDE,       
           reclustering_functions = "../../source/sce_functions_reclustering.R",
-          iterations = 100,
+          iterations = 5,
           resolution_df = RESOLUTION_OTHER,
           #nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
           nr_cores = 5,
           cut_off_counts = config["values"]["03_sce_analysis"]["reclustering_cutoff_counts"],
           cons_level_use = "conserved_signature"      
       conda:
-          "../../envs/reclustering_scores_permutation_bioconductor.yml"
+          "../../envs/test_perm_again_again.yml"
       output:
           perm_score_df = OUTPUT_DAT + "/08_test/perm_score_df_{fraction}"
       script: 

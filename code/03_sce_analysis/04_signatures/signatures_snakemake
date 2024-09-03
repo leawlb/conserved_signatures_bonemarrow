@@ -31,3 +31,12 @@ snakemake --cluster "bsub -q medium -n5 -R rusage[mem=90GB]" -p -j40 -c5 -s sign
 
 
 
+# OWN
+snakemake --cluster "bsub -q medium -n5 -R rusage[mem=130GB]" -p -j10 -c5 -s 01_signatures_reclustering_own.py --latency-wait 20 --configfile ../../config.yaml --use-conda --config  -n
+
+snakemake --cluster "bsub -q medium -n5 -R rusage[mem=200GB]" -p -j10 -c5 -s 01_signatures_reclustering_own.py --latency-wait 20 --configfile ../../config.yaml --use-conda --config  -n
+
+
+snakemake --cluster "bsub -q medium -n5 -R rusage[mem=60GB]" -p -j10 -c5 -s 01_signatures_reclustering_own.py --latency-wait 20 --configfile ../../config.yaml --use-conda --config run_own_sign_permutation=True run_permutation_genesets=True -n
+
+snakemake --cluster "bsub -q medium -n20 -R rusage[mem=200GB]" -p -j10 -c20 -s 01_signatures_reclustering_own.py --latency-wait 20 --configfile ../../config.yaml --use-conda --config run_own_sign_permutation=True run_permutation_genesets=True -n

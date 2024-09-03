@@ -170,7 +170,7 @@ rule download_ts_datasets:
     params:
         li_bone_marrow = DIR_RECLUSTERING + "/Li"
     script:
-        "prepare_datasets/download_ts_files.R"
+        "00_prepare_datasets/download_ts_files.R"
         
 # prepare datasets - Tabula Sapiens
 rule prepare_ts_datasets:
@@ -183,7 +183,7 @@ rule prepare_ts_datasets:
         ts_hscs_progenitors = DIR_RECLUSTERING + "/prepared/ts_hscs_progenitors",
         ts_all_stromal = DIR_RECLUSTERING + "/prepared/ts_all_stromal"
     script:
-        "prepare_datasets/prepare_ts_datasets.R"
+        "00_prepare_datasets/prepare_ts_datasets.R"
 
 """
 # Manually pre-process Li et al. human stromal bone marrow dataset
@@ -218,7 +218,7 @@ if RAN_LI_IPYNB:
       conda:
           "../../envs/zellkonverter_li.yml"
       script:
-          "prepare_datasets/convert_lidata.R"
+          "00_prepare_datasets/convert_lidata.R"
         
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -237,7 +237,7 @@ rule download_mouse_datasets:
         path_annotation_all = DIR_RECLUSTERING + "/raw_mus/tabula_muris/annotations_facs.csv",
         path_weinreb = DIR_RECLUSTERING + "/raw_mus/weinreb/GSE140802_RAW.tar"
     script:
-        "prepare_datasets/download_mouse_datasets.R"
+        "00_prepare_datasets/download_mouse_datasets.R"
 
 # extract all weinreb download folders from .tar, but only need GSE4185642 files
 rule untar_weinreb:
@@ -264,7 +264,7 @@ rule prepare_mouse_datasets_hspc:
         mus_tm_bonemarrow = DIR_RECLUSTERING + "/prepared/mus_tm_bonemarrow",
         mus_weinreb_hspc = DIR_RECLUSTERING + "/prepared/mus_weinreb_hspc"
     script:
-        "prepare_datasets/prepare_mouse_datasets_hspc.R"
+        "00_prepare_datasets/prepare_mouse_datasets_hspc.R"
         
 # prepare tikhonova and baryawno dataset
 # use the merged dataset from dolgalev reference dataset as input
@@ -275,7 +275,7 @@ rule prepare_mouse_datasets_stromal:
         mus_tik_stromal = DIR_RECLUSTERING + "/prepared/mus_tik_stromal",
         mus_bar_stromal = DIR_RECLUSTERING + "/prepared/mus_bar_stromal"
     script:
-        "prepare_datasets/prepare_mouse_datasets_stromal.R"
+        "00_prepare_datasets/prepare_mouse_datasets_stromal.R"
         
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -294,7 +294,7 @@ rule download_exotic_datasets:
         aggregated_filtered_normalised_counts = DIR_RECLUSTERING + "/raw_zeb/aggregated_filtered_normalised_counts.zip",
         aggregated_filtered_counts = DIR_RECLUSTERING + "/raw_zeb/aggregated_filtered_counts.zip"
     script:
-        "prepare_datasets/download_exotic_datasets.R"  
+        "00_prepare_datasets/download_exotic_datasets.R"  
 
 rule unzip_zebrafish:
     input:
@@ -322,7 +322,7 @@ rule prepare_exotic_datasets:
         nmr_sorted_hspc = DIR_RECLUSTERING + "/prepared/nmr_sorted_hspc",
         nmr_whole_hspc = DIR_RECLUSTERING + "/prepared/nmr_whole_hspc"
     script:
-        "prepare_datasets/prepare_exotic_datasets.R"
+        "00_prepare_datasets/prepare_exotic_datasets.R"
         
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -348,4 +348,4 @@ if RAN_LI_IPYNB:
       output:
           OUTPUT_REP + "/prepare_datasets_report.html"
       script:
-          "prepare_datasets_report.Rmd"
+          "00_prepare_datasets_report.Rmd"

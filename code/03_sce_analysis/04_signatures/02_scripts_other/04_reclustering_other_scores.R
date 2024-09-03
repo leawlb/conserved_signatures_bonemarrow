@@ -26,7 +26,7 @@ score_df_list_all <- lapply(seu_list_all, function(seu_list){
     
     print(seu@misc$used_genes)
     print(seu@misc$resolution)
-    score_df <- calculate_scores_long(seu) # own function
+    score_df <- calculate_scores(seu) # own function
     
     # add specific info
     score_df$resolution <- base::rep(seu@misc$resolution, 

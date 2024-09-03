@@ -174,7 +174,7 @@ seu_pool <- BiocGenerics::subset(seu_preprocessed,
 
 # get only genes that have a count of at least n = cut_off_counts
 gene_pool <- rownames(seu_pool)[
-  which(rowSums(seu_pool@assays$RNA$counts) > cut_off_counts)]
+  which(rowSums(seu_pool@assays$RNA$counts) >= cut_off_counts)]
 print(length(gene_pool))
 
 # subset seurat object to these genes 
@@ -251,7 +251,7 @@ for(i in 1:iterations){
   # POSITIONS FROM ORIGINAL SEU_PREPROCESSED subsetted to a smaller list 
   # can use same pool positions that 
   # - don't contain signature genes
-  # - are expressed n > cut_off_counts times
+  # - are expressed n >= cut_off_counts times
   iteration_df_mmms[,i] <- POOL_POSITIONS[base::sample(1:length(gene_pool), 
                                                        nr_random_mmms, 
                                                        replace = FALSE)]
@@ -317,7 +317,7 @@ print(dim(add_df_mark))
 # subset a seurat object without conserved marker IDs, which contains the pool  
 # of genes from which random genes can be drawn:
 # - no conserved marker genes
-# - genes expressed at least n > cut_off_counts times 
+# - genes expressed at least n >= cut_off_counts times 
 
 non_seu_mark <- rownames(seu_preprocessed)[-MARK_POSITIONS]
 
@@ -325,9 +325,9 @@ seu_pool_mark <- BiocGenerics::subset(seu_preprocessed,
                                       features = non_seu_mark,
                                       slot = "count")
 
-# get only genes that have a count of at least n = cut_off_counts
+# get only genes that have a count of at least n >= cut_off_counts
 gene_pool_mark <- rownames(seu_pool_mark)[
-  which(rowSums(seu_pool_mark@assays$RNA$counts) > cut_off_counts)]
+  which(rowSums(seu_pool_mark@assays$RNA$counts) >= cut_off_counts)]
 print(length(gene_pool_mark))
 
 # subset seurat object to these genes 
@@ -430,7 +430,7 @@ print("starting iteration mark vs. signature + random")
 
 res_df_list_mark <- parallel::mclapply(
   X = as.list(c(1:iterations)),
-  FUN = random_reclustering_scores,
+  FUN = permuting_reclustering_scores_seurat,
   seu = seu_preprocessed,
   data_use = seu_preprocessed@misc$data_use,
   iteration_df = iteration_df_mark,
@@ -441,7 +441,7 @@ res_df_list_mark <- parallel::mclapply(
 
 # res_df_list_mark <- lapply(
 #   X = as.list(c(1:iterations)),
-#   FUN = random_reclustering_scores,
+#   FUN = permuting_reclustering_scores_seurat,
 #   seu = seu_preprocessed,
 #   assay_use = "RNA",
 #   iteration_df = iteration_df_mark,
@@ -454,7 +454,7 @@ print("starting iteration mmms vs. signature + random")
 
 res_df_list_mmms <- parallel::mclapply(
   X = as.list(c(1:iterations)),
-  FUN = random_reclustering_scores,
+  FUN = permuting_reclustering_scores_seurat,
   seu = seu_preprocessed,
   data_use = seu_preprocessed@misc$data_use,
   iteration_df = iteration_df_mmms,
@@ -470,7 +470,7 @@ print("starting iteration mmms vs. conserved markers + random")
 
 res_df_list_mmms_mark <- parallel::mclapply(
   X = as.list(c(1:iterations)),
-  FUN = random_reclustering_scores,
+  FUN = permuting_reclustering_scores_seurat,
   seu = seu_preprocessed,
   data_use = seu_preprocessed@misc$data_use,
   iteration_df = iteration_df_mmms_mark,

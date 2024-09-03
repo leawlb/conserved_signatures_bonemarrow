@@ -93,8 +93,10 @@ print(base::table(base::duplicated(
 
 # random genes
 # all genes with non-zero expression (above a defined threshold)
+# since in three datasets, all assays$RNA entries are logcounts, 
+# cut_off_counts = 0 for now
 non_zero_features <- rownames(seu@assays$RNA)[
-  rowSums(seu@assays$RNA) > cut_off_counts]
+  rowSums(seu@assays$RNA) >= cut_off_counts]
 
 # get the same nr of random non-0 genes as there are conserved signature genes
 # always generate the same random numbers
@@ -158,19 +160,16 @@ dim(seu_rand)
 
 # to choose optimal cluster resolution later
 resolution_list <- as.list(seq(0.1, 1.3, by = 0.05))
-#resolution_list <- as.list(c(0.5, 0.1))
 
 print(nr_cores)
 print(cut_off_counts)
 print(resolution_list)
 
-#nr_cores <- 1
 # run the standard pipeline for each resolution and each subsetted dataset                           
 seu_sign_list_reclustered <- mclapply(
   X = resolution_list,
   FUN = standard_seu_pipeline, # from source, own function
   seu = seu_sign,
-  #assay_use = "RNA",
   data_use = seu_sign@misc$data_use,
   calc_umap = TRUE,
   features = conserved_signature_IDs,
@@ -178,11 +177,11 @@ seu_sign_list_reclustered <- mclapply(
   mc.cores = nr_cores,
   mc.silent = TRUE)
 
+# for testing without mclapply
 # seu_sign_list_reclustered <- lapply(
 #   X = resolution_list,
 #   FUN = standard_seu_pipeline, # from source, own function
 #   seu = seu_sign,
-#   #assay_use = "RNA",
 #   data_use = seu_sign@misc$data_use,
 #   calc_umap = TRUE,
 #   features = conserved_signature_IDs)
@@ -195,7 +194,6 @@ seu_mark_list_reclustered <- mclapply(
   X = resolution_list,
   FUN = standard_seu_pipeline, 
   seu = seu_mark,
-  #assay_use = "RNA",
   data_use = seu_mark@misc$data_use,
   calc_umap = TRUE,
   features = conserved_marker_IDs,
@@ -210,7 +208,6 @@ seu_mmms_list_reclustered <- mclapply(
   X = resolution_list,
   FUN = standard_seu_pipeline, 
   seu = seu_mmms,
-  #assay_use = "RNA",
   data_use = seu_mmms@misc$data_use,
   calc_umap = TRUE,
   features = mmusall_marker_IDs,
@@ -225,7 +222,6 @@ seu_rand_list_reclustered <- mclapply(
   X = resolution_list,
   FUN = standard_seu_pipeline, 
   seu = seu_rand,
-  #assay_use = "RNA",
   data_use = seu_rand@misc$data_use,
   calc_umap = TRUE,
   features = random_features,
@@ -242,6 +238,8 @@ export_list <- list("seu_sign" = seu_sign_list_reclustered,
                     "seu_mark" = seu_mark_list_reclustered,
                     "seu_mmms" = seu_mmms_list_reclustered,
                     "seu_rand" = seu_rand_list_reclustered)
+
+#-------------------------------------------------------------------------------
 
 base::saveRDS(export_list, snakemake@output[["seu_output"]])
 

@@ -1,0 +1,1263 @@
+---
+title: "Genesets summary"
+author: "Lea Wölbert"
+date: '2023-11-15'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Report on gene sets, especially conserved signatures.
+
+#### Load objects
+
+```{r seed, message = FALSE}
+set.seed(37)
+```
+
+```{r load, message = FALSE}
+library(tidyverse, quietly = TRUE)
+library(scater, quietly = TRUE)
+library(Seurat, quietly = TRUE)
+library(ComplexUpset, quietly = TRUE)
+```
+
+```{r source, message = FALSE}
+source(file = snakemake@params[["plotting"]])
+```
+
+```{r manual, eval = FALSE, include = FALSE}
+
+geneset_list_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_sign/geneset_list_hsc")
+geneset_list_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_sign/geneset_list_str")
+
+sce_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10")
+sce_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10")
+
+colors_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt"
+source("../../source/colors.R")
+```
+
+```{r load_objects}
+sce_hsc <- base::readRDS(snakemake@input[["sce_hsc"]])
+sce_str <- base::readRDS(snakemake@input[["sce_str"]])
+
+geneset_list_hsc <- base::readRDS(snakemake@input[["geneset_list_hsc"]])
+geneset_list_str <- base::readRDS(snakemake@input[["geneset_list_str"]])
+```
+
+```{r colors, meassage = FALSE}
+colors_path <- snakemake@params[["colors_path"]]
+source(snakemake@params[["colors"]])
+```
+
+# Preparation 
+
+Put all dfs containing info on conservation level per cell type together.
+
+```{r}
+cts_str <- as.list(names(geneset_list_str))
+cts_hsc <- as.list(names(geneset_list_hsc))
+
+conserved_df_list_str <- lapply(cts_str, function(c){
+  
+  geneset_list_str[[c]]$conserved_df$cell_type <- c
+  geneset_list_str[[c]]$conserved_df$fraction <- "str"
+  return(geneset_list_str[[c]]$conserved_df)
+})
+
+conserved_df_list_hsc <- lapply(cts_hsc, function(c){
+  
+  geneset_list_hsc[[c]]$conserved_df$cell_type <- c
+  geneset_list_hsc[[c]]$conserved_df$fraction <- "hsc"
+  return(geneset_list_hsc[[c]]$conserved_df)
+})
+
+conserved_df_str <- dplyr::bind_rows(conserved_df_list_str)
+conserved_df_hsc <- dplyr::bind_rows(conserved_df_list_hsc)
+cons_large_df <- BiocGenerics::rbind(conserved_df_str, conserved_df_hsc)
+print(head(cons_large_df))
+```
+
+# Upset plots
+
+Make one df specifically for upset plot
+
+```{r prepare_upset}
+cons_large_df_up <- cons_large_df
+cons_large_df_up$mmus[which(!is.na(cons_large_df_up$mmus))] <- TRUE
+cons_large_df_up$mcas[which(!is.na(cons_large_df_up$mcas))] <- TRUE
+cons_large_df_up$mspr[which(!is.na(cons_large_df_up$mspr))] <- TRUE
+cons_large_df_up$mcar[which(!is.na(cons_large_df_up$mcar))] <- TRUE
+cons_large_df_up$mmus[which(is.na(cons_large_df_up$mmus))] <- FALSE
+cons_large_df_up$mcas[which(is.na(cons_large_df_up$mcas))] <- FALSE
+cons_large_df_up$mspr[which(is.na(cons_large_df_up$mspr))] <- FALSE
+cons_large_df_up$mcar[which(is.na(cons_large_df_up$mcar))] <- FALSE
+
+head(cons_large_df_up)
+base::table(cons_large_df_up$conserved_signature)
+
+base::table(base::duplicated(cons_large_df_up[
+  cons_large_df_up$ndge == TRUE,]))
+base::table(base::duplicated(cons_large_df_up[
+  cons_large_df_up$conserved_marker == TRUE,]))
+base::table(base::duplicated(cons_large_df_up[
+  cons_large_df_up$conserved_signature == TRUE,]))
+```
+
+```{r upset}
+ComplexUpset::upset(cons_large_df_up[which(
+  cons_large_df_up$ndge == TRUE & cons_large_df_up$fraction == "str"),], 
+  intersect = c("mmus", "mcas", "mspr",  "mcar"))+
+  xlab("")+
+  ggplot2::ggtitle("all marker genes, Stromal cells")
+
+ComplexUpset::upset(cons_large_df_up[which(
+  cons_large_df_up$ndge == TRUE & cons_large_df_up$fraction == "hsc"),], 
+  intersect = c("mmus", "mcas", "mspr",  "mcar"))+
+  xlab("")+
+  ggplot2::ggtitle("all marker genes, HSPCs")
+```
+
+# Categorize
+
+## Total markers
+
+Make a df with categories of conservation for visualisation.
+
+```{r prepare_ggdf_category}
+ggdf_category <- cons_large_df
+
+ggdf_category$marker_only <- base::rep(FALSE, nrow(ggdf_category))
+ggdf_category$conserved_marker_only <- base::rep(FALSE, nrow(ggdf_category))
+ggdf_category$conserved_signature_only <- base::rep(FALSE, nrow(ggdf_category))
+
+# genes that are only non-conserved markers
+ggdf_category$marker_only[
+  which(ggdf_category$conserved_marker == FALSE &
+          ggdf_category$conserved_signature == FALSE)] <- TRUE
+base::table(ggdf_category$marker_only)
+
+# genes that are conserved markers, but not part of a conserved signature
+# because they were not nDGE
+ggdf_category$conserved_marker_only[
+  which(ggdf_category$conserved_marker == TRUE &
+          ggdf_category$conserved_signature == FALSE)] <- TRUE
+base::table(ggdf_category$conserved_marker_only)
+
+# genes that are part of a conserved signature
+ggdf_category$conserved_signature_only[
+  which(ggdf_category$conserved_marker_only == FALSE &
+          ggdf_category$conserved_signature == TRUE)] <- TRUE
+base::table(ggdf_category$conserved_signature_only)
+
+# pivot longer by category
+ggdf_category_long <- base::as.data.frame(tidyr::pivot_longer(
+  ggdf_category,
+  cols = c("marker_only",
+           "conserved_marker_only",
+           "conserved_signature_only"), 
+  names_to = "conservation_level", 
+  values_to = "is_true"))
+
+# remove unneccessary rows that have been generated by pivot longer
+ggdf_category_long <- ggdf_category_long[ggdf_category_long$is_true == TRUE,]
+
+# rename and factor
+ggdf_category_long$conservation_level <- base::gsub(
+  "_only", "", ggdf_category_long$conservation_level)
+ggdf_category_long$conservation_level <- factor(
+  ggdf_category_long$conservation_level,
+  levels = c("marker",
+             "conserved_marker",
+             "conserved_signature"))
+
+ggdf_category_long$cell_type_rev <- factor(
+  ggdf_category_long$cell_type,
+  levels = base::rev(c(names(col_cts_hsc), names(col_cts_str))))
+ggdf_category_long$cell_type <- factor(
+  ggdf_category_long$cell_type,
+  levels = c(names(col_cts_hsc), names(col_cts_str)))
+```
+
+```{r plot_category1}
+plot_cat_1 <- ggplot2::ggplot(ggdf_category_long,
+                              aes(fill = conservation_level, 
+                                  y = cell_type_rev))+
+  ggplot2::geom_bar(position = "stack")+
+  ggplot2::theme_classic()+
+  ggplot2::xlab("Nr of detected marker genes")+
+  ggplot2::scale_fill_manual("", values = col_mode)+
+  ggplot2::theme(strip.text.x = element_text(angle = 90),
+                 axis.text.x = element_text(angle = 90),
+                 legend.position = "bottom")+
+  ggplot2::ylab("Cell type")
+plot_cat_1
+```
+
+## Per species
+
+```{r prepare_ggdf_category_species}
+# pivot longer by species
+ggdf_category_long_species <- base::as.data.frame(tidyr::pivot_longer(
+  ggdf_category_long,
+  cols = c("mmus",
+           "mcas",
+           "mspr",
+           "mcar"), 
+  names_to = "species", 
+  values_to = "enrichment"))
+
+# remove  unneccessary rows that have been generated by pivot longer
+ggdf_category_long_species <- ggdf_category_long_species[
+  !is.na(ggdf_category_long_species$enrichment),]
+
+# factorize species
+ggdf_category_long_species$species <- factor(
+  ggdf_category_long_species$species,
+  levels = names(col_spc))
+# factorize species
+ggdf_category_long_species$species_rev <- factor(
+  ggdf_category_long_species$species,
+  levels = base::rev(names(col_spc)))
+```
+
+```{r plot_category2, fig.width = 5.5, fig.height = 7}
+plot_cat2 <- ggplot2::ggplot(ggdf_category_long_species[
+  ggdf_category_long_species$cell_type %in% names(col_cts_hsc),],
+  aes(fill = conservation_level, y = species_rev))+
+  ggplot2::geom_bar(position = "stack")+
+  ggplot2::theme_classic()+
+  ggplot2::xlab("Nr of detected marker genes")+
+  ggplot2::xlim(c(0,450))+
+  ggplot2::scale_fill_manual(values = col_mode)+
+  ggplot2::facet_grid(rows = vars(cell_type), switch = "y")+
+  ggplot2::scale_y_discrete(position = "right")+
+  ggplot2::theme(
+    legend.position = "top",
+    legend.title = element_blank(),
+    strip.text.y.left = element_text(angle = 0),
+    axis.text.y = element_text(angle = 0),
+    axis.title.y = element_blank(),
+    strip.text = element_text(size = 14),
+    axis.text.x = element_text(size = 12),
+    axis.title.x = element_text(size = 12),
+    strip.background = element_rect(fill = "grey97", linetype = 0))
+
+plot_cat2
+```
+
+```{r, fig.width = 5.5, fig.height = 7}
+plot_cat3 <- plot_cat2+
+  ggplot2::theme(axis.title.y = element_blank(),
+                 axis.text.y = element_blank(),
+                 axis.title.x = element_blank(),
+                 legend.position = "none") 
+plot_cat3
+```
+
+```{r plot_category4, fig.width = 5.6, fig.height = 4.5}
+plot_cat4 <- ggplot2::ggplot(ggdf_category_long_species[
+  ggdf_category_long_species$cell_type %in% names(col_cts_str),],
+  aes(fill = conservation_level, y = species_rev))+
+  ggplot2::geom_bar(position = "stack")+
+  ggplot2::theme_classic()+
+  ggplot2::xlab("Nr of detected marker genes")+
+  ggplot2::scale_fill_manual(values = col_mode)+
+  ggplot2::facet_grid(rows = vars(cell_type), switch = "y")+
+  ggplot2::xlim(c(0,450))+
+  ggplot2::scale_y_discrete(position = "right")+
+  ggplot2::theme(
+    legend.position = "none",
+    strip.text.y.left = element_text(angle = 0),
+    axis.text.y = element_text(angle = 0),
+    axis.title.y = element_blank(),
+    strip.text = element_text(size = 14),
+    axis.text.x = element_text(size = 12),
+    axis.title.x = element_text(size = 12),
+    strip.background = element_rect(fill = "grey97", linetype = 0))
+
+plot_cat4
+```
+
+```{r plot_category5, fig.width = 5.6, fig.height = 4.5}
+plot_cat5 <- plot_cat4+
+  ggplot2::theme(axis.title.y = element_blank(),
+                 axis.text.y = element_blank(),
+                 axis.title.x = element_blank(),
+                 legend.position = "none") 
+plot_cat5
+```
+
+## Is it signature or not?
+
+```{r signature_true}
+ggdf_issign <- ggdf_category_long_species
+
+ggdf_issign$is_signature <- vector(length = nrow(ggdf_issign))
+ggdf_issign$is_signature[
+  ggdf_issign$conservation_level == "marker"] <- FALSE
+ggdf_issign$is_signature[
+  ggdf_issign$conservation_level == "conserved_marker"] <- FALSE
+ggdf_issign$is_signature[
+  ggdf_issign$conservation_level == "conserved_signature"] <- TRUE
+
+ggdf_issign$is_signature <- factor(ggdf_issign$is_signature, 
+                                   levels =c(FALSE, TRUE))
+```
+
+```{r plot_signature_true1, fig.width = 6, fig.height = 4}
+ggplot2::ggplot(ggdf_issign[ggdf_issign$species == "mmus",],
+       aes(fill = is_signature, x = cell_type))+
+  ggplot2::geom_bar(position = "stack")+
+  ggplot2::theme_classic()+
+  ggplot2::ylab("Nr of detected marker genes")+
+  ggplot2::scale_fill_manual("Conserved signature", values = col_mode_log)+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle("BL6 marker genes")+
+  ggplot2::xlab("Cell type")
+
+ggplot2::ggplot(ggdf_issign[ggdf_issign$species == "mmus",],
+       aes(fill = is_signature, x = cell_type))+
+  ggplot2::geom_bar(position = "fill")+
+  ggplot2::theme_classic()+
+  ggplot2::ylab("Proportion of conserved signature genes")+
+  ggplot2::scale_fill_manual("Conserved signature", values = col_mode_log)+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle("BL6 marker genes")+
+  ggplot2::xlab("Cell type")
+```
+
+# Signature gene expression
+
+## All together
+
+```{r prepare_sces}
+cts_hsc <- as.list(names(geneset_list_hsc))
+cts_str <- as.list(names(geneset_list_str))
+
+# this may not be the most elegant solution and it takes quite long
+# separate SCE objects by cell type, then aggregate the counts to obtain
+# the average counts per species for each cell type separately
+# use the multi-batchnorm-corrected logcounts (for now)
+agg_hsc_list <- lapply(cts_hsc, function(ct){
+  
+  print(ct)
+  sce_ct <- sce_hsc[,sce_hsc$celltypes == ct]
+  
+  agg_hsc <- scuttle::aggregateAcrossCells(
+    sce_ct, 
+    id=colData(sce_ct)[,c("Species_ID")], 
+    statistics = "mean",
+    use.assay.type = "logcounts") #multibatchnorm
+  
+  return(agg_hsc)
+})
+names(agg_hsc_list) <- names(geneset_list_hsc)
+
+agg_str_list <- lapply(cts_str, function(ct){
+  
+  print(ct)
+  sce_ct <- sce_str[,sce_str$celltypes == ct]
+  
+  agg_str <- scuttle::aggregateAcrossCells(
+    sce_ct, 
+    id=colData(sce_ct)[,c("Species_ID")], 
+    statistics = "mean",
+    use.assay.type = "logcounts") #multibatchnorm
+  
+  return(agg_str)
+})
+names(agg_str_list) <- names(geneset_list_str)
+
+```
+
+### HSCs
+
+```{r calc_expr_hsc_all}
+
+# get all unique signature genes
+all_sign_genes <- vector()
+for(i in 1:length(geneset_list_hsc)){
+  sign_genes <- geneset_list_hsc[[i]]$conserved_signature
+  all_sign_genes <- c(all_sign_genes, sign_genes)
+}
+all_sign_genes_hsc <- base::unique(all_sign_genes)
+
+expr_df_list_hsc <- lapply(agg_hsc_list, function(agg_hsc){
+  
+  # get current cell type and relevant signature genes
+  ct_curr <- agg_hsc$celltypes[1]
+  sign_genes_ct <- geneset_list_hsc[[ct_curr]]$conserved_signature
+  
+  # get a df from average logcounts per ct and species
+  vis_df <- base::as.data.frame(
+    t(SummarizedExperiment::assays(agg_hsc)$logcounts))
+  
+  # subset to all signature genes of this tissue
+  vis_df <- vis_df[,colnames(vis_df) %in% all_sign_genes_hsc]
+  
+  # change df format 
+  vis_df <- tibble::rownames_to_column(vis_df, "species")
+  vis_df <- tidyr::pivot_longer(vis_df, 
+                                cols = c(2:ncol(vis_df)),
+                                values_to = "expression",
+                                names_to = "gene")
+  
+  # add ct info
+  vis_df$cell_type <- base::rep(ct_curr)
+  
+  # scale expression of all genes per cell type (which genes are highest 
+  # or lowest per cell type)
+  vis_df$scaled_expression <- base::scale(vis_df$expression)
+  
+  # add info on genes that are signature genes of this ct
+  vis_df$is_sign_gene <- vector(length = nrow(vis_df))
+  vis_df$is_sign_gene[vis_df$gene %in% sign_genes_ct] <- TRUE
+  
+  vis_df <- vis_df[base::order(vis_df$scaled_expression, decreasing = TRUE),]
+
+  return(vis_df)
+})
+
+# bind dfs 
+agg_hsc_df <- dplyr::bind_rows(expr_df_list_hsc)
+
+# add "sample"
+agg_hsc_df <- agg_hsc_df %>%
+  mutate("sample" = base::paste0(cell_type, "_", species))
+head(agg_hsc_df)
+
+# get a well ordered list of unique genes for factorization
+all_sign_genes_for_factor <- base::unique(agg_hsc_df$gene[
+  agg_hsc_df$is_sign_gene == TRUE])
+
+# factorize
+agg_hsc_df$gene <- factor(agg_hsc_df$gene,
+                          levels = base::rev(all_sign_genes_for_factor))
+agg_hsc_df$species <- factor(agg_hsc_df$species,
+                             levels = names(col_spc))
+
+# scale expression per gene (in which cell type is a gene highes or lowest
+# expressed)
+agg_hsc_df$scaled_per_gene <- vector(length = nrow(agg_hsc_df), mode = "numeric")
+agg_hsc_df$zscore_gene <- vector(length = nrow(agg_hsc_df), mode = "numeric")
+for(g in base::unique(agg_hsc_df$gene)){
+  
+  expr_vector_g <- agg_hsc_df[agg_hsc_df$gene == g,]$expression
+  
+  # scale expression levels per gene
+  agg_hsc_df$scaled_per_gene[agg_hsc_df$gene == g] <- base::scale(expr_vector_g)
+  
+  # calculate z score per gene
+  z_score_g <- (expr_vector_g - base::mean(expr_vector_g))/stats::sd(expr_vector_g)
+  agg_hsc_df$zscore_gene[agg_hsc_df$gene == g] <- z_score_g
+  
+}
+```
+
+```{r hsc_hm_all1}
+ggplot2::ggplot(agg_hsc_df,
+                aes(x = species, y = gene, fill = expression))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text.y = element_blank(),
+                 axis.ticks.y = element_blank(),
+                 axis.text.x = element_text(angle = 90),
+                 strip.text.x = element_text(angle = 90))+
+  ggplot2::scale_fill_continuous("average logcounts",
+                                 low = "white", high = "red3",
+                                 limits = c(0, max(agg_hsc_df$expression)))+
+  ggplot2::facet_grid(cols = vars(agg_hsc_df$cell_type))
+
+```
+
+```{r hsc_hm_all2}
+ggplot2::ggplot(agg_hsc_df,
+                aes(x = species, y = gene, fill = scaled_expression))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text.y = element_blank(),
+                 axis.ticks.y = element_blank(),
+                 axis.text.x = element_text(angle = 90),
+                 strip.text.x = element_text(angle = 90))+
+  ggplot2::scale_fill_gradientn("scaled per cell type", 
+                                 colours = c("blue3", "white", "red3"),
+                                 breaks = c(-max(agg_hsc_df$scaled_expression),
+                                            0,
+                                            max(agg_hsc_df$scaled_expression)), 
+                                 limits = c(-max(agg_hsc_df$scaled_expression),
+                                            max(agg_hsc_df$scaled_expression)))+
+  ggplot2::facet_grid(cols = vars(agg_hsc_df$cell_type))
+
+```
+
+```{r hsc_hm_all3}
+ggplot2::ggplot(agg_hsc_df,
+                aes(x = species, y = gene, fill = scaled_per_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text.y = element_blank(),
+                 axis.ticks.y = element_blank(),
+                 axis.text.x = element_text(angle = 90),
+                 strip.text.x = element_text(angle = 90))+
+  ggplot2::scale_fill_gradientn("scaled per gene", 
+                                 colours = c("blue3", "white", "red3"),
+                                 breaks = c(-5, -2.5,  0, 2.5, 5), 
+                                 limits = c(-5,5))+
+  ggplot2::facet_grid(cols = vars(agg_hsc_df$cell_type))
+
+```
+
+```{r hsc_hm_all4}
+ggplot2::ggplot(agg_hsc_df,
+                aes(x = species, y = gene, fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text.y = element_blank(),
+                 axis.ticks.y = element_blank(),
+                 axis.text.x = element_text(angle = 90),
+                 strip.text.x = element_text(angle = 90))+
+  ggplot2::scale_fill_gradientn("z-scores per gene", 
+                                 colours = c("blue3", "white", "red3"),
+                                 breaks = c(-5, -2.5,  0, 2.5, 5), 
+                                 limits = c(-5,5))+
+  ggplot2::facet_grid(cols = vars(agg_hsc_df$cell_type))
+
+```
+
+### Stromal cells
+
+```{r calc_expr_str_all}
+
+all_sign_genes <- vector()
+for(i in 1:length(geneset_list_str)){
+  sign_genes <- geneset_list_str[[i]]$conserved_signature
+  all_sign_genes <- c(all_sign_genes, sign_genes)
+}
+all_sign_genes_str <- base::unique(all_sign_genes)
+
+
+expr_df_list_str <- lapply(agg_str_list, function(agg_str){
+  
+  ct_curr <- agg_str$celltypes[1]
+  ct_curr_pos <- which(names(geneset_list_str) == ct_curr)
+  sign_genes_ct <- geneset_list_str[[ct_curr_pos]]$conserved_signature
+  
+  vis_df <- base::as.data.frame(
+    t(SummarizedExperiment::assays(agg_str)$logcounts))
+  
+  vis_df <- vis_df[,colnames(vis_df) %in% all_sign_genes_str]
+  
+  vis_df <- tibble::rownames_to_column(vis_df, "species")
+  vis_df <- tidyr::pivot_longer(vis_df, 
+                                cols = c(2:ncol(vis_df)),
+                                values_to = "expression",
+                                names_to = "gene")
+  
+  vis_df$cell_type <- base::rep(ct_curr)
+  vis_df$scaled_expression <- base::scale(vis_df$expression)
+  
+  vis_df$is_sign_gene <- vector(length = nrow(vis_df))
+  vis_df$is_sign_gene[vis_df$gene %in% sign_genes_ct] <- TRUE
+  
+  vis_df <- vis_df[base::order(vis_df$scaled_expression, decreasing = TRUE),]
+
+  return(vis_df)
+})
+
+agg_str_df <- dplyr::bind_rows(expr_df_list_str)
+
+# add "sample"
+agg_str_df <- agg_str_df %>%
+  mutate("sample" = base::paste0(cell_type, "_", species))
+head(agg_str_df)
+
+# get a well ordered list of unique genes for factorization
+all_sign_genes_for_factor <- base::unique(agg_str_df$gene[
+  agg_str_df$is_sign_gene == TRUE])
+
+agg_str_df$gene <- factor(agg_str_df$gene,
+                          levels = base::rev(all_sign_genes_for_factor))
+agg_str_df$species <- factor(agg_str_df$species,
+                             levels = names(col_spc))
+
+# scale expression per gene (in which cell type is a gene highes or lowest
+# expressed)
+agg_str_df$scaled_per_gene <- vector(length = nrow(agg_str_df), mode = "numeric")
+agg_str_df$zscore_gene <- vector(length = nrow(agg_str_df), mode = "numeric")
+for(g in base::unique(agg_str_df$gene)){
+  
+  expr_vector_g <- agg_str_df[agg_str_df$gene == g,]$expression
+  
+  # scale expression levels per gene
+  agg_str_df$scaled_per_gene[agg_str_df$gene == g] <- base::scale(expr_vector_g)
+  
+  # calculate z score per gene
+  z_score_g <- (expr_vector_g - base::mean(expr_vector_g))/stats::sd(expr_vector_g)
+  agg_str_df$zscore_gene[agg_str_df$gene == g] <- z_score_g
+  
+}
+```
+
+```{r str_hm_all1}
+ggplot2::ggplot(agg_str_df,
+                aes(x = species, y = gene, fill = expression))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text.y = element_blank(),
+                 axis.ticks.y = element_blank(),
+                 axis.text.x = element_text(angle = 90),
+                 strip.text.x = element_text(angle = 90))+
+  ggplot2::scale_fill_continuous("average logcounts",
+                                 low = "white", high = "red3",
+                                 limits = c(0, max(agg_str_df$expression)))+
+  ggplot2::facet_grid(cols = vars(agg_str_df$cell_type))
+
+```
+
+```{r str_hm_all2}
+ggplot2::ggplot(agg_str_df,
+                aes(x = species, y = gene, fill = scaled_expression))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text.y = element_blank(),
+                 axis.ticks.y = element_blank(),
+                 axis.text.x = element_text(angle = 90),
+                 strip.text.x = element_text(angle = 90))+
+  ggplot2::scale_fill_gradientn("scaled per cell type", 
+                                 colours = c("blue3", "white", "red3"),
+                                 breaks = c(-max(agg_str_df$scaled_expression),
+                                            0,
+                                            max(agg_str_df$scaled_expression)), 
+                                 limits = c(-max(agg_str_df$scaled_expression),
+                                            max(agg_str_df$scaled_expression)))+
+  ggplot2::facet_grid(cols = vars(agg_str_df$cell_type))
+
+```
+
+```{r str_hm_all3}
+ggplot2::ggplot(agg_str_df,
+                aes(x = species, y = gene, fill = scaled_per_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text.y = element_blank(),
+                 axis.ticks.y = element_blank(),
+                 axis.text.x = element_text(angle = 90),
+                 strip.text.x = element_text(angle = 90))+
+  ggplot2::scale_fill_gradientn("scaled per gene", 
+                                 colours = c("blue3", "white", "red3"),
+                                 breaks = c(-4, -2,  0, 2, 4), 
+                                 limits = c(-4.5,4.5)
+                                )+
+  ggplot2::facet_grid(cols = vars(agg_str_df$cell_type))
+
+```
+
+```{r str_hm_all4}
+ggplot2::ggplot(agg_str_df,
+                aes(x = species, y = gene, fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text.y = element_blank(),
+                 axis.ticks.y = element_blank(),
+                 axis.text.x = element_text(angle = 90),
+                 strip.text.x = element_text(angle = 90))+
+  ggplot2::scale_fill_gradientn("z-scores per gene", 
+                                 colours = c("blue3", "white", "red3"),
+                                 breaks = c(-4, -2,  0, 2, 4), 
+                                 limits = c(-4.5,4.5)
+                                )+
+  ggplot2::facet_grid(cols = vars(agg_str_df$cell_type))
+
+```
+
+## Per cell type
+
+Generate plots for each cell type.
+
+```{r plot_hsc_signatures1}
+
+plotlist_hsc <- lapply(cts_hsc, function(ct){
+
+  print(ct)
+  hsc_genes <- geneset_list_hsc[[ct]]$conserved_signature
+  
+  hsc_genes_nosub <- hsc_genes[!hsc_genes %in%
+                                 geneset_list_hsc[[ct]]$genes_subclustering]
+  
+  agg_hsc_ct <- agg_hsc_list[[ct]]
+  vis_df <- base::as.data.frame(
+    t(SummarizedExperiment::assays(agg_hsc_ct)$logcounts))
+  vis_df <- vis_df[,colnames(vis_df) %in% hsc_genes]
+  vis_df <- tibble::rownames_to_column(vis_df, "species")
+  vis_df <- tidyr::pivot_longer(vis_df, 
+                                cols = c(2:ncol(vis_df)),
+                                values_to = "expression",
+                                names_to = "gene")
+
+  vis_df$species <- factor(vis_df$species, levels = names(col_spc))
+  
+  # make plots
+  plot1 <- ggplot2::ggplot(vis_df, 
+                           aes(x = species, 
+                               y = reorder(gene, expression), 
+                               fill = expression))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_continuous("average logcounts",
+                                 low = "white", high = "blue2",
+                                 limits = c(0, max(vis_df$expression)))+
+  ggplot2::ggtitle(base::paste(ct, "markers"))+
+  ggplot2::theme(axis.title.y = element_blank(),
+                 axis.title.x = element_blank(),
+                 legend.position = "bottom",
+                 axis.text.x = element_text(angle = 90, 
+                                            size = 12,
+                                            hjust = 0.45),
+                 axis.text.y = element_text(size = 12))
+
+  plotlist <- list(plot1)
+  
+  if(!identical(hsc_genes, hsc_genes_nosub)){
+    vis_df <- vis_df[vis_df$gene %in% hsc_genes_nosub,]
+    vis_df <- vis_df[order(vis_df$expression),]
+    
+    plot2 <- ggplot2::ggplot(vis_df, 
+                             aes(x = species, 
+                                 y = reorder(gene, expression), 
+                                 fill = expression))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::scale_fill_continuous("average logcounts",
+                                   low = "white", high = "blue2",
+                                   limits = c(0, max(vis_df$expression)))+
+    ggplot2::ggtitle(base::paste(ct, "markers"))+
+    ggplot2::theme(axis.title.y = element_blank(),
+                   axis.title.x = element_blank(),
+                   legend.position = "bottom",
+                   axis.text.x = element_text(angle = 90, 
+                                              size = 12,
+                                              hjust = 0.45),
+                   axis.text.y = element_text(size = 12))
+    plotlist <- list(plot1, plot2)
+  }
+  return(plotlist)
+})
+names(plotlist_hsc) <- names(geneset_list_hsc)
+```
+
+```{r plot_expr_hsc, fig.height = 6, fig.width = 4}
+print(plotlist_hsc[["HSCs"]]) 
+```
+
+```{r plot_expr_earlympps, fig.height = 5.5, fig.width = 4}
+print(plotlist_hsc[["Early MPPs"]])
+```
+
+```{r plot_expr_activatedympps, fig.height = 3, fig.width = 4}
+print(plotlist_hsc[["Activated MPPs"]])
+```
+
+```{r plot_expr_earlymyeloid, fig.height = 5, fig.width = 4}
+print(plotlist_hsc[["Early Myeloid"]])
+```
+
+```{r plot_expr_lymphoid, fig.height = 5, fig.width = 4}
+print(plotlist_hsc[["Lymphoid"]])
+```
+
+```{r plot_expr_neutro, fig.height = 10, fig.width = 4}
+print(plotlist_hsc[["Neutrophil progs."]])
+```
+
+```{r plot_expr_mono, fig.height = 10, fig.width = 4}
+print(plotlist_hsc[["Monocyte progs."]])
+```
+
+```{r plot_expr_mk, fig.height = 4, fig.width = 4}
+print(plotlist_hsc[["Mk progs."]])
+```
+
+```{r plot_expr_mkery, fig.height = 4, fig.width = 4}
+print(plotlist_hsc[["Mk/Ery progs."]])
+```
+
+```{r plot_expr_bmprogs, fig.height = 4, fig.width = 4}
+print(plotlist_hsc[["Baso/Mast progs."]])
+```
+
+```{r plot_expr_ery, fig.height = 15, fig.width = 4}
+print(plotlist_hsc[["Erythroid progs."]])
+```
+
+```{r plot_expr_cycling, fig.height = 12, fig.width = 4}
+print(plotlist_hsc[["Cycling"]])
+```
+
+```{r plot_str_signatures}
+cts_str <- as.list(names(geneset_list_str))
+
+plotlist_str <- lapply(cts_str, function(ct){
+  
+  print(ct)
+  str_genes <- geneset_list_str[[ct]]$conserved_signature
+  
+  str_genes_nosub <- str_genes[!str_genes %in%
+                                 geneset_list_str[[ct]]$genes_subclustering]
+  
+  agg_str_ct <- agg_str_list[[ct]]
+  vis_df <- base::as.data.frame(
+    t(SummarizedExperiment::assays(agg_str_ct)$logcounts))
+  vis_df <- vis_df[,colnames(vis_df) %in% str_genes]
+  vis_df <- tibble::rownames_to_column(vis_df, "species")
+  vis_df <- tidyr::pivot_longer(vis_df, 
+                                cols = c(2:ncol(vis_df)),
+                                values_to = "expression",
+                                names_to = "gene")
+
+  vis_df$species <- factor(vis_df$species, levels = names(col_spc))
+  
+  # make plots
+  plot1 <- ggplot2::ggplot(vis_df, 
+                           aes(x = species, 
+                               y = reorder(gene, expression), 
+                               fill = expression))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_continuous("average logcounts",
+                                 low = "white", high = "blue2",
+                                 limits = c(0, max(vis_df$expression)))+
+  ggplot2::ggtitle(base::paste(ct, "markers"))+
+  ggplot2::theme(axis.title.y = element_blank(),
+                 axis.title.x = element_blank(),
+                 legend.position = "bottom",
+                 axis.text.x = element_text(angle = 90, 
+                                            size = 12,
+                                            hjust = 0.45),
+                 axis.text.y = element_text(size = 12))
+
+  plotlist <- list(plot1)
+  
+  if(!identical(str_genes, str_genes_nosub)){
+    vis_df <- vis_df[vis_df$gene %in% str_genes_nosub,]
+    vis_df <- vis_df[order(vis_df$expression),]
+    
+    plot2 <- ggplot2::ggplot(vis_df, 
+                             aes(x = species, 
+                                 y = reorder(gene, expression), 
+                                 fill = expression))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::scale_fill_continuous("average logcounts",
+                                   low = "white", high = "blue2",
+                                   limits = c(0, max(vis_df$expression)))+
+    ggplot2::ggtitle(base::paste(ct, "markers"))+
+    ggplot2::theme(axis.title.y = element_blank(),
+                   axis.title.x = element_blank(),
+                   legend.position = "bottom",
+                   axis.text.x = element_text(angle = 90, 
+                                              size = 12,
+                                              hjust = 0.45),
+                   axis.text.y = element_text(size = 12))
+  plotlist <- list(plot1, plot2)
+  }
+  return(plotlist)
+})
+names(plotlist_str) <- names(geneset_list_str)
+```
+
+```{r plot_expr_adipocars, fig.height = 17, fig.width = 4}
+print(plotlist_str[["Adipo/CARs"]])
+```
+
+```{r plot_expr_osteo, fig.height = 10, fig.width = 4}
+print(plotlist_str[["Osteo"]])
+```
+
+```{r plot_expr_fibrochondro, fig.height = 10, fig.width = 4}
+print(plotlist_str[["Fibro/Chondro"]])
+```
+
+```{r plot_expr_fibro, fig.height = 18, fig.width = 4}
+print(plotlist_str[["Fibroblasts"]])
+```
+
+```{r plot_expr_aec, fig.height = 25, fig.width = 4}
+print(plotlist_str[["Arteriolar/Capillary ECs"]])
+```
+
+```{r plot_expr_svec, fig.height = 15, fig.width = 4}
+print(plotlist_str[["Sinusoidal/Venular ECs"]])
+```
+
+```{r plot_expr_sinusoid, fig.height = 15, fig.width = 4}
+print(plotlist_str[["Sinusoidal ECs"]])
+```
+
+```{r plot_expr_perismooth, fig.height = 10, fig.width = 4}
+print(plotlist_str[["Pericytes/Smooth Muscle"]])
+```
+
+# All BL6 marker gene expression
+
+Generate plots for each cell type.
+This will help us find interesting genes to validate using RNA-FISH (HCR).
+
+```{r plot_hsc_bl6m1}
+
+plotlist_hsc_bl6_markers <- lapply(cts_hsc, function(ct){
+
+  print(ct)
+  # get all BL6 markers per cell type
+  mmms_genes <- geneset_list_hsc[[ct]]$conserved_df$gene[
+    which(!is.na(geneset_list_hsc[[ct]]$conserved_df$mmus))]
+ 
+  mmms_genes_nosub <- mmms_genes[!mmms_genes %in%
+                                 geneset_list_hsc[[ct]]$genes_subclustering]
+  
+  agg_hsc_ct <- agg_hsc_list[[ct]]
+  vis_df <- base::as.data.frame(
+    t(SummarizedExperiment::assays(agg_hsc_ct)$logcounts))
+  vis_df <- vis_df[,colnames(vis_df) %in% mmms_genes]
+  vis_df <- tibble::rownames_to_column(vis_df, "species")
+  vis_df <- tidyr::pivot_longer(vis_df, 
+                                cols = c(2:ncol(vis_df)),
+                                values_to = "expression",
+                                names_to = "gene")
+
+  vis_df$species <- factor(vis_df$species, levels = names(col_spc))
+  
+  # make plots
+  plot1 <- ggplot2::ggplot(vis_df, 
+                           aes(x = species, 
+                               y = reorder(gene, expression), 
+                               fill = expression))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_continuous("average logcounts",
+                                 low = "white", high = "blue2",
+                                 limits = c(0, max(vis_df$expression)))+
+  ggplot2::ggtitle(base::paste(ct, "markers"))+
+  ggplot2::theme(axis.title.y = element_blank(),
+                 axis.title.x = element_blank(),
+                 legend.position = "bottom",
+                 axis.text.x = element_text(angle = 90, 
+                                            size = 12,
+                                            hjust = 0.45),
+                 axis.text.y = element_text(size = 12))
+
+  plotlist <- list(plot1)
+  
+  if(!identical(mmms_genes, mmms_genes_nosub)){
+    vis_df <- vis_df[vis_df$gene %in% mmms_genes_nosub,]
+    vis_df <- vis_df[order(vis_df$expression),]
+    
+    plot2 <- ggplot2::ggplot(vis_df, 
+                             aes(x = species, 
+                                 y = reorder(gene, expression), 
+                                 fill = expression))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::scale_fill_continuous("average logcounts",
+                                   low = "white", high = "blue2",
+                                   limits = c(0, max(vis_df$expression)))+
+    ggplot2::ggtitle(base::paste(ct, "markers"))+
+    ggplot2::theme(axis.title.y = element_blank(),
+                   axis.title.x = element_blank(),
+                   legend.position = "bottom",
+                   axis.text.x = element_text(angle = 90, 
+                                              size = 12,
+                                              hjust = 0.45),
+                   axis.text.y = element_text(size = 12))
+    plotlist <- list(plot1, plot2)
+  }
+  return(plotlist)
+})
+names(plotlist_hsc_bl6_markers) <- names(geneset_list_hsc)
+```
+
+```{r plot_expr_hsc_bl6, fig.height = 13, fig.width = 4}
+print(plotlist_hsc_bl6_markers[["HSCs"]]) 
+```
+
+```{r plot_expr_earlympps_bl6, fig.height = 6, fig.width = 4}
+print(plotlist_hsc_bl6_markers[["Early MPPs"]])
+```
+
+```{r plot_expr_activatedympps_bl6, fig.height = 7, fig.width = 4}
+print(plotlist_hsc_bl6_markers[["Activated MPPs"]])
+```
+
+```{r plot_expr_earlymyeloid_bl6, fig.height = 13, fig.width = 4}
+print(plotlist_hsc_bl6_markers[["Early Myeloid"]])
+```
+
+```{r plot_expr_lymphoid_bl6, fig.height = 17, fig.width = 4}
+print(plotlist_hsc_bl6_markers[["Lymphoid"]])
+```
+
+```{r plot_expr_neutro_bl6, fig.height = 35, fig.width = 4}
+print(plotlist_hsc_bl6_markers[["Neutrophil progs."]])
+```
+
+```{r plot_expr_mono_bl6, fig.height = 35, fig.width = 4}
+print(plotlist_hsc_bl6_markers[["Monocyte progs."]])
+```
+
+```{r plot_expr_mk_bl6, fig.height = 10, fig.width = 4}
+print(plotlist_hsc_bl6_markers[["Mk progs."]])
+```
+
+```{r plot_expr_mkery_bl6, fig.height = 14, fig.width = 4}
+print(plotlist_hsc_bl6_markers[["Mk/Ery progs."]])
+```
+
+```{r plot_expr_bmprogs_bl6, fig.height = 14, fig.width = 4}
+print(plotlist_hsc_bl6_markers[["Baso/Mast progs."]])
+```
+
+```{r plot_expr_ery_bl6, fig.height = 40, fig.width = 4}
+print(plotlist_hsc_bl6_markers[["Erythroid progs."]])
+```
+
+```{r plot_expr_cycling_bl6, fig.height = 20, fig.width = 4}
+print(plotlist_hsc_bl6_markers[["Cycling"]])
+```
+
+```{r plot_str_bl6}
+cts_str <- as.list(names(geneset_list_str))
+
+plotlist_allbl6_markers_str <- lapply(cts_str, function(ct){
+  
+  print(ct)
+   # get all BL6 markers per cell type
+  mmms_genes <- geneset_list_str[[ct]]$conserved_df$gene[
+    which(!is.na(geneset_list_str[[ct]]$conserved_df$mmus))]
+ 
+  mmms_genes_nosub <- mmms_genes[!mmms_genes %in%
+                                 geneset_list_str[[ct]]$genes_subclustering]
+  
+  agg_str_ct <- agg_str_list[[ct]]
+  vis_df <- base::as.data.frame(
+    t(SummarizedExperiment::assays(agg_str_ct)$logcounts))
+  vis_df <- vis_df[,colnames(vis_df) %in% mmms_genes]
+  vis_df <- tibble::rownames_to_column(vis_df, "species")
+  vis_df <- tidyr::pivot_longer(vis_df, 
+                                cols = c(2:ncol(vis_df)),
+                                values_to = "expression",
+                                names_to = "gene")
+
+  vis_df$species <- factor(vis_df$species, levels = names(col_spc))
+  
+  # make plots
+  plot1 <- ggplot2::ggplot(vis_df, 
+                           aes(x = species, 
+                               y = reorder(gene, expression), 
+                               fill = expression))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_continuous("average logcounts",
+                                 low = "white", high = "blue2",
+                                 limits = c(0, max(vis_df$expression)))+
+  ggplot2::ggtitle(base::paste(ct, "markers"))+
+  ggplot2::theme(axis.title.y = element_blank(),
+                 axis.title.x = element_blank(),
+                 legend.position = "bottom",
+                 axis.text.x = element_text(angle = 90, 
+                                            size = 12,
+                                            hjust = 0.45),
+                 axis.text.y = element_text(size = 12))
+
+  plotlist <- list(plot1)
+  
+  if(!identical(mmms_genes, mmms_genes_nosub)){
+    vis_df <- vis_df[vis_df$gene %in% mmms_genes_nosub,]
+    vis_df <- vis_df[order(vis_df$expression),]
+    
+    plot2 <- ggplot2::ggplot(vis_df, 
+                             aes(x = species, 
+                                 y = reorder(gene, expression), 
+                                 fill = expression))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::scale_fill_continuous("average logcounts",
+                                   low = "white", high = "blue2",
+                                   limits = c(0, max(vis_df$expression)))+
+    ggplot2::ggtitle(base::paste(ct, "markers"))+
+    ggplot2::theme(axis.title.y = element_blank(),
+                   axis.title.x = element_blank(),
+                   legend.position = "bottom",
+                   axis.text.x = element_text(angle = 90, 
+                                              size = 12,
+                                              hjust = 0.45),
+                   axis.text.y = element_text(size = 12))
+  plotlist <- list(plot1, plot2)
+  }
+  return(plotlist)
+})
+names(plotlist_allbl6_markers_str) <- names(geneset_list_str)
+```
+
+```{r plot_expr_adipocars_bl6, fig.height = 60, fig.width = 4}
+print(plotlist_allbl6_markers_str[["Adipo/CARs"]])
+```
+
+```{r plot_expr_osteo_bl6, fig.height = 45, fig.width = 4}
+print(plotlist_allbl6_markers_str[["Osteo"]])
+```
+
+```{r plot_expr_fibrochondro_bl6, fig.height = 50, fig.width = 4}
+print(plotlist_allbl6_markers_str[["Fibro/Chondro"]])
+```
+
+```{r plot_expr_fibro_bl6, fig.height = 68, fig.width = 4}
+print(plotlist_allbl6_markers_str[["Fibroblasts"]])
+```
+
+```{r plot_expr_aec_bl6, fig.height = 70, fig.width = 4}
+print(plotlist_allbl6_markers_str[["Arteriolar/Capillary ECs"]])
+```
+
+```{r plot_expr_svec_bl6, fig.height = 50, fig.width = 4}
+print(plotlist_allbl6_markers_str[["Sinusoidal/Venular ECs"]])
+```
+
+```{r plot_expr_sinusoid_bl6, fig.height = 35, fig.width = 4}
+print(plotlist_allbl6_markers_str[["Sinusoidal ECs"]])
+```
+
+```{r plot_expr_perismooth_bl6, fig.height = 44, fig.width = 4}
+print(plotlist_allbl6_markers_str[["Pericytes/Smooth Muscle"]])
+```
+
+### HSCs only, special plot
+
+Making one example plot for HSCs using all BL6 markers
+
+```{r hsc_vis_df}
+
+hsc_cons_df <- geneset_list_hsc$HSCs$conserved_df
+
+agg_hscs <- agg_hsc_list$HSCs
+
+vis_df_hsc <- base::as.data.frame(
+  t(SummarizedExperiment::assays(agg_hscs)$logcounts)) # batchnorm
+vis_df_hsc <- vis_df_hsc[,colnames(vis_df_hsc) %in% hsc_cons_df$gene]
+vis_df_hsc <- tibble::rownames_to_column(vis_df_hsc, "species")
+vis_df_hsc <- tidyr::pivot_longer(vis_df_hsc, 
+                                  cols = c(2:ncol(vis_df_hsc)),
+                                  values_to = "expression",
+                                  names_to = "gene")
+
+vis_df_hsc$species <- factor(vis_df_hsc$species, levels = names(col_spc))
+
+# scale expression per gene (in which cell type is a gene highes or lowest
+# expressed)
+vis_df_hsc$scaled_per_gene <- vector(length = nrow(vis_df_hsc), mode = "numeric")
+vis_df_hsc$zscore_gene <- vector(length = nrow(vis_df_hsc), mode = "numeric")
+for(g in base::unique(vis_df_hsc$gene)){
+  
+  expr_vector_g <- vis_df_hsc[vis_df_hsc$gene == g,]$expression
+  
+  vis_df_hsc$scaled_per_gene[vis_df_hsc$gene == g] <- base::scale(expr_vector_g)
+  
+  z_score_g <- (expr_vector_g - base::mean(expr_vector_g))/stats::sd(expr_vector_g)
+  vis_df_hsc$zscore_gene[vis_df_hsc$gene == g] <- z_score_g
+  
+}
+```
+
+```{r order_hsc_genes}
+# order genes semi-manually for nice visualisation
+
+# get gene sets of interest
+hsc_conserved_signature <- geneset_list_hsc$HSCs$conserved_signature
+hsc_bl6_specific <- hsc_cons_df$gene[which(!is.na(hsc_cons_df$mmus) &
+                                             is.na(hsc_cons_df$mcas) &
+                                             is.na(hsc_cons_df$mspr) &
+                                             is.na(hsc_cons_df$mcar))]
+
+
+# gene set 1 = bl6-specific markers
+vis_df_hsc_bl6spec <- vis_df_hsc[vis_df_hsc$gene %in% hsc_bl6_specific,]
+vis_df_hsc_bl6spec <- vis_df_hsc_bl6spec[
+  base::order(vis_df_hsc_bl6spec$expression, decreasing = TRUE),]
+
+bl6_spec_genes <- base::unique(vis_df_hsc_bl6spec$gene)
+print(length(bl6_spec_genes))
+
+# gene set 2 = neither
+vis_df_hsc_nei <- vis_df_hsc[!vis_df_hsc$gene %in% c(hsc_bl6_specific,
+                                                     hsc_conserved_signature),]
+vis_df_hsc_nei <- vis_df_hsc_nei[
+  base::order(vis_df_hsc_nei$expression, decreasing = TRUE),]
+nei_genes <- base::unique(vis_df_hsc_nei$gene)
+print(length(nei_genes))
+
+# gene set 3 = signature
+vis_df_hsc_sig <- vis_df_hsc[vis_df_hsc$gene %in% hsc_conserved_signature,]
+vis_df_hsc_sig <- vis_df_hsc_sig[
+  base::order(vis_df_hsc_sig$expression, decreasing = TRUE),]
+
+sig_genes <- base::unique(vis_df_hsc_sig$gene)
+print(length(sig_genes))
+
+# bind genes, then use to factor
+genes_for_factor_hsc <- c(sig_genes, nei_genes, bl6_spec_genes)
+
+vis_df_hsc$gene <- factor(vis_df_hsc$gene, 
+                          levels = base::rev(genes_for_factor_hsc))
+```
+
+```{r hsc_markers1, fig.width = 4, fig.height = 4}
+ggplot2::ggplot(vis_df_hsc,
+                aes(x = species, y = gene, fill = expression))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text.y = element_blank(),
+                 axis.ticks.y = element_blank())+
+  ggplot2::scale_fill_gradientn("average logcounts",
+                                 colours = c("white",  "orange", "red3"))
+```
+
+```{r hsc_markers2, fig.width = 4, fig.height = 6}
+ggplot2::ggplot(vis_df_hsc[vis_df_hsc$gene %in% c(
+  sig_genes, bl6_spec_genes),],
+                aes(x = species, y = gene, fill = expression))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_gradientn("average logcounts",
+                                 colours = c("white", "orange", "red3"))
+```
+
+```{r hsc_markers3, fig.width = 4, fig.height = 3}
+ggplot2::ggplot(vis_df_hsc[vis_df_hsc$gene %in% c(
+  sig_genes, bl6_spec_genes),],
+                aes(x = species, y = gene, fill = expression))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text.y = element_blank(),
+                 axis.ticks.y = element_blank())+
+  ggplot2::scale_fill_gradientn("average logcounts",
+                                 colours = c("white", "orange", "red3"))
+```
+
+```{r hsc_markers4, fig.width = 4, fig.height = 3}
+ggplot2::ggplot(vis_df_hsc[vis_df_hsc$gene %in% c(
+  sig_genes, bl6_spec_genes),],
+                aes(x = species, y = gene, fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text.y = element_blank(),
+                 axis.ticks.y = element_blank())+
+  ggplot2::scale_fill_gradientn("zscore per gene",
+                                 colours = c("blue3", "white", "red3"),
+                                limits = c(-5, 5))
+```
+
+```{r sessioninfo}
+utils::sessionInfo()
+```

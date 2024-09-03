@@ -1,0 +1,306 @@
+---
+title: "Report on reclustering our own dataset"
+author: "Lea Wölbert"
+date: '2023-11-15'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Show how well re-clustering of our own dataset using the extracted gene
+sets worked.
+
+#### Load objects
+
+```{r seed, message = FALSE}
+set.seed(37)
+```
+
+```{r load, message = FALSE}
+library(tidyverse, quietly = TRUE)
+library(SingleCellExperiment, quietly = TRUE)
+```
+
+```{r source, message = FALSE}
+source(file = snakemake@params[["plotting"]])
+```
+
+```{r eval = FALSE, include = FALSE}
+sce <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/03_rclo/sce_str")
+score_df <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/03_rclo/score_df_str")
+
+fraction_curr <- "str"
+
+colors_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt"
+source("../../source/colors.R")
+source("../../source/plotting.R")
+source("../../source/sce_functions_reclustering.R")
+
+col_cts <- col_cts_str
+```
+
+```{r load_objects}
+sce <- base::readRDS(snakemake@input[["sce_input"]])
+fraction_curr <- snakemake@wildcards[["fraction"]]
+
+score_df <- base::readRDS(snakemake@input[["score_df"]])
+
+cts_exclude <- snakemake@params[["cts_exclude"]]
+
+# remove cts to exclude and reorder for nicer plots
+sce <- sce[,!sce$celltypes %in% cts_exclude]
+sce$celltypes <- factor(
+  sce$celltypes,
+  levels = levels(sce$celltypes)[levels(sce$celltypes) %in% sce$celltypes])
+
+sce <- sce[,base::sample(c(1:ncol(sce)), ncol(sce), replace = FALSE)]
+```
+
+```{r head_scoredf}
+print(head(score_df))
+```
+
+```{r colors, meassage = FALSE}
+colors_path <- snakemake@params[["colors_path"]]
+source(snakemake@params[["colors"]])
+
+if(fraction_curr == "hsc"){
+  col_cts <- col_cts_hsc
+}else if(fraction_curr == "str"){
+  col_cts <- col_cts_str
+}
+
+col_cts <- col_cts[!names(col_cts) %in% cts_exclude]
+
+# put into colors.txt once more established
+col_cons <- c("conserved_signature" = "yellowgreen",
+              "conserved_markers" = "darkgreen",
+              "mmusall_markers" = "blue2",
+              "ndges" = "orangered1")
+```
+
+# UMAPs
+
+```{r}
+umap_base_l(sce, color_by = "celltypes")+ 
+  ggplot2::ggtitle(base::paste(fraction_curr, "original cell types"))+
+  ggplot2::scale_color_manual("celltypes", values = col_cts)
+
+# signature genes
+umap_base_l(sce, color_by = "cluster_signt")+ 
+  ggplot2::ggtitle(base::paste(sce$nr_cm[1], "conserved signature"))+
+  ggplot2::scale_color_discrete("conserved signature")
+
+# conserved markers
+umap_base_l(sce, color_by = "cluster_consm")+ 
+  ggplot2::ggtitle(base::paste(sce$nr_cc[1], "conserved markers"))+
+  ggplot2::scale_color_discrete("conserved markers")
+
+# BL6 markers
+umap_base_l(sce, color_by = "cluster_mmusm")+ 
+  ggplot2::ggtitle(base::paste(sce$nr_cm[1], "all BL6 markers"))+
+  ggplot2::scale_color_discrete("all BL6 markers")
+
+# ndges
+umap_base_l(sce, color_by = "cluster_ndges")+ 
+  ggplot2::ggtitle(base::paste(sce$nr_nd[1],
+                               "non-differentially expressed genes"))+
+  ggplot2::scale_color_discrete("nDGEs") 
+```
+
+# Heatmaps
+
+## Signature
+
+```{r plot_signature}
+
+mat_sign <- base::table(sce$celltypes, sce$cluster_signt)
+for(i in 1:nrow(mat_sign)){
+  mat_sign[i,] <- mat_sign[i,]/base::sum(mat_sign[i,])
+}
+
+mat_sign
+
+sign_df <- base::as.data.frame(mat_sign)
+sign_df$Var1 <- factor(
+  sign_df$Var1,
+  levels = base::unique(sign_df[base::order(sign_df$Freq, 
+                                            decreasing = TRUE),]$Var1))
+sign_df$Var2 <- factor(
+  sign_df$Var2,
+  levels = base::rev(base::unique(sign_df[base::order(
+    sign_df$Freq,
+    decreasing = TRUE),]$Var2)))
+
+plot_sign <- ggplot2::ggplot(sign_df, 
+                aes(x = Var1, 
+                    y =Var2,
+                    fill = Freq))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  scale_fill_continuous("% cells/cell type", 
+                        limits=c(0, 1), 
+                        breaks=seq(0, 1, by = 0.20),
+                        low = "white", high = "blue")+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))+
+  ggplot2::xlab("Original cell types")+
+  ggplot2::ylab("Re-clustered with conserved signature")+
+  ggplot2::ggtitle("conserved signature")
+
+plot_sign
+```
+
+## Conserved Markers
+
+```{r plot_markers}
+
+mat_mark <- base::table(sce$celltypes, sce$cluster_consm)
+for(i in 1:nrow(mat_mark)){
+  mat_mark[i,] <- mat_mark[i,]/base::sum(mat_mark[i,])
+}
+
+mat_mark
+
+mark_df <- base::as.data.frame(mat_mark)
+mark_df$Var1 <- factor(
+  mark_df$Var1,
+  levels = base::unique(mark_df[base::order(mark_df$Freq, 
+                                            decreasing = TRUE),]$Var1))
+mark_df$Var2 <- factor(
+  mark_df$Var2,
+  levels = base::rev(base::unique(mark_df[base::order(
+    mark_df$Freq,
+    decreasing = TRUE),]$Var2)))
+
+plot_mark <- ggplot2::ggplot(mark_df, 
+                aes(x = Var1, 
+                    y =Var2,
+                    fill = Freq))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_continuous("% cells/cell type", 
+                                 limits=c(0, 1), 
+                                 breaks=seq(0, 1, by= 0.20),
+                                 low = "white", high = "blue")+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))+
+  ggplot2::xlab("Original cell types")+
+  ggplot2::ylab("Re-clustered with conserved markers")+
+  ggplot2::ggtitle("conserved markers")
+
+plot_mark
+```
+
+## all BL6 markers
+
+```{r plot_mmusm}
+
+mat_mmus <- base::table(sce$celltypes, sce$cluster_mmusm)
+for(i in 1:nrow(mat_mmus)){
+  mat_mmus[i,] <- mat_mmus[i,]/base::sum(mat_mmus[i,])
+}
+
+mat_mmus
+
+mmus_df <- base::as.data.frame(mat_mmus)
+mmus_df$Var1 <- factor(
+  mmus_df$Var1,
+  levels = base::unique(mmus_df[base::order(mmus_df$Freq, 
+                                            decreasing = TRUE),]$Var1))
+mmus_df$Var2 <- factor(
+  mmus_df$Var2,
+  levels = base::rev(base::unique(mmus_df[base::order(
+    mmus_df$Freq,
+    decreasing = TRUE),]$Var2)))
+
+plot_mmus <- ggplot2::ggplot(mmus_df, 
+                aes(x = Var1, 
+                    y =Var2,
+                    fill = Freq))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_continuous("% cells/cell type", 
+                                 limits=c(0, 1), 
+                                 breaks=seq(0, 1, by= 0.20),
+                                 low = "white", high = "blue")+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))+
+  ggplot2::xlab("Original cell types")+
+  ggplot2::ylab("Re-clustered with all BL6 markers")+
+  ggplot2::ggtitle("all BL6 markers")
+
+plot_mmus
+```
+
+## nDGEs
+
+```{r plot_ndges}
+
+mat_ndge <- base::table(sce$celltypes, sce$cluster_ndges)
+for(i in 1:nrow(mat_ndge)){
+  mat_ndge[i,] <- mat_ndge[i,]/base::sum(mat_ndge[i,])
+}
+
+mat_ndge
+
+ndge_df <- base::as.data.frame(mat_ndge)
+ndge_df$Var1 <- factor(
+  ndge_df$Var1,
+  levels = base::unique(ndge_df[base::order(ndge_df$Freq, 
+                                            decreasing = TRUE),]$Var1))
+ndge_df$Var2 <- factor(
+  ndge_df$Var2,
+  levels = base::rev(base::unique(ndge_df[base::order(
+    ndge_df$Freq,
+    decreasing = TRUE),]$Var2)))
+
+plot_ndge <- ggplot2::ggplot(ndge_df, 
+                aes(x = Var1, 
+                    y =Var2,
+                    fill = Freq))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_continuous("% cells/cell type", 
+                                 limits=c(0, 1), 
+                                 breaks=seq(0, 1, by= 0.20),
+                                 low = "white", high = "blue")+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))+
+  ggplot2::xlab("Original cell types")+
+  ggplot2::ylab("Re-clustered with nDGEs")+
+  ggplot2::ggtitle("nDGEs")
+
+plot_ndge
+```
+
+# Re-clustering Scores
+
+```{r all_0_to_1, fig.width = 4, fig.height = 3.5}
+
+ggplot2::ggplot(
+  score_df[!score_df$type %in% c("variation_information", 
+                                 "nr_celltypes",
+                                 "nr_clusters"),], 
+  aes(y = value, x = type, color = conservation_level))+
+  ggplot2::geom_point(alpha = 0.7, position = position_dodge(width=0.5))+
+  ggplot2::theme_classic()+
+  ggplot2::ylim(c(0, 1))+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))+
+  ggplot2::scale_color_manual("conservation level", values = col_cons)+
+  ggplot2::ggtitle(base::paste("reclustering", fraction_curr))
+```
+
+```{r vi, fig.width = 3, fig.height = 3.5}
+ggplot2::ggplot(score_df[score_df$type == "variation_information",], 
+                aes(y = value, x = type, color = conservation_level))+
+  ggplot2::geom_point(alpha = 0.7, position = position_dodge(width=0.5))+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))+
+  ggplot2::scale_color_manual("conservation level", values = col_cons)+
+  ggplot2::ylim(c(0, max(score_df$value[
+    score_df$type == "variation_information"])))+
+  ggplot2::ggtitle(base::paste("reclustering", fraction_curr))
+```
+
+```{r sessioninfo}
+utils::sessionInfo()
+```

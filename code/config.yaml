@@ -88,7 +88,9 @@ values:
     cell_types_exclude: 
       - "Lymphatic ECs"
       - "Chondrocytes"
-    reclustering_cutoff_counts: 1 # minimum number of counts for a gene to be used for re-clustering with random genes + permutation test
+    reclustering_cutoff_counts: 0 # minimum number of counts for a gene to be used for re-clustering with random genes + permutation test
+    # ATTENTION: NOT ALL OBJECTS HAVE RAW COUNTS. THEREFORE, THE CUT-OFF IS SET TO 0!
+    # it is unfair to give the same cut-off to raw counts or logcounts.
     nr_cores: 10 # nr of cores for parallelization for reclustering and permutation
   # 05_cci_prep:
   #   min_cells: 60 # min number of cells required per cell type to consider for cci
@@ -112,3 +114,4 @@ run_permutation_genesets: False
 run_permutation_background_sign: False
 run_permutation_background_mark: False
 run_own_permutation_background_sign: False
+run_own_sign_permutation: False

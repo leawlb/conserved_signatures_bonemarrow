@@ -108,13 +108,17 @@ clustering_orig <- function(sce, k_graph, resolution_louvain){
   k_graph <- k_graph # k = number of nearest neighbors for buildSNNGraph()
   resolution_louvain <- resolution_louvain # resolution for cluster_louvain()
   
+  print("reclustering SCE")
+  
+  print("genes")
   print(nrow(sce))
+  print("cells")
   print(ncol(sce))
   
   # re-calculate PCA (without batch correction)
   # use logcounts assay, contains normalized logcounts from multibatchnorm
   # remove old PCA
-  reducedDims(sce)$PCA <- NULL
+  # reducedDims(sce)$PCA <- NULL
   sce <- scater::runPCA(sce, 
                         ncomponents = 25, 
                         exprs_values = "logcounts") 
@@ -127,6 +131,7 @@ clustering_orig <- function(sce, k_graph, resolution_louvain){
   
   # community detection
   clust <- igraph::cluster_louvain(graph, resolution = resolution_louvain)
+  print("clustering done")
   
   # add to sce object 
   sce$reclustered <- clust$membership
@@ -394,8 +399,10 @@ permuting_reclustering_scores_sce <- function(
   sce_sub <- sce[iteration_vector,]
   
   # make sure that only GENES have been subsetted, not cells
-  print(nrow(sce))
-  print(ncol(sce))
+  print("genes")
+  print(nrow(sce_sub))
+  print("cells")
+  print(ncol(sce_sub))
   
   print("starting reclustering function")
   # re-cluster sce objects using original pipeline

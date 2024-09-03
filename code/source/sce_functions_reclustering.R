@@ -341,8 +341,11 @@ permuting_reclustering_scores_seurat <- function(
     features = SeuratObject::Features(seu)[iteration_vector], 
     slot = "count")
   # check that GENES were subsetted
+  print("genes")
   print(nrow(seu_sub))
-
+  print("cells")
+  print(ncol(seu_sub))
+  
   print("starting standard_seu_pipeline function")
   # re-cluster seurat objects from using standard seurat pipeline
   seu_rec <- standard_seu_pipeline(
@@ -352,6 +355,12 @@ permuting_reclustering_scores_seurat <- function(
     data_use = data_use,
     calc_umap = FALSE)
 
+  # make sure that only GENES have been subsetted, not cells
+  print("genes")
+  print(nrow(seu_rec))
+  print("cells")
+  print(ncol(seu_rec))
+  
   print("starting calculate_scores function")
   # calculate re-clustering scores 
   res_df <- calculate_scores(seu_rec, for_permutation = TRUE)

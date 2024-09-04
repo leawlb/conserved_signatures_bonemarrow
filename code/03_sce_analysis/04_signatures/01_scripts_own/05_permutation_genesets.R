@@ -5,8 +5,12 @@
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
+
+# determine random number generator for sample
+# Mersenne-Twister" is default
+RNGkind("Mersenne-Twister") 
+
 set.seed(37)
-RNGkind("L'Ecuyer-CMRG") 
 
 #-------------------------------------------------------------------------------
 
@@ -83,6 +87,7 @@ conserved_signature_list <- lapply(geneset_list, function(geneset){
   return(conserved_signature)
 })
 sign_IDs <- base::unique(unlist(conserved_signature_list))
+sign_IDs <- sign_IDs[sign_IDs %in% rownames(sce_input)]
 
 nr_sign <- length(sign_IDs) 
 print(nr_sign)
@@ -110,7 +115,7 @@ print(add_df_sign[1:10,1:2])
 print(dim(add_df_sign))
 
 #-------------------------------------------------------------------------------
-# extract subclustering genes
+# extract subclustering genes (have already been removed)
 
 subclustering_gene_list <- lapply(geneset_list, function(geneset){
   subclustering_genes <- geneset$genes_subclustering
@@ -144,6 +149,7 @@ conserved_markers_list <- lapply(geneset_list, function(geneset){
   return(conserved_markers)
 })
 mark_IDs <- base::unique(unlist(conserved_markers_list))
+mark_IDs <- mark_IDs[mark_IDs %in% rownames(sce_input)]
 
 # get the number of random genes that need to be added to 
 # conserved_signature_IDs for each gene set to be permuted
@@ -196,8 +202,7 @@ print(length(POOL_POSITIONS))
 
 iteration_df_mark <- base::data.frame(row.names = c(1:nr_random_mark))
 
-set.seed(37)
-base::RNGkind("L'Ecuyer-CMRG")
+set.seed(36) # different set of random numbers each time
 for(i in 1:iterations){
   # POSITIONS FROM ORIGINAL SCE subsetted to a smaller list 
   # basically, subset the vector of pool positions in random positions 
@@ -210,6 +215,8 @@ for(i in 1:iterations){
   
   colnames(iteration_df_mark)[i] <- i
 }
+set.seed(37)
+
 print(iteration_df_mark[1:10,1:2])
 print(dim(iteration_df_mark))
 
@@ -236,6 +243,7 @@ mmus_marker_list <- lapply(geneset_list, function(geneset){
   return(mmus_markers)
 })
 mmms_IDs <- base::unique(unlist(mmus_marker_list))
+mmms_IDs <- mmms_IDs[mmms_IDs %in% rownames(sce_input)]
 
 # get the number of random genes that need to be added to 
 # all BL6 genes for each gene set to be permuted
@@ -246,8 +254,7 @@ print(nr_random_mmms)
 
 #-------------------------------------------------------------------------------
 
-set.seed(36) # different set of random numbers
-base::RNGkind("L'Ecuyer-CMRG")
+set.seed(35) 
 
 iteration_df_mmms <- base::data.frame(row.names = c(1:nr_random_mmms))
 
@@ -266,6 +273,8 @@ for(i in 1:iterations){
   
   colnames(iteration_df_mmms)[i] <- i
 }
+set.seed(37) 
+
 print(iteration_df_mmms[1:10,1:2])
 print(dim(iteration_df_mmms))
 
@@ -375,8 +384,7 @@ print(nr_random_mmms_mark)
 # generate i = iterations random sets of genes at the required number
 # from the allowed pool of random genes (original positions in SEU)
 # always generate the same random numbers
-set.seed(35)
-base::RNGkind("L'Ecuyer-CMRG")
+set.seed(34)
 
 # mmms_mark = comparison mmms with mark
 iteration_df_mmms_mark <- base::data.frame(row.names = c(1:nr_random_mmms_mark))
@@ -394,6 +402,8 @@ for(i in 1:iterations){
   
   colnames(iteration_df_mmms_mark)[i] <- i
 }
+set.seed(37) 
+
 print(iteration_df_mmms_mark[1:10,1:2])
 print(dim(iteration_df_mmms_mark))
 

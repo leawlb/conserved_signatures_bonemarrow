@@ -34,19 +34,19 @@ library(tidyverse, quietly = TRUE)
 
 dataset_curr <- "ts_bone_marrow"
 
-score_df_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/04_rcls/score_df_ts_bone_marrow_list")
+score_df_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_ts_bone_marrow_list")
 
-perm_score_df_mark <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_perg/perm_score_df_mark_ts_bone_marrow")
-perm_score_df_mmms <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_perg/perm_score_df_mmms_ts_bone_marrow")
+perm_score_df_mark <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mark_ts_bone_marrow")
+perm_score_df_mmms <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_ts_bone_marrow")
 
-perm_score_df_mmms_mark <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_perg/perm_score_df_mmms_mark_ts_bone_marrow")
+perm_score_df_mmms_mark <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_mark_ts_bone_marrow")
 
 
 resolution_df_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt"
 
-ensembl_sign <- c("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_endf/ensembl_sign_hsc")
-ensembl_mark <- c("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_endf/ensembl_mark_hsc")
-ensembl_mmms <- c("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_endf/ensembl_mmms_hsc")
+ensembl_sign <- c("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/02_endf/ensembl_sign_hsc")
+ensembl_mark <- c("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/02_endf/ensembl_mark_hsc")
+ensembl_mmms <- c("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/02_endf/ensembl_mmms_hsc")
 
 seu_preprocessed <- base::readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_bone_marrow")
 ```
@@ -55,7 +55,7 @@ seu_preprocessed <- base::readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/
 # for script 05:
 
 
-cut_off_counts <- 5
+cut_off_counts <- 0
 nr_cores <- 1
 iterations <- 2
 source("../../source/sce_functions_reclustering.R")

@@ -4,8 +4,13 @@
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
+# determine random number generator for sample()
+# Mersenne-Twister" is default
+RNGkind("Mersenne-Twister") 
+
 set.seed(37)
-# RNGkind("L'Ecuyer-CMRG") is downstream
+
+#-------------------------------------------------------------------------------
 
 library(Seurat, quietly = TRUE)
 library(dplyr, quietly = TRUE)
@@ -172,7 +177,7 @@ seu_pool <- BiocGenerics::subset(seu_preprocessed,
                                  features = non_seu_sign,
                                  slot = "count")
 
-# get only genes that have a count of at least n = cut_off_counts
+# get only genes that have a count of at least n >= cut_off_counts
 gene_pool <- rownames(seu_pool)[
   which(rowSums(seu_pool@assays$RNA$counts) >= cut_off_counts)]
 print(length(gene_pool))
@@ -195,11 +200,10 @@ print(length(POOL_POSITIONS))
 # generate i = iterations random sets of genes at the required number
 # from the allowed pool of random genes (original positions in SEU)
 # always generate the same random numbers
-set.seed(37)
-base::RNGkind("L'Ecuyer-CMRG")
 
 iteration_df_mark <- base::data.frame(row.names = c(1:nr_random_mark))
 
+set.seed(99)
 for(i in 1:iterations){
   # POSITIONS FROM ORIGINAL SEU_PREPROCESSED subsetted to a smaller list 
   # basically, subset the vector of pool positions in random positions 
@@ -211,6 +215,8 @@ for(i in 1:iterations){
   
   colnames(iteration_df_mark)[i] <- i
 }
+set.seed(37)
+
 print(iteration_df_mark[1:10,1:2])
 print(dim(iteration_df_mark))
 
@@ -242,11 +248,10 @@ print(nr_random_mmms)
 
 #-------------------------------------------------------------------------------
 
-set.seed(36)
-base::RNGkind("L'Ecuyer-CMRG")
 
 iteration_df_mmms <- base::data.frame(row.names = c(1:nr_random_mmms))
 
+set.seed(98)
 for(i in 1:iterations){
   # POSITIONS FROM ORIGINAL SEU_PREPROCESSED subsetted to a smaller list 
   # can use same pool positions that 
@@ -260,6 +265,8 @@ for(i in 1:iterations){
   
   colnames(iteration_df_mmms)[i] <- i
 }
+set.seed(37)
+
 print(iteration_df_mmms[1:10,1:2])
 print(dim(iteration_df_mmms))
 
@@ -361,12 +368,11 @@ print(nr_random_mmms_mark)
 # generate i = iterations random sets of genes at the required number
 # from the allowed pool of random genes (original positions in SEU)
 # always generate the same random numbers
-set.seed(35)
-base::RNGkind("L'Ecuyer-CMRG")
 
 # mmms_mark = comparison mmms with mark
 iteration_df_mmms_mark <- base::data.frame(row.names = c(1:nr_random_mmms_mark))
 
+set.seed(97)
 for(i in 1:iterations){
   # POSITIONS FROM ORIGINAL SEU_PREPROCESSED subsetted to a smaller list 
   # basically, subset the vector of pool positions in random positions 
@@ -379,6 +385,8 @@ for(i in 1:iterations){
   
   colnames(iteration_df_mmms_mark)[i] <- i
 }
+set.seed(37)
+
 print(iteration_df_mmms_mark[1:10,1:2])
 print(dim(iteration_df_mmms_mark))
 
@@ -481,6 +489,10 @@ res_df_list_mmms_mark <- parallel::mclapply(
 
 score_df_mmms_mark <- dplyr::bind_rows(res_df_list_mmms_mark)
 print(head(score_df_mmms_mark))
+
+print(iteration_df_mark[1:20,1:3])
+print(iteration_df_mmms[1:20,1:3])
+print(iteration_df_mmms_mark[1:20,1:3])
 
 #-------------------------------------------------------------------------------
 

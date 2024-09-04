@@ -1,12 +1,14 @@
 
 # recluster datasets from other species using different gene sets
 
+
+base::RNGkind("L'Ecuyer-CMRG") # for mclapply, generation of same random numbers
+set.seed(37)
+
+
 library(Seurat, quietly = TRUE)
 library(SeuratObject, quietly = TRUE)
 library(parallel, quietly = TRUE)
-
-set.seed(37)
-base::RNGkind("L'Ecuyer-CMRG") # for mclapply, generation of same random numbers
 
 source(snakemake@params[["reclustering_functions"]])
 

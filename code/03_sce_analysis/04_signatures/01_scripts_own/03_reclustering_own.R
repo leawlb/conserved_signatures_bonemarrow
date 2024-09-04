@@ -9,13 +9,17 @@
 
 #-------------------------------------------------------------------------------
 
+# determine random number generator for sample
+# Mersenne-Twister" is default
+RNGkind("Mersenne-Twister") 
+
+set.seed(37)
+
 library(scater, quietly = TRUE)
 library(scran, quietly = TRUE)
 library(bluster, quietly = TRUE)
 library(tidyverse, quietly = TRUE)
 library(parallel, quietly = TRUE)
-
-set.seed(37)
 
 source(snakemake@params[["functions_reclustering"]])
 
@@ -112,6 +116,22 @@ subclustering_genes <- base::unique(unlist(subclustering_gene_list))
 #-------------------------------------------------------------------------------
 # subset to required cell types
 sce <- sce[,which(!sce$celltypes %in% cts_exclude)]
+
+# if fraction is hsc, downsample to accelerate re-clustering
+if(fraction_curr == "hsc"){
+  # set a different seed so the same numbers are not generated accidentally 
+  set.seed(147)
+  
+  downample_pos <- base::sample(c(1:ncol(sce)), 25000, replace = FALSE)
+  sce <- sce[,downample_pos]
+  print(dim(sce))
+  print(head(downample_pos))
+  
+  # set seed back to seed
+  set.seed(37)
+}
+
+#-------------------------------------------------------------------------------
 
 # subset to all genes that are not subclustering genes
 # TODO: if ok, remove the cell type-specific removal

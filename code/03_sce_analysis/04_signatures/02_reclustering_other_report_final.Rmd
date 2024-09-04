@@ -272,7 +272,7 @@ plot_list_long <- lapply(selected_seu_list,
                          vis_perc_long_gg,
                          title_add = dataset_curr)
 plot_list_long
-#knitr::knit_exit()
+knitr::knit_exit()
 ```
 
 ```{r correction_vec}

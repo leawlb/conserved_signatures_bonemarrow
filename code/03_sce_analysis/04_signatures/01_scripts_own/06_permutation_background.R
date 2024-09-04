@@ -3,8 +3,10 @@
 
 # permutation of own dataset reclustering
 
+# determine random number generator for sample
+# Mersenne-Twister" is default
+RNGkind("Mersenne-Twister") 
 set.seed(37)
-base::RNGkind("L'Ecuyer-CMRG")
 
 #-------------------------------------------------------------------------------
 
@@ -82,6 +84,7 @@ test_IDs_list <- lapply(geneset_list, function(geneset){
   return(test_ids)
 })
 test_IDs <- base::unique(unlist(test_IDs_list))
+test_IDs <- test_IDs[test_IDs %in% rownames(sce)]
 
 # get the number of genes to be tested
 # the same number of random genes will be used for the permutation test
@@ -132,12 +135,15 @@ print(nrow(sce_sub))
 
 iteration_df <- base::data.frame(row.names = c(1:nr_recl_genes))
 
+set.seed(4000)
 for(i in 1:iterations){
   iteration_df[,i] <- base::sample(1:length(gene_pool), 
                                    nr_recl_genes, 
                                    replace = FALSE)
   colnames(iteration_df)[i] <- i
 }
+set.seed(37)
+
 print(iteration_df[1:10,1:2])
 
 # test

@@ -3,8 +3,11 @@
 
 
 #-------------------------------------------------------------------------------
-set.seed(37)
-# base::RNGkind("L'Ecuyer-CMRG") is downstream
+# determine random number generator for sample()
+# Mersenne-Twister" is default
+RNGkind("Mersenne-Twister") 
+
+#-------------------------------------------------------------------------------
 
 library(Seurat, quietly = TRUE)
 library(dplyr, quietly = TRUE)
@@ -112,12 +115,12 @@ print(nr_recl_genes)
 
 #-------------------------------------------------------------------------------
 
-# get only genes that have a count of at least n = cut_off_counts
+# get only genes that have a count of at least n >= cut_off_counts
 # test genes can be randomly sampled
 print(base::summary(rowSums(seu_preprocessed@assays$RNA$counts)))
 
 gene_pool <- rownames(seu_preprocessed)[
-  which(rowSums(seu_preprocessed@assays$RNA$counts) > cut_off_counts)]
+  which(rowSums(seu_preprocessed@assays$RNA$counts) >= cut_off_counts)]
 print(length(gene_pool))
 
 # subset seurat object to these genes as the other genes won't be used
@@ -134,7 +137,7 @@ print(base::summary(rowSums(seu_preprocessed_sub@assays$RNA$counts)))
 
 iteration_df <- base::data.frame(row.names = c(1:nr_recl_genes))
 
-set.seed(37)
+set.seed(5)
 base::RNGkind("L'Ecuyer-CMRG")
 for(i in 1:iterations){
   iteration_df[,i] <- base::sample(1:length(gene_pool), 
@@ -142,6 +145,8 @@ for(i in 1:iterations){
                                    replace = FALSE)
   colnames(iteration_df)[i] <- i
 }
+set.seed(37)
+
 print(iteration_df[1:10,1:2])
 
 #-------------------------------------------------------------------------------
@@ -157,7 +162,7 @@ print("starting iteration")
 
 res_df_list <- parallel::mclapply(
   X = as.list(c(1:iterations)),
-  FUN = random_reclustering_scores,
+  FUN = permuting_reclustering_scores_seurat,
   seu = seu_preprocessed_sub,
   data_use = seu_preprocessed_sub@misc$data_use,
   iteration_df = iteration_df,
@@ -167,9 +172,9 @@ res_df_list <- parallel::mclapply(
   mc.silent = TRUE)
 
 # res_df_list <- lapply(X = as.list(c(1:iterations)),
-#                                   FUN = random_reclustering_scores,
+#                                   FUN = permuting_reclustering_scores_seurat,
 #                                   seu = seu_preprocessed_sub,
-#                                   assay_use = "RNA",
+#                                   data_use = seu_preprocessed_sub@misc$data_use,
 #                                   iteration_df = iteration_df,
 #                                   resolution = resl)
 

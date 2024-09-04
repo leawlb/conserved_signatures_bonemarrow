@@ -2,8 +2,6 @@
 
 import pandas as pd
 
-#TODO: check out cutoff, possibly keep the code (for now)
-
 #-------------------------------------------------------------------------------
 
 OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
@@ -49,8 +47,8 @@ for f in fractions:
   targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_mmms_" + f]
   
   targets = targets + [OUTPUT_DAT + "/03_recl/sce_" + f]
-  targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_" + f]
-  targets = targets + [OUTPUT_REP + "/reclustering_own_report_" + f + ".html"]
+  # targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_" + f]
+  # targets = targets + [OUTPUT_REP + "/reclustering_own_report_" + f + ".html"]
 
   if RUN_PERM_GENESETS:
     targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mark_" + f]
@@ -180,6 +178,9 @@ rule reclustering_own:
         functions_reclustering = "../../source/sce_functions_reclustering.R"
     output:
         sce_output = OUTPUT_DAT + "/03_recl/sce_{fraction}"
+        # contains re-clustered vectors
+        # cts_exclude already removed
+        # HSC sub-sampled to 25,000 cells
     script:
         "01_scripts_own/03_reclustering_own.R"
 
@@ -245,7 +246,9 @@ if RUN_PERM_GENESETS:
 
   rule permutation_genesets:
       input:
-          sce_input = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10",
+          sce_input = rules.reclustering_own.output,
+          # cts_exclude already excluded
+          # HSCs subsampled to 25,000 cells
           geneset_list = rules.export_genesets.output,
       params:
           functions_reclustering = "../../source/sce_functions_reclustering.R",
@@ -253,8 +256,8 @@ if RUN_PERM_GENESETS:
           resolution_louvain_list = config["values"]["02_sce_anno"]["resolution_louvain_list"],
           #nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
           #iterations = config["values"]["03_sce_analysis"]["iterations"],
-          iterations = 15,
-          nr_cores = 15,
+          iterations = 40,
+          nr_cores = 20,
           cut_off_counts = config["values"]["03_sce_analysis"]["reclustering_cutoff_counts"],
           cts_exclude = CELL_TYPES_EXCLUDE,
       conda:
@@ -287,7 +290,9 @@ if RUN_OWN_SIGN_PERM:
 
   rule permutation_own_background_sign:
       input:
-          sce_input = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10",
+          sce_input = rules.reclustering_own.output,
+          # cts_exclude already excluded
+          # HSCs subsampled to 25,000 cells
           geneset_list = rules.export_genesets.output,
       params:
           k_graph_list = config["values"]["02_sce_anno"]["k_graph_list"],
@@ -295,7 +300,7 @@ if RUN_OWN_SIGN_PERM:
           cut_off_counts = config["values"]["03_sce_analysis"]["reclustering_cutoff_counts"],
           #iterations = config["values"]["03_sce_analysis"]["iterations"],
           #nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
-          iterations = 20,
+          iterations = 40,
           nr_cores = 20,
           functions_reclustering = "../../source/sce_functions_reclustering.R",
           cts_exclude = CELL_TYPES_EXCLUDE,       

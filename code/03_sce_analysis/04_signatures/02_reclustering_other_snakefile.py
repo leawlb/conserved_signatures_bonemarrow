@@ -2,12 +2,10 @@
 
 import pandas as pd
 
-# TODO: rename one env for 01
-# TODO: subset own HSPC dataset and use as input for permutations
-
 #-------------------------------------------------------------------------------
 
 OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
+OUTPUT_DAT_01 = OUTPUT_BASE + "/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own"
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other"
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/04_signatures/02_reclustering_other"
 
@@ -15,7 +13,6 @@ OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/04_signatures/0
 #COLORS = config["base"] + config["metadata_paths"]["colors"]
 
 RESOLUTION_OTHER = config["base"] + config["metadata_paths"]["resolution_other"]
-print(RESOLUTION_OTHER)
 
 RUN_PERM_GENESETS = config["run_permutation_genesets"]
 RUN_PERM_BACKGROUND_SIGN = config["run_permutation_background_sign"]
@@ -30,9 +27,13 @@ def get_list(metadata, column):
   return(values)
 print(METADATA)
 
+fractions = get_list(metadata = METADATA, column = "Fraction_ID")
+
 # define datasets to be tested
 datasets_other_hsc = ["ts_hscs_progenitors", "ts_bone_marrow", "mus_weinreb_hspc", "mus_tm_bonemarrow", "nmr_sorted_hspc", "zeb_all_hspc"]
 datasets_other_str = ["ts_all_stromal", "li_all_stromal", "mus_tik_stromal", "mus_bar_stromal"]
+#datasets_other_hsc = ["ts_bone_marrow"]
+#datasets_other_str = []
 datasets_other = datasets_other_hsc + datasets_other_str
 print(datasets_other)
 
@@ -47,14 +48,14 @@ for d in datasets_other:
   targets = targets + [OUTPUT_REP + "/final/reclustering_other_final_report_" + d + ".html"]
  
   # testing reclustering scores
-  #targets = targets + [OUTPUT_REP + "/reclustering_scores/test_reclustering_scores_" + d + ".html"]
+  # targets = targets + [OUTPUT_REP + "/test_scores/test_reclustering_scores_" + d + ".html"]
 
   # permutation
   if RUN_PERM_GENESETS:
     targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mark_" + d]
     targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mmms_" + d]
-    targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mmms_mark" + d]
-    targets = targets + [OUTPUT_REP + "/genesets/perm_genesets_" + d + ".html"]
+    targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mmms_mark_" + d]
+    #targets = targets + [OUTPUT_REP + "/genesets/perm_genesets_" + d + ".html"]
 
   if RUN_PERM_BACKGROUND_SIGN:
     targets = targets + [OUTPUT_DAT + "/06_psig/perm_score_df_" + d]
@@ -62,7 +63,7 @@ for d in datasets_other:
 
   if RUN_PERM_BACKGROUND_MARK:
     targets = targets + [OUTPUT_DAT + "/07_pmrk/perm_score_df_" + d]
-    targets = targets + [OUTPUT_REP + "/conserved_markers/perm_conserved_signature_" + d + ".html"]
+    targets = targets + [OUTPUT_REP + "/conserved_markers/perm_conserved_markers_" + d + ".html"]
 
 
 #-------------------------------------------------------------------------------
@@ -87,8 +88,7 @@ rule all:
 # - conserved signatures
 # - conserved marker genes
 # - all BL6 marker genes 
-# - nDGEs (own datasets only)
-# - random genes (other datasets only)
+# - random genes 
 # - all conserved markers - random genes (other datasets only)
 # - all BL6 markers - random genes (other datasets only)
 #
@@ -111,9 +111,9 @@ rule all:
 rule reclustering_other:
     input:
         seu_input = config["base"] + config["metadata_paths"]["datasets_other_path"] + "/{dataset}",
-        ensembl_sign = expand(rules.prepare_ensembl.output.ensembl_sign, fraction = fractions),
-        ensembl_mark = expand(rules.prepare_ensembl.output.ensembl_mark, fraction = fractions),
-        ensembl_mmms = expand(rules.prepare_ensembl.output.ensembl_mmms, fraction = fractions)
+        ensembl_sign = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_sign_{fraction}", fraction = fractions),
+        ensembl_mark = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_mark_{fraction}", fraction = fractions),
+        ensembl_mmms = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_mmms_{fraction}", fraction = fractions)
     params:
         reclustering_functions = "../../source/sce_functions_reclustering.R",
         cut_off_counts = config["values"]["03_sce_analysis"]["reclustering_cutoff_counts"], 
@@ -151,13 +151,13 @@ rule reclustering_other:
 
 rule test_reclustering_scores:
     input: 
-        seu_list = OUTPUT_DAT + "/04_rcls/reclustered_{dataset}_list"
+        seu_list = rules.reclustering_other.output
     output:
-        OUTPUT_REP + "/reclustering_scores/test_reclustering_scores_{dataset}.html"
+        OUTPUT_REP + "/test_scores/test_reclustering_scores_{dataset}.html"
     conda:
         "../../envs/reclustering_scores.yml"
     script:
-        "test_reclustering_scores.Rmd"
+        "02_test_reclustering_scores.Rmd"
 
 
 #-------------------------------------------------------------------------------  
@@ -224,12 +224,12 @@ if RUN_PERM_GENESETS:
   rule permutation_genesets:
       input:
           seu_preprocessed = config["base"] + config["metadata_paths"]["reclustering"] + "/prepared/{dataset}",
-          ensembl_sign = expand(rules.prepare_ensembl.output.ensembl_sign, fraction = fractions),
-          ensembl_mark = expand(rules.prepare_ensembl.output.ensembl_mark, fraction = fractions),
-          ensembl_mmms = expand(rules.prepare_ensembl.output.ensembl_mmms, fraction = fractions)
+          ensembl_sign = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_sign_{fraction}", fraction = fractions),
+          ensembl_mark = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_mark_{fraction}", fraction = fractions),
+          ensembl_mmms = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_mmms_{fraction}", fraction = fractions)
       params:
           reclustering_functions = "../../source/sce_functions_reclustering.R",
-          iterations = 20,
+          iterations = 100,
           nr_cores = 20,
           resolution_df = RESOLUTION_OTHER,
           #nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
@@ -254,9 +254,9 @@ if RUN_PERM_GENESETS:
           perm_score_df_mark = rules.permutation_genesets.output.perm_score_df_mark,
           perm_score_df_mmms = rules.permutation_genesets.output.perm_score_df_mmms,
           perm_score_df_mmms_mark = rules.permutation_genesets.output.perm_score_df_mmms_mark,
-          ensembl_sign = expand(rules.prepare_ensembl.output.ensembl_sign, fraction = fractions),
-          ensembl_mark = expand(rules.prepare_ensembl.output.ensembl_mark, fraction = fractions),
-          ensembl_mmms = expand(rules.prepare_ensembl.output.ensembl_mmms, fraction = fractions)
+          ensembl_sign = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_sign_{fraction}", fraction = fractions),
+          ensembl_mark = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_mark_{fraction}", fraction = fractions),
+          ensembl_mmms = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_mmms_{fraction}", fraction = fractions)
       params:
           resolution_df = RESOLUTION_OTHER,
           datasets_other_hsc = datasets_other_hsc,
@@ -264,7 +264,7 @@ if RUN_PERM_GENESETS:
       output:
           OUTPUT_REP + "/genesets/perm_genesets_{dataset}.html"
       script: 
-          "02_permutation_genesets_report.Rmd"
+          "02_permutation_other_genesets_report.Rmd"
           
 #-------------------------------------------------------------------------------
 
@@ -274,10 +274,10 @@ if RUN_PERM_BACKGROUND_SIGN:
   rule permutation_background_sign:
       input:
           seu_preprocessed = config["base"] + config["metadata_paths"]["reclustering"] + "/prepared/{dataset}",
-          ensembl_paths = expand(rules.prepare_ensembl.output.ensembl_sign, fraction = fractions)
+          ensembl_paths = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_sign_{fraction}", fraction = fractions)
       params:
           reclustering_functions = "../../source/sce_functions_reclustering.R",
-          iterations = 20,
+          iterations = 100,
           resolution_df = RESOLUTION_OTHER,
           #nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
           nr_cores = 20,
@@ -305,7 +305,7 @@ if RUN_PERM_BACKGROUND_SIGN:
       output:
           OUTPUT_REP + "/conserved_signature/perm_conserved_signature_{dataset}.html"
       script: 
-          "02_permutation_background_report.Rmd"
+          "02_permutation_other_background_report.Rmd"
 
 #-------------------------------------------------------------------------------
 
@@ -315,10 +315,10 @@ if RUN_PERM_BACKGROUND_MARK:
   rule permutation_background_mark:
       input:
           seu_preprocessed = config["base"] + config["metadata_paths"]["reclustering"] + "/prepared/{dataset}",
-          ensembl_paths = expand(rules.prepare_ensembl.output.ensembl_mark, fraction = fractions)
+          ensembl_paths = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_mark_{fraction}", fraction = fractions)
       params:
           reclustering_functions = "../../source/sce_functions_reclustering.R",
-          iterations = 20,
+          iterations = 100,
           resolution_df = RESOLUTION_OTHER,
           #nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
           nr_cores = 20,
@@ -345,7 +345,7 @@ if RUN_PERM_BACKGROUND_MARK:
       output:
           OUTPUT_REP + "/conserved_markers/perm_conserved_markers_{dataset}.html"
       script: 
-          "02_permutation_background_report.Rmd"
+          "02_permutation_other_background_report.Rmd"
 
 
 

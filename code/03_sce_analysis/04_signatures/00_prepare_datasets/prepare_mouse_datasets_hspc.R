@@ -1,11 +1,14 @@
 
 # prepare mouse datasets
 
-library(Matrix)
-library(Seurat)
+# determine random number generator for sample
+# Mersenne-Twister" is default
+base::RNGkind("Mersenne-Twister")
 
 set.seed(37)
-base::RNGkind("L'Ecuyer-CMRG")
+
+library(Matrix)
+library(Seurat)
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -349,7 +352,10 @@ seu_wrb@misc$data_use <- "logcounts" # only has normalised counts, so start from
 #-------------------------------------------------------------------------------
 
 # subset to 30,000 random cells
+set.seed(777)
 subset_pos <- base::sample(c(1:ncol(seu_wrb)), 25000, replace = FALSE)
+print(head(subset_pos))
+set.seed(37)
 
 seu_wrb <- seu_wrb[,subset_pos]
 print(dim(seu_wrb))

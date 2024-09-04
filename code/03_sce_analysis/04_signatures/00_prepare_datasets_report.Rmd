@@ -27,7 +27,7 @@ source(snakemake@params[["reclustering_functions"]])
 ```
 
 ```{r manual, eval = FALSE, include = FALSE}
-mus_tik_stromal <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/mus_tik_stromal")
+mus_weinreb_hspc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/mus_weinreb_hspc")
 ```
 
 ```{r load_objects}
@@ -211,6 +211,7 @@ mus_weinreb_hspc@assays
 mus_weinreb_hspc@assays$RNA
 mus_weinreb_hspc@assays$RNA@counts[1:10,1:10] # NORMALISED/LOGCOUNTSs
 mus_weinreb_hspc@assays$RNA@data[1:10,1:10] # NORMALISED/LOGCOUNTSs
+mus_weinreb_hspc@assays$RNA@scale.data # no scaled data 
 
 mus_weinreb_hspc@misc
 
@@ -230,11 +231,11 @@ mus_weinreb_hspc_reclustered <- standard_seu_pipeline(
 print(mus_weinreb_hspc@misc$data_use)
 mus_weinreb_hspc_reclustered@assays$RNA@counts[1:10,1:10] 
 mus_weinreb_hspc_reclustered@assays$RNA@data[1:10,1:10] # the same
-mus_weinreb_hspc_reclustered@assays$RNA@scale.data[1:10,1:10] # scale is new
+mus_weinreb_hspc_reclustered@assays$RNA@scale.data[1:10,1:2] # is new
 mus_weinreb_hspc_reclustered@reductions # has new PCA
 
-rm(mus_weinreb_hspc)
-rm(mus_weinreb_hspc_reclustered)
+#rm(mus_weinreb_hspc)
+#rm(mus_weinreb_hspc_reclustered)
 ```
 
 ## mus_tik_stromal

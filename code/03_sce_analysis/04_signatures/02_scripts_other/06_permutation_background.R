@@ -6,6 +6,7 @@
 # determine random number generator for sample()
 # Mersenne-Twister" is default
 RNGkind("Mersenne-Twister") 
+set.seed(37)
 
 #-------------------------------------------------------------------------------
 
@@ -137,8 +138,8 @@ print(base::summary(rowSums(seu_preprocessed_sub@assays$RNA$counts)))
 
 iteration_df <- base::data.frame(row.names = c(1:nr_recl_genes))
 
-set.seed(5)
-base::RNGkind("L'Ecuyer-CMRG")
+# make sure that seed is unique for each cons_level_use
+set.seed((5000 + base::nchar(cons_level_use))) 
 for(i in 1:iterations){
   iteration_df[,i] <- base::sample(1:length(gene_pool), 
                                    nr_recl_genes, 

@@ -34,7 +34,7 @@ standard_seu_pipeline <- function(resolution,
   if(data_use == "raw_counts"){
     
     # NormalizeData normalizes "count data"
-    seu <- Seurat::NormalizeData(
+    seu <- Seurat::NormalizeData( # rlog probably
       seu,
       assay = "RNA", 
       verbose = FALSE)

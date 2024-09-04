@@ -490,10 +490,6 @@ res_df_list_mmms_mark <- parallel::mclapply(
 score_df_mmms_mark <- dplyr::bind_rows(res_df_list_mmms_mark)
 print(head(score_df_mmms_mark))
 
-print(iteration_df_mark[1:20,1:3])
-print(iteration_df_mmms[1:20,1:3])
-print(iteration_df_mmms_mark[1:20,1:3])
-
 #-------------------------------------------------------------------------------
 
 base::saveRDS(score_df_mark, snakemake@output[["perm_score_df_mark"]])

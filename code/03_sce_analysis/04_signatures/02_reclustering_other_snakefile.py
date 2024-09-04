@@ -30,10 +30,10 @@ print(METADATA)
 fractions = get_list(metadata = METADATA, column = "Fraction_ID")
 
 # define datasets to be tested
-datasets_other_hsc = ["ts_hscs_progenitors", "ts_bone_marrow", "mus_weinreb_hspc", "mus_tm_bonemarrow", "nmr_sorted_hspc", "zeb_all_hspc"]
-datasets_other_str = ["ts_all_stromal", "li_all_stromal", "mus_tik_stromal", "mus_bar_stromal"]
-#datasets_other_hsc = ["ts_bone_marrow"]
-#datasets_other_str = []
+# datasets_other_hsc = ["ts_hscs_progenitors", "ts_bone_marrow", "mus_weinreb_hspc", "mus_tm_bonemarrow", "nmr_sorted_hspc", "zeb_all_hspc"]
+# datasets_other_str = ["ts_all_stromal", "li_all_stromal", "mus_tik_stromal", "mus_bar_stromal"]
+datasets_other_hsc = ["ts_bone_marrow"]
+datasets_other_str = []
 datasets_other = datasets_other_hsc + datasets_other_str
 print(datasets_other)
 
@@ -43,9 +43,9 @@ targets = []
      
 for d in datasets_other:
   targets = targets + [OUTPUT_DAT + "/03_recl/reclustered_" + d + "_list"]
-  targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_" + d + "_list"]
-  targets = targets + [OUTPUT_REP + "/all/reclustering_other_report_" + d + ".html"]
-  targets = targets + [OUTPUT_REP + "/final/reclustering_other_final_report_" + d + ".html"]
+  #targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_" + d + "_list"]
+  #targets = targets + [OUTPUT_REP + "/all/reclustering_other_report_" + d + ".html"]
+  #targets = targets + [OUTPUT_REP + "/final/reclustering_other_final_report_" + d + ".html"]
  
   # testing reclustering scores
   # targets = targets + [OUTPUT_REP + "/test_scores/test_reclustering_scores_" + d + ".html"]
@@ -229,7 +229,7 @@ if RUN_PERM_GENESETS:
           ensembl_mmms = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_mmms_{fraction}", fraction = fractions)
       params:
           reclustering_functions = "../../source/sce_functions_reclustering.R",
-          iterations = 100,
+          iterations = 20,
           nr_cores = 20,
           resolution_df = RESOLUTION_OTHER,
           #nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],

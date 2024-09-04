@@ -384,11 +384,11 @@ print(nr_random_mmms_mark)
 # generate i = iterations random sets of genes at the required number
 # from the allowed pool of random genes (original positions in SEU)
 # always generate the same random numbers
-set.seed(34)
 
 # mmms_mark = comparison mmms with mark
 iteration_df_mmms_mark <- base::data.frame(row.names = c(1:nr_random_mmms_mark))
 
+set.seed(34)
 for(i in 1:iterations){
   # POSITIONS FROM ORIGINAL SCE subsetted to a smaller list 
   # basically, subset the vector of pool positions in random positions 

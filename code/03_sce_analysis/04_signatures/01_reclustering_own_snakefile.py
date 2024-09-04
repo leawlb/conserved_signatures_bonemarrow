@@ -54,11 +54,11 @@ for f in fractions:
     targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mark_" + f]
     targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mmms_" + f]
     targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mmms_mark_" + f]
-    targets = targets + [OUTPUT_REP + "/perm_genesets_" + f + ".html"]
+    #targets = targets + [OUTPUT_REP + "/perm_genesets_" + f + ".html"]
 
   if RUN_OWN_SIGN_PERM:
     targets = targets + [OUTPUT_DAT + "/06_psig/perm_score_df_" + f]
-    targets = targets + [OUTPUT_REP + "/perm_conserved_signature_" + f + ".html"]
+    #targets = targets + [OUTPUT_REP + "/perm_conserved_signature_" + f + ".html"]
           
 targets = targets + [OUTPUT_REP + "/genesets_summary.html"]
 
@@ -261,7 +261,7 @@ if RUN_PERM_GENESETS:
           cut_off_counts = config["values"]["03_sce_analysis"]["reclustering_cutoff_counts"],
           cts_exclude = CELL_TYPES_EXCLUDE,
       conda:
-          "../../envs/test_perm_again_again.yml"
+          "../../envs/reclustering_own_scores.yml"
       output:
           perm_score_df_mark = OUTPUT_DAT + "/05_perg/perm_score_df_mark_{fraction}",
           perm_score_df_mmms = OUTPUT_DAT + "/05_perg/perm_score_df_mmms_{fraction}",
@@ -306,7 +306,7 @@ if RUN_OWN_SIGN_PERM:
           cts_exclude = CELL_TYPES_EXCLUDE,       
           cons_level_use = "conserved_signature"      
       conda:
-          "../../envs/test_perm_again_again.yml"
+          "../../envs/reclustering_own_scores.yml"
       output:
           perm_score_df = OUTPUT_DAT + "/06_psig/perm_score_df_{fraction}"
       script: 

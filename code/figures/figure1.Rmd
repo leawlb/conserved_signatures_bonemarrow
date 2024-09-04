@@ -14,8 +14,8 @@ Generate Figure 1, current title:
 #### Load objects
 
 ```{r seed, message = FALSE}
+base::RNGkind(kind = "Mersenne-Twister")
 set.seed(37)
-base::RNGkind(kind = "L'Ecuyer-CMRG")
 ```
 
 ```{r load, message = FALSE}
@@ -88,11 +88,6 @@ print(colors_source)
 #knitr::knit_exit()
 ```
 
-```{r colors}
-
-
-```
-
 ```{r params}
 # determine params that may be changed 
 
@@ -118,7 +113,7 @@ axis_title_color <- "black"
 
 axis_text_face <- "plain"
 axis_text_size <- 14
-axus_text_color <- "black"
+axis_text_color <- "black"
 axis_text_size_small <- 10
 
 max_size_dotplots <- 4

@@ -1,0 +1,352 @@
+---
+title: "Figure 2"
+date: '2024-09-04'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Generate Figure 2, current title:
+"Cell type conserved signature genes are robust across mouse species and age."
+
+#### Load objects
+
+```{r seed, message = FALSE}
+base::RNGkind(kind = "Mersenne-Twister")
+set.seed(37)
+```
+
+```{r load, message = FALSE}
+library(tidyverse, quietly = TRUE)
+library(SingleCellExperiment, quietly = TRUE)
+library(ggpubr, quietly = TRUE)
+library(scuttle, quietly = TRUE)
+```
+
+```{r load_manual, eval = FALSE, include = FALSE}
+
+# load data for manual use here
+
+base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/"
+
+sce_hsc <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10"))
+
+sce_hsc_all_pseudotime <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/04_psce/sce_hsc_pseudotime"))
+
+sce_hsc_ery_pseudotime <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/05_bsce/sce_ery"))
+
+# list of genesets (conserved signature and others)
+geneset_list_hsc <- base::readRDS(base::paste0(
+  base_path, 
+  "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"))
+  
+geneset_list_str <- base::readRDS(base::paste0(
+  base_path, 
+  "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_str"))
+
+colors_path <- base::paste0(
+  base_path, 
+  "/metadata/colors/colors.txt")
+
+source("../source/colors.R")
+
+```
+
+```{r load_snakemake}
+
+# annotated SCE objects
+sce_input_list_path <- snakemake@input[["sce_input_list"]] 
+sce_hsc <- base::readRDS(sce_input_list_path[[
+  base::grep("hsc", sce_input_list_path)]])
+
+# colors
+colors_path <- snakemake@params[["colors_path"]]
+colors_source <- snakemake@params[["colors"]]
+source(colors_source)
+
+print(sce_input_list_path)
+print(colors_path)
+print(colors_source)
+
+knitr::knit_exit()
+```
+
+```{r params}
+# determine params that may be changed 
+
+umap_point_size <- 0.3
+umap_point_alpha <- 1
+umap_legend_point_size <- 3
+umap_legend_point_alpha <- 1
+
+legend_title_face <- "plain"
+legend_title_size <- 16
+legend_title_color <- "black"
+
+legend_text_face <- "plain"
+legend_text_size <- 14
+legend_text_color <- "black"
+
+axis_title_face <- "plain"
+axis_title_size <- 16
+axis_title_color <- "black"
+
+axis_text_face <- "plain"
+axis_text_size <- 14
+axis_text_color <- "black"
+axis_text_size_small <- 10
+
+colors_z_score <- c("blue3", "white", "red3")
+
+strip_background_color <- "white"
+strip_background_fill <- "white"
+```
+
+## A
+
+Model of methods used to extract conserved signature genes for each cell type. 
+Conserved signature genes are non-differentially expressed conserved markers
+within the same cell type across all species.
+
+@Lea
+
+## B
+
+Expression of conserved signature genes in all mouse species across HSPC
+cell types (scaled by z-score per gene).
+
+@Lea
+
+#### Plot Components
+
+```{r b_prep1}
+# get all unique signature genes
+all_sign_genes <- vector()
+for(i in 1:length(geneset_list_hsc)){
+  sign_genes <- geneset_list_hsc[[i]]$conserved_signature
+  all_sign_genes <- c(all_sign_genes, sign_genes)
+}
+all_sign_genes_hsc <- base::unique(all_sign_genes)
+```
+
+```{r b_prep2}
+# aggregate per cell type and species
+cts_hsc <- as.list(names(geneset_list_hsc))
+
+# separate SCE objects by cell type, then aggregate the counts to obtain
+# the average counts per species for each cell type separately
+# use the multi-batchnorm-corrected logcounts 
+
+agg_hsc_list <- lapply(cts_hsc, function(ct){
+  
+  sce_ct <- sce_hsc[,sce_hsc$celltypes == ct]
+  agg_hsc <- scuttle::aggregateAcrossCells(
+    sce_ct, 
+    id=colData(sce_ct)[,c("Species_ID")], 
+    statistics = "mean",
+    use.assay.type = "logcounts") #multibatchnorm
+  
+  return(agg_hsc)
+})
+names(agg_hsc_list) <- names(geneset_list_hsc)
+```
+
+```{r b_prep3}
+expr_df_list_hsc <- lapply(agg_hsc_list, function(agg_hsc){
+  
+  # get current cell type and relevant signature genes
+  ct_curr <- agg_hsc$celltypes[1]
+  sign_genes_ct <- geneset_list_hsc[[ct_curr]]$conserved_signature
+  
+  # get a df from average logcounts per ct and species
+  vis_df <- base::as.data.frame(
+    t(SummarizedExperiment::assays(agg_hsc)$logcounts))
+  
+  # subset to all signature genes of this tissue
+  vis_df <- vis_df[,colnames(vis_df) %in% all_sign_genes_hsc]
+  
+  # change df format 
+  vis_df <- tibble::rownames_to_column(vis_df, "species")
+  vis_df <- tidyr::pivot_longer(vis_df, 
+                                cols = c(2:ncol(vis_df)),
+                                values_to = "expression",
+                                names_to = "gene")
+  
+  # add ct info
+  vis_df$cell_type <- base::rep(ct_curr)
+
+  # add info on genes that are signature genes of this ct
+  vis_df$is_sign_gene <- vector(length = nrow(vis_df))
+  vis_df$is_sign_gene[vis_df$gene %in% sign_genes_ct] <- TRUE
+
+  # scale expression of all genes per cell type 
+  # for ordering of genes ONLY
+  vis_df$scaled_expression_per_ct <- base::scale(vis_df$expression)
+  vis_df <- vis_df[base::order(vis_df$scaled_expression_per_ct, 
+                               decreasing = TRUE),]
+
+  return(vis_df)
+})
+
+# bind dfs 
+agg_hsc_df <- dplyr::bind_rows(expr_df_list_hsc)
+```
+
+```{r b_prep4}
+# scale expression per gene using z-scores
+agg_hsc_df$zscore_gene <- vector(length = nrow(agg_hsc_df), mode = "numeric")
+for(g in base::unique(agg_hsc_df$gene)){
+  
+  expr_vector_g <- agg_hsc_df[agg_hsc_df$gene == g,]$expression
+
+  # calculate z score per gene
+  z_score_g <- (expr_vector_g - base::mean(expr_vector_g))/stats::sd(expr_vector_g)
+  agg_hsc_df$zscore_gene[agg_hsc_df$gene == g] <- z_score_g
+  
+}
+
+```
+
+```{r b_prep5}
+# get a well ordered list of unique genes for factorization (after order above)
+all_sign_genes_for_factor <- base::unique(agg_hsc_df$gene[
+  agg_hsc_df$is_sign_gene == TRUE])
+
+# factorize
+agg_hsc_df$gene <- factor(agg_hsc_df$gene,
+                          levels = base::rev(all_sign_genes_for_factor))
+agg_hsc_df$species <- factor(agg_hsc_df$species,
+                             levels = names(col_spc))
+```
+
+```{r b_base_plot}
+b_base_plot <- ggplot2::ggplot(
+  agg_hsc_df,
+  aes(x = species, y = gene, fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::facet_grid(cols = vars(agg_hsc_df$cell_type))
+```
+
+```{r b_theme_plot}
+b_theme_plot <- b_base_plot+
+  ggplot2::theme_classic()+
+  ggplot2::theme(
+    axis.text.y = element_blank(),
+    axis.title = element_text(
+      face = axis_title_face,
+      size = axis_title_size,
+      color = axis_title_color),
+    axis.text.x = element_text(
+      angle = 90,
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axis_text_color,
+      vjust = 0.5,
+      hjust = 0),
+    strip.text.x = element_text(
+      angle = 90,
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axis_text_color,
+      vjust = 0.5,
+      hjust = 0),
+    strip.background.x = element_rect(
+      color = strip_background_color,
+      fill = strip_background_fill),
+    legend.title = element_text(
+      face = legend_title_face,
+      size = legend_title_size,
+      color = legend_title_color),
+    legend.text = element_text(
+      face = legend_text_face,
+      size = legend_text_size,
+      color = legend_text_color),
+    axis.ticks.y = element_blank())+
+  ggplot2::ylab("Conserved signature genes")+
+  ggplot2::xlab("Species")+
+  ggplot2::scale_fill_gradientn(
+    "z-scores per gene", 
+    colours = colors_z_score,
+    breaks = c(-5, -2.5,  0, 2.5, 5), 
+    limits = c(-5,5))
+```
+
+```{r b_rm}
+rm(agg_hsc_list)
+```
+
+## C 
+
+HSPCs in UMAP space, colored by diffusion pseudotime.
+
+@Lea
+
+#### Plot components
+
+```{r c_prep}
+
+# transfer pseudotime
+sce_hsc$pseudotime <- sce_hsc_all_pseudotime$dpt_pseudotime
+
+hsc_umap <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_hsc, type = "UMAP"))
+hsc_umap$color_by <- sce_hsc$dpt_pseudotime
+hsc_umap <- hsc_umap[base::sample(
+  1:nrow(hsc_umap),
+  nrow(hsc_umap),
+  replace = FALSE),]
+```
+
+
+```{r c_base_plot}
+c_base_plot <- ggplot2::ggplot(
+  hsc_umap, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(hsc_umap$X1)-1, base::max(hsc_umap$X1))+1)+
+  ggplot2::ylim(c(base::min(hsc_umap$X2)-1, base::max(hsc_umap$X2))+1)+
+  ggplot2::scale_color_manual("Cell type", values = col_cts_hsc)
+```
+
+## D
+
+Min-max scaled expression of HSC (top), Mk prog. (middle) or Erythroid prog.
+(bottom) conserved signature genes along diffusion pseudotime trajectory within 
+the erythroid branch. Cells were partitioned into branches based on their 
+lineage differentiation probability calculated by cellrank.
+
+@Veronica
+
+## E 
+
+Scaled expression of species-specific marker genes in all mouse species within
+HSCs (scaled by z-score per gene).
+
+@Lea
+
+## F 
+
+Number of marker genes per HSPC cell type identified when all, only old, 
+or only young mouse samples are included.
+
+@Veronica
+
+## G
+
+G: Scaled expression of signature genes [geneX], [geneY], and [geneZ] across
+mouse species and ages (z-score per species and age).
+
+@Veronica

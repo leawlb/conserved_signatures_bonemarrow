@@ -435,6 +435,50 @@ permuting_reclustering_scores_sce <- function(
     mat_pca = mat_pca, 
     for_permutation = TRUE)
   
+  res_df$nr_genes_used <- base::rep(length(iteration_vector), nrow(res_df))
+  res_df$k_graph <- base::rep(k_graph, nrow(res_df))
+  res_df$resolution_louvain <- base::rep(resolution_louvain, nrow(res_df))
+  
   return(res_df)
+}
+
+
+
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+
+########################### prop_expressed_total ###############################
+
+#-------------------------------------------------------------------------------
+# a function that takes a SCE object and a vector of genes as input and
+# returns a dataframe with the prop of cells a gene is expressed in
+# used for cut off
+
+prop_expressed_total_sce <- function(
+    sce, 
+    geneset){
+  
+  sce <- sce # input SCE
+  geneset <- geneset # vector of genes to be tested
+
+  # get counts
+  counts <- SummarizedExperiment::assays(sce)$counts
+  
+  total_nr <- ncol(counts)
+
+  # stop if there are duplicated rownames which complicates subsetting
+  stopifnot(!base::duplicated(rownames(counts)))
+  
+  # subset to geneset, then transform into logical values
+  counts_subset <- counts[rownames(counts) %in% geneset,]
+  counts_true <- counts_subset > 0
+  
+  prop_expr_df <- data.frame(
+    "gene" = rownames(counts_true),
+    "nr_cells" = rowSums(counts_true), #rowsums will count occurrences of TRUE
+    "prop_cells" = rowSums(counts_true)/total_nr
+  )
+  
+  return(prop_expr_df)
 }
 

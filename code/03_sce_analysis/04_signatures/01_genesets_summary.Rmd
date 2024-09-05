@@ -26,18 +26,20 @@ library(ComplexUpset, quietly = TRUE)
 
 ```{r source, message = FALSE}
 source(file = snakemake@params[["plotting"]])
+source(file = snakemake@params[["functions_reclustering"]])
 ```
 
 ```{r manual, eval = FALSE, include = FALSE}
 
-geneset_list_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_sign/geneset_list_hsc")
-geneset_list_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_sign/geneset_list_str")
+geneset_list_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc")
+geneset_list_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_str")
 
 sce_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10")
 sce_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10")
 
 colors_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt"
 source("../../source/colors.R")
+source("../../source/sce_functions_reclustering.R")
 ```
 
 ```{r load_objects}
@@ -46,6 +48,17 @@ sce_str <- base::readRDS(snakemake@input[["sce_str"]])
 
 geneset_list_hsc <- base::readRDS(snakemake@input[["geneset_list_hsc"]])
 geneset_list_str <- base::readRDS(snakemake@input[["geneset_list_str"]])
+
+cts_exclude <- snakemake@params[["cts_exclude"]]
+
+# subset to required cell types (sce_str only)
+sce_str <- sce_str[,which(!sce_str$celltypes %in% cts_exclude)]
+
+# remove cell type levels that are not required anymore
+sce_str$celltypes <- factor(
+  sce_str$celltypes,
+  levels = levels(sce_str$celltypes)[
+    which(levels(sce_str$celltypes) %in% base::unique(sce_str$celltypes))])
 ```
 
 ```{r colors, meassage = FALSE}
@@ -119,6 +132,101 @@ ComplexUpset::upset(cons_large_df_up[which(
   intersect = c("mmus", "mcas", "mspr",  "mcar"))+
   xlab("")+
   ggplot2::ggtitle("all marker genes, HSPCs")
+```
+
+# Check Proportion of cells
+
+That express certain genes.
+
+### HSCs
+
+```{r perc_cells_hsc}
+
+hsc_conserved_signature <- base::unique(conserved_df_hsc$gene[
+  conserved_df_hsc$conserved_signature == TRUE])
+hsc_conserved_markers <- base::unique(conserved_df_hsc$gene[
+  conserved_df_hsc$conserved_marker == TRUE])
+hsc_ndges <- base::unique(conserved_df_hsc$gene[
+  conserved_df_hsc$ndge == TRUE])
+
+# use own function to get the proportion of cells a gene is expressed in
+prop_expr_df_hsc <- prop_expressed_total_sce(
+  sce = sce_hsc,
+  geneset = c(base::unique(c(hsc_conserved_signature,
+                             hsc_conserved_markers,
+                             hsc_ndges))))
+
+prop_expr_df_hsc_sign <- prop_expr_df_hsc[prop_expr_df_hsc$gene %in%
+                                            hsc_conserved_signature,]
+prop_expr_df_hsc_mark <- prop_expr_df_hsc[prop_expr_df_hsc$gene %in%
+                                            hsc_conserved_markers,] 
+prop_expr_df_hsc_ndge <- prop_expr_df_hsc[prop_expr_df_hsc$gene %in%
+                                            hsc_ndges,]
+
+prop_expr_df_hsc_sign$type <- "conserved_signature"
+prop_expr_df_hsc_mark$type <- "conserved_markers"
+prop_expr_df_hsc_ndge$type <- "ndges"
+
+prop_expr_df_hsc <- base::rbind(prop_expr_df_hsc_sign,
+                                prop_expr_df_hsc_mark,
+                                prop_expr_df_hsc_ndge)
+
+plot <- ggplot2::ggplot(prop_expr_df_hsc,
+                        aes(x = type, y = prop_cells))+
+  ggplot2::geom_jitter(color = "grey70")+
+  ggplot2::geom_boxplot(alpha = 0, color = "black")+
+  ggplot2::theme_classic()
+plot
+
+print(base::min(prop_expr_df_hsc$prop_cells))
+print(base::min(prop_expr_df_hsc_sign$prop_cells))
+print(base::min(prop_expr_df_hsc_mark$prop_cells))
+print(base::min(prop_expr_df_hsc_ndge$prop_cells))
+```
+
+### Stromal
+
+```{r perc_cells_str}
+
+str_conserved_signature <- base::unique(conserved_df_str$gene[
+  conserved_df_str$conserved_signature == TRUE])
+str_conserved_markers <- base::unique(conserved_df_str$gene[
+  conserved_df_str$conserved_marker == TRUE])
+str_ndges <- base::unique(conserved_df_str$gene[
+  conserved_df_str$ndge == TRUE])
+
+prop_expr_df_str <- prop_expressed_total_sce(
+  sce = sce_str,
+  geneset = c(base::unique(c(str_conserved_signature,
+                             str_conserved_markers,
+                             str_ndges))))
+
+prop_expr_df_str_sign <- prop_expr_df_str[prop_expr_df_str$gene %in%
+                                            str_conserved_signature,]
+prop_expr_df_str_mark <- prop_expr_df_str[prop_expr_df_str$gene %in%
+                                            str_conserved_markers,] 
+prop_expr_df_str_ndge <- prop_expr_df_str[prop_expr_df_str$gene %in%
+                                            str_ndges,]
+
+prop_expr_df_str_sign$type <- "conserved_signature"
+prop_expr_df_str_mark$type <- "conserved_markers"
+prop_expr_df_str_ndge$type <- "ndges"
+
+prop_expr_df_str <- base::rbind(prop_expr_df_str_sign,
+                                prop_expr_df_str_mark,
+                                prop_expr_df_str_ndge)
+
+plot <- ggplot2::ggplot(prop_expr_df_str,
+                        aes(x = type, y = prop_cells))+
+  ggplot2::geom_jitter(color = "grey70")+
+  ggplot2::geom_boxplot(alpha = 0, color = "black")+
+  ggplot2::theme_classic()
+plot
+
+print(base::min(prop_expr_df_str$prop_cells))
+print(base::min(prop_expr_df_str_sign$prop_cells))
+print(base::min(prop_expr_df_str_mark$prop_cells))
+print(base::min(prop_expr_df_str_ndge$prop_cells))
 ```
 
 # Categorize

@@ -117,6 +117,12 @@ subclustering_genes <- base::unique(unlist(subclustering_gene_list))
 # subset to required cell types
 sce <- sce[,which(!sce$celltypes %in% cts_exclude)]
 
+# remove cell type levels that are not required anymore
+sce$celltypes <- factor(
+  sce$celltypes,
+  levels = levels(sce$celltypes)[
+    which(levels(sce$celltypes) %in% base::unique(sce$celltypes))])
+
 # if fraction is hsc, downsample to accelerate re-clustering
 if(fraction_curr == "hsc"){
   # set a different seed so the same numbers are not generated accidentally 

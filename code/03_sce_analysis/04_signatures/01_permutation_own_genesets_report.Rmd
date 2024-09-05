@@ -33,22 +33,28 @@ library(tidyverse, quietly = TRUE)
 
 score_df <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/04_rcls/score_df_str")
 
+
 perm_score_df_mark <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_perg/perm_score_df_mark_str")
 perm_score_df_mmms <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_perg/perm_score_df_mmms_str")
 perm_score_df_mmms_mark <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_perg/perm_score_df_mmms_mark_str")
+
+geneset_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_str")
+
+fraction_curr <- "str"
 ```
 
 ```{r manual_for_script, include = FALSE, eval = FALSE}
 # for script 05:
 
 
-cut_off_counts <- 5
+cut_off_prop <- 0.01
 nr_cores <- 1
 iterations <- 2
 source("../../source/sce_functions_reclustering.R")
 
-sce_input <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10")
+sce_input <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/03_recl/sce_str")
 
+geneset_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_str")
 ```
 
 ```{r load_objects1}
@@ -72,56 +78,56 @@ score_df_sign <- score_df[score_df$conservation_level == "conserved_signature",]
 ```
 
 ```{r load_objects4}
-# load ensembl list and pre-processed object to know how many genes of
-# each set were used 
-
-#sce <- base::readRDS(snakemake@input[["sce_input"]])
+# load ensembl list to know how many genes of each set were used 
 
 geneset_list <- base::readRDS(snakemake@input[["geneset_list"]])
 
 ```
 
 ```{r prepare_genesets}
-# get all signature genes
+# get subclustering genes for control
+subclustering_gene_list <- lapply(geneset_list, function(geneset){
+  subclustering_genes <- geneset$genes_subclustering
+  return(subclustering_genes)
+})
+
+subclustering_genes <- base::unique(unlist(subclustering_gene_list))
+# get all signature genes (excluding subclustering genes)
 conserved_signature_list <- lapply(geneset_list, function(geneset){
   conserved_signature <- geneset$conserved_signature
-  conserved_signature <- conserved_signature[
-    which(!conserved_signature %in% geneset$subclustering_genes)]
   return(conserved_signature)
 })
 sign_IDs <- base::unique(unlist(conserved_signature_list))
+sign_IDs <- sign_IDs[!sign_IDs %in% subclustering_genes]
 print(length(sign_IDs))
 
 # get all conserved markers
 conserved_markers_list <- lapply(geneset_list, function(geneset){
   conserved_markers <- geneset$conserved_markers
-  conserved_markers <- conserved_markers[
-    which(!conserved_markers %in% geneset$subclustering_genes)]
   return(conserved_markers)
 })
 mark_IDs <- base::unique(unlist(conserved_markers_list))
+mark_IDs <- mark_IDs[!mark_IDs %in% subclustering_genes]
 print(length(mark_IDs))
+
+# get all BL6 marker IDs
+mmus_marker_list <- lapply(geneset_list, function(geneset){
+  mmus_markers <- geneset$conserved_df$gene[
+    which(!is.na(geneset$conserved_df$mmus))]
+  return(mmus_markers)
+})
+mmms_IDs <- base::unique(unlist(mmus_marker_list))
+mmms_IDs <- mmms_IDs[!mmms_IDs %in% subclustering_genes]
+print(length(mmms_IDs))
 
 # get all ndges
 ndge_list <- lapply(geneset_list, function(geneset){
   ndges <- geneset$ndges
-  ndges <- ndges[
-    which(!ndges %in% geneset$subclustering_genes)]
   return(ndges)
 })
 ndges <- base::unique(unlist(ndge_list))
+ndges <- ndges[!ndges %in% subclustering_genes]
 print(length(ndges))
-
-# get all BL6 markers
-mmus_marker_list <- lapply(geneset_list, function(geneset){
-  mmus_markers <- geneset$conserved_df$gene[
-    which(!is.na(geneset$conserved_df$mmus))]
-  mmus_markers <- mmus_markers[
-    which(!mmus_markers %in% geneset$subclustering_genes)]
-  return(mmus_markers)
-})
-mmms_IDs <- base::unique(unlist(mmus_marker_list))
-print(length(mmms_IDs))
 
 max_genes <- length(mmms_IDs)
 ```
@@ -154,9 +160,22 @@ print(head(perm_score_df_mmms_mark))
 
 ```{r perm_plots_mark}
 
-scores <- base::unique(score_df_mark$type)[1:6]
+scores <- c(
+  "adjusted_rand_index",
+  "fowles_mallow_index",
+  "mean_cluster_purity",
+  "mean_prop_cells_cluster",
+  "proportion_of_zeros")
 
-for(score in scores){
+scores_v <- c(
+  "adjusted_rand_index",
+  "fowles_mallow_index",
+  "mean_cluster_purity",
+  "mean_prop_cells_cluster",
+  "proportion_of_zeros",
+  "variation_information")
+
+for(score in scores_v){
   
   print(score)
   
@@ -184,7 +203,11 @@ for(score in scores){
     ggplot2::ggtitle(base::paste(score, 
                                  fraction_curr, 
                                  iterations,
-                                 "iterations"))+
+                                 "iterations,",
+                                 perm_score_df_mark$cut_off_prop[1],
+                                 "% of cells,",
+                                 perm_score_df_mark$nr_genes_used,
+                                 "genes used"))+
     annotate("text", 
              x = 0.8,
              y = 0.8, 
@@ -197,29 +220,19 @@ for(score in scores){
 
 All scores between 0 and 1
 
-```{r all1, fig.width = 4, fig.height = 4}
+```{r all1, fig.width = 3.5, fig.height = 4}
 
-score_df_temp <- score_df_mark[!score_df_mark$type %in% c(
-  "nr_celltypes",
-  "nr_clusters",
-  "variation_information"),]
+score_df_temp <- score_df_mark[score_df_mark$type %in% scores,]
 score_df_temp <- score_df_temp[
   score_df_temp$conservation_level == "conserved_markers",]
-score_df_temp_sign <- score_df_sign[!score_df_sign$type %in% c(
-  "nr_celltypes",
-  "nr_clusters",
-  "variation_information"),]
+score_df_temp_sign <- score_df_sign[score_df_sign$type %in% scores,]
 score_df_temp <- rbind(score_df_temp, score_df_temp_sign)
 
 perm_score_df_temp <- pivot_longer(perm_score_df_mark,
                                    c = 1:ncol(perm_score_df_mark),
                                    values_to = "value",
                                    names_to = "type")
-perm_score_df_temp <- perm_score_df_temp[!perm_score_df_temp$type %in% c(
-  "nr_celltypes",
-  "nr_clusters",
-  "variation_information",
-  "iteration"),]
+perm_score_df_temp <- perm_score_df_temp[perm_score_df_temp$type %in% scores,]
 
 ggplot2::ggplot(score_df_temp, 
                 aes(x = type, y = value))+
@@ -235,12 +248,16 @@ ggplot2::ggplot(score_df_temp,
   ggplot2::theme_classic()+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
   ggplot2::ggtitle(base::paste(fraction_curr, 
-                               "\n" ,
                                iterations,
-                               "iterations"))
+                               "iterations,",
+                               perm_score_df_mark$cut_off_prop[1],
+                               "% of cells,",
+                               "\n",
+                               perm_score_df_mark$nr_genes_used,
+                               "genes used"))
 ```
 
-```{r all2, fig.width = 3, fig.height = 4}
+```{r all2, fig.width = 3, fig.height = 3}
 
 score_df_temp <- score_df_mark[
   score_df_mark$type %in% c("variation_information"),]
@@ -270,10 +287,7 @@ ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::scale_color_manual("conservation level", values = col_cons)+
   ggplot2::theme_classic()+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
-  ggplot2::ggtitle(base::paste(fraction_curr,
-                               "\n",
-                               iterations,
-                               "iterations"))
+  ggplot2::ggtitle("")
 ```
 
 ## Nr of genes per gene set
@@ -330,9 +344,7 @@ ggplot2::ggplot(vis_df_mark, aes(x = type1, y = number, fill = type2))+
 
 ```{r perm_plots_mmms}
 
-scores <- base::unique(score_df_mmms$type)[1:6]
-
-for(score in scores){
+for(score in scores_v){
   
   print(score)
   
@@ -360,7 +372,11 @@ for(score in scores){
     ggplot2::ggtitle(base::paste(score, 
                                  fraction_curr, 
                                  iterations,
-                                 "iterations"))+
+                                 "iterations,",
+                                 perm_score_df_mmms$cut_off_prop[1],
+                                 "% of cells,",
+                                 perm_score_df_mmms$nr_genes_used,
+                                 "genes used"))+
     annotate("text", 
              x = 0.8,
              y = 0.8, 
@@ -373,29 +389,19 @@ for(score in scores){
 
 All scores between 0 and 1
 
-```{r all1_mmms, fig.width = 4, fig.height = 4}
+```{r all1_mmms, fig.width = 3.5, fig.height = 4.4}
 
-score_df_temp <- score_df_mmms[!score_df_mmms$type %in% c(
-  "nr_celltypes",
-  "nr_clusters",
-  "variation_information"),]
+score_df_temp <- score_df_mmms[score_df_mmms$type %in% scores,]
 score_df_temp <- score_df_temp[
   score_df_temp$conservation_level == "mmusall_markers",]
-score_df_temp_sign <- score_df_sign[!score_df_sign$type %in% c(
-  "nr_celltypes",
-  "nr_clusters",
-  "variation_information"),]
+score_df_temp_sign <- score_df_sign[score_df_sign$type %in% scores,]
 score_df_temp <- rbind(score_df_temp, score_df_temp_sign)
 
 perm_score_df_temp <- pivot_longer(perm_score_df_mmms,
                                    c = 1:ncol(perm_score_df_mmms),
                                    values_to = "value",
                                    names_to = "type")
-perm_score_df_temp <- perm_score_df_temp[!perm_score_df_temp$type %in% c(
-  "nr_celltypes",
-  "nr_clusters",
-  "variation_information",
-  "iteration"),]
+perm_score_df_temp <- perm_score_df_temp[perm_score_df_temp$type %in% scores,]
 
 ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::geom_violin(data = perm_score_df_temp,
@@ -410,12 +416,16 @@ ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::theme_classic()+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
   ggplot2::ggtitle(base::paste(fraction_curr, 
-                               "\n" ,
                                iterations,
-                               "iterations"))
+                               "iterations,",
+                               "\n",
+                               perm_score_df_mmms$cut_off_prop[1],
+                               "% of cells,",
+                               perm_score_df_mmms$nr_genes_used,
+                               "genes used"))
 ```
 
-```{r all2_mmms, fig.width = 3, fig.height = 4}
+```{r all2_mmms, fig.width = 3, fig.height = 3}
 
 score_df_temp <- score_df_mmms[
   score_df_mmms$type %in% c("variation_information"),]
@@ -445,10 +455,7 @@ ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
                                  score_df_temp$value))))+
   ggplot2::theme_classic()+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
-  ggplot2::ggtitle(base::paste(fraction_curr,
-                               "\n",
-                               iterations,
-                               "iterations"))
+  ggplot2::ggtitle("")
 ```
 
 ## Nr of genes per gene set
@@ -510,9 +517,7 @@ head(perm_score_df_mmms_mark)
 
 ```{r perm_plots_mmmsmark}
 
-scores <- base::unique(score_df_mmms$type)[1:6]
-
-for(score in scores){
+for(score in scores_v){
   
   print(score)
   
@@ -540,7 +545,11 @@ for(score in scores){
     ggplot2::ggtitle(base::paste(score, 
                                  fraction_curr, 
                                  iterations,
-                                 "iterations"))+
+                                 "iterations,",
+                                 perm_score_df_mmms_mark$cut_off_prop[1],
+                                 "% of cells,",
+                                 perm_score_df_mmms_mark$nr_genes_used,
+                                 "genes used"))+
     annotate("text", 
              x = 0.8,
              y = 0.8, 
@@ -553,29 +562,19 @@ for(score in scores){
 
 All scores between 0 and 1
 
-```{r all1_mmmsmark, fig.width = 4, fig.height = 4}
+```{r all1_mmmsmark, fig.width = 3.5, fig.height = 4}
 
-score_df_temp <- score_df_mmms[!score_df_mmms$type %in% c(
-  "nr_celltypes",
-  "nr_clusters",
-  "variation_information"),]
+score_df_temp <- score_df_mmms[score_df_mmms$type %in% scores,]
 score_df_temp <- score_df_temp[
   score_df_temp$conservation_level == "mmusall_markers",]
-score_df_temp_mark <- score_df_mark[!score_df_mark$type %in% c(
-  "nr_celltypes",
-  "nr_clusters",
-  "variation_information"),]
+score_df_temp_mark <- score_df_mark[score_df_mark$type %in% scores,]
 score_df_temp <- rbind(score_df_temp, score_df_temp_mark)
 
 perm_score_df_temp <- pivot_longer(perm_score_df_mmms_mark,
                                    c = 1:ncol(perm_score_df_mmms_mark),
                                    values_to = "value",
                                    names_to = "type")
-perm_score_df_temp <- perm_score_df_temp[!perm_score_df_temp$type %in% c(
-  "nr_celltypes",
-  "nr_clusters",
-  "variation_information",
-  "iteration"),]
+perm_score_df_temp <- perm_score_df_temp[perm_score_df_temp$type %in% scores,]
 
 ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::geom_violin(data = perm_score_df_temp,
@@ -590,12 +589,16 @@ ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::theme_classic()+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
   ggplot2::ggtitle(base::paste(fraction_curr, 
-                               "\n" ,
                                iterations,
-                               "iterations"))
+                               "iterations,",
+                               perm_score_df_mmms_mark$cut_off_prop[1],
+                               "% of cells,",
+                               "\n",
+                               perm_score_df_mmms_mark$nr_genes_used,
+                               "genes used"))
 ```
 
-```{r all2_mmmsmark, fig.width = 3, fig.height = 4}
+```{r all2_mmmsmark, fig.width = 3, fig.height = 3}
 
 score_df_temp <- score_df_mmms[
   score_df_mmms$type %in% c("variation_information"),]
@@ -603,7 +606,7 @@ score_df_temp <- score_df_temp[
   score_df_temp$conservation_level == "mmusall_markers",]
 score_df_temp_mark <- score_df_mark[
   score_df_mark$type %in% c("variation_information"),]
-score_df_temp <- rbind(score_df_temp, score_df_temp_mark)
+score_df_temp <- base::rbind(score_df_temp, score_df_temp_mark)
 
 perm_score_df_temp <- pivot_longer(perm_score_df_mmms_mark, 
                                    c = 1:ncol(perm_score_df_mmms_mark),
@@ -625,10 +628,7 @@ ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
                                  score_df_temp$value))))+
   ggplot2::theme_classic()+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
-  ggplot2::ggtitle(base::paste(fraction_curr,
-                               "\n",
-                               iterations,
-                               "iterations"))
+  ggplot2::ggtitle("")
 ```
 
 ## Nr of genes per gene set

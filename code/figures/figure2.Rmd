@@ -18,7 +18,7 @@ base::RNGkind(kind = "Mersenne-Twister")
 set.seed(37)
 ```
 
-```{r load, message = FALSE}
+```{r load_packages, message = FALSE}
 library(tidyverse, quietly = TRUE)
 library(SingleCellExperiment, quietly = TRUE)
 library(ggpubr, quietly = TRUE)
@@ -39,75 +39,47 @@ sce_hsc_all_pseudotime <- base::readRDS(base::paste0(
   base_path, 
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/04_psce/sce_hsc_pseudotime"))
 
-sce_hsc_ery_pseudotime <- base::readRDS(base::paste0(
-  base_path, 
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/05_bsce/sce_ery"))
-
 # list of genesets (conserved signature and others)
 geneset_list_hsc <- base::readRDS(base::paste0(
   base_path, 
   "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"))
   
-geneset_list_str <- base::readRDS(base::paste0(
-  base_path, 
-  "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_str"))
-
 colors_path <- base::paste0(
   base_path, 
   "/metadata/colors/colors.txt")
 
 source("../source/colors.R")
-
 ```
 
 ```{r load_snakemake}
 
+# data during snakemake run is loaded here
+
 # annotated SCE objects
-sce_input_list_path <- snakemake@input[["sce_input_list"]] 
-sce_hsc <- base::readRDS(sce_input_list_path[[
-  base::grep("hsc", sce_input_list_path)]])
+sce_hsc <- base::readRDS(snakemake@input[["sce_hsc"]])
+sce_hsc_all_pseudotime <- base::readRDS(snakemake@input[["sce_pt"]])
+
+# gene list
+geneset_list_hsc <- base::readRDS(snakemake@input[["geneset_list_hsc"]])
 
 # colors
 colors_path <- snakemake@params[["colors_path"]]
 colors_source <- snakemake@params[["colors"]]
 source(colors_source)
 
-print(sce_input_list_path)
-print(colors_path)
-print(colors_source)
-
 knitr::knit_exit()
+
 ```
 
 ```{r params}
-# determine params that may be changed 
+# global params
+source("determine_params.R")
 
-umap_point_size <- 0.3
-umap_point_alpha <- 1
-umap_legend_point_size <- 3
-umap_legend_point_alpha <- 1
-
-legend_title_face <- "plain"
-legend_title_size <- 16
-legend_title_color <- "black"
-
-legend_text_face <- "plain"
-legend_text_size <- 14
-legend_text_color <- "black"
-
-axis_title_face <- "plain"
-axis_title_size <- 16
-axis_title_color <- "black"
-
-axis_text_face <- "plain"
-axis_text_size <- 14
-axis_text_color <- "black"
-axis_text_size_small <- 10
-
+# specific params
+# TODO: put in colors later
 colors_z_score <- c("blue3", "white", "red3")
 
-strip_background_color <- "white"
-strip_background_fill <- "white"
+celltype <- "HSCs"
 ```
 
 ## A
@@ -124,6 +96,8 @@ Expression of conserved signature genes in all mouse species across HSPC
 cell types (scaled by z-score per gene).
 
 @Lea
+
+TODO: CHECK IF WITH OR WITHOUT SUBCLUSTERING GENES!!
 
 #### Plot Components
 
@@ -208,7 +182,8 @@ for(g in base::unique(agg_hsc_df$gene)){
   expr_vector_g <- agg_hsc_df[agg_hsc_df$gene == g,]$expression
 
   # calculate z score per gene
-  z_score_g <- (expr_vector_g - base::mean(expr_vector_g))/stats::sd(expr_vector_g)
+  z_score_g <- (expr_vector_g - base::mean(expr_vector_g))/
+    stats::sd(expr_vector_g)
   agg_hsc_df$zscore_gene[agg_hsc_df$gene == g] <- z_score_g
   
 }
@@ -240,10 +215,11 @@ b_theme_plot <- b_base_plot+
   ggplot2::theme_classic()+
   ggplot2::theme(
     axis.text.y = element_blank(),
-    axis.title = element_text(
+    axis.title.y = element_text(
       face = axis_title_face,
       size = axis_title_size,
       color = axis_title_color),
+    axis.title.x = element_blank(),
     axis.text.x = element_text(
       angle = 90,
       face = axis_text_face,
@@ -271,16 +247,33 @@ b_theme_plot <- b_base_plot+
       color = legend_text_color),
     axis.ticks.y = element_blank())+
   ggplot2::ylab("Conserved signature genes")+
-  ggplot2::xlab("Species")+
   ggplot2::scale_fill_gradientn(
-    "z-scores per gene", 
+    "z-score per gene", 
     colours = colors_z_score,
     breaks = c(-5, -2.5,  0, 2.5, 5), 
     limits = c(-5,5))
+
+b_legend <- ggpubr::get_legend(b_theme_plot)
 ```
 
 ```{r b_rm}
-rm(agg_hsc_list)
+#rm(agg_hsc_list)
+```
+
+### Construct
+
+```{r b_construct, fig.width = 8.5, fig.height = 6}
+b_plot_theme <- ggpubr::ggarrange(
+  b_theme_plot + theme(legend.position = "none")
+)
+b_plot_theme
+```
+
+```{r b_construct_legend, fig.width = 4, fig.height = 4}
+b_legend_theme <- ggpubr::ggarrange(
+  b_legend 
+)
+b_legend_theme
 ```
 
 ## C 
@@ -299,13 +292,12 @@ sce_hsc$pseudotime <- sce_hsc_all_pseudotime$dpt_pseudotime
 hsc_umap <- base::as.data.frame(
   SingleCellExperiment::reducedDim(
     sce_hsc, type = "UMAP"))
-hsc_umap$color_by <- sce_hsc$dpt_pseudotime
+hsc_umap$color_by <- sce_hsc$pseudotime
 hsc_umap <- hsc_umap[base::sample(
   1:nrow(hsc_umap),
   nrow(hsc_umap),
   replace = FALSE),]
 ```
-
 
 ```{r c_base_plot}
 c_base_plot <- ggplot2::ggplot(
@@ -317,8 +309,65 @@ c_base_plot <- ggplot2::ggplot(
     size = umap_point_size,
     alpha = umap_point_alpha)+
   ggplot2::xlim(c(base::min(hsc_umap$X1)-1, base::max(hsc_umap$X1))+1)+
-  ggplot2::ylim(c(base::min(hsc_umap$X2)-1, base::max(hsc_umap$X2))+1)+
-  ggplot2::scale_color_manual("Cell type", values = col_cts_hsc)
+  ggplot2::ylim(c(base::min(hsc_umap$X2)-1, base::max(hsc_umap$X2))+1)
+```
+
+```{r c_theme_plot}
+c_theme_plot <- c_base_plot+
+  cowplot::theme_nothing()+
+  ggplot2::scale_color_gradientn(
+    "Pseudotime",
+    colors = mycolors_to1
+  )
+```
+
+```{r c_legend_base_plot}
+c_legend_base_plot <- ggplot2::ggplot(
+  hsc_umap, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point()
+```
+
+```{r c_legend_theme_plot}
+c_legend_theme_plot <- c_legend_base_plot+
+  ggplot2::scale_color_gradientn(
+    "Pseudotime",
+    colors = mycolors_to1,
+    breaks = c(0, 0.5, 1))+
+  ggplot2::theme(
+    legend.title = element_text(
+      size = legend_title_size,
+      face = legend_title_face,
+      color = legend_title_color,
+      margin = margin(r = 10),
+      vjust = 0.85),
+    legend.text = element_text(
+      size = legend_text_size,
+      face = legend_text_face,
+      color = legend_text_color),
+    legend.box.just = "left",
+    legend.position = "bottom")
+      #legend.box = "vertical", # Stack legends vertically
+
+c_legend <- ggpubr::get_legend(c_legend_theme_plot)
+```
+
+#### Construct
+
+```{r c_construct, fig.width = 3.7, fig.height = 3.7}
+c_plot_theme <- ggpubr::ggarrange(
+  c_theme_plot
+)
+c_plot_theme
+```
+
+```{r c_construct_legend, fig.width = 3, fig.height = 1}
+c_legend_theme <- ggpubr::ggarrange(
+  c_legend
+)
+c_legend_theme
 ```
 
 ## D
@@ -336,6 +385,138 @@ Scaled expression of species-specific marker genes in all mouse species within
 HSCs (scaled by z-score per gene).
 
 @Lea
+
+```{r e_prep}
+# get ct specific data
+hsc_cons_df_ct <- geneset_list_hsc$HSCs$conserved_df
+
+hsc_mmus_specific <- hsc_cons_df_ct$gene[which(
+  !is.na(hsc_cons_df_ct$mmus) &
+    is.na(hsc_cons_df_ct$mcas) &
+    is.na(hsc_cons_df_ct$mspr) &
+    is.na(hsc_cons_df_ct$mcar))]
+
+hsc_mcas_specific <- hsc_cons_df_ct$gene[which(
+  is.na(hsc_cons_df_ct$mmus) &
+    !is.na(hsc_cons_df_ct$mcas) &
+    is.na(hsc_cons_df_ct$mspr) &
+    is.na(hsc_cons_df_ct$mcar))]
+
+hsc_mspr_specific <- hsc_cons_df_ct$gene[which(
+  is.na(hsc_cons_df_ct$mmus) &
+    is.na(hsc_cons_df_ct$mcas) &
+    !is.na(hsc_cons_df_ct$mspr) &
+    is.na(hsc_cons_df_ct$mcar))]
+
+hsc_mcar_specific <- hsc_cons_df_ct$gene[which(
+  is.na(hsc_cons_df_ct$mmus) &
+    is.na(hsc_cons_df_ct$mcas) &
+    is.na(hsc_cons_df_ct$mspr) &
+    !is.na(hsc_cons_df_ct$mcar))]
+  
+hsc_genes <- c(hsc_mmus_specific,
+               hsc_mcas_specific,
+               hsc_mspr_specific,
+               hsc_mcar_specific)
+
+stopifnot(!duplicated(hsc_genes))
+```
+
+```{r e_prep2}
+agg_hsc_ct <- agg_hsc_list[[celltype]]
+
+# make visualisation DF
+vis_df_hsc <- as.data.frame(
+  t(SummarizedExperiment::assays(agg_hsc_ct)$logcounts)) # batchnorm, aggregated
+vis_df_hsc <- vis_df_hsc[,colnames(vis_df_hsc) %in% hsc_genes]
+vis_df_hsc <- tibble::rownames_to_column(vis_df_hsc, "species")
+vis_df_hsc <- tidyr::pivot_longer(
+  vis_df_hsc, 
+  cols = c(2:ncol(vis_df_hsc)),
+  values_to = "expression",
+  names_to = "gene")
+
+vis_df_hsc$species <- factor(vis_df_hsc$species, levels = names(col_spc))
+vis_df_hsc$gene <- factor(vis_df_hsc$gene, levels = base::rev(hsc_genes))
+
+vis_df_hsc$zscore_gene <- vector(length = nrow(vis_df_hsc), mode = "numeric")
+
+for(g in base::unique(vis_df_hsc$gene)){
+  
+  expr_vector_g <- vis_df_hsc[vis_df_hsc$gene == g,]$expression
+
+  # calculate z score per gene
+  z_score_g <- (expr_vector_g - base::mean(expr_vector_g))/stats::sd(expr_vector_g)
+  vis_df_hsc$zscore_gene[vis_df_hsc$gene == g] <- z_score_g
+  
+}
+```
+
+```{r e_base_plot}
+e_base_plot <- ggplot2::ggplot(
+  vis_df_hsc, 
+  aes(x = species, 
+      y = gene, 
+      fill = zscore_gene))+
+  ggplot2::geom_tile()
+```
+
+```{r e_theme_plot}
+e_theme_plot <- e_base_plot +
+  ggplot2::theme_classic()+
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_text(
+      face = axis_title_face,
+      size = axis_title_size,
+      color = axis_title_color),
+    axis.ticks.y = element_blank(),
+    axis.text.y = element_blank(),
+    axis.text.x = element_text(
+      angle = 90,
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axis_text_color,
+      vjust = 0.5,
+      hjust = 0),
+    legend.title = element_text(
+      face = legend_title_face,
+      size = legend_title_size,
+      color = legend_title_color),
+    legend.text = element_text(
+      face = legend_text_face,
+      size = legend_text_size,
+      color = legend_text_color),
+)+
+  ggplot2::ylab("Species-specific marker genes")+
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene", 
+    colours = colors_z_score,
+    breaks = c(-1.5, 0, 1.5), 
+    #breaks = c(-5, -2.5, 0, 2.5, 5), 
+    #limits = c(-5,5)
+    limits = c(-2,2)
+    )+
+  scale_x_discrete(expand = c(0, 0))
+
+e_legend <- ggpubr::get_legend(e_theme_plot)
+```
+
+#### Construct
+
+```{r e_construct, fig.width = 3, fig.height = 4}
+e_plot_theme <- ggpubr::ggarrange(
+  e_theme_plot+theme(legend.position = "none")
+)
+e_plot_theme
+```
+
+```{r e_construct_legend, fig.width = 2, fig.height = 2}
+e_legend_theme <- ggpubr::ggarrange(
+  e_legend
+)
+e_legend_theme
+```
 
 ## F 
 

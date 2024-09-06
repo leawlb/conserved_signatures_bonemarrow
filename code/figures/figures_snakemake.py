@@ -10,14 +10,15 @@ import pandas as pd
 
 #-------------------------------------------------------------------------------
 
-
-# snakemake --cluster "bsub -q medium -n1 -R rusage[mem=40GB]" -p -j1 -c1 -s figures_snakemake.py --latency-wait 20 --configfile ../config.yaml -n
-
+# use this command in this repository with snkmk_isbm
+"""
+snakemake --cluster "bsub -q medium -n1 -R rusage[mem=80GB]" -p -j2 -c1 -s figures_snakemake.py --latency-wait 20 --configfile ../config.yaml -n
+"""
 
 #-------------------------------------------------------------------------------
 
 # base path
-OUTPUT_BASE = config["base"]
+BASE = config["base"]
 OUTPUT_REP = config["base"] + "/data/manuscript1/figures"
 print(OUTPUT_REP)
 
@@ -50,9 +51,9 @@ COLORS = config["base"] + config["metadata_paths"]["colors"]
 targets = []
 
 #-------------------------------------------------------------------------------
-# Figure 1
 
 targets = targets + [OUTPUT_REP + "/figure1.html"]
+targets = targets + [OUTPUT_REP + "/figure2.html"]
 
 
 #-------------------------------------------------------------------------------
@@ -82,7 +83,7 @@ GENE_LIST_DOTPLOT = config["base"] + config["metadata_paths"]["gene_list_dotplot
 rule figure1:
   input:
       # fully annotated SCE objects, one per fraction (02_/03_/)
-      sce_input_list = expand(OUTPUT_BASE + "/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10", fraction = fractions),
+      sce_input_list = expand(BASE + "/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10", fraction = fractions),
       gene_list_dtplt = GENE_LIST_DOTPLOT
   output:
       OUTPUT_REP + "/figure1.html"
@@ -94,6 +95,27 @@ rule figure1:
 
 
 
+"""
+Figure 2
+"""
+# list of genes (in sequence) for dotplots
+GENE_LIST_DOTPLOT = config["base"] + config["metadata_paths"]["gene_list_dotplot"]
+
+rule figure2:
+  input:
+      # fully annotated SCE object (HSPC)
+      sce_hsc = BASE + "/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10",
+      # fully annotated SCE object (HSPC) with pseudotime in coldata
+      sce_pt = BASE + "/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/04_psce",
+      # list of gene sets for HSPCs (conserved signature etc.s)
+      gene_list_hsc = BASE + "/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"
+  output:
+      OUTPUT_REP + "/figure2.html"
+  params:
+      colors_path = COLORS,
+      colors = "../source/colors.R"
+  script:
+      "figure2.Rmd"
 
 
 

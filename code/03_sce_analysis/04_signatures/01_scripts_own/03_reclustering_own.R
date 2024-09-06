@@ -60,16 +60,11 @@ print(cts_exclude)
 
 #-------------------------------------------------------------------------------
 # get the required gene sets
-# remove subclustering genes from gene sets in a cell-type specific manner
-# this allows for genes that were used to sub-cluster two cell types to
-# still be used for re-clustering if they are part of the conserved signature
-# of another cell type
+# sub-clustering genes will be removed in total downstream
 
 # get all signature genes
 conserved_signature_list <- lapply(geneset_list, function(geneset){
   conserved_signature <- geneset$conserved_signature
-  conserved_signature <- conserved_signature[
-    which(!conserved_signature %in% geneset$subclustering_genes)]
   return(conserved_signature)
 })
 signt <- base::unique(unlist(conserved_signature_list))
@@ -78,8 +73,6 @@ print(length(signt))
 # get all conserved markers
 conserved_markers_list <- lapply(geneset_list, function(geneset){
   conserved_markers <- geneset$conserved_markers
-  conserved_markers <- conserved_markers[
-    which(!conserved_markers %in% geneset$subclustering_genes)]
   return(conserved_markers)
 })
 consm <- base::unique(unlist(conserved_markers_list))
@@ -88,8 +81,6 @@ print(length(consm))
 # get all ndges
 ndge_list <- lapply(geneset_list, function(geneset){
   ndges <- geneset$ndges
-  ndges <- ndges[
-    which(!ndges %in% geneset$subclustering_genes)]
   return(ndges)
 })
 ndges <- base::unique(unlist(ndge_list))
@@ -99,8 +90,6 @@ print(length(ndges))
 mmus_marker_list <- lapply(geneset_list, function(geneset){
   mmus_markers <- geneset$conserved_df$gene[
     which(!is.na(geneset$conserved_df$mmus))]
-  mmus_markers <- mmus_markers[
-    which(!mmus_markers %in% geneset$subclustering_genes)]
   return(mmus_markers)
 })
 mmusm <- base::unique(unlist(mmus_marker_list))
@@ -140,7 +129,6 @@ if(fraction_curr == "hsc"){
 #-------------------------------------------------------------------------------
 
 # subset to all genes that are not subclustering genes
-# TODO: if ok, remove the cell type-specific removal
 sce <- sce[which(!rownames(sce) %in% subclustering_genes)]
 print(dim(sce))
 
@@ -161,7 +149,7 @@ print(dim(sce_mmusm))
 
 #-------------------------------------------------------------------------------
 # re-cluster and add clusters to SCE object
-# exactly how the data was orignally clustered
+# exactly how the data was originally clustered
 
 # cluster each subsetted sce object
 sce_list <- list("sce_signt" = sce_signt,
@@ -188,10 +176,15 @@ clustered_list <- mclapply(
 #-------------------------------------------------------------------------------
 # transfer clustering info to original sce
 
+sce$cluster_signt <- clustered_list$sce_signt$reclustered
 sce$cluster_consm <- clustered_list$sce_consm$reclustered
 sce$cluster_ndges <- clustered_list$sce_ndges$reclustered
-sce$cluster_signt <- clustered_list$sce_signt$reclustered
 sce$cluster_mmusm <- clustered_list$sce_mmusm$reclustered
+
+sce$cluster_signt_genes_used <- nrow(sce_signt) # after subclustering gene rem
+sce$cluster_consm_genes_used <- nrow(sce_consm) 
+sce$cluster_ndges_genes_used <- nrow(sce_ndges)
+sce$cluster_mmusm_genes_used <- nrow(sce_mmusm)
 
 print(head(colData(sce)))
 

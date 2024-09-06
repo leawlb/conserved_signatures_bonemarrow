@@ -96,9 +96,22 @@ print(head(perm_score_df))
 
 ```{r perm_plots}
 
-scores <- base::unique(score_df$type)[1:6]
+scores <- c(
+  "adjusted_rand_index",
+  "fowles_mallow_index",
+  "mean_cluster_purity",
+  "mean_prop_cells_cluster",
+  "proportion_of_zeros")
 
-for(score in scores){
+scores_v <- c(
+  "adjusted_rand_index",
+  "fowles_mallow_index",
+  "mean_cluster_purity",
+  "mean_prop_cells_cluster",
+  "proportion_of_zeros",
+  "variation_information")
+
+for(score in scores_v){
   
   print(score)
   
@@ -139,10 +152,7 @@ All scores between 0 and 1
 
 ```{r all1, fig.width = 2, fig.height = 4}
 
-score_df_temp <- score_df[!score_df$type %in% c(
-  "nr_celltypes",
-  "nr_clusters",
-  "variation_information"),]
+score_df_temp <- score_df[score_df$type %in% scores,]
 score_df_temp <- score_df_temp[
   score_df_temp$conservation_level == cons_level_use,]
 
@@ -150,11 +160,7 @@ perm_score_df_temp <- pivot_longer(perm_score_df,
                                    c = 1:ncol(perm_score_df),
                                    values_to = "value",
                                    names_to = "type")
-perm_score_df_temp <- perm_score_df_temp[!perm_score_df_temp$type %in% c(
-  "nr_celltypes",
-  "nr_clusters",
-  "variation_information",
-  "iteration"),]
+perm_score_df_temp <- perm_score_df_temp[perm_score_df_temp$type %in% scores,]
 
 ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::geom_violin(data = perm_score_df_temp,

@@ -47,8 +47,8 @@ for f in fractions:
   targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_mmms_" + f]
   
   targets = targets + [OUTPUT_DAT + "/03_recl/sce_" + f]
-  # targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_" + f]
-  # targets = targets + [OUTPUT_REP + "/reclustering_own_report_" + f + ".html"]
+  targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_" + f]
+  targets = targets + [OUTPUT_REP + "/reclustering_own_report_" + f + ".html"]
 
   if RUN_PERM_GENESETS:
     targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mark_" + f]
@@ -58,7 +58,7 @@ for f in fractions:
 
   if RUN_OWN_SIGN_PERM:
     targets = targets + [OUTPUT_DAT + "/06_psig/perm_score_df_" + f]
-    #targets = targets + [OUTPUT_REP + "/perm_conserved_signature_" + f + ".html"]
+    targets = targets + [OUTPUT_REP + "/perm_conserved_signature_" + f + ".html"]
           
 targets = targets + [OUTPUT_REP + "/genesets_summary.html"]
 

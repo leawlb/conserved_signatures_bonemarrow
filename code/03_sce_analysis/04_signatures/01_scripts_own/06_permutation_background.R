@@ -91,6 +91,7 @@ subclustering_gene_list <- lapply(geneset_list, function(geneset){
   return(subclustering_genes)
 })
 subclustering_genes <- base::unique(unlist(subclustering_gene_list))
+print(length(subclustering_genes))
 stopifnot(!subclustering_genes %in% rownames(sce))
 
 # extract gene set to be tested (based on "cons_level_use")
@@ -106,7 +107,6 @@ test_IDs <- test_IDs[test_IDs %in% rownames(sce)]
 nr_recl_genes <- length(test_IDs)
 print("nr_recl_genes")
 print(nr_recl_genes)
-
 
 #-------------------------------------------------------------------------------
 
@@ -132,7 +132,6 @@ print(length(gene_pool))
 # subset GENES
 sce_sub <- sce[which(rownames(sce) %in% gene_pool),]
 
-print(dim(sce))
 print(dim(sce_sub))
 
 #-------------------------------------------------------------------------------
@@ -176,7 +175,7 @@ print(resolution_louvain)
 res_df_list <- parallel::mclapply(
   X = as.list(c(1:iterations)),
   FUN = permuting_reclustering_scores_sce,
-  sce = sce_sub, # use subsetted SCE without subclustering genes
+  sce = sce_sub, # use subsetted SCE without lowly expressed genes
   iteration_df = iteration_df,
   resolution_louvain = resolution_louvain,
   k_graph = k_graph,

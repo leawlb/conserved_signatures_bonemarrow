@@ -49,6 +49,7 @@ sce_str <- base::readRDS(snakemake@input[["sce_str"]])
 geneset_list_hsc <- base::readRDS(snakemake@input[["geneset_list_hsc"]])
 geneset_list_str <- base::readRDS(snakemake@input[["geneset_list_str"]])
 
+# cell types to exclude (stromal only)
 cts_exclude <- snakemake@params[["cts_exclude"]]
 
 # subset to required cell types (sce_str only)

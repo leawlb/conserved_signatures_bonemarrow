@@ -29,8 +29,6 @@ score_df_list_all <- lapply(seu_list_all, function(seu_list){
     score_df <- calculate_scores(seu) # own function
     
     # add specific info
-    score_df$resolution <- base::rep(seu@misc$resolution, 
-                                     nrow(score_df))
     score_df$conservation_level <- base::rep(seu@misc$used_genes,
                                              nrow(score_df))
     return(score_df)

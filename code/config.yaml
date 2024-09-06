@@ -89,8 +89,9 @@ values:
       - "Lymphatic ECs"
       - "Chondrocytes"
     reclustering_cutoff_prop: 0.01 # minimum proportion of cells that express a given gene to keep it for permutation
- 
-    nr_cores: 10 # nr of cores for parallelization for reclustering and permutation
+    nr_cores: 20 # nr of cores for parallelization for reclustering and permutation
+    iteraions: 500 # nr of iterations for permutation
+
   # 05_cci_prep:
   #   min_cells: 60 # min number of cells required per cell type to consider for cci
   #   min_perc: 0.05 # min percentage of cells per cell type a gene must be expressed in to consider for cci

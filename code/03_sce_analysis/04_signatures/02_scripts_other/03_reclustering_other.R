@@ -2,9 +2,13 @@
 # recluster datasets from other species using different gene sets
 
 
-base::RNGkind("L'Ecuyer-CMRG") # for mclapply, generation of same random numbers
+# determine random number generator for sample()
+# Mersenne-Twister" is default
+RNGkind("Mersenne-Twister") 
+
 set.seed(37)
 
+#-------------------------------------------------------------------------------
 
 library(Seurat, quietly = TRUE)
 library(SeuratObject, quietly = TRUE)
@@ -17,7 +21,7 @@ source(snakemake@params[["reclustering_functions"]])
 # LOAD 
 
 # params for re-clustering
-cut_off_counts <- snakemake@params[["cut_off_counts"]]
+cut_off_prop <- snakemake@params[["cut_off_prop"]]
 nr_cores <- snakemake@params[["nr_cores"]]
 
 #-------------------------------------------------------------------------------
@@ -94,19 +98,25 @@ print(base::table(base::duplicated(
   ensembl_sign[,which(colnames(ensembl_sign) == ensembl_column_use)])))
 
 # random genes
-# all genes with non-zero expression (above a defined threshold)
-# since in three datasets, all assays$RNA entries are logcounts, 
-# cut_off_counts = 0 for now
-non_zero_features <- rownames(seu@assays$RNA)[
-  rowSums(seu@assays$RNA) >= cut_off_counts]
+# all genes with expressed in at least cut_off_prop % of cells
+
+prop_df <- prop_expressed_total_seu(
+  seu = seu, 
+  geneset = rownames(seu))
+
+# subset by cut-off proportion
+prop_df_sub <- prop_df[prop_df$prop_cells >= cut_off_prop,]
+print(nrow(prop_df_sub))
+stopifnot(nrow(prop_df_sub) > 5000) # so nr of genes is not too small
+
+gene_pool <- prop_df_sub$gene
 
 # get the same nr of random non-0 genes as there are conserved signature genes
 # always generate the same random numbers
-set.seed(37)
-base::RNGkind("L'Ecuyer-CMRG")
-random_features <- non_zero_features[
-  base::sample(1:length(non_zero_features), 
-               length(conserved_signature_IDs),
+
+random_features <- gene_pool[
+  base::sample(1:length(gene_pool), 
+               length(conserved_signature_IDs), # same as cons_sign for vis
                replace = F)]
 
 #-------------------------------------------------------------------------------
@@ -163,14 +173,16 @@ dim(seu_rand)
 # to choose optimal cluster resolution later
 resolution_list <- as.list(seq(0.1, 1.3, by = 0.05))
 
+print("nr_cores")
 print(nr_cores)
-print(cut_off_counts)
+print("cut_off_prop")
+print(cut_off_prop)
 print(resolution_list)
 
 # run the standard pipeline for each resolution and each subsetted dataset                           
 seu_sign_list_reclustered <- mclapply(
   X = resolution_list,
-  FUN = standard_seu_pipeline, # from source, own function
+  FUN = standard_seu_pipeline, # own function
   seu = seu_sign,
   data_use = seu_sign@misc$data_use,
   calc_umap = TRUE,

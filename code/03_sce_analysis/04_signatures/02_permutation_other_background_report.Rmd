@@ -58,7 +58,7 @@ resolution_df_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadat
 ```
 
 ```{r manualscriptown, include = FALSE, eval = FALSE}
-cut_off_counts <- 5
+cut_off_counts <- 0.01
 nr_cores <- 1 
 iterations <- 2
 
@@ -147,9 +147,22 @@ print(seu_reclustered)
 
 ```{r perm_plots}
 
-scores <- base::unique(score_df$type)[1:6]
+scores <- c(
+  "adjusted_rand_index",
+  "fowles_mallow_index",
+  "mean_cluster_purity",
+  "mean_prop_cells_cluster",
+  "proportion_of_zeros")
 
-for(score in scores){
+scores_v <- c(
+  "adjusted_rand_index",
+  "fowles_mallow_index",
+  "mean_cluster_purity",
+  "mean_prop_cells_cluster",
+  "proportion_of_zeros",
+  "variation_information")
+
+for(score in scores_v){
   
   print(score)
   
@@ -175,7 +188,11 @@ for(score in scores){
     ggplot2::ggtitle(base::paste(score, 
                                  dataset_curr, 
                                  iterations,
-                                 "iterations"))+
+                                 "iterations",
+                                 "resololution:",
+                                 resl,
+                                 score_df$genes_used[1],
+                                 "genes used"))+
     annotate("text", 
              x = 0.8,
              y = 0.8, 
@@ -190,10 +207,7 @@ All scores between 0 and 1
 
 ```{r all1, fig.width = 2, fig.height = 4}
 
-score_df_temp <- score_df[!score_df$type %in% c(
-  "nr_celltypes",
-  "nr_clusters",
-  "variation_information"),]
+score_df_temp <- score_df[score_df$type %in% scores,]
 score_df_temp <- score_df_temp[
   score_df_temp$conservation_level == cons_level_use,]
 
@@ -201,11 +215,7 @@ perm_score_df_temp <- pivot_longer(perm_score_df,
                                    c = 1:ncol(perm_score_df),
                                    values_to = "value",
                                    names_to = "type")
-perm_score_df_temp <- perm_score_df_temp[!perm_score_df_temp$type %in% c(
-  "nr_celltypes",
-  "nr_clusters",
-  "variation_information",
-  "iteration"),]
+perm_score_df_temp <- perm_score_df_temp[perm_score_df_temp$type %in% scores,]
 
 ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::geom_violin(data = perm_score_df_temp,
@@ -220,7 +230,12 @@ ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::ggtitle(base::paste(dataset_curr, 
                                "\n" ,
                                iterations,
-                               "iterations"))
+                               "iterations",
+                                "resololution:",
+                                resl,
+                               "\n" ,
+                                score_df$genes_used[1],
+                                "genes used"))
 ```
 
 ```{r all2, fig.width = 1.2, fig.height = 4}
@@ -246,69 +261,17 @@ ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::ylim(c(0, base::max(perm_score_df_temp$value)))+
   ggplot2::theme_classic()+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
-  ggplot2::ggtitle(base::paste(dataset_curr,
-                               "\n",
+  ggplot2::ggtitle(base::paste(dataset_curr, 
+                               "\n" ,
                                iterations,
-                               "iterations"))
+                               "iterations",
+                                "resololution:",
+                                resl,
+                               "\n" ,
+                                perm_score_df_temp$genes_used[1],
+                                "genes used"))
 ```
 
 ```{r session_info}
 sessionInfo()
-knitr::knit_exit()
-```
-
-All scores between 0 and 1
-
-```{r fig.width = 2, fig.height = 4}
-library(gghalves)
-
-score_df_temp <- score_df[!score_df$type %in% c("nr_celltypes",
-                                                "nr_clusters",
-                                                "variation_information",
-                                                "mean_prop_cells/cluster"),]
-score_df_temp <- score_df_temp[score_df_temp$conservation_level == cons_level_use,]
-perm_score_df_temp <- pivot_longer(perm_score_df, c = 1:ncol(perm_score_df),
-                                   values_to = "value",
-                                   names_to = "type")
-perm_score_df_temp <- perm_score_df_temp[!perm_score_df_temp$type %in% c("nr_celltypes",
-                                                "nr_clusters",
-                                                "variation_information",
-                                                "mean_prop_cells.cluster",
-                                                "iteration"),]
-
-ggplot(score_df_temp, aes(x = type, y = value))+
-  geom_half_violin(data = perm_score_df_temp,
-                   side = "l",
-                   scale = "area",
-                   position = position_nudge(x = 0.2, y = 0))+
-  geom_half_boxplot(data = perm_score_df_temp, 
-                    side = "r", 
-                    position = position_nudge(x = 0.2, y = 0))+
-  geom_point(color = col_show, 
-             size = 2,
-             position = position_nudge(x = -0.2, y = 0))+
-  ylim(c(0,1))+
-  theme_classic()+
-  theme(axis.text.x = element_text(angle = 90))+
-  ggtitle(dataset_curr)
-
-```
-
-```{r fig.width = 1.2, fig.height = 4}
-
-score_df_temp <- score_df[score_df$type %in% c("variation_information"),]
-score_df_temp <- score_df_temp[score_df_temp$conservation_level == cons_level_use,]
-perm_score_df_temp <- pivot_longer(perm_score_df, c = 1:ncol(perm_score_df),
-                                   values_to = "value",
-                                   names_to = "type")
-perm_score_df_temp <- perm_score_df_temp[perm_score_df_temp$type %in% c("variation_information"),]
-
-ggplot(score_df_temp, aes(x = type, y = value))+
-  geom_half_violin(data = perm_score_df_temp, side = "l", scale = "width", position = position_nudge(x = 0.2, y = 0))+
-  geom_half_boxplot(data = perm_score_df_temp, side = "r", position = position_nudge(x = 0.2, y = 0))+
-  geom_point(color = col_show, size = 3, alpha = 0.7, position = position_nudge(x = -0.2, y = 0))+
-  ylim(c(0,max(perm_score_df_temp$value)))+
-  theme_classic()+
-  theme(axis.text.x = element_text(angle = 90))
-
 ```

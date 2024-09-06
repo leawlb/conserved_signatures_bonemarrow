@@ -33,7 +33,7 @@ source(snakemake@params[["reclustering_functions"]])
 # LOAD OBJECTS
 
 # params for re-clustering and permutation test
-cut_off_counts <- snakemake@params[["cut_off_counts"]]
+cut_off_prop <- snakemake@params[["cut_off_prop"]]
 nr_cores <- snakemake@params[["nr_cores"]]
 iterations <- snakemake@params[["iterations"]]
 
@@ -105,6 +105,13 @@ print(resl_mark)
 print(resl_mmms)
 
 #-------------------------------------------------------------------------------
+# determine seeds
+
+seed1 <- (99 + round(ncol(seu_preprocessed)/100, digits = 0))
+seed2 <- (98 + round(ncol(seu_preprocessed)/100, digits = 0))
+seed3 <- (97 + round(ncol(seu_preprocessed)/100, digits = 0))
+
+#-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
 ############   Prepare signature IDs and seurat objects     ####################
@@ -113,12 +120,13 @@ print(resl_mmms)
 
 print("preparing signature IDs")
 
-# extract conserved signature IDs
+# extract conserved signature IDs, keep only genes also in seu object
 sign_IDs <- base::unique(
   ensembl_sign_df[,which(colnames(ensembl_sign_df) == ensembl_column_use)])
 sign_IDs <- sign_IDs[sign_IDs %in% rownames(seu_preprocessed)]
 
 nr_sign <- length(sign_IDs) 
+print("nr_sign")
 print(nr_sign)
 
 #-------------------------------------------------------------------------------
@@ -139,9 +147,9 @@ for(i in 1:iterations){
   add_df_sign[,i] <- SIGN_POSITIONS
   colnames(add_df_sign)[i] <- i
 }
-print("sign_df")
+print("ensembl_sign_df")
 print(add_df_sign[1:10,1:2])
-print(dim(add_df_sign))
+print(nrow(add_df_sign))
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -169,7 +177,7 @@ print(nr_random_mark)
 # subset a seurat object without signature IDs, which contains the pool of 
 # genes from which random genes can be drawn:
 # - no signature genes
-# - genes expressed at least n > cut_off_counts times 
+# - genes expressed in at least cut_off_prop cells 
 
 non_seu_sign <- rownames(seu_preprocessed)[-SIGN_POSITIONS]
 
@@ -177,9 +185,19 @@ seu_pool <- BiocGenerics::subset(seu_preprocessed,
                                  features = non_seu_sign,
                                  slot = "count")
 
-# get only genes that have a count of at least n >= cut_off_counts
-gene_pool <- rownames(seu_pool)[
-  which(rowSums(seu_pool@assays$RNA$counts) >= cut_off_counts)]
+# get only genes that are expressed in at least cut_off_prop% of cells
+# use own function to get the proportion of cells a gene is expressed in
+gene_pool <- rownames(seu_pool)
+print(length(gene_pool))
+
+prop_df <- prop_expressed_total_seu(
+  seu = seu_pool, 
+  geneset = gene_pool)
+
+# subset by cut-off proportion
+prop_df_sub <- prop_df[prop_df$prop_cells >= cut_off_prop,]
+
+gene_pool <- gene_pool[which(gene_pool %in% prop_df_sub$gene)]
 print(length(gene_pool))
 
 # subset seurat object to these genes 
@@ -203,7 +221,8 @@ print(length(POOL_POSITIONS))
 
 iteration_df_mark <- base::data.frame(row.names = c(1:nr_random_mark))
 
-set.seed(99)
+# make sure that seed is unique for each object
+set.seed(seed1)
 for(i in 1:iterations){
   # POSITIONS FROM ORIGINAL SEU_PREPROCESSED subsetted to a smaller list 
   # basically, subset the vector of pool positions in random positions 
@@ -222,8 +241,6 @@ print(dim(iteration_df_mark))
 
 # add the signature gene positions IN THE ORIGINAL SEU DATASET
 iteration_df_mark <- base::rbind(add_df_sign, iteration_df_mark)
-print(iteration_df_mark[1:10,1:2])
-print(dim(iteration_df_mark))
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -251,12 +268,12 @@ print(nr_random_mmms)
 
 iteration_df_mmms <- base::data.frame(row.names = c(1:nr_random_mmms))
 
-set.seed(98)
+set.seed(seed2)
 for(i in 1:iterations){
   # POSITIONS FROM ORIGINAL SEU_PREPROCESSED subsetted to a smaller list 
   # can use same pool positions that 
   # - don't contain signature genes
-  # - are expressed n >= cut_off_counts times
+  # - are expressed in at least cut_off_prop % of cells
   iteration_df_mmms[,i] <- POOL_POSITIONS[base::sample(1:length(gene_pool), 
                                                        nr_random_mmms, 
                                                        replace = FALSE)]
@@ -272,9 +289,6 @@ print(dim(iteration_df_mmms))
 
 # add signature gene positions
 iteration_df_mmms <- base::rbind(add_df_sign, iteration_df_mmms)
-
-print(iteration_df_mmms[1:10,1:2])
-print(dim(iteration_df_mmms))
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -314,7 +328,6 @@ for(i in 1:iterations){
   colnames(add_df_mark)[i] <- i
 }
 print("mark_df")
-print(add_df_mark[1:10,1:2])
 print(dim(add_df_mark))
 
 #-------------------------------------------------------------------------------
@@ -324,7 +337,7 @@ print(dim(add_df_mark))
 # subset a seurat object without conserved marker IDs, which contains the pool  
 # of genes from which random genes can be drawn:
 # - no conserved marker genes
-# - genes expressed at least n >= cut_off_counts times 
+# - genes expressed in at least cut_off_prop cells 
 
 non_seu_mark <- rownames(seu_preprocessed)[-MARK_POSITIONS]
 
@@ -332,9 +345,19 @@ seu_pool_mark <- BiocGenerics::subset(seu_preprocessed,
                                       features = non_seu_mark,
                                       slot = "count")
 
-# get only genes that have a count of at least n >= cut_off_counts
-gene_pool_mark <- rownames(seu_pool_mark)[
-  which(rowSums(seu_pool_mark@assays$RNA$counts) >= cut_off_counts)]
+# get only genes that are expressed in at least cut_off_prop% of cells
+# use own function to get the proportion of cells a gene is expressed in
+gene_pool_mark <- rownames(seu_pool_mark)
+print(length(gene_pool_mark))
+
+prop_df <- prop_expressed_total_seu(
+  sce = seu_pool_mark, 
+  geneset = gene_pool_mark)
+
+# subset by cut-off proportion
+prop_df_sub <- prop_df[prop_df$prop_cells >= cut_off_prop,]
+
+gene_pool_mark <- gene_pool_mark[which(gene_pool_mark %in% prop_df_sub$gene)]
 print(length(gene_pool_mark))
 
 # subset seurat object to these genes 
@@ -372,7 +395,7 @@ print(nr_random_mmms_mark)
 # mmms_mark = comparison mmms with mark
 iteration_df_mmms_mark <- base::data.frame(row.names = c(1:nr_random_mmms_mark))
 
-set.seed(97)
+set.seed(seed3)
 for(i in 1:iterations){
   # POSITIONS FROM ORIGINAL SEU_PREPROCESSED subsetted to a smaller list 
   # basically, subset the vector of pool positions in random positions 
@@ -392,9 +415,6 @@ print(dim(iteration_df_mmms_mark))
 
 # add the signature gene positions IN THE ORIGINAL SEU DATASET
 iteration_df_mmms_mark <- base::rbind(add_df_mark, iteration_df_mmms_mark)
-print(iteration_df_mmms_mark[1:10,1:2])
-print(dim(iteration_df_mmms_mark))
-
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -447,6 +467,7 @@ res_df_list_mark <- parallel::mclapply(
   mc.cores = nr_cores,
   mc.silent = TRUE)
 
+# for testing without mclapply
 # res_df_list_mark <- lapply(
 #   X = as.list(c(1:iterations)),
 #   FUN = permuting_reclustering_scores_seurat,
@@ -494,7 +515,6 @@ print(head(score_df_mmms_mark))
 
 base::saveRDS(score_df_mark, snakemake@output[["perm_score_df_mark"]])
 base::saveRDS(score_df_mmms, snakemake@output[["perm_score_df_mmms"]])
-
 base::saveRDS(score_df_mmms_mark, snakemake@output[["perm_score_df_mmms_mark"]])
 
 utils::sessionInfo()

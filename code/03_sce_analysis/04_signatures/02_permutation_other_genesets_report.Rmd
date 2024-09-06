@@ -61,6 +61,8 @@ iterations <- 2
 source("../../source/sce_functions_reclustering.R")
 
 dataset_curr <- "li_all_stromal"
+seu <- base::readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/li_all_stromal")
+
 seu_preprocessed <- base::readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/li_all_stromal")
 ensembl_sign <- c("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_endf/ensembl_sign_str")
 ensembl_mark <- c("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_endf/ensembl_mark_str")

@@ -32,7 +32,7 @@ source(snakemake@params[["reclustering_functions"]])
 
 # params for re-clustering and permutation test
 
-cut_off_counts <- snakemake@params[["cut_off_counts"]]
+cut_off_prop <- snakemake@params[["cut_off_prop"]]
 nr_cores <- snakemake@params[["nr_cores"]]
 iterations <- snakemake@params[["iterations"]]
 
@@ -67,10 +67,8 @@ seu_preprocessed <- base::readRDS(snakemake@input[["seu_preprocessed"]])
 ensembl_paths <- snakemake@input[["ensembl_paths"]]
 print(ensembl_paths)
 
-# this is the correct one for conserved_signature_genes
 ensembl_df <- base::readRDS(ensembl_paths[[
   which(base::grepl(fraction_curr, ensembl_paths))]])
-print(head(ensembl_df))
 
 #-------------------------------------------------------------------------------
 
@@ -90,7 +88,12 @@ resolution_df <- resolution_df[resolution_df$dataset == dataset_curr,]
 
 # always use the same resolution as for the original gene set
 resl <- resolution_df$resolution[
-  resolution_df$conservation_level == "random_features"]
+  resolution_df$conservation_level == cons_level_use]
+
+#-------------------------------------------------------------------------------
+
+# determine seed
+seed1 <- (5000 + round(ncol(seu_preprocessed)/100, digits = 0)) 
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -116,12 +119,21 @@ print(nr_recl_genes)
 
 #-------------------------------------------------------------------------------
 
-# get only genes that have a count of at least n >= cut_off_counts
-# test genes can be randomly sampled
-print(base::summary(rowSums(seu_preprocessed@assays$RNA$counts)))
+# get only genes that are expressed in at least cut_off_prop% of cells
+# use own function to get the proportion of cells a gene is expressed in
+gene_pool <- rownames(seu_preprocessed)
+print(length(gene_pool))
 
-gene_pool <- rownames(seu_preprocessed)[
-  which(rowSums(seu_preprocessed@assays$RNA$counts) >= cut_off_counts)]
+prop_df <- prop_expressed_total_seu(
+  seu = seu_preprocessed, 
+  geneset = gene_pool)
+
+# subset by cut-off proportion
+prop_df_sub <- prop_df[prop_df$prop_cells >= cut_off_prop,]
+print(dim(seu_preprocessed))
+print(dim(prop_df_sub))
+
+gene_pool <- gene_pool[which(gene_pool %in% prop_df_sub$gene)]
 print(length(gene_pool))
 
 # subset seurat object to these genes as the other genes won't be used
@@ -129,7 +141,6 @@ seu_preprocessed_sub <- BiocGenerics::subset(seu_preprocessed,
                                              features = gene_pool,
                                              slot = "count")
 print(dim(seu_preprocessed_sub))
-print(base::summary(rowSums(seu_preprocessed_sub@assays$RNA$counts)))
 
 #-------------------------------------------------------------------------------
 
@@ -138,8 +149,8 @@ print(base::summary(rowSums(seu_preprocessed_sub@assays$RNA$counts)))
 
 iteration_df <- base::data.frame(row.names = c(1:nr_recl_genes))
 
-# make sure that seed is unique for each cons_level_use
-set.seed((5000 + base::nchar(cons_level_use))) 
+# make sure that seed is unique for each object
+set.seed(seed1)
 for(i in 1:iterations){
   iteration_df[,i] <- base::sample(1:length(gene_pool), 
                                    nr_recl_genes, 
@@ -155,8 +166,8 @@ print(iteration_df[1:10,1:2])
 
 print("nr_cores")
 print(nr_cores)
-print("cut_off_counts")
-print(cut_off_counts)
+print("cut_off_prop")
+print(cut_off_prop)
 print("resl")
 print(resl)
 print("starting iteration")
@@ -164,7 +175,7 @@ print("starting iteration")
 res_df_list <- parallel::mclapply(
   X = as.list(c(1:iterations)),
   FUN = permuting_reclustering_scores_seurat,
-  seu = seu_preprocessed_sub,
+  seu = seu_preprocessed_sub, # use subsetted seu object
   data_use = seu_preprocessed_sub@misc$data_use,
   iteration_df = iteration_df,
   resolution = resl,
@@ -180,6 +191,7 @@ res_df_list <- parallel::mclapply(
 #                                   resolution = resl)
 
 score_df <- dplyr::bind_rows(res_df_list)
+score_df$cons_level_used <- base::rep(cons_level_used, nrow(score_df))
 print(head(score_df))
 
 #-------------------------------------------------------------------------------

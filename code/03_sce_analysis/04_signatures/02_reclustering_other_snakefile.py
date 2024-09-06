@@ -9,9 +9,6 @@ OUTPUT_DAT_01 = OUTPUT_BASE + "/sce_objects/03_sce_analysis/04_signatures/01_rec
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other"
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/04_signatures/02_reclustering_other"
 
-#COLORS_REF = config["base"] + config["metadata_paths"]["colors_ref"]
-#COLORS = config["base"] + config["metadata_paths"]["colors"]
-
 RESOLUTION_OTHER = config["base"] + config["metadata_paths"]["resolution_other"]
 
 RUN_PERM_GENESETS = config["run_permutation_genesets"]
@@ -30,10 +27,8 @@ print(METADATA)
 fractions = get_list(metadata = METADATA, column = "Fraction_ID")
 
 # define datasets to be tested
-# datasets_other_hsc = ["ts_hscs_progenitors", "ts_bone_marrow", "mus_weinreb_hspc", "mus_tm_bonemarrow", "nmr_sorted_hspc", "zeb_all_hspc"]
-# datasets_other_str = ["ts_all_stromal", "li_all_stromal", "mus_tik_stromal", "mus_bar_stromal"]
-datasets_other_hsc = ["ts_bone_marrow"]
-datasets_other_str = []
+datasets_other_hsc = ["ts_hscs_progenitors", "ts_bone_marrow", "mus_weinreb_hspc", "mus_tm_bonemarrow", "nmr_sorted_hspc", "zeb_all_hspc"]
+datasets_other_str = ["ts_all_stromal", "li_all_stromal", "mus_tik_stromal", "mus_bar_stromal"]
 datasets_other = datasets_other_hsc + datasets_other_str
 print(datasets_other)
 
@@ -43,9 +38,9 @@ targets = []
      
 for d in datasets_other:
   targets = targets + [OUTPUT_DAT + "/03_recl/reclustered_" + d + "_list"]
-  #targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_" + d + "_list"]
-  #targets = targets + [OUTPUT_REP + "/all/reclustering_other_report_" + d + ".html"]
-  #targets = targets + [OUTPUT_REP + "/final/reclustering_other_final_report_" + d + ".html"]
+  targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_" + d + "_list"]
+  targets = targets + [OUTPUT_REP + "/all/reclustering_other_report_" + d + ".html"]
+  targets = targets + [OUTPUT_REP + "/final/reclustering_other_final_report_" + d + ".html"]
  
   # testing reclustering scores
   # targets = targets + [OUTPUT_REP + "/test_scores/test_reclustering_scores_" + d + ".html"]
@@ -55,7 +50,7 @@ for d in datasets_other:
     targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mark_" + d]
     targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mmms_" + d]
     targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mmms_mark_" + d]
-    #targets = targets + [OUTPUT_REP + "/genesets/perm_genesets_" + d + ".html"]
+    targets = targets + [OUTPUT_REP + "/genesets/perm_genesets_" + d + ".html"]
 
   if RUN_PERM_BACKGROUND_SIGN:
     targets = targets + [OUTPUT_DAT + "/06_psig/perm_score_df_" + d]
@@ -102,8 +97,8 @@ rule all:
 # RE-CLUSTERING OTHER DATA
 #
 # Datasets from other species are prepared for analysis using 
-# prepare_datasets_snakefile.py
-# All data generated from prepare_datasets_snakefile.py is in metadata!
+# 00_prepare_datasets_snakefile.py
+# All data generated from 00_prepare_datasets_snakefile.py is in metadata!
 #
 # Standard Seurat approach with standard options starting from raw counts
 # but with aforementioned gene sets instead of HVGs.
@@ -116,7 +111,7 @@ rule reclustering_other:
         ensembl_mmms = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_mmms_{fraction}", fraction = fractions)
     params:
         reclustering_functions = "../../source/sce_functions_reclustering.R",
-        cut_off_counts = config["values"]["03_sce_analysis"]["reclustering_cutoff_counts"], 
+        cut_off_prop = config["values"]["03_sce_analysis"]["reclustering_cutoff_prop"], 
         nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
         datasets_other_hsc = datasets_other_hsc,
         datasets_other_str = datasets_other_str
@@ -138,13 +133,10 @@ rule reclustering_other:
 # We choose to use following metrics for evaluating re-clustering:
 #
 # - adjusted rand index
-# - fowlkes-mallows index
 # - variation of information
-# - mean cluster purity of reclustered labels
-# - proportion of fields that are 0 (own score)
-# - mean proportion of cells of a cell type per cluster (own score)
+# - mean proportion of cells of a cell type per cluster 
 #
-# We use many different scores because some of these scores increase or
+# We use different scores because some of these scores increase or
 # decrease with a higher clustering resolution/nr of clusters and we aim to 
 # reduce this bias by using several different kinds of scores.
 """
@@ -233,7 +225,8 @@ if RUN_PERM_GENESETS:
           nr_cores = 20,
           resolution_df = RESOLUTION_OTHER,
           #nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
-          cut_off_counts = config["values"]["03_sce_analysis"]["reclustering_cutoff_counts"],
+          #iterations = config["values"]["03_sce_analysis"]["iterations"],
+          cut_off_prop = config["values"]["03_sce_analysis"]["reclustering_cutoff_prop"],
           datasets_other_hsc = datasets_other_hsc,
           datasets_other_str = datasets_other_str     
       conda:
@@ -248,7 +241,6 @@ if RUN_PERM_GENESETS:
   # visualise reclustering permutation
   rule permutation_genesets_report:
       input:
-          #seu_list = rules.reclustering_other.output,
           score_df_list = rules.reclustering_other_scores.output,
           seu_preprocessed = config["base"] + config["metadata_paths"]["reclustering"] + "/prepared/{dataset}",
           perm_score_df_mark = rules.permutation_genesets.output.perm_score_df_mark,
@@ -277,11 +269,12 @@ if RUN_PERM_BACKGROUND_SIGN:
           ensembl_paths = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_sign_{fraction}", fraction = fractions)
       params:
           reclustering_functions = "../../source/sce_functions_reclustering.R",
-          iterations = 100,
+          iterations = 20,
           resolution_df = RESOLUTION_OTHER,
           #nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
+          #iterations = config["values"]["03_sce_analysis"]["iterations"],
           nr_cores = 20,
-          cut_off_counts = config["values"]["03_sce_analysis"]["reclustering_cutoff_counts"],
+          cut_off_prop = config["values"]["03_sce_analysis"]["reclustering_cutoff_prop"],
           cons_level_use = "conserved_signature",
           datasets_other_hsc = datasets_other_hsc,
           datasets_other_str = datasets_other_str
@@ -318,11 +311,12 @@ if RUN_PERM_BACKGROUND_MARK:
           ensembl_paths = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_mark_{fraction}", fraction = fractions)
       params:
           reclustering_functions = "../../source/sce_functions_reclustering.R",
-          iterations = 100,
+          iterations = 20,
           resolution_df = RESOLUTION_OTHER,
           #nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
+          #iterations = config["values"]["03_sce_analysis"]["nr_cores"],
           nr_cores = 20,
-          cut_off_counts = config["values"]["03_sce_analysis"]["reclustering_cutoff_counts"],
+          cut_off_prop = config["values"]["03_sce_analysis"]["reclustering_cutoff_prop"],
           cons_level_use = "conserved_markers",
           datasets_other_hsc = datasets_other_hsc,
           datasets_other_str = datasets_other_str       

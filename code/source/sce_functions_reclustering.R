@@ -366,6 +366,9 @@ permuting_reclustering_scores_seurat <- function(
   res_df <- calculate_scores(seu_rec, for_permutation = TRUE)
   res_df$iteration[1] <- iteration
   
+  res_df$nr_genes_used <- base::rep(length(iteration_vector), nrow(res_df))
+  res_df$resolution <- base::rep(resolution, nrow(res_df))
+  
   return(res_df)
 }
 
@@ -482,3 +485,30 @@ prop_expressed_total_sce <- function(
   return(prop_expr_df)
 }
 
+prop_expressed_total_seu <- function(
+    seu, 
+    geneset){
+  
+  seu <- seu # input seurat object
+  geneset <- geneset # vector of genes to be tested
+  
+  # get data slot
+  data <- seu@assays$RNA@counts
+  
+  total_nr <- ncol(data)
+  
+  # stop if there are duplicated rownames which complicates subsetting
+  stopifnot(!base::duplicated(rownames(data)))
+  
+  # subset to geneset, then transform into logical values
+  data_subset <- data[rownames(data) %in% geneset,]
+  data_true <- data_subset > 0
+  
+  prop_expr_df <- data.frame(
+    "gene" = rownames(data_true),
+    "nr_cells" = rowSums(data_true), #rowsums will count occurrences of TRUE
+    "prop_cells" = rowSums(data_true)/total_nr
+  )
+  
+  return(prop_expr_df)
+}

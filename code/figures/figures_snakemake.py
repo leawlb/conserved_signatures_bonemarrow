@@ -59,7 +59,7 @@ targets = targets + [OUTPUT_REP + "/figure2.html"]
 #-------------------------------------------------------------------------------
 
 # local execution of non-demanding rules
-localrules: all, figure1
+localrules: all
 
 # define rules
 rule all: # must contain all possible output paths from all rules below and must always be the first rule
@@ -77,14 +77,13 @@ rule all: # must contain all possible output paths from all rules below and must
 """
 Figure 1
 """
-# list of genes (in sequence) for dotplots
-GENE_LIST_DOTPLOT = config["base"] + config["metadata_paths"]["gene_list_dotplot"]
 
 rule figure1:
   input:
       # fully annotated SCE objects, one per fraction (02_/03_/)
       sce_input_list = expand(BASE + "/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10", fraction = fractions),
-      gene_list_dtplt = GENE_LIST_DOTPLOT
+      # list of genes (in sequence) for dotplots
+      gene_list_dtplt = config["base"] + config["metadata_paths"]["gene_list_dotplot"]
   output:
       OUTPUT_REP + "/figure1.html"
   params:
@@ -103,12 +102,12 @@ GENE_LIST_DOTPLOT = config["base"] + config["metadata_paths"]["gene_list_dotplot
 
 rule figure2:
   input:
-      # fully annotated SCE object (HSPC)
+      # fully annotated SCE object (HSPCs)
       sce_hsc = BASE + "/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10",
-      # fully annotated SCE object (HSPC) with pseudotime in coldata
-      sce_pt = BASE + "/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/04_psce",
-      # list of gene sets for HSPCs (conserved signature etc.s)
-      gene_list_hsc = BASE + "/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"
+      # fully annotated SCE object (HSPCs) with diffusion pseudotime
+      sce_pt = BASE + "/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/04_psce/sce_hsc_pseudotime",
+      # list of gene sets for HSPCs (conserved signature, conserved markers, etc.)
+      geneset_list_hsc = BASE + "/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"
   output:
       OUTPUT_REP + "/figure2.html"
   params:

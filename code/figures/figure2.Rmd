@@ -54,6 +54,7 @@ source("../source/colors.R")
 ```{r load_snakemake}
 
 # data during snakemake run is loaded here
+# @Veronica I can add all paths from you here
 
 # annotated SCE objects
 sce_hsc <- base::readRDS(snakemake@input[["sce_hsc"]])
@@ -67,7 +68,7 @@ colors_path <- snakemake@params[["colors_path"]]
 colors_source <- snakemake@params[["colors"]]
 source(colors_source)
 
-knitr::knit_exit()
+#knitr::knit_exit()
 
 ```
 

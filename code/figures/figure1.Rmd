@@ -608,12 +608,12 @@ d_theme_plot_top_left <- d_base_plot_top_left+
       vjust = 0.5,
       face = axis_text_face,
       size = axis_text_size_small,
-      color = axus_text_color,
+      color = axis_text_color,
       angle = 90),
     axis.text.y = element_text(
       face = axis_text_face,
       size = axis_text_size,
-      color = axus_text_color),
+      color = axis_text_color),
     legend.position = "none")+
   ggplot2::ylab("Species")+
   ggplot2::xlab("Gene")+
@@ -696,12 +696,12 @@ d_theme_plot_top_right <- d_base_plot_top_right+
       vjust = 0.5,
       face = axis_text_face,
       size = axis_text_size_small,
-      color = axus_text_color,
+      color = axis_text_color,
       angle = 90),
     axis.text.y = element_text(
       face = axis_text_face,
       size = axis_text_size,
-      color = axus_text_color),
+      color = axis_text_color),
     legend.position = "none")+
   ggplot2::xlab("Gene")+
   ggplot2::scale_size_area(
@@ -748,7 +748,7 @@ d_theme_plot_bottom_left <- d_base_plot_bottom_left+
     axis.text.y = element_text(
       face = axis_text_face,
       size = axis_text_size,
-      color = axus_text_color),
+      color = axis_text_color),
     legend.position = "none")+
   ggplot2::ylab("Cell type")+
   ggplot2::scale_size_area(
@@ -792,7 +792,7 @@ d_theme_plot_bottom_right <- d_base_plot_bottom_right+
     axis.text.y = element_text(
       face = axis_text_face,
       size = axis_text_size,
-      color = axus_text_color),
+      color = axis_text_color),
     legend.position = "none")+
   ggplot2::ylab("Cell type")+
   ggplot2::scale_size_area(
@@ -804,6 +804,7 @@ d_theme_plot_bottom_right <- d_base_plot_bottom_right+
      colors = mycolors_to100,
      limits = c(0, 100)
   )
+knitr::knit_exit()
 ```
 
 #### Legends

@@ -105,7 +105,7 @@ ncol(ts_all_stromal)
 ts_all_stromal@assays
 ts_all_stromal@assays$RNA
 ts_all_stromal@assays$RNA@counts[90:100,1:10] # RAW COUNTS
-ts_all_stromal@assays$RNA@counts[90:100,1:10] # NORMALISED/LOGCOUNTSs
+ts_all_stromal@assays$RNA@data[90:100,1:10] # NORMALISED/LOGCOUNTSs
 
 ts_all_stromal@misc
 

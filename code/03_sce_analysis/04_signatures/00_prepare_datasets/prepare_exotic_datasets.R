@@ -208,12 +208,30 @@ stopifnot(!is.na(seu_nmr_srt$cell_type))
 
 #-------------------------------------------------------------------------------
 
+# take care of assays, keeping only raw counts
 seu_nmr_srt@assays$RNA@data <- seu_nmr_srt@assays$RNA@counts
 
 #-------------------------------------------------------------------------------
 
 # add info on which column of the ensembl data frame to use based on Features 
 seu_nmr_srt@misc$ensembl_column_use <- "HGLABER_SYMBOL" # NMR symbols
+
+# remove ADT assays
+print(seu_nmr_srt@assays)
+
+seu_nmr_srt@assays <- list("RNA" = seu_nmr_srt@assays$RNA)
+
+print(seu_nmr_srt@assays)
+
+#-------------------------------------------------------------------------------
+
+# add info on which type of data to use for re-clustering pipeline
+seu_nmr_srt@misc$data_use <- "raw_counts" # NMR symbols
+
+#-------------------------------------------------------------------------------
+# check variable features and remove them
+
+seu_nmr_srt@assays$RNA@var.features <- list()
 
 #-------------------------------------------------------------------------------
 
@@ -227,19 +245,7 @@ seu_nmr_srt@reductions$pca_orig <- seu_nmr_srt_pca@reductions$pca
 print("after removal")
 print(seu_nmr_srt@reductions)
 
-#-------------------------------------------------------------------------------
 
-# remove ADT assays
-print(seu_nmr_srt@assays)
-
-seu_nmr_srt@assays <- list("RNA" = seu_nmr_srt@assays$RNA)
- 
-print(seu_nmr_srt@assays)
-
-#-------------------------------------------------------------------------------
-
-# add info on which type of data to use for re-clustering pipeline
-seu_nmr_srt@misc$data_use <- "raw_counts" # NMR symbols
 
 #-------------------------------------------------------------------------------
 

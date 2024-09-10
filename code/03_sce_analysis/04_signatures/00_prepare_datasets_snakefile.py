@@ -6,7 +6,8 @@
 
 # all of the generated data is saved in METADATA
 
-# last run 2024-08-28
+# last run 2024-09-10
+# manually downloaded data has been downloaded before that
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -131,7 +132,7 @@ if RAN_LI_IPYNB:
 wildcard_constraints: 
     fraction="[a-z]+"
 
-localrules: all, unzip_zebrafish, untar_weinreb, download_ts_datasets, download_mouse_datasets, download_exotic_datasets
+localrules: all, unzip_zebrafish, untar_weinreb #, download_ts_datasets, download_mouse_datasets, download_exotic_datasets
 
 rule all: 
     input:
@@ -149,7 +150,7 @@ rule download_ensembl:
         ensembl_zeb = ENSEMBL_ZEB,
         ensembl_nmr = ENSEMBL_NMR
     script:
-        "prepare_datasets/download_ensembl.R"
+        "00_prepare_datasets/download_ensembl.R"
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -160,7 +161,12 @@ Human
 """
 
 # download datasets
-# the directories "/Li/download" and "/Li/data" must be generated manually
+"""
+# !!!!! the directories "/Li/download" and "/Li/data" must be generated manually
+# !!!!! and downloaded manually! including the csv in data
+"""
+
+# download tabula sapiens datasets
 # download links in script
 rule download_ts_datasets:
     output:
@@ -230,7 +236,11 @@ Mouse
 
 # download tabula muris dataset and weinreb dataset
 # download links and more infos in script
+"""
 # !!!!!!! still requires manual download of the zipped "FACS" folder !!!!!!!!!!!
+# !!!!!!! for tabula muris
+# !!!!!!! move contents to DIR_RECLUSTERING + "/raw_mus/tabula_muris/FACS"
+"""
 rule download_mouse_datasets:
     output:
         path_metadata_all = DIR_RECLUSTERING + "/raw_mus/tabula_muris/metadata_FACS.csv",

@@ -23,6 +23,7 @@ library(tidyverse, quietly = TRUE)
 library(SingleCellExperiment, quietly = TRUE)
 library(ggpubr, quietly = TRUE)
 library(scuttle, quietly = TRUE)
+library(Seurat, quietly = TRUE)
 ```
 
 ```{r load_manual, eval = FALSE, include = FALSE}
@@ -38,6 +39,9 @@ sce_hsc <- base::readRDS(base::paste0(
 sce_hsc_all_pseudotime <- base::readRDS(base::paste0(
   base_path, 
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/04_psce/sce_hsc_pseudotime"))
+ery_pseudo <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/05_bsce/sce_ery"))
 
 # list of genesets (conserved signature and others)
 geneset_list_hsc <- base::readRDS(base::paste0(
@@ -398,6 +402,119 @@ the erythroid branch. Cells were partitioned into branches based on their
 lineage differentiation probability calculated by cellrank.
 
 @Veronica
+
+```{r d_prep_1}
+ery_pseudo_seurat <- Seurat::CreateSeuratObject(counts = ery_pseudo@assays@data@listData[["logcounts"]],
+                                        meta.data = ery_pseudo@colData@listData)
+
+plot_data <- ery_pseudo_seurat@meta.data %>%
+  select("pseudotime", "celltypes", "Mouse_ID", 
+         "Species_ID", "Age_weeks", "Age_ID")
+for(n in 1:length(geneset_list_hsc)){
+  cell_sp_markers <- geneset_list_hsc[[n]][["conserved_signature"]]
+  for(g in cell_sp_markers){
+    plot_data[,g] <-unlist(FetchData(ery_pseudo_seurat, g))
+  }
+}
+plot_data[,7:ncol(plot_data)] <- scale(plot_data[,7:ncol(plot_data)])
+```
+
+```{r d_prep_2}
+plot_HSCs <- plot_data[,c(colnames(plot_data)[1:6],
+                           geneset_list_hsc[["HSCs"]][["conserved_signature"]])] %>%
+  gather(gene, expression,
+         -pseudotime, -celltypes, -Mouse_ID, 
+         -Species_ID, -Age_weeks, -Age_ID)
+
+plot_Mk <- plot_data[,c(colnames(plot_data)[1:6],
+                           geneset_list_hsc[["Mk progs."]][["conserved_signature"]])] %>%
+  gather(gene, expression,
+         -pseudotime, -celltypes, -Mouse_ID, 
+         -Species_ID, -Age_weeks, -Age_ID)
+
+plot_Ery <- plot_data[,c(colnames(plot_data)[1:6],
+                           geneset_list_hsc[["Erythroid progs."]][["conserved_signature"]])] %>%
+  gather(gene, expression,
+         -pseudotime, -celltypes, -Mouse_ID, 
+         -Species_ID, -Age_weeks, -Age_ID)
+```
+
+
+```{r d_plot}
+ggplot2::ggplot(plot_HSCs,
+       aes(x = rank(pseudotime),
+           y = expression,
+           color = gene)) +
+  geom_smooth(se = F) +
+  guides(color = "none") +
+  labs(x = "Pseudotime Erythroid", 
+       y = "Scaled Expression",
+       title = names(markers)[n]) +
+  ggplot2::theme(
+    legend.title = element_text(
+      size = legend_title_size,
+      face = legend_title_face,
+      color = legend_title_color,
+      margin = margin(r = 10),
+      vjust = 0.85),
+    legend.text = element_text(
+      size = legend_text_size,
+      face = legend_text_face,
+      color = legend_text_color),
+    legend.box.just = "left",
+    legend.position = "bottom",
+    axis.text = element_blank())
+
+ggplot2::ggplot(plot_Mk,
+       aes(x = rank(pseudotime),
+           y = expression,
+           color = gene)) +
+  geom_smooth(se = F) +
+  guides(color = "none") +
+  labs(x = "Pseudotime Erythroid", 
+       y = "Scaled Expression",
+       title = names(markers)[n]) +
+  ggplot2::theme(
+    legend.title = element_text(
+      size = legend_title_size,
+      face = legend_title_face,
+      color = legend_title_color,
+      margin = margin(r = 10),
+      vjust = 0.85),
+    legend.text = element_text(
+      size = legend_text_size,
+      face = legend_text_face,
+      color = legend_text_color),
+    legend.box.just = "left",
+    legend.position = "bottom",
+    axis.text = element_blank())
+
+ggplot2::ggplot(plot_Ery,
+       aes(x = rank(pseudotime),
+           y = expression,
+           color = gene)) +
+  geom_smooth(se = F) +
+  guides(color = "none") +
+  labs(x = "Pseudotime Erythroid", 
+       y = "Scaled Expression",
+       title = names(markers)[n]) +
+  ggplot2::theme(
+    legend.title = element_text(
+      size = legend_title_size,
+      face = legend_title_face,
+      color = legend_title_color,
+      margin = margin(r = 10),
+      vjust = 0.85),
+    legend.text = element_text(
+      size = legend_text_size,
+      face = legend_text_face,
+      color = legend_text_color),
+    legend.box.just = "left",
+    legend.position = "bottom",
+    axis.text = element_blank())
+
+```
+
 
 ## E 
 

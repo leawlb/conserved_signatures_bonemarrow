@@ -24,6 +24,7 @@ library(SingleCellExperiment, quietly = TRUE)
 library(ggpubr, quietly = TRUE)
 library(scuttle, quietly = TRUE)
 library(Seurat, quietly = TRUE)
+library(SeuratObject, quietly = TRUE)
 ```
 
 ```{r load_manual, eval = FALSE, include = FALSE}
@@ -396,7 +397,7 @@ c_legend_theme
 
 ## D
 
-Min-max scaled expression of HSC (top), Mk prog. (middle) or Erythroid prog.
+Scaled expression of HSC (top), Mk prog. (middle) or Erythroid prog.
 (bottom) conserved signature genes along diffusion pseudotime trajectory within 
 the erythroid branch. Cells were partitioned into branches based on their 
 lineage differentiation probability calculated by cellrank.
@@ -413,7 +414,7 @@ plot_data <- ery_pseudo_seurat@meta.data %>%
 for(n in 1:length(geneset_list_hsc)){
   cell_sp_markers <- geneset_list_hsc[[n]][["conserved_signature"]]
   for(g in cell_sp_markers){
-    plot_data[,g] <-unlist(FetchData(ery_pseudo_seurat, g))
+    plot_data[,g] <-unlist(SeuratObject::FetchData(ery_pseudo_seurat, g))
   }
 }
 plot_data[,7:ncol(plot_data)] <- scale(plot_data[,7:ncol(plot_data)])

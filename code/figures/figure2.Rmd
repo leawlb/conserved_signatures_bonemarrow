@@ -747,6 +747,8 @@ ggplot2::ggplot(plot_hsc,
        y = "# marker genes identified", 
        fill = NULL) +
   theme(axis.text.x = element_text(angle = 90, h = 1))
+
+# still need to get colors, legend, etc all correct
 ```
 
 
@@ -756,3 +758,113 @@ G: Scaled expression of signature genes [geneX], [geneY], and [geneZ] across
 mouse species and ages (z-score per species and age).
 
 @Veronica
+
+```{r g_prep_1}
+metadata <- sce_hsc@colData@listData
+sce_hsc_seurat <- SeuratObject::CreateSeuratObject(counts = sce_hsc@assays@data@listData[["logcounts"]],
+                           meta.data = metadata)
+
+# assign gene list!!
+g <- c(
+  "Lmo4",
+  "Cd34", 
+  "Txnip"
+)
+
+metadata$expression <- SeuratObject::FetchData(sce_hsc_seurat, 
+                        vars = g)
+metadata$celltypes <- as.character(metadata$celltypes)
+gene_expression <- metadata$expression %>%
+  cbind(do.call(cbind, metadata[c("Species_ID", "Age_ID", "celltypes")]))
+```
+
+```{r g_prep_2}
+plot_1 <- gene_expression[,c(g[1], "Species_ID", "Age_ID", "celltypes")] 
+colnames(plot_1)[1] <- "gene"
+plot_1 <- plot_1 %>%
+  group_by(Species_ID, Age_ID, celltypes) %>%
+  summarize(mean = mean(gene))
+plot_1$signature <- lapply(plot_1$celltypes, function(x){
+  g[1] %in% geneset_list_hsc[[x]][["conserved_signature"]]
+}) %>% unlist()
+
+
+plot_2 <- gene_expression[,c(g[2], "Species_ID", "Age_ID", "celltypes")] 
+colnames(plot_2)[1] <- "gene"
+plot_2 <- plot_2 %>%
+  group_by(Species_ID, Age_ID, celltypes) %>%
+  summarize(mean = mean(gene))
+plot_2$signature <- lapply(plot_2$celltypes, function(x){
+  g[2] %in% geneset_list_hsc[[x]][["conserved_signature"]]
+}) %>% unlist()
+
+
+plot_3 <- gene_expression[,c(g[3], "Species_ID", "Age_ID", "celltypes")] 
+colnames(plot_3)[1] <- "gene"
+plot_3 <- plot_3 %>%
+  group_by(Species_ID, Age_ID, celltypes) %>%
+  summarize(mean = mean(gene))
+plot_3$signature <- lapply(plot_3$celltypes, function(x){
+  g[3] %in% geneset_list_hsc[[x]][["conserved_signature"]]
+}) %>% unlist()
+```
+
+
+```{r g_plot}
+ggplot2::ggplot(plot_1,
+       aes(x = celltypes,
+           y = paste(Species_ID, Age_ID),
+           fill = mean,
+           color = signature,
+           size = signature)) +
+  geom_tile(width = 0.95, 
+            height = 0.95) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, h = 1)) +
+  scale_color_manual(guide = "none", values = c(alpha("black", 0), "grey50")) +
+  scale_size_manual(guide = "none", values = c(0, 0.4)) +
+  labs(x = NULL, y = NULL, title = g[1]) +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red",
+                       midpoint = mean(plot_1$mean)) +
+  theme(legend.position = "none")
+
+
+ggplot2::ggplot(plot_2,
+       aes(x = celltypes,
+           y = paste(Species_ID, Age_ID),
+           fill = mean,
+           color = signature,
+           size = signature)) +
+  geom_tile(width = 0.95, 
+            height = 0.95) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, h = 1)) +
+  scale_color_manual(guide = "none", values = c(alpha("black", 0), "grey50")) +
+  scale_size_manual(guide = "none", values = c(0, 0.4)) +
+  labs(x = NULL, y = NULL, title = g[2]) +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red",
+                       midpoint = mean(plot_2$mean)) +
+  theme(legend.position = "none")
+
+
+ggplot2::ggplot(plot_3,
+       aes(x = celltypes,
+           y = paste(Species_ID, Age_ID),
+           fill = mean,
+           color = signature,
+           size = signature)) +
+  geom_tile(width = 0.95, 
+            height = 0.95) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, h = 1)) +
+  scale_color_manual(guide = "none", values = c(alpha("black", 0), "grey50")) +
+  scale_size_manual(guide = "none", values = c(0, 0.4)) +
+  labs(x = NULL, y = NULL, title = g[3]) +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red",
+                       midpoint = mean(plot_3$mean)) +
+  theme(legend.position = "none")
+
+
+# still need to get colors, legend, etc all correct
+```
+

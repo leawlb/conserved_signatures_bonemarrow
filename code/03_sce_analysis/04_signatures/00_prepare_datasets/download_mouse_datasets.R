@@ -4,6 +4,7 @@
 # TABULA MURIS DATASET
 
 # https://figshare.com/articles/dataset/Single-cell_RNA-seq_data_from_Smart-seq2_sequencing_of_FACS_sorted_cells_v2_/5829687
+# download FACS.zip manually and move manually to download folder
 
 #-------------------------------------------------------------------------------
 

@@ -351,7 +351,7 @@ seu_wrb@misc$data_use <- "logcounts" # only has normalised counts, so start from
 
 #-------------------------------------------------------------------------------
 
-# subset to 30,000 random cells
+# subset to 25,000 random cells
 set.seed(777)
 subset_pos <- base::sample(c(1:ncol(seu_wrb)), 25000, replace = FALSE)
 print(head(subset_pos))

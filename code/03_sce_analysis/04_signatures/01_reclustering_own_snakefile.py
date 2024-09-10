@@ -59,7 +59,7 @@ for f in fractions:
   if RUN_OWN_SIGN_PERM:
     targets = targets + [OUTPUT_DAT + "/06_psig/perm_score_df_" + f]
     targets = targets + [OUTPUT_REP + "/perm_conserved_signature_" + f + ".html"]
-          
+
 targets = targets + [OUTPUT_REP + "/genesets_summary.html"]
 
 #-------------------------------------------------------------------------------
@@ -187,6 +187,8 @@ rule reclustering_own:
         "01_scripts_own/03_reclustering_own.R"
 
 # get the reclustering scores for our own re-clustered datasets
+# the conda environment can be used to calculate many more scores
+# than are currently required - but used for testing
 rule reclustering_own_scores:
     input:
         sce_input = rules.reclustering_own.output,
@@ -244,6 +246,8 @@ rule reclustering_own_report:
 #-------------------------------------------------------------------------------
 
 # permutation: diff marker genes vs. conserved signature + random (same number)
+# the conda environment can be used to calculate many more scores than
+# currently required - but used for testing
 if RUN_PERM_GENESETS:
 
   rule permutation_genesets:
@@ -256,10 +260,9 @@ if RUN_PERM_GENESETS:
           functions_reclustering = "../../source/sce_functions_reclustering.R",
           k_graph_list = config["values"]["02_sce_anno"]["k_graph_list"],
           resolution_louvain_list = config["values"]["02_sce_anno"]["resolution_louvain_list"],
-          #nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
+          nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
           #iterations = config["values"]["03_sce_analysis"]["iterations"],
           iterations = 40,
-          nr_cores = 20,
           cut_off_prop = config["values"]["03_sce_analysis"]["reclustering_cutoff_prop"]
       conda:
           "../../envs/reclustering_own_scores.yml"
@@ -287,6 +290,8 @@ if RUN_PERM_GENESETS:
 #-------------------------------------------------------------------------------
 
 # permutation: conserved signature vs. random (same number)
+# the conda environment can be used to calculate many more scores
+# than are currently required - but used for testing
 if RUN_OWN_SIGN_PERM:
 
   rule permutation_own_background_sign:
@@ -300,9 +305,8 @@ if RUN_OWN_SIGN_PERM:
           resolution_louvain_list = config["values"]["02_sce_anno"]["resolution_louvain_list"],
           cut_off_prop = config["values"]["03_sce_analysis"]["reclustering_cutoff_prop"],
           #iterations = config["values"]["03_sce_analysis"]["iterations"],
-          #nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
+          nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
           iterations = 40,
-          nr_cores = 20,
           functions_reclustering = "../../source/sce_functions_reclustering.R",
           cts_exclude = CELL_TYPES_EXCLUDE,       
           cons_level_use = "conserved_signature"      

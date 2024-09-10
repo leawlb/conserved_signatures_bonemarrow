@@ -46,6 +46,7 @@ iterations <- snakemake@params[["iterations"]]
 # - cts to exclude removed
 # - hsc dataset sub-sampled
 sce_input <- base::readRDS(snakemake@input[["sce_input"]])
+print(dim(sce_input))
 
 #-------------------------------------------------------------------------------
 # params for re-clustering

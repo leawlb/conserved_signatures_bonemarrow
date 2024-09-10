@@ -28,8 +28,8 @@ source(file = snakemake@params[["plotting"]])
 ```
 
 ```{r eval = FALSE, include = FALSE}
-sce <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/03_rclo/sce_str")
-score_df <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/03_rclo/score_df_str")
+sce <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/03_recl/sce_str")
+score_df <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/04_rcls/score_df_str")
 
 fraction_curr <- "str"
 
@@ -117,8 +117,8 @@ umap_base_l(sce, color_by = "cluster_ndges")+
 ```{r plot_signature}
 
 mat_sign <- base::table(sce$celltypes, sce$cluster_signt)
-for(i in 1:nrow(mat_sign)){
-  mat_sign[i,] <- mat_sign[i,]/base::sum(mat_sign[i,])
+for(i in 1:ncol(mat_sign)){
+  mat_sign[,i] <- mat_sign[,i]/base::sum(mat_sign[,i])
 }
 
 mat_sign
@@ -140,14 +140,16 @@ plot_sign <- ggplot2::ggplot(sign_df,
                     fill = Freq))+
   ggplot2::geom_tile()+
   ggplot2::theme_classic()+
-  scale_fill_continuous("% cells/cell type", 
+  scale_fill_continuous("% cells/cluster", 
                         limits=c(0, 1), 
                         breaks=seq(0, 1, by = 0.20),
                         low = "white", high = "blue")+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
   ggplot2::xlab("Original cell types")+
   ggplot2::ylab("Re-clustered with conserved signature")+
-  ggplot2::ggtitle("conserved signature")
+  ggplot2::ggtitle(base::paste(sce$cluster_signt_genes_used[1],
+                               "conserved signature",
+                               "genes"))
 
 plot_sign
 ```
@@ -157,8 +159,8 @@ plot_sign
 ```{r plot_markers}
 
 mat_mark <- base::table(sce$celltypes, sce$cluster_consm)
-for(i in 1:nrow(mat_mark)){
-  mat_mark[i,] <- mat_mark[i,]/base::sum(mat_mark[i,])
+for(i in 1:ncol(mat_mark)){
+  mat_mark[,i] <- mat_mark[,i]/base::sum(mat_mark[,i])
 }
 
 mat_mark
@@ -180,14 +182,16 @@ plot_mark <- ggplot2::ggplot(mark_df,
                     fill = Freq))+
   ggplot2::geom_tile()+
   ggplot2::theme_classic()+
-  ggplot2::scale_fill_continuous("% cells/cell type", 
+  ggplot2::scale_fill_continuous("% cells/cluster", 
                                  limits=c(0, 1), 
                                  breaks=seq(0, 1, by= 0.20),
                                  low = "white", high = "blue")+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
   ggplot2::xlab("Original cell types")+
   ggplot2::ylab("Re-clustered with conserved markers")+
-  ggplot2::ggtitle("conserved markers")
+  ggplot2::ggtitle(base::paste(sce$cluster_consm_genes_used[1],
+                               "conserved marker",
+                               "genes"))
 
 plot_mark
 ```
@@ -197,8 +201,8 @@ plot_mark
 ```{r plot_mmusm}
 
 mat_mmus <- base::table(sce$celltypes, sce$cluster_mmusm)
-for(i in 1:nrow(mat_mmus)){
-  mat_mmus[i,] <- mat_mmus[i,]/base::sum(mat_mmus[i,])
+for(i in 1:ncol(mat_mmus)){
+  mat_mmus[,i] <- mat_mmus[,i]/base::sum(mat_mmus[,i])
 }
 
 mat_mmus
@@ -220,14 +224,16 @@ plot_mmus <- ggplot2::ggplot(mmus_df,
                     fill = Freq))+
   ggplot2::geom_tile()+
   ggplot2::theme_classic()+
-  ggplot2::scale_fill_continuous("% cells/cell type", 
+  ggplot2::scale_fill_continuous("% cells/cluster", 
                                  limits=c(0, 1), 
                                  breaks=seq(0, 1, by= 0.20),
                                  low = "white", high = "blue")+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
   ggplot2::xlab("Original cell types")+
   ggplot2::ylab("Re-clustered with all BL6 markers")+
-  ggplot2::ggtitle("all BL6 markers")
+  ggplot2::ggtitle(base::paste(sce$cluster_mmusm_genes_used[1],
+                               "all BL6 marker",
+                               "genes"))
 
 plot_mmus
 ```
@@ -237,8 +243,8 @@ plot_mmus
 ```{r plot_ndges}
 
 mat_ndge <- base::table(sce$celltypes, sce$cluster_ndges)
-for(i in 1:nrow(mat_ndge)){
-  mat_ndge[i,] <- mat_ndge[i,]/base::sum(mat_ndge[i,])
+for(i in 1:ncol(mat_ndge)){
+  mat_ndge[,i] <- mat_ndge[,i]/base::sum(mat_ndge[,i])
 }
 
 mat_ndge
@@ -260,45 +266,54 @@ plot_ndge <- ggplot2::ggplot(ndge_df,
                     fill = Freq))+
   ggplot2::geom_tile()+
   ggplot2::theme_classic()+
-  ggplot2::scale_fill_continuous("% cells/cell type", 
+  ggplot2::scale_fill_continuous("% cells/cluster", 
                                  limits=c(0, 1), 
                                  breaks=seq(0, 1, by= 0.20),
                                  low = "white", high = "blue")+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
   ggplot2::xlab("Original cell types")+
   ggplot2::ylab("Re-clustered with nDGEs")+
-  ggplot2::ggtitle("nDGEs")
+  ggplot2::ggtitle(base::paste(sce$cluster_ndges_genes_used[1],
+                               "nDGE",
+                               "genes"))
 
 plot_ndge
 ```
 
 # Re-clustering Scores
 
-```{r all_0_to_1, fig.width = 4, fig.height = 3.5}
+```{r all_0_to_1, fig.width = 4.5, fig.height = 3.5}
 
-ggplot2::ggplot(
-  score_df[!score_df$type %in% c("variation_information", 
-                                 "nr_celltypes",
-                                 "nr_clusters"),], 
+scores <- c("mean_prop_cells_cluster",
+            "adjusted_rand_index",
+            "mean_cluster_purity")
+
+plot_1 <- ggplot2::ggplot(
+  score_df[score_df$type %in% scores,], 
   aes(y = value, x = type, color = conservation_level))+
   ggplot2::geom_point(alpha = 0.7, position = position_dodge(width=0.5))+
   ggplot2::theme_classic()+
   ggplot2::ylim(c(0, 1))+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
   ggplot2::scale_color_manual("conservation level", values = col_cons)+
-  ggplot2::ggtitle(base::paste("reclustering", fraction_curr))
-```
+  ggplot2::ggtitle(base::paste(fraction_curr))
 
-```{r vi, fig.width = 3, fig.height = 3.5}
-ggplot2::ggplot(score_df[score_df$type == "variation_information",], 
+plot_2 <- ggplot2::ggplot(score_df[score_df$type == "variation_information",], 
                 aes(y = value, x = type, color = conservation_level))+
   ggplot2::geom_point(alpha = 0.7, position = position_dodge(width=0.5))+
   ggplot2::theme_classic()+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
   ggplot2::scale_color_manual("conservation level", values = col_cons)+
   ggplot2::ylim(c(0, max(score_df$value[
-    score_df$type == "variation_information"])))+
-  ggplot2::ggtitle(base::paste("reclustering", fraction_curr))
+    score_df$type == "variation_information"])))
+
+plot <- ggpubr::ggarrange(
+  plot_1 + ggplot2::theme(legend.position = "none"), 
+  plot_2 + ggplot2::theme(plot.title = element_blank(),
+                          axis.title.y = element_blank()),
+  align = "h",
+  widths = c(1, 2))
+plot
 ```
 
 ```{r sessioninfo}

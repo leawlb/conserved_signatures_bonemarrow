@@ -1,7 +1,7 @@
 #-------------------------------------------------------------------------------
 # re-cluster own datasets with each gene set 
 # - conserved signature,
-# - conserved markers
+# - conserved markers,
 # - all BL6 genes,
 # - nDGEs
 
@@ -142,6 +142,11 @@ print(dim(sce_signt))
 print(dim(sce_consm))
 print(dim(sce_ndges))
 print(dim(sce_mmusm))
+
+stopifnot(!rownames(sce_signt) %in% subclustering_genes)
+stopifnot(!rownames(sce_consm) %in% subclustering_genes)
+stopifnot(!rownames(sce_ndges) %in% subclustering_genes)
+stopifnot(!rownames(sce_mmusm) %in% subclustering_genes)
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------

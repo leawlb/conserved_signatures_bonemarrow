@@ -201,65 +201,43 @@ calculate_scores <- function(
   
   #-----------------------------------------------------------------------------
   #-----------------------------------------------------------------------------
-  # score 1: proportions of 0
+  # score_1: mean proportion of cells of a given cell type per new cluster
+  # it's just the mean of all prop values per clusters
   
-  # extract which nr is higher; nr of clusters or number of cell types  
-  if(nr_clusters == 1){
-    score_1 <- 0
-  }else if(nr_clusters > 1){
-    if(nrow(mat) >= ncol(mat)){
-      max_nr <- nrow(mat)
-    }else if(nrow(mat) < ncol(mat)){
-      max_nr <- ncol(mat)
-    }
+  # remove cells that have an extremely low proportion of cells
+  # if it's only ~ 1 - 10 cells per cluster that is not a major re-clustering 
+  # issue but it deflates the mean proportions of cells per cluster a lot
+  mat_per_cluster[mat_per_cluster <= 0.005] <- NA
+  per_cluster_mean <- base::mean(mat_per_cluster, na.rm = TRUE)
   
-  # get the proportion of fields that are 0 from the max possible nr of fields
-  # that can be 0 in a theoretical perfect re-clustering. 
-  # That "max possible nr" is equivalent to all fields - max_nr
-  
-    score_1 <- length(which(mat == 0))/(ncol(mat)*nrow(mat)-max_nr)
-    stopifnot(score_1 <= 1)
-  }
-  
+  score_1 <- per_cluster_mean
+
   print("score_1")
   
   #-----------------------------------------------------------------------------
   #-----------------------------------------------------------------------------
-  # score 2: mean proportion of cells of a cell type per cluster
+  # scores 2 & 3: established metrics for comparing two clusterings
   
-  mat_per_cluster[mat_per_cluster == 0] <- NA
-  per_cluster_mean <- base::mean(mat_per_cluster, na.rm = TRUE)
+  # Adjusted Rand index
+  score_2 <- mclust::adjustedRandIndex(cluster_vector1, cluster_vector2)
   
-  score_2 <- per_cluster_mean
-
-  print("score_2")
+  # Variation of Information
+  score_3 <- mcclust::vi.dist(S4Vectors::unfactor(cluster_vector1),
+                              S4Vectors::unfactor(cluster_vector2))
+  
+  print("scores 2 and 3")
   
   #-----------------------------------------------------------------------------
   #-----------------------------------------------------------------------------
-  # score 3: mean purity of new clusters
+  # score_x: mean purity of new clusters
+  # used for selecting resolution for other datasets
   
   res_recl <- bluster::neighborPurity(mat_pca, 
                                       clusters = cluster_vector2, 
                                       k = 50)
-  score_3 <- base::mean(res_recl$purity)
+  score_x <- base::mean(res_recl$purity)
   
-  print("score_3")
-  
-  #-----------------------------------------------------------------------------
-  #-----------------------------------------------------------------------------
-  # scores 4 - 6: established metrics for comparing two clusterings
-  
-  # Adjusted Rand index
-  score_4 <- mclust::adjustedRandIndex(cluster_vector1, cluster_vector2)
-  
-  # Fowlkes-Mallows Index
-  score_5 <- dendextend::FM_index_R(cluster_vector1, cluster_vector2)[1]
-  
-  # Variation of Information
-  score_6 <- mcclust::vi.dist(S4Vectors::unfactor(cluster_vector1),
-                              S4Vectors::unfactor(cluster_vector2))
-
-  print("score_4 to score_6")
+  print("score_x")
   
   #-----------------------------------------------------------------------------
   #-----------------------------------------------------------------------------
@@ -268,32 +246,26 @@ calculate_scores <- function(
   if(!for_permutation){
     
     return_df <- base::data.frame(
-      "type" = c("proportion_of_zeros", 
-                 "mean_prop_cells_cluster",
-                 "mean_cluster_purity",
+      "type" = c("mean_prop_cells_cluster",
                  "adjusted_rand_index",
-                 "fowles_mallow_index",
                  "variation_information",
+                 "mean_cluster_purity",
                  "nr_clusters",
                  "nr_celltypes"),
       "value" = c(score_1, 
                   score_2,
                   score_3,
-                  score_4, 
-                  score_5,
-                  score_6,
+                  score_x, 
                   nr_clusters, 
                   nr_celltypes))
     
   }else if(for_permutation){
     
     return_df <- base::data.frame(
-      "proportion_of_zeros" = score_1,
-      "mean_prop_cells_cluster" = score_2,
-      "mean_cluster_purity" = score_3,
-      "adjusted_rand_index" = score_4,
-      "fowles_mallow_index" = score_5,
-      "variation_information" = score_6,
+      "mean_prop_cells_cluster" = score_1,
+      "adjusted_rand_index" = score_2,
+      "variation_information" = score_3,
+      "mean_cluster_purity" = score_x,
       "nr_clusters" = nr_clusters,
       "nr_celltypes" = nr_celltypes) 
   }
@@ -367,7 +339,7 @@ permuting_reclustering_scores_seurat <- function(
   res_df$iteration[1] <- iteration
   
   res_df$nr_genes_used <- base::rep(length(iteration_vector), nrow(res_df))
-  res_df$resolution <- base::rep(resolution, nrow(res_df))
+  #res_df$resolution <- base::rep(resolution, nrow(res_df))
   
   return(res_df)
 }
@@ -506,7 +478,7 @@ prop_expressed_total_seu <- function(
   
   prop_expr_df <- data.frame(
     "gene" = rownames(data_true),
-    "nr_cells" = rowSums(data_true), #rowsums will count occurrences of TRUE
+    "nr_cells" = rowSums(data_true), # rowsums will count occurrences of TRUE
     "prop_cells" = rowSums(data_true)/total_nr
   )
   

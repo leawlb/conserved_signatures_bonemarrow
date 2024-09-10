@@ -49,10 +49,7 @@ resolution_louvain <- resolution_louvain_list[[fraction_curr]]
 cts_exclude <- snakemake@params[["cts_exclude"]]
 print(cts_exclude)
 print(base::table(sce$celltypes))
-
-sce <- sce[,which(!sce$celltypes %in% cts_exclude)]
-print(dim(sce))
-print(base::table(sce$celltypes))
+stopifnot(!sce$celltypes %in% cts_exclude)
 
 #-------------------------------------------------------------------------------
 # params for permutation test

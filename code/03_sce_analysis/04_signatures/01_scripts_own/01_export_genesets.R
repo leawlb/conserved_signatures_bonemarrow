@@ -1,8 +1,9 @@
 #-------------------------------------------------------------------------------
 # export a list of marker gene data frames and lists containing info on 
-# - conserved marker genes
 # - conserved signature genes
+# - conserved marker genes
 # - nDGEs
+# - all BL6 marker genes
 # - genes used for subclustering
 # one item for each cell type and fraction
 

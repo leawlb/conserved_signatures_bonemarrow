@@ -48,6 +48,11 @@ ery_pseudo <- base::readRDS(base::paste0(
 geneset_list_hsc <- base::readRDS(base::paste0(
   base_path, 
   "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"))
+
+# conserved markers per cell type per age (markers_conservation_hsc)
+base::load(base::paste0(
+base_path,
+"scRNAseq/main_analysis/sce_objects/03_sce_analysis/03_marker_conservation/02_age/cons_markers_hsc.RData"))
   
 colors_path <- base::paste0(
   base_path, 
@@ -682,6 +687,68 @@ Number of marker genes per HSPC cell type identified when all, only old,
 or only young mouse samples are included.
 
 @Veronica
+
+```{r f_prep_1}
+conserved_genes <- data.frame(celltype = rep(names(geneset_list_hsc)),
+                              young = 0,
+                              both = 0,
+                              old = 0,
+                              n_markers = 0,
+                              young_in_markers = 0,
+                              both_in_markers = 0,
+                              old_in_markers = 0)
+for(ct in names(geneset_list_hsc)){
+  young <- markers_conservation_hsc[[grep(paste(ct, "young", sep = "_"),
+                                      names(markers_conservation_hsc),
+                                      value = T)]] %>% as.data.frame()
+  young$gene <- rownames(young)
+  young <- young[complete.cases(young),]
+
+  old <- markers_conservation_hsc[[grep(paste(ct, "old", sep = "_"),
+                                    names(markers_conservation_hsc),
+                                    value = T)]] %>% as.data.frame()
+  old$gene <- rownames(old)
+  old <- old[complete.cases(old),]
+
+  both <- young$gene[young$gene %in% old$gene]
+
+  mark <- geneset_list_hsc[[grep(ct,
+                                 names(geneset_list_hsc),
+                                 value = T)]][["conserved_df"]]
+  mark <- mark[complete.cases(mark),]
+
+  conserved_genes[which(conserved_genes$celltype == ct),1] <- ct
+
+  conserved_genes[which(conserved_genes$celltype == ct),2:8] <-
+    c(nrow(young),
+      length(both),
+      nrow(old),
+      nrow(mark),
+      sum(young$gene %in% mark$gene),
+      sum(both %in% mark$gene),
+      sum(old$gene %in% mark$gene)) %>% as.numeric()
+}
+
+plot_hsc <- gather(conserved_genes[,c("celltype", 
+                                      "n_markers",
+                                      "young_in_markers", 
+                                      "old_in_markers")], 
+                   "group", "count", -celltype)
+```
+
+```{r f_plot}
+ggplot2::ggplot(plot_hsc,
+       aes(x = celltype,
+           y = count,
+           fill = group)) +
+  geom_col(position = "dodge") +
+  theme_classic() +
+  labs(x = NULL, 
+       y = "# marker genes identified", 
+       fill = NULL) +
+  theme(axis.text.x = element_text(angle = 90, h = 1))
+```
+
 
 ## G
 

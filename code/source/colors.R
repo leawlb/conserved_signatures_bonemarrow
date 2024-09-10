@@ -17,6 +17,9 @@ marker2 <- "darkgreen"
 mycolors_to1 <- grDevices::colorRampPalette(c("grey98", "blue"))(100)
 names(mycolors_to1) <- c(1:100)/100
 
+mycolors_to1_grey <- grDevices::colorRampPalette(c("grey85", "blue"))(100)
+names(mycolors_to1_grey) <- c(1:100)/100
+
 mycolors_to100 <- grDevices::colorRampPalette(c("grey98", "blue"))(100)
 names(mycolors_to100) <- c(1:100)
 

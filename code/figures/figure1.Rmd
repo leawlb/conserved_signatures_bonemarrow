@@ -23,6 +23,7 @@ library(tidyverse, quietly = TRUE)
 library(SingleCellExperiment, quietly = TRUE)
 library(ggpubr, quietly = TRUE)
 library(scuttle, quietly = TRUE)
+library(patchwork, quietly = TRUE)
 ```
 
 ```{r load_manual, eval = FALSE, include = FALSE}
@@ -359,11 +360,58 @@ c_theme_plot
 
 ```{r c_theme_legend, fig.height = 2, fig.width = 2}
 c_theme_legend <- ggpubr::ggarrange(
-  ncol = 1,
-  align = "v",
   c_legend)
 
 c_theme_legend
+```
+
+## BC together
+
+```{r bc_construct, fig.width = 16, fig.height = 9}
+
+bc_plot_left <- ggpubr::ggarrange(
+  align = c("h"),
+  b_theme_plot_left,
+  c_theme_plot_left,
+  ncol = 1
+)
+
+bc_plot_right <- ggpubr::ggarrange(
+  align = "h",
+  b_theme_plot_right,
+  c_theme_plot_right,
+  ncol = 1
+)
+
+bc_plot_middle1 <- ggpubr::ggarrange(
+  align = "hv",
+  b_legend_left,
+  b_legend_right,
+  ncol = 1)
+
+bc_plot_middle <- ggpubr::ggarrange(
+  ncol = 1,
+  heights = c(6, 1),
+  align = "h",
+  bc_plot_middle1,
+  c_theme_legend + theme(plot.margin = margin(r  = 4.18, b = 4, unit = "cm"))) 
+
+bc_plot_middle <- ggpubr::ggarrange(
+  ncol = 1,
+  heights = c(2, 2, 1),
+  b_legend_left,
+  b_legend_right,
+  c_theme_legend + theme(plot.margin = margin(r  = 4.18, b = 4, unit = "cm"))) 
+
+
+bc_plot_all <- ggpubr::ggarrange(
+  bc_plot_left,
+  bc_plot_middle,
+  bc_plot_right,
+  widths = c(4.5, 7, 4.5),
+  nrow = 1
+)
+bc_plot_all
 ```
 
 ## D
@@ -541,36 +589,42 @@ vis_df_ct_str <- get_perc_expressed(vis_df_ct_str, sce_str)
 # make background grid
 background_hsc <- data.frame(
   xmin = c(
-    1,
-    9,
-    11,
-    15,
-    16,
-    18,
-    22,
-    25,
-    30,
-    32,
-    39),  # start of each segment (character values)
+    "Mecom",
+    "Adgrl4",
+    "Dctpp1",
+    "Cebpa",
+    "Irf8",
+    "Cebpe",
+    "Flt3",
+    "Hdc",
+    "Gata2",
+    "Gata1",
+    "Klf1",
+    "Mki67"),  # start of each segment (character values)
   xmax = c(
-    8,
-    10,
-    14,
-    15,
-    17,
-    21,
-    24,
-    29,
-    31,
-    38,
-    41
+    "Meis1",
+    "Cd34",
+    "Hells",
+    "Cebpa",
+    "Ccr2",
+    "S100a8",
+    "Dntt",
+    "Cpa3",
+    "Pf4",
+    "Car2",
+    "Hba-a1",
+    "Lockd"
   ),  # end of each segment (character values)
   ymin = -Inf,              # covers full height
   ymax = Inf,
   fill = c(
-    "white",
-    rep(c("grey80", "white"),  5))  # alternating colors
+    "grey80",
+    rep(c("white", "grey80"), 5),
+    "white")  # alternating colors
 )
+
+background_hsc$xmin <- match(background_hsc$xmin, levels(vis_df_ct_hsc$gene))
+background_hsc$xmax <- match(background_hsc$xmax, levels(vis_df_ct_hsc$gene))
 
 d_base_plot_top_left <- ggplot2::ggplot(
   vis_df_ct_hsc, 
@@ -595,25 +649,20 @@ d_theme_plot_top_left <- d_base_plot_top_left+
   ggplot2::theme_classic()+
   ggplot2::scale_x_discrete(position = "top")+
   ggplot2::theme(
-    axis.title.y = element_text(
-      face = axis_title_face,
-      size = axis_title_size,
-      color = axis_title_color),
-    axis.title.x = element_text(
-      face = axis_title_face,
-      size = axis_title_size,
-      color = axis_title_color),
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
     axis.text.x.top = element_text(
       hjust = 0,
       vjust = 0.5,
       face = axis_text_face,
-      size = axis_text_size_small,
+      size = axis_text_size,
       color = axis_text_color,
       angle = 90),
     axis.text.y = element_text(
       face = axis_text_face,
       size = axis_text_size,
-      color = axis_text_color),
+      color = axis_text_color,
+      hjust = 0),
     legend.position = "none")+
   ggplot2::ylab("Species")+
   ggplot2::xlab("Gene")+
@@ -631,37 +680,40 @@ d_theme_plot_top_left <- d_base_plot_top_left+
 # make background grid
 background_str <- data.frame(
   xmin = c(
-    1,
-    4,
-    7,
-    12,
-    16,
-    18,
-    21,
-    24,
-    30,
-    34,
-    38
+    "Cxcl12",
+    "Spp1",
+    "Comp",
+    "S100a10",
+    "Cdh5",
+    "Ly6a",
+    "Car4",
+    "Vwf",
+    "Tfpi",
+    "Lyve1",
+    "Tagln"
     ),  # start of each segment (character values)
   xmax = c(
-    3,
-    6,
-    11,
-    15,
-    17,
-    20,
-    23,
-    29,
-    33,
-    37,
-    42
+    "Lepr",
+    "Bglap",
+    "Fmod",
+    "Thy1",
+    "Pecam1",
+    "Efnb2",
+    "Timp4",
+    "Lrg1",
+    "Flt4",
+    "Prox1",
+    "Steap4"
   ),  # end of each segment (character values)
   ymin = -Inf,              # covers full height
   ymax = Inf,
   fill = c(
-    "white",
-    rep(c("grey80", "white"),  5))  # alternating colors
+    "grey80",
+    rep(c("white", "grey80"),  5))  # alternating colors
 )
+
+background_str$xmin <- match(background_str$xmin, levels(vis_df_ct_str$gene))
+background_str$xmax <- match(background_str$xmax, levels(vis_df_ct_str$gene))
 
 d_base_plot_top_right <- ggplot2::ggplot(
   vis_df_ct_str, 
@@ -687,21 +739,15 @@ d_theme_plot_top_right <- d_base_plot_top_right+
   ggplot2::theme_classic()+
   ggplot2::theme(
     axis.title.y = element_blank(),
-    axis.title.x = element_text(
-      face = axis_title_face,
-      size = axis_title_size,
-      color = axis_title_color),
+    axis.title.x = element_blank(),
     axis.text.x.top = element_text(
       hjust = 0,
       vjust = 0.5,
       face = axis_text_face,
-      size = axis_text_size_small,
+      size = axis_text_size,
       color = axis_text_color,
       angle = 90),
-    axis.text.y = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color),
+    axis.text.y = element_blank(),
     legend.position = "none")+
   ggplot2::xlab("Gene")+
   ggplot2::scale_size_area(
@@ -738,10 +784,7 @@ d_base_plot_bottom_left <- ggplot2::ggplot(
 d_theme_plot_bottom_left <- d_base_plot_bottom_left+
   ggplot2::theme_classic()+
   ggplot2::theme(
-    axis.title.y = element_text(
-      face = axis_title_face,
-      size = axis_title_size,
-      color = axis_title_color),
+    axis.title.y = element_blank(),
     axis.title.x = element_blank(),
     axis.text.x = element_blank(),
     axis.ticks.x = element_blank(),
@@ -750,7 +793,6 @@ d_theme_plot_bottom_left <- d_base_plot_bottom_left+
       size = axis_text_size,
       color = axis_text_color),
     legend.position = "none")+
-  ggplot2::ylab("Cell type")+
   ggplot2::scale_size_area(
     "logcounts",
     max_size = max_size_dotplots,
@@ -804,7 +846,7 @@ d_theme_plot_bottom_right <- d_base_plot_bottom_right+
      colors = mycolors_to100,
      limits = c(0, 100)
   )
-knitr::knit_exit()
+#knitr::knit_exit()
 ```
 
 #### Legends
@@ -886,8 +928,8 @@ d_theme_plot
 
 ```{r d_theme_plot2, fig.width = 16, fig.height = 6}
 d_theme_plot <- ggpubr::ggarrange(
-  d_theme_plot_top_left + theme(plot.margin = margin(t = 5, r = 5, b = 20, l = 5)), 
-  d_theme_plot_top_right + theme(plot.margin = margin(t = 5, r = 5, b = 20, l = 5)),
+  d_theme_plot_top_left + theme(plot.margin = margin(t = 10, r = 5, b = 20, l = 5, unit = "pt")), 
+  d_theme_plot_top_right + theme(plot.margin = margin(t = 5, r = 5, b = 20, l = 5, unit = "pt")),
   d_theme_plot_bottom_left,
   d_theme_plot_bottom_right,
   heights = c(1,1.8),
@@ -904,7 +946,7 @@ d_theme_legend_left <- ggpubr::ggarrange(
 d_theme_legend_left
 ```
 
-```{r d_theme_legend_right, fig.width = 2, fig.height = 2}
+```{r d_theme_legend_right, fig.width = 4, fig.height = 2}
 d_theme_legend_right <- ggpubr::ggarrange(
   d_legend_right
   )
@@ -915,8 +957,3 @@ d_theme_legend_right
 ```{r sessioninfo}
 utils::sessionInfo()
 ```
-
-
-
-
-

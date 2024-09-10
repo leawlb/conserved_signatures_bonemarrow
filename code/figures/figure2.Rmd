@@ -277,6 +277,25 @@ b_legend_theme <- ggpubr::ggarrange(
 b_legend_theme
 ```
 
+```{r b_construct_legend_long, fig.width = 4, fig.height = 4}
+b_legend_long <- ggpubr::get_legend(
+  b_theme_plot+ 
+    theme(legend.position = "bottom",
+    legend.title = element_text(
+      margin = margin(r = 10),
+      vjust = 0.85))+
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene", 
+    colours = colors_z_score,
+    breaks = c(-5, 0,  5), 
+    limits = c(-5,5)))
+
+b_legend_theme_long <- ggpubr::ggarrange(
+  b_legend_long 
+)
+b_legend_theme_long
+```
+
 ## C 
 
 HSPCs in UMAP space, colored by diffusion pseudotime.
@@ -318,7 +337,7 @@ c_theme_plot <- c_base_plot+
   cowplot::theme_nothing()+
   ggplot2::scale_color_gradientn(
     "Pseudotime",
-    colors = mycolors_to1
+    colors = mycolors_to1_grey
   )
 ```
 
@@ -335,7 +354,7 @@ c_legend_base_plot <- ggplot2::ggplot(
 c_legend_theme_plot <- c_legend_base_plot+
   ggplot2::scale_color_gradientn(
     "Pseudotime",
-    colors = mycolors_to1,
+    colors = mycolors_to1_grey,
     breaks = c(0, 0.5, 1))+
   ggplot2::theme(
     legend.title = element_text(
@@ -493,10 +512,10 @@ e_theme_plot <- e_base_plot +
   ggplot2::scale_fill_gradientn(
     "z-score per gene", 
     colours = colors_z_score,
-    breaks = c(-1.5, 0, 1.5), 
-    #breaks = c(-5, -2.5, 0, 2.5, 5), 
-    #limits = c(-5,5)
-    limits = c(-2,2)
+    breaks = c(-5, -2.5, 0, 2.5, 5), 
+    limits = c(-5,5)
+    #breaks = c(-1.5, 0, 1.5), 
+    #limits = c(-2,2)
     )+
   scale_x_discrete(expand = c(0, 0))
 
@@ -512,11 +531,31 @@ e_plot_theme <- ggpubr::ggarrange(
 e_plot_theme
 ```
 
-```{r e_construct_legend, fig.width = 2, fig.height = 2}
-e_legend_theme <- ggpubr::ggarrange(
+```{r e_construct_legend, fig.width = 4, fig.height = 2}
+
+e_legend_long <- ggpubr::get_legend(
+  e_theme_plot+ 
+    theme(legend.position = "bottom",
+    legend.title = element_text(
+      margin = margin(r = 10),
+      vjust = 0.85))+
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene", 
+    colours = colors_z_score,
+      breaks = c(-1.5, 0, 1.5), 
+      limits = c(-2,2)))
+
+e_legend_theme_long <- ggpubr::ggarrange(
+  e_legend_long
+)
+e_legend_theme_long
+```
+
+```{r e_construct_legend_lomg, fig.width = 2, fig.height = 2}
+e_legend_theme_long <- ggpubr::ggarrange(
   e_legend
 )
-e_legend_theme
+e_legend_theme_long
 ```
 
 ## F 

@@ -152,6 +152,8 @@ plot_sign <- ggplot2::ggplot(sign_df,
                                "genes"))
 
 plot_sign
+print(score_df$nr_celltypes[score_df$conservation_level == "conserved_signature"])
+print(score_df$nr_clusters[score_df$conservation_level == "conserved_signature"])
 ```
 
 ## Conserved Markers
@@ -194,6 +196,8 @@ plot_mark <- ggplot2::ggplot(mark_df,
                                "genes"))
 
 plot_mark
+print(score_df$nr_celltypes[score_df$conservation_level == "conserved_markers"])
+print(score_df$nr_clusters[score_df$conservation_level == "conserved_markers"])
 ```
 
 ## all BL6 markers
@@ -236,6 +240,8 @@ plot_mmus <- ggplot2::ggplot(mmus_df,
                                "genes"))
 
 plot_mmus
+print(score_df$nr_celltypes[score_df$conservation_level == "mmusall_markers"])
+print(score_df$nr_clusters[score_df$conservation_level == "mmusall_markers"])
 ```
 
 ## nDGEs
@@ -278,6 +284,8 @@ plot_ndge <- ggplot2::ggplot(ndge_df,
                                "genes"))
 
 plot_ndge
+print(score_df$nr_celltypes[score_df$conservation_level == "ndges"])
+print(score_df$nr_clusters[score_df$conservation_level == "ndges"])
 ```
 
 # Re-clustering Scores

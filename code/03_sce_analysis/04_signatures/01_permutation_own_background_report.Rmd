@@ -22,7 +22,6 @@ library(tidyverse, quietly = TRUE)
 ```
 
 ```{r manual, include = FALSE, eval = FALSE}
-sce <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/03_recl/sce_str")
 
 fraction_curr <- "str"
 
@@ -56,7 +55,6 @@ geneset_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNA
 ```
 
 ```{r load_objects}
-
 fraction_curr <- snakemake@wildcards[["fraction"]]
 
 # permuted scores dataframe, containing all scores per permutation iteration
@@ -67,7 +65,9 @@ score_df <- base::readRDS(snakemake@input[["score_df"]])
 
 # which conservation level to use
 cons_level_use <- snakemake@params[["cons_level_use"]]
- 
+```
+
+```{r subset_objects}
 score_df <- score_df[score_df$conservation_level == cons_level_use,]
 
 iterations <- nrow(perm_score_df)
@@ -98,17 +98,13 @@ print(head(perm_score_df))
 
 scores <- c(
   "adjusted_rand_index",
-  "fowles_mallow_index",
   "mean_cluster_purity",
-  "mean_prop_cells_cluster",
-  "proportion_of_zeros")
+  "mean_prop_cells_cluster")
 
 scores_v <- c(
   "adjusted_rand_index",
-  "fowles_mallow_index",
   "mean_cluster_purity",
   "mean_prop_cells_cluster",
-  "proportion_of_zeros",
   "variation_information")
 
 for(score in scores_v){
@@ -162,7 +158,7 @@ perm_score_df_temp <- pivot_longer(perm_score_df,
                                    names_to = "type")
 perm_score_df_temp <- perm_score_df_temp[perm_score_df_temp$type %in% scores,]
 
-ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
+plot1 <- ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::geom_violin(data = perm_score_df_temp,
                        scale = "width",
                        position = position_nudge(x = 0.2, y = 0))+
@@ -173,12 +169,11 @@ ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::theme_classic()+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
   ggplot2::ggtitle(base::paste(fraction_curr, 
-                               "\n" ,
                                iterations,
                                "iterations"))
 ```
 
-```{r all2, fig.width = 1.2, fig.height = 4}
+```{r all2, fig.width = 5, fig.height = 4}
 
 score_df_temp <- score_df[score_df$type %in% c("variation_information"),]
 score_df_temp <- score_df_temp[
@@ -191,7 +186,7 @@ perm_score_df_temp <- pivot_longer(perm_score_df,
 perm_score_df_temp <- perm_score_df_temp[
   perm_score_df_temp$type %in% c("variation_information"),]
 
-ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
+plot2 <- ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::geom_violin(data = perm_score_df_temp,
                        scale = "width", 
                        position = position_nudge(x = 0.2, y = 0))+
@@ -205,6 +200,26 @@ ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
                                "\n",
                                iterations,
                                "iterations"))
+```
+
+```{r numbers_mark_sign}
+print("cell types:")
+print(score_df$nr_celltypes[1])
+print(base::table(perm_score_df$nr_celltypes))
+
+print("clusters:")
+print(score_df$nr_clusters[1])
+print(base::table(perm_score_df$nr_clusters))
+```
+
+```{r plot_2, fig.width = 3, fig.height = 4.5}
+plot <- ggpubr::ggarrange(
+  plot1 + ggplot2::theme(legend.position = "none"), 
+  plot2 + ggplot2::theme(plot.title = element_blank(),
+                          axis.title.y = element_blank()),
+  align = "h",
+  widths = c(1, 0.5))
+plot
 ```
 
 ```{r session_info}

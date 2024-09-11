@@ -64,14 +64,16 @@ print(fraction_curr)
 ```
 
 ```{r load_objects2}
-# iteration dataframe, containing all scores per iteration
+# permutation dataframe, containing all scores per iteration
 perm_score_df_mark <- base::readRDS(snakemake@input[["perm_score_df_mark"]])
 perm_score_df_mmms <- base::readRDS(snakemake@input[["perm_score_df_mmms"]])
 perm_score_df_mmms_mark <- base::readRDS(snakemake@input[["perm_score_df_mmms_mark"]])
 
 # score dataframe, containing the calculated scores per re-clustered dataset
 score_df <- base::readRDS(snakemake@input[["score_df"]])
+```
 
+```{r load_objects3}
 score_df_mark <- score_df[score_df$conservation_level == "conserved_markers",]
 score_df_mmms <- score_df[score_df$conservation_level == "mmusall_markers",]
 score_df_sign <- score_df[score_df$conservation_level == "conserved_signature",]
@@ -79,9 +81,7 @@ score_df_sign <- score_df[score_df$conservation_level == "conserved_signature",]
 
 ```{r load_objects4}
 # load ensembl list to know how many genes of each set were used 
-
 geneset_list <- base::readRDS(snakemake@input[["geneset_list"]])
-
 ```
 
 ```{r prepare_genesets}
@@ -141,8 +141,7 @@ col_cons <- c("conserved_signature" = "yellowgreen",
               "random_features" = "purple2")
 ```
 
-
-```{r subset}
+```{r it}
 iterations <- nrow(perm_score_df_mmms)
 ```
 
@@ -162,17 +161,13 @@ print(head(perm_score_df_mmms_mark))
 
 scores <- c(
   "adjusted_rand_index",
-  "fowles_mallow_index",
   "mean_cluster_purity",
-  "mean_prop_cells_cluster",
-  "proportion_of_zeros")
+  "mean_prop_cells_cluster")
 
 scores_v <- c(
   "adjusted_rand_index",
-  "fowles_mallow_index",
   "mean_cluster_purity",
   "mean_prop_cells_cluster",
-  "proportion_of_zeros",
   "variation_information")
 
 for(score in scores_v){
@@ -226,7 +221,7 @@ score_df_temp <- score_df_mark[score_df_mark$type %in% scores,]
 score_df_temp <- score_df_temp[
   score_df_temp$conservation_level == "conserved_markers",]
 score_df_temp_sign <- score_df_sign[score_df_sign$type %in% scores,]
-score_df_temp <- rbind(score_df_temp, score_df_temp_sign)
+score_df_temp <- base::rbind(score_df_temp, score_df_temp_sign)
 
 perm_score_df_temp <- pivot_longer(perm_score_df_mark,
                                    c = 1:ncol(perm_score_df_mark),
@@ -234,7 +229,7 @@ perm_score_df_temp <- pivot_longer(perm_score_df_mark,
                                    names_to = "type")
 perm_score_df_temp <- perm_score_df_temp[perm_score_df_temp$type %in% scores,]
 
-ggplot2::ggplot(score_df_temp, 
+plot1 <- ggplot2::ggplot(score_df_temp, 
                 aes(x = type, y = value))+
   ggplot2::geom_violin(data = perm_score_df_temp,
                        scale = "width",
@@ -250,6 +245,7 @@ ggplot2::ggplot(score_df_temp,
   ggplot2::ggtitle(base::paste(fraction_curr, 
                                iterations,
                                "iterations,",
+                               "\n",
                                perm_score_df_mark$cut_off_prop[1],
                                "% of cells,",
                                "\n",
@@ -274,7 +270,7 @@ perm_score_df_temp <- pivot_longer(perm_score_df_mark,
 perm_score_df_temp <- perm_score_df_temp[
   perm_score_df_temp$type %in% c("variation_information"),]
 
-ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
+plot2 <- ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::geom_violin(data = perm_score_df_temp,
                        scale = "width", 
                        position = position_nudge(x = 0.2, y = 0))+
@@ -288,6 +284,29 @@ ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::theme_classic()+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
   ggplot2::ggtitle("")
+```
+
+```{r numbers_mark_sign}
+print("cell types:")
+print(score_df_mark$nr_celltypes[1])
+print(score_df_sign$nr_celltypes[1])
+print(base::table(perm_score_df_mark$nr_celltypes))
+
+print("clusters:")
+print(score_df_mark$nr_clusters[1])
+print(score_df_sign$nr_clusters[1])
+print(base::table(perm_score_df_mark$nr_clusters))
+```
+
+
+```{r plot_mark_sign_x, fig.width = 5, fig.height = 5}
+plot <- ggpubr::ggarrange(
+  plot1 + ggplot2::theme(legend.position = "none"), 
+  plot2 + ggplot2::theme(plot.title = element_blank(),
+                          axis.title.y = element_blank()),
+  align = "h",
+  widths = c(1, 1.5))
+plot
 ```
 
 ## Nr of genes per gene set
@@ -403,7 +422,7 @@ perm_score_df_temp <- pivot_longer(perm_score_df_mmms,
                                    names_to = "type")
 perm_score_df_temp <- perm_score_df_temp[perm_score_df_temp$type %in% scores,]
 
-ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
+plot1 <- ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::geom_violin(data = perm_score_df_temp,
                        scale = "width",
                        position = position_nudge(x = 0.2, y = 0))+
@@ -421,8 +440,9 @@ ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
                                "\n",
                                perm_score_df_mmms$cut_off_prop[1],
                                "% of cells,",
+                               "\n",
                                perm_score_df_mmms$nr_genes_used,
-                               "genes used"))
+                               "genes"))
 ```
 
 ```{r all2_mmms, fig.width = 3, fig.height = 3}
@@ -442,7 +462,7 @@ perm_score_df_temp <- pivot_longer(perm_score_df_mmms,
 perm_score_df_temp <- perm_score_df_temp[
   perm_score_df_temp$type %in% c("variation_information"),]
 
-ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
+plot2 <- ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::geom_violin(data = perm_score_df_temp,
                        scale = "width", 
                        position = position_nudge(x = 0.2, y = 0))+
@@ -456,6 +476,28 @@ ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::theme_classic()+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
   ggplot2::ggtitle("")
+```
+
+```{r numbers_mmms_sign}
+print("cell types:")
+print(score_df_mmms$nr_celltypes[1])
+print(score_df_sign$nr_celltypes[1])
+print(base::table(perm_score_df_mmms$nr_celltypes))
+
+print("clusters:")
+print(score_df_mmms$nr_clusters[1])
+print(score_df_sign$nr_clusters[1])
+print(base::table(perm_score_df_mmms$nr_clusters))
+```
+
+```{r plot_mmms_sign_x, fig.width = 5, fig.height = 5}
+plot <- ggpubr::ggarrange(
+  plot1 + ggplot2::theme(legend.position = "none"), 
+  plot2 + ggplot2::theme(plot.title = element_blank(),
+                          axis.title.y = element_blank()),
+  align = "h",
+  widths = c(1, 1.5))
+plot
 ```
 
 ## Nr of genes per gene set
@@ -576,7 +618,7 @@ perm_score_df_temp <- pivot_longer(perm_score_df_mmms_mark,
                                    names_to = "type")
 perm_score_df_temp <- perm_score_df_temp[perm_score_df_temp$type %in% scores,]
 
-ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
+plot1 <- ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::geom_violin(data = perm_score_df_temp,
                        scale = "width",
                        position = position_nudge(x = 0.2, y = 0))+
@@ -591,11 +633,12 @@ ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::ggtitle(base::paste(fraction_curr, 
                                iterations,
                                "iterations,",
+                               "\n",
                                perm_score_df_mmms_mark$cut_off_prop[1],
                                "% of cells,",
                                "\n",
                                perm_score_df_mmms_mark$nr_genes_used,
-                               "genes used"))
+                               "genes"))
 ```
 
 ```{r all2_mmmsmark, fig.width = 3, fig.height = 3}
@@ -615,7 +658,7 @@ perm_score_df_temp <- pivot_longer(perm_score_df_mmms_mark,
 perm_score_df_temp <- perm_score_df_temp[
   perm_score_df_temp$type %in% c("variation_information"),]
 
-ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
+plot2 <- ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::geom_violin(data = perm_score_df_temp,
                        scale = "width", 
                        position = position_nudge(x = 0.2, y = 0))+
@@ -629,6 +672,28 @@ ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::theme_classic()+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
   ggplot2::ggtitle("")
+```
+
+```{r numbers_mmms_mark}
+print("cell types:")
+print(score_df_mmms$nr_celltypes[1])
+print(score_df_mark$nr_celltypes[1])
+print(base::table(perm_score_df_mmms_mark$nr_celltypes))
+
+print("clusters:")
+print(score_df_mmms$nr_clusters[1])
+print(score_df_mark$nr_clusters[1])
+print(base::table(perm_score_df_mmms_mark$nr_clusters))
+```
+
+```{r plot_mmms_mark, fig.width = 5, fig.height = 5}
+plot <- ggpubr::ggarrange(
+  plot1 + ggplot2::theme(legend.position = "none"), 
+  plot2 + ggplot2::theme(plot.title = element_blank(),
+                          axis.title.y = element_blank()),
+  align = "h",
+  widths = c(1, 1.5))
+plot
 ```
 
 ## Nr of genes per gene set

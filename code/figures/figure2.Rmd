@@ -25,6 +25,7 @@ library(ggpubr, quietly = TRUE)
 library(scuttle, quietly = TRUE)
 library(Seurat, quietly = TRUE)
 library(SeuratObject, quietly = TRUE)
+library(ggpattern, quietly = TRUE) # this is not currently in conda envt
 ```
 
 ```{r load_manual, eval = FALSE, include = FALSE}
@@ -732,23 +733,36 @@ for(ct in names(geneset_list_hsc)){
 plot_hsc <- gather(conserved_genes[,c("celltype", 
                                       "n_markers",
                                       "young_in_markers", 
-                                      "old_in_markers")], 
-                   "group", "count", -celltype)
+                                      "old_in_markers",
+                                      "both_in_markers")], 
+                   "group", "count", -celltype, -both_in_markers)
 ```
 
-```{r f_plot}
-ggplot2::ggplot(plot_hsc,
-       aes(x = celltype,
-           y = count,
-           fill = group)) +
-  geom_col(position = "dodge") +
+```{r f_plot, fig.width = 3, fig.height = 5}
+print(
+ggplot(plot_hsc,
+       aes(y = factor(celltype, levels = rev(names(geneset_list_hsc))),
+           fill = factor(group, levels = c("young_in_markers", 
+                                           "n_markers", 
+                                           "old_in_markers")))) +
+  geom_col(aes(x = count),
+           position = "dodge") +
+  ggpattern::geom_col_pattern(aes(x = both_in_markers),
+           position = "dodge",
+           pattern = "stripe",
+           pattern_color = "black",
+           pattern_spacing = 0.07,
+           pattern_density = 0.001,
+           pattern_angle = 60) +
   theme_classic() +
-  labs(x = NULL, 
-       y = "# marker genes identified", 
+  labs(y = NULL, 
+       x = "# markers identified", 
        fill = NULL) +
-  theme(axis.text.x = element_text(angle = 90, h = 1))
-
-# still need to get colors, legend, etc all correct
+  #theme(axis.text.y = element_text(angle = 90, h = 1)) +
+  guides(fill=guide_legend(override.aes=list(pattern="none"))) +
+  scale_fill_manual(labels = c("young", "all", "old"),
+                      values = c("grey30", "grey60", "grey90"))
+)
 ```
 
 
@@ -811,7 +825,7 @@ plot_3$signature <- lapply(plot_3$celltypes, function(x){
 
 
 ```{r g_plot}
-ggplot2::ggplot(plot_1,
+ggplot(plot_1,
        aes(x = celltypes,
            y = paste(Species_ID, Age_ID),
            fill = mean,
@@ -829,7 +843,7 @@ ggplot2::ggplot(plot_1,
   theme(legend.position = "none")
 
 
-ggplot2::ggplot(plot_2,
+ggplot(plot_2,
        aes(x = celltypes,
            y = paste(Species_ID, Age_ID),
            fill = mean,
@@ -847,7 +861,7 @@ ggplot2::ggplot(plot_2,
   theme(legend.position = "none")
 
 
-ggplot2::ggplot(plot_3,
+ggplot(plot_3,
        aes(x = celltypes,
            y = paste(Species_ID, Age_ID),
            fill = mean,

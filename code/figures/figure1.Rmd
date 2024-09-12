@@ -89,6 +89,15 @@ print(colors_source)
 #knitr::knit_exit()
 ```
 
+```{r pdf_output}
+# define output paths for pdf export
+
+output_pdf_b_c <- base::paste0(base_path, "/manuscript1/figures/figure1_b_c.pdf")
+output_pdf_d <- base::paste0(base_path, "/manuscript1/figures/figure1_d.pdf")
+output_pdf_d_legend <- base::paste0(base_path, "/manuscript1/figures/figure1_d_legend.pdf")
+```
+
+
 ```{r params}
 # global params
 source("determine_params.R")
@@ -396,12 +405,12 @@ bc_plot_middle <- ggpubr::ggarrange(
   bc_plot_middle1,
   c_theme_legend + theme(plot.margin = margin(r  = 4.18, b = 4, unit = "cm"))) 
 
-bc_plot_middle <- ggpubr::ggarrange(
-  ncol = 1,
-  heights = c(2, 2, 1),
-  b_legend_left,
-  b_legend_right,
-  c_theme_legend + theme(plot.margin = margin(r  = 4.18, b = 4, unit = "cm"))) 
+# bc_plot_middle <- ggpubr::ggarrange(
+#   ncol = 1,
+#   heights = c(2, 2, 1),
+#   b_legend_left,
+#   b_legend_right,
+#   c_theme_legend + theme(plot.margin = margin(r  = 4.18, b = 4, unit = "cm"))) 
 
 
 bc_plot_all <- ggpubr::ggarrange(
@@ -412,6 +421,12 @@ bc_plot_all <- ggpubr::ggarrange(
   nrow = 1
 )
 bc_plot_all
+```
+
+```{r export_b_c}
+pdf(output_pdf_b_c, width = 16, height = 9)
+bc_plot_all
+dev.off()
 ```
 
 ## D
@@ -853,8 +868,17 @@ d_theme_plot_bottom_right <- d_base_plot_bottom_right+
 
 Since logcounts have different upper limits in HSPCs vs Niche, need two.
 
+```{r d_legend_base_plot_left}
+d_legend_base_plot_left <- ggplot2::ggplot(
+  vis_df_hsc, 
+  aes(x = gene,
+      y = celltypes,
+      size = expression))+
+  ggplot2::geom_point()
+```
+
 ```{r d_legend_theme_plot_left}
-d_legend_theme_plot_left <- d_base_plot_bottom_left+
+d_legend_theme_plot_left <- d_legend_base_plot_left+
   ggplot2::theme_classic()+
   ggplot2::theme(legend.title = element_text(
       face = legend_title_face,
@@ -872,18 +896,55 @@ d_legend_theme_plot_left <- d_base_plot_bottom_left+
   ggplot2::scale_size_area(
     "logcounts",
     max_size = max_size_dotplots,
-    limits = c(0, base::max(vis_df_hsc$expression)))+
-  ggplot2::scale_colour_gradientn(
-     "% expressed",
-      breaks = c(0, 50, 100),
-      colors = mycolors_to100,
-      limits = c(0, 100)
-  )
+    limits = c(0, base::max(vis_df_hsc$expression)))
 d_legend_left <- ggpubr::get_legend(d_legend_theme_plot_left)
 ```
 
+```{r d_legend_base_plot_middle}
+d_legend_base_plot_middle <- ggplot2::ggplot(
+  vis_df_str, 
+  aes(x = gene,
+      y = celltypes,
+      color = percent_expressed))+
+  ggplot2::geom_point()
+```
+
+```{r d_legend_theme_plot_middle}
+d_legend_theme_plot_middle <- d_legend_base_plot_middle+
+  ggplot2::theme_classic()+
+  ggplot2::theme(legend.title = element_text(
+      face = legend_title_face,
+      size = legend_title_size,
+      color = legend_title_color),
+      legend.title.position = "top",
+      legend.text = element_text(
+      face = legend_text_face,
+      size = legend_text_size,
+      color = legend_text_color),
+      legend.box.just = "left",
+      legend.position = "bottom",
+      legend.box = "vertical", # Stack legends vertically
+      legend.spacing.y = unit(0.5, 'cm'))+
+  ggplot2::scale_colour_gradientn(
+     "% expressed",
+      breaks = c(0, 50, 100),
+      colors = mycolors_to100,
+      limits = c(0, 100)
+  )
+d_legend_middle <- ggpubr::get_legend(d_legend_theme_plot_middle)
+```
+
+```{r d_legend_base_plot_right}
+d_legend_base_plot_right <- ggplot2::ggplot(
+  vis_df_str, 
+  aes(x = gene,
+      y = celltypes,
+      size = expression))+
+  ggplot2::geom_point()
+```
+
 ```{r d_legend_theme_plot_right}
-d_legend_theme_plot_right <- d_base_plot_bottom_right+
+d_legend_theme_plot_right <- d_legend_base_plot_right+
   ggplot2::theme_classic()+
   ggplot2::theme(legend.title = element_text(
       face = legend_title_face,
@@ -901,13 +962,7 @@ d_legend_theme_plot_right <- d_base_plot_bottom_right+
   ggplot2::scale_size_area(
     "logcounts",
     max_size = max_size_dotplots,
-    limits = c(0, base::max(vis_df_ct_str$expression)))+
-  ggplot2::scale_colour_gradientn(
-     "% expressed",
-      breaks = c(0, 50, 100),
-      colors = mycolors_to100,
-      limits = c(0, 100)
-  )
+    limits = c(0, base::max(vis_df_ct_str$expression)))
 d_legend_right <- ggpubr::get_legend(d_legend_theme_plot_right)
 ```
 
@@ -927,7 +982,7 @@ d_theme_plot
 ```
 
 ```{r d_theme_plot2, fig.width = 16, fig.height = 6}
-d_theme_plot <- ggpubr::ggarrange(
+d_theme_plot2 <- ggpubr::ggarrange(
   d_theme_plot_top_left + theme(plot.margin = margin(t = 10, r = 5, b = 20, l = 5, unit = "pt")), 
   d_theme_plot_top_right + theme(plot.margin = margin(t = 5, r = 5, b = 20, l = 5, unit = "pt")),
   d_theme_plot_bottom_left,
@@ -935,15 +990,18 @@ d_theme_plot <- ggpubr::ggarrange(
   heights = c(1,1.8),
   widths = c(1, 1.1))
 
-d_theme_plot
+d_theme_plot2
 ```
 
-```{r d_theme_legend_left, fig.width = 2, fig.height = 2}
-d_theme_legend_left <- ggpubr::ggarrange(
-  d_legend_left
+```{r d_theme_legends, fig.width = 7, fig.height = 1}
+d_theme_legends <- ggpubr::ggarrange(
+  nrow = 1,
+  d_legend_left,
+  d_legend_middle,
+  d_legend_right
   )
 
-d_theme_legend_left
+d_theme_legends
 ```
 
 ```{r d_theme_legend_right, fig.width = 4, fig.height = 2}
@@ -952,6 +1010,18 @@ d_theme_legend_right <- ggpubr::ggarrange(
   )
 
 d_theme_legend_right
+```
+
+```{r export_d}
+pdf(output_pdf_d, width = 16, height = 6)
+d_theme_plot2
+dev.off()
+```
+
+```{r export_d_legend}
+pdf(output_pdf_d_legend, width = 7, height = 1)
+d_theme_legends
+dev.off()
 ```
 
 ```{r sessioninfo}

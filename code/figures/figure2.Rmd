@@ -433,7 +433,9 @@ plot_HSCs <- plot_data[,c(colnames(plot_data)[1:6],
   gather(gene, expression,
          -pseudotime, -celltypes, -Mouse_ID, 
          -Species_ID, -Age_weeks, -Age_ID)
-col_HSCs <- grDevices::colorRampPalette(c("grey95", col_cts_hsc["HSCs"], "grey5"))
+col_HSCs <- grDevices::colorRampPalette(c("grey95", 
+                                          col_cts_hsc["HSCs"], 
+                                          "grey5"))
 palette_HSCs <- col_HSCs(length(geneset_list_hsc[["HSCs"]][["conserved_signature"]]))
 
 
@@ -442,7 +444,9 @@ plot_MkEry <- plot_data[,c(colnames(plot_data)[1:6],
   gather(gene, expression,
          -pseudotime, -celltypes, -Mouse_ID, 
          -Species_ID, -Age_weeks, -Age_ID)
-col_MkEry <- grDevices::colorRampPalette(c("grey95", col_cts_hsc["Mk/Ery progs."], "grey5"))
+col_MkEry <- grDevices::colorRampPalette(c("grey95", 
+                                           col_cts_hsc["Mk/Ery progs."], 
+                                           "grey5"))
 palette_MkEry <- col_MkEry(length(geneset_list_hsc[["Mk/Ery progs."]][["conserved_signature"]]))
 
 
@@ -451,7 +455,9 @@ plot_Ery <- plot_data[,c(colnames(plot_data)[1:6],
   gather(gene, expression,
          -pseudotime, -celltypes, -Mouse_ID, 
          -Species_ID, -Age_weeks, -Age_ID)
-col_Ery <- grDevices::colorRampPalette(c("grey95", col_cts_hsc["Erythroid progs."], "grey5"))
+col_Ery <- grDevices::colorRampPalette(c("grey95", 
+                                         col_cts_hsc["Erythroid progs."], 
+                                         "grey5"))
 palette_Ery <- col_Ery(length(geneset_list_hsc[["Erythroid progs."]][["conserved_signature"]]))
 ```
 
@@ -505,7 +511,8 @@ print(
     HSC_1,
     MkEry_2,
     Ery_3,
-    nrow = 1
+    nrow = 1,
+    widths = c(0.36, 0.32, 0.32)
   )
 )
 ```
@@ -768,9 +775,9 @@ sce_hsc_seurat <- SeuratObject::CreateSeuratObject(counts = sce_hsc@assays@data@
 
 # assign gene list!!
 g <- c(
-  "Lmo4",
-  "Cd34", 
-  "Txnip"
+  "Nkx2-3",
+  "Trib2", 
+  "Blvrb"
 )
 
 metadata$expression <- SeuratObject::FetchData(sce_hsc_seurat, 
@@ -813,8 +820,8 @@ plot_3$signature <- lapply(plot_3$celltypes, function(x){
 
 
 ```{r g_plot}
-ggplot(plot_1,
-       aes(x = celltypes,
+marker_1 <- ggplot(plot_1,
+       aes(x = factor(celltypes, levels = names(geneset_list_hsc)),
            y = paste(Species_ID, Age_ID),
            fill = mean,
            color = signature,
@@ -826,13 +833,13 @@ ggplot(plot_1,
   scale_color_manual(guide = "none", values = c(alpha("black", 0), "grey50")) +
   scale_size_manual(guide = "none", values = c(0, 0.4)) +
   labs(x = NULL, y = NULL, title = g[1]) +
-  scale_fill_gradient2(low = "blue", mid = "white", high = "red",
+  scale_fill_gradient2(low = "blue3", mid = "white", high = "red3",
                        midpoint = mean(plot_1$mean)) +
   theme(legend.position = "none")
 
 
-ggplot(plot_2,
-       aes(x = celltypes,
+marker_2 <- ggplot(plot_2,
+       aes(x = factor(celltypes, levels = names(geneset_list_hsc)),
            y = paste(Species_ID, Age_ID),
            fill = mean,
            color = signature,
@@ -840,17 +847,18 @@ ggplot(plot_2,
   geom_tile(width = 0.95, 
             height = 0.95) +
   theme_classic() +
-  theme(axis.text.x = element_text(angle = 90, h = 1)) +
+  theme(axis.text.x = element_text(angle = 90, h = 1),
+        axis.text.y = element_blank()) +
   scale_color_manual(guide = "none", values = c(alpha("black", 0), "grey50")) +
   scale_size_manual(guide = "none", values = c(0, 0.4)) +
   labs(x = NULL, y = NULL, title = g[2]) +
-  scale_fill_gradient2(low = "blue", mid = "white", high = "red",
+  scale_fill_gradient2(low = "blue3", mid = "white", high = "red3",
                        midpoint = mean(plot_2$mean)) +
   theme(legend.position = "none")
 
 
-ggplot(plot_3,
-       aes(x = celltypes,
+marker_3 <- ggplot(plot_3,
+       aes(x = factor(celltypes, levels = names(geneset_list_hsc)),
            y = paste(Species_ID, Age_ID),
            fill = mean,
            color = signature,
@@ -858,11 +866,12 @@ ggplot(plot_3,
   geom_tile(width = 0.95, 
             height = 0.95) +
   theme_classic() +
-  theme(axis.text.x = element_text(angle = 90, h = 1)) +
+  theme(axis.text.x = element_text(angle = 90, h = 1),
+        axis.text.y = element_blank()) +
   scale_color_manual(guide = "none", values = c(alpha("black", 0), "grey50")) +
   scale_size_manual(guide = "none", values = c(0, 0.4)) +
   labs(x = NULL, y = NULL, title = g[3]) +
-  scale_fill_gradient2(low = "blue", mid = "white", high = "red",
+  scale_fill_gradient2(low = "blue3", mid = "white", high = "red3",
                        midpoint = mean(plot_3$mean)) +
   theme(legend.position = "none")
 
@@ -870,3 +879,14 @@ ggplot(plot_3,
 # still need to get colors, legend, etc all correct
 ```
 
+```{r g_assemble, fig.width = 6, fig.height = 2.5}
+print(
+  ggpubr::ggarrange(
+    marker_1,
+    marker_2,
+    marker_3,
+    nrow = 1,
+    widths = c(0.4, 0.3, 0.3)
+  )
+)
+```

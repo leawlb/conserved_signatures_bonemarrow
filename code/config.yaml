@@ -33,11 +33,6 @@ metadata_paths:
   ensembl_nmr: "/data/metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_nmr"
   datasets_other_path: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared"
   resolution_other: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt"
-  #test_ts_all_stromal: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_all_stromal"
-  #test_ts_bone_marrow: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_bone_marrow"
-  #test_ts_hsc_progenitors: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_hscs_progenitors"
-  #test_li_all_stromal: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/li_all_stromal"
-  #cell_cycle_genes: "/data/metadata/scRNAseq/03_sce_analysis/cell_cycle_genes/go_term_cellcycleprocess_mouse.csv"
   assignment: "/data/metadata/scRNAseq/05_cci_prep/assignment.txt"
   assignment_reverse: "/data/metadata/scRNAseq/05_cci_prep/assignment_reverse.txt"
   assignment_no_ct_removal: "/data/metadata/scRNAseq/06_cci_alt/assignment_no_ct_removal.txt"
@@ -74,14 +69,13 @@ values:
       hsc: 11 
     seeds_umap_after:
       str: 2 # for nicer plots after subclustering
-      hsc: 10 # for nicer plots after subclustering 
+      hsc: 10 
     k_graph_list:
-      hsc: 20
-      str: 10 # for louvain clustering resolution
+      hsc: 20 # for louvain clustering SCE
+      str: 10 
     resolution_louvain_list:   
-      hsc: 0.65
+      hsc: 0.65 # for louvain clustering SCE
       str: 0.3
-    #k_louvain_refs: 50 # for louvain clustering resolution
     ndge_padj_cutoff: 0.05 # below which nDGEs are significant
     ndge_fc_cutoff: 1.5 # above which genes are excluded from nDGEs
   03_sce_analysis:
@@ -90,7 +84,7 @@ values:
       - "Chondrocytes"
     reclustering_cutoff_prop: 0.01 # minimum proportion of cells that express a given gene to keep it for permutation
     nr_cores: 20 # nr of cores for parallelization for reclustering and permutation
-    iteraions: 500 # nr of iterations for permutation
+    iterations: 500 # nr of iterations for permutation
 
   # 05_cci_prep:
   #   min_cells: 60 # min number of cells required per cell type to consider for cci
@@ -108,7 +102,9 @@ values:
 run_preprocessing_summary: False
 run_anno_reports: False
 run_marker_reports: False
+
 ran_li_ipynb: False
+
 recluster_other: False
 run_permutation_genesets: False
 run_permutation_background_sign: False

@@ -31,9 +31,12 @@ library(ggplot2, quietly = TRUE)
 ```
 
 ```{r manual, include = FALSE, eval = FALSE}
-seu_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/04_rcls/reclustered_zeb_all_hspc_list")
+seu_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_li_all_stromal_list")
 
-dataset_curr <- "li_all_stroma"
+dataset_curr <- "li_all_stromal"
+
+cut_off_ranks <- 0.5
+
 ```
 
 ```{r load_object}
@@ -51,7 +54,8 @@ col_vec_cons <- c("conserved_signature" = "yellowgreen",
 col_vec1 <- c("prop_of_zeros" = "goldenrod1",
               "mean_ct_per_cluster_norm" = "indianred1",
               "prop_cells_per_cluster_median" = "steelblue4",
-              "prop_cells_per_cluster_mean" = "steelblue1")
+              "prop_cells_per_cluster_mean" = "steelblue1",
+              "prop_cells_per_cluster_mean_ranked" = "lightblue3")
   
 col_vec2 <- c("mean_ct_per_cluster" = "indianred3",
               "mean_cluster_per_ct" = "seagreen2",
@@ -66,6 +70,13 @@ col_vec4 <-  c("adj_rand" = "orchid",
                "fowlkes_mallows" = "darkblue",
                "variation_information" = "orange")
 ```
+
+```{r}
+nr_celltypes <- length(base::unique(seu_list_all$seu_sign[[1]]$cell_type))
+print(nr_celltypes)
+cut_off_ranks <- 0.25
+```
+
 
 ## Functions
 
@@ -130,7 +141,6 @@ per cluster cl.
 ```{r function_mat, include = FALSE}
 calculate_scores_mat <- function(seu){
   
-  #seu <- seu_list_all$seu_mmms$"0.1"
   seu <- seu 
   # seurat objects with clusters in "seurat_clusters" slot and
   # cell type or identity to compare in "cell_type" slot
@@ -140,7 +150,7 @@ calculate_scores_mat <- function(seu){
   mat_per_celltype <- mat/Matrix::rowSums(mat)
   t_mat <- t(mat)
   mat_per_cluster <- t(t_mat/Matrix::rowSums(t_mat)) # keep format
-  
+
   #-----------------------------------------------------------------------------
   # score 1: proportions of 0
   
@@ -164,13 +174,28 @@ calculate_scores_mat <- function(seu){
   # that are in a new cluster
 
   # proportion of cells of a cell type per cluster
-  mat_per_cluster[mat_per_cluster == 0] <- NA
-  per_cluster_median <- stats::median(mat_per_cluster, na.rm = TRUE)
-  per_cluster_mean <- base::mean(mat_per_cluster, na.rm = TRUE)
+  mat_per_cluster_na <- mat_per_cluster
+  mat_per_cluster_na[mat_per_cluster_na == 0] <- NA
+  per_cluster_median <- stats::median(mat_per_cluster_na, na.rm = TRUE)
+  per_cluster_mean <- base::mean(mat_per_cluster_na, na.rm = TRUE)
   
   score_2 <- per_cluster_median
   score_3 <- per_cluster_mean
  
+  #-----------------------------------------------------------------------------
+  # include ranking
+  values <- c(mat_per_cluster)
+  
+  ranks <- base::rank(values, ties.method = "random")
+
+  rank_df <- data.frame("values" = values,
+                        "ranks" = ranks)
+
+  rank_df <- rank_df[order(rank_df$ranks, decreasing = TRUE),]
+  
+  # take only top X% of rankings into account for calculating mean
+  score_4 <- base::mean(rank_df$values[1:(base::round(nrow(rank_df)*cut_off_ranks, digits = 0))])
+
   #-----------------------------------------------------------------------------
   
   # test the nr of cell types per cluster and reverse
@@ -183,8 +208,8 @@ calculate_scores_mat <- function(seu){
     nr_cts_per_cluster <- c(nr_cts_per_cluster, length(which(mat[,i] != 0)))
     names(nr_cts_per_cluster)[i] <- colnames(nr_cts_per_cluster)[i]
   }
-  score_4 <- base::mean(nr_cts_per_cluster)
-  score_5 <- score_4/nr_celltypes # normalize by total number of cell types
+  score_5 <- base::mean(nr_cts_per_cluster)
+  score_6 <- score_4/nr_celltypes # normalize by total number of cell types
   
   # nr of clusters per ct
   nr_clusters_per_ct <- vector()
@@ -192,14 +217,15 @@ calculate_scores_mat <- function(seu){
     nr_clusters_per_ct <- c(nr_clusters_per_ct, length(which(mat[i,] != 0)))
     names(nr_clusters_per_ct)[i] <- colnames(nr_clusters_per_ct)[i]
   }
-  score_6 <- base::mean(nr_clusters_per_ct)
-  score_7 <- score_6/nr_clusters # normalize by total number of clusters
+  score_7 <- base::mean(nr_clusters_per_ct)
+  score_8 <- score_6/nr_clusters # normalize by total number of clusters
   # score_7 and score_5 are identical
   
   return_df <- data.frame(
     "type" = c("prop_of_zeros", 
                "prop_cells_per_cluster_median", 
                "prop_cells_per_cluster_mean",
+               "prop_cells_per_cluster_mean_ranked",
                "mean_ct_per_cluster",
                "mean_ct_per_cluster_norm",
                "mean_cluster_per_ct",
@@ -209,10 +235,11 @@ calculate_scores_mat <- function(seu){
     "value" = c(score_1, 
                 score_2,
                 score_3,
-                score_4, 
-                score_5,
-                score_6, 
-                score_7,
+                score_4,
+                score_5, 
+                score_6,
+                score_7, 
+                score_8,
                 nr_clusters, 
                 nr_celltypes)
   )
@@ -221,6 +248,7 @@ calculate_scores_mat <- function(seu){
   return_df$resolution <- base::rep(seu@misc$resolution)
   return(return_df)
 }
+
 ```
 
 ```{r mat_df, include = FALSE}
@@ -253,6 +281,7 @@ mat_plots <- lapply(df_list_mat, function(df_mat){
     "prop_of_zeros", 
     "prop_cells_per_cluster_median", 
     "prop_cells_per_cluster_mean",
+    "prop_cells_per_cluster_mean_ranked",
     "mean_ct_per_cluster_norm"),]
   
   title <- base::paste(df_mat$length_conservation_level[1],
@@ -318,6 +347,64 @@ mat_plots <- lapply(df_list_mat, function(df_mat){
 mat_plots
 ```
 
+```{r get_hist_function, fig.height = 4, fig.width = 4}
+get_hist <- function(seu){
+  
+  seu <- seu 
+  # seurat objects with clusters in "seurat_clusters" slot and
+  # cell type or identity to compare in "cell_type" slot
+  
+  title <- base::paste(seu@misc$resolution, 
+                       dataset_curr,
+                       length(base::unique(seu$seurat_clusters)),
+                       "clusters")
+  
+  # make a comparison matrix, then split into cells/celltype and cells/cluster
+  mat <- base::table(seu$cell_type, seu$seurat_clusters)
+  t_mat <- t(mat)
+  mat_per_cluster <- t(t_mat/Matrix::rowSums(t_mat)) # keep format
+  
+  all_values <- c(mat_per_cluster)
+  nonzero_values <- c(mat_per_cluster[mat_per_cluster != 0])
+  
+  plot <- ggplot2::ggplot(data.frame("values" = all_values), 
+                          aes(x = all_values))+
+    ggplot2::geom_histogram(binwidth = 0.01)+
+    ggplot2::theme_classic()+
+    ggplot2::ggtitle(title)
+    
+  return(plot)
+}
+```
+
+```{r hist_sign, fig.height = 24, fig.width = 12}
+plot_list <- lapply(seu_list_all$seu_sign, get_hist)
+cowplot::plot_grid(
+  ncol = 3,
+  plotlist = plot_list)
+```
+
+```{r hist_mark, fig.height = 24, fig.width = 12}
+plot_list <- lapply(seu_list_all$seu_mark, get_hist)
+cowplot::plot_grid(
+  ncol = 3,
+  plotlist = plot_list)
+```
+
+```{r hist_mmms, fig.height = 24, fig.width = 12}
+plot_list <- lapply(seu_list_all$seu_mmms, get_hist)
+cowplot::plot_grid(
+  ncol = 3,
+  plotlist = plot_list)
+```
+
+```{r hist_rand, fig.height = 24, fig.width = 12}
+plot_list <- lapply(seu_list_all$seu_rand, get_hist)
+cowplot::plot_grid(
+  ncol = 3,
+  plotlist = plot_list)
+```
+
 ```{r mat_plots_all, fig.height = 3, fig.width = 7}
 
 plot1 <- ggplot2::ggplot(
@@ -357,6 +444,18 @@ plot3 <- ggplot2::ggplot(
 plot3
 
 plot4 <- ggplot2::ggplot(
+  df_mat[df_mat$type == "prop_cells_per_cluster_mean_ranked",],
+  aes(x = nr_recl, y = value, color = conservation_level))+
+  ggplot2::geom_point(alpha = 0.7)+
+  ggplot2::geom_line()+
+  ggplot2::theme_classic()+
+  ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
+  ggplot2::ggtitle("prop_cells_per_cluster_mean_ranked")+
+  ggplot2::ylim(c(0,1))+
+  ggplot2::xlim(0, max(df_mat$nr_recl))
+plot4
+
+plot5 <- ggplot2::ggplot(
   df_mat[df_mat$type == "mean_ct_per_cluster_norm",],
   aes(x = nr_recl, y = value, color = conservation_level))+
   ggplot2::geom_point(alpha = 0.7)+
@@ -366,7 +465,7 @@ plot4 <- ggplot2::ggplot(
   ggplot2::ggtitle("mean_ct_per_cluster_norm")+
   ggplot2::ylim(c(0,1))+
   ggplot2::xlim(0, max(df_mat$nr_recl))
-plot4
+plot5
 ```
 
 ```{r mat_plots_all_resolution, fig.height = 3, fig.width = 7}
@@ -380,17 +479,6 @@ plot1 <- ggplot2::ggplot(
   ggplot2::ggtitle("prop_of_zeros")+
   ggplot2::ylim(c(0,1))
 plot1
-
-plot4 <- ggplot2::ggplot(
-  df_mat[df_mat$type == "mean_ct_per_cluster_norm",],
-  aes(x = resolution, y = value, color = conservation_level))+
-  ggplot2::geom_point(alpha = 0.7)+
-  ggplot2::geom_line()+
-  ggplot2::theme_classic()+
-  ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
-  ggplot2::ggtitle("mean_ct_per_cluster_norm")+
-  ggplot2::ylim(c(0,1))
-plot4
 
 plot2 <- ggplot2::ggplot(
   df_mat[df_mat$type == "prop_cells_per_cluster_median",],
@@ -413,6 +501,32 @@ plot3 <- ggplot2::ggplot(
   ggplot2::ggtitle("prop_cells_per_cluster_mean")+
   ggplot2::ylim(c(0,1))
 plot3
+
+plot4 <- ggplot2::ggplot(
+  df_mat[df_mat$type == "prop_cells_per_cluster_mean_ranked",],
+  aes(x = resolution, y = value, color = conservation_level))+
+  ggplot2::geom_point(alpha = 0.7)+
+  ggplot2::geom_line()+
+  ggplot2::theme_classic()+
+  ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
+  ggplot2::ggtitle("prop_cells_per_cluster_mean_ranked")+
+  ggplot2::ylim(c(0,1))
+plot4
+
+plot5 <- ggplot2::ggplot(
+  df_mat[df_mat$type == "mean_ct_per_cluster_norm",],
+  aes(x = resolution, y = value, color = conservation_level))+
+  ggplot2::geom_point(alpha = 0.7)+
+  ggplot2::geom_line()+
+  ggplot2::theme_classic()+
+  ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
+  ggplot2::ggtitle("mean_ct_per_cluster_norm")+
+  ggplot2::ylim(c(0,1))
+plot5
+```
+
+```{r}
+knitr::knit_exit()
 ```
 
 ### Scores from cluster silhouette and purity 
@@ -423,7 +537,7 @@ This does not compare to the original clusters at all.
 This just evaluates the re-clustering quality independent of the original cell
 types.
 
-- cluster silhuoette: "measure of how similar an object is to its own cluster 
+- cluster silhouette: "measure of how similar an object is to its own cluster 
   (cohesion) compared to other clusters (separation)". "A clustering with an
   average silhouette width of over 0.7 is considered to be "strong",
   a value over 0.5 "reasonable" and over 0.25 "weak" "
@@ -820,12 +934,11 @@ plot3
 
 Based on this report, we use as reclustering scores:
 
- - proportion of 0s
- - mean proportion of cells of a cell type per cluster
- - mean purity
+ - mean proportion of cells of a cell type per cluster (ranked)
  - adjusted rand index
- - fowles mallow index
  - variation of information
+ 
+We also use mean cluster purity to help select the optimal resolution.
 
 ```{r sessioninfo}
 utils::sessionInfo()

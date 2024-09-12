@@ -54,10 +54,14 @@ for f in fractions:
     targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mark_" + f]
     targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mmms_" + f]
     targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mmms_mark_" + f]
+    #targets = targets + [OUTPUT_DAT + "/07_expp/mark-vs-signrand_" + f]
+    #targets = targets + [OUTPUT_DAT + "/07_expp/mmms-vs-signrand_" + f]
+    #targets = targets + [OUTPUT_DAT + "/07_expp/mmms-vs-markrand_" + f]
     targets = targets + [OUTPUT_REP + "/perm_genesets_" + f + ".html"]
 
   if RUN_OWN_SIGN_PERM:
     targets = targets + [OUTPUT_DAT + "/06_psig/perm_score_df_" + f]
+    #targets = targets + [OUTPUT_DAT + "/07_expp/sign-vs-rand_" + f]
     targets = targets + [OUTPUT_REP + "/perm_conserved_signature_" + f + ".html"]
 
 targets = targets + [OUTPUT_REP + "/genesets_summary.html"]
@@ -261,8 +265,8 @@ if RUN_PERM_GENESETS:
           k_graph_list = config["values"]["02_sce_anno"]["k_graph_list"],
           resolution_louvain_list = config["values"]["02_sce_anno"]["resolution_louvain_list"],
           nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
-          #iterations = config["values"]["03_sce_analysis"]["iterations"],
-          iterations = 40,
+          iterations = config["values"]["03_sce_analysis"]["iterations"],
+          #iterations = 40,
           cut_off_prop = config["values"]["03_sce_analysis"]["reclustering_cutoff_prop"]
       conda:
           "../../envs/reclustering_own_scores.yml"
@@ -274,6 +278,7 @@ if RUN_PERM_GENESETS:
           "01_scripts_own/05_permutation_genesets.R"
 
   # visualise reclustering permutation
+  # P VALUES ARE NOT CORRECTED!
   rule permutation_genesets_report:
       input:
           score_df = rules.reclustering_own_scores.output,
@@ -285,8 +290,47 @@ if RUN_PERM_GENESETS:
           OUTPUT_REP + "/perm_genesets_{fraction}.html"
       script: 
           "01_permutation_own_genesets_report.Rmd"
-
-     
+  """     
+  # compare conserved markers to conserved signature + random
+  rule mark-vs-signrand:
+      input:
+          orig_score_df_input = rules.reclustering_own_scores.output.score_df,
+          perm_score_df_input = rules.permutation_genesets.output.perm_score_df_mark
+      params:
+          cons_level_use = "conserved_markers",
+          comparison = "mark-vs-signrand"
+      output:
+          pval_score_df_output = OUTPUT_DAT + "/07_expp/mark-vs-signrand_{fraction}"
+      script:
+          "01_scripts_own/07_export_pval.R"
+          
+  # compare mmusall_markers (all BL6 markers) to conserved signature + random
+  rule mmms-vs-signrand:
+      input:
+          orig_score_df_input = rules.reclustering_own_scores.output.score_df,
+          perm_score_df_input = rules.permutation_genesets.output.perm_score_df_mmms
+      params:
+          cons_level_use = "mmusall_markers",
+          comparison = "mmms-vs-signrand"
+      output:
+          pval_score_df_output = OUTPUT_DAT + "/07_expp/mmms-vs-signrand_{fraction}"
+      script:
+          "01_scripts_own/07_export_pval.R"
+          
+                    
+  # compare mmusall_markers (all BL6 markers) to conserved markers + random
+  rule mmms-vs-markrand:
+      input:
+          orig_score_df_input = rules.reclustering_own_scores.output.score_df,
+          perm_score_df_input = rules.permutation_genesets.output.perm_score_df_mmms_mark
+      params:
+          cons_level_use = "mmusall_markers",
+          comparison = "mmms-vs-markrand"
+      output:
+          pval_score_df_output = OUTPUT_DAT + "/07_expp/mmms-vs-markrand_{fraction}"
+      script:
+          "01_scripts_own/07_export_pval.R"
+  """
 #-------------------------------------------------------------------------------
 
 # permutation: conserved signature vs. random (same number)
@@ -304,9 +348,9 @@ if RUN_OWN_SIGN_PERM:
           k_graph_list = config["values"]["02_sce_anno"]["k_graph_list"],
           resolution_louvain_list = config["values"]["02_sce_anno"]["resolution_louvain_list"],
           cut_off_prop = config["values"]["03_sce_analysis"]["reclustering_cutoff_prop"],
-          #iterations = config["values"]["03_sce_analysis"]["iterations"],
+          iterations = config["values"]["03_sce_analysis"]["iterations"],
           nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
-          iterations = 40,
+          #iterations = 40,
           functions_reclustering = "../../source/sce_functions_reclustering.R",
           cts_exclude = CELL_TYPES_EXCLUDE,       
           cons_level_use = "conserved_signature"      
@@ -318,6 +362,7 @@ if RUN_OWN_SIGN_PERM:
           "01_scripts_own/06_permutation_background.R"
 
   # visualise conserved signature permutation
+  # P VALUES ARE NOT CORRECTED!
   rule permutation_own_background_sign_report:
       input:
           score_df = rules.reclustering_own_scores.output,
@@ -329,3 +374,17 @@ if RUN_OWN_SIGN_PERM:
       script: 
           "01_permutation_own_background_report.Rmd"
 
+  """     
+  # compare conserved signature to random background
+  rule sign-vs-rand:
+      input:
+          orig_score_df_input = rules.reclustering_own_scores.output.score_df,
+          perm_score_df_input = rules.permutation_own_background_sign.output.perm_score_df
+      params:
+          cons_level_use = "conserved_signature",
+          comparison = "sign-vs-rand"
+      output:
+          pval_score_df_output = OUTPUT_DAT + "/07_expp/sign-vs-rand_{fraction}"
+      script:
+          "01_scripts_own/07_export_pval.R"
+  """

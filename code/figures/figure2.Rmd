@@ -26,6 +26,7 @@ library(scuttle, quietly = TRUE)
 library(Seurat, quietly = TRUE)
 library(SeuratObject, quietly = TRUE)
 library(ggpattern, quietly = TRUE) # this is not currently in conda envt
+library(grDevices, quietly = TRUE) # this is not currently in conda envt
 ```
 
 ```{r load_manual, eval = FALSE, include = FALSE}
@@ -403,7 +404,7 @@ c_legend_theme
 
 ## D
 
-Scaled expression of HSC (top), Mk prog. (middle) or Erythroid prog.
+Scaled expression of HSC (top), Mk/Erythroid prog. (middle) or Erythroid prog.
 (bottom) conserved signature genes along diffusion pseudotime trajectory within 
 the erythroid branch. Cells were partitioned into branches based on their 
 lineage differentiation probability calculated by cellrank.
@@ -411,7 +412,7 @@ lineage differentiation probability calculated by cellrank.
 @Veronica
 
 ```{r d_prep_1}
-ery_pseudo_seurat <- Seurat::CreateSeuratObject(counts = ery_pseudo@assays@data@listData[["logcounts"]],
+ery_pseudo_seurat <- CreateSeuratObject(counts = ery_pseudo@assays@data@listData[["logcounts"]],
                                         meta.data = ery_pseudo@colData@listData)
 
 plot_data <- ery_pseudo_seurat@meta.data %>%
@@ -432,94 +433,81 @@ plot_HSCs <- plot_data[,c(colnames(plot_data)[1:6],
   gather(gene, expression,
          -pseudotime, -celltypes, -Mouse_ID, 
          -Species_ID, -Age_weeks, -Age_ID)
+col_HSCs <- grDevices::colorRampPalette(c("grey95", col_cts_hsc["HSCs"], "grey5"))
+palette_HSCs <- col_HSCs(length(geneset_list_hsc[["HSCs"]][["conserved_signature"]]))
 
-plot_Mk <- plot_data[,c(colnames(plot_data)[1:6],
-                           geneset_list_hsc[["Mk progs."]][["conserved_signature"]])] %>%
+
+plot_MkEry <- plot_data[,c(colnames(plot_data)[1:6],
+                           geneset_list_hsc[["Mk/Ery progs."]][["conserved_signature"]])] %>%
   gather(gene, expression,
          -pseudotime, -celltypes, -Mouse_ID, 
          -Species_ID, -Age_weeks, -Age_ID)
+col_MkEry <- grDevices::colorRampPalette(c("grey95", col_cts_hsc["Mk/Ery progs."], "grey5"))
+palette_MkEry <- col_MkEry(length(geneset_list_hsc[["Mk/Ery progs."]][["conserved_signature"]]))
+
 
 plot_Ery <- plot_data[,c(colnames(plot_data)[1:6],
                            geneset_list_hsc[["Erythroid progs."]][["conserved_signature"]])] %>%
   gather(gene, expression,
          -pseudotime, -celltypes, -Mouse_ID, 
          -Species_ID, -Age_weeks, -Age_ID)
+col_Ery <- grDevices::colorRampPalette(c("grey95", col_cts_hsc["Erythroid progs."], "grey5"))
+palette_Ery <- col_Ery(length(geneset_list_hsc[["Erythroid progs."]][["conserved_signature"]]))
 ```
 
 
 ```{r d_plot}
-ggplot2::ggplot(plot_HSCs,
+HSC_1 <- ggplot(plot_HSCs,
        aes(x = rank(pseudotime),
            y = expression,
            color = gene)) +
   geom_smooth(se = F) +
   guides(color = "none") +
   labs(x = "Pseudotime Erythroid", 
-       y = "Scaled Expression",
-       title = names(markers)[n]) +
-  ggplot2::theme(
-    legend.title = element_text(
-      size = legend_title_size,
-      face = legend_title_face,
-      color = legend_title_color,
-      margin = margin(r = 10),
-      vjust = 0.85),
-    legend.text = element_text(
-      size = legend_text_size,
-      face = legend_text_face,
-      color = legend_text_color),
-    legend.box.just = "left",
-    legend.position = "bottom",
-    axis.text = element_blank())
+       y = "Scaled Expression") +
+  scale_color_manual(values = rev(palette_HSCs)) +
+  theme_classic() +
+  theme(legend.text = element_blank(),
+        axis.text = element_blank())
 
-ggplot2::ggplot(plot_Mk,
+MkEry_2 <- ggplot(plot_MkEry,
        aes(x = rank(pseudotime),
            y = expression,
            color = gene)) +
   geom_smooth(se = F) +
   guides(color = "none") +
   labs(x = "Pseudotime Erythroid", 
-       y = "Scaled Expression",
-       title = names(markers)[n]) +
-  ggplot2::theme(
-    legend.title = element_text(
-      size = legend_title_size,
-      face = legend_title_face,
-      color = legend_title_color,
-      margin = margin(r = 10),
-      vjust = 0.85),
-    legend.text = element_text(
-      size = legend_text_size,
-      face = legend_text_face,
-      color = legend_text_color),
-    legend.box.just = "left",
-    legend.position = "bottom",
-    axis.text = element_blank())
+       y = NULL) +
+  scale_color_manual(values = rev(palette_MkEry)) +
+  theme_classic() +
+  theme(legend.text = element_blank(),
+        axis.text = element_blank())
 
-ggplot2::ggplot(plot_Ery,
+Ery_3 <- ggplot(plot_Ery,
        aes(x = rank(pseudotime),
            y = expression,
            color = gene)) +
   geom_smooth(se = F) +
   guides(color = "none") +
   labs(x = "Pseudotime Erythroid", 
-       y = "Scaled Expression",
-       title = names(markers)[n]) +
-  ggplot2::theme(
-    legend.title = element_text(
-      size = legend_title_size,
-      face = legend_title_face,
-      color = legend_title_color,
-      margin = margin(r = 10),
-      vjust = 0.85),
-    legend.text = element_text(
-      size = legend_text_size,
-      face = legend_text_face,
-      color = legend_text_color),
-    legend.box.just = "left",
-    legend.position = "bottom",
-    axis.text = element_blank())
+       y = NULL) +
+  scale_color_manual(values = rev(palette_Ery)) +
+  theme_classic() +
+  theme(legend.text = element_blank(),
+        axis.text = element_blank())
 
+```
+
+
+```{r d_assemble, fig.width = 6, fig.height = 2}
+print(
+  ggpubr::ggarrange(
+    HSC_1,
+    MkEry_2,
+    Ery_3,
+    nrow = 1
+  )
+)
 ```
 
 

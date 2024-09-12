@@ -1,0 +1,746 @@
+---
+title: "Figure 3"
+date: '2024-09-10'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Generate Figure 3, current title:
+"Mouse cell type signature genes alone are sufficient to identify cell types."
+
+#### Load objects
+
+```{r seed, message = FALSE}
+base::RNGkind(kind = "Mersenne-Twister")
+set.seed(37)
+```
+
+```{r load_packages, message = FALSE}
+library(tidyverse, quietly = TRUE)
+library(SingleCellExperiment, quietly = TRUE)
+library(ggpubr, quietly = TRUE)
+library(see, quietly = TRUE)
+```
+
+```{r load_manual, eval = FALSE, include = FALSE}
+
+# hscs
+
+# SCE with reclustering vectors for each gene set
+sce_hsc_recl <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/03_recl/sce_hsc")
+
+# score DF 
+score_df_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/04_rcls/score_df_hsc")
+
+# perm score DFs from gene set permutation
+psdf_hsc_mark_signrand <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_perg/perm_score_df_mark_hsc")
+psdf_hsc_mmms_signrand <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_perg/perm_score_df_mmms_hsc")
+psdf_hsc_mmms_markrand <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_perg/perm_score_df_mmms_mark_hsc")
+
+# perm score DF from background permutation
+psdf_hsc_sign_rand <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/06_psig/perm_score_df_hsc")
+
+# geneset list
+geneset_list_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc")
+
+colors_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt"
+source("../source/colors.R")
+source("../source/plotting.R")
+source("../source/sce_functions_reclustering.R")
+```
+
+```{r params}
+# global params
+source("determine_params.R")
+
+col_cons <- c("conserved_signature" = "#db5b00ff",
+              "conserved_markers" = "#eb9523ff",
+              "mmusall_markers" = "#a7c5a3ff",
+              "ndges" = "#ea91adff",
+              "random_features" = "grey50")
+
+col_cons_long <- c(
+  "conserved identity signature" = "#db5b00ff",
+  "conserved markers" = "#eb9523ff",
+  "total BL6 markers" = "#a7c5a3ff",
+  "ndges" = "#ea91adff",
+  "random_features" = "grey50")
+
+point_plot_size <- 4
+```
+
+```{r colors}
+
+```
+
+# A
+
+Heatmaps of own re-clustered HSPC mouse data using signature genes/
+conserved markers/BL6 markers/nDGEs.
+
+#### Prep
+
+```{r a_prep_conserved_signature}
+mat_sign <- base::table(sce_hsc_recl$celltypes, sce_hsc_recl$cluster_signt)
+
+# normalise per column = new clusters and turn into DF
+for(i in 1:ncol(mat_sign)){mat_sign[,i] <- mat_sign[,i]/base::sum(mat_sign[,i])}
+sign_df <- base::as.data.frame(mat_sign)
+
+# manually factorise clusters
+sign_df$Var2 <- factor(
+  sign_df$Var2,
+  levels = base::rev(c(1, 3, 2, 5, 8, 4, 6, 7)))
+```
+
+```{r a_prep_conserved_markers}
+mat_mark <- base::table(sce_hsc_recl$celltypes, sce_hsc_recl$cluster_consm)
+
+for(i in 1:ncol(mat_mark)){mat_mark[,i] <- mat_mark[,i]/base::sum(mat_mark[,i])}
+mark_df <- base::as.data.frame(mat_mark)
+
+mark_df$Var2 <- factor(
+  mark_df$Var2,
+  levels = base::rev(c(1, 3, 8, 10, 5, 2, 11, 4, 6, 7, 12, 9)))
+```
+
+```{r a_prep_all_bl6_markers}
+mat_mmms <- base::table(sce_hsc_recl$celltypes, sce_hsc_recl$cluster_mmusm)
+
+for(i in 1:ncol(mat_mmms)){mat_mmms[,i] <- mat_mmms[,i]/base::sum(mat_mmms[,i])}
+mmms_df <- base::as.data.frame(mat_mmms)
+
+mmms_df$Var2 <- factor(
+  mmms_df$Var2,
+  levels = base::rev(c(1, 3, 10, 11, 12, 5, 2, 9, 4, 6, 14, 13, 8, 7)))
+```
+
+```{r a_prep_ndges}
+mat_ndge <- base::table(sce_hsc_recl$celltypes, sce_hsc_recl$cluster_ndges)
+
+for(i in 1:ncol(mat_ndge)){mat_ndge[,i] <- mat_ndge[,i]/base::sum(mat_ndge[,i])}
+ndge_df <- base::as.data.frame(mat_ndge)
+
+ndge_df$Var2 <- factor(
+  ndge_df$Var2,
+  levels = base::rev(c(1, 4, 3, 6, 8, 7, 10, 2, 5, 9, 11)))
+```
+
+#### Plot Components
+
+```{r a_sign_base_plot}
+a_sign_base_plot <- ggplot2::ggplot(
+  sign_df, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+```
+
+```{r a_mark_base_plot}
+a_mark_base_plot <- ggplot2::ggplot(
+  mark_df, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+```
+
+```{r a_mmms_base_plot}
+a_mmms_base_plot <- ggplot2::ggplot(
+  mmms_df, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+```
+
+```{r a_ndge_base_plot}
+a_ndge_base_plot <- ggplot2::ggplot(
+  ndge_df, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+```
+
+```{r a_sign_theme_plot}
+a_sign_theme_plot <- a_sign_base_plot+
+  ggplot2::theme_classic()+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    # axis.title.y = element_text(
+    #   face = axis_title_face,
+    #   size = axis_title_size,
+    #   color = axis_title_color,     
+    # ),
+    axis.title.y = element_blank(),
+    axis.text.y = element_text(
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axis_text_color,      
+    )
+  )+
+  ggplot2::scale_fill_gradientn(
+    "Proportion of cells per cluster",
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  ylab("New clusters")
+```
+
+```{r a_mark_theme_plot}
+a_mark_theme_plot <- a_mark_base_plot+
+  ggplot2::theme_classic()+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.y = element_text(
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axis_text_color,      
+    )
+  )+
+  ggplot2::scale_fill_gradientn(
+    "Proportion of cells per cluster",
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))
+```
+
+```{r a_mmms_theme_plot}
+a_mmms_theme_plot <- a_mmms_base_plot+
+  ggplot2::theme_classic()+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.y = element_text(
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axis_text_color,      
+    )
+  )+
+  ggplot2::scale_fill_gradientn(
+    "Proportion of cells per cluster",
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))
+```
+
+```{r a_ndge_theme_plot}
+a_ndge_theme_plot <- a_ndge_base_plot+
+  ggplot2::theme_classic()+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axis_text_color, 
+      angle = 90,
+      hjust = 0,
+      vjust = 0.5
+    ),
+    axis.title.y = element_blank(),
+    axis.text.y = element_text(
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axis_text_color,      
+    )
+  )+
+  ggplot2::scale_fill_gradientn(
+    "Proportion of cells per cluster",
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))
+```
+
+```{r a_legend_theme_plot}
+a_legend_plot <- a_ndge_base_plot+
+  ggplot2::scale_fill_gradientn(
+    "Proportion of cells per cluster",
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  ggplot2::theme(
+    legend.title = element_text(
+      face = legend_title_face,
+      size = legend_title_size,
+      color = legend_title_color,
+      margin = margin(r = 10),
+      vjust = 0.85),
+    legend.text = element_text(
+      face = legend_text_face,
+      size = legend_text_size,
+      color = legend_text_color),
+    legend.position = "bottom",
+  )
+a_legend_theme <- ggpubr::get_legend(a_legend_plot)
+```
+
+#### Construct
+
+```{r a_construct, fig.height = 10, fig.width = 3}
+
+a_theme_plot <- ggpubr::ggarrange(
+  ncol = 1,
+  a_sign_theme_plot,
+  a_mark_theme_plot,
+  a_mmms_theme_plot,
+  a_ndge_theme_plot,
+  align = "v",
+  heights = c(1, 1.4, 1.5, 2.1)
+)
+
+a_theme_plot
+```
+
+```{r a_construct2, fig.height = 8, fig.width = 3}
+
+a_theme_plot2 <- ggpubr::ggarrange(
+  ncol = 1,
+  a_sign_theme_plot,
+  a_mark_theme_plot,
+  a_mmms_theme_plot+
+  ggplot2::theme(
+    axis.text.x = element_text(
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axis_text_color, 
+      angle = 90,
+      hjust = 0,
+      vjust = 0.5)),
+  align = "v",
+  heights = c(1, 1.5, 2.4)
+)
+
+a_theme_plot2
+```
+
+```{r a_construct_legend, fig.width = 6, fig.height = 1}
+a_legend <- ggpubr::ggarrange(a_legend_theme)
+```
+
+## B
+
+(Re-) clustering metrics to compare re-clustering of own dataset with signature
+genes, conserved markers or all BL6 markers, permuted with different sets of
+random genes as indicated (signature + random_conserved_markers,
+signature + conserved markers + random_bl6_markers). 
+
+ADJUSTED RAND INDEX
+
+#### Prep
+
+```{r b_prep1}
+score_df_sign <- score_df_hsc[score_df_hsc$conservation_level == "conserved_signature",]
+score_df_sign_score_1 <- score_df_sign[score_df_sign$type == "adjusted_rand_index",]
+score_df_sign_score_2 <- score_df_sign[score_df_sign$type == "variation_information",]
+score_df_sign_score_3 <- score_df_sign[score_df_sign$type == "mean_prop_cells_cluster",]
+
+score_df_sign_score_1$conservation_level <- "conserved identity signature"
+score_df_sign_score_2$conservation_level <- "conserved identity signature"
+score_df_sign_score_3$conservation_level <- "conserved identity signature"
+```
+
+```{r b_prep2}
+score_df_mark <- score_df_hsc[score_df_hsc$conservation_level == "conserved_markers",]
+score_df_mark_score_1 <- score_df_mark[score_df_mark$type == "adjusted_rand_index",]
+score_df_mark_score_2 <- score_df_mark[score_df_mark$type == "variation_information",]
+score_df_mark_score_3 <- score_df_mark[score_df_mark$type == "mean_prop_cells_cluster",]
+
+score_df_mark_score_1$conservation_level <- "conserved markers"
+score_df_mark_score_2$conservation_level <- "conserved markers"
+score_df_mark_score_3$conservation_level <- "conserved markers"
+
+psdf_mark_signrand_long <- pivot_longer(
+  psdf_hsc_mark_signrand, 
+  c = 1:ncol(psdf_hsc_mark_signrand),
+  values_to = "value",
+  names_to = "type")
+
+psdf_mark_signrand_score_1 <- psdf_mark_signrand_long[psdf_mark_signrand_long$type %in% c("adjusted_rand_index"),]
+psdf_mark_signrand_score_2 <- psdf_mark_signrand_long[psdf_mark_signrand_long$type %in% c("variation_information"),]
+psdf_mark_signrand_score_3 <- psdf_mark_signrand_long[psdf_mark_signrand_long$type %in% c("mean_prop_cells_cluster"),]
+
+psdf_mark_signrand_score_1$conservation_level = base::rep("conserved markers", nrow(psdf_mark_signrand_score_1))
+psdf_mark_signrand_score_2$conservation_level = base::rep("conserved markers", nrow(psdf_mark_signrand_score_2))
+psdf_mark_signrand_score_3$conservation_level = base::rep("conserved markers", nrow(psdf_mark_signrand_score_3))
+```
+
+```{r b_prep4}
+score_df_mmms <- score_df_hsc[score_df_hsc$conservation_level == "mmusall_markers",]
+score_df_mmms_score_1 <- score_df_mmms[score_df_mmms$type == "adjusted_rand_index",]
+score_df_mmms_score_2 <- score_df_mmms[score_df_mmms$type == "variation_information",]
+score_df_mmms_score_3 <- score_df_mmms[score_df_mmms$type == "mean_prop_cells_cluster",]
+
+score_df_mmms_score_1$conservation_level <- "total BL6 markers"
+score_df_mmms_score_2$conservation_level <- "total BL6 markers"
+score_df_mmms_score_3$conservation_level <- "total BL6 markers"
+
+psdf_mmms_signrand_long <- pivot_longer(
+  psdf_hsc_mmms_signrand, 
+  c = 1:ncol(psdf_hsc_mmms_signrand),
+  values_to = "value",
+  names_to = "type")
+
+psdf_mmms_signrand_score_1 <- psdf_mmms_signrand_long[psdf_mmms_signrand_long$type %in% c("adjusted_rand_index"),]
+psdf_mmms_signrand_score_2 <- psdf_mmms_signrand_long[psdf_mmms_signrand_long$type %in% c("variation_information"),]
+psdf_mmms_signrand_score_3 <- psdf_mmms_signrand_long[psdf_mmms_signrand_long$type %in% c("mean_prop_cells_cluster"),]
+
+psdf_mmms_signrand_score_1$conservation_level = base::rep("total BL6 markers", nrow(psdf_mmms_signrand_score_1))
+psdf_mmms_signrand_score_2$conservation_level = base::rep("total BL6 markers", nrow(psdf_mmms_signrand_score_2))
+psdf_mmms_signrand_score_3$conservation_level = base::rep("total BL6 markers", nrow(psdf_mmms_signrand_score_3))
+```
+
+```{r}
+max_vi <- base::max(c(
+  score_df_hsc$value[score_df_hsc$type == "variation_information"],
+  psdf_hsc_mmms_signrand$variation_information,
+  psdf_hsc_mark_signrand$variation_information))
+```
+
+
+#### Plot Components
+
+##### part a (left, score1)
+
+```{r b_base_plot_a1}
+b_base_plot_a1 <- ggplot2::ggplot(
+  score_df_sign_score_1,
+  aes(y = conservation_level,
+      x = value,
+      color = conservation_level))+
+  ggplot2::geom_vline(xintercept = 0.25,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_vline(xintercept = 0.5,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_vline(xintercept = 0.75,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_point(
+    size = point_plot_size)
+```
+
+```{r b_theme_plot_a1}
+b_theme_plot_a1 <- b_base_plot_a1+
+  ggplot2::theme_classic()+
+  ggplot2::scale_color_manual(
+    "Score",
+    values = col_cons_long)+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.text.x = element_text(
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axis_text_color, 
+      angle = 0,
+      hjust = 0.5,
+      vjust = 0.5),
+    axis.text.y = element_text(
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axis_text_color,
+      vjust = 0.5),
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank())+
+  ggplot2::scale_x_continuous(
+    position = "top", 
+    limits = c(0, 1)) 
+
+```
+
+```{r b_base_plot_a2}
+b_base_plot_a2 <- ggplot2::ggplot(
+  score_df_mark_score_1,
+  aes(x = conservation_level,
+      y = value,
+      fill = conservation_level,
+      color = conservation_level))+
+  ggplot2::geom_hline(yintercept = 0.25,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_hline(yintercept = 0.5,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_hline(yintercept = 0.75,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_point(
+    size = point_plot_size,
+    position = position_nudge(x = 0.2, y = 0))+
+  geom_half_violin(
+    data = psdf_mark_signrand_score_1,
+    color = col_cons_long["conserved markers"],
+    alpha = 1,
+    side = "r",
+    scale = "width",
+    position = position_nudge(x = -0.2, y = 0))+
+  ggplot2::coord_flip()
+```
+
+```{r b_theme_plot_a2}
+b_theme_plot_a2 <- b_base_plot_a2+
+  ggplot2::theme_classic()+
+  ggplot2::scale_color_manual(
+    "Score",
+    values = col_cons_long)+
+  ggplot2::scale_fill_manual(
+    "Score",
+    values = col_cons_long)+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.text.x = element_blank(),
+    axis.text.y = element_text(
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axis_text_color,
+      vjust = 0.5),
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank())+
+  ggplot2::ylim(0, 1) # because flipped
+```
+
+```{r b_base_plot_a3}
+b_base_plot_a3 <- ggplot2::ggplot(
+  score_df_mmms_score_1,
+  aes(x = conservation_level,
+      y = value,
+      fill = conservation_level,
+      color = conservation_level))+
+  ggplot2::geom_hline(yintercept = 0.25,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_hline(yintercept = 0.5,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_hline(yintercept = 0.75,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_point(
+    size = point_plot_size,
+    position = position_nudge(x = 0.2, y = 0))+
+  geom_half_violin(
+    data = psdf_mmms_signrand_score_1,
+    color = col_cons_long["total BL6 markers"],
+    alpha = 1,
+    side = "r",
+    scale = "width",
+    position = position_nudge(x = -0.2, y = 0))+
+  ggplot2::coord_flip()
+```
+
+```{r b_theme_plot_a3}
+b_theme_plot_a3 <- b_base_plot_a3+
+  ggplot2::theme_classic()+
+  ggplot2::scale_color_manual(
+    "Score",
+    values = col_cons_long)+
+  ggplot2::scale_fill_manual(
+    "Score",
+    values = col_cons_long)+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.text.x = element_blank(),
+    axis.text.y = element_text(
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axis_text_color,
+      vjust = 0.5),
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank())+
+  ggplot2::ylim(0, 1) # because flipped
+```
+
+```{r b_construct_a, fig.height = 2, fig.width = 5}
+b_part_a <- ggpubr::ggarrange(
+  ncol = 1, 
+  b_theme_plot_1,
+  b_theme_plot_2,
+  b_theme_plot_3,
+  align = "v"
+)
+b_part_a
+```
+
+START FROM HERE
+
+##### part b (middle, score2)
+
+```{r b_base_plot_b1}
+b_base_plot_b1 <- ggplot2::ggplot(
+  score_df_sign_score_2,
+  aes(y = conservation_level,
+      x = value,
+      color = conservation_level))+
+  ggplot2::geom_vline(xintercept = round(max_vi,digits = 0) * 0.25,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_vline(xintercept = round(max_vi,digits = 0) * 0.5,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_vline(xintercept = round(max_vi,digits = 0) * 0.75,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_point(
+    size = point_plot_size)
+```
+
+```{r b_theme_plot_b1}
+b_theme_plot_b1 <- b_base_plot_b1+
+  ggplot2::theme_classic()+
+  ggplot2::scale_color_manual(
+    "Score",
+    values = col_cons_long)+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.text.x = element_text(
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axis_text_color, 
+      angle = 0,
+      hjust = 0.5,
+      vjust = 0.5),
+    axis.text.y = element_text(
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axis_text_color,
+      vjust = 0.5),
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank())+
+  ggplot2::scale_x_continuous(
+    position = "top", 
+    limits = c(0, max_vi)) 
+```
+
+```{r b_base_plot_a2}
+b_base_plot_a2 <- ggplot2::ggplot(
+  score_df_mark_score_1,
+  aes(x = conservation_level,
+      y = value,
+      fill = conservation_level,
+      color = conservation_level))+
+  ggplot2::geom_hline(yintercept = 0.25,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_hline(yintercept = 0.5,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_hline(yintercept = 0.75,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_point(
+    size = point_plot_size,
+    position = position_nudge(x = 0.2, y = 0))+
+  geom_half_violin(
+    data = psdf_mark_signrand_score_1,
+    color = col_cons_long["conserved markers"],
+    alpha = 1,
+    side = "r",
+    scale = "width",
+    position = position_nudge(x = -0.2, y = 0))+
+  ggplot2::coord_flip()
+```
+
+```{r b_theme_plot_a2}
+b_theme_plot_a2 <- b_base_plot_a2+
+  ggplot2::theme_classic()+
+  ggplot2::scale_color_manual(
+    "Score",
+    values = col_cons_long)+
+  ggplot2::scale_fill_manual(
+    "Score",
+    values = col_cons_long)+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.text.x = element_blank(),
+    axis.text.y = element_text(
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axis_text_color,
+      vjust = 0.5),
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank())+
+  ggplot2::ylim(0, 1) # because flipped
+```
+
+```{r b_base_plot_a3}
+b_base_plot_a3 <- ggplot2::ggplot(
+  score_df_mmms_score_1,
+  aes(x = conservation_level,
+      y = value,
+      fill = conservation_level,
+      color = conservation_level))+
+  ggplot2::geom_hline(yintercept = 0.25,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_hline(yintercept = 0.5,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_hline(yintercept = 0.75,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_point(
+    size = point_plot_size,
+    position = position_nudge(x = 0.2, y = 0))+
+  geom_half_violin(
+    data = psdf_mmms_signrand_score_1,
+    color = col_cons_long["total BL6 markers"],
+    alpha = 1,
+    side = "r",
+    scale = "width",
+    position = position_nudge(x = -0.2, y = 0))+
+  ggplot2::coord_flip()
+```
+
+```{r b_theme_plot_a3}
+b_theme_plot_a3 <- b_base_plot_a3+
+  ggplot2::theme_classic()+
+  ggplot2::scale_color_manual(
+    "Score",
+    values = col_cons_long)+
+  ggplot2::scale_fill_manual(
+    "Score",
+    values = col_cons_long)+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.text.x = element_blank(),
+    axis.text.y = element_text(
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axis_text_color,
+      vjust = 0.5),
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank())+
+  ggplot2::ylim(0, 1) # because flipped
+```
+
+```{r b_construct_a, fig.height = 2, fig.width = 5}
+b_part_a <- ggpubr::ggarrange(
+  ncol = 1, 
+  b_theme_plot_1,
+  b_theme_plot_2,
+  b_theme_plot_3,
+  align = "v"
+)
+b_part_a
+```

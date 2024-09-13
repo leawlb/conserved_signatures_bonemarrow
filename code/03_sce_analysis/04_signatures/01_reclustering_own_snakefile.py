@@ -54,14 +54,14 @@ for f in fractions:
     targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mark_" + f]
     targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mmms_" + f]
     targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mmms_mark_" + f]
-    #targets = targets + [OUTPUT_DAT + "/07_expp/mark-vs-signrand_" + f]
-    #targets = targets + [OUTPUT_DAT + "/07_expp/mmms-vs-signrand_" + f]
-    #targets = targets + [OUTPUT_DAT + "/07_expp/mmms-vs-markrand_" + f]
+    targets = targets + [OUTPUT_DAT + "/07_expp/mark-vs-signrand_" + f]
+    targets = targets + [OUTPUT_DAT + "/07_expp/mmms-vs-signrand_" + f]
+    targets = targets + [OUTPUT_DAT + "/07_expp/mmms-vs-markrand_" + f]
     targets = targets + [OUTPUT_REP + "/perm_genesets_" + f + ".html"]
 
   if RUN_OWN_SIGN_PERM:
     targets = targets + [OUTPUT_DAT + "/06_psig/perm_score_df_" + f]
-    #targets = targets + [OUTPUT_DAT + "/07_expp/sign-vs-rand_" + f]
+    targets = targets + [OUTPUT_DAT + "/07_expp/sign-vs-rand_" + f]
     targets = targets + [OUTPUT_REP + "/perm_conserved_signature_" + f + ".html"]
 
 targets = targets + [OUTPUT_REP + "/genesets_summary.html"]
@@ -290,9 +290,9 @@ if RUN_PERM_GENESETS:
           OUTPUT_REP + "/perm_genesets_{fraction}.html"
       script: 
           "01_permutation_own_genesets_report.Rmd"
-  """     
+    
   # compare conserved markers to conserved signature + random
-  rule mark-vs-signrand:
+  rule mark_vs_signrand:
       input:
           orig_score_df_input = rules.reclustering_own_scores.output.score_df,
           perm_score_df_input = rules.permutation_genesets.output.perm_score_df_mark
@@ -305,7 +305,7 @@ if RUN_PERM_GENESETS:
           "01_scripts_own/07_export_pval.R"
           
   # compare mmusall_markers (all BL6 markers) to conserved signature + random
-  rule mmms-vs-signrand:
+  rule mmms_vs_signrand:
       input:
           orig_score_df_input = rules.reclustering_own_scores.output.score_df,
           perm_score_df_input = rules.permutation_genesets.output.perm_score_df_mmms
@@ -319,7 +319,7 @@ if RUN_PERM_GENESETS:
           
                     
   # compare mmusall_markers (all BL6 markers) to conserved markers + random
-  rule mmms-vs-markrand:
+  rule mmms_vs_markrand:
       input:
           orig_score_df_input = rules.reclustering_own_scores.output.score_df,
           perm_score_df_input = rules.permutation_genesets.output.perm_score_df_mmms_mark
@@ -330,7 +330,7 @@ if RUN_PERM_GENESETS:
           pval_score_df_output = OUTPUT_DAT + "/07_expp/mmms-vs-markrand_{fraction}"
       script:
           "01_scripts_own/07_export_pval.R"
-  """
+
 #-------------------------------------------------------------------------------
 
 # permutation: conserved signature vs. random (same number)
@@ -374,9 +374,9 @@ if RUN_OWN_SIGN_PERM:
       script: 
           "01_permutation_own_background_report.Rmd"
 
-  """     
+  
   # compare conserved signature to random background
-  rule sign-vs-rand:
+  rule sign_vs_rand:
       input:
           orig_score_df_input = rules.reclustering_own_scores.output.score_df,
           perm_score_df_input = rules.permutation_own_background_sign.output.perm_score_df
@@ -387,4 +387,4 @@ if RUN_OWN_SIGN_PERM:
           pval_score_df_output = OUTPUT_DAT + "/07_expp/sign-vs-rand_{fraction}"
       script:
           "01_scripts_own/07_export_pval.R"
-  """
+

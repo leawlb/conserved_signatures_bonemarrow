@@ -53,7 +53,6 @@ orig_score_df_sub <- orig_score_df[
 
 scores_v <- c(
   "adjusted_rand_index",
-  "mean_cluster_purity",
   "mean_prop_cells_cluster",
   "variation_information")
 
@@ -74,15 +73,17 @@ for(score in scores_v){
   # the pval is the proportion of permuted values that is at least as "good"
   # as the original value 
   if(score != "variation_information"){
-    pval = length(which(perm_scores >= orig_score_df_temp$value))/
-      length(perm_scores)
+    pval = length(which(perm_scores_all >= orig_score_df_temp$value))/
+      length(perm_scores_all)
   }else if(score == "variation_information"){
     # for variation_information score, the smaller, the better
-    pval = length(which(perm_scores <= orig_score_df_temp$value))/
-      length(perm_scores)
+    pval = length(which(perm_scores_all <= orig_score_df_temp$value))/
+      length(perm_scores_all)
   }
   
   orig_score_df_sub$pval[orig_score_df_sub$type == score] <- pval
+  orig_score_df_sub$nr_iterations <- base::rep(length(perm_scores_all), 
+                                               nrow(orig_score_df_sub))
   
 }
 

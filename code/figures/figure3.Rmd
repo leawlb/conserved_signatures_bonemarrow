@@ -19,34 +19,54 @@ set.seed(37)
 ```
 
 ```{r load_packages, message = FALSE}
-library(tidyverse, quietly = TRUE)
 library(SingleCellExperiment, quietly = TRUE)
 library(ggpubr, quietly = TRUE)
-library(see, quietly = TRUE)
+library(gghalves, quietly = TRUE)
+library(tidyverse, quietly = TRUE)
+library(ggpattern, quietly = TRUE)
 ```
 
 ```{r load_manual, eval = FALSE, include = FALSE}
 
+base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+
 # hscs
 
 # SCE with reclustering vectors for each gene set
-sce_hsc_recl <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/03_recl/sce_hsc")
+sce_hsc_recl <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/03_recl/sce_hsc"))
 
 # score DF 
-score_df_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/04_rcls/score_df_hsc")
+score_df_hsc <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/04_rcls/score_df_hsc"))
 
 # perm score DFs from gene set permutation
-psdf_hsc_mark_signrand <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_perg/perm_score_df_mark_hsc")
-psdf_hsc_mmms_signrand <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_perg/perm_score_df_mmms_hsc")
-psdf_hsc_mmms_markrand <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_perg/perm_score_df_mmms_mark_hsc")
+psdf_hsc_mark_signrand <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_perg/perm_score_df_mark_hsc"))
+psdf_hsc_mmms_signrand <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_perg/perm_score_df_mmms_hsc"))
+psdf_hsc_mmms_markrand <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_perg/perm_score_df_mmms_mark_hsc"))
 
 # perm score DF from background permutation
-psdf_hsc_sign_rand <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/06_psig/perm_score_df_hsc")
+psdf_hsc_sign_rand <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/06_psig/perm_score_df_hsc"))
 
 # geneset list
-geneset_list_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc")
+geneset_list_hsc <-base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"))
 
-colors_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt"
+colors_path <- base::paste0(
+  base_path,
+  "/metadata/colors/colors.txt")
+  
 source("../source/colors.R")
 source("../source/plotting.R")
 source("../source/sce_functions_reclustering.R")
@@ -60,20 +80,29 @@ col_cons <- c("conserved_signature" = "#db5b00ff",
               "conserved_markers" = "#eb9523ff",
               "mmusall_markers" = "#a7c5a3ff",
               "ndges" = "#ea91adff",
-              "random_features" = "grey50")
+              "random_features" = "grey80")
 
 col_cons_long <- c(
   "conserved identity signature" = "#db5b00ff",
   "conserved markers" = "#eb9523ff",
   "total BL6 markers" = "#a7c5a3ff",
   "ndges" = "#ea91adff",
-  "random_features" = "grey50")
+  "random genes" = "grey80")
 
 point_plot_size <- 4
+
+pattern_fill_color <- "white"
+pattern_line_colour <- "white"
+pattern_density_val <- 0.4
+pattern_spacing_val <- 0.1
+pattern_key_scale_factor_val <- 1.5
+
 ```
 
-```{r colors}
+```{r export_paths}
 
+output_pdf_a_plot <- base::paste0(base_path, "/manuscript1/figures/figure3_a.pdf")
+output_pdf_a_legend <- base::paste0(base_path, "/manuscript1/figures/figure3_a_legend.pdf")
 ```
 
 # A
@@ -174,16 +203,13 @@ a_sign_theme_plot <- a_sign_base_plot+
     legend.position = "none",
     axis.title.x = element_blank(),
     axis.text.x = element_blank(),
-    # axis.title.y = element_text(
-    #   face = axis_title_face,
-    #   size = axis_title_size,
-    #   color = axis_title_color,     
-    # ),
     axis.title.y = element_blank(),
-    axis.text.y = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color,      
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    plot.title = element_text(
+      size = plot_title_size,
+      face = plot_title_face,
+      color = col_cons_long["conserved identity signature"]
     )
   )+
   ggplot2::scale_fill_gradientn(
@@ -191,7 +217,7 @@ a_sign_theme_plot <- a_sign_base_plot+
     colors = mycolors_to1,
     limits = c(0, 1),
     breaks = c(0, 0.5, 1))+
-  ylab("New clusters")
+  ggplot2::ggtitle("Conserved identity signature")
 ```
 
 ```{r a_mark_theme_plot}
@@ -201,18 +227,21 @@ a_mark_theme_plot <- a_mark_base_plot+
     legend.position = "none",
     axis.title.x = element_blank(),
     axis.text.x = element_blank(),
+    axis.ticks.y = element_blank(),
     axis.title.y = element_blank(),
-    axis.text.y = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color,      
+    axis.text.y = element_blank(),
+    plot.title = element_text(
+      size = plot_title_size,
+      face = plot_title_face,
+      color = col_cons_long["conserved markers"]
     )
   )+
   ggplot2::scale_fill_gradientn(
     "Proportion of cells per cluster",
     colors = mycolors_to1,
     limits = c(0, 1),
-    breaks = c(0, 0.5, 1))
+    breaks = c(0, 0.5, 1))+
+  ggplot2::ggtitle("Conserved markers")
 ```
 
 ```{r a_mmms_theme_plot}
@@ -223,49 +252,24 @@ a_mmms_theme_plot <- a_mmms_base_plot+
     axis.title.x = element_blank(),
     axis.text.x = element_blank(),
     axis.title.y = element_blank(),
-    axis.text.y = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color,      
+    axis.ticks.y = element_blank(),
+    axis.text.y = element_blank(),
+    plot.title = element_text(
+      size = plot_title_size,
+      face = plot_title_face,
+      color = col_cons_long["total BL6 markers"]
     )
   )+
   ggplot2::scale_fill_gradientn(
     "Proportion of cells per cluster",
     colors = mycolors_to1,
     limits = c(0, 1),
-    breaks = c(0, 0.5, 1))
-```
-
-```{r a_ndge_theme_plot}
-a_ndge_theme_plot <- a_ndge_base_plot+
-  ggplot2::theme_classic()+
-  ggplot2::theme(
-    legend.position = "none",
-    axis.title.x = element_blank(),
-    axis.text.x = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color, 
-      angle = 90,
-      hjust = 0,
-      vjust = 0.5
-    ),
-    axis.title.y = element_blank(),
-    axis.text.y = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color,      
-    )
-  )+
-  ggplot2::scale_fill_gradientn(
-    "Proportion of cells per cluster",
-    colors = mycolors_to1,
-    limits = c(0, 1),
-    breaks = c(0, 0.5, 1))
+    breaks = c(0, 0.5, 1))+
+  ggplot2::ggtitle("total BL6 markers")
 ```
 
 ```{r a_legend_theme_plot}
-a_legend_plot <- a_ndge_base_plot+
+a_legend_plot <- a_mmms_base_plot+
   ggplot2::scale_fill_gradientn(
     "Proportion of cells per cluster",
     colors = mycolors_to1,
@@ -289,24 +293,9 @@ a_legend_theme <- ggpubr::get_legend(a_legend_plot)
 
 #### Construct
 
-```{r a_construct, fig.height = 10, fig.width = 3}
+```{r a_construct, fig.height = 8, fig.width = 3}
 
 a_theme_plot <- ggpubr::ggarrange(
-  ncol = 1,
-  a_sign_theme_plot,
-  a_mark_theme_plot,
-  a_mmms_theme_plot,
-  a_ndge_theme_plot,
-  align = "v",
-  heights = c(1, 1.4, 1.5, 2.1)
-)
-
-a_theme_plot
-```
-
-```{r a_construct2, fig.height = 8, fig.width = 3}
-
-a_theme_plot2 <- ggpubr::ggarrange(
   ncol = 1,
   a_sign_theme_plot,
   a_mark_theme_plot,
@@ -323,11 +312,23 @@ a_theme_plot2 <- ggpubr::ggarrange(
   heights = c(1, 1.5, 2.4)
 )
 
-a_theme_plot2
+a_theme_plot
 ```
 
 ```{r a_construct_legend, fig.width = 6, fig.height = 1}
 a_legend <- ggpubr::ggarrange(a_legend_theme)
+```
+
+```{r a_plot_export}
+pdf(output_pdf_a_plot, width = 3, height = 8)
+a_theme_plot
+dev.off()
+```
+
+```{r a_legend_export}
+pdf(output_pdf_a_legend, width = 6, height = 1)
+a_legend
+dev.off()
 ```
 
 ## B
@@ -337,9 +338,9 @@ genes, conserved markers or all BL6 markers, permuted with different sets of
 random genes as indicated (signature + random_conserved_markers,
 signature + conserved markers + random_bl6_markers). 
 
-ADJUSTED RAND INDEX
-
 #### Prep
+
+##### perm plots
 
 ```{r b_prep1}
 score_df_sign <- score_df_hsc[score_df_hsc$conservation_level == "conserved_signature",]
@@ -377,7 +378,7 @@ psdf_mark_signrand_score_2$conservation_level = base::rep("conserved markers", n
 psdf_mark_signrand_score_3$conservation_level = base::rep("conserved markers", nrow(psdf_mark_signrand_score_3))
 ```
 
-```{r b_prep4}
+```{r b_prep3}
 score_df_mmms <- score_df_hsc[score_df_hsc$conservation_level == "mmusall_markers",]
 score_df_mmms_score_1 <- score_df_mmms[score_df_mmms$type == "adjusted_rand_index",]
 score_df_mmms_score_2 <- score_df_mmms[score_df_mmms$type == "variation_information",]
@@ -402,17 +403,126 @@ psdf_mmms_signrand_score_2$conservation_level = base::rep("total BL6 markers", n
 psdf_mmms_signrand_score_3$conservation_level = base::rep("total BL6 markers", nrow(psdf_mmms_signrand_score_3))
 ```
 
-```{r}
+```{r max_vi}
 max_vi <- base::max(c(
   score_df_hsc$value[score_df_hsc$type == "variation_information"],
   psdf_hsc_mmms_signrand$variation_information,
   psdf_hsc_mark_signrand$variation_information))
 ```
 
+##### box plots
+
+```{r b_prep4}
+# get the number of genes used for each gene set
+
+
+nr_sign_used <- sce_hsc_recl$cluster_signt_genes_used[1]
+nr_mark_used <- sce_hsc_recl$cluster_consm_genes_used[1]
+nr_mmms_used <- sce_hsc_recl$cluster_mmusm_genes_used[1]
+
+nr_mark_left <- nr_mark_used - nr_sign_used
+nr_mark_rand <- nr_mark_left
+
+nr_mmms_left <- nr_mmms_used - nr_sign_used
+nr_mmms_rand <- nr_mmms_left
+
+max_genes <- nr_mmms_used
+```
+
+```{r b_prep5}
+vis_df_sign <- base::data.frame(
+  type_y = "conserved identity signature",
+  type_fill = "conserved identity signature",
+  number = nr_sign_used
+)
+```
+
+```{r b_prep6}
+vis_df_mark <- base::data.frame(
+  type_y = c(
+    "conserved markers",
+    "conserved markers",
+    "permutation gene set",
+    "permutation gene set"),
+  type_fill = c(
+    "conserved identity signature",
+    "conserved markers",
+    "conserved identity signature",
+    "random genes"),
+  number = c(
+    nr_sign_used,
+    nr_mark_left,
+    nr_sign_used,
+    nr_mark_rand)
+)
+
+vis_df_mark$type_fill <- factor(vis_df_mark$type_fill, levels = base::rev(c(
+  "conserved identity signature",
+  "conserved markers",
+  "random genes"
+)))
+vis_df_mark$type_y <- factor(vis_df_mark$type_y, levels = base::rev(c(
+  "conserved markers",
+  "permutation gene set"
+)))
+
+vis_df_mark_legend <- vis_df_mark
+vis_df_mark_legend$type_fill <- factor(vis_df_mark_legend$type_fill, levels = c(
+  "conserved identity signature",
+  "conserved markers",
+  "random genes"
+))
+vis_df_mark_legend$type_y <- factor(vis_df_mark_legend$type_y, levels = c(
+  "conserved markers",
+  "permutation gene set"
+))
+```
+
+```{r b_prep7}
+vis_df_mmms <- base::data.frame(
+  type_y = c(
+    "total BL6 markers",
+    "total BL6 markers",
+    "permutation gene set",
+    "permutation gene set"),
+  type_fill = c(
+    "conserved identity signature",
+    "total BL6 markers",
+    "conserved identity signature",
+    "random genes"),
+  number = c(
+    nr_sign_used,
+    nr_mmms_left,
+    nr_sign_used,
+    nr_mmms_rand)
+)
+
+vis_df_mmms$type_fill <- factor(vis_df_mmms$type_fill, levels = base::rev(c(
+  "conserved identity signature",
+  "total BL6 markers",
+  "random genes"
+)))
+vis_df_mmms$type_y <- factor(vis_df_mmms$type_y, levels = base::rev(c(
+  "total BL6 markers",
+  "permutation gene set"
+)))
+
+vis_df_mmms_legend <- vis_df_mmms
+vis_df_mmms_legend$type_fill <- factor(vis_df_mmms_legend$type_fill, levels = c(
+  "conserved identity signature",
+  "total BL6 markers",
+  "random genes"
+))
+vis_df_mmms_legend$type_y <- factor(vis_df_mmms_legend$type_y, levels = c(
+  "total BL6 markers",
+  "permutation gene set"
+))
+
+```
 
 #### Plot Components
 
-##### part a (left, score1)
+##### part a (left, score1) Adjusted Rand index
 
 ```{r b_base_plot_a1}
 b_base_plot_a1 <- ggplot2::ggplot(
@@ -421,9 +531,6 @@ b_base_plot_a1 <- ggplot2::ggplot(
       x = value,
       color = conservation_level))+
   ggplot2::geom_vline(xintercept = 0.25,
-                      color = "grey95",
-                      linewidth = 3)+
-  ggplot2::geom_vline(xintercept = 0.5,
                       color = "grey95",
                       linewidth = 3)+
   ggplot2::geom_vline(xintercept = 0.75,
@@ -454,10 +561,16 @@ b_theme_plot_a1 <- b_base_plot_a1+
       color = axis_text_color,
       vjust = 0.5),
     axis.title.y = element_blank(),
-    axis.title.x = element_blank())+
+    axis.title.x = element_blank(),
+    plot.title = element_text(
+      size = plot_title_size,
+      face = plot_title_face,
+      color = plot_title_color, 
+      hjust = 0.5))+
   ggplot2::scale_x_continuous(
     position = "top", 
-    limits = c(0, 1)) 
+    limits = c(0, 1))+
+  ggplot2::ggtitle("Adjusted rand index")
 
 ```
 
@@ -471,22 +584,34 @@ b_base_plot_a2 <- ggplot2::ggplot(
   ggplot2::geom_hline(yintercept = 0.25,
                       color = "grey95",
                       linewidth = 3)+
-  ggplot2::geom_hline(yintercept = 0.5,
-                      color = "grey95",
-                      linewidth = 3)+
   ggplot2::geom_hline(yintercept = 0.75,
                       color = "grey95",
                       linewidth = 3)+
   ggplot2::geom_point(
     size = point_plot_size,
-    position = position_nudge(x = 0.2, y = 0))+
+    position = position_nudge(x = 0.25, y = 0))+
   geom_half_violin(
     data = psdf_mark_signrand_score_1,
     color = col_cons_long["conserved markers"],
     alpha = 1,
     side = "r",
     scale = "width",
-    position = position_nudge(x = -0.2, y = 0))+
+    position = position_nudge(x = -0.5, y = 0))+
+  geom_violin_pattern(
+    pattern = "circle",
+    inherit.aes = FALSE,
+    scale = "width",
+    trim = FALSE,
+    position = position_nudge(x = -0.5, y = 0),
+    data = psdf_mark_signrand_score_1,
+    mapping = aes(y = value, x = conservation_level),
+    color = NA, 
+    alpha = 0,
+    pattern_fill = pattern_fill_color,
+    pattern_colour = pattern_line_colour,
+    pattern_density =pattern_density_val,
+    pattern_spacing = pattern_spacing_val,
+    pattern_key_scale_factor = pattern_key_scale_factor_val)+
   ggplot2::coord_flip()
 ```
 
@@ -524,22 +649,34 @@ b_base_plot_a3 <- ggplot2::ggplot(
   ggplot2::geom_hline(yintercept = 0.25,
                       color = "grey95",
                       linewidth = 3)+
-  ggplot2::geom_hline(yintercept = 0.5,
-                      color = "grey95",
-                      linewidth = 3)+
   ggplot2::geom_hline(yintercept = 0.75,
                       color = "grey95",
                       linewidth = 3)+
   ggplot2::geom_point(
     size = point_plot_size,
-    position = position_nudge(x = 0.2, y = 0))+
+    position = position_nudge(x = 0.25, y = 0))+
   geom_half_violin(
     data = psdf_mmms_signrand_score_1,
     color = col_cons_long["total BL6 markers"],
     alpha = 1,
     side = "r",
     scale = "width",
-    position = position_nudge(x = -0.2, y = 0))+
+    position = position_nudge(x = -0.5, y = 0))+
+  geom_violin_pattern(
+    pattern = "circle",
+    inherit.aes = FALSE,
+    scale = "width",
+    trim = FALSE,
+    position = position_nudge(x = -0.5, y = 0),
+    data = psdf_mmms_signrand_score_1,
+    mapping = aes(y = value, x = conservation_level),
+    color = NA, 
+    alpha = 0,
+    pattern_fill = pattern_fill_color,
+    pattern_colour = pattern_line_colour,
+    pattern_density =pattern_density_val,
+    pattern_spacing = pattern_spacing_val,
+    pattern_key_scale_factor = pattern_key_scale_factor_val)+
   ggplot2::coord_flip()
 ```
 
@@ -567,18 +704,17 @@ b_theme_plot_a3 <- b_base_plot_a3+
   ggplot2::ylim(0, 1) # because flipped
 ```
 
-```{r b_construct_a, fig.height = 2, fig.width = 5}
+```{r b_construct_a, fig.height = 2.8, fig.width = 5}
 b_part_a <- ggpubr::ggarrange(
   ncol = 1, 
-  b_theme_plot_1,
-  b_theme_plot_2,
-  b_theme_plot_3,
+  b_theme_plot_a1,
+  b_theme_plot_a2,
+  b_theme_plot_a3,
+  heights = c(1.05, 1, 1),
   align = "v"
 )
 b_part_a
 ```
-
-START FROM HERE
 
 ##### part b (middle, score2)
 
@@ -588,13 +724,10 @@ b_base_plot_b1 <- ggplot2::ggplot(
   aes(y = conservation_level,
       x = value,
       color = conservation_level))+
-  ggplot2::geom_vline(xintercept = round(max_vi,digits = 0) * 0.25,
+  ggplot2::geom_vline(xintercept = 1.5,
                       color = "grey95",
                       linewidth = 3)+
-  ggplot2::geom_vline(xintercept = round(max_vi,digits = 0) * 0.5,
-                      color = "grey95",
-                      linewidth = 3)+
-  ggplot2::geom_vline(xintercept = round(max_vi,digits = 0) * 0.75,
+  ggplot2::geom_vline(xintercept = 4.5,
                       color = "grey95",
                       linewidth = 3)+
   ggplot2::geom_point(
@@ -616,49 +749,63 @@ b_theme_plot_b1 <- b_base_plot_b1+
       angle = 0,
       hjust = 0.5,
       vjust = 0.5),
-    axis.text.y = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color,
-      vjust = 0.5),
+    axis.text.y = element_blank(),
     axis.title.y = element_blank(),
-    axis.title.x = element_blank())+
+    axis.title.x = element_blank(),
+    plot.title = element_text(
+      size = plot_title_size,
+      face = plot_title_face,
+      color = plot_title_color, 
+      hjust = 0.5))+
   ggplot2::scale_x_continuous(
     position = "top", 
-    limits = c(0, max_vi)) 
+    limits = c(0, max_vi))+
+  ggplot2::ggtitle("Variation of information")
 ```
 
-```{r b_base_plot_a2}
-b_base_plot_a2 <- ggplot2::ggplot(
-  score_df_mark_score_1,
+```{r b_base_plot_b2}
+b_base_plot_b2 <- ggplot2::ggplot(
+  score_df_mark_score_2,
   aes(x = conservation_level,
       y = value,
       fill = conservation_level,
       color = conservation_level))+
-  ggplot2::geom_hline(yintercept = 0.25,
+  ggplot2::geom_hline(yintercept = 1.5,
                       color = "grey95",
                       linewidth = 3)+
-  ggplot2::geom_hline(yintercept = 0.5,
-                      color = "grey95",
-                      linewidth = 3)+
-  ggplot2::geom_hline(yintercept = 0.75,
+  ggplot2::geom_hline(yintercept = 4.5,
                       color = "grey95",
                       linewidth = 3)+
   ggplot2::geom_point(
     size = point_plot_size,
-    position = position_nudge(x = 0.2, y = 0))+
+    position = position_nudge(x = 0.25, y = 0))+
   geom_half_violin(
-    data = psdf_mark_signrand_score_1,
+    data = psdf_mark_signrand_score_2,
     color = col_cons_long["conserved markers"],
     alpha = 1,
     side = "r",
     scale = "width",
-    position = position_nudge(x = -0.2, y = 0))+
+    position = position_nudge(x = -0.5, y = 0))+
+  geom_violin_pattern(
+    pattern = "circle",
+    inherit.aes = FALSE,
+    scale = "width",
+    trim = FALSE,
+    position = position_nudge(x = -0.5, y = 0),
+    data = psdf_mark_signrand_score_2,
+    mapping = aes(y = value, x = conservation_level),
+    color = NA, 
+    alpha = 0,
+    pattern_fill = pattern_fill_color,
+    pattern_colour = pattern_line_colour,
+    pattern_density =pattern_density_val,
+    pattern_spacing = pattern_spacing_val,
+    pattern_key_scale_factor = pattern_key_scale_factor_val)+
   ggplot2::coord_flip()
 ```
 
-```{r b_theme_plot_a2}
-b_theme_plot_a2 <- b_base_plot_a2+
+```{r b_theme_plot_b2}
+b_theme_plot_b2 <- b_base_plot_b2+
   ggplot2::theme_classic()+
   ggplot2::scale_color_manual(
     "Score",
@@ -669,21 +816,140 @@ b_theme_plot_a2 <- b_base_plot_a2+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_blank(),
-    axis.text.y = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color,
-      vjust = 0.5),
+    axis.text.y = element_blank(),
     axis.line.x = element_blank(),
     axis.ticks.x = element_blank(),
     axis.title.y = element_blank(),
     axis.title.x = element_blank())+
-  ggplot2::ylim(0, 1) # because flipped
+  ggplot2::ylim(0, max_vi) # because flipped
 ```
 
-```{r b_base_plot_a3}
-b_base_plot_a3 <- ggplot2::ggplot(
-  score_df_mmms_score_1,
+```{r b_base_plot_b3}
+b_base_plot_b3 <- ggplot2::ggplot(
+  score_df_mmms_score_2,
+  aes(x = conservation_level,
+      y = value,
+      fill = conservation_level,
+      color = conservation_level))+
+  ggplot2::geom_hline(yintercept = 1.5,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_hline(yintercept = 4.5,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_point(
+    size = point_plot_size,
+    position = position_nudge(x = 0.25, y = 0))+
+  geom_half_violin(
+    data = psdf_mmms_signrand_score_2,
+    color = col_cons_long["total BL6 markers"],
+    alpha = 1,
+    side = "r",
+    scale = "width",
+    position = position_nudge(x = -0.5, y = 0))+
+  geom_violin_pattern(
+    pattern = "circle",
+    inherit.aes = FALSE,
+    scale = "width",
+    trim = FALSE,
+    position = position_nudge(x = -0.5, y = 0),
+    data = psdf_mmms_signrand_score_2,
+    mapping = aes(y = value, x = conservation_level),
+    color = NA, 
+    alpha = 0,
+    pattern_fill = pattern_fill_color,
+    pattern_colour = pattern_line_colour,
+    pattern_density =pattern_density_val,
+    pattern_spacing = pattern_spacing_val,
+    pattern_key_scale_factor = pattern_key_scale_factor_val)+
+  ggplot2::coord_flip()
+```
+
+```{r b_theme_plot_b3}
+b_theme_plot_b3 <- b_base_plot_b3+
+  ggplot2::theme_classic()+
+  ggplot2::scale_color_manual(
+    "Score",
+    values = col_cons_long)+
+  ggplot2::scale_fill_manual(
+    "Score",
+    values = col_cons_long)+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank())+
+  ggplot2::ylim(0, max_vi) # because flipped
+```
+
+```{r b_construct_b, fig.height = 2.8, fig.width = 2.8}
+b_part_b <- ggpubr::ggarrange(
+  ncol = 1, 
+  b_theme_plot_b1,
+  b_theme_plot_b2,
+  b_theme_plot_b3,
+  heights = c(1.05, 1, 1),
+  align = "v"
+)
+b_part_b
+```
+
+##### part c (right, score3) mean prop cells
+
+```{r b_base_plot_c1}
+b_base_plot_c1 <- ggplot2::ggplot(
+  score_df_sign_score_3,
+  aes(y = conservation_level,
+      x = value,
+      color = conservation_level))+
+  ggplot2::geom_vline(xintercept = 0.25,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_vline(xintercept = 0.5,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_vline(xintercept = 0.75,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_point(
+    size = point_plot_size)
+```
+
+```{r b_theme_plot_c1}
+b_theme_plot_c1 <- b_base_plot_c1+
+  ggplot2::theme_classic()+
+  ggplot2::scale_color_manual(
+    "Score",
+    values = col_cons_long)+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.text.x = element_text(
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axis_text_color, 
+      angle = 0,
+      hjust = 0.5,
+      vjust = 0.5),
+    axis.text.y = element_blank(),
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    plot.title = element_text(
+      size = plot_title_size,
+      face = plot_title_face,
+      color = plot_title_color, 
+      hjust = 0.5))+
+  ggplot2::scale_x_continuous(
+    position = "top", 
+    limits = c(0, 1))+
+  ggplot2::ggtitle("Mean prop. cells/cluster")
+```
+
+```{r b_base_plot_c2}
+b_base_plot_c2 <- ggplot2::ggplot(
+  score_df_mark_score_3,
   aes(x = conservation_level,
       y = value,
       fill = conservation_level,
@@ -699,19 +965,34 @@ b_base_plot_a3 <- ggplot2::ggplot(
                       linewidth = 3)+
   ggplot2::geom_point(
     size = point_plot_size,
-    position = position_nudge(x = 0.2, y = 0))+
+    position = position_nudge(x = 0.25, y = 0))+
   geom_half_violin(
-    data = psdf_mmms_signrand_score_1,
-    color = col_cons_long["total BL6 markers"],
+    data = psdf_mark_signrand_score_3,
+    color = col_cons_long["conserved markers"],
     alpha = 1,
     side = "r",
     scale = "width",
-    position = position_nudge(x = -0.2, y = 0))+
+    position = position_nudge(x = -0.5, y = 0))+
+  geom_violin_pattern(
+    pattern = "circle",
+    inherit.aes = FALSE,
+    scale = "width",
+    trim = FALSE,
+    position = position_nudge(x = -0.5, y = 0),
+    data = psdf_mark_signrand_score_3,
+    mapping = aes(y = value, x = conservation_level),
+    color = NA, 
+    alpha = 0,
+    pattern_fill = pattern_fill_color,
+    pattern_colour = pattern_line_colour,
+    pattern_density =pattern_density_val,
+    pattern_spacing = pattern_spacing_val,
+    pattern_key_scale_factor = pattern_key_scale_factor_val)+
   ggplot2::coord_flip()
 ```
 
-```{r b_theme_plot_a3}
-b_theme_plot_a3 <- b_base_plot_a3+
+```{r b_theme_plot_c2}
+b_theme_plot_c2 <- b_base_plot_c2+
   ggplot2::theme_classic()+
   ggplot2::scale_color_manual(
     "Score",
@@ -722,11 +1003,7 @@ b_theme_plot_a3 <- b_base_plot_a3+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_blank(),
-    axis.text.y = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color,
-      vjust = 0.5),
+    axis.text.y = element_blank(),
     axis.line.x = element_blank(),
     axis.ticks.x = element_blank(),
     axis.title.y = element_blank(),
@@ -734,13 +1011,220 @@ b_theme_plot_a3 <- b_base_plot_a3+
   ggplot2::ylim(0, 1) # because flipped
 ```
 
-```{r b_construct_a, fig.height = 2, fig.width = 5}
-b_part_a <- ggpubr::ggarrange(
+```{r b_base_plot_c3}
+b_base_plot_c3 <- ggplot2::ggplot(
+  score_df_mmms_score_3,
+  aes(x = conservation_level,
+      y = value,
+      fill = conservation_level,
+      color = conservation_level))+
+  ggplot2::geom_hline(yintercept = 0.25,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_hline(yintercept = 0.5,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_hline(yintercept = 0.75,
+                      color = "grey95",
+                      linewidth = 3)+
+  ggplot2::geom_point(
+    size = point_plot_size,
+    position = position_nudge(x = 0.25, y = 0))+
+  geom_half_violin(
+    data = psdf_mmms_signrand_score_3,
+    color = col_cons_long["total BL6 markers"],
+    alpha = 1,
+    side = "r",
+    scale = "width",
+    position = position_nudge(x = -0.5, y = 0))+
+  geom_violin_pattern(
+    pattern = "circle",
+    inherit.aes = FALSE,
+    scale = "width",
+    trim = FALSE,
+    position = position_nudge(x = -0.5, y = 0),
+    data = psdf_mmms_signrand_score_3,
+    mapping = aes(y = value, x = conservation_level),
+    color = NA, 
+    alpha = 0,
+    pattern_fill = pattern_fill_color,
+    pattern_colour = pattern_line_colour,
+    pattern_density =pattern_density_val,
+    pattern_spacing = pattern_spacing_val,
+    pattern_key_scale_factor = pattern_key_scale_factor_val)+
+  ggplot2::coord_flip()
+```
+
+```{r b_theme_plot_c3}
+b_theme_plot_c3 <- b_base_plot_c3+
+  ggplot2::theme_classic()+
+  ggplot2::scale_color_manual(
+    "Score",
+    values = col_cons_long)+
+  ggplot2::scale_fill_manual(
+    "Score",
+    values = col_cons_long)+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank())+
+  ggplot2::ylim(0, 1) # because flipped
+```
+
+```{r b_construct_c, fig.height = 2.8, fig.width = 2.8}
+b_part_c <- ggpubr::ggarrange(
   ncol = 1, 
-  b_theme_plot_1,
-  b_theme_plot_2,
-  b_theme_plot_3,
+  b_theme_plot_c1,
+  b_theme_plot_c2,
+  b_theme_plot_c3,
+  heights = c(1.05, 1, 1),
   align = "v"
 )
-b_part_a
+b_part_c
 ```
+
+##### part D, boxplots
+
+```{r b_base_plot_d1}
+b_base_plot_d1 <- ggplot2::ggplot(
+  vis_df_sign,
+  aes(y = type_y, x=  number, fill = type_fill))+
+  ggplot2::geom_col(position = position_stack())
+```
+
+```{r b_theme_plot_d1}
+b_theme_plot_d1 <- b_base_plot_d1+
+  ggplot2::theme_classic()+
+  ggplot2::theme(
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    legend.position = "none",
+    axis.text.x = element_text(
+      size = axis_text_size,
+      face = axis_text_face,
+      color = axis_text_color),
+    axis.title.x = element_blank(),
+    plot.title = element_text(
+      size = plot_title_size,
+      face = plot_title_face,
+      color = plot_title_color,
+      hjust = 0.5))+
+  ggplot2::scale_x_continuous(
+    position = "top", 
+    limits = c(0, max_genes))+
+  ggplot2::ggtitle("Number of genes")+
+  ggplot2::scale_fill_manual( values = col_cons_long)
+```
+
+```{r b_base_plot_d2}
+b_base_plot_d2 <- ggplot2::ggplot(
+  vis_df_mark,
+  aes(y = type_y, x=  number, fill = type_fill))+
+  ggplot2::geom_col(position = position_stack())+
+  ggpattern::geom_bar_pattern(
+    data = data.frame("type_y" = base::rep("permutation gene set", nr_mark_used)),
+    inherit.aes = FALSE,
+    mapping = aes(y = type_y),
+    position = position_dodge(preserve = "single"),
+    pattern = "circle",
+    color = NA, 
+    alpha = 0,
+    pattern_fill = pattern_fill_color,
+    pattern_colour = pattern_line_colour,
+    pattern_density =pattern_density_val,
+    pattern_spacing = pattern_spacing_val,
+    pattern_key_scale_factor = pattern_key_scale_factor_val)
+```
+
+```{r b_theme_plot_d2}
+b_theme_plot_d2 <- b_base_plot_d2+
+  ggplot2::theme_classic()+
+  ggplot2::theme(
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    legend.position = "none",
+    axis.text.x = element_blank(),
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.x = element_blank())+
+  ggplot2::scale_x_continuous(
+    limits = c(0, max_genes))+
+  ggplot2::xlab("Number of genes")+
+  ggplot2::scale_fill_manual( values = col_cons_long)
+```
+
+```{r b_base_plot_d3}
+b_base_plot_d3 <- ggplot2::ggplot(
+  vis_df_mmms,
+  aes(y = type_y, x = number, fill = type_fill, pattern = type_y))+
+  ggplot2::geom_col(position = position_stack())+
+  ggpattern::geom_bar_pattern(
+    data = data.frame("type_y" = base::rep("permutation gene set", nr_mmms_used)),
+    inherit.aes = FALSE,
+    mapping = aes(y = type_y),
+    pattern = "circle",
+    position = position_dodge(preserve = "single"),
+    color = "white", 
+    alpha = 0,
+    pattern_fill = pattern_fill_color,
+    pattern_colour = pattern_line_colour,
+    pattern_density =pattern_density_val,
+    pattern_spacing = pattern_spacing_val,
+    pattern_key_scale_factor = pattern_key_scale_factor_val
+    )
+```
+
+```{r b_theme_plot_d3}
+b_theme_plot_d3 <- b_base_plot_d3+
+  ggplot2::theme_classic()+
+  ggplot2::theme(
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    legend.position = "none",
+    axis.text.x = element_blank(),
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.x = element_blank())+
+  ggplot2::scale_x_continuous(
+    limits = c(0, max_genes))+
+  ggplot2::xlab("Number of genes")+
+  ggplot2::scale_fill_manual( values = col_cons_long)
+```
+
+```{r b_construct_d, fig.height = 2.8, fig.width = 2.8}
+b_part_d <- ggpubr::ggarrange(
+  ncol = 1, 
+  b_theme_plot_d1,
+  b_theme_plot_d2,
+  b_theme_plot_d3,
+  heights = c(1.05, 1, 1),
+  align = "v"
+)
+b_part_d
+```
+
+
+```{r b_construct_all, fig.height = 3.5, fig.width = 13}
+
+# the ratio between upper panel and lower two panels depends on the
+# height of the entire plot
+
+b_all <- ggpubr::ggarrange(
+  ncol = 4,
+  b_part_a,
+  b_part_b,
+  b_part_c,
+  b_part_d,
+  widths = c(3.8, 2, 2, 1.5),
+  align = "v"
+)
+b_all
+```
+
+
+
+

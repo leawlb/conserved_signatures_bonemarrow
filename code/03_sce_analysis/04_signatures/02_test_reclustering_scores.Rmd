@@ -31,11 +31,11 @@ library(ggplot2, quietly = TRUE)
 ```
 
 ```{r manual, include = FALSE, eval = FALSE}
-seu_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_li_all_stromal_list")
+seu_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_zeb_all_hspc_list")
 
-dataset_curr <- "li_all_stromal"
+dataset_curr <- "zeb_all_hspc"
 
-cut_off_ranks <- 0.5
+cut_off_ranks <- 0.15
 
 ```
 
@@ -74,7 +74,7 @@ col_vec4 <-  c("adj_rand" = "orchid",
 ```{r}
 nr_celltypes <- length(base::unique(seu_list_all$seu_sign[[1]]$cell_type))
 print(nr_celltypes)
-cut_off_ranks <- 0.25
+cut_off_ranks <- 0.15
 ```
 
 
@@ -142,6 +142,7 @@ per cluster cl.
 calculate_scores_mat <- function(seu){
   
   seu <- seu 
+  print(seu@misc$resolution)
   # seurat objects with clusters in "seurat_clusters" slot and
   # cell type or identity to compare in "cell_type" slot
   
@@ -165,9 +166,15 @@ calculate_scores_mat <- function(seu){
   # that can be 0 in a theoretical perfect re-clustering. 
   # That "max possible nr" is equivalent to all fields - max_nr
   
-  score_1 <- length(which(mat == 0))/(ncol(mat)*nrow(mat)-max_nr)
-  stopifnot(score_1 <= 1)
+  # if there is only one column = one cluster, the score has to be one
+  if(ncol(mat) == 1){
+    score_1 <- 1
+  }else{
   
+    score_1 <- length(which(mat == 0))/(ncol(mat)*nrow(mat)-max_nr)
+    print(score_1)
+    stopifnot(score_1 <= 1)
+  } 
   #-----------------------------------------------------------------------------
 
   # test the mean or median of the proportions of cells of a cell type
@@ -414,7 +421,7 @@ plot1 <- ggplot2::ggplot(
   ggplot2::geom_line()+
   ggplot2::theme_classic()+
   ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
-  ggplot2::ggtitle("prop_of_zeros")+
+  ggplot2::ggtitle(base::paste(dataset_curr, "prop_of_zeros"))+
   ggplot2::ylim(c(0,1))+
   ggplot2::xlim(0, max(df_mat$nr_recl))
 plot1
@@ -426,7 +433,7 @@ plot2 <- ggplot2::ggplot(
   ggplot2::geom_line()+
   ggplot2::theme_classic()+
    ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
-  ggplot2::ggtitle("prop_cells_per_cluster_median")+
+  ggplot2::ggtitle(base::paste(dataset_curr, "prop_cells_per_cluster_median"))+
   ggplot2::ylim(c(0,1))+
   ggplot2::xlim(0, max(df_mat$nr_recl))
 plot2
@@ -438,7 +445,7 @@ plot3 <- ggplot2::ggplot(
   ggplot2::geom_line()+
   ggplot2::theme_classic()+
   ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
-  ggplot2::ggtitle("prop_cells_per_cluster_mean")+
+  ggplot2::ggtitle(base::paste(dataset_curr, "prop_cells_per_cluster_mean"))+
   ggplot2::ylim(c(0,1))+
   ggplot2::xlim(0, max(df_mat$nr_recl))
 plot3
@@ -450,7 +457,8 @@ plot4 <- ggplot2::ggplot(
   ggplot2::geom_line()+
   ggplot2::theme_classic()+
   ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
-  ggplot2::ggtitle("prop_cells_per_cluster_mean_ranked")+
+  ggplot2::ggtitle(base::paste(dataset_curr, 
+                               "prop_cells_per_cluster_mean_ranked"))+
   ggplot2::ylim(c(0,1))+
   ggplot2::xlim(0, max(df_mat$nr_recl))
 plot4
@@ -462,7 +470,7 @@ plot5 <- ggplot2::ggplot(
   ggplot2::geom_line()+
   ggplot2::theme_classic()+
   ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
-  ggplot2::ggtitle("mean_ct_per_cluster_norm")+
+  ggplot2::ggtitle(base::paste(dataset_curr, "mean_ct_per_cluster_norm"))+
   ggplot2::ylim(c(0,1))+
   ggplot2::xlim(0, max(df_mat$nr_recl))
 plot5
@@ -476,7 +484,7 @@ plot1 <- ggplot2::ggplot(
   ggplot2::geom_line()+
   ggplot2::theme_classic()+
   ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
-  ggplot2::ggtitle("prop_of_zeros")+
+  ggplot2::ggtitle(base::paste(dataset_curr, "prop_of_zeros"))+
   ggplot2::ylim(c(0,1))
 plot1
 
@@ -487,7 +495,7 @@ plot2 <- ggplot2::ggplot(
   ggplot2::geom_line()+
   ggplot2::theme_classic()+
    ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
-  ggplot2::ggtitle("prop_cells_per_cluster_median")+
+  ggplot2::ggtitle(base::paste(dataset_curr, "prop_cells_per_cluster_median"))+
   ggplot2::ylim(c(0,1))
 plot2
 
@@ -498,7 +506,7 @@ plot3 <- ggplot2::ggplot(
   ggplot2::geom_line()+
   ggplot2::theme_classic()+
   ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
-  ggplot2::ggtitle("prop_cells_per_cluster_mean")+
+  ggplot2::ggtitle(base::paste(dataset_curr, "prop_cells_per_cluster_mean"))+
   ggplot2::ylim(c(0,1))
 plot3
 
@@ -509,7 +517,8 @@ plot4 <- ggplot2::ggplot(
   ggplot2::geom_line()+
   ggplot2::theme_classic()+
   ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
-  ggplot2::ggtitle("prop_cells_per_cluster_mean_ranked")+
+  ggplot2::ggtitle(base::paste(dataset_curr,
+                               "prop_cells_per_cluster_mean_ranked"))+
   ggplot2::ylim(c(0,1))
 plot4
 
@@ -520,13 +529,9 @@ plot5 <- ggplot2::ggplot(
   ggplot2::geom_line()+
   ggplot2::theme_classic()+
   ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
-  ggplot2::ggtitle("mean_ct_per_cluster_norm")+
+  ggplot2::ggtitle(base::paste(dataset_curr, "mean_ct_per_cluster_norm"))+
   ggplot2::ylim(c(0,1))
 plot5
-```
-
-```{r}
-knitr::knit_exit()
 ```
 
 ### Scores from cluster silhouette and purity 
@@ -669,7 +674,7 @@ plot1 <- ggplot2::ggplot(
     ggplot2::geom_line()+
     ggplot2::theme_classic()+
     ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
-    ggplot2::ggtitle("median_silhouette_width")+
+    ggplot2::ggtitle(base::paste(dataset_curr, "median_silhouette_width"))+
     ggplot2::ylim(c(-1, 1))+
     ggplot2::xlim(0, max(df_sp$nr_recl))
 plot1
@@ -681,7 +686,7 @@ plot2 <- ggplot2::ggplot(
     ggplot2::geom_line()+
     ggplot2::theme_classic()+
     ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
-    ggplot2::ggtitle("mean_silhouette_width")+
+    ggplot2::ggtitle(base::paste(dataset_curr, "mean_silhouette_width"))+
     ggplot2::ylim(c(-1, 1))+
     ggplot2::xlim(0, max(df_sp$nr_recl))
 plot2
@@ -693,7 +698,7 @@ plot3 <- ggplot2::ggplot(
     ggplot2::geom_line()+
     ggplot2::theme_classic()+
     ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
-    ggplot2::ggtitle("median_purity")+
+    ggplot2::ggtitle(base::paste(dataset_curr, "median_purity"))+
     ggplot2::xlim(0, max(df_sp$nr_recl))+
     ggplot2::ylim(c(0, 1))
 plot3
@@ -705,7 +710,7 @@ plot4 <- ggplot2::ggplot(
     ggplot2::geom_line()+
     ggplot2::theme_classic()+
     ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
-    ggplot2::ggtitle("mean_purity")+
+    ggplot2::ggtitle(base::paste(dataset_curr, "mean_purity"))+
     ggplot2::xlim(0, max(df_sp$nr_recl))+
     ggplot2::ylim(c(0, 1))
 plot4
@@ -719,7 +724,7 @@ plot1 <- ggplot2::ggplot(
     ggplot2::geom_line()+
     ggplot2::theme_classic()+
     ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
-    ggplot2::ggtitle("median_silhouette_width")+
+    ggplot2::ggtitle(base::paste(dataset_curr, "median_silhouette_width"))+
     ggplot2::ylim(c(-1, 1))
 plot1
 
@@ -730,7 +735,7 @@ plot2 <- ggplot2::ggplot(
     ggplot2::geom_line()+
     ggplot2::theme_classic()+
     ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
-    ggplot2::ggtitle("mean_silhouette_width")+
+    ggplot2::ggtitle(base::paste(dataset_curr, "mean_silhouette_width"))+
     ggplot2::ylim(c(-1, 1))
 plot2
 
@@ -741,7 +746,7 @@ plot3 <- ggplot2::ggplot(
     ggplot2::geom_line()+
     ggplot2::theme_classic()+
     ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
-    ggplot2::ggtitle("median_purity")+
+    ggplot2::ggtitle(base::paste(dataset_curr, "median_purity"))+
     ggplot2::ylim(c(0, 1))
 plot3
 
@@ -752,7 +757,7 @@ plot4 <- ggplot2::ggplot(
     ggplot2::geom_line()+
     ggplot2::theme_classic()+
     ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
-    ggplot2::ggtitle("mean_purity")+
+    ggplot2::ggtitle(base::paste(dataset_curr, "mean_purity"))+
     ggplot2::ylim(c(0, 1))
 plot4
 ```
@@ -867,7 +872,7 @@ plot1 <- ggplot2::ggplot(
     ggplot2::geom_line()+
     ggplot2::theme_classic()+
     ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
-    ggplot2::ggtitle("adj_rand")+
+    ggplot2::ggtitle(base::paste(dataset_curr, "adj_rand"))+
     ggplot2::xlim(0, max(df_met$nr_recl))+
     ggplot2::ylim(0, 1)
 plot1
@@ -879,7 +884,7 @@ plot2 <- ggplot2::ggplot(
     ggplot2::geom_line()+
     ggplot2::theme_classic()+
     ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
-    ggplot2::ggtitle("fowlkes_mallows")+
+    ggplot2::ggtitle(base::paste(dataset_curr, "fowlkes_mallows"))+
     ggplot2::xlim(0, max(df_met$nr_recl))+
     ggplot2::ylim(0, 1)
 plot2
@@ -891,7 +896,7 @@ plot3 <- ggplot2::ggplot(
     ggplot2::geom_line()+
     ggplot2::theme_classic()+
     ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
-    ggplot2::ggtitle("variation_information")+
+    ggplot2::ggtitle(base::paste(dataset_curr, "variation_information"))+
     ggplot2::xlim(0, max(df_met$nr_recl))+
     ggplot2::ylim(0, max(df_met$value))
 plot3
@@ -905,7 +910,7 @@ plot1 <- ggplot2::ggplot(
     ggplot2::geom_line()+
     ggplot2::theme_classic()+
     ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
-    ggplot2::ggtitle("adj_rand")+
+    ggplot2::ggtitle(base::paste(dataset_curr, "adj_rand"))+
     ggplot2::ylim(0, 1)
 plot1
 
@@ -916,7 +921,7 @@ plot2 <- ggplot2::ggplot(
     ggplot2::geom_line()+
     ggplot2::theme_classic()+
     ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
-    ggplot2::ggtitle("fowlkes_mallows")+
+    ggplot2::ggtitle(base::paste(dataset_curr, "fowlkes_mallows"))+
     ggplot2::ylim(0, 1)
 plot2
 
@@ -927,7 +932,7 @@ plot3 <- ggplot2::ggplot(
     ggplot2::geom_line()+
     ggplot2::theme_classic()+
     ggplot2::scale_color_manual("conservation level", values = col_vec_cons)+
-    ggplot2::ggtitle("variation_information")+
+    ggplot2::ggtitle(base::paste(dataset_curr, "variation_information"))+
     ggplot2::ylim(0, max(df_met$value))
 plot3
 ```

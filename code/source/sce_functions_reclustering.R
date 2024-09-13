@@ -207,7 +207,7 @@ calculate_scores <- function(
   # remove cells that have an extremely low proportion of cells
   # if it's only ~ 1 - 10 cells per cluster that is not a major re-clustering 
   # issue but it deflates the mean proportions of cells per cluster a lot
-  mat_per_cluster[mat_per_cluster <= 0.005] <- NA
+  mat_per_cluster[mat_per_cluster <= 0] <- NA
   per_cluster_mean <- base::mean(mat_per_cluster, na.rm = TRUE)
   
   score_1 <- per_cluster_mean

@@ -20,6 +20,9 @@ axis_text_size <- 14
 axis_text_color <- "black"
 axis_text_size_small <- 10
 
+plot_title_face <- "plain"
+plot_title_size <- 16
+plot_title_color <- "black"
 
 #### OTHER THEME STUFF
 

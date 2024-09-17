@@ -33,7 +33,7 @@ library(tidyverse, quietly = TRUE)
 
 base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/04_rcls/"
 
-seu_list_all <- readRDS(paste0(base_path, "reclustered_nmr_sorted_hspc_list"))
+seu_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_li_all_stromal_list")
 
 
 colors_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt"
@@ -44,9 +44,11 @@ source("../../source/sce_functions_reclustering.R")
 
 resolution_df_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt"
 
+frame_df_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_frame.txt"
+
 dataset_curr <- "nmr_sorted_hspc"
 
-score_df_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/04_rcls/reclustered_nmr_sorted_hspc_list")
+score_df_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_li_all_stromal_list")
 
 for(i in 1:length(seu_list_all$seu_sign)){
   seu_list_all$seu_sign[[i]]@meta.data$cell_type <- seu_list_all$seu_sign[[i]]@meta.data$manually_annotated_ct
@@ -57,7 +59,6 @@ col_cts <- col_cts_hsc
 
 ```{r load_objects}
 seu_list_all <- base::readRDS(snakemake@input[["seu_list"]])
-
 score_df_list_all <- base::readRDS(snakemake@input[["score_df_list"]])
 
 dataset_curr <- snakemake@wildcards[["dataset"]]
@@ -71,7 +72,18 @@ resolution_df <- utils::read.csv(file = resolution_df_path,
                                as.is=TRUE, 
                                colClasses = "character")
 
+frame_df_path <- snakemake@input[["frame_df"]]
+frame_df <- utils::read.csv(
+  file = frame_df_path, 
+  header = TRUE, 
+  sep = ";", 
+  check.names=FALSE, 
+  stringsAsFactors=FALSE, 
+  as.is=TRUE, 
+  colClasses = "character")
+
 resolution_df <- resolution_df[resolution_df$dataset == dataset_curr,]
+frame_df <- frame_df[frame_df$dataset == dataset_curr,]
 ```
 
 ```{r subset_selected}
@@ -117,6 +129,18 @@ col_vec_cons <- c(
     "conserved_markers" = "darkgreen",
     "mmusall_markers" = "blue2",
     "random_features" = "purple2")
+
+col_vec1 <- c("mean_prop_cells_cluster" = "steelblue2",
+              "mean_cluster_purity" = "olivedrab4")
+col_vec2 <-  c("adjusted_rand_index" = "orchid",
+               "variation_information" = "orange")
+
+# will put into colors.txt once color choice if more finalized
+cols_per <- c("mean_ct_per_cluster" = "pink4",
+              "median_ct_per_cluster" = "pink1", 
+              "mean_cluster_per_ct" = "green1",
+              "median_cluster_per_ct" = "green4",
+              "nr_clusters" = "black")
 
 ```
 
@@ -217,6 +241,170 @@ vis_perc_long_gg <- function(seu, correction_vec_list = NULL, title_add= NULL){
 }
 ```
 
+```{r nr_clusters_function}
+
+vis_nr_cl_nr_cell <- function(seu_list, title){
+  
+  vis_df_list <- lapply(seu_list, function(seu){
+    
+    mat <- base::table(seu$cell_type, seu$seurat_clusters)
+    
+    # get the nr of cell types per cluster for each cluster
+    nr_ct_per_cluster_all <- vector()
+    for(cluster in colnames(mat)){
+      nr_ct_per_cluster <- length(which(mat[,cluster] !=0))
+      nr_ct_per_cluster_all <- c(nr_ct_per_cluster_all, nr_ct_per_cluster)
+    }
+  
+    # same for nr of clusters per cell type for each cell type
+    nr_clusters_per_ct_all <- vector()
+    for(ct in rownames(mat)){
+      nr_clusters_per_ct <- length(which(mat[ct,] !=0))
+      nr_clusters_per_ct_all <- c(nr_clusters_per_ct_all, nr_clusters_per_ct)
+    }
+  
+    vis_df <- base::data.frame(
+        "mean_ct_per_cluster" = base::mean(nr_ct_per_cluster_all),
+        "median_ct_per_cluster" = stats::median(nr_ct_per_cluster_all),
+        "mean_cluster_per_ct" = base::mean(nr_clusters_per_ct_all),
+        "median_cluster_per_ct" = stats::median(nr_clusters_per_ct_all),
+        "nr_clusters" = ncol(mat),
+        "resolution" = seu@misc$resolution,
+        "conservation_level" = seu@misc$used_genes
+    )
+    return(vis_df)
+  })
+  
+  vis_df_all <- dplyr::bind_rows(vis_df_list)
+  
+  frame_df_temp <- frame_df[
+    frame_df$conservation_level == seu_list[[1]]@misc$used_genes,]
+  frame_low <- as.numeric(frame_df_temp$frame_low)
+  frame_high <- as.numeric(frame_df_temp$frame_high)
+  
+  resolution_chosen <- as.numeric(
+    resolution_df$resolution[
+      resolution_df$conservation_level == seu_list[[1]]@misc$used_genes])
+  
+  # the nr of original cell types is always the same
+  vis_df_all$nr_celltypes <- base::rep(
+    length(base::unique(seu_list[[1]]$cell_type)), nrow(vis_df_all))
+  
+  # pivot_longer
+  vis_df_all <- pivot_longer(vis_df_all, 
+                             names_to = "type", 
+                             values_to = "value",
+                             cols = c("mean_ct_per_cluster",
+                                      "median_ct_per_cluster",
+                                      "mean_cluster_per_ct",
+                                      "median_cluster_per_ct",
+                                      "nr_clusters"))
+  
+  title <- base::paste(title, vis_df_all$conservation_level[1])
+  
+  plot1 <- ggplot2::ggplot(vis_df_all, 
+                           aes(x = resolution, y = value, color = type))+
+    ggplot2::geom_point(alpha = 0.7)+
+    ggplot2::scale_color_manual("", values = cols_per)+
+    ggplot2::geom_hline(yintercept = vis_df_all$nr_celltypes[1], 
+                        color = "grey60", 
+                        linetype = "dashed")+
+    ggplot2::geom_vline(xintercept = frame_low, 
+                        color = "grey60", 
+                        linetype = "dashed")+
+    ggplot2::geom_vline(xintercept = frame_high, 
+                        color = "grey60", 
+                        linetype = "dashed")+ 
+    ggplot2::geom_vline(xintercept = resolution_chosen, 
+                        color = "orange2", 
+                        linetype = "dashed")+ 
+    ggplot2::theme_classic()+
+    ggplot2::ylim(c(0, base::max(vis_df_all$nr_celltypes[1], 
+                                 vis_df_all$value)))+
+    ggplot2::ggtitle(title)
+  
+  return(plot1)
+}
+
+# run the function but visualize later
+plot_list_nr <- lapply(seu_list_all, vis_nr_cl_nr_cell, title = dataset_curr)
+```
+
+### Scores
+
+```{r score_vis_function}
+vis_clustering_scores <- function(score_df_list, title){
+  
+  score_df <- dplyr::bind_rows(score_df_list)
+  
+  cons_level <- score_df$conservation_level[1]
+  
+  title <- base::paste(title, score_df$conservation_level[1])
+
+  frame_df_temp <- frame_df[
+    frame_df$conservation_level == cons_level,]
+  frame_low <- as.numeric(frame_df_temp$frame_low)
+  frame_high <- as.numeric(frame_df_temp$frame_high)
+  
+  resolution_chosen <- as.numeric(
+    resolution_df$resolution[
+      resolution_df$conservation_level == cons_level])
+  
+  vis_df_1 <- score_df[score_df$type %in% c("mean_prop_cells_cluster",
+                                            "mean_cluster_purity"),]
+  
+  plot1 <- ggplot2::ggplot(vis_df_1, 
+                           aes(x = resolution, y = value, color = type))+
+    ggplot2::geom_point()+
+    ggplot2::theme_classic()+
+    ggplot2::geom_hline(yintercept = 0.5,
+                        color = "grey20",
+                        linetype = "dashed")+
+    ggplot2::geom_vline(xintercept = frame_low, 
+                        color = "grey60", 
+                        linetype = "dashed")+
+    ggplot2::geom_vline(xintercept = frame_high, 
+                        color = "grey60", 
+                        linetype = "dashed")+ 
+    ggplot2::geom_vline(xintercept = resolution_chosen, 
+                        color = "orange2", 
+                        linetype = "dashed")+ 
+    ggplot2::ylim(c(0, 1))+
+    ggplot2::ggtitle(title)+
+    ggplot2::scale_color_manual("score", values = col_vec1)
+  
+  vis_df_2 <- score_df[score_df$type %in% c("adjusted_rand_index",
+                                            "variation_information"),]
+
+  plot2 <- ggplot2::ggplot(vis_df_2, 
+                           aes(x = resolution, y = value, color = type))+
+    ggplot2::geom_point()+
+    ggplot2::theme_classic()+
+    ggplot2::geom_hline(yintercept = 0.5,
+                        color = "grey20",
+                        linetype = "dashed")+
+    ggplot2::geom_vline(xintercept = frame_low, 
+                        color = "grey60", 
+                        linetype = "dashed")+
+    ggplot2::geom_vline(xintercept = frame_high, 
+                        color = "grey60", 
+                        linetype = "dashed")+ 
+    ggplot2::geom_vline(xintercept = resolution_chosen, 
+                        color = "orange2", 
+                        linetype = "dashed")+ 
+    ggplot2::ylim(c(0, base::max(vis_df_2$value)))+
+    ggplot2::ggtitle(title)+
+    ggplot2::scale_color_manual("score", values = col_vec2)
+  
+  return(list(plot1, plot2))
+  
+}
+# run the function, visualize later
+plotlist_scores <- lapply(score_df_list_all, 
+                          vis_clustering_scores, 
+                          title = dataset_curr)
+```
+
 # Plot
 
 ## Scores
@@ -253,6 +441,14 @@ ggplot2::ggplot(score_df[score_df$type == "variation_information",],
   ggplot2::ylim(c(0, max(score_df$value[
     score_df$type == "variation_information"])))+
   ggplot2::ggtitle(title)
+```
+
+```{r print_nr_plot, fig.width = 7, fig.height = 3}
+plot_list_nr
+```
+
+```{r print_scores, fig.width = 7, fig.height = 3}
+plotlist_scores
 ```
 
 ## Heatmaps

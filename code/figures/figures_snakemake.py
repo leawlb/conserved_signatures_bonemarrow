@@ -80,7 +80,7 @@ Figure 1
 
 rule figure1:
   input:
-      # fully annotated SCE objects, one per fraction (02_/03_/)
+      # fully annotated SCE objects, one per fraction 
       sce_input_list = expand(BASE + "/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10", fraction = fractions),
       # list of genes (in sequence) for dotplots
       gene_list_dtplt = config["base"] + config["metadata_paths"]["gene_list_dotplot"]
@@ -97,19 +97,24 @@ rule figure1:
 """
 Figure 2
 """
-# list of genes (in sequence) for dotplots
-GENE_LIST_DOTPLOT = config["base"] + config["metadata_paths"]["gene_list_dotplot"]
 
+#TODO: construct conda environment containing all required packages
 rule figure2:
   input:
       # fully annotated SCE object (HSPCs)
       sce_hsc = BASE + "/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10",
       # fully annotated SCE object (HSPCs) with diffusion pseudotime
       sce_pt = BASE + "/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/04_psce/sce_hsc_pseudotime",
+      # fully annotated SCE object (HSPCs), erythroid branch cells only, with pseudotime and erythroid differentiation probability
+      sce_ery = BASE + "/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/05_bsce/sce_ery",
       # list of gene sets for HSPCs (conserved signature, conserved markers, etc.)
       geneset_list_hsc = BASE + "/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"
+      # conserved markers per cell type per age (markers_conservation_hsc)
+      cons_markers_hsc = BASE + "/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/03_marker_conservation/02_age/cons_markers_hsc.RData
   output:
       OUTPUT_REP + "/figure2.html"
+  # conda:
+  #     conda_env
   params:
       colors_path = COLORS,
       colors = "../source/colors.R"

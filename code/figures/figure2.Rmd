@@ -35,20 +35,25 @@ library(grDevices, quietly = TRUE) # this is not currently in conda envt
 
 # load data for manual use here
 
+# fully annotated SCE object (HSPCs)
 base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/"
 
 sce_hsc <- base::readRDS(base::paste0(
   base_path, 
   "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10"))
 
-#sce_hsc_all_pseudotime <- base::readRDS(base::paste0(
-#  base_path, 
-#  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/04_psce/sce_hsc_pseudotime"))
+# fully annotated SCE object (HSPCs) with diffusion pseudotime
+sce_hsc_all_pseudotime <- base::readRDS(base::paste0(
+ base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/04_psce/sce_hsc_pseudotime"))
+
+# fully annotated SCE object (HSPCs), erythroid branch cells only, with 
+# pseudotime and erythroid differentiation probability
 ery_pseudo <- base::readRDS(base::paste0(
   base_path, 
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/05_bsce/sce_ery"))
 
-# list of genesets (conserved signature and others)
+# list of gene sets for HSPCs (conserved signature, conserved markers, etc.)
 geneset_list_hsc <- base::readRDS(base::paste0(
   base_path, 
   "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"))
@@ -68,15 +73,23 @@ source("../source/colors.R")
 ```{r load_snakemake}
 
 # data during snakemake run is loaded here
-# @Veronica I can add all paths from you here
 
-# annotated SCE objects
+# fully annotated SCE object (HSPCs)
 sce_hsc <- base::readRDS(snakemake@input[["sce_hsc"]])
+
+# fully annotated SCE object (HSPCs) with diffusion pseudotime
 sce_hsc_all_pseudotime <- base::readRDS(snakemake@input[["sce_pt"]])
 
-# gene list
+# fully annotated SCE object (HSPCs), erythroid branch cells only, with 
+# pseudotime and erythroid differentiation probability
+ery_pseudo <- base::readRDS(snakemake@input[["sce_ery"]])
+
+# list of gene sets for HSPCs (conserved signature, conserved markers, etc.)
 geneset_list_hsc <- base::readRDS(snakemake@input[["geneset_list_hsc"]])
 
+# conserved markers per cell type per age (markers_conservation_hsc)
+base::load(snakemake@input[["cons_markers_hsc"]])
+  
 # colors
 colors_path <- snakemake@params[["colors_path"]]
 colors_source <- snakemake@params[["colors"]]

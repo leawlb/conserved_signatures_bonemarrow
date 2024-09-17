@@ -317,7 +317,7 @@ if RUN_PERM_GENESETS:
       script:
           "01_scripts_own/08_export_pval.R"
           
-                    
+  # TODO: think about necessity of this step.                  
   # compare mmusall_markers (all BL6 markers) to conserved markers + random
   rule mmms_vs_markrand:
       input:
@@ -374,7 +374,6 @@ if RUN_OWN_SIGN_PERM:
       script: 
           "01_permutation_own_background_report.Rmd"
 
-  
   # compare conserved signature to random background
   rule sign_vs_rand:
       input:

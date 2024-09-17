@@ -10,6 +10,7 @@ OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/03_sce_analysis/04_signatures/02_reclus
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/04_signatures/02_reclustering_other"
 
 RESOLUTION_OTHER = config["base"] + config["metadata_paths"]["resolution_other"]
+FRAME_OTHER = config["base"] + config["metadata_paths"]["frame_other"]
 
 RUN_PERM_GENESETS = config["run_permutation_genesets"]
 RUN_PERM_BACKGROUND_SIGN = config["run_permutation_background_sign"]
@@ -38,12 +39,12 @@ targets = []
      
 for d in datasets_other:
   targets = targets + [OUTPUT_DAT + "/03_recl/reclustered_" + d + "_list"]
-  targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_" + d + "_list"]
-  targets = targets + [OUTPUT_REP + "/all/reclustering_other_report_" + d + ".html"]
-  targets = targets + [OUTPUT_REP + "/final/reclustering_other_final_report_" + d + ".html"]
+  # targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_" + d + "_list"]
+  # targets = targets + [OUTPUT_REP + "/all/reclustering_other_report_" + d + ".html"]
+  # targets = targets + [OUTPUT_REP + "/final/reclustering_other_final_report_" + d + ".html"]
  
-  # testing reclustering scores
-  # targets = targets + [OUTPUT_REP + "/test_scores/test_reclustering_scores_" + d + ".html"]
+  #testing reclustering scores
+  #targets = targets + [OUTPUT_REP + "/test_scores/test_reclustering_scores_" + d + ".html"]
 
   # permutation
   if RUN_PERM_GENESETS:
@@ -54,11 +55,11 @@ for d in datasets_other:
 
   if RUN_PERM_BACKGROUND_SIGN:
     targets = targets + [OUTPUT_DAT + "/06_psig/perm_score_df_" + d]
-    targets = targets + [OUTPUT_REP + "/conserved_signature/perm_conserved_signature_" + d + ".html"]
+    #targets = targets + [OUTPUT_REP + "/conserved_signature/perm_conserved_signature_" + d + ".html"]
 
   if RUN_PERM_BACKGROUND_MARK:
     targets = targets + [OUTPUT_DAT + "/07_pmrk/perm_score_df_" + d]
-    targets = targets + [OUTPUT_REP + "/conserved_markers/perm_conserved_markers_" + d + ".html"]
+    #targets = targets + [OUTPUT_REP + "/conserved_markers/perm_conserved_markers_" + d + ".html"]
 
 
 #-------------------------------------------------------------------------------
@@ -134,7 +135,7 @@ rule reclustering_other:
 #
 # - adjusted rand index
 # - variation of information
-# - mean proportion of cells of a cell type per cluster 
+# - mean proportion of cells of a cell type per cluster (top 10% ranked)
 #
 # We use different scores because some of these scores increase or
 # decrease with a higher clustering resolution/nr of clusters and we aim to 
@@ -221,8 +222,8 @@ if RUN_PERM_GENESETS:
           ensembl_mmms = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_mmms_{fraction}", fraction = fractions)
       params:
           reclustering_functions = "../../source/sce_functions_reclustering.R",
-          iterations = 20,
-          nr_cores = 20,
+          iterations = 100,
+          nr_cores = 4,
           resolution_df = RESOLUTION_OTHER,
           #nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
           #iterations = config["values"]["03_sce_analysis"]["iterations"],
@@ -257,6 +258,48 @@ if RUN_PERM_GENESETS:
           OUTPUT_REP + "/genesets/perm_genesets_{dataset}.html"
       script: 
           "02_permutation_other_genesets_report.Rmd"
+        
+  # export pvals: compare conserved markers to conserved signature + random
+  rule mark_vs_signrand:
+      input:
+          orig_score_df_list_input = rules.reclustering_other_scores.output.score_df_list,
+          perm_score_df_input = rules.permutation_genesets.output.perm_score_df_mark
+      params:
+          resolution_df = RESOLUTION_OTHER,
+          cons_level_use = "conserved_markers",
+          comparison = "mark-vs-signrand"
+      output:
+          pval_score_df_output = OUTPUT_DAT + "/08_expp/mark-vs-signrand_{dataset}"
+      script:
+          "02_scripts_other/08_export_pval.R"  
+
+  # export pvals: compare mmusall_markers (all BL6 markers) to conserved signature + random
+  rule mmms_vs_signrand:
+      input:
+          orig_score_df_list_input = rules.reclustering_other_scores.output.score_df_list,
+          perm_score_df_input = rules.permutation_genesets.output.perm_score_df_mmms
+      params:
+          resolution_df = RESOLUTION_OTHER,
+          cons_level_use = "mmusall_markers",
+          comparison = "mmms-vs-signrand"
+      output:
+          pval_score_df_output = OUTPUT_DAT + "/08_expp/mmms-vs-signrand_{dataset}"
+      script:
+          "02_scripts_other/08_export_pval.R" 
+
+  # export pvals: compare mmusall_markers (all BL6 markers) to conserved markers + random
+  rule mmms_vs_markrand:
+      input:
+          orig_score_df_list_input = rules.reclustering_other_scores.output.score_df_list,
+          perm_score_df_input = rules.permutation_genesets.output.perm_score_df_mmms_mark
+      params:
+          resolution_df = RESOLUTION_OTHER,
+          cons_level_use = "mmusall_markers",
+          comparison = "mmms-vs-markrand"
+      output:
+          pval_score_df_output = OUTPUT_DAT + "/08_expp/mmms-vs-markrand_{dataset}"
+      script:
+          "02_scripts_other/08_export_pval.R" 
           
 #-------------------------------------------------------------------------------
 
@@ -269,11 +312,11 @@ if RUN_PERM_BACKGROUND_SIGN:
           ensembl_paths = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_sign_{fraction}", fraction = fractions)
       params:
           reclustering_functions = "../../source/sce_functions_reclustering.R",
-          iterations = 20,
+          iterations = 100,
           resolution_df = RESOLUTION_OTHER,
           #nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
           #iterations = config["values"]["03_sce_analysis"]["iterations"],
-          nr_cores = 20,
+          nr_cores = 4,
           cut_off_prop = config["values"]["03_sce_analysis"]["reclustering_cutoff_prop"],
           cons_level_use = "conserved_signature",
           datasets_other_hsc = datasets_other_hsc,
@@ -285,7 +328,20 @@ if RUN_PERM_BACKGROUND_SIGN:
       script: 
           "02_scripts_other/06_permutation_background.R"
 
-
+  # export pvals: compare conserved signature to random background
+  rule sign_vs_rand:
+      input:
+          orig_score_df_list_input = rules.reclustering_other_scores.output.score_df_list,
+          perm_score_df_input = rules.permutation_other_background_sign.output.perm_score_df
+      params:
+          resolution_df = RESOLUTION_OTHER,
+          cons_level_use = "conserved_signature",
+          comparison = "sign-vs-rand"
+      output:
+          pval_score_df_output = OUTPUT_DAT + "/08_expp/sign-vs-rand_{dataset}"
+      script:
+          "02_scripts_other/08_export_pval.R"
+          
   # visualise reclustering permutation
   rule permutation_background_report_sign:
       input:
@@ -311,11 +367,11 @@ if RUN_PERM_BACKGROUND_MARK:
           ensembl_paths = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_mark_{fraction}", fraction = fractions)
       params:
           reclustering_functions = "../../source/sce_functions_reclustering.R",
-          iterations = 20,
+          iterations = 100,
           resolution_df = RESOLUTION_OTHER,
           #nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
           #iterations = config["values"]["03_sce_analysis"]["nr_cores"],
-          nr_cores = 20,
+          nr_cores = 4,
           cut_off_prop = config["values"]["03_sce_analysis"]["reclustering_cutoff_prop"],
           cons_level_use = "conserved_markers",
           datasets_other_hsc = datasets_other_hsc,
@@ -327,6 +383,20 @@ if RUN_PERM_BACKGROUND_MARK:
       script: 
           "02_scripts_other/06_permutation_background.R"
 
+  # export pvals: compare conserved markers to random background
+  rule mark_vs_rand:
+      input:
+          orig_score_df_list_input = rules.reclustering_other_scores.output.score_df_list,
+          perm_score_df_input = rules.permutation_other_background_sign.output.perm_score_df
+      params:
+          resolution_df = RESOLUTION_OTHER,
+          cons_level_use = "conserved_markers",
+          comparison = "mark-vs-rand"
+      output:
+          pval_score_df_output = OUTPUT_DAT + "/08_expp/mark-vs-rand_{dataset}"
+      script:
+          "02_scripts_other/08_export_pval.R"
+          
   # visualise reclustering permutation
   rule permutation_background_report_mark:
       input:
@@ -362,7 +432,8 @@ rule reclustering_other_report_final:
     input:
         seu_list = rules.reclustering_other.output,
         score_df_list = rules.reclustering_other_scores.output,
-        resolution_df = RESOLUTION_OTHER
+        resolution_df = RESOLUTION_OTHER,
+        frame_df = FRAME_OTHER
     output:
         OUTPUT_REP + "/final/reclustering_other_final_report_{dataset}.html"
     script: 

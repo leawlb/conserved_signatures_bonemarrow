@@ -217,10 +217,16 @@ color_hline_background <- "grey97"
 ```
 
 ```{r export_paths}
-output_pdf_a_plot <- base::paste0(base_path, "/manuscript1/figures/figure3_a.pdf")
-output_pdf_a_legend <- base::paste0(base_path, "/manuscript1/figures/figure3_a_legend.pdf")
-output_pdf_b_plot <- base::paste0(base_path, "/manuscript1/figures/figure3_b.pdf")
-output_pdf_b_legend <- base::paste0(base_path, "/manuscript1/figures/figure3_b_legend.pdf")
+output_pdf_a_plot <- base::paste0(
+  base_path, "/manuscript1/figures/figure3_a.pdf")
+output_pdf_a_legend <- base::paste0(
+  base_path, "/manuscript1/figures/figure3_a_legend.pdf")
+output_pdf_b_plot <- base::paste0(
+  base_path, "/manuscript1/figures/figure3_b.pdf")
+output_pdf_b_legend <- base::paste0(
+  base_path, "/manuscript1/figures/figure3_b_legend.pdf")
+output_pdf_c_plot <- base::paste0(
+  base_path, "/manuscript1/figures/figure3_c.pdf")
 ```
 
 # A
@@ -464,31 +470,43 @@ signature + conserved markers + random_bl6_markers).
 Separate score DFs per conservation level and type of score.
 
 ```{r b_prep1}
-score_df_sign <- score_df_hsc[score_df_hsc$conservation_level == "conserved_signature",]
+score_df_sign <- score_df_hsc[
+  score_df_hsc$conservation_level == "conserved_signature",]
 # add nicer looking conservation level annotation
 score_df_sign$conservation_level_long <- "conserved identity signature"
 
-score_df_sign_score_1 <- score_df_sign[score_df_sign$type == "adjusted_rand_index",]
-score_df_sign_score_2 <- score_df_sign[score_df_sign$type == "variation_information",]
-score_df_sign_score_3 <- score_df_sign[score_df_sign$type == "mean_prop_cells_cluster",]
+score_df_sign_score_1 <- score_df_sign[
+  score_df_sign$type == "adjusted_rand_index",]
+score_df_sign_score_2 <- score_df_sign[
+  score_df_sign$type == "variation_information",]
+score_df_sign_score_3 <- score_df_sign[
+  score_df_sign$type == "mean_prop_cells_cluster",]
 ```
 
 ```{r b_prep2}
-score_df_mark <- score_df_hsc[score_df_hsc$conservation_level == "conserved_markers",]
+score_df_mark <- score_df_hsc[
+  score_df_hsc$conservation_level == "conserved_markers",]
 score_df_mark$conservation_level_long <- "conserved markers"
 
-score_df_mark_score_1 <- score_df_mark[score_df_mark$type == "adjusted_rand_index",]
-score_df_mark_score_2 <- score_df_mark[score_df_mark$type == "variation_information",]
-score_df_mark_score_3 <- score_df_mark[score_df_mark$type == "mean_prop_cells_cluster",]
+score_df_mark_score_1 <- score_df_mark[
+  score_df_mark$type == "adjusted_rand_index",]
+score_df_mark_score_2 <- score_df_mark[
+  score_df_mark$type == "variation_information",]
+score_df_mark_score_3 <- score_df_mark[
+  score_df_mark$type == "mean_prop_cells_cluster",]
 ```
 
 ```{r b_prep3}
-score_df_mmms <- score_df_hsc[score_df_hsc$conservation_level == "mmusall_markers",]
+score_df_mmms <- score_df_hsc[
+  score_df_hsc$conservation_level == "mmusall_markers",]
 score_df_mmms$conservation_level_long <- "total BL6 markers"
 
-score_df_mmms_score_1 <- score_df_mmms[score_df_mmms$type == "adjusted_rand_index",]
-score_df_mmms_score_2 <- score_df_mmms[score_df_mmms$type == "variation_information",]
-score_df_mmms_score_3 <- score_df_mmms[score_df_mmms$type == "mean_prop_cells_cluster",]
+score_df_mmms_score_1 <- score_df_mmms[
+  score_df_mmms$type == "adjusted_rand_index",]
+score_df_mmms_score_2 <- score_df_mmms[
+  score_df_mmms$type == "variation_information",]
+score_df_mmms_score_3 <- score_df_mmms[
+  score_df_mmms$type == "mean_prop_cells_cluster",]
 ```
 
 Also separate the permutation score dfs by conservation level and type of score.
@@ -503,9 +521,12 @@ psdf_mark_signrand_long <- pivot_longer(
 psdf_mark_signrand_long$conservation_level_long = base::rep(
   "conserved markers", nrow(psdf_mark_signrand_long))
 
-psdf_mark_signrand_score_1 <- psdf_mark_signrand_long[psdf_mark_signrand_long$type %in% c("adjusted_rand_index"),]
-psdf_mark_signrand_score_2 <- psdf_mark_signrand_long[psdf_mark_signrand_long$type %in% c("variation_information"),]
-psdf_mark_signrand_score_3 <- psdf_mark_signrand_long[psdf_mark_signrand_long$type %in% c("mean_prop_cells_cluster"),]
+psdf_mark_signrand_score_1 <- psdf_mark_signrand_long[
+  psdf_mark_signrand_long$type %in% c("adjusted_rand_index"),]
+psdf_mark_signrand_score_2 <- psdf_mark_signrand_long[
+  psdf_mark_signrand_long$type %in% c("variation_information"),]
+psdf_mark_signrand_score_3 <- psdf_mark_signrand_long[
+  psdf_mark_signrand_long$type %in% c("mean_prop_cells_cluster"),]
 ```
 
 ```{r b_prep5}
@@ -518,19 +539,28 @@ psdf_mmms_signrand_long <- pivot_longer(
 psdf_mmms_signrand_long$conservation_level_long = base::rep(
   "total BL6 markers", nrow(psdf_mmms_signrand_long))
 
-psdf_mmms_signrand_score_1 <- psdf_mmms_signrand_long[psdf_mmms_signrand_long$type %in% c("adjusted_rand_index"),]
-psdf_mmms_signrand_score_2 <- psdf_mmms_signrand_long[psdf_mmms_signrand_long$type %in% c("variation_information"),]
-psdf_mmms_signrand_score_3 <- psdf_mmms_signrand_long[psdf_mmms_signrand_long$type %in% c("mean_prop_cells_cluster"),]
+psdf_mmms_signrand_score_1 <- psdf_mmms_signrand_long[
+  psdf_mmms_signrand_long$type %in% c("adjusted_rand_index"),]
+psdf_mmms_signrand_score_2 <- psdf_mmms_signrand_long[
+  psdf_mmms_signrand_long$type %in% c("variation_information"),]
+psdf_mmms_signrand_score_3 <- psdf_mmms_signrand_long[
+  psdf_mmms_signrand_long$type %in% c("mean_prop_cells_cluster"),]
 ```
 
 get the maximum number of variation of information scores for plot limits
 
 ```{r max_vi}
 max_vi <- base::max(c(
+  
+  # actual scores
   score_df_hsc$value[score_df_hsc$type == "variation_information"],
+  
+  # permuted background scores for conserved signature
   psdf_hsc_sign_rand$variation_information,
+  
+  # pemruted gene set scores
   psdf_hsc_mmms_signrand$variation_information,
-  psdf_hsc_mark_signrand$variation_information))
+  psdf_hsc_mark_signrand$variation_information)) + 0.5
 ```
 
 ##### box plots
@@ -589,18 +619,6 @@ vis_df_mark$type_y <- factor(vis_df_mark$type_y, levels = base::rev(c(
   "conserved markers",
   "permutation gene set"
 )))
-
-# for legend 
-vis_df_mark_legend <- vis_df_mark
-vis_df_mark_legend$type_fill <- factor(vis_df_mark_legend$type_fill, levels = c(
-  "conserved identity signature",
-  "conserved markers",
-  "random genes"
-))
-vis_df_mark_legend$type_y <- factor(vis_df_mark_legend$type_y, levels = c(
-  "conserved markers",
-  "permutation gene set"
-))
 ```
 
 ```{r b_prep9}
@@ -631,18 +649,6 @@ vis_df_mmms$type_y <- factor(vis_df_mmms$type_y, levels = base::rev(c(
   "total BL6 markers",
   "permutation gene set"
 )))
-
-vis_df_mmms_legend <- vis_df_mmms
-vis_df_mmms_legend$type_fill <- factor(vis_df_mmms_legend$type_fill, levels = c(
-  "conserved identity signature",
-  "total BL6 markers",
-  "random genes"
-))
-vis_df_mmms_legend$type_y <- factor(vis_df_mmms_legend$type_y, levels = c(
-  "total BL6 markers",
-  "permutation gene set"
-))
-
 ```
 
 #### Plot Components
@@ -903,8 +909,9 @@ b_theme_plot_mleft1 <- b_base_plot_mleft1+
       color = plot_title_color, 
       hjust = 0.5))+
   ggplot2::scale_x_continuous(
-    position = "top", 
-    limits = c(0, max_vi))+
+    position = "top",
+    limit = c(0, max_vi),
+    breaks=c(0, 1, 2, 3, 4, 5))+
   ggplot2::ggtitle("Variation of information")
 ```
 
@@ -972,10 +979,11 @@ b_theme_plot_mleft2 <- b_base_plot_mleft2+
     axis.line.x = element_blank(),
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
-  ggplot2::scale_y_continuous(
-    limits = c(0, max_vi))+
   ggplot2::scale_x_discrete(
-    expand = expansion(add = c(-0.8, -0.1)))
+    expand = expansion(add = c(-0.8, -0.1)))+
+  ggplot2::scale_y_continuous(
+   limit = c(0, max_vi),
+   breaks=c(0, 1, 2, 3, 4, 5))
 ```
 
 ```{r b_base_plot_mleft3}
@@ -1045,7 +1053,10 @@ b_theme_plot_mleft3 <- b_base_plot_mleft3+
   ggplot2::scale_y_continuous(
     limits = c(0, max_vi))+
   ggplot2::scale_x_discrete(
-    expand = expansion(add = c(-0.8, -0.1)))
+    expand = expansion(add = c(-0.8, -0.1)))+
+ ggplot2::scale_y_continuous(
+   limit = c(0, max_vi),
+   breaks=c(0, 1, 2, 3, 4, 5))
 ```
 
 ```{r b_construct_mleft, fig.height = 2.8, fig.width = 2.8}
@@ -1467,7 +1478,8 @@ dev.off()
 
 #### Prep
 
-Can use many of the dfs generated for B
+Can re-use conserved signature DFs generated for part B.
+Make DFs for conserved signature permuted scores.
 
 ```{r c_prep1}
 psdf_sign_rand_long <- pivot_longer(
@@ -1476,22 +1488,20 @@ psdf_sign_rand_long <- pivot_longer(
   values_to = "value",
   names_to = "type")
 
+psdf_sign_rand_long$conservation_level_long <- base::rep(
+  "conserved identity signature", nrow(psdf_sign_rand_long))
+
 psdf_sign_rand_score_1 <- psdf_sign_rand_long[psdf_sign_rand_long$type %in% 
                                                c("adjusted_rand_index"),]
 psdf_sign_rand_score_2 <- psdf_sign_rand_long[psdf_sign_rand_long$type %in% 
                                                c("variation_information"),]
 psdf_sign_rand_score_3 <- psdf_sign_rand_long[psdf_sign_rand_long$type %in% 
                                                c("mean_prop_cells_cluster"),]
-
-psdf_sign_rand_score_1$conservation_level <- base::rep(
-  "conserved identity signature", nrow(psdf_sign_rand_score_1))
-psdf_sign_rand_score_2$conservation_level <- base::rep(
-  "conserved identity signature", nrow(psdf_sign_rand_score_2))
-psdf_sign_rand_score_3$conservation_level <- base::rep(
-  "conserved identity signature", nrow(psdf_sign_rand_score_3))
 ```
 
-```{r c_prep1}
+Make DF with gene numbers also for conserved signature background permutation.
+
+```{r c_prep2}
 vis_df_sign_rand <- base::data.frame(
   type_y = c(
     "conserved identity signature",
@@ -1503,47 +1513,39 @@ vis_df_sign_rand <- base::data.frame(
     nr_sign_used,
     nr_sign_used))
 
-vis_df_sign_rand$type_fill <- factor(vis_df_sign_rand$type_fill,
-                                     levels = base::rev(c(
-  "conserved identity signature",
-  "random genes"
-)))
-vis_df_sign_rand$type_y <- factor(vis_df_sign_rand$type_y, levels = base::rev(c(
-  "conserved identity signature",
-  "permutation gene set"
-)))
+vis_df_sign_rand$type_fill <- factor(
+  vis_df_sign_rand$type_fill,
+  levels = base::rev(c(
+    "conserved identity signature",
+    "random genes")))
 
-vis_df_sign_rand_legend <- vis_df_sign_rand
-vis_df_sign_rand_legend$type_fill <- factor(vis_df_sign_rand_legend$type_fill,
-                                            levels = c(
-  "conserved identity signature",
-  "random genes"
-))
-vis_df_sign_rand_legend$type_y <- factor(vis_df_sign_rand_legend$type_y,
-                                         levels = c(
-  "conserved identity signature",
-  "permutation gene set"
-))
+vis_df_sign_rand$type_y <- factor(
+  vis_df_sign_rand$type_y, 
+  levels = base::rev(c(
+    "conserved identity signature",
+    "permutation gene set")))
 ```
 
-#### part left, (rand index) 
+##### part left: adjusted rand index
 
 ```{r c_base_plot_left}
 c_base_plot_left <- ggplot2::ggplot(
   score_df_sign_score_1,
-  aes(x = conservation_level,
+  aes(x = conservation_level_long,
       y = value,
-      fill = conservation_level,
-      color = conservation_level))+
-  ggplot2::geom_hline(yintercept = 0.25,
-                      color = "grey95",
-                      linewidth = 3)+
-  ggplot2::geom_hline(yintercept = 0.75,
-                      color = "grey95",
-                      linewidth = 3)+
+      fill = conservation_level_long,
+      color = conservation_level_long))+
+  ggplot2::geom_hline(
+    yintercept = 0.25,
+    color = color_hline_background,
+    linewidth = 3)+
+  ggplot2::geom_hline(
+    yintercept = 0.75,
+    color = color_hline_background,
+    linewidth = 3)+
   ggplot2::geom_point(
     size = point_plot_size,
-    position = position_nudge(x = 0.25, y = 0))+
+    position = position_nudge(x = 0.5, y = 0))+
   gghalves::geom_half_violin(
     data = psdf_sign_rand_score_1,
     color = col_cons_long["conserved identity signature"],
@@ -1551,21 +1553,20 @@ c_base_plot_left <- ggplot2::ggplot(
     side = "r",
     scale = "width",
     position = position_nudge(x = -0.5, y = 0))+
-  geom_violin_pattern(
+  ggpattern::geom_violin_pattern(
     pattern = "circle",
     inherit.aes = FALSE,
     scale = "width",
     trim = FALSE,
     position = position_nudge(x = -0.5, y = 0),
     data = psdf_sign_rand_score_1,
-    mapping = aes(y = value, x = conservation_level),
+    mapping = aes(y = value, x = conservation_level_long),
     color = NA, 
     alpha = 0,
     pattern_fill = pattern_fill_color,
     pattern_colour = pattern_line_colour,
     pattern_density =pattern_density_val,
-    pattern_spacing = pattern_spacing_val,
-    pattern_key_scale_factor = pattern_key_scale_factor_val)+
+    pattern_spacing = pattern_spacing_val)+
   gghalves::geom_half_violin(
     data = psdf_sign_rand_score_1,
     color = col_cons_long["conserved identity signature"],
@@ -1595,36 +1596,39 @@ c_theme_plot_left <- c_base_plot_left+
       face = axis_text_face,
       color = axis_text_color,
       size = axis_text_size),
-    axis.title.y = element_blank(),
-    axis.title.x = element_blank(),
+    axis.title = element_blank(),
     plot.title = element_text(
       size = plot_title_size,
       face = plot_title_face,
       color = plot_title_color,
       hjust = 0.5))+
-  ggplot2::scale_y_continuous(position = "right", limits = c(0,1))+# because flipped
-  ggplot2::scale_x_discrete(expand = expansion(add = c(-1)))+
+  ggplot2::scale_y_continuous(
+    position = "right", limits = c(0,1))+ # because flipped
+  ggplot2::scale_x_discrete(
+    expand = expansion(add = c(-0.9)))+
   ggplot2::ggtitle("Adjusted rand index")
 ```
 
-#### part middle, (variation information) 
+##### part left middle: variation information
 
-```{r c_base_plot_middle}
-c_base_plot_middle <- ggplot2::ggplot(
+```{r c_base_plot_mleft}
+c_base_plot_mleft <- ggplot2::ggplot(
   score_df_sign_score_2,
-  aes(x = conservation_level,
+  aes(x = conservation_level_long,
       y = value,
-      fill = conservation_level,
-      color = conservation_level))+
-  ggplot2::geom_hline(yintercept = 1.5,
-                      color = "grey95",
-                      linewidth = 3)+
-  ggplot2::geom_hline(yintercept = 4.5,
-                      color = "grey95",
-                      linewidth = 3)+
+      fill = conservation_level_long,
+      color = conservation_level_long))+
+  ggplot2::geom_hline(
+    yintercept = 1.5,
+    color = color_hline_background,
+    linewidth = 3)+
+  ggplot2::geom_hline(
+    yintercept = 4.5,
+    color = color_hline_background,
+    linewidth = 3)+
   ggplot2::geom_point(
     size = point_plot_size,
-    position = position_nudge(x = 0.25, y = 0))+
+    position = position_nudge(x = 0.5, y = 0))+
   gghalves::geom_half_violin(
     data = psdf_sign_rand_score_2,
     color = col_cons_long["conserved identity signature"],
@@ -1632,21 +1636,20 @@ c_base_plot_middle <- ggplot2::ggplot(
     side = "r",
     scale = "width",
     position = position_nudge(x = -0.5, y = 0))+
-  geom_violin_pattern(
+  ggpattern::geom_violin_pattern(
     pattern = "circle",
     inherit.aes = FALSE,
     scale = "width",
     trim = FALSE,
     position = position_nudge(x = -0.5, y = 0),
     data = psdf_sign_rand_score_2,
-    mapping = aes(y = value, x = conservation_level),
+    mapping = aes(y = value, x = conservation_level_long),
     color = NA, 
     alpha = 0,
     pattern_fill = pattern_fill_color,
     pattern_colour = pattern_line_colour,
     pattern_density =pattern_density_val,
-    pattern_spacing = pattern_spacing_val,
-    pattern_key_scale_factor = pattern_key_scale_factor_val)+
+    pattern_spacing = pattern_spacing_val)+
   gghalves::geom_half_violin(
     data = psdf_sign_rand_score_2,
     color = col_cons_long["conserved identity signature"],
@@ -1657,8 +1660,8 @@ c_base_plot_middle <- ggplot2::ggplot(
   ggplot2::coord_flip()
 ```
 
-```{r c_theme_plot_middle}
-c_theme_plot_middle <- c_base_plot_middle+
+```{r c_theme_plot_mleft}
+c_theme_plot_mleft <- c_base_plot_mleft+
   ggplot2::theme_classic()+
   ggplot2::scale_color_manual(
     "Score",
@@ -1680,29 +1683,35 @@ c_theme_plot_middle <- c_base_plot_middle+
       face = plot_title_face,
       color = plot_title_color,
       hjust = 0.5))+
-  ggplot2::scale_y_continuous(position = "right", limits = c(0,max_vi))+# because flipped
-  ggplot2::scale_x_discrete(expand = expansion(add = c(-1)))+
+  ggplot2::scale_y_continuous(
+    position = "right", 
+    breaks=c(0, 1, 2, 3, 4, 5),
+    limits = c(0, max_vi))+
+  ggplot2::scale_x_discrete(
+    expand = expansion(add = c(-0.9)))+
   ggplot2::ggtitle("Variation of information")
 ```
 
-#### part right, (prop cells/cluster) 
+#### part middle right: prop cells/cluster
 
-```{r c_base_plot_right}
-c_base_plot_right <- ggplot2::ggplot(
+```{r c_base_plot_mright}
+c_base_plot_mright <- ggplot2::ggplot(
   score_df_sign_score_3,
-  aes(x = conservation_level,
+  aes(x = conservation_level_long,
       y = value,
-      fill = conservation_level,
-      color = conservation_level))+
-  ggplot2::geom_hline(yintercept = 0.25,
-                      color = "grey95",
-                      linewidth = 3)+
-  ggplot2::geom_hline(yintercept = 0.75,
-                      color = "grey95",
-                      linewidth = 3)+
+      fill = conservation_level_long,
+      color = conservation_level_long))+
+  ggplot2::geom_hline(
+    yintercept = 0.25,
+    color = color_hline_background,
+    linewidth = 3)+
+  ggplot2::geom_hline(
+    yintercept = 0.75,
+    color = color_hline_background,
+    linewidth = 3)+
   ggplot2::geom_point(
     size = point_plot_size,
-    position = position_nudge(x = 0.25, y = 0))+
+    position = position_nudge(x = 0.5, y = 0))+
   gghalves::geom_half_violin(
     data = psdf_sign_rand_score_3,
     color = col_cons_long["conserved identity signature"],
@@ -1717,14 +1726,13 @@ c_base_plot_right <- ggplot2::ggplot(
     trim = FALSE,
     position = position_nudge(x = -0.5, y = 0),
     data = psdf_sign_rand_score_3,
-    mapping = aes(y = value, x = conservation_level),
+    mapping = aes(y = value, x = conservation_level_long),
     color = NA, 
     alpha = 0,
     pattern_fill = pattern_fill_color,
     pattern_colour = pattern_line_colour,
     pattern_density =pattern_density_val,
-    pattern_spacing = pattern_spacing_val,
-    pattern_key_scale_factor = pattern_key_scale_factor_val)+
+    pattern_spacing = pattern_spacing_val)+
   gghalves::geom_half_violin(
     data = psdf_sign_rand_score_3,
     color = col_cons_long["conserved identity signature"],
@@ -1735,8 +1743,8 @@ c_base_plot_right <- ggplot2::ggplot(
   ggplot2::coord_flip()
 ```
 
-```{r c_theme_plot_right}
-c_theme_plot_right <- c_base_plot_right+
+```{r c_theme_plot_mright}
+c_theme_plot_mright <- c_base_plot_mright+
   ggplot2::theme_classic()+
   ggplot2::scale_color_manual(
     "Score",
@@ -1751,28 +1759,32 @@ c_theme_plot_right <- c_base_plot_right+
       face = axis_text_face,
       color = axis_text_color,
       size = axis_text_size),
-    axis.title.y = element_blank(),
-    axis.title.x = element_blank(),
+    axis.title = element_blank(),
     plot.title = element_text(
       size = plot_title_size,
       face = plot_title_face,
       color = plot_title_color,
       hjust = 0.5))+
-  ggplot2::scale_y_continuous(position = "right", 
-                              limits = c(0, 1))+ # because flipped
-  ggplot2::scale_x_discrete(expand = expansion(add = c(-1)))+
+  ggplot2::scale_y_continuous(
+    position = "right", 
+    limits = c(0, 1))+ 
+  ggplot2::scale_x_discrete(
+    expand = expansion(add = c(-1)))+
   ggplot2::ggtitle("Mean prop. cells/cluster")
 ```
 
-#### part col
+#### part right: barplots
 
-```{r c_base_plot_col}
-c_base_plot_col <- ggplot2::ggplot(
+```{r c_base_plot_right}
+c_base_plot_right <- ggplot2::ggplot(
   vis_df_sign_rand,
-  aes(y = type_y, x = number, fill = type_fill))+
+  aes(y = type_y, 
+        x = number, 
+      fill = type_fill))+
   ggplot2::geom_col(position = position_stack())+
   ggpattern::geom_bar_pattern(
-    data = data.frame("type_y" = base::rep("permutation gene set", nr_sign_used)),
+    data = base::data.frame(
+      "type_y" = base::rep("permutation gene set", nr_sign_used)),
     inherit.aes = FALSE,
     mapping = aes(y = type_y),
     position = position_dodge(preserve = "single"),
@@ -1782,21 +1794,20 @@ c_base_plot_col <- ggplot2::ggplot(
     pattern_fill = pattern_fill_color,
     pattern_colour = pattern_line_colour,
     pattern_density =pattern_density_val,
-    pattern_spacing = pattern_spacing_val,
-    pattern_key_scale_factor = pattern_key_scale_factor_val)
+    pattern_spacing = pattern_spacing_val)
 ```
 
-```{r c_theme_plot_col}
-c_theme_plot_col <- c_base_plot_col+
+```{r c_theme_plot_right}
+c_theme_plot_right <- c_base_plot_right+
   ggplot2::theme_classic()+
   ggplot2::theme(
     axis.title.y = element_blank(),
     axis.text.y = element_blank(),
     legend.position = "none",
     axis.text.x = element_text(
-      size = axis_title_size,
-      face = axis_title_face,
-      color = axis_title_color,
+      size = axis_text_size,
+      face = axis_text_face,
+      color = axis_text_color,
       hjust = 0.5),
     axis.title.x = element_blank(),
     plot.title = element_text(
@@ -1807,24 +1818,23 @@ c_theme_plot_col <- c_base_plot_col+
   ggplot2::scale_x_continuous(
     limits = c(0, max_genes),
     position = "top")+
-  ggplot2::xlab("Number of genes")+
-  ggplot2::scale_fill_manual( values = col_cons_long)+
-  ggplot2::ggtitle("Number of genes")
+  ggplot2::scale_fill_manual(values = col_cons_long)+
+  ggplot2::ggtitle("# re-clustering genes")
 ```
 
 #### Assemble
 
-```{r c_assemble_plot, fig.width = 13, fig.height = 2}
+```{r c_assemble_plot, fig.width = 12.7, fig.height = 2}
 
 c_theme_plot <- ggpubr::ggarrange(
   c_theme_plot_left,
-  c_theme_plot_middle,
+  c_theme_plot_mleft,
+  c_theme_plot_mright,
   c_theme_plot_right,
-  c_theme_plot_col,
   nrow = 1,
   widths = c(3.8, 2, 2, 1.5)
 )
-
+c_theme_plot
 ```
 
 ## D 
@@ -2126,7 +2136,7 @@ max_vi <- base::max(c(
   psdf_hsc_sign_rand_other1$variation_information,
   psdf_hsc_mmms_signrand_other1$variation_information,
   psdf_hsc_mark_signrand_other1$variation_information,
-  psdf_hsc_mmms_markrand_other1$variation_information))
+  psdf_hsc_mmms_markrand_other1$variation_information)) + 0.2
 ```
 
 

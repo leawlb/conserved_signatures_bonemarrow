@@ -1,9 +1,13 @@
 
 # get reclustering stores for reclustered datasets from other species
 
-#-------------------------------------------------------------------------------
+# determine random number generator for sample()
+# Mersenne-Twister" is default
+RNGkind("Mersenne-Twister") 
 
 set.seed(37)
+
+#-------------------------------------------------------------------------------
 
 library(mclust, quietly = TRUE)
 library(mcclust, quietly = TRUE)
@@ -31,6 +35,11 @@ score_df_list_all <- lapply(seu_list_all, function(seu_list){
     # add specific info
     score_df$conservation_level <- base::rep(seu@misc$used_genes,
                                              nrow(score_df))
+    score_df$resolution <- base::rep(seu@misc$resolution,
+                                             nrow(score_df))   
+    score_df$nr_genes_used <- base::rep(seu@misc$nr_genes_used,
+                                        nrow(score_df))
+    
     return(score_df)
   })
   names(score_df_list) <- names(seu_list)

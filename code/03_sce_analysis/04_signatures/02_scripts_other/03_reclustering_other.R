@@ -46,6 +46,10 @@ print(fraction_curr)
 
 #-------------------------------------------------------------------------------
 
+seed1 <- (nchar(dataset_curr) + 123)
+
+#-------------------------------------------------------------------------------
+
 # ensembl data frames for each gene set
 
 sign_paths <- snakemake@input[["ensembl_sign"]]
@@ -90,15 +94,17 @@ mmusall_marker_IDs <- mmusall_marker_IDs[
 
 
 # check length and amount of duplication
-print("checking ENSMUS ID")
+print("checking ENSMUS ID duplication")
 print(base::table(base::duplicated(ensembl_sign$ENSMUS_ID)))
 
-print("checking species ID")
+print("checking species ID duplication")
 print(base::table(base::duplicated(
   ensembl_sign[,which(colnames(ensembl_sign) == ensembl_column_use)])))
 
+#-------------------------------------------------------------------------------
 # random genes
 # all genes with expressed in at least cut_off_prop % of cells
+# this is just for visualisation
 
 prop_df <- prop_expressed_total_seu(
   seu = seu, 
@@ -114,10 +120,15 @@ gene_pool <- prop_df_sub$gene
 # get the same nr of random non-0 genes as there are conserved signature genes
 # always generate the same random numbers
 
+set.seed(seed1)
 random_features <- gene_pool[
   base::sample(1:length(gene_pool), 
                length(conserved_signature_IDs), # same as cons_sign for vis
                replace = F)]
+print(seed1)
+print(head(random_features))
+
+set.seed(37)
 
 #-------------------------------------------------------------------------------
 
@@ -129,32 +140,41 @@ seu_sign <- BiocGenerics::subset(
   seu, 
   features = conserved_signature_IDs,
   slot = "count")
-seu_sign@misc$all_features_subclustering <- conserved_signature_IDs
+seu_sign@misc$all_features_reclustering <- conserved_signature_IDs
 seu_sign@misc$used_genes <- "conserved_signature"
+seu_sign@misc$nr_genes_used <- length(conserved_signature_IDs)
 
 # set of conserved marker genes 
 seu_mark <- BiocGenerics::subset(
   seu, 
   features = conserved_marker_IDs,
   slot = "count")
-seu_mark@misc$all_features_subclustering <- conserved_marker_IDs
+seu_mark@misc$all_features_reclustering <- conserved_marker_IDs
 seu_mark@misc$used_genes <- "conserved_markers"
+seu_mark@misc$nr_genes_used <- length(conserved_marker_IDs)
 
 # set of all BL6 marker genes 
 seu_mmms <- BiocGenerics::subset(
   seu, 
   features = mmusall_marker_IDs,
   slot = "count")
-seu_mmms@misc$all_features_subclustering <- mmusall_marker_IDs
+seu_mmms@misc$all_features_reclustering <- mmusall_marker_IDs
 seu_mmms@misc$used_genes <- "mmusall_markers"
+seu_mmms@misc$nr_genes_used <- length(mmusall_marker_IDs)
 
 # random genes
 seu_rand <- BiocGenerics::subset(
   seu, 
   features = random_features,
   slot = "count")
-seu_rand@misc$all_features_subclustering <- random_features
+seu_rand@misc$all_features_reclustering <- random_features
 seu_rand@misc$used_genes <- "random_features"
+seu_rand@misc$nr_genes_used <- length(random_features)
+
+print(seu_sign@misc$nr_genes_used)
+print(seu_mark@misc$nr_genes_used)
+print(seu_mmms@misc$nr_genes_used)
+print(seu_rand@misc$nr_genes_used)
 
 #-------------------------------------------------------------------------------
 
@@ -177,7 +197,6 @@ print("nr_cores")
 print(nr_cores)
 print("cut_off_prop")
 print(cut_off_prop)
-print(resolution_list)
 
 # run the standard pipeline for each resolution and each subsetted dataset                           
 seu_sign_list_reclustered <- mclapply(
@@ -201,6 +220,7 @@ seu_sign_list_reclustered <- mclapply(
 #   features = conserved_signature_IDs)
 
 names(seu_sign_list_reclustered) <- base::as.character(unlist(resolution_list))
+print(seu_sign_list_reclustered[[1]]@misc)
 
 print("done signature gene reclustering")
 

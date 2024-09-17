@@ -54,14 +54,14 @@ for f in fractions:
     targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mark_" + f]
     targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mmms_" + f]
     targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mmms_mark_" + f]
-    targets = targets + [OUTPUT_DAT + "/07_expp/mark-vs-signrand_" + f]
-    targets = targets + [OUTPUT_DAT + "/07_expp/mmms-vs-signrand_" + f]
-    targets = targets + [OUTPUT_DAT + "/07_expp/mmms-vs-markrand_" + f]
+    targets = targets + [OUTPUT_DAT + "/08_expp/mark-vs-signrand_" + f]
+    targets = targets + [OUTPUT_DAT + "/08_expp/mmms-vs-signrand_" + f]
+    targets = targets + [OUTPUT_DAT + "/08_expp/mmms-vs-markrand_" + f]
     targets = targets + [OUTPUT_REP + "/perm_genesets_" + f + ".html"]
 
   if RUN_OWN_SIGN_PERM:
     targets = targets + [OUTPUT_DAT + "/06_psig/perm_score_df_" + f]
-    targets = targets + [OUTPUT_DAT + "/07_expp/sign-vs-rand_" + f]
+    targets = targets + [OUTPUT_DAT + "/08_expp/sign-vs-rand_" + f]
     targets = targets + [OUTPUT_REP + "/perm_conserved_signature_" + f + ".html"]
 
 targets = targets + [OUTPUT_REP + "/genesets_summary.html"]
@@ -300,9 +300,9 @@ if RUN_PERM_GENESETS:
           cons_level_use = "conserved_markers",
           comparison = "mark-vs-signrand"
       output:
-          pval_score_df_output = OUTPUT_DAT + "/07_expp/mark-vs-signrand_{fraction}"
+          pval_score_df_output = OUTPUT_DAT + "/08_expp/mark-vs-signrand_{fraction}"
       script:
-          "01_scripts_own/07_export_pval.R"
+          "01_scripts_own/08_export_pval.R"
           
   # compare mmusall_markers (all BL6 markers) to conserved signature + random
   rule mmms_vs_signrand:
@@ -313,9 +313,9 @@ if RUN_PERM_GENESETS:
           cons_level_use = "mmusall_markers",
           comparison = "mmms-vs-signrand"
       output:
-          pval_score_df_output = OUTPUT_DAT + "/07_expp/mmms-vs-signrand_{fraction}"
+          pval_score_df_output = OUTPUT_DAT + "/08_expp/mmms-vs-signrand_{fraction}"
       script:
-          "01_scripts_own/07_export_pval.R"
+          "01_scripts_own/08_export_pval.R"
           
                     
   # compare mmusall_markers (all BL6 markers) to conserved markers + random
@@ -327,9 +327,9 @@ if RUN_PERM_GENESETS:
           cons_level_use = "mmusall_markers",
           comparison = "mmms-vs-markrand"
       output:
-          pval_score_df_output = OUTPUT_DAT + "/07_expp/mmms-vs-markrand_{fraction}"
+          pval_score_df_output = OUTPUT_DAT + "/08_expp/mmms-vs-markrand_{fraction}"
       script:
-          "01_scripts_own/07_export_pval.R"
+          "01_scripts_own/08_export_pval.R"
 
 #-------------------------------------------------------------------------------
 
@@ -384,7 +384,7 @@ if RUN_OWN_SIGN_PERM:
           cons_level_use = "conserved_signature",
           comparison = "sign-vs-rand"
       output:
-          pval_score_df_output = OUTPUT_DAT + "/07_expp/sign-vs-rand_{fraction}"
+          pval_score_df_output = OUTPUT_DAT + "/08_expp/sign-vs-rand_{fraction}"
       script:
-          "01_scripts_own/07_export_pval.R"
+          "01_scripts_own/08_export_pval.R"
 

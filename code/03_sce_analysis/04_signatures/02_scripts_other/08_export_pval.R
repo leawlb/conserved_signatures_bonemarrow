@@ -21,25 +21,67 @@ set.seed(37)
 #-------------------------------------------------------------------------------
 # load
 
-# df of original scores to be tested
-orig_score_df <- base::readRDS(snakemake@input[["orig_score_df_input"]])
+# params
+cons_level_use <- snakemake@params[["cons_level_use"]]
+comparison <- snakemake@params[["comparison"]]
+dataset_curr <- snakemake@wildcards[["dataset"]]
 
-print(head(orig_score_df))
+# alternative shorter word used as name for the list items
+cons_level_use_alt <- snakemake@params[["cons_level_use_alt"]]
 
-# df of permutated scores from the same object
+print(comparison)
+print(cons_level_use)
+print(dataset_curr)
+
+#-------------------------------------------------------------------------------
+
+# list with dfs of original scores to be tested, for each conservation level
+orig_score_df_list <- base::readRDS(snakemake@input[["orig_score_df_list_input"]])
+
+# df of permutated scores from the conservation level and comp as indicated
 perm_score_df <- base::readRDS(snakemake@input[["perm_score_df_input"]])
 
 print(head(perm_score_df))
 
-# params
-cons_level_use <- snakemake@params[["cons_level_use"]]
-comparison <- snakemake@params[["comparison"]]
-fraction_curr <- snakemake@wildcards[["fraction"]]
+#-------------------------------------------------------------------------------
+
+# resolution DF
+# load the dataframe which contains info on which resolution to use for
+# the conservation level as indicated
+resolution_df_path <- snakemake@params[["resolution_df"]] 
+
+resolution_df <- utils::read.csv(file = resolution_df_path, 
+                                 header = TRUE, 
+                                 sep = ";", 
+                                 check.names=FALSE, 
+                                 stringsAsFactors=FALSE, 
+                                 as.is=TRUE, 
+                                 colClasses = "character")
+
+resolution_df <- resolution_df[resolution_df$dataset == dataset_curr,]
+
+# get resolution for each gene set to be permuted
+resl <- resolution_df$resolution[
+  resolution_df$conservation_level == cons_level_use]
+
+print(resl)
+
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+
+# subset to correct orig data frame
+orig_score_df <- orig_score_df_list[[cons_level_use_alt]][[resl]]
 
 # add info and subset
-orig_score_df$fraction <- base::rep(fraction_curr, nrow(orig_score_df))
+orig_score_df$dataset <- base::rep(dataset_curr, nrow(orig_score_df))
 orig_score_df$comparison <- base::rep(comparison, nrow(orig_score_df))
 
+orig_score_df$nr_genes_used <- base::rep(perm_score_df$nr_genes_used[1], 
+                                         nrow(orig_score_df))
+
+colnames(orig_score_df)[colnames(orig_score_df) == "value"] <- "value_orig"
+
+# failsave
 orig_score_df_sub <- orig_score_df[
   orig_score_df$conservation_level %in% cons_level_use,]
 
@@ -60,6 +102,8 @@ scores_v <- c(
 # per score
 
 orig_score_df_sub <- orig_score_df_sub[orig_score_df_sub$type %in% scores_v,]
+orig_score_df_sub$nr_iterations <- vector(length = nrow(orig_score_df_sub))
+orig_score_df_sub$median_perm_scores <- vector(length = nrow(orig_score_df_sub))
 orig_score_df_sub$pval <- vector(length = nrow(orig_score_df_sub))
 
 for(score in scores_v){
@@ -81,9 +125,14 @@ for(score in scores_v){
       length(perm_scores_all)
   }
   
-  orig_score_df_sub$pval[orig_score_df_sub$type == score] <- pval
-  orig_score_df_sub$nr_iterations <- base::rep(length(perm_scores_all), 
-                                               nrow(orig_score_df_sub))
+  median_perm_scores <- stats::median(perm_scores_all)
+  
+  orig_score_df_sub$pval[
+    orig_score_df_sub$type == score] <- pval
+  orig_score_df_sub$median_perm_scores[
+    orig_score_df_sub$type == score] < median_perm_scores
+  orig_score_df_sub$nr_iterations[
+    orig_score_df_sub$type == score] <- length(perm_scores_all)
   
 }
 

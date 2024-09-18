@@ -262,12 +262,15 @@ if RUN_PERM_GENESETS:
   # export pvals: compare conserved markers to conserved signature + random
   rule mark_vs_signrand:
       input:
+          # list of score dfs from all conservation levels and resolutions
           orig_score_df_list_input = rules.reclustering_other_scores.output.score_df_list,
+          # df of permuted scores (from comparing gene sets) 
           perm_score_df_input = rules.permutation_genesets.output.perm_score_df_mark
       params:
-          resolution_df = RESOLUTION_OTHER,
-          cons_level_use = "conserved_markers",
-          comparison = "mark-vs-signrand"
+          resolution_df = RESOLUTION_OTHER, # determine correct resolution
+          cons_level_use = "conserved_markers", # determine correct cons level
+          cons_level_use = "seu_mark", # alternative name for cons level
+          comparison = "mark-vs-signrand" # record comparison
       output:
           pval_score_df_output = OUTPUT_DAT + "/08_expp/mark-vs-signrand_{dataset}"
       script:
@@ -281,6 +284,7 @@ if RUN_PERM_GENESETS:
       params:
           resolution_df = RESOLUTION_OTHER,
           cons_level_use = "mmusall_markers",
+          cons_level_use_alt = "seu_mmms",
           comparison = "mmms-vs-signrand"
       output:
           pval_score_df_output = OUTPUT_DAT + "/08_expp/mmms-vs-signrand_{dataset}"
@@ -295,6 +299,7 @@ if RUN_PERM_GENESETS:
       params:
           resolution_df = RESOLUTION_OTHER,
           cons_level_use = "mmusall_markers",
+          cons_level_use_alt = "seu_mmms",
           comparison = "mmms-vs-markrand"
       output:
           pval_score_df_output = OUTPUT_DAT + "/08_expp/mmms-vs-markrand_{dataset}"
@@ -336,6 +341,7 @@ if RUN_PERM_BACKGROUND_SIGN:
       params:
           resolution_df = RESOLUTION_OTHER,
           cons_level_use = "conserved_signature",
+          cons_level_use_alt = "seu_sign", 
           comparison = "sign-vs-rand"
       output:
           pval_score_df_output = OUTPUT_DAT + "/08_expp/sign-vs-rand_{dataset}"
@@ -391,6 +397,7 @@ if RUN_PERM_BACKGROUND_MARK:
       params:
           resolution_df = RESOLUTION_OTHER,
           cons_level_use = "conserved_markers",
+          cons_level_use_alt = "seu_mark",
           comparison = "mark-vs-rand"
       output:
           pval_score_df_output = OUTPUT_DAT + "/08_expp/mark-vs-rand_{dataset}"

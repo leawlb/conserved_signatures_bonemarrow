@@ -22,7 +22,7 @@ sce <- base::readRDS(snakemake@input[["sce_input"]])
 cts_exclude <- snakemake@params[["cts_exclude"]]
 fraction_curr <- snakemake@wildcards[["fraction"]]
 
-# remove cts to exclude and reorder for nicer plots
+# remove cts (failsave) to exclude and reorder factors for nicer plots
 sce <- sce[,!sce$celltypes %in% cts_exclude]
 sce$celltypes <- factor(
   sce$celltypes,
@@ -56,7 +56,7 @@ res_df_sign$fraction <- base::rep(
   fraction_curr, 
   nrow(res_df_sign))
 res_df_sign$nr_genes_used <- base::rep(
-  sce$cluster_signt_genes_used,
+  sce$cluster_signt_genes_used[1],
   nrow(res_df_sign))
 
 #-------------------------------------------------------------------------------
@@ -82,7 +82,7 @@ res_df_mark$fraction <- base::rep(
   fraction_curr, 
   nrow(res_df_mark))
 res_df_mark$nr_genes_used <- base::rep(
-  sce$cluster_consm_genes_used,
+  sce$cluster_consm_genes_used[1],
   nrow(res_df_mark))
 
 #-------------------------------------------------------------------------------
@@ -108,7 +108,7 @@ res_df_mmsm$fraction <- base::rep(
   fraction_curr, 
   nrow(res_df_mmsm))
 res_df_mmsm$nr_genes_used <- base::rep(
-  sce$cluster_mmusm_genes_used,
+  sce$cluster_mmusm_genes_used[1],
   nrow(res_df_mmsm))
 
 #-------------------------------------------------------------------------------
@@ -134,7 +134,7 @@ res_df_ndge$fraction <- base::rep(
   fraction_curr,
   nrow(res_df_ndge))
 res_df_ndge$nr_genes_used <- base::rep(
-  sce$cluster_ndges_genes_used,
+  sce$cluster_ndges_genes_used[1],
   nrow(res_df_ndge))
 
 #-------------------------------------------------------------------------------

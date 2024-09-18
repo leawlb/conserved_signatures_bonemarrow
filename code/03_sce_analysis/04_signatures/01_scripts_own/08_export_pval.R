@@ -39,6 +39,7 @@ fraction_curr <- snakemake@wildcards[["fraction"]]
 # add info and subset
 orig_score_df$fraction <- base::rep(fraction_curr, nrow(orig_score_df))
 orig_score_df$comparison <- base::rep(comparison, nrow(orig_score_df))
+orig_score_df$identifier <- base::rep("own", nrow(orig_score_df))
 
 orig_score_df_sub <- orig_score_df[
   orig_score_df$conservation_level %in% cons_level_use,]
@@ -60,6 +61,8 @@ scores_v <- c(
 # per score
 
 orig_score_df_sub <- orig_score_df_sub[orig_score_df_sub$type %in% scores_v,]
+orig_score_df_sub$nr_iterations <- vector(length = nrow(orig_score_df_sub))
+orig_score_df_sub$median_perm_scores <- vector(length = nrow(orig_score_df_sub))
 orig_score_df_sub$pval <- vector(length = nrow(orig_score_df_sub))
 
 for(score in scores_v){
@@ -81,9 +84,14 @@ for(score in scores_v){
       length(perm_scores_all)
   }
   
-  orig_score_df_sub$pval[orig_score_df_sub$type == score] <- pval
-  orig_score_df_sub$nr_iterations <- base::rep(length(perm_scores_all), 
-                                               nrow(orig_score_df_sub))
+  median_perm_scores <- stats::median(perm_scores_all)
+  
+  orig_score_df_sub$pval[
+    orig_score_df_sub$type == score] <- pval
+  orig_score_df_sub$median_perm_scores[
+    orig_score_df_sub$type == score] < median_perm_scores
+  orig_score_df_sub$nr_iterations[
+    orig_score_df_sub$type == score] <- length(perm_scores_all)
   
 }
 

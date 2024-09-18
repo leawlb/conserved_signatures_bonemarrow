@@ -18,6 +18,8 @@
 RNGkind("Mersenne-Twister") 
 set.seed(37)
 
+library(tidyr)
+
 #-------------------------------------------------------------------------------
 # load
 
@@ -75,13 +77,19 @@ orig_score_df <- orig_score_df_list[[cons_level_use_alt]][[resl]]
 # add info and subset
 orig_score_df$dataset <- base::rep(dataset_curr, nrow(orig_score_df))
 orig_score_df$comparison <- base::rep(comparison, nrow(orig_score_df))
+orig_score_df$identifier <- base::rep("other", nrow(orig_score_df))
+
+nr_clusters <- orig_score_df$value[orig_score_df$type == "nr_clusters"]
+nr_celltypes <- orig_score_df$value[orig_score_df$type == "nr_celltypes"]
+orig_score_df$nr_clusters <- base::rep(nr_clusters, nrow(orig_score_df))
+orig_score_df$nr_celltypes <- base::rep(nr_celltypes, nrow(orig_score_df))
 
 orig_score_df$nr_genes_used <- base::rep(perm_score_df$nr_genes_used[1], 
                                          nrow(orig_score_df))
 
+
 colnames(orig_score_df)[colnames(orig_score_df) == "value"] <- "value_orig"
 
-# failsave
 orig_score_df_sub <- orig_score_df[
   orig_score_df$conservation_level %in% cons_level_use,]
 

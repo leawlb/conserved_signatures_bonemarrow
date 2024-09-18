@@ -214,6 +214,14 @@ pattern_spacing_val <- 0.1
 
 color_hline_background <- "grey97"
 
+## CHECK SCORE MAX!!
+score2 <- "variation_information"
+score1 <- "adjusted_rand_index"
+score3 <- "mean_prop_cells_cluster"
+
+score2_long <- "Variation of information"
+score1_long <- "Adjusted rand index"
+score3_long <- "Mean prop. cells/cluster"
 ```
 
 ```{r export_paths}
@@ -465,8 +473,6 @@ signature + conserved markers + random_bl6_markers).
 
 #### Prep
 
-##### perm plots
-
 Separate score DFs per conservation level and type of score.
 
 ```{r b_prep1}
@@ -475,12 +481,9 @@ score_df_sign <- score_df_hsc[
 # add nicer looking conservation level annotation
 score_df_sign$conservation_level_long <- "conserved identity signature"
 
-score_df_sign_score_1 <- score_df_sign[
-  score_df_sign$type == "adjusted_rand_index",]
-score_df_sign_score_2 <- score_df_sign[
-  score_df_sign$type == "variation_information",]
-score_df_sign_score_3 <- score_df_sign[
-  score_df_sign$type == "mean_prop_cells_cluster",]
+score_df_sign_score_1 <- score_df_sign[score_df_sign$type == score1,]
+score_df_sign_score_2 <- score_df_sign[score_df_sign$type == score2,]
+score_df_sign_score_3 <- score_df_sign[score_df_sign$type == score3,]
 ```
 
 ```{r b_prep2}
@@ -488,12 +491,9 @@ score_df_mark <- score_df_hsc[
   score_df_hsc$conservation_level == "conserved_markers",]
 score_df_mark$conservation_level_long <- "conserved markers"
 
-score_df_mark_score_1 <- score_df_mark[
-  score_df_mark$type == "adjusted_rand_index",]
-score_df_mark_score_2 <- score_df_mark[
-  score_df_mark$type == "variation_information",]
-score_df_mark_score_3 <- score_df_mark[
-  score_df_mark$type == "mean_prop_cells_cluster",]
+score_df_mark_score_1 <- score_df_mark[score_df_mark$type == score1,]
+score_df_mark_score_2 <- score_df_mark[score_df_mark$type == score2,]
+score_df_mark_score_3 <- score_df_mark[score_df_mark$type == score3,]
 ```
 
 ```{r b_prep3}
@@ -501,12 +501,9 @@ score_df_mmms <- score_df_hsc[
   score_df_hsc$conservation_level == "mmusall_markers",]
 score_df_mmms$conservation_level_long <- "total BL6 markers"
 
-score_df_mmms_score_1 <- score_df_mmms[
-  score_df_mmms$type == "adjusted_rand_index",]
-score_df_mmms_score_2 <- score_df_mmms[
-  score_df_mmms$type == "variation_information",]
-score_df_mmms_score_3 <- score_df_mmms[
-  score_df_mmms$type == "mean_prop_cells_cluster",]
+score_df_mmms_score_1 <- score_df_mmms[score_df_mmms$type == score1,]
+score_df_mmms_score_2 <- score_df_mmms[score_df_mmms$type == score2,]
+score_df_mmms_score_3 <- score_df_mmms[score_df_mmms$type == score3,]
 ```
 
 Also separate the permutation score dfs by conservation level and type of score.
@@ -522,11 +519,11 @@ psdf_mark_signrand_long$conservation_level_long = base::rep(
   "conserved markers", nrow(psdf_mark_signrand_long))
 
 psdf_mark_signrand_score_1 <- psdf_mark_signrand_long[
-  psdf_mark_signrand_long$type %in% c("adjusted_rand_index"),]
+  psdf_mark_signrand_long$type == score1,]
 psdf_mark_signrand_score_2 <- psdf_mark_signrand_long[
-  psdf_mark_signrand_long$type %in% c("variation_information"),]
+  psdf_mark_signrand_long$type == score2,]
 psdf_mark_signrand_score_3 <- psdf_mark_signrand_long[
-  psdf_mark_signrand_long$type %in% c("mean_prop_cells_cluster"),]
+  psdf_mark_signrand_long$type == score3,]
 ```
 
 ```{r b_prep5}
@@ -540,11 +537,11 @@ psdf_mmms_signrand_long$conservation_level_long = base::rep(
   "total BL6 markers", nrow(psdf_mmms_signrand_long))
 
 psdf_mmms_signrand_score_1 <- psdf_mmms_signrand_long[
-  psdf_mmms_signrand_long$type %in% c("adjusted_rand_index"),]
+  psdf_mmms_signrand_long$type == score1,]
 psdf_mmms_signrand_score_2 <- psdf_mmms_signrand_long[
-  psdf_mmms_signrand_long$type %in% c("variation_information"),]
+  psdf_mmms_signrand_long$type == score2,]
 psdf_mmms_signrand_score_3 <- psdf_mmms_signrand_long[
-  psdf_mmms_signrand_long$type %in% c("mean_prop_cells_cluster"),]
+  psdf_mmms_signrand_long$type == score3,]
 ```
 
 get the maximum number of variation of information scores for plot limits
@@ -561,6 +558,14 @@ max_vi <- base::max(c(
   # pemruted gene set scores
   psdf_hsc_mmms_signrand$variation_information,
   psdf_hsc_mark_signrand$variation_information)) + 0.5
+
+print(score1)
+print(score2)
+print(score3)
+
+score2_max <- max_vi
+score1_max <- 1
+score3_max <- 1
 ```
 
 ##### box plots
@@ -702,8 +707,8 @@ b_theme_plot_left1 <- b_base_plot_left1+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.25, 0.5, 0.75, 1),
     position = "top", 
-    limits = c(0, 1))+
-  ggplot2::ggtitle("Adjusted rand index")
+    limits = c(0, score1_max))+
+  ggplot2::ggtitle(score1_long) #TODO: continue here
 ```
 
 ```{r b_base_plot_left2}
@@ -776,7 +781,7 @@ b_theme_plot_left2 <- b_base_plot_left2+
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
   ggplot2::scale_y_continuous( # because flipped
-    limits = c(0, 1))+
+    limits = c(0, score1_max))+
   ggplot2::scale_x_discrete(expand = expansion(add = c(-0.8, -0.1)))
 ```
 
@@ -850,7 +855,7 @@ b_theme_plot_left3 <- b_base_plot_left3+
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
   ggplot2::scale_y_continuous(
-    limits = c(0, 1))+
+    limits = c(0, score1_max))+
   ggplot2::scale_x_discrete(expand = expansion(add = c(-0.8, -0.1)))
 ```
 
@@ -1824,7 +1829,7 @@ c_theme_plot_right <- c_base_plot_right+
 
 #### Assemble
 
-```{r c_assemble_plot, fig.width = 12.7, fig.height = 2}
+```{r c_assemble_plot, fig.width = 12.7, fig.height = 1.8}
 
 c_theme_plot <- ggpubr::ggarrange(
   c_theme_plot_left,
@@ -2048,54 +2053,59 @@ score_df_hsc_other1 <- bind_rows(selected_score_df_list)
 ```
 
 ```{r e_prep1}
-score_df_sign_other1 <- score_df_hsc_other1[score_df_hsc_other1$conservation_level == "conserved_signature",]
-score_df_sign_score_1_other1 <- score_df_sign_other1[score_df_sign_other1$type == "adjusted_rand_index",]
-score_df_sign_score_2_other1 <- score_df_sign_other1[score_df_sign_other1$type == "variation_information",]
-score_df_sign_score_3_other1 <- score_df_sign_other1[score_df_sign_other1$type == "mean_prop_cells_cluster",]
+score_df_sign_o1 <- score_df_hsc_o1[
+  score_df_hsc_o1$conservation_level == "conserved_signature",]
+score_df_sign_o1$conservation_level_long <- "conserved identity signature"
 
-score_df_sign_score_1$conservation_level <- "conserved identity signature"
-score_df_sign_score_2$conservation_level <- "conserved identity signature"
-score_df_sign_score_3$conservation_level <- "conserved identity signature"
+score_df_sign_score_1_o1 <- score_df_sign_o1[
+  score_df_sign_o1$type == "adjusted_rand_index",]
+score_df_sign_score_2_o1 <- score_df_sign_o1[
+  score_df_sign_o1$type == "variation_information",]
+score_df_sign_score_3_o1 <- score_df_sign_o1[
+  score_df_sign_o1$type == "mean_prop_cells_cluster",]
 ```
 
 ```{r e_prep2}
-score_df_mark_other1 <- score_df_hsc_other1[score_df_hsc_other1$conservation_level == "conserved_markers",]
-score_df_mark_score_1_other1 <- score_df_mark_other1[score_df_mark_other1$type == "adjusted_rand_index",]
-score_df_mark_score_2_other1 <- score_df_mark_other1[score_df_mark_other1$type == "variation_information",]
-score_df_mark_score_3_other1 <- score_df_mark_other1[score_df_mark_other1$type == "mean_prop_cells_cluster",]
+score_df_mark_o1 <- score_df_hsc_o1[
+  score_df_hsc_o1$conservation_level == "conserved_markers",]
+score_df_mark_o1$conservation_level_long <- "conserved markers"
 
-score_df_mark_score_1_other1$conservation_level <- "conserved markers"
-score_df_mark_score_2_other1$conservation_level <- "conserved markers"
-score_df_mark_score_3_other1$conservation_level <- "conserved markers"
+score_df_mark_score_1_o1 <- score_df_mark_o1[
+  score_df_mark_o1$type == "adjusted_rand_index",]
+score_df_mark_score_2_o1 <- score_df_mark_o1[
+  score_df_mark_o1$type == "variation_information",]
+score_df_mark_score_3_o1 <- score_df_mark_o1[
+  score_df_mark_o1$type == "mean_prop_cells_cluster",]
 ```
 
-!# TODO: CONTINUE HERE
-
 ```{r e_prep3}
-psdf_mark_signrand_long_other1 <- pivot_longer(
-  psdf_hsc_mark_signrand_other1, 
-  c = 1:ncol(psdf_hsc_mark_signrand_other1),
+psdf_mark_signrand_long_o1 <- pivot_longer(
+  psdf_hsc_mark_signrand_o1, 
+  c = 1:ncol(psdf_hsc_mark_signrand_o1),
   values_to = "value",
   names_to = "type")
+psdf_mark_signrand_long_o1$conservation_level_long = base::rep(
+  "conserved markers", nrow(psdf_mark_signrand_long_o1))
 
-psdf_mark_signrand_score_1_other1 <- psdf_mark_signrand_long_other1[psdf_mark_signrand_long_other1$type %in% c("adjusted_rand_index"),]
-psdf_mark_signrand_score_2_other1 <- psdf_mark_signrand_long_other1[psdf_mark_signrand_long_other1$type %in% c("variation_information"),]
-psdf_mark_signrand_score_3_other1 <- psdf_mark_signrand_long_other1[psdf_mark_signrand_long_other1$type %in% c("mean_prop_cells_cluster"),]
-
-psdf_mark_signrand_score_1_other1$conservation_level = base::rep("conserved markers", nrow(psdf_mark_signrand_score_1_other1))
-psdf_mark_signrand_score_2_other1$conservation_level = base::rep("conserved markers", nrow(psdf_mark_signrand_score_2_other1))
-psdf_mark_signrand_score_3_other1$conservation_level = base::rep("conserved markers", nrow(psdf_mark_signrand_score_3_other1))
+psdf_mark_signrand_score_1_o1 <- psdf_mark_signrand_long_o1[
+  psdf_mark_signrand_long_o1$type %in% c("adjusted_rand_index"),]
+psdf_mark_signrand_score_2_o1 <- psdf_mark_signrand_long_o1[
+  psdf_mark_signrand_long_o1$type %in% c("variation_information"),]
+psdf_mark_signrand_score_3_o1 <- psdf_mark_signrand_long_o1[
+  psdf_mark_signrand_long_o1$type %in% c("mean_prop_cells_cluster"),]
 ```
 
 ```{r e_prep4}
-score_df_mmms_other_1  <- score_df_hsc_other_1[score_df_hsc_other_1 $conservation_level == "mmusall_markers",]
-score_df_mmms_score_1_other_1 <- score_df_mmms_other_1[score_df_mmms_other_1$type == "adjusted_rand_index",]
-score_df_mmms_score_2_other_1 <- score_df_mmms_other_1[score_df_mmms_other_1$type == "variation_information",]
-score_df_mmms_score_3_other_1 <- score_df_mmms_other_1[score_df_mmms_other_1$type == "mean_prop_cells_cluster",]
+score_df_mmms_o1  <- score_df_hsc_o1[
+  score_df_hsc_o1$conservation_level == "mmusall_markers",]
+score_df_mmms_o1$conservation_level_long <- "total BL6 markers"
 
-score_df_mmms_score_1_other_1$conservation_level <- "total BL6 markers"
-score_df_mmms_score_2_other_1$conservation_level <- "total BL6 markers"
-score_df_mmms_score_3_other_1$conservation_level <- "total BL6 markers"
+score_df_mmms_score_1_o1 <- score_df_mmms_o1[
+  score_df_mmms_o1$type == "adjusted_rand_index",]
+score_df_mmms_score_2_o1 <- score_df_mmms_o1[
+  score_df_mmms_o1$type == "variation_information",]
+score_df_mmms_score_3_o1 <- score_df_mmms_o1[
+  score_df_mmms_o1$type == "mean_prop_cells_cluster",]
 ```
 
 ```{r e_prep5}

@@ -52,14 +52,19 @@ for d in datasets_other:
     targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mmms_" + d]
     targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mmms_mark_" + d]
     targets = targets + [OUTPUT_REP + "/genesets/perm_genesets_" + d + ".html"]
+    targets = targets + [OUTPUT_DAT + "/08_expp/mark-vs-signrand_" + d]
+    targets = targets + [OUTPUT_DAT + "/08_expp/mmms-vs-signrand_" + d]
+    targets = targets + [OUTPUT_DAT + "/08_expp/mmms-vs-markrand_" + d]
 
   if RUN_PERM_BACKGROUND_SIGN:
     targets = targets + [OUTPUT_DAT + "/06_psig/perm_score_df_" + d]
     targets = targets + [OUTPUT_REP + "/conserved_signature/perm_conserved_signature_" + d + ".html"]
+    targets = targets + [OUTPUT_DAT + "/08_expp/sign-vs-rand_" + d]
 
   if RUN_PERM_BACKGROUND_MARK:
     targets = targets + [OUTPUT_DAT + "/07_pmrk/perm_score_df_" + d]
     targets = targets + [OUTPUT_REP + "/conserved_markers/perm_conserved_markers_" + d + ".html"]
+    targets = targets + [OUTPUT_DAT + "/08_expp/mark-vs-rand_" + d]
 
 
 #-------------------------------------------------------------------------------
@@ -269,7 +274,7 @@ if RUN_PERM_GENESETS:
       params:
           resolution_df = RESOLUTION_OTHER, # determine correct resolution
           cons_level_use = "conserved_markers", # determine correct cons level
-          cons_level_use = "seu_mark", # alternative name for cons level
+          cons_level_use_alt = "seu_mark", # alternative name for cons level
           comparison = "mark-vs-signrand" # record comparison
       output:
           pval_score_df_output = OUTPUT_DAT + "/08_expp/mark-vs-signrand_{dataset}"

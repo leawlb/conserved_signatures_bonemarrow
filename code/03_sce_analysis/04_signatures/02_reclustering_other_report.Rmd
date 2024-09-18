@@ -48,7 +48,7 @@ library(tidyverse, quietly = TRUE)
 
 base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other"
 
-seu_list_all <- readRDS(paste0(base_path, "/03_recl/reclustered_zeb_all_hspc_list"))
+seu_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_li_all_stromal_list")
 
 score_df_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_mus_bar_stromal_list")
 
@@ -59,7 +59,7 @@ source("../../source/sce_functions_reclustering.R")
 
 wildcard_curr <- "zeb_all_hspc"
 
-
+score_df_list_all$seu_sign[[1]]$nr_genes_used
 ```
 
 ```{r load_objects}
@@ -97,7 +97,7 @@ Proportions of cells of a cluster per cell type.
 
 vis_perc_wide_gg <- function(seu, title_add= NULL){
   
-  title <- base::paste(seu@misc$used_genes, title_add)
+  title <- base::paste(seu@misc$used_genes, seu@misc$nr_genes_used, title_add)
   
   mat <- base::table(seu$cell_type, seu$seurat_clusters)
   mat1 <- mat/rowSums(mat)*100
@@ -134,7 +134,7 @@ Proportion of cells of a cell type per cluster.
 ```{r long_function}
 vis_perc_long_gg <- function(seu, title_add= NULL){
   
-  title <- base::paste(seu@misc$used_genes, title_add)
+  title <- base::paste(seu@misc$used_genes, seu@misc$nr_genes_used, title_add)
     
   mat <- t(base::table(seu$cell_type, seu$seurat_clusters))
   mat2 <- mat/rowSums(mat)*100
@@ -219,7 +219,10 @@ vis_nr_cl_nr_cell <- function(seu_list, title){
                                       "median_cluster_per_ct",
                                       "nr_clusters"))
   
-  title <- base::paste(title, vis_df_all$conservation_level[1])
+  title <- base::paste(
+    title, 
+    seu_list[[1]]@misc$nr_genes_used, 
+    vis_df_all$conservation_level[1])
   
   plot1 <- ggplot2::ggplot(vis_df_all, 
                            aes(x = resolution, y = value, color = type))+
@@ -246,7 +249,10 @@ plot_list_nr <- lapply(seu_list_all, vis_nr_cl_nr_cell, title = dataset_curr)
 vis_clustering_scores <- function(score_df_list, title){
   
   score_df <- dplyr::bind_rows(score_df_list)
-  title <- base::paste(title, score_df$conservation_level[1])
+  title <- base::paste(
+    title, 
+    score_df$nr_genes_used[1], 
+    score_df$conservation_level[1])
 
   vis_df_1 <- score_df[score_df$type %in% c("mean_prop_cells_cluster",
                                             "mean_cluster_purity"),]

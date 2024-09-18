@@ -23,20 +23,20 @@ library(tidyverse, quietly = TRUE)
 ```
 
 ```{r manual, include = FALSE, eval = FALSE}
-seu_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/04_rcls/reclustered_li_all_stromal_list")
+seu_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_li_all_stromal_list")
 
 dataset_curr <- "li_all_stromal"
 
-score_df_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/04_rcls/score_df_li_all_stromal_list")
+score_df_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_li_all_stromal_list")
 
-perm_score_df <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_perm/li_all_stromal_perm_score_df")
+perm_score_df <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/06_psig/perm_score_df_li_all_stromal")
 
 resolution_df_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt"
 
 ```
 
 ```{r manualscript, include = FALSE, eval = FALSE}
-cut_off_counts <- 5
+cut_off_prop <- 0.015
 nr_cores <- 1 
 iterations <- 2
 
@@ -47,11 +47,17 @@ cons_level_use <- "conserved_markers"
 
 seu_preprocessed <- base::readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/li_all_stromal")
 
+seu <- seu_preprocessed
+
 # sign
 ensembl_paths <- c("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_endf/ensembl_sign_str")
 
 # mark
 ensembl_paths <- c("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_endf/ensembl_mark_str")
+
+sign_paths <- c("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/02_endf/ensembl_sign_str")
+mark_paths <- c("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/02_endf/ensembl_mark_str")
+mmms_paths <- c("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/02_endf/ensembl_mmms_str")
 
 resolution_df_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt"
 
@@ -149,17 +155,11 @@ print(seu_reclustered)
 
 scores <- c(
   "adjusted_rand_index",
-  "fowles_mallow_index",
-  "mean_cluster_purity",
-  "mean_prop_cells_cluster",
-  "proportion_of_zeros")
+  "mean_prop_cells_cluster")
 
 scores_v <- c(
   "adjusted_rand_index",
-  "fowles_mallow_index",
-  "mean_cluster_purity",
   "mean_prop_cells_cluster",
-  "proportion_of_zeros",
   "variation_information")
 
 for(score in scores_v){
@@ -191,7 +191,8 @@ for(score in scores_v){
                                  "iterations",
                                  "resololution:",
                                  resl,
-                                 score_df$genes_used[1],
+                                 "\n",
+                                 score_df$nr_genes_used[1],
                                  "genes used"))+
     annotate("text", 
              x = 0.8,
@@ -211,10 +212,11 @@ score_df_temp <- score_df[score_df$type %in% scores,]
 score_df_temp <- score_df_temp[
   score_df_temp$conservation_level == cons_level_use,]
 
-perm_score_df_temp <- pivot_longer(perm_score_df,
-                                   c = 1:ncol(perm_score_df),
-                                   values_to = "value",
-                                   names_to = "type")
+perm_score_df_temp <- pivot_longer(
+  perm_score_df,
+  cols = colnames(perm_score_df)[colnames(perm_score_df) %in% scores],
+  values_to = "value",
+  names_to = "type")
 perm_score_df_temp <- perm_score_df_temp[perm_score_df_temp$type %in% scores,]
 
 ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
@@ -230,24 +232,24 @@ ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
   ggplot2::ggtitle(base::paste(dataset_curr, 
                                "\n" ,
                                iterations,
-                               "iterations",
-                                "resololution:",
+                               "\n" ,
                                 resl,
                                "\n" ,
-                                score_df$genes_used[1],
-                                "genes used"))
+                                score_df$nr_genes_used, 
+                               "genes"))
 ```
 
-```{r all2, fig.width = 1.2, fig.height = 4}
+```{r all2, fig.width = 1.2, fig.height = 3}
 
 score_df_temp <- score_df[score_df$type %in% c("variation_information"),]
 score_df_temp <- score_df_temp[
   score_df_temp$conservation_level == cons_level_use,]
 
-perm_score_df_temp <- pivot_longer(perm_score_df, 
-                                   c = 1:ncol(perm_score_df),
-                                   values_to = "value",
-                                   names_to = "type")
+perm_score_df_temp <- pivot_longer(
+  perm_score_df, 
+  cols ="variation_information",
+  values_to = "value",
+  names_to = "type")
 perm_score_df_temp <- perm_score_df_temp[
   perm_score_df_temp$type %in% c("variation_information"),]
 
@@ -260,16 +262,7 @@ ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
                       position = position_nudge(x = -0.2, y = 0))+
   ggplot2::ylim(c(0, base::max(perm_score_df_temp$value)))+
   ggplot2::theme_classic()+
-  ggplot2::theme(axis.text.x = element_text(angle = 90))+
-  ggplot2::ggtitle(base::paste(dataset_curr, 
-                               "\n" ,
-                               iterations,
-                               "iterations",
-                                "resololution:",
-                                resl,
-                               "\n" ,
-                                perm_score_df_temp$genes_used[1],
-                                "genes used"))
+  ggplot2::theme(axis.text.x = element_text(angle = 90))
 ```
 
 ```{r session_info}

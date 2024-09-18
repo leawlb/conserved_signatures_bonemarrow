@@ -24,7 +24,7 @@ library(parallel, quietly = TRUE)
 library(mclust, quietly = TRUE)
 library(mcclust, quietly = TRUE)
 library(bluster, quietly = TRUE)
-library(dendextend, quietly = TRUE)
+#library(dendextend, quietly = TRUE) # not needed anymore, but kept for archive
 
 source(snakemake@params[["reclustering_functions"]])
 
@@ -170,7 +170,9 @@ mark_IDs <- mark_IDs[mark_IDs %in% rownames(seu_preprocessed)]
 nr_random_mark <- length(mark_IDs) - nr_sign
 
 print(length(mark_IDs))
+print(nr_sign)
 print(nr_random_mark)
+print(nr_random_mark + nr_sign)
 
 #-------------------------------------------------------------------------------
 
@@ -351,7 +353,7 @@ gene_pool_mark <- rownames(seu_pool_mark)
 print(length(gene_pool_mark))
 
 prop_df <- prop_expressed_total_seu(
-  sce = seu_pool_mark, 
+  seu = seu_pool_mark, 
   geneset = gene_pool_mark)
 
 # subset by cut-off proportion

@@ -33,7 +33,7 @@ library(tidyverse, quietly = TRUE)
 
 base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/04_rcls/"
 
-seu_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_li_all_stromal_list")
+seu_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_mus_tik_stromal_list")
 
 
 colors_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt"
@@ -46,9 +46,9 @@ resolution_df_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadat
 
 frame_df_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_frame.txt"
 
-dataset_curr <- "nmr_sorted_hspc"
+dataset_curr <- "mus_tik_stromal"
 
-score_df_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_li_all_stromal_list")
+score_df_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_mus_tik_stromal_list")
 
 for(i in 1:length(seu_list_all$seu_sign)){
   seu_list_all$seu_sign[[i]]@meta.data$cell_type <- seu_list_all$seu_sign[[i]]@meta.data$manually_annotated_ct
@@ -95,7 +95,7 @@ selected_seu_list <- lapply(seu_list_all, function(seu_list){
   resdf_temp <- resolution_df[resolution_df$conservation_level == conslev_curr,]
   res_curr <- resdf_temp$resolution
   
-  seu_return <- seu_list[[res_curr]]
+  seu_return <- seu_list[[which(names(seu_list) == res_curr)]]
   return(seu_return)
   
 })

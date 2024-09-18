@@ -52,4 +52,3 @@ names(score_df_list_all) <- names(seu_list_all)
 base::saveRDS(score_df_list_all, snakemake@output[["score_df_list"]])
 
 utils::sessionInfo()
-

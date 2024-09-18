@@ -39,9 +39,9 @@ targets = []
      
 for d in datasets_other:
   targets = targets + [OUTPUT_DAT + "/03_recl/reclustered_" + d + "_list"]
-  # targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_" + d + "_list"]
-  # targets = targets + [OUTPUT_REP + "/all/reclustering_other_report_" + d + ".html"]
-  # targets = targets + [OUTPUT_REP + "/final/reclustering_other_final_report_" + d + ".html"]
+  targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_" + d + "_list"]
+  targets = targets + [OUTPUT_REP + "/all/reclustering_other_report_" + d + ".html"]
+  targets = targets + [OUTPUT_REP + "/final/reclustering_other_final_report_" + d + ".html"]
  
   #testing reclustering scores
   #targets = targets + [OUTPUT_REP + "/test_scores/test_reclustering_scores_" + d + ".html"]
@@ -55,11 +55,11 @@ for d in datasets_other:
 
   if RUN_PERM_BACKGROUND_SIGN:
     targets = targets + [OUTPUT_DAT + "/06_psig/perm_score_df_" + d]
-    #targets = targets + [OUTPUT_REP + "/conserved_signature/perm_conserved_signature_" + d + ".html"]
+    targets = targets + [OUTPUT_REP + "/conserved_signature/perm_conserved_signature_" + d + ".html"]
 
   if RUN_PERM_BACKGROUND_MARK:
     targets = targets + [OUTPUT_DAT + "/07_pmrk/perm_score_df_" + d]
-    #targets = targets + [OUTPUT_REP + "/conserved_markers/perm_conserved_markers_" + d + ".html"]
+    targets = targets + [OUTPUT_REP + "/conserved_markers/perm_conserved_markers_" + d + ".html"]
 
 
 #-------------------------------------------------------------------------------
@@ -332,7 +332,7 @@ if RUN_PERM_BACKGROUND_SIGN:
   rule sign_vs_rand:
       input:
           orig_score_df_list_input = rules.reclustering_other_scores.output.score_df_list,
-          perm_score_df_input = rules.permutation_other_background_sign.output.perm_score_df
+          perm_score_df_input = rules.permutation_background_sign.output.perm_score_df
       params:
           resolution_df = RESOLUTION_OTHER,
           cons_level_use = "conserved_signature",
@@ -387,7 +387,7 @@ if RUN_PERM_BACKGROUND_MARK:
   rule mark_vs_rand:
       input:
           orig_score_df_list_input = rules.reclustering_other_scores.output.score_df_list,
-          perm_score_df_input = rules.permutation_other_background_sign.output.perm_score_df
+          perm_score_df_input = rules.permutation_background_mark.output.perm_score_df
       params:
           resolution_df = RESOLUTION_OTHER,
           cons_level_use = "conserved_markers",

@@ -65,7 +65,6 @@ seu_preprocessed <- base::readRDS(snakemake@input[["seu_preprocessed"]])
 # load ensembl IDs of specific gene set to be tested from correct fraction
 # this can be signature genes or all BL6 marker genes
 ensembl_paths <- snakemake@input[["ensembl_paths"]]
-print(ensembl_paths)
 
 ensembl_df <- base::readRDS(ensembl_paths[[
   which(base::grepl(fraction_curr, ensembl_paths))]])
@@ -191,7 +190,7 @@ res_df_list <- parallel::mclapply(
 #                                   resolution = resl)
 
 score_df <- dplyr::bind_rows(res_df_list)
-score_df$cons_level_used <- base::rep(cons_level_used, nrow(score_df))
+score_df$cons_level_used <- base::rep(cons_level_use, nrow(score_df))
 print(head(score_df))
 
 #-------------------------------------------------------------------------------

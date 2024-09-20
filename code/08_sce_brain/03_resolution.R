@@ -16,6 +16,7 @@ all_scores <- list()
 for(species in unique(data.updated$orig.ident)){
   
   seu <- subset(data.updated, subset = orig.ident == species)
+  seu$cell_type <- as.factor(seu$subclass_label)
   
   seu_mark_cor_list <- lapply(X = as.list(resolution_vec),
                               FUN = standard_seu_pipeline,

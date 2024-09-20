@@ -1,5 +1,5 @@
-library(Seurat)
-library(dplyr)
+library(Seurat, quietly = TRUE)
+library(dplyr, quietly = TRUE)
 
 data <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/08_sce_brain/sample.combined_exc_4_species_integration.RDS")
 data.updated <- UpdateSeuratObject(object = data)  # available data is v3 Seurat
@@ -8,8 +8,8 @@ DefaultAssay(data.updated) <- "RNA"
 metadata <- data.updated@meta.data
 
 # Identify markers that are specific to each cell type in each species
-# ONLY LOOKING AT PRIMATES, WILL CROSS-COMPARE TO MOUSE
-species <- c("human", "macaque", "marmoset") #unique(metadata$orig.ident)
+# ONLY LOOKING AT PRIMATES
+species <- c("human", "macaque", "marmoset")
 cell_types <- unique(metadata$subclass_label)
 
 markers_list <- list()

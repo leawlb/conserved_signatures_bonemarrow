@@ -4,6 +4,8 @@ source("code/source/sce_functions_reclustering.R")
 data <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/08_sce_brain/sample.combined_exc_4_species_integration.RDS")
 data.updated <- UpdateSeuratObject(object = data)  # available data is v3 Seurat
 
+
+# Optimize resolution using markers conserved across primate species
 core_markers <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/08_sce_brain/02_marker_conserved_primates.rds")
 seu_mark_cor <- unique(unlist(core_markers)) # set of marker genes 
 

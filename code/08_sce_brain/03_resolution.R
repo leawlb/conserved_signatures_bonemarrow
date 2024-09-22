@@ -10,8 +10,8 @@ core_markers <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNA
 seu_mark_cor <- unique(unlist(core_markers)) # set of marker genes 
 
 # to choose optimal cluster resolution later
-resolution_vec <- c(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 
-                    1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2)
+resolution_vec <- c(0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1,
+                    1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9)
 
 all_scores <- list()
 

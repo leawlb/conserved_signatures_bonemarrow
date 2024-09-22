@@ -222,7 +222,7 @@ calculate_scores <- function(
   score_2 <- mclust::adjustedRandIndex(cluster_vector1, cluster_vector2)
   
   # Variation of Information
-  score_3 <- mclust::vi.dist(S4Vectors::unfactor(cluster_vector1),
+  score_3 <- mcclust::vi.dist(S4Vectors::unfactor(cluster_vector1),
                               S4Vectors::unfactor(cluster_vector2))
   
   print("scores 2 and 3")

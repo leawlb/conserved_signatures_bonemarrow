@@ -22,15 +22,15 @@ set.seed(37)
 library(SingleCellExperiment, quietly = TRUE)
 library(ggpubr, quietly = TRUE)
 library(tidyverse, quietly = TRUE)
-library(gghalves, quietly = TRUE) # not in conda env
+#library(gghalves, quietly = TRUE) # not in conda env
 library(ggpattern, quietly = TRUE) # not in conda env
 ```
 
-```{r load_manual_basepath, eval = FALSE, include = FALSE}
+```{r load_manual_basepath}
 base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
 ```
 
-```{r load_manual, eval = FALSE, include = FALSE}
+```{r load_manual}
 #-------------------------------------------------------------------------------
 #### OWN DATASET (HSPCs)
 
@@ -58,7 +58,7 @@ psdf_hsc_sign_rand <- base::readRDS(base::paste0(
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/06_psig/perm_score_df_hsc"))
 ```
 
-```{r load_manual_other1, eval = FALSE, include = FALSE}
+```{r load_manual_other1}
 #-------------------------------------------------------------------------------
 #### OTHER MOUSE DATASET 1 (HSPC)
 #### MUS_TM_BONEMARROW
@@ -113,7 +113,7 @@ psdf_hsc_sign_rand_o2 <- base::readRDS(base::paste0(
 
 ```
 
-```{r load_manual_remaining, eval = FALSE, include = FALSE}
+```{r load_manual_remaining}
 #-------------------------------------------------------------------------------
 #### REMAINING
 
@@ -144,7 +144,7 @@ source("../source/plotting.R")
 source("../source/sce_functions_reclustering.R")
 ```
 
-```{r load_snakemake}
+```{r load_snakemake, eval = FALSE, include = FALSE}
 
 #-------------------------------------------------------------------------------
 #### OWN DATASET (HSPCs)
@@ -240,6 +240,64 @@ score3 <- "mean_prop_cells_cluster"
 score2_long <- "Variation of information"
 score1_long <- "Adjusted rand index"
 score3_long <- "Mean prop. cells/cluster"
+```
+
+```{r density_plot_function}
+make_pattern_density_plot <- function(
+  score_df,
+  perm_score_df,
+  color_cons,
+  ylabel
+  ){
+
+  # make temp plot to extract maximum y value
+  p_temp <- ggplot2::ggplot(
+    perm_score_df,
+    aes(x = value))+
+    geom_density_pattern()
+  
+  # calculate the maximum y value (density at its peak)
+  density_data <- ggplot2::ggplot_build(p_temp)$data[[1]]
+  max_y <- max(density_data$y)
+  
+  # define the y value for the point as 125% of the maximum y value
+  y_value <- 1.25 * max_y
+  
+  # define the y limits for a nicer plot + y value to place the break/label
+  y_lim_low <- -0.25 * max_y
+  y_lim_high <- 1.5 * max_y
+  y_lim_break <- (y_lim_low + y_lim_high)/2 
+  
+  # add to score DF
+  score_df$y_value <- y_value
+  
+  # plot
+  p_return <- ggplot2::ggplot(
+    perm_score_df,
+    aes(x = value))+
+    geom_density_pattern(
+      fill = color_cons,
+      color = color_cons,
+      pattern = "circle",
+      pattern_fill = pattern_fill_color,
+      pattern_colour = pattern_line_colour,
+      pattern_density =pattern_density_val,
+      pattern_spacing = pattern_spacing_val)+
+    geom_point(
+      inherit.aes = FALSE, 
+      data = score_df,
+      aes(x = value, y = y_value),
+      size = point_plot_size,
+      color = color_cons)+
+    scale_y_continuous(
+      limits = c(y_lim_low, y_lim_high),
+      breaks = y_lim_break, 
+      labels = ylabel)
+  
+  return(p_return)
+  # TODO: add grey background
+}
+
 ```
 
 ```{r export_paths}
@@ -589,6 +647,7 @@ print(score1)
 print(score2)
 print(score3)
 
+#TODO: generate max_vi for entire figure
 score2_max <- max_vi
 score1_max <- 1
 score3_max <- 1
@@ -734,67 +793,21 @@ b_theme_plot_left1 <- b_base_plot_left1+
     breaks=c(0, 0.25, 0.5, 0.75, 1),
     position = "top", 
     limits = c(0, score1_max))+
-  ggplot2::ggtitle(score1_long) #TODO: continue here
+  ggplot2::ggtitle(score1_long) 
 ```
 
 ```{r b_base_plot_left2}
-b_base_plot_left2 <- ggplot2::ggplot(
-  score_df_mark_score_1,
-  aes(x = conservation_level_long,
-      y = value,
-      fill = conservation_level_long,
-      color = conservation_level_long))+
-  ggplot2::geom_hline(
-    yintercept = 0.25,
-    color = color_hline_background,
-    linewidth = 3)+
-  ggplot2::geom_hline(
-    yintercept = 0.75,
-    color = color_hline_background,
-    linewidth = 3)+
-  ggplot2::geom_point(
-    size = point_plot_size,
-    position = position_nudge(x = 0.25, y = 0))+
-  gghalves::geom_half_violin(
-    data = psdf_mark_signrand_score_1,
-    color = col_cons_long["conserved markers"],
-    alpha = 1,
-    side = "r",
-    scale = "width",
-    position = position_nudge(x = -0.5, y = 0))+
-  geom_violin_pattern(
-    pattern = "circle",
-    inherit.aes = FALSE,
-    scale = "width",
-    trim = FALSE,
-    position = position_nudge(x = -0.5, y = 0),
-    data = psdf_mark_signrand_score_1,
-    mapping = aes(y = value, x = conservation_level_long),
-    color = NA, 
-    alpha = 0,
-    pattern_fill = pattern_fill_color,
-    pattern_colour = pattern_line_colour,
-    pattern_density =pattern_density_val,
-    pattern_spacing = pattern_spacing_val)+
-  gghalves::geom_half_violin(
-    data = psdf_mark_signrand_score_1,
-    color = col_cons_long["conserved markers"],
-    alpha = 0,
-    side = "r",
-    scale = "width",
-    position = position_nudge(x = -0.5, y = 0))+
-  ggplot2::coord_flip()
+b_base_plot_left2 <- make_pattern_density_plot(
+  score_df = score_df_mark_score_1,
+  perm_score_df = psdf_mark_signrand_score_1,
+  color_cons = col_cons_long["conserved markers"],
+  ylabel = "conserved markers"
+)
 ```
 
 ```{r b_theme_plot_left2}
 b_theme_plot_left2 <- b_base_plot_left2+
   ggplot2::theme_classic()+
-  ggplot2::scale_color_manual(
-    "Score",
-    values = col_cons_long)+
-  ggplot2::scale_fill_manual(
-    "Score",
-    values = col_cons_long)+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_blank(),
@@ -806,69 +819,22 @@ b_theme_plot_left2 <- b_base_plot_left2+
     axis.line.x = element_blank(),
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
-  ggplot2::scale_y_continuous( # because flipped
-    limits = c(0, score1_max))+
-  ggplot2::scale_x_discrete(expand = expansion(add = c(-0.8, -0.1)))
+  ggplot2::scale_x_continuous(
+    limits = c(0, score1_max))
 ```
 
 ```{r b_base_plot_left3}
-b_base_plot_left3 <- ggplot2::ggplot(
-  score_df_mmms_score_1,
-  aes(x = conservation_level_long,
-      y = value,
-      fill = conservation_level_long,
-      color = conservation_level_long))+
-  ggplot2::geom_hline(
-    yintercept = 0.25,
-    color = color_hline_background,
-    linewidth = 3)+
-  ggplot2::geom_hline(
-    yintercept = 0.75,
-    color = color_hline_background,
-    linewidth = 3)+
-  ggplot2::geom_point(
-    size = point_plot_size,
-    position = position_nudge(x = 0.25, y = 0))+
-  gghalves::geom_half_violin(
-    data = psdf_mmms_signrand_score_1,
-    color = col_cons_long["total BL6 markers"],
-    alpha = 1,
-    side = "r",
-    scale = "width",
-    position = position_nudge(x = -0.5, y = 0))+
-  geom_violin_pattern(
-    pattern = "circle",
-    inherit.aes = FALSE,
-    scale = "width",
-    trim = FALSE,
-    position = position_nudge(x = -0.5, y = 0),
-    data = psdf_mmms_signrand_score_1,
-    mapping = aes(y = value, x = conservation_level_long),
-    color = NA, 
-    alpha = 0,
-    pattern_fill = pattern_fill_color,
-    pattern_colour = pattern_line_colour,
-    pattern_density =pattern_density_val,
-    pattern_spacing = pattern_spacing_val)+
-  gghalves::geom_half_violin(
-    data = psdf_mmms_signrand_score_1,
-    color = col_cons_long["total BL6 markers"],
-    alpha = 0,
-    side = "r",
-    scale = "width",
-    position = position_nudge(x = -0.5, y = 0))+
-  ggplot2::coord_flip()
+b_base_plot_left3 <- make_pattern_density_plot(
+  score_df = score_df_mmms_score_1,
+  perm_score_df = psdf_mmms_signrand_score_1,
+  color_cons = col_cons_long["total BL6 markers"],
+  ylabel ="total BL6 markers"
+)
 ```
 
 ```{r b_theme_plot_left3}
 b_theme_plot_left3 <- b_base_plot_left3+
   ggplot2::theme_classic()+
-  ggplot2::scale_color_manual(
-    "Score",
-    values = col_cons_long)+
-  ggplot2::scale_fill_manual(
-    "Score",
-    values = col_cons_long)+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_blank(),
@@ -880,9 +846,8 @@ b_theme_plot_left3 <- b_base_plot_left3+
     axis.line.x = element_blank(),
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
-  ggplot2::scale_y_continuous(
-    limits = c(0, score1_max))+
-  ggplot2::scale_x_discrete(expand = expansion(add = c(-0.8, -0.1)))
+  ggplot2::scale_x_continuous(
+    limits = c(0, score1_max))
 ```
 
 ```{r b_construct_a, fig.height = 2.8, fig.width = 5}
@@ -947,147 +912,47 @@ b_theme_plot_mleft1 <- b_base_plot_mleft1+
 ```
 
 ```{r b_base_plot_mleft2}
-b_base_plot_mleft2 <- ggplot2::ggplot(
-  score_df_mark_score_2,
-  aes(x = conservation_level_long,
-      y = value,
-      fill = conservation_level_long,
-      color = conservation_level_long))+
-  ggplot2::geom_hline(
-    yintercept = 1.5,
-    color = color_hline_background,
-    linewidth = 3)+
-  ggplot2::geom_hline(
-    yintercept = 4.5,
-    color = color_hline_background,
-    linewidth = 3)+
-  ggplot2::geom_point(
-    size = point_plot_size,
-    position = position_nudge(x = 0.25, y = 0))+
-  gghalves::geom_half_violin(
-    data = psdf_mark_signrand_score_2,
-    color = col_cons_long["conserved markers"],
-    alpha = 1,
-    side = "r",
-    scale = "width",
-    position = position_nudge(x = -0.5, y = 0))+
-  ggpattern::geom_violin_pattern(
-    pattern = "circle",
-    inherit.aes = FALSE,
-    scale = "width",
-    trim = FALSE,
-    position = position_nudge(x = -0.5, y = 0),
-    data = psdf_mark_signrand_score_2,
-    mapping = aes(y = value, x = conservation_level_long),
-    color = NA, 
-    alpha = 0,
-    pattern_fill = pattern_fill_color,
-    pattern_colour = pattern_line_colour,
-    pattern_density =pattern_density_val,
-    pattern_spacing = pattern_spacing_val)+
-  gghalves::geom_half_violin(
-    data = psdf_mark_signrand_score_2,
-    color = col_cons_long["conserved markers"],
-    alpha = 0,
-    side = "r",
-    scale = "width",
-    position = position_nudge(x = -0.5, y = 0))+
-   ggplot2::coord_flip()
+b_base_plot_mleft2 <- make_pattern_density_plot(
+  score_df = score_df_mark_score_2,
+  perm_score_df = psdf_mark_signrand_score_2,
+  color_cons = col_cons_long["conserved markers"],
+  ylabel = "conserved markers"
+)
 ```
 
 ```{r b_theme_plot_mleft2}
 b_theme_plot_mleft2 <- b_base_plot_mleft2+
   ggplot2::theme_classic()+
-  ggplot2::scale_color_manual(
-    "Score",
-    values = col_cons_long)+
-  ggplot2::scale_fill_manual(
-    "Score",
-    values = col_cons_long)+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
     axis.line.x = element_blank(),
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
-  ggplot2::scale_x_discrete(
-    expand = expansion(add = c(-0.8, -0.1)))+
-  ggplot2::scale_y_continuous(
-   limit = c(0, max_vi),
-   breaks=c(0, 1, 2, 3, 4, 5))
+  ggplot2::scale_x_continuous(
+    limits = c(0, score2_max))
 ```
 
 ```{r b_base_plot_mleft3}
-b_base_plot_mleft3 <- ggplot2::ggplot(
-  score_df_mmms_score_2,
-  aes(x = conservation_level_long,
-      y = value,
-      fill = conservation_level_long,
-      color = conservation_level_long))+
-  ggplot2::geom_hline(
-    yintercept = 1.5,
-    color = color_hline_background,
-    linewidth = 3)+
-  ggplot2::geom_hline(
-    yintercept = 4.5,
-    color = color_hline_background,
-    linewidth = 3)+
-  ggplot2::geom_point(
-    size = point_plot_size,
-    position = position_nudge(x = 0.25, y = 0))+
-  gghalves::geom_half_violin(
-    data = psdf_mmms_signrand_score_2,
-    color = col_cons_long["total BL6 markers"],
-    alpha = 1,
-    side = "r",
-    scale = "width",
-    position = position_nudge(x = -0.5, y = 0))+
-  ggpattern::geom_violin_pattern(
-    pattern = "circle",
-    inherit.aes = FALSE,
-    scale = "width",
-    trim = FALSE,
-    position = position_nudge(x = -0.5, y = 0),
-    data = psdf_mmms_signrand_score_2,
-    mapping = aes(y = value, x = conservation_level_long),
-    color = NA, 
-    alpha = 0,
-    pattern_fill = pattern_fill_color,
-    pattern_colour = pattern_line_colour,
-    pattern_density =pattern_density_val,
-    pattern_spacing = pattern_spacing_val)+
-  gghalves::geom_half_violin(
-    data = psdf_mmms_signrand_score_2,
-    color = col_cons_long["total BL6 markers"],
-    alpha = 0,
-    side = "r",
-    scale = "width",
-    position = position_nudge(x = -0.5, y = 0))+
-  ggplot2::coord_flip()
+b_base_plot_mleft3 <- make_pattern_density_plot(
+  score_df = score_df_mmms_score_2,
+  perm_score_df = psdf_mmms_signrand_score_2,
+  color_cons = col_cons_long["total BL6 markers"],
+  ylabel = "total BL6 markers"
+)
 ```
 
 ```{r b_theme_plot_mleft3}
 b_theme_plot_mleft3 <- b_base_plot_mleft3+
   ggplot2::theme_classic()+
-  ggplot2::scale_color_manual(
-    "Score",
-    values = col_cons_long)+
-  ggplot2::scale_fill_manual(
-    "Score",
-    values = col_cons_long)+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
     axis.line.x = element_blank(),
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
-  ggplot2::scale_y_continuous(
-    limits = c(0, max_vi))+
-  ggplot2::scale_x_discrete(
-    expand = expansion(add = c(-0.8, -0.1)))+
- ggplot2::scale_y_continuous(
-   limit = c(0, max_vi),
-   breaks=c(0, 1, 2, 3, 4, 5))
+  ggplot2::scale_x_continuous(
+    limits = c(0, score2_max))
 ```
 
 ```{r b_construct_mleft, fig.height = 2.8, fig.width = 2.8}
@@ -1151,143 +1016,47 @@ b_theme_plot_mright1 <- b_base_plot_mright1+
 ```
 
 ```{r b_base_plot_mright2}
-b_base_plot_mright2 <- ggplot2::ggplot(
-  score_df_mark_score_3,
-  aes(x = conservation_level_long,
-      y = value,
-      fill = conservation_level_long,
-      color = conservation_level_long))+
-  ggplot2::geom_hline(
-    yintercept = 0.25,
-    color = color_hline_background,
-    linewidth = 3)+
-  ggplot2::geom_hline(
-    yintercept = 0.75,
-    color = color_hline_background,
-    linewidth = 3)+
-  ggplot2::geom_point(
-    size = point_plot_size,
-    position = position_nudge(x = 0.25, y = 0))+
-  gghalves::geom_half_violin(
-    data = psdf_mark_signrand_score_3,
-    color = col_cons_long["conserved markers"],
-    alpha = 1,
-    side = "r",
-    scale = "width",
-    position = position_nudge(x = -0.5, y = 0))+
-  ggpattern::geom_violin_pattern(
-    pattern = "circle",
-    inherit.aes = FALSE,
-    scale = "width",
-    trim = FALSE,
-    position = position_nudge(x = -0.5, y = 0),
-    data = psdf_mark_signrand_score_3,
-    mapping = aes(y = value, x = conservation_level_long),
-    color = NA, 
-    alpha = 0,
-    pattern_fill = pattern_fill_color,
-    pattern_colour = pattern_line_colour,
-    pattern_density =pattern_density_val,
-    pattern_spacing = pattern_spacing_val)+
-  gghalves::geom_half_violin(
-    data = psdf_mark_signrand_score_3,
-    color = col_cons_long["conserved markers"],
-    alpha = 0,
-    side = "r",
-    scale = "width",
-    position = position_nudge(x = -0.5, y = 0))+
-  ggplot2::coord_flip()
+b_base_plot_mright2 <- make_pattern_density_plot(
+  score_df = score_df_mark_score_3,
+  perm_score_df = psdf_mark_signrand_score_3,
+  color_cons = col_cons_long["conserved markers"],
+  ylabel = "conserved markers"
+)
 ```
 
 ```{r b_theme_plot_mright2}
 b_theme_plot_mright2 <- b_base_plot_mright2+
   ggplot2::theme_classic()+
-  ggplot2::scale_color_manual(
-    "Score",
-    values = col_cons_long)+
-  ggplot2::scale_fill_manual(
-    "Score",
-    values = col_cons_long)+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
     axis.line.x = element_blank(),
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
-  ggplot2::scale_y_continuous(
-    limits = c(0, 1))+
-  ggplot2::scale_x_discrete(
-    expand = expansion(add = c(-0.8, -0.1)))
+  ggplot2::scale_x_continuous(
+    limits = c(0, score3_max))
 ```
 
 ```{r b_base_plot_mright3}
-b_base_plot_mright3 <- ggplot2::ggplot(
-  score_df_mmms_score_3,
-  aes(x = conservation_level_long,
-      y = value,
-      fill = conservation_level_long,
-      color = conservation_level_long))+
-  ggplot2::geom_hline(
-    yintercept = 0.25,
-    color = color_hline_background,
-    linewidth = 3)+
-  ggplot2::geom_hline(
-    yintercept = 0.75,
-    color = color_hline_background,
-    linewidth = 3)+
-  ggplot2::geom_point(
-    size = point_plot_size,
-    position = position_nudge(x = 0.25, y = 0))+
-  gghalves::geom_half_violin(
-    data = psdf_mmms_signrand_score_3,
-    color = col_cons_long["total BL6 markers"],
-    alpha = 1,
-    side = "r",
-    scale = "width",
-    position = position_nudge(x = -0.5, y = 0))+
-  ggpattern::geom_violin_pattern(
-    pattern = "circle",
-    inherit.aes = FALSE,
-    scale = "width",
-    trim = FALSE,
-    position = position_nudge(x = -0.5, y = 0),
-    data = psdf_mmms_signrand_score_3,
-    mapping = aes(y = value, x = conservation_level_long),
-    color = NA, 
-    alpha = 0,
-    pattern_fill = pattern_fill_color,
-    pattern_colour = pattern_line_colour,
-    pattern_density =pattern_density_val,
-    pattern_spacing = pattern_spacing_val)+
-  gghalves::geom_half_violin(
-    data = psdf_mmms_signrand_score_3,
-    color = col_cons_long["total BL6 markers"],
-    alpha = 0,
-    side = "r",
-    scale = "width",
-    position = position_nudge(x = -0.5, y = 0))+
-  ggplot2::coord_flip()
+b_base_plot_mright3 <- make_pattern_density_plot(
+  score_df = score_df_mmms_score_3,
+  perm_score_df = psdf_mmms_signrand_score_3,
+  color_cons = col_cons_long["total BL6 markers"],
+  ylabel = "total BL6 markers"
+)
 ```
 
 ```{r b_theme_plot_mright3}
 b_theme_plot_mright3 <- b_base_plot_mright3+
   ggplot2::theme_classic()+
-  ggplot2::scale_color_manual(
-    "Score",
-    values = col_cons_long)+
-  ggplot2::scale_fill_manual(
-    "Score",
-    values = col_cons_long)+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
     axis.line.x = element_blank(),
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
-  ggplot2::scale_y_continuous(
-    limits = c(0, 1))+
-  ggplot2::scale_x_discrete(
-    expand = expansion(add = c(-0.8, -0.1)))
+  ggplot2::scale_x_continuous(
+    limits = c(0, score3_max))
 ```
 
 ```{r b_construct_c, fig.height = 2.8, fig.width = 2.8}
@@ -1494,15 +1263,15 @@ b_all_plot
 ```
 
 ```{r b_plot_export}
-pdf(output_pdf_b_plot, width = 12.7, height = 3.7)
-b_all_plot
-dev.off()
+# pdf(output_pdf_b_plot, width = 12.7, height = 3.7)
+# b_all_plot
+# dev.off()
 ```
 
 ```{r b_legend_export}
-pdf(output_pdf_b_legend, width = 3, height = 1.8)
-b_legend
-dev.off()
+# pdf(output_pdf_b_legend, width = 3, height = 1.8)
+# b_legend
+# dev.off()
 ```
 
 ## C
@@ -1513,7 +1282,7 @@ Can re-use conserved signature DFs generated for part B.
 Make DFs for conserved signature permuted scores.
 
 ```{r c_prep1}
-psdf_sign_rand_long <- pivot_longer(
+psdf_sign_rand_long <- tidyr::pivot_longer(
   psdf_hsc_sign_rand, 
   c = 1:ncol(psdf_hsc_sign_rand),
   values_to = "value",
@@ -1560,247 +1329,105 @@ vis_df_sign_rand$type_y <- factor(
 ##### part left: adjusted rand index
 
 ```{r c_base_plot_left}
-c_base_plot_left <- ggplot2::ggplot(
-  score_df_sign_score_1,
-  aes(x = conservation_level_long,
-      y = value,
-      fill = conservation_level_long,
-      color = conservation_level_long))+
-  ggplot2::geom_hline(
-    yintercept = 0.25,
-    color = color_hline_background,
-    linewidth = 3)+
-  ggplot2::geom_hline(
-    yintercept = 0.75,
-    color = color_hline_background,
-    linewidth = 3)+
-  ggplot2::geom_point(
-    size = point_plot_size,
-    position = position_nudge(x = 0.5, y = 0))+
-  gghalves::geom_half_violin(
-    data = psdf_sign_rand_score_1,
-    color = col_cons_long["conserved identity signature"],
-    alpha = 1,
-    side = "r",
-    scale = "width",
-    position = position_nudge(x = -0.5, y = 0))+
-  ggpattern::geom_violin_pattern(
-    pattern = "circle",
-    inherit.aes = FALSE,
-    scale = "width",
-    trim = FALSE,
-    position = position_nudge(x = -0.5, y = 0),
-    data = psdf_sign_rand_score_1,
-    mapping = aes(y = value, x = conservation_level_long),
-    color = NA, 
-    alpha = 0,
-    pattern_fill = pattern_fill_color,
-    pattern_colour = pattern_line_colour,
-    pattern_density =pattern_density_val,
-    pattern_spacing = pattern_spacing_val)+
-  gghalves::geom_half_violin(
-    data = psdf_sign_rand_score_1,
-    color = col_cons_long["conserved identity signature"],
-    alpha = 0,
-    side = "r",
-    scale = "width",
-    position = position_nudge(x = -0.5, y = 0))+
-  ggplot2::coord_flip()
+c_base_plot_left <- make_pattern_density_plot(
+  score_df = score_df_sign_score_1,
+  perm_score_df = psdf_sign_rand_score_1,
+  color_cons = col_cons_long["conserved identity signature"],
+  ylabel = "conserved identity signature"
+)
 ```
 
 ```{r c_theme_plot_left}
 c_theme_plot_left <- c_base_plot_left+
   ggplot2::theme_classic()+
-  ggplot2::scale_color_manual(
-    "Score",
-    values = col_cons_long)+
-  ggplot2::scale_fill_manual(
-    "Score",
-    values = col_cons_long)+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_text(
       face = axis_text_face,
       color = axis_text_color,
       size = axis_text_size),
-    axis.text.y = element_text(
-      face = axis_text_face,
-      color = axis_text_color,
-      size = axis_text_size),
-    axis.title = element_blank(),
     plot.title = element_text(
       size = plot_title_size,
       face = plot_title_face,
       color = plot_title_color,
-      hjust = 0.5))+
-  ggplot2::scale_y_continuous(
-    position = "right", limits = c(0,1))+ # because flipped
-  ggplot2::scale_x_discrete(
-    expand = expansion(add = c(-0.9)))+
+      hjust = 0.5),
+    axis.text.y = element_text(
+      face = axis_text_face,
+      color = axis_text_color,
+      size = axis_text_size),  
+    axis.ticks.x = element_blank(),
+    axis.title = element_blank())+
+  ggplot2::scale_x_continuous(
+    limits = c(0, score1_max), 
+    position = "top")+
   ggplot2::ggtitle("Adjusted rand index")
 ```
 
 ##### part left middle: variation information
 
 ```{r c_base_plot_mleft}
-c_base_plot_mleft <- ggplot2::ggplot(
-  score_df_sign_score_2,
-  aes(x = conservation_level_long,
-      y = value,
-      fill = conservation_level_long,
-      color = conservation_level_long))+
-  ggplot2::geom_hline(
-    yintercept = 1.5,
-    color = color_hline_background,
-    linewidth = 3)+
-  ggplot2::geom_hline(
-    yintercept = 4.5,
-    color = color_hline_background,
-    linewidth = 3)+
-  ggplot2::geom_point(
-    size = point_plot_size,
-    position = position_nudge(x = 0.5, y = 0))+
-  gghalves::geom_half_violin(
-    data = psdf_sign_rand_score_2,
-    color = col_cons_long["conserved identity signature"],
-    alpha = 1,
-    side = "r",
-    scale = "width",
-    position = position_nudge(x = -0.5, y = 0))+
-  ggpattern::geom_violin_pattern(
-    pattern = "circle",
-    inherit.aes = FALSE,
-    scale = "width",
-    trim = FALSE,
-    position = position_nudge(x = -0.5, y = 0),
-    data = psdf_sign_rand_score_2,
-    mapping = aes(y = value, x = conservation_level_long),
-    color = NA, 
-    alpha = 0,
-    pattern_fill = pattern_fill_color,
-    pattern_colour = pattern_line_colour,
-    pattern_density =pattern_density_val,
-    pattern_spacing = pattern_spacing_val)+
-  gghalves::geom_half_violin(
-    data = psdf_sign_rand_score_2,
-    color = col_cons_long["conserved identity signature"],
-    alpha = 0,
-    side = "r",
-    scale = "width",
-    position = position_nudge(x = -0.5, y = 0))+
-  ggplot2::coord_flip()
+c_base_plot_mleft <- make_pattern_density_plot(
+  score_df = score_df_sign_score_2,
+  perm_score_df = psdf_sign_rand_score_2,
+  color_cons = col_cons_long["conserved identity signature"],
+  ylabel = "conserved identity signature"
+)
 ```
 
 ```{r c_theme_plot_mleft}
 c_theme_plot_mleft <- c_base_plot_mleft+
   ggplot2::theme_classic()+
-  ggplot2::scale_color_manual(
-    "Score",
-    values = col_cons_long)+
-  ggplot2::scale_fill_manual(
-    "Score",
-    values = col_cons_long)+
   ggplot2::theme(
     legend.position = "none",
-    axis.text.y = element_blank(),
     axis.text.x = element_text(
       face = axis_text_face,
       color = axis_text_color,
       size = axis_text_size),
-    axis.title.y = element_blank(),
-    axis.title.x = element_blank(),
     plot.title = element_text(
       size = plot_title_size,
       face = plot_title_face,
       color = plot_title_color,
-      hjust = 0.5))+
-  ggplot2::scale_y_continuous(
-    position = "right", 
-    breaks=c(0, 1, 2, 3, 4, 5),
-    limits = c(0, max_vi))+
-  ggplot2::scale_x_discrete(
-    expand = expansion(add = c(-0.9)))+
-  ggplot2::ggtitle("Variation of information")
+      hjust = 0.5),
+    axis.text.y = element_blank(),  
+    axis.ticks.x = element_blank(),
+    axis.title = element_blank())+
+  ggplot2::scale_x_continuous(
+    limits = c(0, score2_max), 
+    position = "top")+
+  ggplot2::ggtitle("Variation of Information")
 ```
 
 #### part middle right: prop cells/cluster
 
 ```{r c_base_plot_mright}
-c_base_plot_mright <- ggplot2::ggplot(
-  score_df_sign_score_3,
-  aes(x = conservation_level_long,
-      y = value,
-      fill = conservation_level_long,
-      color = conservation_level_long))+
-  ggplot2::geom_hline(
-    yintercept = 0.25,
-    color = color_hline_background,
-    linewidth = 3)+
-  ggplot2::geom_hline(
-    yintercept = 0.75,
-    color = color_hline_background,
-    linewidth = 3)+
-  ggplot2::geom_point(
-    size = point_plot_size,
-    position = position_nudge(x = 0.5, y = 0))+
-  gghalves::geom_half_violin(
-    data = psdf_sign_rand_score_3,
-    color = col_cons_long["conserved identity signature"],
-    alpha = 1,
-    side = "r",
-    scale = "width",
-    position = position_nudge(x = -0.5, y = 0))+
-  geom_violin_pattern(
-    pattern = "circle",
-    inherit.aes = FALSE,
-    scale = "width",
-    trim = FALSE,
-    position = position_nudge(x = -0.5, y = 0),
-    data = psdf_sign_rand_score_3,
-    mapping = aes(y = value, x = conservation_level_long),
-    color = NA, 
-    alpha = 0,
-    pattern_fill = pattern_fill_color,
-    pattern_colour = pattern_line_colour,
-    pattern_density =pattern_density_val,
-    pattern_spacing = pattern_spacing_val)+
-  gghalves::geom_half_violin(
-    data = psdf_sign_rand_score_3,
-    color = col_cons_long["conserved identity signature"],
-    alpha = 0,
-    side = "r",
-    scale = "width",
-    position = position_nudge(x = -0.5, y = 0))+
-  ggplot2::coord_flip()
+c_base_plot_mright <- make_pattern_density_plot(
+  score_df = score_df_sign_score_3,
+  perm_score_df = psdf_sign_rand_score_3,
+  color_cons = col_cons_long["conserved identity signature"],
+  ylabel = "conserved identity signature"
+)
 ```
 
 ```{r c_theme_plot_mright}
 c_theme_plot_mright <- c_base_plot_mright+
   ggplot2::theme_classic()+
-  ggplot2::scale_color_manual(
-    "Score",
-    values = col_cons_long)+
-  ggplot2::scale_fill_manual(
-    "Score",
-    values = col_cons_long)+
   ggplot2::theme(
     legend.position = "none",
-    axis.text.y = element_blank(),
     axis.text.x = element_text(
       face = axis_text_face,
       color = axis_text_color,
       size = axis_text_size),
-    axis.title = element_blank(),
     plot.title = element_text(
       size = plot_title_size,
       face = plot_title_face,
       color = plot_title_color,
-      hjust = 0.5))+
-  ggplot2::scale_y_continuous(
-    position = "right", 
-    limits = c(0, 1))+ 
-  ggplot2::scale_x_discrete(
-    expand = expansion(add = c(-1)))+
+      hjust = 0.5),
+    axis.text.y = element_blank(),  
+    axis.ticks.x = element_blank(),
+    axis.title = element_blank())+
+  ggplot2::scale_x_continuous(
+    limits = c(0, score3_max), 
+    position = "top")+
   ggplot2::ggtitle("Mean prop. cells/cluster")
 ```
 
@@ -1866,12 +1493,14 @@ c_theme_plot <- ggpubr::ggarrange(
   widths = c(3.8, 2, 2, 1.5)
 )
 c_theme_plot
+knitr::knit_exit()
+
 ```
 
 ```{r c_plot_export}
-pdf(output_pdf_c_plot, width = 12.7, height = 1.8)
-c_theme_plot
-dev.off()
+# pdf(output_pdf_c_plot, width = 12.7, height = 1.8)
+# c_theme_plot
+# dev.off()
 ```
 
 ## D 
@@ -1911,7 +1540,7 @@ d_sign_df$Var2 <- factor(
   levels = base::rev(c(1, 0, 4, 8, 5, 6, 7, 3, 2)))
 ```
 
-```{r a_prep_conserved_markers}
+```{r d_prep_conserved_markers}
 d_mat_mark <- base::table(selected_seu_list$seu_mark$cell_type, 
                           selected_seu_list$seu_mark$seurat_clusters)
 
@@ -1925,7 +1554,7 @@ d_mark_df$Var2 <- factor(
   levels = base::rev(c(1, 0, 3, 6, 4, 5, 2, 7)))
 ```
 
-```{r a_prep_all_bl6_markers}
+```{r d_prep_all_bl6_markers}
 d_mat_mmms <- base::table(selected_seu_list$seu_mmms$cell_type, 
                           selected_seu_list$seu_mmms$seurat_clusters)
 
@@ -2117,7 +1746,7 @@ score_df_sign_score_3_o1 <- score_df_sign_o1[
   score_df_sign_o1$type == "mean_prop_cells_cluster",]
 ```
 
-```{r e_prep2}
+```{r e_prep3}
 score_df_mark_o1 <- score_df_hsc_o1[
   score_df_hsc_o1$conservation_level == "conserved_markers",]
 score_df_mark_o1$conservation_level_long <- "conserved markers"
@@ -2130,7 +1759,7 @@ score_df_mark_score_3_o1 <- score_df_mark_o1[
   score_df_mark_o1$type == "mean_prop_cells_cluster",]
 ```
 
-```{r e_prep3}
+```{r e_prep4}
 psdf_mark_signrand_long_o1 <- pivot_longer(
   psdf_hsc_mark_signrand_o1, 
   c = 1:ncol(psdf_hsc_mark_signrand_o1),
@@ -2147,7 +1776,7 @@ psdf_mark_signrand_score_3_o1 <- psdf_mark_signrand_long_o1[
   psdf_mark_signrand_long_o1$type %in% c("mean_prop_cells_cluster"),]
 ```
 
-```{r e_prep4}
+```{r e_prep5}
 score_df_mmms_o1  <- score_df_hsc_o1[
   score_df_hsc_o1$conservation_level == "mmusall_markers",]
 score_df_mmms_o1$conservation_level_long <- "total BL6 markers"
@@ -2160,7 +1789,7 @@ score_df_mmms_score_3_o1 <- score_df_mmms_o1[
   score_df_mmms_o1$type == "mean_prop_cells_cluster",]
 ```
 
-```{r e_prep5}
+```{r e_prep6}
 psdf_mmms_signrand_long_o1 <- tidyr::pivot_longer(
   psdf_hsc_mmms_signrand_o1, 
   c = 1:ncol(psdf_hsc_mmms_signrand_o1),
@@ -2177,7 +1806,7 @@ psdf_mmms_signrand_score_3_o1 <- psdf_mmms_signrand_long_o1[
   psdf_mmms_signrand_long_o1$type %in% c("mean_prop_cells_cluster"),]
 ```
 
-```{r e_prep6}
+```{r e_prep7}
 
 # get the number of genes used for each gene set
 nr_sign_used <- selected_score_df_list_o1$seu_sign$nr_genes_used[1]
@@ -2194,7 +1823,7 @@ nr_mmms_rand <- nr_mmms_left
 max_genes <- nr_mmms_used
 ```
 
-```{r e_prep7}
+```{r e_prep8}
 e_vis_df_sign <- base::data.frame(
   type_y = "conserved identity signature",
   type_fill = "conserved identity signature",
@@ -2202,7 +1831,7 @@ e_vis_df_sign <- base::data.frame(
 )
 ```
 
-```{r b_prep8}
+```{r e_prep9}
 e_vis_df_mark <- base::data.frame(
   type_y = c(
     "conserved markers",
@@ -2233,7 +1862,7 @@ e_vis_df_mark$type_y <- factor(e_vis_df_mark$type_y, levels = base::rev(c(
 )))
 ```
 
-```{r b_prep9}
+```{r e_prep10}
 e_vis_df_mmms <- base::data.frame(
   type_y = c(
     "total BL6 markers",
@@ -3353,7 +2982,7 @@ f_base_plot_right <- ggplot2::ggplot(
     pattern_spacing = pattern_spacing_val)
 ```
 
-```{r c_theme_plot_right}
+```{r f_theme_plot_right}
 f_theme_plot_right <- f_base_plot_right+
   ggplot2::theme_classic()+
   ggplot2::theme(
@@ -3472,7 +3101,7 @@ max_genes <- nr_mmms_used
 
 Make DF with gene numbers also for conserved signature background permutation.
 
-```{r f_prep2}
+```{r g_prep5}
 g_vis_df_sign_rand <- base::data.frame(
   type_y = c(
     "conserved identity signature",

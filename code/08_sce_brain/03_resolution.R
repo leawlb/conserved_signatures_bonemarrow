@@ -1,4 +1,5 @@
 library(Seurat, quietly = TRUE)
+library(ggplot2, quietly = TRUE)
 source("code/source/sce_functions_reclustering.R")
 
 data <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/08_sce_brain/sample.combined_exc_4_species_integration.RDS")
@@ -35,3 +36,47 @@ for(species in unique(data.updated$orig.ident)){
 
 saveRDS(all_scores,
         "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/08_sce_brain/03_resolution_scores.rds")
+
+# ggplot(all_scores[["human"]],
+#        aes(x = resolution,
+#            y = value,
+#            group = type)) +
+#   facet_wrap(~type,
+#                       scale = "free_y",
+#                       ncol = 1) +
+#   geom_line() +
+#   theme_classic()
+## human is 0.5
+
+# ggplot(all_scores[["macaque"]],
+#                 aes(x = resolution,
+#                              y = value,
+#                              group = type)) +
+#   facet_wrap(~type,
+#                       scale = "free_y",
+#                       ncol = 1) +
+#   geom_line() +
+#   theme_classic()
+# # macaque is 0.7
+
+# ggplot(all_scores[["marmoset"]],
+#                 aes(x = resolution,
+#                              y = value,
+#                              group = type)) +
+#   facet_wrap(~type,
+#                       scale = "free_y",
+#                       ncol = 1) +
+#   geom_line() +
+#   theme_classic()
+# # marmoset is 0.6
+
+# ggplot(all_scores[["mouse"]],
+#                 aes(x = resolution,
+#                              y = value,
+#                              group = type)) +
+#   facet_wrap(~type,
+#                       scale = "free_y",
+#                       ncol = 1) +
+#   geom_line() +
+#   theme_classic()
+# # mouse is 0.7

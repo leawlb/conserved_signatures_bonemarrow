@@ -1,0 +1,601 @@
+---
+title: "Figure 4"
+date: '2024-09-23
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Generate Figure 4, current title:
+" "
+
+#### Load objects
+
+```{r seed, message = FALSE}
+base::RNGkind(kind = "Mersenne-Twister")
+set.seed(37)
+```
+
+```{r load_packages, message = FALSE}
+library(SingleCellExperiment, quietly = TRUE)
+library(ggpubr, quietly = TRUE)
+library(tidyverse, quietly = TRUE)
+library(gghalves, quietly = TRUE) # not in conda env
+library(ggpattern, quietly = TRUE) # not in conda env
+```
+
+```{r load_manual_basepath}
+base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+```
+
+```{r load_manual}
+#-------------------------------------------------------------------------------
+#### OWN DATASET (HSPCs)
+
+# SCE with reclustering vectors for each gene set
+sce_str_recl <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/03_recl/sce_str"))
+
+# dataframe of re-clustering scores for each gene set
+score_df_str <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/04_rcls/score_df_str"))
+
+# dataframes of re-clustering scores after permutation comparing gene sets
+psdf_str_mark_signrand <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_perg/perm_score_df_mark_str"))
+psdf_str_mmms_signrand <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_perg/perm_score_df_mmms_str"))
+
+# dataframes of re-clustering scores after background permutation
+psdf_str_sign_rand <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/06_psig/perm_score_df_str"))
+```
+
+```{r load_manual_other1}
+#-------------------------------------------------------------------------------
+#### OTHER MOUSE DATASET 1 (HSPC)
+#### MUS_BAR_STROMAL
+
+dataset_1 <- "mus_bar_stromal"
+
+# list of seurat objects with reclustering vectors for each gene set and resolution
+seu_hsc_recl_list_o1 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_mus_bar_stromal_list"))
+
+# list of dataframes of re-clustering scores for each gene set and resolution
+score_df_hsc_list_o1 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_mus_bar_stromal_list"))
+
+# dataframes of re-clustering scores after permutation comparing gene sets
+psdf_hsc_mark_signrand_o1 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mark_mus_bar_stromal"))
+psdf_hsc_mmms_signrand_o1 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_mus_bar_stromal"))
+psdf_hsc_mmms_markrand_o1 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_mark_mus_bar_stromal"))
+
+# perm score DF from background permutation (SIGN)
+psdf_hsc_sign_rand_o1 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/06_psig/perm_score_df_mus_bar_stromal"))
+
+# perm score DF from background permutation (MARK)
+# psdf_hsc_mark_rand_o1 <- base::readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_pmrk/perm_score_df_li_all_stromal"))
+```
+
+```{r load_manual_other2}
+#### MUS_WEINREB_HSPC
+
+dataset_2 <- "mus_weinreb_hspc"
+
+# list of dataframes of re-clustering scores for each gene set and resolution
+score_df_hsc_list_o2 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_mus_weinreb_hspc_list"))
+
+# perm score DF from background permutation (SIGN)
+psdf_hsc_sign_rand_o2 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/06_psig/perm_score_df_mus_weinreb_hspc"))
+
+```
+
+```{r load_manual_remaining}
+#-------------------------------------------------------------------------------
+#### REMAINING
+
+# list of gene sets for HSPCs (conserved signature, conserved markers, etc.)
+geneset_list_hsc <-base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"))
+
+# data frame containing the correct resolutions for other datasets as visually determined
+resolution_df_path <- base::paste0(
+  base_path,
+  "/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt")
+
+resolution_df <- utils::read.csv(file = resolution_df_path, 
+                               header = TRUE, 
+                               sep = ";", 
+                               check.names=FALSE, 
+                               stringsAsFactors=FALSE, 
+                               as.is=TRUE, 
+                               colClasses = "character")
+
+colors_path <- base::paste0(
+  base_path,
+  "/metadata/colors/colors.txt")
+
+source("../source/colors.R")
+source("../source/plotting.R")
+source("../source/sce_functions_reclustering.R")
+```
+
+
+```{r params}
+# global params
+source("determine_params.R")
+
+col_cons <- c("conserved_signature" = "#db5b00ff",
+              "conserved_markers" = "#eb9523ff",
+              "mmusall_markers" = "#a7c5a3ff",
+              "ndges" = "#ea91adff",
+              "random_features" = "grey80")
+
+col_cons_long <- c(
+  "conserved identity signature" = "#db5b00ff",
+  "conserved markers" = "#eb9523ff",
+  "total BL6 markers" = "#a7c5a3ff",
+  "ndges" = "#ea91adff",
+  "random genes" = "grey80")
+```
+
+# HEATMAPS (put in order later)
+
+Heatmaps of own re-clustered HSPC mouse data using signature genes/
+conserved markers/BL6 markers/nDGEs.
+
+#### Prep
+
+```{r a_prep_conserved_signature}
+mat_sign <- base::table(
+  sce_str_recl$celltypes, 
+  sce_str_recl$cluster_signt)
+
+# normalise per column = new clusters and turn into DF
+for(i in 1:ncol(mat_sign)){
+  mat_sign[,i] <- mat_sign[,i]/base::sum(mat_sign[,i])
+}
+sign_df <- base::as.data.frame(mat_sign)
+
+#manually factorise clusters for nice order
+sign_df$Var2 <- factor(
+  sign_df$Var2,
+  levels = base::rev(c(5, 8, 1, 3, 4, 2, 6, 7)))
+```
+
+```{r a_prep_conserved_markers}
+mat_mark <- base::table(
+  sce_str_recl$celltypes, 
+  sce_str_recl$cluster_consm)
+
+for(i in 1:ncol(mat_mark)){
+  mat_mark[,i] <- mat_mark[,i]/base::sum(mat_mark[,i])
+}
+mark_df <- base::as.data.frame(mat_mark)
+
+mark_df$Var2 <- factor(
+  mark_df$Var2,
+  levels = base::rev(c(1, 7, 2, 4, 5, 9, 3, 8, 6)))
+```
+
+```{r a_prep_all_bl6_markers}
+mat_mmms <- base::table(
+  sce_str_recl$celltypes, 
+  sce_str_recl$cluster_mmusm)
+
+for(i in 1:ncol(mat_mmms)){
+  mat_mmms[,i] <- mat_mmms[,i]/base::sum(mat_mmms[,i])
+}
+mmms_df <- base::as.data.frame(mat_mmms)
+
+mmms_df$Var2 <- factor(
+  mmms_df$Var2,
+  levels = base::rev(c(1, 10, 2, 9, 4, 5, 8, 3, 6, 7)))
+```
+
+#### Plot Components
+
+```{r a_sign_base_plot}
+a_sign_base_plot <- ggplot2::ggplot(
+  sign_df, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+```
+
+```{r a_mark_base_plot}
+a_mark_base_plot <- ggplot2::ggplot(
+  mark_df, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+```
+
+```{r a_mmms_base_plot}
+a_mmms_base_plot <- ggplot2::ggplot(
+  mmms_df, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+```
+
+```{r a_sign_theme_plot}
+a_sign_theme_plot <- a_sign_base_plot+
+  ggplot2::theme_classic()+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    axis.ticks.y = element_blank(),
+    plot.title = element_text(
+      size = plot_title_size,
+      face = plot_title_face,
+      hjust = 0.5,
+      color = col_cons_long["conserved identity signature"]))+
+  ggplot2::scale_fill_gradientn(
+    "Proportion of cells per cluster",
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  ggplot2::ggtitle("Conserved identity signature")
+```
+
+```{r a_mark_theme_plot}
+a_mark_theme_plot <- a_mark_base_plot+
+  ggplot2::theme_classic()+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.title.x = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks.y = element_blank(),
+    axis.title.y = element_text(
+      size = axis_title_size,
+      color = axis_title_color,
+      face = axis_title_face),
+    plot.title = element_text(
+      size = plot_title_size,
+      face = plot_title_face,
+      hjust = 0.5,
+      color = col_cons_long["conserved markers"]))+
+  ggplot2::ylab("New clusters")+
+  ggplot2::scale_fill_gradientn(
+    "Proportion of cells per cluster",
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  ggplot2::ggtitle("Conserved markers")
+```
+
+```{r a_mmms_theme_plot}
+a_mmms_theme_plot <- a_mmms_base_plot+
+  ggplot2::theme_classic()+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.title.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    axis.text.y = element_blank(),
+    axis.title.x = element_text(
+      size = axis_title_size,
+      color = axis_title_color,
+      face = axis_title_face,
+      margin = margin(t = 0.3, unit = "cm")),
+    axis.text.x = element_text(
+      size = axis_text_size,
+      color = axis_text_color,
+      face = axis_text_face,
+      angle = 90,
+      hjust = 0,
+      vjust = 0.5),
+    plot.title = element_text(
+      size = plot_title_size,
+      face = plot_title_face,
+      hjust = 0.5,
+      color = col_cons_long["total BL6 markers"]))+
+  ggplot2::xlab("Original cell types")+
+  ggplot2::scale_fill_gradientn(
+    "Proportion of cells per cluster",
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  ggplot2::ggtitle("total BL6 markers")
+```
+
+```{r a_legend_theme_plot}
+a_legend_plot <- a_mmms_base_plot+
+  ggplot2::scale_fill_gradientn(
+    "Proportion of cells per cluster",
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  ggplot2::theme(
+    legend.title = element_text(
+      face = legend_title_face,
+      size = legend_title_size,
+      color = legend_title_color,
+      margin = margin(r = 10),
+      vjust = 0.85),
+    legend.text = element_text(
+      face = legend_text_face,
+      size = legend_text_size,
+      color = legend_text_color),
+    legend.position = "bottom",
+  )
+a_legend_theme <- ggpubr::get_legend(a_legend_plot)
+```
+
+#### Construct
+
+```{r a_construct, fig.height = 8.5, fig.width = 3.2}
+
+a_theme_plot <- ggpubr::ggarrange(
+  ncol = 1,
+  a_sign_theme_plot,
+  a_mark_theme_plot,
+  a_mmms_theme_plot+
+  ggplot2::theme(
+    axis.text.x = element_text(
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axis_text_color, 
+      angle = 90,
+      hjust = 0,
+      vjust = 0.5)),
+  align = "v",
+  heights = c(1, 1, 2.4)
+)
+
+a_theme_plot
+```
+
+```{r a_construct_legend, fig.width = 6, fig.height = 1}
+a_legend <- ggpubr::ggarrange(a_legend_theme)
+```
+
+```{r a_plot_export}
+# pdf(output_pdf_a_plot, width = 3.2, height = 7)
+# a_theme_plot
+# dev.off()
+```
+
+```{r a_legend_export}
+# pdf(output_pdf_a_legend, width = 6, height = 1)
+# a_legend
+# dev.off()
+```
+
+## HEATMAPS OTHER1
+
+#### Prep
+
+```{r d_prep1}
+
+resolution_df_o1 <- resolution_df[resolution_df$dataset == dataset_1,]
+
+selected_seu_list <- lapply(seu_hsc_recl_list_o1, function(seu_list){
+  
+  conslev_curr <- seu_list[[1]]@misc$used_genes
+  
+  resdf_temp <- resolution_df_o1[resolution_df_o1$conservation_level == conslev_curr,]
+  res_curr <- resdf_temp$resolution
+  
+  seu_return <- seu_list[[res_curr]]
+  return(seu_return)
+  
+})
+```
+
+```{r d_prep_conserved_signature}
+d_mat_sign <- base::table(selected_seu_list$seu_sign$cell_type, 
+                          selected_seu_list$seu_sign$seurat_clusters)
+
+# normalise per column = new clusters and turn into DF
+for(i in 1:ncol(d_mat_sign)){
+  d_mat_sign[,i] <- d_mat_sign[,i]/base::sum(d_mat_sign[,i])
+}
+d_sign_df <- base::as.data.frame(d_mat_sign)
+
+# manually factorise clusters
+d_sign_df$Var2 <- factor(
+  d_sign_df$Var2,
+  levels = base::rev(c(2, 12, 6, 7, 4, 3, 8, 11, 0, 9, 5, 1, 10)))
+```
+
+```{r d_prep_conserved_markers}
+d_mat_mark <- base::table(selected_seu_list$seu_mark$cell_type, 
+                          selected_seu_list$seu_mark$seurat_clusters)
+
+for(i in 1:ncol(d_mat_mark)){
+  d_mat_mark[,i] <- d_mat_mark[,i]/base::sum(d_mat_mark[,i])
+  }
+d_mark_df <- base::as.data.frame(d_mat_mark)
+
+d_mark_df$Var2 <- factor(
+  d_mark_df$Var2,
+  levels = base::rev(c(2, 12, 7, 6, 4, 3, 8, 11, 0, 9, 5, 1, 13, 10)))
+```
+
+```{r d_prep_all_bl6_markers}
+d_mat_mmms <- base::table(selected_seu_list$seu_mmms$cell_type, 
+                          selected_seu_list$seu_mmms$seurat_clusters)
+
+for(i in 1:ncol(d_mat_mmms)){
+  d_mat_mmms[,i] <- d_mat_mmms[,i]/base::sum(d_mat_mmms[,i])
+}
+d_mmms_df <- base::as.data.frame(d_mat_mmms)
+
+d_mmms_df$Var2 <- factor(
+  d_mmms_df$Var2,
+  levels = base::rev(c(3, 12, 6, 8, 4, 2, 7, 11, 0, 9, 5, 1, 13, 10)))
+```
+
+#### Plot Components
+
+```{r d_sign_base_plot}
+d_sign_base_plot <- ggplot2::ggplot(
+  d_sign_df, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+d_sign_base_plot
+```
+
+```{r d_mark_base_plot}
+d_mark_base_plot <- ggplot2::ggplot(
+  d_mark_df, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+d_mark_base_plot
+```
+
+```{r d_mmms_base_plot}
+d_mmms_base_plot <- ggplot2::ggplot(
+  d_mmms_df, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+d_mmms_base_plot
+```
+
+```{r d_sign_theme_plot}
+d_sign_theme_plot <- d_sign_base_plot+
+  ggplot2::theme_classic()+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks.y = element_blank(),
+    plot.title = element_text(
+      size = plot_title_size,
+      face = plot_title_face,
+      hjust = 0.5,
+      color = col_cons_long["conserved identity signature"]))+
+  ggplot2::scale_fill_gradientn(
+    "Proportion of cells per cluster",
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  ggplot2::ggtitle("Conserved identity signature")
+```
+
+```{r d_mark_theme_plot}
+d_mark_theme_plot <- d_mark_base_plot+
+  ggplot2::theme_classic()+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.title.x = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks.y = element_blank(),
+    axis.title.y = element_text(
+      size = axis_title_size,
+      face = axis_title_face,
+      color = axis_title_color),
+    plot.title = element_text(
+      size = plot_title_size,
+      face = plot_title_face,
+      hjust = 0.5,
+      color = col_cons_long["conserved markers"]))+
+  ggplot2::scale_fill_gradientn(
+    "Proportion of cells per cluster",
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  ggplot2::ggtitle("Conserved markers")+
+  ggplot2::ylab("New clusters")
+```
+
+```{r d_mmms_theme_plot}
+d_mmms_theme_plot <- d_mmms_base_plot+
+  ggplot2::theme_classic()+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.text.x = element_text(
+      size = axis_text_size,
+      face = axis_text_face,
+      color = axis_text_color,
+      angle = 90,
+      hjust = 0,
+      vjust = 0.5),
+    axis.title.x = element_text(
+      size = axis_title_size,
+      face = axis_title_face,
+      color = axis_title_color,
+      margin = margin(t = 0.3, unit = "cm")),
+    axis.title.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    axis.text.y = element_blank(),
+    plot.title = element_text(
+      size = plot_title_size,
+      face = plot_title_face,
+      hjust = 0.5,
+      color = col_cons_long["total BL6 markers"]))+
+  ggplot2::scale_fill_gradientn(
+    "Proportion of cells per cluster",
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  ggplot2::ggtitle("total BL6 markers")+
+  ggplot2::xlab("Original cell types")
+```
+
+#### Construct
+
+```{r d_construct, fig.width = 3.2, fig.height = 9.2}
+
+d_theme_plot <- ggpubr::ggarrange(
+  ncol = 1,
+  d_sign_theme_plot,
+  d_mark_theme_plot,
+  d_mmms_theme_plot+
+  ggplot2::theme(
+    axis.text.x = element_text(
+      face = axis_text_face,
+      size = axis_text_size,
+      color = axis_text_color, 
+      angle = 90,
+      hjust = 0,
+      vjust = 0.5)),
+  align = "v",
+  heights = c(1, 1, 3.5)
+)
+
+d_theme_plot
+```
+
+```{r d_plot_export}
+# pdf(output_pdf_d_plot, width = 3.2, height = 9.2)
+# d_theme_plot
+# dev.off()
+```
+

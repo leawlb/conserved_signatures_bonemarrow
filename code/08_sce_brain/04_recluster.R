@@ -90,7 +90,9 @@ for(sp in c("human", "marmoset", "macaque", "mouse")){
     
     print(
       ggplot(plot_gg, 
-             aes(x = factor(subclass_label), 
+             aes(x = factor(subclass_label, 
+                            levels = c("L2/3 IT", "L5 IT", "L6 IT", "L6 IT Car3", 
+                                       "L5 ET", "L5/6 NP", "L6 CT", "L6b")), 
                  y = seurat_clusters, 
                  fill= clust_prop*100)) + 
         geom_tile() +

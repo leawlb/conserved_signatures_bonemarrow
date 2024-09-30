@@ -113,7 +113,7 @@ for(sp in c("human", "marmoset", "macaque")){
 
 #### Plot Components
 
-```{r d_sign_base_plot}
+```{r b_base_plot}
 plotted_gg <- list()
 for(sp in c("human", "marmoset", "macaque")){
   for(genes in c("core", "sig")){
@@ -123,7 +123,7 @@ for(sp in c("human", "marmoset", "macaque")){
                                            "L5 ET", "L5/6 NP", "L6 CT", "L6b")), 
                y = factor(seurat_clusters, 
                           levels = unique(factorize[[sp]][[genes]])),
-               fill= clust_prop)) + 
+               fill = clust_prop)) + 
       geom_tile()
   }
 }
@@ -135,7 +135,7 @@ for(sp in c("human", "marmoset", "macaque")){
     if(genes == "core"){ # bottom of plot
       title <- "conserved markers"
       plotted_gg[[sp]][[genes]] <- plotted_gg[[sp]][[genes]] + 
-          ggplot2::theme_classic()+
+          ggplot2::theme_classic() +
           ggplot2::theme(
             legend.position = "none",
             axis.title.x = element_blank(),
@@ -221,4 +221,136 @@ dev.off()
 ```
 
 
+## C
+
+Mouse cell type identification using only primate marker genes.
+
+#### Prep
+
+```{r c_prep1}
+# establish order of clusters for plotting based on 04_recluster.R
+# core = conserved markers; sig = conserved identity signature genes
+factorize_mouse <- list(core = c(10,2,5,7,6,0,4,8,9,1,12,3,11),
+                        sig = c(0,11,6,10,2,7,8,4,5,9,3,1,12))
+```
+
+```{r c_prep2}
+# loop through all three primate species and across core and sig genes sets
+# to create normalized matrices for plotting
+plot_gg_mouse <- list()
+for(genes in c("core", "sig")){
+  data <- readRDS(paste0(base_path, 
+                         brain_path, 
+                         "04_recluster/mouse_reclust_", genes, ".rds"))
+  
+  plot <- data@meta.data[,c("subclass_label", "seurat_clusters")] %>%
+    table() %>% as.matrix()
+  
+  plot_gg_mouse[[genes]] <- plot %>%
+    as.data.frame() %>%
+    group_by(seurat_clusters) %>%
+    mutate(clust_prop = Freq/sum(Freq)) %>%
+    ungroup %>%
+    group_by(subclass_label) %>%
+    mutate(subclass_prop = Freq/sum(Freq)) %>%
+    filter(subclass_label != "L6 IT Car3")
+}
+```
+
+#### Plot Components
+
+```{r c_base_plot}
+plotted_gg_mouse <- list()
+for(genes in c("core", "sig")){
+  plotted_gg_mouse[[genes]] <- ggplot(plot_gg_mouse[[genes]], 
+         aes(x = factor(subclass_label, 
+                              levels = c("L2/3 IT", "L5 IT", "L6 IT", 
+                                         "L5 ET", "L5/6 NP", "L6 CT", "L6b")), 
+             y = factor(seurat_clusters, 
+                        levels = unique(factorize_mouse[[genes]])),
+             fill = clust_prop)) + 
+    geom_tile()
+}
+```
+
+```{r c_set_theme}
+plotted_gg_mouse[["core"]] <- plotted_gg_mouse[["core"]] + 
+    ggplot2::theme_classic() +
+    ggplot2::theme(
+      legend.position = "none",
+      axis.title.x = element_blank(),
+      axis.text = element_blank(),
+      axis.text.x = element_text(
+                    size = axis_text_size,
+                    face = axis_text_face,
+                    color = axis_text_color,
+                    angle = 90,
+                    hjust = 0,
+                    vjust = 0.5),
+      axis.ticks.y = element_blank(),
+      axis.title.y = element_text(
+        size = axis_title_size,
+        face = axis_title_face,
+        color = axis_title_color),
+      plot.title = element_text(
+        size = plot_title_size,
+        face = plot_title_face,
+        hjust = 0.5,
+        color = col_cons_long["conserved markers"])) +
+    ggplot2::ggtitle("conserved markers") +
+    ggplot2::scale_fill_gradientn(
+      colors = mycolors_to1,
+      limits = c(0, 1),
+      breaks = c(0, 0.5, 1))+
+    ggplot2::ylab("New clusters") +
+    ggplot2::xlab("Original cell types")
+print(plotted_gg_mouse[["core"]])
+
+
+plotted_gg_mouse[["sig"]] <- plotted_gg_mouse[["sig"]] + 
+    ggplot2::theme_classic() +
+    ggplot2::theme(
+      legend.position = "none",
+      axis.title.x = element_blank(),
+      axis.text = element_blank(),
+      axis.ticks.y = element_blank(),
+      axis.title.y = element_text(
+        size = axis_title_size,
+        face = axis_title_face,
+        color = axis_title_color),
+      plot.title = element_text(
+        size = plot_title_size,
+        face = plot_title_face,
+        hjust = 0.5,
+        color = col_cons_long["conserved identity signature"]))  +
+     ggplot2::ggtitle("conserved identity signature") +
+     ggplot2::scale_fill_gradientn(
+          colors = mycolors_to1,
+          limits = c(0, 1),
+          breaks = c(0, 0.5, 1)) +
+     ggplot2::ylab("New clusters")
+print(plotted_gg_mouse[["sig"]])
+
+```
+
+#### Construct
+
+```{r c_construct, fig.width = 3, fig.height = 4}
+
+b_plot <- ggpubr::ggarrange(
+  ncol = 1,
+  plotted_gg_mouse[["sig"]] ,
+  plotted_gg_mouse[["core"]],
+  align = "v",
+  heights = c(1, 1.5)
+)
+
+b_plot
+```
+
+```{r c_plot_export}
+pdf(output_pdf_b_plot, width = 9, height = 4)
+b_plot
+dev.off()
+```
 

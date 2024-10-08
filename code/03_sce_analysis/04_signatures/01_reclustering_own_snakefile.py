@@ -68,7 +68,7 @@ targets = targets + [OUTPUT_REP + "/genesets_summary.html"]
 
 #-------------------------------------------------------------------------------
 
-localrules: all  
+localrules: all, sign_vs_rand, mark_vs_signrand, mmms_vs_signrand
 
 rule all: 
     input:
@@ -278,7 +278,6 @@ if RUN_PERM_GENESETS:
           "01_scripts_own/05_permutation_genesets.R"
 
   # visualise reclustering permutation
-  # P VALUES ARE NOT CORRECTED!
   rule permutation_genesets_report:
       input:
           score_df = rules.reclustering_own_scores.output,
@@ -298,6 +297,7 @@ if RUN_PERM_GENESETS:
           perm_score_df_input = rules.permutation_genesets.output.perm_score_df_mark
       params:
           cons_level_use = "conserved_markers",
+          resolution_louvain_list = config["values"]["02_sce_anno"]["resolution_louvain_list"],
           comparison = "mark-vs-signrand"
       output:
           pval_score_df_output = OUTPUT_DAT + "/08_expp/mark-vs-signrand_{fraction}"
@@ -311,13 +311,16 @@ if RUN_PERM_GENESETS:
           perm_score_df_input = rules.permutation_genesets.output.perm_score_df_mmms
       params:
           cons_level_use = "mmusall_markers",
+          resolution_louvain_list = config["values"]["02_sce_anno"]["resolution_louvain_list"],
           comparison = "mmms-vs-signrand"
       output:
           pval_score_df_output = OUTPUT_DAT + "/08_expp/mmms-vs-signrand_{fraction}"
       script:
           "01_scripts_own/08_export_pval.R"
           
-  # TODO: think about necessity of this step.                  
+  """
+  # At the moment, this step is not necessary.  
+  # Remove from 01_permutation_own_genesets_report once decision is final.
   # compare mmusall_markers (all BL6 markers) to conserved markers + random
   rule mmms_vs_markrand:
       input:
@@ -330,7 +333,8 @@ if RUN_PERM_GENESETS:
           pval_score_df_output = OUTPUT_DAT + "/08_expp/mmms-vs-markrand_{fraction}"
       script:
           "01_scripts_own/08_export_pval.R"
-
+  """
+  
 #-------------------------------------------------------------------------------
 
 # permutation: conserved signature vs. random (same number)
@@ -362,7 +366,6 @@ if RUN_OWN_SIGN_PERM:
           "01_scripts_own/06_permutation_background.R"
 
   # visualise conserved signature permutation
-  # P VALUES ARE NOT CORRECTED!
   rule permutation_own_background_sign_report:
       input:
           score_df = rules.reclustering_own_scores.output,
@@ -381,6 +384,7 @@ if RUN_OWN_SIGN_PERM:
           perm_score_df_input = rules.permutation_own_background_sign.output.perm_score_df
       params:
           cons_level_use = "conserved_signature",
+          resolution_louvain_list = config["values"]["02_sce_anno"]["resolution_louvain_list"],
           comparison = "sign-vs-rand"
       output:
           pval_score_df_output = OUTPUT_DAT + "/08_expp/sign-vs-rand_{fraction}"

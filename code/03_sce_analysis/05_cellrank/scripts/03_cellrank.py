@@ -46,7 +46,7 @@ g.fit(n_states=n_states_total, cluster_key="celltypes")
 # define terminal states 
 g.predict_terminal_states(method="top_n", n_states=n_states_terminal)
 #-------------------------------------------------------------------------------
-# for each defines terminal state, get fate probabilities
+# for each defined terminal state, get fate probabilities
 # this will be added to adata automatically
 g.compute_fate_probabilities(n_jobs=1) # trying to avoid weird bug
 

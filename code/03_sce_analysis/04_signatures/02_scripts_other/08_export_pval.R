@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 
-# export pvals from permutations and correct them
+# export pvals from permutations 
 
 # this script will be run for multiple comparisons:
 # background:
@@ -61,6 +61,7 @@ resolution_df <- utils::read.csv(file = resolution_df_path,
                                  colClasses = "character")
 
 resolution_df <- resolution_df[resolution_df$dataset == dataset_curr,]
+print(head(resolution_df))
 
 # get resolution for each gene set to be permuted
 resl <- resolution_df$resolution[
@@ -75,7 +76,8 @@ print(resl)
 orig_score_df <- orig_score_df_list[[cons_level_use_alt]][[resl]]
 
 # add info and subset
-orig_score_df$dataset <- base::rep(dataset_curr, nrow(orig_score_df))
+# name it condition so it fits with "fraction" from 01
+orig_score_df$condition <- base::rep(dataset_curr, nrow(orig_score_df))
 orig_score_df$comparison <- base::rep(comparison, nrow(orig_score_df))
 orig_score_df$identifier <- base::rep("other", nrow(orig_score_df))
 

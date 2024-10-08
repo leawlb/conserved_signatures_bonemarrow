@@ -23,21 +23,25 @@ set.seed(37)
 
 # df of original scores to be tested
 orig_score_df <- base::readRDS(snakemake@input[["orig_score_df_input"]])
-
-print(head(orig_score_df))
+# remove fraction columns for downstream compatibility with other datasets
+orig_score_df <- orig_score_df[,-which(colnames(orig_score_df) == "fraction")]
 
 # df of permutated scores from the same object
 perm_score_df <- base::readRDS(snakemake@input[["perm_score_df_input"]])
-
-print(head(perm_score_df))
 
 # params
 cons_level_use <- snakemake@params[["cons_level_use"]]
 comparison <- snakemake@params[["comparison"]]
 fraction_curr <- snakemake@wildcards[["fraction"]]
 
+# get info on the resolution to record it in the DF
+resolution_louvain_list <- snakemake@params[["resolution_louvain_list"]]
+resolution <- resolution_louvain_list[[fraction_curr]]
+
 # add info and subset
-orig_score_df$fraction <- base::rep(fraction_curr, nrow(orig_score_df))
+# call condition so it fits with 02
+print(head(orig_score_df))
+orig_score_df$condition <- base::rep(fraction_curr, nrow(orig_score_df))
 orig_score_df$comparison <- base::rep(comparison, nrow(orig_score_df))
 orig_score_df$identifier <- base::rep("own", nrow(orig_score_df))
 
@@ -98,13 +102,20 @@ for(score in scores_v){
 print(head(orig_score_df_sub))
 
 #-------------------------------------------------------------------------------
-# correct pvals
-# using bonferroni hochberg for now
-# possibility of merging all pval_score_df_output and correcting pvals together
+# add resolution
 
-# orig_score_df_sub$pval_corrected <- stats::p.adjust(
-#   orig_score_df_sub$pval, 
-#   method = "BH")
+print(base::paste("Resolution", resolution))
+orig_score_df_sub$resolution <- base::rep(resolution, nrow(orig_score_df_sub))
+
+#-------------------------------------------------------------------------------
+# change name of value column
+
+colnames(orig_score_df_sub)[colnames(orig_score_df_sub) == "value"] <- "value_orig"
+print(colnames(orig_score_df_sub))
+
+# make sure the fraction column is gone
+stopifnot(!"fraction" %in% colnames(orig_score_df_sub))
+stopifnot("resolution" %in% colnames(orig_score_df_sub))
 
 #-------------------------------------------------------------------------------
 

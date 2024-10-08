@@ -159,6 +159,10 @@ resolution_df <- utils::read.csv(file = resolution_df_path,
                                as.is=TRUE, 
                                colClasses = "character")
 
+corr_pval_df <-  readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/09_crpv/all_corrected_pval"))
+
 colors_path <- base::paste0(
   base_path,
   "/metadata/colors/colors.txt")
@@ -264,6 +268,32 @@ score3 <- "mean_prop_cells_cluster"
 score2_long <- "Variation of information"
 score1_long <- "Adjusted rand index"
 score3_long <- "Mean prop. cells/cluster"
+
+axis_ticks_color <- "black"
+# specify one theme for all, customize elements per plot
+theme_all <- ggplot2::theme(
+  axis.text = element_text(
+    size = axis_text_size,
+    face = axis_text_face,
+    color = axis_text_color),
+  axis.title = element_text(
+    size = axis_title_size,
+    face = axis_title_face,
+    color = axis_title_color),
+  plot.title = element_text(
+    size = plot_title_size,
+    face = plot_title_face,
+    color = plot_title_color),
+  legend.text = element_text(
+    size = legend_text_size,
+    face = legend_text_face,
+    color = legend_text_color),
+  legend.title = element_text(
+    size = legend_title_size,
+    face = legend_title_face,
+    color = legend_title_color),
+  axis.ticks = element_line(
+    color = axis_ticks_color))
 ```
 
 ```{r density_plot_function}
@@ -349,6 +379,10 @@ output_pdf_f_plot <- base::paste0(
   base_path, "/manuscript1/figures/figure3_f.pdf")
 output_pdf_g_plot <- base::paste0(
   base_path, "/manuscript1/figures/figure3_g.pdf")
+output_pdf_h_plot <- base::paste0(
+  base_path, "/manuscript1/figures/figure3_h.pdf")
+output_pdf_h_legend <- base::paste0(
+  base_path, "/manuscript1/figures/figure3_h_legend.pdf")
 ```
 
 # A
@@ -2634,7 +2668,7 @@ mmms_plots_title <- annotate_figure(
     size = plot_title_size))
 ```
 
-```{r de_construct, fig.width = 4.5, fig.height = 9.2}
+```{r de_construct2, fig.width = 4.5, fig.height = 9.2}
 de_plot <- ggpubr::ggarrange(
   sign_plots_title,
   mark_plots_title,
@@ -3315,12 +3349,170 @@ g_all_plot <- ggpubr::ggarrange(
 g_all_plot
 ```
 
-
-```{r de_plot_export}
+```{r g_plot_export}
 pdf(output_pdf_g_plot, width = 11.3, height = 2.7)
 g_all_plot
 dev.off()
 ```
 
-# TODO: CONTROL EVERYTHING EXACTLY!
-# Adjust the plots
+## G
+
+pval plot
+
+```{r h_prep1}
+
+# add more columns for nicer visualisation
+corr_pval_df$color_id <- vector(length = nrow(corr_pval_df))
+corr_pval_df$color_id[corr_pval_df$pval_corrected < 0.05] <- "significant"
+corr_pval_df$color_id[corr_pval_df$pval_corrected == 0] <- "is_null"
+corr_pval_df$color_id[corr_pval_df$pval_corrected >= 0.05] <- "non_significant"
+
+corr_pval_df$cons_level_long <- vector(length = nrow(corr_pval_df))
+corr_pval_df$cons_level_long[
+  corr_pval_df$conservation_level == "conserved_signature"] <- "conserved identity signature"
+corr_pval_df$cons_level_long[
+  corr_pval_df$conservation_level == "conserved_markers"] <- "conserved markers"
+corr_pval_df$cons_level_long[
+  corr_pval_df$conservation_level == "mmusall_markers"] <- "all BL6 markers"
+
+corr_pval_df$score_long <- vector(length = nrow(corr_pval_df))
+corr_pval_df$score_long[
+  corr_pval_df$type == "adjusted_rand_index"] <- "Adjusted rand index"
+corr_pval_df$score_long[
+  corr_pval_df$type == "variation_information"] <- "Variation of information"
+corr_pval_df$score_long[
+  corr_pval_df$type == "mean_prop_cells_cluster"] <- "Mean prop. cells/cluster"
+
+corr_pval_df$cons_level_long <- factor(
+  corr_pval_df$cons_level_long, levels = c(
+    "conserved identity signature",
+    "conserved markers",
+    "all BL6 markers"))
+
+corr_pval_df$score_long <- factor(
+  corr_pval_df$score_long, levels = c(
+    "Adjusted rand index",
+    "Variation of information",
+    "Mean prop. cells/cluster"))
+
+corr_pval_df$color_id <- factor(
+  corr_pval_df$color_id, levels = rev(c(
+    "non_significant",
+    "significant",
+    "is_null")))
+
+color_significance <- c("non_significant" = "grey70",
+                        "significant" = "black", 
+                        "is_null" = "blue")
+```
+
+```{r h_prep2_subset}
+
+corr_pval_df_sub <- corr_pval_df[corr_pval_df$condition %in% c(
+  "hsc",
+  "mus_tm_bonemarrow",
+  "mus_weinreb_hspc"),]
+
+corr_pval_df_sub$condition_long <- vector(length = nrow(corr_pval_df_sub))
+corr_pval_df_sub$condition_long[
+  corr_pval_df_sub$condition == "mus_tm_bonemarrow"] <- "tabula muris"
+corr_pval_df_sub$condition_long[
+  corr_pval_df_sub$condition == "mus_weinreb_hspc"] <- "Weinreb et al."
+corr_pval_df_sub$condition_long[
+  corr_pval_df_sub$condition == "hsc"] <- "HSPCs"
+
+corr_pval_df_sub$condition_long <- factor(
+  corr_pval_df_sub$condition_long, levels = rev(c(
+    "HSPCs",
+    "tabula muris",
+    "Weinreb et al.")))
+```
+
+```{r h_base_plot, fig.width = 10, fig.height= 3} 
+h_base_plot <- ggplot2::ggplot(
+  corr_pval_df_sub,
+  aes(y = condition_long, 
+      x = nr_genes_used,
+      color = color_id, 
+      size = 10^-pval_corrected))+
+  ggplot2::geom_point(alpha = 1)+
+  ggplot2::facet_grid(cols = vars(corr_pval_df_sub$score_long),
+                      switch = "y",
+                      rows = vars(corr_pval_df_sub$cons_level_long))+
+  ggplot2::theme_classic()+
+  ggplot2::scale_x_continuous(limits = c(0, max(corr_pval_df_sub$nr_genes_used)))+
+  ggplot2::scale_color_manual(values = color_significance)
+```
+
+```{r h_theme_plot, fig.width = 10, fig.height = 3} 
+h_theme_plot <- h_base_plot+
+  ggplot2::theme_classic()+
+  theme_all+
+  ggplot2::scale_x_continuous(
+    position = "bottom",
+    limits = c(0, base::max(corr_pval_df_sub$nr_genes_used)))+
+  ggplot2::scale_color_manual(values = color_significance)+
+  ggplot2::theme(
+    strip.text.x = element_text(
+      size = plot_title_size,
+      color = plot_title_color,
+      face = plot_title_face),
+    strip.text.y.left = element_blank(),
+    strip.background = element_blank(),
+    axis.title.y = element_blank(),
+    strip.placement = "outside",
+    legend.position = "none")+
+  ggplot2::xlab("# re-clustering genes")
+h_theme_plot
+```
+
+```{r h_legend_base_plot}
+h_legend_base_plot <- ggplot2::ggplot(
+  corr_pval_df,
+  aes(y = condition, 
+      x = nr_genes_used,
+      color = color_id, 
+      size = 10^-pval_corrected))+
+  ggplot2::geom_point(alpha = 1)+
+  ggplot2::facet_grid(cols = vars(corr_pval_df$score_long),
+                      switch = "y",
+                      rows = vars(corr_pval_df$cons_level_long))+
+  ggplot2::theme_classic()+
+  ggplot2::scale_x_continuous(limits = c(0, max(corr_pval_df$nr_genes_used)))+
+  ggplot2::scale_color_manual(values = color_significance)
+```
+
+```{r h_legend_theme_plot, fig.width = 3, fig.height= 3}
+h_legend_theme_plot <- g_legend_base_plot+
+   ggplot2::theme_classic()+
+  ggplot2::scale_x_continuous(
+    limits = c(0, base::max(corr_pval_df_sub$nr_genes_used)))+
+  ggplot2::scale_color_manual("", values = color_significance)+
+  ggplot2::scale_size_continuous("10 adjusted p val")+
+  ggplot2::theme(
+    legend.title = element_text(
+      size = legend_title_size,
+      color = legend_title_color,
+      face = legend_title_face),
+    legend.text = element_text(
+      size = legend_text_size,
+      color = legend_text_color,
+      face = legend_text_face))
+
+h_legend_theme <- ggpubr::get_legend(h_legend_theme_plot)
+
+h_legend <- ggpubr::ggarrange(h_legend_theme)
+h_legend
+```
+
+```{r h_plot_export}
+pdf(output_pdf_h_plot, width = 9.3, height = 3)
+h_theme_plot
+dev.off()
+```
+
+```{r h_legend_export}
+pdf(output_pdf_h_legend, width = 3, height = 3)
+h_legend
+dev.off()
+```

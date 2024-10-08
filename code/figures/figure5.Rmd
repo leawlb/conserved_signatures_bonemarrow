@@ -1,0 +1,900 @@
+---
+title: "Figure 5"
+date: '2024-10-03'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Generate Figure 5, current title:
+"Mouse conserved marker genes alone are effective at identifying homologous cell types in evolutionarily distant species."
+
+#### Load objects
+
+```{r seed, message = FALSE}
+base::RNGkind(kind = "Mersenne-Twister")
+set.seed(37)
+```
+
+```{r load_packages, message = FALSE}
+library(SingleCellExperiment, quietly = TRUE)
+library(ggpubr, quietly = TRUE)
+library(tidyverse, quietly = TRUE)
+library(gghalves, quietly = TRUE) # not in conda env
+library(ggpattern, quietly = TRUE) # not in conda env
+```
+
+```{r load_manual_basepath}
+base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+```
+
+```{r load_manual_remaining}
+#-------------------------------------------------------------------------------
+#### REMAINING
+
+# list of gene sets for HSPCs (conserved signature, conserved markers, etc.)
+geneset_list_str <-base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_str"))
+
+# data frame containing the correct resolutions for other datasets as visually determined
+resolution_df_path <- base::paste0(
+  base_path,
+  "/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt")
+
+resolution_df <- utils::read.csv(file = resolution_df_path, 
+                               header = TRUE, 
+                               sep = ";", 
+                               check.names=FALSE, 
+                               stringsAsFactors=FALSE, 
+                               as.is=TRUE, 
+                               colClasses = "character")
+
+corr_pval_df <-  readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/09_crpv/all_corrected_pval"))
+
+colors_path <- base::paste0(
+  base_path,
+  "/metadata/colors/colors.txt")
+
+source("../source/colors.R")
+source("../source/plotting.R")
+source("../source/sce_functions_reclustering.R")
+```
+
+```{r load_manual_other1}
+#-------------------------------------------------------------------------------
+#### OTHER MOUSE DATASET 1 (HSPC)
+#### TABULA SAPIENS BONE MARROW
+
+dataset_o1 <- "ts_bone_marrow"
+
+# list of seurat objects with reclustering vectors for each gene set and resolution
+seu_str_recl_list_o1 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_ts_bone_marrow_list"))
+
+# list of dataframes of re-clustering scores for each gene set and resolution
+score_df_str_list_o1 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_ts_bone_marrow_list"))
+
+# dataframes of re-clustering scores after permutation comparing gene sets
+psdf_str_mark_signrand_o1 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mark_ts_bone_marrow"))
+psdf_str_mmms_signrand_o1 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_ts_bone_marrow"))
+psdf_str_mmms_markrand_o1 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_mark_ts_bone_marrow"))
+
+# perm score DF from background permutation (SIGN)
+psdf_str_sign_rand_o1 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/06_psig/perm_score_df_ts_bone_marrow"))
+
+# perm score DF from background permutation (MARK)
+# psdf_str_mark_rand_o1 <- base::readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_pmrk/perm_score_df_li_all_stromal"))
+```
+
+```{r selected_seu_o1}
+
+resolution_df_o1 <- resolution_df[resolution_df$dataset == dataset_o1,]
+
+selected_seu_list_o1 <- lapply(seu_str_recl_list_o1, function(seu_list){
+  
+  conslev_curr <- seu_list[[1]]@misc$used_genes
+  
+  resdf_temp <- resolution_df_o1[resolution_df_o1$conservation_level == conslev_curr,]
+  res_curr <- resdf_temp$resolution
+  
+  seu_return <- seu_list[[res_curr]]
+  return(seu_return)
+  
+})
+
+rm(seu_str_recl_list_o1)
+gc()
+```
+
+```{r load_manual_other2}
+#-------------------------------------------------------------------------------
+#### OTHER MOUSE DATASET 2 (HSPC)
+#### Tabula sapiens HSCs and Progs (fetal)
+
+dataset_o2 <- "ts_hscs_progenitors"
+
+# list of seurat objects with reclustering vectors for each gene set and resolution
+seu_str_recl_list_o2 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_ts_hscs_progenitors_list"))
+
+# list of dataframes of re-clustering scores for each gene set and resolution
+score_df_str_list_o2 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_ts_hscs_progenitors_list"))
+
+# dataframes of re-clustering scores after permutation comparing gene sets
+psdf_str_mark_signrand_o2 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mark_ts_hscs_progenitors"))
+psdf_str_mmms_signrand_o2 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_ts_hscs_progenitors"))
+psdf_str_mmms_markrand_o2 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_mark_ts_hscs_progenitors"))
+
+# perm score DF from background permutation (SIGN)
+psdf_str_sign_rand_o2 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/06_psig/perm_score_df_ts_hscs_progenitors"))
+
+dataset_o3_orig <- base::readRDS(base::paste0(
+  base_path,
+  "/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/zeb_all_hspc"))
+```
+
+```{r selected_seu_o2}
+
+resolution_df_o2 <- resolution_df[resolution_df$dataset == dataset_o2,]
+
+selected_seu_list_o2 <- lapply(seu_str_recl_list_o2, function(seu_list){
+  
+  conslev_curr <- seu_list[[1]]@misc$used_genes
+  
+  resdf_temp <- resolution_df_o2[resolution_df_o2$conservation_level == conslev_curr,]
+  res_curr <- resdf_temp$resolution
+  
+  seu_return <- seu_list[[res_curr]]
+  return(seu_return)
+  
+})
+
+rm(seu_str_recl_list_o2)
+gc()
+```
+
+```{r load_manual_other3}
+#-------------------------------------------------------------------------------
+#### OTHER MOUSE DATASET 3 (HSPC)
+#### ZEBRAFISH
+
+dataset_o3 <- "zeb_all_hspc"
+
+# list of seurat objects with reclustering vectors for each gene set and resolution
+seu_str_recl_list_o3 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_zeb_all_hspc_list"))
+
+# list of dataframes of re-clustering scores for each gene set and resolution
+score_df_str_list_o3 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_zeb_all_hspc_list"))
+
+# dataframes of re-clustering scores after permutation comparing gene sets
+psdf_str_mark_signrand_o3 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mark_zeb_all_hspc"))
+psdf_str_mmms_signrand_o3 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_zeb_all_hspc"))
+psdf_str_mmms_markrand_o3 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_mark_zeb_all_hspc"))
+
+# perm score DF from background permutation (SIGN)
+psdf_str_sign_rand_o3 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/06_psig/perm_score_df_zeb_all_hspc"))
+```
+
+```{r selected_seu_o3}
+
+resolution_df_o3 <- resolution_df[resolution_df$dataset == dataset_o3,]
+
+selected_seu_list_o3 <- lapply(seu_str_recl_list_o3, function(seu_list){
+  
+  conslev_curr <- seu_list[[1]]@misc$used_genes
+  
+  resdf_temp <- resolution_df_o3[resolution_df_o3$conservation_level == conslev_curr,]
+  res_curr <- resdf_temp$resolution
+  
+  seu_return <- seu_list[[res_curr]]
+  return(seu_return)
+  
+})
+
+rm(seu_str_recl_list_o3)
+gc()
+```
+
+```{r params}
+# global params
+source("determine_params.R")
+
+
+# TODO: put in colors later
+colors_z_score <- c("blue3", "white", "red3")
+
+col_cons <- c("conserved_signature" = "#db5b00ff",
+              "conserved_markers" = "#eb9523ff",
+              "mmusall_markers" = "#a7c5a3ff",
+              "ndges" = "#ea91adff",
+              "random_features" = "grey80")
+
+col_cons_long <- c(
+  "conserved identity signature" = "#db5b00ff",
+  "conserved markers" = "#eb9523ff",
+  "total BL6 markers" = "#a7c5a3ff",
+  "ndges" = "#ea91adff",
+  "random genes" = "grey80")
+
+axis_ticks_color <- "black"
+
+# specify one theme for all, customize elements per plot
+theme_all <- ggplot2::theme(
+  axis.text = element_text(
+    size = axis_text_size,
+    face = axis_text_face,
+    color = axis_text_color),
+  axis.title = element_text(
+    size = axis_title_size,
+    face = axis_title_face,
+    color = axis_title_color),
+  plot.title = element_text(
+    size = plot_title_size,
+    face = plot_title_face,
+    color = plot_title_color),
+  legend.text = element_text(
+    size = legend_text_size,
+    face = legend_text_face,
+    color = legend_text_color),
+  legend.title = element_text(
+    size = legend_title_size,
+    face = legend_title_face,
+    color = legend_title_color),
+  axis.ticks = element_line(
+    color = axis_ticks_color))
+```
+
+```{r export_paths}
+output_pdf_abc_plot <- base::paste0(
+  base_path, "/manuscript1/figures/figure5_abc.pdf")
+output_pdf_d_plot <- base::paste0(
+  base_path, "/manuscript1/figures/figure5_d.pdf")
+output_pdf_d_legend <- base::paste0(
+  base_path, "/manuscript1/figures/figure5_d_legend.pdf")
+output_pdf_e_plot <- base::paste0(
+  base_path, "/manuscript1/figures/figure5_e.pdf")
+output_pdf_e_legend <- base::paste0(
+  base_path, "/manuscript1/figures/figure5_e_legend.pdf")
+```
+
+## ABC: Reclustering eatmaps 
+
+### Other 1
+
+```{r mat_sign_o1}
+mat_sign_o1 <- base::table(selected_seu_list_o1$seu_sign$cell_type, 
+                          selected_seu_list_o1$seu_sign$seurat_clusters)
+
+# normalise per column = new clusters and turn into DF
+for(i in 1:ncol(mat_sign_o1)){
+  mat_sign_o1[,i] <- mat_sign_o1[,i]/base::sum(mat_sign_o1[,i])
+}
+sign_df_o1 <- base::as.data.frame(mat_sign_o1)
+
+sign_df_o1$Var2 <- factor(
+  sign_df_o1$Var2,
+  levels = base::rev(c(4, 0, 5, 6, 8, 1, 7, 3, 2)))
+```
+
+```{r sign_base_plot_o1}
+sign_base_plot_o1 <- ggplot2::ggplot(
+  sign_df_o1, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+```
+
+```{r sign_theme_plot_o1}
+sign_theme_plot_o1 <- sign_base_plot_o1+
+  ggplot2::theme_classic()+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.title.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    axis.text.x = element_text(
+      angle = 90,
+      vjust = 0.5,
+      hjust = 0))+
+  ggplot2::scale_fill_gradientn(
+    "Proportion of cells per cluster",
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  ggplot2::ylab("New clusters")
+```
+
+```{r mat_sign_o2}
+mat_sign_o2 <- base::table(selected_seu_list_o2$seu_sign$cell_type, 
+                          selected_seu_list_o2$seu_sign$seurat_clusters)
+
+for(i in 1:ncol(mat_sign_o2)){
+  mat_sign_o2[,i] <- mat_sign_o2[,i]/base::sum(mat_sign_o2[,i])
+}
+sign_df_o2 <- base::as.data.frame(mat_sign_o2)
+
+sign_df_o2$Var2 <- factor(
+  sign_df_o2$Var2,
+  levels = base::rev(c(1, 4, 10, 3, 6, 2, 9, 0, 5, 7, 8)))
+```
+
+```{r sign_base_plot_o2}
+sign_base_plot_o2 <- ggplot2::ggplot(
+  sign_df_o2, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+```
+
+```{r sign_theme_plot_o2}
+sign_theme_plot_o2 <- sign_base_plot_o2+
+  ggplot2::theme_classic()+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.title = element_blank(),
+    axis.text.y = element_blank(),
+    axis.text.x = element_text(
+      angle = 90,
+      hjust = 0, 
+      vjust = 0.5),
+    axis.ticks.y = element_blank())+
+  ggplot2::scale_fill_gradientn(
+    "Proportion of cells per cluster",
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))
+```
+
+### Other 3
+
+```{r mat_sign_o3}
+mat_sign_o3 <- base::table(selected_seu_list_o3$seu_sign$cell_type, 
+                          selected_seu_list_o3$seu_sign$seurat_clusters)
+
+for(i in 1:ncol(mat_sign_o3)){
+  mat_sign_o3[,i] <- mat_sign_o3[,i]/base::sum(mat_sign_o3[,i])
+}
+sign_df_o3 <- base::as.data.frame(mat_sign_o3)
+
+sign_df_o3$Var2 <- factor(
+  sign_df_o3$Var2,
+  levels = base::rev(c(2, 8, 6, 3, 5, 7, 0, 4, 1)))
+```
+
+```{r mat_mark_o3}
+mat_mark_o3 <- base::table(selected_seu_list_o3$seu_mark$cell_type, 
+                          selected_seu_list_o3$seu_mark$seurat_clusters)
+
+for(i in 1:ncol(mat_mark_o3)){
+  mat_mark_o3[,i] <- mat_mark_o3[,i]/base::sum(mat_mark_o3[,i])
+}
+mark_df_o3 <- base::as.data.frame(mat_mark_o3)
+
+mark_df_o3$Var2 <- factor(
+  mark_df_o3$Var2,
+  levels = base::rev(c(2, 7, 9, 5, 8, 6, 1, 3, 4, 0)))
+```
+
+```{r mat_mmms_o3}
+mat_mmms_o3 <- base::table(selected_seu_list_o3$seu_mmms$cell_type, 
+                          selected_seu_list_o3$seu_mmms$seurat_clusters)
+
+# normalise per column = new clusters and turn into DF
+for(i in 1:ncol(mat_mmms_o3)){
+  mat_mmms_o3[,i] <- mat_mmms_o3[,i]/base::sum(mat_mmms_o3[,i])
+}
+mmms_df_o3 <- base::as.data.frame(mat_mmms_o3)
+
+mmms_df_o3$Var2 <- factor(
+  mmms_df_o3$Var2,
+  levels = base::rev(c(1, 7, 3, 5, 0, 2, 6, 4, 8)))
+```
+
+```{r sign_base_plot_o3}
+sign_base_plot_o3 <- ggplot2::ggplot(
+  sign_df_o3, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+```
+
+```{r sign_theme_plot_o3}
+sign_theme_plot_o3 <- sign_base_plot_o3+
+  ggplot2::theme_classic()+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks.y = element_blank(),
+    plot.title = element_text(
+      color = col_cons_long["conserved identity signature"],
+      hjust = 0.5))+
+  ggplot2::scale_fill_gradientn(
+    "Proportion of cells per cluster",
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  ggplot2::ggtitle("Conserved identity signature")
+```
+
+```{r mark_base_plot_o3}
+mark_base_plot_o3 <- ggplot2::ggplot(
+  mark_df_o3, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+```
+
+```{r mark_theme_plot_o3}
+mark_theme_plot_o3 <- mark_base_plot_o3+
+  ggplot2::theme_classic()+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks.y = element_blank(),
+    plot.title = element_text(
+      color = col_cons_long["conserved markers"],
+      hjust = 0.5))+
+  ggplot2::scale_fill_gradientn(
+    "Proportion of cells per cluster",
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  ggplot2::ggtitle("Conserved markers")
+```
+
+```{r mmms_base_plot_o3}
+mmms_base_plot_o3 <- ggplot2::ggplot(
+  mmms_df_o3, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+```
+
+```{r mmms_theme_plot_o3}
+mmms_theme_plot_o3 <- mmms_base_plot_o3+
+  ggplot2::theme_classic()+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    axis.text.x = element_text(
+      angle = 90,
+      hjust = 0,
+      vjust = 0.5),
+    plot.title = element_text(
+      color = col_cons_long["total BL6 markers"],
+      hjust = 0.5))+
+  ggplot2::scale_fill_gradientn(
+    "Proportion of cells per cluster",
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  ggplot2::xlab("Original cell types")+
+  ggplot2::ggtitle("total BL6 markers")
+```
+
+### Assemble
+
+```{r ab_plotparts, fig.width = 4, fig.height = 10}
+
+sign_plots_ab <- ggpubr::ggarrange(
+  ncol = 2,
+  align = "hv",
+  sign_theme_plot_o1 + theme(plot.margin = margin(b = 9.5, unit = "cm")),
+  sign_theme_plot_o2 + theme(plot.margin = margin(b = 7.5, unit = "cm")),
+  widths = c(1, 1))
+
+sign_plots_title_ab <- annotate_figure(
+  sign_plots_ab,
+  top = ggpubr::text_grob(
+    "Conserved identity signature", 
+    color = col_cons_long["conserved identity signature"], 
+    face = plot_title_face,
+    size = plot_title_size))
+```
+
+```{r c_plotparts, fig.height = 10, fig.width = 3}
+plots_c <- ggpubr::ggarrange(
+  ncol = 1,
+  align = "v",
+  sign_theme_plot_o3,
+  mark_theme_plot_o3,
+  mmms_theme_plot_o3,
+  heights = c(1, 1, 1.5))
+plots_c
+```
+
+```{r abc_assemble, fig.height = 10, fig.width = 9}
+
+abc_plot <- ggpubr::ggarrange(
+  sign_plots_title_ab,
+  plots_c,
+  ncol = 2,
+  widths = c(2, 1)
+)
+abc_plot
+```
+
+```{r abc_plot_export}
+pdf(output_pdf_abc_plot, width = 9, height = 10)
+abc_plot
+dev.off()
+```
+
+## D
+
+pval plot
+
+```{r d_prep1}
+
+# add more columns for nicer visualisation
+corr_pval_df$color_id <- vector(length = nrow(corr_pval_df))
+corr_pval_df$color_id[corr_pval_df$pval_corrected < 0.05] <- "significant"
+corr_pval_df$color_id[corr_pval_df$pval_corrected == 0] <- "is_null"
+corr_pval_df$color_id[corr_pval_df$pval_corrected >= 0.05] <- "non_significant"
+
+corr_pval_df$cons_level_long <- vector(length = nrow(corr_pval_df))
+corr_pval_df$cons_level_long[
+  corr_pval_df$conservation_level == "conserved_signature"] <- "conserved identity signature"
+corr_pval_df$cons_level_long[
+  corr_pval_df$conservation_level == "conserved_markers"] <- "conserved markers"
+corr_pval_df$cons_level_long[
+  corr_pval_df$conservation_level == "mmusall_markers"] <- "all BL6 markers"
+
+corr_pval_df$score_long <- vector(length = nrow(corr_pval_df))
+corr_pval_df$score_long[
+  corr_pval_df$type == "adjusted_rand_index"] <- "Adjusted rand index"
+corr_pval_df$score_long[
+  corr_pval_df$type == "variation_information"] <- "Variation of information"
+corr_pval_df$score_long[
+  corr_pval_df$type == "mean_prop_cells_cluster"] <- "Mean prop. cells/cluster"
+
+corr_pval_df$cons_level_long <- factor(
+  corr_pval_df$cons_level_long, levels = c(
+    "conserved identity signature",
+    "conserved markers",
+    "all BL6 markers"))
+
+corr_pval_df$score_long <- factor(
+  corr_pval_df$score_long, levels = c(
+    "Adjusted rand index",
+    "Variation of information",
+    "Mean prop. cells/cluster"))
+
+corr_pval_df$color_id <- factor(
+  corr_pval_df$color_id, levels = rev(c(
+    "non_significant",
+    "significant",
+    "is_null")))
+
+color_significance <- c("non_significant" = "grey70",
+                        "significant" = "black", 
+                        "is_null" = "blue")
+```
+
+```{r d_prep2_subset}
+
+corr_pval_df_sub <- corr_pval_df[corr_pval_df$condition %in% c(
+  dataset_o1,
+  dataset_o2,
+  dataset_o3),]
+
+corr_pval_df_sub$condition_long <- vector(length = nrow(corr_pval_df_sub))
+corr_pval_df_sub$condition_long[
+  corr_pval_df_sub$condition == dataset_o1] <- "tabula sapiens BM"
+corr_pval_df_sub$condition_long[
+  corr_pval_df_sub$condition == dataset_o2] <- "tabula sapiens fetal"
+corr_pval_df_sub$condition_long[
+  corr_pval_df_sub$condition == dataset_o3] <- "zebrafish HSPCs"
+
+corr_pval_df_sub$condition_long <- factor(
+  corr_pval_df_sub$condition_long, levels = rev(c(
+    "tabula sapiens BM",
+    "tabula sapiens fetal",
+    "zebrafish HSPCs")))
+```
+
+```{r d_base_plot, fig.width = 10, fig.height= 3} 
+d_base_plot <- ggplot2::ggplot(
+  corr_pval_df_sub,
+  aes(y = condition_long, 
+      x = nr_genes_used,
+      color = color_id, 
+      size = 10^-pval_corrected))+
+  ggplot2::geom_point(alpha = 1)+
+  ggplot2::facet_grid(cols = vars(corr_pval_df_sub$score_long),
+                      switch = "y",
+                      rows = vars(corr_pval_df_sub$cons_level_long))+
+  ggplot2::theme_classic()+
+  ggplot2::scale_x_continuous(limits = c(0, max(corr_pval_df_sub$nr_genes_used)))+
+  ggplot2::scale_color_manual(values = color_significance)
+```
+
+```{r d_theme_plot, fig.width = 12, fig.height = 3.3} 
+d_theme_plot <- d_base_plot+
+  ggplot2::theme_classic()+
+  theme_all+
+  ggplot2::scale_x_continuous(
+    limits = c(0, base::max(corr_pval_df_sub$nr_genes_used)))+
+  ggplot2::scale_color_manual(values = color_significance)+
+  ggplot2::theme(
+    strip.text.x = element_text(
+      size = plot_title_size,
+      color = plot_title_color,
+      face = plot_title_face,
+      hjust = 1,
+      angle = 0),
+    strip.text.y.left = element_text(
+      size = axis_text_size,
+      color = axis_text_color,
+      face = axis_text_face,
+      hjust = 0,
+      angle = 0),
+    strip.background = element_blank(),
+    strip.placement = "outside",
+    axis.title.y = element_blank(),
+    axis.title = element_text(
+      size = axis_title_size,
+      color = axis_title_color,
+      face = axis_title_face),
+    legend.position = "none")+
+  ggplot2::xlab("# re-clustering genes")
+```
+
+```{r}
+d_legend_base_plot <- ggplot2::ggplot(
+  corr_pval_df,
+  aes(y = condition, 
+      x = nr_genes_used,
+      color = color_id, 
+      size = 10^-pval_corrected))+
+  ggplot2::geom_point(alpha = 1)+
+  ggplot2::facet_grid(cols = vars(corr_pval_df$score_long),
+                      switch = "y",
+                      rows = vars(corr_pval_df$cons_level_long))+
+  ggplot2::theme_classic()+
+  ggplot2::scale_x_continuous(limits = c(0, max(corr_pval_df$nr_genes_used)))+
+  ggplot2::scale_color_manual(values = color_significance)
+```
+
+```{r d_legend_theme_plot, fig.width = 3, fig.height= 3}
+d_legend_theme_plot <- d_legend_base_plot+
+   ggplot2::theme_classic()+
+  ggplot2::scale_x_continuous(
+    limits = c(0, base::max(corr_pval_df_sub$nr_genes_used)))+
+  ggplot2::scale_color_manual("", values = color_significance)+
+  ggplot2::scale_size_continuous("10 adjusted p val")+
+  ggplot2::theme(
+    legend.title = element_text(
+      size = legend_title_size,
+      color = legend_title_color,
+      face = legend_title_face),
+    legend.text = element_text(
+      size = legend_text_size,
+      color = legend_text_color,
+      face = legend_text_face))
+
+d_legend_theme <- ggpubr::get_legend(d_legend_theme_plot)
+
+d_legend <- ggpubr::ggarrange(d_legend_theme)
+d_legend
+```
+
+```{r d_plot_export}
+pdf(output_pdf_d_plot, width = 12, height = 3.3)
+d_theme_plot
+dev.off()
+```
+
+```{r d_legend_export}
+pdf(output_pdf_d_legend, width = 3, height = 3)
+d_legend
+dev.off()
+```
+
+## E zebrafish expression heatmap
+
+```{r e_prep1}
+
+# get all used conserved signature genes for zebrafish
+# these are all genes remaining in the reclustered object
+sign_ids <- rownames(selected_seu_list_o3$seu_sign)
+
+# aggregate per cell type
+# convert to SCE
+sce_o3 <- Seurat::as.SingleCellExperiment(dataset_o3_orig)
+agg_o3 <- scuttle::aggregateAcrossCells(
+    sce_o3, 
+    id=colData(sce_o3)[,c("cell_type")], 
+    statistics = "mean",
+    use.assay.type = "logcounts") 
+
+# make a visualisation DF
+vis_df <- base::as.data.frame(
+  t(SummarizedExperiment::assays(agg_o3)$logcounts))
+  
+# subset to all signature genes of this tissue
+vis_df <- vis_df[,colnames(vis_df) %in% sign_ids]
+  
+# change df format 
+vis_df_mat <- vis_df
+vis_df <- tibble::rownames_to_column(vis_df, "cell_type")
+vis_df <- tidyr::pivot_longer(vis_df, 
+                              cols = c(2:ncol(vis_df)),
+                              values_to = "expression",
+                              names_to = "gene")
+ 
+# calculate z_score
+vis_df$zscore_gene <- vector(length = nrow(vis_df), mode = "numeric")
+for(g in base::unique(vis_df$gene)){
+  
+  expr_vector_g <- vis_df[vis_df$gene == g,]$expression
+
+  # calculate z score per gene
+  z_score_g <- (expr_vector_g - base::mean(expr_vector_g))/
+    stats::sd(expr_vector_g)
+  vis_df$zscore_gene[vis_df$gene == g] <- z_score_g
+} 
+```
+
+```{r seurat_plot, eval = FALSE, include = FALSE}
+dataset_o3_orig <- Seurat::ScaleData(dataset_o3_orig, features = sign_ids)
+
+Seurat::DoHeatmap(
+  dataset_o3_orig, 
+  features = sign_ids, 
+  assay = "RNA", 
+  group.by = "cell_type",)
+```
+
+```{r sce_plot, fig.height = 8, fig.width = 7, eval = FALSE, include = FALSE}
+
+scater::plotHeatmap(show_rownames = FALSE,show_legend = FALSE,
+  agg_o3,
+  features=sign_ids, 
+  scale = TRUE,
+  exprs_values = "logcounts",
+  symmetric=TRUE,
+  #colour_columns_by = "cell_type",
+  center = TRUE,
+  #colour = colors_z_score,
+  order_columns_by = "cell_type", 
+  show_colnames = TRUE)+
+  theme(legend.position = "none")
+```
+
+```{r let_pheatmap_do_clustering}
+
+# use pheatmap to get a clustering and then extract it
+vis_df_prep <- vis_df[,c(1,2,4)]
+vis_df_prep <- tidyr::pivot_wider(
+  vis_df_prep,
+  names_from = "gene", 
+  values_from = "zscore_gene")
+
+vis_df_prep <- tibble::column_to_rownames(vis_df_prep, var = "cell_type")
+
+# extract restuls
+res <- pheatmap::pheatmap(t(vis_df_prep))
+clusters <- cutree(res$tree_row, k = 10)
+genes <- names(clusters)
+
+# use order to factorize genesin original vis_df
+vis_df_gene <- vis_df[res$tree_row$order,]
+vis_df$gene <- factor(vis_df$gene, levels = base::unique(vis_df_gene$gene))
+```
+
+
+```{r e_base_plot, fig.height = 4, fig.width = 5}
+e_base_plot <- ggplot2::ggplot(
+  vis_df,
+  aes(x = cell_type, y = gene, fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  scale_fill_gradientn(
+    "z-score per gene", 
+    colours = colors_z_score)
+```
+
+```{r e_theme_plot, fig.height = 7, fig.width = 4.5}
+e_theme_plot <- e_base_plot+
+  ggplot2::theme_classic()+
+  theme_all+
+  ggplot2::theme(
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    axis.text.x = element_text(angle = 90)
+  )+
+  ggplot2::xlab("Cell types")+
+  ggplot2::ylab("Conserved identity signature gene orthologue")+
+  theme(legend.position = "none")
+
+e_theme_plot
+```
+
+```{r e_legend_theme_plot}
+e_legend_theme_plot <- e_base_plot+
+  ggplot2::theme_classic()+
+  theme_all+
+  ggplot2::theme(
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    axis.text.x = element_text(angle = 90)
+  )+
+  ggplot2::xlab("Cell types")+
+  ggplot2::ylab("Conserved identity signature gene orthologue")
+e_theme_legend <- ggpubr::get_legend(e_legend_theme_plot)
+
+e_legend <- ggpubr::ggarrange(e_theme_legend)
+e_legend
+```
+
+```{r e_plot_export}
+pdf(output_pdf_e_plot, width = 4.5, height = 7)
+e_theme_plot
+dev.off()
+```
+
+```{r e_legend_export}
+pdf(output_pdf_e_legend, width = 3, height = 3)
+e_legend
+dev.off()
+```
+
+```{r sessioninfo}
+utils::sessionInfo()
+```
+

@@ -15,6 +15,7 @@ FRAME_OTHER = config["base"] + config["metadata_paths"]["frame_other"]
 RUN_PERM_GENESETS = config["run_permutation_genesets"]
 RUN_PERM_BACKGROUND_SIGN = config["run_permutation_background_sign"]
 RUN_PERM_BACKGROUND_MARK = config["run_permutation_background_mark"]
+RUN_PVAL_CORRECTION = config["run_pval_correction"]
 
 METADATA = pd.read_csv(config["base"] + config["metadata_paths"]["table"])
 def get_list(metadata, column):
@@ -54,22 +55,26 @@ for d in datasets_other:
     targets = targets + [OUTPUT_REP + "/genesets/perm_genesets_" + d + ".html"]
     targets = targets + [OUTPUT_DAT + "/08_expp/mark-vs-signrand_" + d]
     targets = targets + [OUTPUT_DAT + "/08_expp/mmms-vs-signrand_" + d]
-    targets = targets + [OUTPUT_DAT + "/08_expp/mmms-vs-markrand_" + d]
+    #targets = targets + [OUTPUT_DAT + "/08_expp/mmms-vs-markrand_" + d]
 
   if RUN_PERM_BACKGROUND_SIGN:
     targets = targets + [OUTPUT_DAT + "/06_psig/perm_score_df_" + d]
     targets = targets + [OUTPUT_REP + "/conserved_signature/perm_conserved_signature_" + d + ".html"]
     targets = targets + [OUTPUT_DAT + "/08_expp/sign-vs-rand_" + d]
 
+  """
   if RUN_PERM_BACKGROUND_MARK:
     targets = targets + [OUTPUT_DAT + "/07_pmrk/perm_score_df_" + d]
     targets = targets + [OUTPUT_REP + "/conserved_markers/perm_conserved_markers_" + d + ".html"]
     targets = targets + [OUTPUT_DAT + "/08_expp/mark-vs-rand_" + d]
-
+  """
+  
+if RUN_PVAL_CORRECTION:
+  targets = targets + [OUTPUT_DAT + "/09_crpv/all_corrected_pval"]
 
 #-------------------------------------------------------------------------------
 
-localrules: all  
+localrules: all, pval_correction, sign_vs_rand, mark_vs_signrand, mmms_vs_signrand
 
 rule all: 
     input:
@@ -227,11 +232,11 @@ if RUN_PERM_GENESETS:
           ensembl_mmms = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_mmms_{fraction}", fraction = fractions)
       params:
           reclustering_functions = "../../source/sce_functions_reclustering.R",
-          iterations = 100,
+          #iterations = 100,
           nr_cores = 4,
           resolution_df = RESOLUTION_OTHER,
           #nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
-          #iterations = config["values"]["03_sce_analysis"]["iterations"],
+          iterations = config["values"]["03_sce_analysis"]["iterations"],
           cut_off_prop = config["values"]["03_sce_analysis"]["reclustering_cutoff_prop"],
           datasets_other_hsc = datasets_other_hsc,
           datasets_other_str = datasets_other_str     
@@ -296,6 +301,7 @@ if RUN_PERM_GENESETS:
       script:
           "02_scripts_other/08_export_pval.R" 
 
+  """
   # export pvals: compare mmusall_markers (all BL6 markers) to conserved markers + random
   rule mmms_vs_markrand:
       input:
@@ -310,7 +316,7 @@ if RUN_PERM_GENESETS:
           pval_score_df_output = OUTPUT_DAT + "/08_expp/mmms-vs-markrand_{dataset}"
       script:
           "02_scripts_other/08_export_pval.R" 
-          
+  """        
 #-------------------------------------------------------------------------------
 
 if RUN_PERM_BACKGROUND_SIGN:
@@ -322,10 +328,10 @@ if RUN_PERM_BACKGROUND_SIGN:
           ensembl_paths = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_sign_{fraction}", fraction = fractions)
       params:
           reclustering_functions = "../../source/sce_functions_reclustering.R",
-          iterations = 100,
+          #iterations = 100,
           resolution_df = RESOLUTION_OTHER,
           #nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
-          #iterations = config["values"]["03_sce_analysis"]["iterations"],
+          iterations = config["values"]["03_sce_analysis"]["iterations"],
           nr_cores = 4,
           cut_off_prop = config["values"]["03_sce_analysis"]["reclustering_cutoff_prop"],
           cons_level_use = "conserved_signature",
@@ -369,6 +375,7 @@ if RUN_PERM_BACKGROUND_SIGN:
 
 #-------------------------------------------------------------------------------
 
+"""
 if RUN_PERM_BACKGROUND_MARK:
 
   # requires conda channel genomedk
@@ -423,7 +430,29 @@ if RUN_PERM_BACKGROUND_MARK:
       script: 
           "02_permutation_other_background_report.Rmd"
 
+"""
 
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+# correct all pvalues (to be used)
+
+# only use and correct the pvals that WILL be used for the publication
+# other tests will eventually be removed once decision is final
+if RUN_PVAL_CORRECTION:
+  
+  
+  rule pval_correction:
+      input:
+          own_sign_rand = expand(OUTPUT_DAT_01 + "/08_expp/sign-vs-rand_{fraction}", fraction = fractions),
+          own_mark_signrand = expand(OUTPUT_DAT_01 + "/08_expp/mark-vs-signrand_{fraction}", fraction = fractions),
+          own_mmms_signrand = expand(OUTPUT_DAT_01 + "/08_expp/mmms-vs-signrand_{fraction}", fraction = fractions),
+          other_sign_rand = expand(OUTPUT_DAT + "/08_expp/sign-vs-rand_{dataset}", dataset = datasets_other),
+          other_mark_signrand = expand(OUTPUT_DAT  + "/08_expp/mark-vs-signrand_{dataset}", dataset = datasets_other),
+          other_mmms_signrand = expand(OUTPUT_DAT + "/08_expp/mmms-vs-signrand_{dataset}", dataset = datasets_other)
+      output:
+          pval_corrected_df = OUTPUT_DAT + "/09_crpv/all_corrected_pval"
+      script:
+          "02_scripts_other/09_correct_all_pvals.R"
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------

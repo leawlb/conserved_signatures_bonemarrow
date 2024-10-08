@@ -65,6 +65,9 @@ if(exists("colors_path")){
   col_spc <- colors_df[colors_df$purpose == "Species_ID",]$color
   names(col_spc) <- colors_df[colors_df$purpose == "Species_ID",]$level
   
+  col_spc_pub <- colors_df[colors_df$purpose == "Species_ID",]$color
+  names(col_spc_pub) <- c("BL6", "CAST", "SPRETUS", "CAROLI")
+  
   col_frc <- colors_df[colors_df$purpose == "Fraction_ID",]$color
   names(col_frc) <- colors_df[colors_df$purpose == "Fraction_ID",]$level
   

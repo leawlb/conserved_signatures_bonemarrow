@@ -28,7 +28,8 @@ library(Seurat, quietly = TRUE)
 ```
 
 ```{r load_manual_basepath}
-base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+base_path_input <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+base_path_output_temp <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp"
 ```
 
 ```{r load_manual}
@@ -37,25 +38,25 @@ base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
 
 # SCE with reclustering vectors for each gene set
 sce_hsc_recl <- base::readRDS(base::paste0(
-  base_path,
+  base_path_input,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/03_recl/sce_hsc"))
 
 # dataframe of re-clustering scores for each gene set
 score_df_hsc <- base::readRDS(base::paste0(
-  base_path,
+  base_path_input,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/04_rcls/score_df_hsc"))
 
 # dataframes of re-clustering scores after permutation comparing gene sets
 psdf_hsc_mark_signrand <- base::readRDS(base::paste0(
-  base_path,
+  base_path_input,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_perg/perm_score_df_mark_hsc"))
 psdf_hsc_mmms_signrand <- base::readRDS(base::paste0(
-  base_path,
+  base_path_input,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_perg/perm_score_df_mmms_hsc"))
 
 # dataframes of re-clustering scores after background permutation
 psdf_hsc_sign_rand <- base::readRDS(base::paste0(
-  base_path,
+  base_path_input,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/06_psig/perm_score_df_hsc"))
 ```
 
@@ -356,7 +357,7 @@ make_pattern_density_plot <- function(
 
 ```{r export_paths}
 output_pdf_a_plot <- base::paste0(
-  base_path, "/manuscript1/figures/figure3_a.pdf")
+  base_path_output_temp, "/manuscript1/figures/figure3_a.pdf")
 output_pdf_a_legend <- base::paste0(
   base_path, "/manuscript1/figures/figure3_a_legend.pdf")
 output_pdf_b_plot <- base::paste0(

@@ -69,3 +69,20 @@ theme_all <- ggplot2::theme_classic()+
     axis.ticks = element_line(
       color = axis_ticks_color))
 
+# TODO: put in colors later
+colors_z_score <- c("blue3", "white", "red3")
+
+col_cons <- c("conserved_signature" = "#db5b00ff",
+              "conserved_markers" = "#eb9523ff",
+              "mmusall_markers" = "#a7c5a3ff",
+              "ndges" = "#ea91adff",
+              "random_features" = "grey80")
+
+col_cons_long <- c(
+  "conserved identity signature" = "#db5b00ff",
+  "conserved markers" = "#eb9523ff",
+  "total BL6 markers" = "#a7c5a3ff",
+  "ndges" = "#ea91adff",
+  "random genes" = "grey80",
+  "species-specific marker genes" = "grey50")
+

@@ -11,6 +11,19 @@ knitr::opts_chunk$set(echo = TRUE)
 Generate Figure 2, current title:
 "Cell type conserved signature genes are robust across mouse species and age."
 
+Because Figure 2 requires so much data, it is ordered by how big each chunk of 
+data is, not by the actual panel order.
+
+- Expression Heatmap signature genes (B)
+- Expression Heatmap species-specific genes (C)
+- Expression heatmaps condition (F)
+- Number of marker genes (G)
+
+Anything using erythroid or pseudotime data comes later:
+Relevant data is also loaded later to save space before that.
+- Pseudotime and Erythroid Branch UMAPs (D)
+- Pseudotime ranking and scaling (E)
+
 #### Load objects
 
 ```{r seed, message = FALSE}
@@ -42,19 +55,8 @@ base_path_output_temp <- snakemake@params[["base_path_output_temp"]]
 ```{r load_manual}
 # fully annotated SCE object (HSPCs)
 sce_hsc <- base::readRDS(base::paste0(
-  base_path, 
-  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10"))
-
-# fully annotated SCE object (HSPCs) with diffusion pseudotime
-sce_hsc_all_pseudotime <- base::readRDS(base::paste0(
- base_path,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/04_psce/sce_hsc_pseudotime"))
-
-# fully annotated SCE object (HSPCs), erythroid branch cells only, with 
-# pseudotime and erythroid differentiation probability
-ery_pseudo <- base::readRDS(base::paste0(
   base_path_input, 
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/05_bsce/sce_ery"))
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10"))
 
 # list of gene sets for HSPCs (conserved signature, conserved markers, etc.)
 geneset_list_hsc <- base::readRDS(base::paste0(
@@ -79,32 +81,58 @@ source("determine_params.R")
 
 # specific params
 
-pattern_density_val <- 0.08
-pattern_spacing_val <- 0.01
+pattern_density_val <- 0.015
+pattern_spacing_val <- 0.03
+
 
 celltype <- "HSCs"
 ```
 
 ```{r export_paths}
-output_pdf_bcd_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure2_bcd.pdf")
-output_pdf_b_legend <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure2_b_legend.pdf")
-output_pdf_c_legend <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure2_c_legend.pdf")
-output_pdf_ef_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure2_ef.pdf")
+output_pdf_pt_umap1_plot <- base::paste0(
+  base_path_output_temp, "/manuscript1/figures/figure2_pt_umap1.pdf")
+output_pdf_pt_umap2_plot <- base::paste0(
+  base_path_output_temp, "/manuscript1/figures/figure2_pt_umap2.pdf")
+
+output_pdf_pt_umap_legend1 <- base::paste0(
+  base_path_output_temp, "/manuscript1/figures/figure2_pt_umap_legend_1.pdf")
+output_pdf_pt_umap_legend2 <- base::paste0(
+  base_path_output_temp, "/manuscript1/figures/figure2_pt_umap_legend_2.pdf")
+
+output_pdf_pt_ranking_plot_long <- base::paste0(
+  base_path_output_temp,
+  "/manuscript1/figures/figure2_pt_ranking_plot_long.pdf")
+output_pdf_pt_ranking_plot_wide <- base::paste0(
+  base_path_output_temp, 
+  "/manuscript1/figures/figure2_pt_ranking_plot_wide.pdf")
+
+output_pdf_sign_heatmap_plot <- base::paste0(
+  base_path_output_temp, "/manuscript1/figures/figure2_sign_heatmap_plot.pdf")
+output_pdf_sign_heatmap_legend <- base::paste0(
+  base_path_output_temp, "/manuscript1/figures/figure2_sign_heatmap_legend.pdf")
+
+output_pdf_heatmap_spec_plot <- base::paste0(
+  base_path_output_temp, "/manuscript1/figures/figure2_heatmap_spec_plot.pdf")
+
+output_pdf_two_hms <- base::paste0(
+  base_path_output_temp, "/manuscript1/figures/figure2_two_hms.pdf")
+
+output_pdf_heatmap_conds_long_plot <- base::paste0(
+  base_path_output_temp,
+  "/manuscript1/figures/figure2_heatmap_conds_long_plot.pdf")
+output_pdf_heatmap_conds_wide_plot <- base::paste0(
+  base_path_output_temp,
+  "/manuscript1/figures/figure2_heatmap_conds_wide_plot.pdf")
+
+output_pdf_aging_theme_plot <- base::paste0(
+  base_path_output_temp,
+  "/manuscript1/figures/figure2_aging_plot.pdf")
+output_pdf_aging_theme_legend <- base::paste0(
+  base_path_output_temp,
+  "/manuscript1/figures/figure2_aging_legend.pdf")
 ```
 
-## A
-
-Model of methods used to extract conserved signature genes for each cell type. 
-Conserved signature genes are non-differentially expressed conserved markers
-within the same cell type across all species.
-
-@Lea
-
-## B
+## Expression heatmap conserved signature
 
 Expression of conserved signature genes in all mouse species across HSPC
 cell types (scaled by z-score per gene).
@@ -113,7 +141,18 @@ cell types (scaled by z-score per gene).
 
 #### Plot Components
 
-```{r b_prep1}
+```{r sign_heatmap0}
+sce_hsc$species_pub <- vector(length = ncol(sce_hsc))
+sce_hsc$species_pub[sce_hsc$Species_ID == "mmus"] <- "BL6"
+sce_hsc$species_pub[sce_hsc$Species_ID == "mcas"] <- "CAST"
+sce_hsc$species_pub[sce_hsc$Species_ID == "mspr"] <- "SPRETUS"
+sce_hsc$species_pub[sce_hsc$Species_ID == "mcar"] <- "CAROLI"
+sce_hsc$species_pub <- factor(sce_hsc$species_pub, 
+                              levels = names(col_spc_pub))
+```
+
+
+```{r sign_heatmap1}
 # get all unique signature genes
 all_sign_genes <- vector()
 for(i in 1:length(geneset_list_hsc)){
@@ -123,7 +162,7 @@ for(i in 1:length(geneset_list_hsc)){
 all_sign_genes_hsc <- base::unique(all_sign_genes)
 ```
 
-```{r b_prep2}
+```{r sign_heatmap2}
 # aggregate per cell type and species
 cts_hsc <- as.list(names(geneset_list_hsc))
 
@@ -136,7 +175,7 @@ agg_hsc_list <- lapply(cts_hsc, function(ct){
   sce_ct <- sce_hsc[,sce_hsc$celltypes == ct]
   agg_hsc <- scuttle::aggregateAcrossCells(
     sce_ct, 
-    id=colData(sce_ct)[,c("Species_ID")], 
+    id=colData(sce_ct)[,c("species_pub")], 
     statistics = "mean",
     use.assay.type = "logcounts") #multibatchnorm
   
@@ -145,7 +184,7 @@ agg_hsc_list <- lapply(cts_hsc, function(ct){
 names(agg_hsc_list) <- names(geneset_list_hsc)
 ```
 
-```{r b_prep3}
+```{r sign_heatmap3}
 expr_df_list_hsc <- lapply(agg_hsc_list, function(agg_hsc){
   
   # get current cell type and relevant signature genes
@@ -186,7 +225,7 @@ expr_df_list_hsc <- lapply(agg_hsc_list, function(agg_hsc){
 agg_hsc_df <- dplyr::bind_rows(expr_df_list_hsc)
 ```
 
-```{r b_prep4}
+```{r sign_heatmap4}
 # scale expression per gene using z-scores
 agg_hsc_df$zscore_gene <- vector(length = nrow(agg_hsc_df), mode = "numeric")
 for(g in base::unique(agg_hsc_df$gene)){
@@ -200,7 +239,7 @@ for(g in base::unique(agg_hsc_df$gene)){
 }
 ```
 
-```{r b_prep5}
+```{r sign_heatmap5}
 # get a well ordered list of unique genes for factorization (after order above)
 all_sign_genes_for_factor <- base::unique(agg_hsc_df$gene[
   agg_hsc_df$is_sign_gene == TRUE])
@@ -209,10 +248,10 @@ all_sign_genes_for_factor <- base::unique(agg_hsc_df$gene[
 agg_hsc_df$gene <- factor(agg_hsc_df$gene,
                           levels = all_sign_genes_for_factor)
 agg_hsc_df$species <- factor(agg_hsc_df$species,
-                             levels = base::rev(names(col_spc)))
+                             levels = base::rev(names(col_spc_pub)))
 ```
 
-```{r b_prep6}
+```{r sign_heatmap6}
 interest_genes <- c("Msi2",
                     "Angpt1",
                     "Cd34",
@@ -227,16 +266,16 @@ agg_hsc_df$is_gene[agg_hsc_df$gene %in% interest_genes] <- "TRUE"
 agg_hsc_df$is_gene <- as.logical(agg_hsc_df$is_gene)
 ```
 
-```{r b_base_plot}
-b_base_plot <- ggplot2::ggplot(
+```{r sign_heatmap_base_plot}
+sign_heatmap_base_plot <- ggplot2::ggplot(
   agg_hsc_df,
   aes(y = species, x = gene, fill = zscore_gene))+
   ggplot2::geom_tile()+
   ggplot2::facet_grid(rows = vars(agg_hsc_df$cell_type))
 ```
 
-```{r b_theme_plot}
-b_theme_plot <- b_base_plot+
+```{r sign_heatmap_theme_plot}
+sign_heatmap_theme_plot <- sign_heatmap_base_plot+
   theme_all+
   ggplot2::theme(
     axis.text.x = element_blank(),
@@ -247,7 +286,8 @@ b_theme_plot <- b_base_plot+
       color = col_cons_long["conserved identity signature"]),
     axis.title.y = element_blank(),
     axis.line.x = element_blank(),
-    axis.text.y = element_blank(),
+    axis.text.y = element_text(
+      hjust = 0),
     strip.text.y = element_text(
       size = axis_text_size,
       face = axis_text_face,
@@ -266,41 +306,41 @@ b_theme_plot <- b_base_plot+
     position =  "bottom",
     breaks = agg_hsc_df$gene[agg_hsc_df$is_gene])
 
-b_legend_theme <- ggpubr::get_legend(b_theme_plot)
+sign_heatmap_legend_theme <- ggpubr::get_legend(sign_heatmap_theme_plot)
 ```
 
 ### Assemble
 
-```{r b_construct, fig.width = 6, fig.height = 6}
-b_plot <- ggpubr::ggarrange(
-  b_theme_plot + ggplot2::theme(legend.position = "none")
+```{r sign_heatmap_assemble, fig.width = 6, fig.height = 9}
+sign_heatmap_plot <- ggpubr::ggarrange(
+  sign_heatmap_theme_plot + ggplot2::theme(legend.position = "none")
 )
-b_plot
+sign_heatmap_plot
 ```
 
-```{r b_construct_legend, fig.width = 4, fig.height = 4}
-b_legend <- ggpubr::ggarrange(b_legend_theme )
+```{r sign_heatmap_legend, fig.width = 4, fig.height = 4}
+sign_heatmap_legend <- ggpubr::ggarrange(sign_heatmap_legend_theme)
 ```
 
-```{r b_construct_legend_long, fig.width = 4, fig.height = 4}
-b_legend_long <- ggpubr::get_legend(
-  b_theme_plot+ 
-    theme(legend.position = "bottom",
-    legend.title = element_text(
-      margin = margin(r = 10),
-      vjust = 0.85))+
-  ggplot2::scale_fill_gradientn(
-    "z-score per gene", 
-    colours = colors_z_score,
-    breaks = c(-5, 0,  5), 
-    limits = c(-5,5)))
-
-b_legend_theme_long <- ggpubr::ggarrange(
-  b_legend_long 
-)
+```{r output_pdf_sign_heatmap_plot}
+pdf(output_pdf_sign_heatmap_plot, width = 6, height = 8)
+sign_heatmap_plot
+dev.off()
 ```
 
-## C Species-specific marke rgenes
+```{r output_sign_heatmap_legend}
+pdf(output_pdf_sign_heatmap_legend, width = 8, height = 4)
+sign_heatmap_legend
+dev.off()
+#knitr::knit_exit()
+```
+
+```{r sign_heatmap_remove}
+rm(expr_df_list_hsc)
+gc()
+```
+
+## Heatmap species-specific marker rgenes
 
 Scaled expression of species-specific marker genes in all mouse species within
 HSCs (scaled by z-score per gene).
@@ -309,7 +349,7 @@ HSCs (scaled by z-score per gene).
 
 #### Prep
 
-```{r c_prep}
+```{r heatmap_spec1}
 # get ct specific data
 hsc_cons_df_ct <- geneset_list_hsc$HSCs$conserved_df
 
@@ -345,8 +385,11 @@ hsc_genes <- c(hsc_mmus_specific,
 stopifnot(!duplicated(hsc_genes))
 ```
 
-```{r c_prep2}
+```{r heatmap_spec2}
 agg_hsc_ct <- agg_hsc_list[[celltype]]
+
+rm(agg_hsc_list)
+gc()
 
 # make visualisation DF
 vis_df_hsc <- as.data.frame(
@@ -359,7 +402,8 @@ vis_df_hsc <- tidyr::pivot_longer(
   values_to = "expression",
   names_to = "gene")
 
-vis_df_hsc$species <- factor(vis_df_hsc$species, levels = base::rev(names(col_spc)))
+vis_df_hsc$species <- factor(vis_df_hsc$species, 
+                             levels = base::rev(names(col_spc_pub)))
 vis_df_hsc$gene <- factor(vis_df_hsc$gene, levels = hsc_genes)
 
 vis_df_hsc$zscore_gene <- vector(length = nrow(vis_df_hsc), mode = "numeric")
@@ -376,7 +420,7 @@ for(g in base::unique(vis_df_hsc$gene)){
 levels(vis_df_hsc$gene)
 ```
 
-```{r c_prep3}
+```{r heatmap_spec3}
 interest_genes2 <- c(
   "Procr",
   "Ly6a",
@@ -396,10 +440,8 @@ vis_df_hsc$is_gene <- as.logical(vis_df_hsc$is_gene)
 print(levels(vis_df_hsc$gene))
 ```
 
-#### Plot parts
-
-```{r c_base_plot}
-c_base_plot <- ggplot2::ggplot(
+```{r heatmap_spec_base_plot}
+heatmap_spec_base_plot <- ggplot2::ggplot(
   vis_df_hsc, 
   aes(y = species, 
       x = gene, 
@@ -407,19 +449,18 @@ c_base_plot <- ggplot2::ggplot(
   ggplot2::geom_tile()
 ```
 
-```{r c_theme_plot}
-c_theme_plot <- c_base_plot +
+```{r heatmap_spec_theme_plot}
+heatmap_spec_theme_plot <- heatmap_spec_base_plot+
   theme_all+
   ggplot2::theme(
     axis.title = element_blank(),
     plot.title = element_text(
       hjust = 0.5),
+    legend.position = "none",
     axis.text.x = element_blank(),
-    axis.line.x = element_blank(),
     axis.text.y = element_text(
-      angle = 0,
-      vjust = 0.5,
-      hjust = 0))+
+      hjust = 0),
+    axis.line.x = element_blank())+
   ggplot2::ggtitle("Species-specific HSC marker genes")+
   ggplot2::scale_fill_gradientn(
     "z-score per gene", 
@@ -430,309 +471,60 @@ c_theme_plot <- c_base_plot +
   ggplot2::scale_x_discrete(
     position =  "bottom",
     breaks = vis_df_hsc$gene[vis_df_hsc$is_gene])
-
-c_theme_legend <- ggpubr::get_legend(c_theme_plot)
 ```
 
 ### Assemble
 
-```{r c_construct, fig.width = 6, fig.height = 2}
-c_plot <- ggpubr::ggarrange(
-  c_theme_plot+theme(legend.position = "none")
+```{r heatmap_spec_assemble, fig.width = 6, fig.height = 2}
+heatmap_spec_plot <- ggpubr::ggarrange(
+  heatmap_spec_theme_plot
 )
-c_plot
+heatmap_spec_plot
 ```
 
-## BCD PLOT ASSEMBLY
+```{r output_pdf_heatmap_spec_plot}
+pdf(output_pdf_heatmap_spec_plot, width = 6, height = 2)
+heatmap_spec_plot
+dev.off()
+```
 
-```{r b_c_d_plotX, fig.width = 11, fig.height = 12.5, eval = FALSE, include = FALSE}
+### TWO-HEATMAP ASSEMBLY
 
-#TODO: Decide how to assemble after decision on how drastically the figure should be revised,
-b_c_d_plot <- ggpubr::ggarrange(
-  b_theme_plot + ggplot2::theme(
-    plot.margin = margin("r" = 0, unit = "cm"),
+```{r two_heatmap_assembly, fig.height = 13, fig.width = 6}
+two_hms <- ggpubr::ggarrange(
+  sign_heatmap_theme_plot+ggplot2::theme(
     legend.position = "none",
-    plot.title = element_text(margin = margin("b" = 1.38, unit = "cm"))),
-  c_theme_plot +  ggplot2::theme(
-    axis.text.y = element_blank(),
-    plot.margin = margin("l" = 0, unit = "cm")),
-  d_theme_plot +  ggplot2::theme(
-    legend.position = "none",
-    plot.margin = margin("r" = 4.2, t = "2", unit = "cm"),
-    axis.text.y = element_text(margin = margin(
-      "l" = 0, "r" = 0.11, unit = "cm"))),
-  widths = c(1, 0.6),
-  heights = c(10, 2.5)
+    plot.margin = margin(l = 0, unit = "cm")),
+  heatmap_spec_theme_plot+ggplot2::theme(
+    plot.margin = margin(t = 4, r = 4, unit = "cm")),
+  ncol = 1,
+  align = "hv",
+  heights = c(10, 3)
 )
-
-b_c_d_plot
+two_hms
 ```
 
-```{r bcd_plot_exportX, eval = FALSE, include = FALSE}
-pdf(output_pdf_bcd_plot, width = 11, height = 12.5)
-b_c_d_plot
+```{r output_pdf_two_hms}
+pdf(output_pdf_two_hms, width = 6, height = 13)
+two_hms
 dev.off()
 ```
 
-```{r b_legend_exportX, eval = FALSE, include = FALSE}
-pdf(output_pdf_b_legend, width = 4, height = 1)
-b_legend_theme_long
-dev.off()
-```
-
-```{r d_legend_exportX, eval = FALSE, include = FALSE}
-pdf(output_pdf_c_legend, width = 3, height = 1.4)
-c_theme_legend
-dev.off()
-```
-
-```{r remove_big_objects}
-rm(agg_hsc_list)
+```{r heatmap_spec_plot_remove}
 rm(agg_hsc_ct)
 rm(agg_hsc_df)
 
-rm(b_base_plot)
-rm(b_c_d_plot)
-rm(b_theme_plot)
-
 gc()
 ```
 
-## D Umap Pseudotime (and possibly erythroid branch)
+## Expression heatmap conditions
 
-TODO: Think about naming of erythroid branch and other branches
-
-```{r d_prep1}
-
-sce_hsc_all_pseudotime
-
-sce_hsc$pseudotime <- sce_hsc_all_pseudotime$dpt_pseudotime
-sce_hsc$ery <- ery_pseudo$
-
-hsc_umap_pt <- base::as.data.frame(
-  SingleCellExperiment::reducedDim(
-    sce_hsc, type = "UMAP"))
-hsc_umap_pt$color_by <- sce_hsc$pseudotime 
-hsc_umap_pt <- hsc_umap_pt[base::sample(
-  1:nrow(hsc_umap_pt),
-  nrow(hsc_umap_pt),
-  replace = FALSE),]
-```
-
-```{r d_base_plot_1}
-d_base_plot_1 <- ggplot2::ggplot(
-  hsc_umap_pt, 
-  aes(x = X1,
-      y = X2,
-      color = color_by))+
-  ggplot2::geom_point(
-    size = umap_point_size,
-    alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(hsc_umap_pt$X1)-1, base::max(hsc_umap_pt$X1))+1)+
-  ggplot2::ylim(c(base::min(hsc_umap_pt$X2)-1, base::max(hsc_umap_pt$X2))+1)+
-  ggplot2::scale_color_gradientn(colours = mycolors_to1_grey)
-```
-
-```{r d_theme_plot_1}
-d_theme_plot_1 <- d_base_plot_1+
-  cowplot::theme_nothing()
-```
-
-## E
-
-Scaled expression of HSC (top), Mk/Erythroid prog. (middle) or Erythroid prog.
-(bottom) conserved signature genes along diffusion pseudotime trajectory within 
-the erythroid branch. Cells were partitioned into branches based on their 
-lineage differentiation probability calculated by cellrank.
-
-@Veronica
-
-```{r e_prep_1, message = FALSE}
-ery_pseudo_seurat <- CreateSeuratObject(counts = ery_pseudo@assays@data@listData[["logcounts"]],
-                                        meta.data = ery_pseudo@colData@listData)
-
-rm(ery_pseudo)
-gc()
-
-plot_data <- ery_pseudo_seurat@meta.data %>%
-  select("pseudotime", "celltypes", "Mouse_ID", 
-         "Species_ID", "Age_weeks", "Age_ID")
-for(n in 1:length(geneset_list_hsc)){
-  cell_sp_markers <- geneset_list_hsc[[n]][["conserved_signature"]]
-  for(g in cell_sp_markers){
-    plot_data[,g] <-unlist(SeuratObject::FetchData(ery_pseudo_seurat, g))
-  }
-}
-plot_data[,7:ncol(plot_data)] <- scale(plot_data[,7:ncol(plot_data)])
-```
-
-```{r e_prep_2}
-plot_HSCs <- plot_data[,c(colnames(plot_data)[1:6],
-                           geneset_list_hsc[["HSCs"]][["conserved_signature"]])] %>%
-  gather(gene, expression,
-         -pseudotime, -celltypes, -Mouse_ID, 
-         -Species_ID, -Age_weeks, -Age_ID)
-col_HSCs <- grDevices::colorRampPalette(c("grey95", 
-                                          col_cts_hsc["HSCs"], 
-                                          "grey5"))
-palette_HSCs <- col_HSCs(length(geneset_list_hsc[["HSCs"]][["conserved_signature"]]))
-
-
-plot_MkEry <- plot_data[,c(colnames(plot_data)[1:6],
-                           geneset_list_hsc[["Mk/Ery progs."]][["conserved_signature"]])] %>%
-  gather(gene, expression,
-         -pseudotime, -celltypes, -Mouse_ID, 
-         -Species_ID, -Age_weeks, -Age_ID)
-col_MkEry <- grDevices::colorRampPalette(c("grey95", 
-                                           col_cts_hsc["Mk/Ery progs."], 
-                                           "grey5"))
-palette_MkEry <- col_MkEry(length(geneset_list_hsc[["Mk/Ery progs."]][["conserved_signature"]]))
-
-
-plot_Ery <- plot_data[,c(colnames(plot_data)[1:6],
-                           geneset_list_hsc[["Erythroid progs."]][["conserved_signature"]])] %>%
-  gather(gene, expression,
-         -pseudotime, -celltypes, -Mouse_ID, 
-         -Species_ID, -Age_weeks, -Age_ID)
-col_Ery <- grDevices::colorRampPalette(c("grey95", 
-                                         col_cts_hsc["Erythroid progs."], 
-                                         "grey5"))
-palette_Ery <- col_Ery(length(geneset_list_hsc[["Erythroid progs."]][["conserved_signature"]]))
-```
-
-```{r e_plot}
-HSC_1 <- ggplot(plot_HSCs,
-       aes(x = rank(pseudotime),
-           y = expression,
-           color = gene)) +
-  geom_smooth(se = F) +
-  guides(color = "none") +
-  labs(x = "Pseudotime Erythroid", 
-       y = "Scaled Expression") +
-  scale_color_manual(values = rev(palette_HSCs)) +
-  theme_classic() +
-  theme(legend.text = element_blank(),
-        axis.text = element_blank())
-
-MkEry_2 <- ggplot(plot_MkEry,
-       aes(x = rank(pseudotime),
-           y = expression,
-           color = gene)) +
-  geom_smooth(se = F) +
-  guides(color = "none") +
-  labs(x = "Pseudotime Erythroid", 
-       y = NULL) +
-  scale_color_manual(values = rev(palette_MkEry)) +
-  theme_classic() +
-  theme(legend.text = element_blank(),
-        axis.text = element_blank())
-
-Ery_3 <- ggplot(plot_Ery,
-       aes(x = rank(pseudotime),
-           y = expression,
-           color = gene)) +
-  geom_smooth(se = F) +
-  guides(color = "none") +
-  labs(x = "Pseudotime Erythroid", 
-       y = NULL) +
-  scale_color_manual(values = rev(palette_Ery)) +
-  theme_classic() +
-  theme(legend.text = element_blank(),
-        axis.text = element_blank())
-
-```
-
-```{r e_theme_plot}
-HSC_1_theme <- HSC_1+ 
-  ggplot2::theme(   
-    axis.title.x = element_blank(),
-    axis.title.y = element_text(
-      face = axis_title_face,
-      size = axis_title_size,
-      color = axis_title_color),
-    axis.text.x = element_blank(),
-    axis.text.y = element_blank(),
-    plot.title = element_text(
-      face = plot_title_face,
-      size = plot_title_size,
-      color = plot_title_color,
-      hjust = 0.5))+
-  ggplot2::ggtitle("HSCs")
-
-MkEry_2_theme <- MkEry_2+ 
-  ggplot2::theme(   
-    axis.title.y = element_blank(),
-    axis.title.x = element_text(
-      face = axis_title_face,
-      size = axis_title_size,
-      color = axis_title_color),
-    axis.text.x = element_blank(),
-    axis.text.y = element_blank(),
-    plot.title = element_text(
-      face = plot_title_face,
-      size = plot_title_size,
-      color = plot_title_color,
-      hjust = 0.5))+
-  ggplot2::ggtitle("Mk/Ery progs.")
-
-Ery_3_theme <- Ery_3+ 
-  ggplot2::theme(   
-    axis.title.y = element_blank(),
-    axis.title.x = element_blank(),
-    axis.text.x = element_blank(),
-    axis.text.y = element_blank(),
-    plot.title = element_text(
-      face = plot_title_face,
-      size = plot_title_size,
-      color = plot_title_color,
-      hjust = 0.5))+
-  ggplot2::ggtitle("Ery progs.")
-```
-
-
-```{r e_assemble, fig.width = 6, fig.height = 2}
-print(
-  ggpubr::ggarrange(
-    HSC_1,
-    MkEry_2,
-    Ery_3,
-    nrow = 1,
-    widths = c(0.36, 0.32, 0.32)
-  )
-)
-```
-
-```{r e_assemble_plot, fig.width = 6, fig.height = 2}
-e_plot <- ggpubr::ggarrange(
-    HSC_1+theme(axis.title.x = element_blank()),
-    MkEry_2,
-    Ery_3+theme(axis.title.x = element_blank()),
-    nrow = 1,
-    align = "h",
-    widths = c(0.36, 0.32, 0.32)
-  )
-```
-
-```{r e_assemble_plot2, fig.width = 10, fig.height = 3}
-e_plot <- ggpubr::ggarrange(
-    HSC_1_theme,
-    MkEry_2_theme,
-    Ery_3_theme,
-    nrow = 1,
-    align = "h",
-    widths = c(0.36, 0.32, 0.32)
-  )
-e_plot
-```
-
-## F
-
-G: Scaled expression of signature genes [geneX], [geneY], and [geneZ] across
+Scaled expression of signature genes [geneX], [geneY], and [geneZ] across
 mouse species and ages (z-score per species and age).
 
 @Veronica
 
-```{r f_prep_1}
+```{r heatmap_conds1}
 metadata <- sce_hsc@colData@listData
 sce_hsc_seurat <- SeuratObject::CreateSeuratObject(counts = sce_hsc@assays@data@listData[["logcounts"]],
                            meta.data = metadata)
@@ -751,7 +543,7 @@ gene_expression <- metadata$expression %>%
   cbind(do.call(cbind, metadata[c("Species_ID", "Age_ID", "celltypes")]))
 ```
 
-```{r f_prep_2}
+```{r heatmap_conds2}
 plot_1 <- gene_expression[,c(g[1], "Species_ID", "Age_ID", "celltypes")] 
 colnames(plot_1)[1] <- "gene"
 plot_1 <- plot_1 %>%
@@ -783,10 +575,37 @@ plot_3$signature <- lapply(plot_3$celltypes, function(x){
 ```
 
 
-```{r f_plot}
-marker_1 <- ggplot(plot_1,
+```{r heatmap_conds3}
+order_condition <- c(
+ "mmus yng",
+ "mmus old",
+ "mcas yng",
+ "mcas old",
+ "mspr yng",
+ "mspr old",
+ "mcar yng",
+ "mcar old"
+)
+plot_1$condition <- base::paste(plot_1$Species_ID, plot_1$Age_ID)
+plot_1$condition_rev <- plot_1$condition
+plot_1$condition <- factor(plot_1$condition, levels = order_condition)
+plot_1$conditionrev <- factor(plot_1$condition, levels = rev(order_condition))
+
+plot_2$condition <- base::paste(plot_2$Species_ID, plot_2$Age_ID)
+plot_2$condition_rev <- plot_2$condition
+plot_2$condition <- factor(plot_2$condition, levels = order_condition)
+plot_2$conditionrev <- factor(plot_2$condition, levels = rev(order_condition))
+
+plot_3$condition <- base::paste(plot_3$Species_ID, plot_3$Age_ID)
+plot_3$condition_rev <- plot_3$condition
+plot_3$condition <- factor(plot_3$condition, levels = order_condition)
+plot_3$conditionrev <- factor(plot_3$condition, levels = rev(order_condition))
+```
+
+```{r heatmap_conds4}
+marker_1_wide <- ggplot(plot_1,
        aes(x = factor(celltypes, levels = names(geneset_list_hsc)),
-           y = paste(Species_ID, Age_ID),
+           y = conditionrev,
            fill = mean,
            color = signature,
            size = signature)) +
@@ -801,10 +620,28 @@ marker_1 <- ggplot(plot_1,
                        midpoint = mean(plot_1$mean)) +
   theme(legend.position = "none")
 
+marker_1_long <- ggplot(plot_1,
+       aes(y = factor(celltypes, levels = rev(names(geneset_list_hsc))),
+           x = condition,
+           fill = mean,
+           color = signature,
+           size = signature)) +
+  geom_tile(width = 0.95, 
+            height = 0.95) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, h = 1)) +
+  scale_color_manual(guide = "none", values = c(alpha("black", 0), "grey50")) +
+  scale_size_manual(guide = "none", values = c(0, 0.4)) +
+  labs(x = NULL, y = NULL, title = g[1]) +
+  scale_fill_gradient2(low = "blue3", mid = "white", high = "red3",
+                       midpoint = mean(plot_1$mean)) +
+  theme(legend.position = "none")
+```
 
-marker_2 <- ggplot(plot_2,
+```{r heatmap_conds5}
+marker_2_wide <- ggplot(plot_2,
        aes(x = factor(celltypes, levels = names(geneset_list_hsc)),
-           y = paste(Species_ID, Age_ID),
+           y = conditionrev,
            fill = mean,
            color = signature,
            size = signature)) +
@@ -820,10 +657,29 @@ marker_2 <- ggplot(plot_2,
                        midpoint = mean(plot_2$mean)) +
   theme(legend.position = "none")
 
+marker_2_long <- ggplot(plot_2,
+       aes(x = conditionrev,
+           y = factor(celltypes, levels = rev(names(geneset_list_hsc))),
+           fill = mean,
+           color = signature,
+           size = signature)) +
+  geom_tile(width = 0.95, 
+            height = 0.95) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, h = 1),
+        axis.text.y = element_blank()) +
+  scale_color_manual(guide = "none", values = c(alpha("black", 0), "grey50")) +
+  scale_size_manual(guide = "none", values = c(0, 0.4)) +
+  labs(x = NULL, y = NULL, title = g[2]) +
+  scale_fill_gradient2(low = "blue3", mid = "white", high = "red3",
+                       midpoint = mean(plot_2$mean)) +
+  theme(legend.position = "none")
+```
 
-marker_3 <- ggplot(plot_3,
+```{r heatmap_conds6}
+marker_3_wide <- ggplot(plot_3,
        aes(x = factor(celltypes, levels = names(geneset_list_hsc)),
-           y = paste(Species_ID, Age_ID),
+           y = condition,
            fill = mean,
            color = signature,
            size = signature)) +
@@ -839,75 +695,141 @@ marker_3 <- ggplot(plot_3,
                        midpoint = mean(plot_3$mean)) +
   theme(legend.position = "none")
 
+marker_3_long <- ggplot(plot_3,
+       aes(x = condition,
+           y = factor(celltypes, levels = rev(names(geneset_list_hsc))),
+           fill = mean,
+           color = signature,
+           size = signature)) +
+  geom_tile(width = 0.95, 
+            height = 0.95) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, h = 1),
+        axis.text.y = element_blank()) +
+  scale_color_manual(guide = "none", values = c(alpha("black", 0), "grey50")) +
+  scale_size_manual(guide = "none", values = c(0, 0.4)) +
+  labs(x = NULL, y = NULL, title = g[3]) +
+  scale_fill_gradient2(low = "blue3", mid = "white", high = "red3",
+                       midpoint = mean(plot_3$mean)) +
+  theme(legend.position = "none")
 
 # still need to get colors, legend, etc all correct
 ```
 
-```{r f_theme}
-
-marker_1_theme <- marker_1+
+```{r marker_1_theme}
+marker_1_theme_long <- marker_1_long+
+  theme_all+
   ggplot2::theme(
     axis.title.y = element_blank(),
     axis.title.x = element_blank(),
-    axis.text.x = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color,
-      hjust = 0,
-      vjust = 0.5),
+    axis.text.x = element_blank(),
     axis.text.y = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color,
       vjust = 0.5,
       hjust = 0),
     plot.title = element_text(
       face = "italic",
-      size = plot_title_size,
-      hjust = 0.5,
-      color = plot_title_color))+
-  ggplot2::scale_y_discrete(expand = c(0, 0))
+      hjust = 0.5,),
+    legend.title = element_blank())+
+  ggplot2::scale_y_discrete(expand = c(0, 0))+
+  ggplot2::scale_x_discrete(expand = c(0, 0))
 
-marker_2_theme <- marker_2+
+marker_1_theme_wide <- marker_1_wide+
+  theme_all+
   ggplot2::theme(
     axis.title.y = element_blank(),
     axis.title.x = element_blank(),
     axis.text.x = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color,
       hjust = 0,
-      vjust = 0.5),
-    axis.text.y = element_blank(),
+      vjust = 0.5,
+      angle = 90),
+    axis.text.y = element_text(
+      vjust = 0.5,
+      hjust = 0),
     plot.title = element_text(
       face = "italic",
-      size = plot_title_size,
-      hjust = 0.5,
-      color = plot_title_color))+
-  ggplot2::scale_y_discrete(expand = c(0, 0))
-
-marker_3_theme <- marker_3 +
-  ggplot2::theme(
-    axis.title.y = element_blank(),
-    axis.title.x = element_blank(),
-    axis.text.x = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color,
-      hjust = 0,
-      vjust = 0.5),
-    axis.text.y = element_blank(),
-    plot.title = element_text(
-      face = "italic",
-      size = plot_title_size,
-      hjust = 0.5,
-      color = plot_title_color))+
-  ggplot2::scale_y_discrete(expand = c(0, 0))
-
+      hjust = 0.5),
+    legend.title = element_blank(),
+    legend.position = "bottom")+
+  ggplot2::scale_y_discrete(expand = c(0, 0))+
+  ggplot2::scale_x_discrete(expand = c(0, 0))
 ```
 
+```{r marker_2_theme}
+marker_2_theme_long <- marker_2_long+
+  theme_all+
+  ggplot2::theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_text(
+      vjust = 0.5,
+      hjust = 0),
+    plot.title = element_text(
+      face = "italic",
+      hjust = 0.5,),
+    legend.title = element_blank())+
+  ggplot2::scale_y_discrete(expand = c(0, 0))+
+  ggplot2::scale_x_discrete(expand = c(0, 0))
 
-```{r f_assemble, fig.width = 9, fig.height = 3.5}
+marker_2_theme_wide <- marker_2_wide+
+  theme_all+
+  ggplot2::theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(
+      hjust = 0,
+      vjust = 0.5,
+      angle = 90),
+    axis.text.y = element_blank(),
+    plot.title = element_text(
+      face = "italic",
+      hjust = 0.5),
+    legend.title = element_blank(),
+    legend.position = "bottom")+
+  ggplot2::scale_y_discrete(expand = c(0, 0))+
+  ggplot2::scale_x_discrete(expand = c(0, 0))
+```
+
+```{r marker_3_theme}
+marker_3_theme_long <- marker_3_long+
+  theme_all+
+  ggplot2::theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(
+      hjust = 0,
+      vjust = 0.5,
+      angle = 90),
+    axis.text.y = element_text(
+      vjust = 0.5,
+      hjust = 0),
+    plot.title = element_text(
+      face = "italic",
+      hjust = 0.5,),
+    legend.title = element_blank())+
+  ggplot2::scale_y_discrete(expand = c(0, 0))+
+  ggplot2::scale_x_discrete(expand = c(0, 0))
+
+marker_3_theme_wide <- marker_3_wide+
+  theme_all+
+  ggplot2::theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(
+      hjust = 0,
+      vjust = 0.5,
+      angle = 90),
+    axis.text.y = element_blank(),
+    plot.title = element_text(
+      face = "italic",
+      hjust = 0.5),
+    legend.title = element_blank(),
+    legend.position = "bottom")+
+  ggplot2::scale_y_discrete(expand = c(0, 0))+
+  ggplot2::scale_x_discrete(expand = c(0, 0))
+```
+
+```{r heatmap_conds7, fig.width = 9, fig.height = 3.5, include = FALSE, eval = FALSE}
 print(
   ggpubr::ggarrange(
     marker_1,
@@ -919,41 +841,48 @@ print(
 )
 ```
 
-```{r f_assemble_plot, fig.width = 9, fig.height = 3.5}
-f_theme_plot <- ggpubr::ggarrange(
-    marker_1_theme,
-    marker_2_theme,
-    marker_3_theme,
+```{r heatmap_conds_assemble_long, fig.width = 4.5, fig.height = 9}
+heatmap_conds_long_plot <- ggpubr::ggarrange(
+    marker_1_theme_long,
+    marker_2_theme_long,
+    marker_3_theme_long,
+    ncol = 1,
+    heights = c(1, 1, 1.4)
+  )
+heatmap_conds_long_plot
+```
+
+```{r heatmap_conds_assemble_wide, fig.width = 9, fig.height = 4.5}
+heatmap_conds_wide_plot <- ggpubr::ggarrange(
+    marker_1_theme_wide,
+    marker_2_theme_wide,
+    marker_3_theme_wide,
     nrow = 1,
-    widths = c(0.4, 0.3, 0.3)
+    widths = c(1.3, 1, 1)
   )
+heatmap_conds_wide_plot
 ```
 
-```{r assemble_e_f, fig.width = 10, fig.height = 7}
-
-e_f_plot <- ggpubr::ggarrange(
-  e_plot + theme(plot.margin = margin("l" = 1.75, unit = "cm")),
-  f_theme_plot + theme(plot.margin = margin("t" = 1, unit = "cm")),
-  nrow = 2,
-  heights = c(1, 2)
-  )
-e_f_plot
-```
-
-```{r bcd_plot_export}
-pdf(output_pdf_ef_plot, width = 11, height = 7)
-e_f_plot
+```{r output_pdf_heatmap_conds_long_plot}
+pdf(output_pdf_heatmap_conds_long_plot, width = 4.5, height = 9)
+heatmap_conds_long_plot
 dev.off()
 ```
 
-## F Robustness to Aging
+```{r output_pdf_heatmap_conds_wide_plot}
+pdf(output_pdf_heatmap_conds_wide_plot, width = 9, height = 4.5)
+heatmap_conds_wide_plot
+dev.off()
+```
+
+## Boxplot Robustness to Aging
 
 Number of marker genes per HSPC cell type identified when all, only old, 
 or only young mouse samples are included.
 
 @Veronica
 
-```{r f_prep_1}
+```{r aging1}
 conserved_genes <- data.frame(celltype = rep(names(geneset_list_hsc)),
                               young = 0,
                               both = 0,
@@ -1002,7 +931,7 @@ plot_hsc <- gather(conserved_genes[,c("celltype",
                    "group", "count", -celltype, -both_in_markers)
 ```
 
-```{r f_plot, fig.width = 3, fig.height = 5}
+```{r aging2, fig.width = 3, fig.height = 5}
 print(
 ggplot(plot_hsc,
        aes(y = factor(celltype, levels = rev(names(geneset_list_hsc))),
@@ -1029,7 +958,7 @@ ggplot(plot_hsc,
 )
 ```
 
-```{r f_theme_plot, fig.height = 6}
+```{r aging_theme_plot, fig.height = 6}
 # this is the same plot, with themes added and different format
 # plus small adjustments: 
 # -ggpattern (circles instead of hatches for now)
@@ -1048,21 +977,29 @@ plot_hsc$celltype <- factor(
   plot_hsc$celltype, 
   levels = base::rev(names(geneset_list_hsc)))
 
-# TODO: change pattern last by adjusting pattern_density_val/pattern_spacing_val
-f_theme_plot <- ggplot2::ggplot(
+aging_theme_plot <- ggplot2::ggplot(
   plot_hsc,
   aes(y = celltype,
       fill = group))+
   ggplot2::geom_col(
     aes(x = count),
     position = "dodge") +
+  # ggplot2::geom_col(
+  #   data = plot_hsc,
+  #   aes(x = both_in_markers),
+  #   position = "dodge",
+  #   color = NA,
+  #   fill = "black",
+  #   alpha = 0.15
+  # )+
   ggpattern::geom_col_pattern(
     data = plot_hsc,
     aes(x = both_in_markers),
     position = "dodge",
     pattern = "stripe",
-    color = NA,
-    pattern_angle = 60,
+    color = "black",
+    linewidth = 0.5,
+    pattern_angle = 55,
     pattern_fill = "black",
     pattern_colour = "black",
     pattern_density = pattern_density_val,
@@ -1082,23 +1019,21 @@ f_theme_plot <- ggplot2::ggplot(
     y = NULL, 
     x = "# markers identified", 
     fill = NULL) +
-  ggplot2::ggtitle("Conserved markers")+
   ggplot2::scale_fill_manual(
-    values = c("young_in_markers" = "grey30", 
-               "n_markers" = col_cons_long[["conserved markers"]], 
+    values = c("young_in_markers" = "grey30",
+               "n_markers" = col_cons_long[["conserved markers"]],
                "old_in_markers" = "grey80"))+
   ggplot2::scale_x_continuous(
     position = "top",
     expand  = expansion(c(0,0)))+
   ggplot2::scale_y_discrete(
     expand = c(0, 0))
-f_theme_plot
 ```
 
-```{r f_legend_plot}
+```{r aging_legend_plot}
 
 # this is the same plot but adjusted for legend generation only
-f_legend_plot <- ggplot2::ggplot(
+aging_legend_plot <- ggplot2::ggplot(
   plot_hsc,
   aes(y = celltype,
       fill = group))+
@@ -1118,16 +1053,461 @@ f_legend_plot <- ggplot2::ggplot(
     values = c("grey30", 
                col_cons_long[["conserved markers"]], 
                "grey80"))
-f_legend_plot
-
-f_theme_legend <- ggpubr::get_legend(f_legend_plot)
+aging_theme_legend <- ggpubr::get_legend(aging_legend_plot)
 ```
 
-```{r c_legend, fig.width = 2, fig.height = 2}
-f_legend <- ggpubr::ggarrange(f_theme_legend)
-f_legend
+```{r aging_legend, fig.width = 2, fig.height = 2}
+aging_legend <- ggpubr::ggarrange(aging_theme_legend)
+aging_legend
 ```
 
+```{r aging_plot_assemble, fig.width = 4.5, fig.height = 3}
+aging_theme_plot
+```
+
+```{r output_pdf_aging_theme_plot}
+pdf(output_pdf_aging_theme_plot, width = 4.5, height = 3)
+aging_theme_plot
+dev.off()
+```
+
+```{r output_pdf_aging_theme_legend}
+pdf(output_pdf_aging_theme_legend, width = 2, height = 2)
+aging_legend
+dev.off()
+```
+
+## Pseudotime-UMAPs
+
+```{r load_large}
+# fully annotated SCE object (HSPCs) with diffusion pseudotime
+sce_hsc_all_pseudotime <- base::readRDS(base::paste0(
+ base_path_input,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/04_psce/sce_hsc_pseudotime"))
+
+# fully annotated SCE object (HSPCs), erythroid branch cells only, with 
+# pseudotime and erythroid differentiation probability
+ery_pseudo <- base::readRDS(base::paste0(
+  base_path_input, 
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/05_bsce/sce_ery"))
+
+```
+
+TODO: Think about naming of erythroid branch and other branches
+
+```{r pt_umaps1}
+
+# transfer pseudotime info, then remove pseudotime SCE object
+sce_hsc$pseudotime <- sce_hsc_all_pseudotime$dpt_pseudotime
+rm(sce_hsc_all_pseudotime)
+gc()
+
+# add ery info
+# ery object is still needed later
+sce_hsc$ery <- vector(length = ncol(sce_hsc))
+sce_hsc$ery[base::match(colnames(ery_pseudo),
+                        colnames(sce_hsc))] <- ery_pseudo$Erythroid
+
+hsc_umap_pt <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_hsc, type = "UMAP"))
+hsc_umap_pt$color_by <- sce_hsc$pseudotime 
+hsc_umap_pt <- hsc_umap_pt[base::sample(
+  1:nrow(hsc_umap_pt),
+  nrow(hsc_umap_pt),
+  replace = FALSE),]
+
+hsc_umap_ery <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_hsc, type = "UMAP"))
+hsc_umap_ery$color_by <- sce_hsc$ery 
+hsc_umap_ery <- hsc_umap_ery[base::sample(
+  1:nrow(hsc_umap_ery),
+  nrow(hsc_umap_ery),
+  replace = FALSE),]
+```
+
+```{r pt_umaps_base_plot_1}
+pt_umaps_base_plot_1 <- ggplot2::ggplot(
+  hsc_umap_pt, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(hsc_umap_pt$X1)-1, base::max(hsc_umap_pt$X1))+1)+
+  ggplot2::ylim(c(base::min(hsc_umap_pt$X2)-1, base::max(hsc_umap_pt$X2))+1)+
+  ggplot2::scale_color_gradientn(
+    "Diffusion pseudotime",
+    colours = mycolors_to1_grey)
+```
+
+```{r pt_umaps_theme_plot_1, fig.width = 3, fig.height = 3}
+pt_umaps_theme_plot_1 <- pt_umaps_base_plot_1+
+  cowplot::theme_nothing()
+pt_umaps_theme_plot_1
+```
+
+```{r pt_umaps_base_plot_2}
+pt_umaps_base_plot_2 <- ggplot2::ggplot(
+  hsc_umap_ery, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(hsc_umap_pt$X1)-1, base::max(hsc_umap_pt$X1))+1)+ 
+  ggplot2::ylim(c(base::min(hsc_umap_pt$X2)-1, base::max(hsc_umap_pt$X2))+1)+
+  ggplot2::scale_color_gradientn(
+    "Erythroid cell fate probability",
+    colours = c("grey80", col_cts_hsc["Erythroid progs."]))
+```
+
+```{r pt_umaps_theme_plot_2, fig.width = 3, fig.height = 3}
+pt_umaps_theme_plot_2 <- pt_umaps_base_plot_2+
+  cowplot::theme_nothing()
+pt_umaps_theme_plot_2
+```
+
+```{r pt_umaps_legend1, fig.width = 3, fid.height = 2}
+pt_umaps_legend_1_plot <- pt_umaps_base_plot_1+
+  theme_all
+
+pt_umaps_legend1_theme <- ggpubr::get_legend(pt_umaps_legend_1_plot)
+pt_umaps_legend1 <- ggpubr::ggarrange(pt_umaps_legend1_theme)
+pt_umaps_legend1
+```
+
+```{r pt_umaps_legend2, fig.width = 3, fid.height = 2}
+pt_umaps_legend_2_plot <- pt_umaps_base_plot_2+
+  theme_all
+
+pt_umaps_legend2_theme <- ggpubr::get_legend(pt_umaps_legend_2_plot)
+pt_umaps_legend2 <- ggpubr::ggarrange(pt_umaps_legend2_theme)
+pt_umaps_legend2
+```
+
+```{r pt_umaps1_export}
+pdf(output_pdf_pt_umap1_plot, width = 2.5, height = 2.5)
+pt_umaps_theme_plot_1
+dev.off()
+```
+
+```{r pt_umaps2_export}
+pdf(output_pdf_pt_umap2_plot, width = 2.5, height = 2.5)
+pt_umaps_theme_plot_2
+dev.off()
+```
+
+```{r output_pdf_pt_umap_legend1}
+pdf(output_pdf_pt_umap_legend1, width = 3, height = 2)
+pt_umaps_legend1
+dev.off()
+```
+
+```{r output_pdf_pt_umap_legend2}
+pdf(output_pdf_pt_umap_legend2, width = 3, height = 2)
+pt_umaps_legend2
+dev.off()
+```
+
+```{r remove}
+rm(
+  hsc_umap_ery,
+  hsc_umap_pt,
+  pt_umaps_base_plot_1,
+  pt_umaps_base_plot_2,
+  pt_umaps_theme_plot_1,
+  pt_umaps_theme_plot_2,
+  pt_umaps_legend_1_plot,
+  pt_umaps_legend_2_plot,
+  pt_umaps_legend1_theme,
+  pt_umaps_legend2_theme,
+  pt_umaps_legend1,
+  pt_umaps_legend2)
+gc()
+```
+
+## Pseudotime-ranking and scaling 
+
+Scaled expression of HSC (top), Mk/Erythroid prog. (middle) or Erythroid prog.
+(bottom) conserved signature genes along diffusion pseudotime trajectory within 
+the erythroid branch. Cells were partitioned into branches based on their 
+lineage differentiation probability calculated by cellrank.
+
+@Veronica
+
+```{r pt_ranking1, message = FALSE, warning= FALSE}
+ery_pseudo_seurat <- CreateSeuratObject(counts = ery_pseudo@assays@data@listData[["logcounts"]],
+                                        meta.data = ery_pseudo@colData@listData)
+
+rm(ery_pseudo)
+gc()
+
+plot_data <- ery_pseudo_seurat@meta.data %>%
+  select("pseudotime", "celltypes", "Mouse_ID", 
+         "Species_ID", "Age_weeks", "Age_ID")
+for(n in 1:length(geneset_list_hsc)){
+  cell_sp_markers <- geneset_list_hsc[[n]][["conserved_signature"]]
+  for(g in cell_sp_markers){
+    plot_data[,g] <-unlist(SeuratObject::FetchData(ery_pseudo_seurat, g))
+  }
+}
+plot_data[,7:ncol(plot_data)] <- scale(plot_data[,7:ncol(plot_data)])
+```
+
+```{r pt_ranking2}
+plot_HSCs <- plot_data[,c(colnames(plot_data)[1:6],
+                           geneset_list_hsc[["HSCs"]][["conserved_signature"]])] %>%
+  gather(gene, expression,
+         -pseudotime, -celltypes, -Mouse_ID, 
+         -Species_ID, -Age_weeks, -Age_ID)
+col_HSCs <- grDevices::colorRampPalette(c("grey95", 
+                                          col_cts_hsc["HSCs"], 
+                                          "grey5"))
+palette_HSCs <- col_HSCs(length(geneset_list_hsc[["HSCs"]][["conserved_signature"]]))
+
+
+plot_MkEry <- plot_data[,c(colnames(plot_data)[1:6],
+                           geneset_list_hsc[["Mk/Ery progs."]][["conserved_signature"]])] %>%
+  gather(gene, expression,
+         -pseudotime, -celltypes, -Mouse_ID, 
+         -Species_ID, -Age_weeks, -Age_ID)
+col_MkEry <- grDevices::colorRampPalette(c("grey95", 
+                                           col_cts_hsc["Mk/Ery progs."], 
+                                           "grey5"))
+palette_MkEry <- col_MkEry(length(geneset_list_hsc[["Mk/Ery progs."]][["conserved_signature"]]))
+
+
+plot_Ery <- plot_data[,c(colnames(plot_data)[1:6],
+                           geneset_list_hsc[["Erythroid progs."]][["conserved_signature"]])] %>%
+  gather(gene, expression,
+         -pseudotime, -celltypes, -Mouse_ID, 
+         -Species_ID, -Age_weeks, -Age_ID)
+col_Ery <- grDevices::colorRampPalette(c("grey95", 
+                                         col_cts_hsc["Erythroid progs."], 
+                                         "grey5"))
+palette_Ery <- col_Ery(length(geneset_list_hsc[["Erythroid progs."]][["conserved_signature"]]))
+```
+
+```{r pt_ranking3}
+
+HSC_1 <- ggplot(plot_HSCs,
+       aes(x = rank(pseudotime),
+           y = expression,
+           color = gene)) +
+  geom_smooth(se = F) +
+  guides(color = "none") +
+  labs(x = "Pseudotime Erythroid", 
+       y = "Scaled Expression") +
+  scale_color_manual(values = rev(palette_HSCs)) +
+  theme_classic() +
+  theme(legend.text = element_blank(),
+        axis.text = element_blank())
+
+MkEry_2 <- ggplot(plot_MkEry,
+       aes(x = rank(pseudotime),
+           y = expression,
+           color = gene)) +
+  geom_smooth(se = F) +
+  guides(color = "none") +
+  labs(x = "Pseudotime Erythroid", 
+       y = NULL) +
+  scale_color_manual(values = rev(palette_MkEry)) +
+  theme_classic() +
+  theme(legend.text = element_blank(),
+        axis.text = element_blank())
+
+Ery_3 <- ggplot(plot_Ery,
+       aes(x = rank(pseudotime),
+           y = expression,
+           color = gene)) +
+  geom_smooth(se = F) +
+  guides(color = "none") +
+  labs(x = "Pseudotime Erythroid", 
+       y = NULL) +
+  scale_color_manual(values = rev(palette_Ery)) +
+  theme_classic() +
+  theme(legend.text = element_blank(),
+        axis.text = element_blank())
+
+```
+
+```{r pt_ranking4, fig.width = 6, fig.height = 2, eval = FALSE, include = FALSE}
+print(
+  ggpubr::ggarrange(
+    HSC_1,
+    MkEry_2,
+    Ery_3,
+    nrow = 1,
+    widths = c(0.36, 0.32, 0.32)
+  )
+)
+```
+
+```{r hsc_pt_theme_plot}
+# due to using ranks for a different number of data points due to different 
+# numbers of genes, the actual x axis values are not identical, but the
+# "meaning" of the x axis in pseudotime is identical (?)
+# --> will remove x axis ticks to avoid confusion
+
+# due to fitting the expression from the lowest to the largest point for each
+# gene individually = min-max scaling, also no direct comparison is necessary 
+# or required
+# --> will remove y axis ticks to avoid confusion
+
+HSC_theme <- HSC_1+ 
+  theme_all+
+  ggplot2::theme(   
+    axis.title = element_blank(),
+    axis.ticks = element_blank(),
+    axis.text = element_blank(),
+    plot.title = element_text(
+      hjust = 0.5))+
+  ggplot2::ggtitle("HSCs")+
+  ggplot2::ylab("Expression scaled along pseudo-time ranks")+
+  ggplot2::xlab("Pseudo-time ranks of erythroid branch cells")
+```
+
+```{r mkery_pt_theme_plot}
+MkEry_theme <- MkEry_2+ 
+  theme_all+
+  ggplot2::theme(   
+    axis.title = element_blank(),
+    axis.ticks = element_blank(),
+    axis.text = element_blank(),
+    plot.title = element_text(
+      hjust = 0.5))+
+  ggplot2::ggtitle("Mk/Ery progs.")+
+  ggplot2::ylab("Expression scaled along pseudo-time ranks")+
+  ggplot2::xlab("Pseudo-time ranks of erythroid branch cells")
+```
+
+```{r ery_pt_theme_plot}
+Ery_theme <- Ery_3+ 
+  theme_all+
+  ggplot2::theme(   
+    axis.title = element_blank(),
+    axis.ticks = element_blank(),
+    axis.text = element_blank(),
+    plot.title = element_text(
+      hjust = 0.5))+
+  ggplot2::ggtitle("Erythroid progs.")+
+  ggplot2::ylab("Expression scaled along pseudo-time ranks")+
+  ggplot2::xlab("Pseudo-time ranks of erythroid branch cells")
+```
+
+```{r pt_ranking_remove1}
+rm(
+  plot_data,
+  plot_HSCs,
+  plot_MkEry,
+  plot_Ery,
+  HSC_1,
+  MkEry_2,
+  Ery_3,
+  ery_pseudo_seurat
+)
+gc()
+```
+
+```{r pt_ranking_assemble, fig.width = 3, fig.height = 7}
+pt_ranking_theme_plot_long <- ggpubr::ggarrange(
+    HSC_theme,
+    MkEry_theme,
+    Ery_theme,
+    ncol = 1,
+    align = "hv"
+  )
+```
+
+```{r pt_ranking_assemble2, fig.width = 4, fig.height = 10}
+pt_ranking_plot_long <- ggpubr::annotate_figure(
+  pt_ranking_theme_plot_long,
+  top = ggpubr::text_grob(
+    "Conserved identity signature genes", 
+    color = col_cons_long["conserved identity signature"], 
+    face = plot_title_face,
+    size = plot_title_size),
+  bottom = ggpubr::text_grob(
+    "Pseudotime ranks \nof erythroid branch cells", 
+    color = axis_title_color, 
+    face = axis_title_face,
+    size = axis_title_size),
+  left = ggpubr::text_grob(
+    rot = 90,
+    "Scaled gene expression", 
+    color = axis_title_color, 
+    face = axis_title_face,
+    size = axis_title_size),
+    )
+pt_ranking_plot_long
+```
+
+```{r output_pdf_pt_ranking_plot_long}
+pdf(output_pdf_pt_ranking_plot_long, width = 4, height = 10)
+pt_ranking_plot_long
+dev.off()
+```
+
+```{r pt_ranking_remove2}
+rm(pt_ranking_theme_plot_long,
+   pt_ranking_plot_long,
+   markers_conservation_hsc)
+gc()
+```
+
+```{r pt_ranking_assemble3, fig.width = 8, fig.height = 3}
+pt_ranking_theme_plot_wide <- ggpubr::ggarrange(
+    HSC_theme,
+    MkEry_theme,
+    Ery_theme,
+    nrow = 1,
+    align = "hv"
+  )
+pt_ranking_theme_plot_wide
+```
+
+```{r pt_ranking_assemble4, fig.width = 8, fig.height = 3}
+pt_ranking_plot_wide <- ggpubr::annotate_figure(
+  pt_ranking_theme_plot_wide,
+  top = ggpubr::text_grob(
+    "Conserved identity signature genes", 
+    color = col_cons_long["conserved identity signature"], 
+    face = plot_title_face,
+    size = plot_title_size),
+  bottom = ggpubr::text_grob(
+    "Pseudotime ranks of erythroid branch cells", 
+    color = axis_title_color, 
+    face = axis_title_face,
+    size = axis_title_size),
+  left = ggpubr::text_grob(
+    rot = 90,
+    "Scaled gene expression", 
+    color = axis_title_color, 
+    face = axis_title_face,
+    size = axis_title_size),
+    )
+pt_ranking_plot_wide
+```
+
+```{r output_pdf_pt_ranking_plot_wide}
+pdf(output_pdf_pt_ranking_plot_wide, width = 8, height = 4)
+pt_ranking_plot_wide
+dev.off()
+```
+
+```{r pt_ranking_remove3}
+rm( 
+  HSC_theme,
+  MkEry_theme,
+  Ery_theme,
+  pt_ranking_theme_plot_wide,
+  pt_ranking_plot_wide)
+gc()
+```
 
 ```{r session_info}
 utils::sessionInfo()

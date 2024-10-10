@@ -81,7 +81,7 @@ col_cons <- c("conserved_signature" = "#db5b00ff",
 col_cons_long <- c(
   "conserved identity signature" = "#db5b00ff",
   "conserved markers" = "#eb9523ff",
-  "total BL6 markers" = "#a7c5a3ff",
+  "BL6 markers" = "#a7c5a3ff",
   "ndges" = "#ea91adff",
   "random genes" = "grey80",
   "species-specific marker genes" = "grey50")

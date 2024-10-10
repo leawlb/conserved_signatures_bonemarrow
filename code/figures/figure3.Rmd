@@ -229,6 +229,7 @@ make_pattern_density_plot <- function(
       fill = color_cons,
       color = color_cons,
       pattern = "stripe",
+      angle = 110,
       pattern_fill = pattern_fill_color,
       pattern_colour = pattern_line_colour,
       pattern_density =pattern_density_val,
@@ -472,29 +473,48 @@ a_legend <- ggpubr::ggarrange(a_legend_theme)
 ```
 
 ```{r a_plot_export}
-pdf(output_pdf_a_plot, width = 3.2, height = 7)
-a_theme_plot
-dev.off()
+# pdf(output_pdf_a_plot, width = 3.7, height = 7)
+# a_theme_plot
+# dev.off()
 ```
 
 ```{r a_legend_export}
-pdf(output_pdf_a_legend, width = 6, height = 1)
-a_legend
-dev.off()
+# pdf(output_pdf_a_legend, width = 5, height = 1)
+# a_legend
+# dev.off()
 ```
 
-## B
-
-(Re-) clustering metrics to compare re-clustering of own dataset with signature
-genes, conserved markers or all BL6 markers, permuted with different sets of
-random genes as indicated (signature + random_conserved_markers,
-signature + conserved markers + random_bl6_markers). 
-
-#### Prep
+# PREP ALL SCORE DFs 
 
 Separate score DFs per conservation level and type of score.
 
-```{r b_prep1}
+For uniform axis limits, do it for all score DFs.
+
+### OWN 
+
+```{r own_scoredf_0}
+
+psdf_hsc_sign_rand$variation_information <- 0-
+  psdf_hsc_sign_rand$variation_information
+
+psdf_sign_rand_long <- tidyr::pivot_longer(
+  psdf_hsc_sign_rand, 
+  c = 1:ncol(psdf_hsc_sign_rand),
+  values_to = "value",
+  names_to = "type")
+
+psdf_sign_rand_long$conservation_level_long <- base::rep(
+  "conserved identity signature", nrow(psdf_sign_rand_long))
+
+psdf_sign_rand_score_1 <- psdf_sign_rand_long[psdf_sign_rand_long$type %in% 
+                                               c("adjusted_rand_index"),]
+psdf_sign_rand_score_2 <- psdf_sign_rand_long[psdf_sign_rand_long$type %in% 
+                                               c("variation_information"),]
+psdf_sign_rand_score_3 <- psdf_sign_rand_long[psdf_sign_rand_long$type %in% 
+                                               c("mean_prop_cells_cluster"),]
+```
+
+```{r own_scoredf_1}
 
 # flip VI
 score_df_hsc$value[
@@ -511,7 +531,7 @@ score_df_sign_score_2 <- score_df_sign[score_df_sign$type == score2,]
 score_df_sign_score_3 <- score_df_sign[score_df_sign$type == score3,]
 ```
 
-```{r b_prep2}
+```{r own_scoredf_2}
 score_df_mark <- score_df_hsc[
   score_df_hsc$conservation_level == "conserved_markers",]
 score_df_mark$conservation_level_long <- "conserved markers"
@@ -521,7 +541,7 @@ score_df_mark_score_2 <- score_df_mark[score_df_mark$type == score2,]
 score_df_mark_score_3 <- score_df_mark[score_df_mark$type == score3,]
 ```
 
-```{r b_prep3}
+```{r own_scoredf_3}
 score_df_mmms <- score_df_hsc[
   score_df_hsc$conservation_level == "mmusall_markers",]
 score_df_mmms$conservation_level_long <- "total BL6 markers"
@@ -533,7 +553,11 @@ score_df_mmms_score_3 <- score_df_mmms[score_df_mmms$type == score3,]
 
 Also separate the permutation score dfs by conservation level and type of score.
 
-```{r b_prep4}
+
+```{r own_scoredf_4}
+
+psdf_hsc_mark_signrand$variation_information <- 0-psdf_hsc_mark_signrand$variation_information
+
 psdf_mark_signrand_long <- pivot_longer(
   psdf_hsc_mark_signrand, 
   c = 1:ncol(psdf_hsc_mark_signrand),
@@ -551,7 +575,10 @@ psdf_mark_signrand_score_3 <- psdf_mark_signrand_long[
   psdf_mark_signrand_long$type == score3,]
 ```
 
-```{r b_prep5}
+```{r own_scoredf_5}
+
+psdf_hsc_mmms_signrand$variation_information <- 0 - psdf_hsc_mmms_signrand$variation_information
+
 psdf_mmms_signrand_long <- pivot_longer(
   psdf_hsc_mmms_signrand, 
   c = 1:ncol(psdf_hsc_mmms_signrand),
@@ -569,39 +596,252 @@ psdf_mmms_signrand_score_3 <- psdf_mmms_signrand_long[
   psdf_mmms_signrand_long$type == score3,]
 ```
 
-get the minimum number of variation of information scores for plot limits
+### OTHER 1 
 
-```{r max_vi}
-# TODO: do this for the entire plot
-min_vi <- base::min(c(
-  
-  # actual scores
-  score_df_hsc$value[score_df_hsc$type == "variation_information"],
-  
-  # permuted background scores for conserved signature
-  psdf_hsc_sign_rand$variation_information,
-  
-  # permuted gene set scores
-  psdf_hsc_mmms_signrand$variation_information,
-  psdf_hsc_mark_signrand$variation_information)) - 0.5
+```{r d_prep1}
 
-print(score1)
-print(score2)
-print(score3)
+resolution_df_o1 <- resolution_df[resolution_df$dataset == dataset_o1,]
 
-#TODO: generate max_vi for entire figure
-#TODO: also generate new score3_max for entire figure
-score2_min <- min_vi
-score2_max <- 0
-score1_max <- 1
-score1_min <- 0
-score3_max <- 1
-score3_min <- 0
+selected_seu_list <- lapply(seu_hsc_recl_list_o1, function(seu_list){
+  
+  conslev_curr <- seu_list[[1]]@misc$used_genes
+  
+  resdf_temp <- resolution_df_o1[resolution_df_o1$conservation_level == conslev_curr,]
+  res_curr <- resdf_temp$resolution
+  
+  seu_return <- seu_list[[res_curr]]
+  return(seu_return)
+  
+})
 ```
 
-##### box plots
+```{r o1_scoredf_1}
+selected_score_df_list_o1 <- lapply(score_df_hsc_list_o1, function(score_df_list){
+  
+  conslev_curr <- score_df_list[[1]]$conservation_level[1]
+  
+  resdf_temp <- resolution_df_o1[
+    resolution_df_o1$conservation_level == conslev_curr,]
+  res_curr <- resdf_temp$resolution
+  
+  score_df_return <- score_df_list[[res_curr]]
+  return(score_df_return)
+  
+})
+score_df_hsc_o1 <- dplyr::bind_rows(selected_score_df_list_o1)
 
-```{r b_prep6}
+# flip VI
+score_df_hsc_o1$value[
+  score_df_hsc_o1$type == "variation_information"] <- 0-score_df_hsc_o1$value[
+    score_df_hsc_o1$type == "variation_information"]
+```
+
+```{r o1_scoredf_2}
+score_df_sign_o1 <- score_df_hsc_o1[
+  score_df_hsc_o1$conservation_level == "conserved_signature",]
+score_df_sign_o1$conservation_level_long <- "conserved identity signature"
+
+score_df_sign_score_1_o1 <- score_df_sign_o1[
+  score_df_sign_o1$type == "adjusted_rand_index",]
+score_df_sign_score_2_o1 <- score_df_sign_o1[
+  score_df_sign_o1$type == "variation_information",]
+score_df_sign_score_3_o1 <- score_df_sign_o1[
+  score_df_sign_o1$type == "mean_prop_cells_cluster",]
+```
+
+```{r o1_scoredf_3}
+score_df_mark_o1 <- score_df_hsc_o1[
+  score_df_hsc_o1$conservation_level == "conserved_markers",]
+score_df_mark_o1$conservation_level_long <- "conserved markers"
+
+score_df_mark_score_1_o1 <- score_df_mark_o1[
+  score_df_mark_o1$type == "adjusted_rand_index",]
+score_df_mark_score_2_o1 <- score_df_mark_o1[
+  score_df_mark_o1$type == "variation_information",]
+score_df_mark_score_3_o1 <- score_df_mark_o1[
+  score_df_mark_o1$type == "mean_prop_cells_cluster",]
+```
+
+```{r o1_scoredf_4}
+psdf_hsc_mark_signrand_o1$variation_information <- 0-
+  psdf_hsc_mark_signrand_o1$variation_information
+
+psdf_mark_signrand_long_o1 <- tidyr::pivot_longer(
+  psdf_hsc_mark_signrand_o1, 
+  c = 1:ncol(psdf_hsc_mark_signrand_o1),
+  values_to = "value",
+  names_to = "type")
+psdf_mark_signrand_long_o1$conservation_level_long = base::rep(
+  "conserved markers", nrow(psdf_mark_signrand_long_o1))
+
+psdf_mark_signrand_score_1_o1 <- psdf_mark_signrand_long_o1[
+  psdf_mark_signrand_long_o1$type %in% c("adjusted_rand_index"),]
+psdf_mark_signrand_score_2_o1 <- psdf_mark_signrand_long_o1[
+  psdf_mark_signrand_long_o1$type %in% c("variation_information"),]
+psdf_mark_signrand_score_3_o1 <- psdf_mark_signrand_long_o1[
+  psdf_mark_signrand_long_o1$type %in% c("mean_prop_cells_cluster"),]
+```
+
+```{r o1_scoredf_5}
+score_df_mmms_o1  <- score_df_hsc_o1[
+  score_df_hsc_o1$conservation_level == "mmusall_markers",]
+score_df_mmms_o1$conservation_level_long <- "total BL6 markers"
+
+score_df_mmms_score_1_o1 <- score_df_mmms_o1[
+  score_df_mmms_o1$type == "adjusted_rand_index",]
+score_df_mmms_score_2_o1 <- score_df_mmms_o1[
+  score_df_mmms_o1$type == "variation_information",]
+score_df_mmms_score_3_o1 <- score_df_mmms_o1[
+  score_df_mmms_o1$type == "mean_prop_cells_cluster",]
+```
+
+```{r o1_scoredf_6}
+
+psdf_hsc_mmms_signrand_o1$variation_information <- 0-
+  psdf_hsc_mmms_signrand_o1$variation_information
+
+psdf_mmms_signrand_long_o1 <- tidyr::pivot_longer(
+  psdf_hsc_mmms_signrand_o1, 
+  c = 1:ncol(psdf_hsc_mmms_signrand_o1),
+  values_to = "value",
+  names_to = "type")
+psdf_mmms_signrand_long_o1$conservation_level_long = base::rep(
+  "total BL6 markers", nrow(psdf_mmms_signrand_long_o1))
+
+psdf_mmms_signrand_score_1_o1 <- psdf_mmms_signrand_long_o1[
+  psdf_mmms_signrand_long_o1$type %in% c("adjusted_rand_index"),]
+psdf_mmms_signrand_score_2_o1 <- psdf_mmms_signrand_long_o1[
+  psdf_mmms_signrand_long_o1$type %in% c("variation_information"),]
+psdf_mmms_signrand_score_3_o1 <- psdf_mmms_signrand_long_o1[
+  psdf_mmms_signrand_long_o1$type %in% c("mean_prop_cells_cluster"),]
+```
+
+### OTHER 2 
+
+```{r f_prep1}
+
+resolution_df_o2 <- resolution_df[resolution_df$dataset == dataset_o2,]
+
+selected_seu_list_o2 <- lapply(seu_hsc_recl_list_o2, function(seu_list){
+  
+  conslev_curr <- seu_list[[1]]@misc$used_genes
+  
+  resdf_temp <- resolution_df_o2[resolution_df_o2$conservation_level == conslev_curr,]
+  res_curr <- resdf_temp$resolution
+  
+  seu_return <- seu_list[[res_curr]]
+  return(seu_return)
+  
+})
+```
+
+```{r o2_scoredf_1}
+selected_score_df_list_o2 <- lapply(score_df_hsc_list_o2, function(score_df_list){
+  
+  conslev_curr <- score_df_list[[1]]$conservation_level[1]
+  
+  resdf_temp <- resolution_df_o2[
+    resolution_df_o2$conservation_level == conslev_curr,]
+  res_curr <- resdf_temp$resolution
+  
+  score_df_return <- score_df_list[[res_curr]]
+  return(score_df_return)
+  
+})
+score_df_hsc_o2 <- dplyr::bind_rows(selected_score_df_list_o2)
+
+# flip VI
+score_df_hsc_o2$value[
+  score_df_hsc_o2$type == "variation_information"] <- 0-score_df_hsc_o2$value[
+    score_df_hsc_o2$type == "variation_information"]
+```
+
+```{r o2_scoredf_2}
+score_df_sign_o2 <- score_df_hsc_o2[
+  score_df_hsc_o2$conservation_level == "conserved_signature",]
+score_df_sign_o2$conservation_level_long <- "conserved identity signature"
+
+score_df_sign_score_1_o2 <- score_df_sign_o2[
+  score_df_sign_o2$type == "adjusted_rand_index",]
+score_df_sign_score_2_o2 <- score_df_sign_o2[
+  score_df_sign_o2$type == "variation_information",]
+score_df_sign_score_3_o2 <- score_df_sign_o2[
+  score_df_sign_o2$type == "mean_prop_cells_cluster",]
+```
+
+```{r o2_scoredf_3}
+score_df_mark_o2 <- score_df_hsc_o2[
+  score_df_hsc_o2$conservation_level == "conserved_markers",]
+score_df_mark_o2$conservation_level_long <- "conserved markers"
+
+score_df_mark_score_1_o2 <- score_df_mark_o2[
+  score_df_mark_o2$type == "adjusted_rand_index",]
+score_df_mark_score_2_o2 <- score_df_mark_o2[
+  score_df_mark_o2$type == "variation_information",]
+score_df_mark_score_3_o2 <- score_df_mark_o2[
+  score_df_mark_o2$type == "mean_prop_cells_cluster",]
+```
+
+```{r o2_scoredf_4}
+
+psdf_hsc_mark_signrand_o2$variation_information <- 0-
+  psdf_hsc_mark_signrand_o2$variation_information
+
+psdf_mark_signrand_long_o2 <- pivot_longer(
+  psdf_hsc_mark_signrand_o2, 
+  c = 1:ncol(psdf_hsc_mark_signrand_o2),
+  values_to = "value",
+  names_to = "type")
+psdf_mark_signrand_long_o2$conservation_level_long = base::rep(
+  "conserved markers", nrow(psdf_mark_signrand_long_o2))
+
+psdf_mark_signrand_score_1_o2 <- psdf_mark_signrand_long_o2[
+  psdf_mark_signrand_long_o2$type %in% c("adjusted_rand_index"),]
+psdf_mark_signrand_score_2_o2 <- psdf_mark_signrand_long_o2[
+  psdf_mark_signrand_long_o2$type %in% c("variation_information"),]
+psdf_mark_signrand_score_3_o2 <- psdf_mark_signrand_long_o2[
+  psdf_mark_signrand_long_o2$type %in% c("mean_prop_cells_cluster"),]
+```
+
+```{r o2_scoredf_5}
+score_df_mmms_o2  <- score_df_hsc_o2[
+  score_df_hsc_o2$conservation_level == "mmusall_markers",]
+score_df_mmms_o2$conservation_level_long <- "total BL6 markers"
+
+score_df_mmms_score_1_o2 <- score_df_mmms_o2[
+  score_df_mmms_o2$type == "adjusted_rand_index",]
+score_df_mmms_score_2_o2 <- score_df_mmms_o2[
+  score_df_mmms_o2$type == "variation_information",]
+score_df_mmms_score_3_o2 <- score_df_mmms_o2[
+  score_df_mmms_o2$type == "mean_prop_cells_cluster",]
+```
+
+```{r o2_scoredf_6}
+
+psdf_hsc_mmms_signrand_o2$variation_information <- 0-
+  psdf_hsc_mmms_signrand_o2$variation_information
+
+psdf_mmms_signrand_long_o2 <- tidyr::pivot_longer(
+  psdf_hsc_mmms_signrand_o2, 
+  c = 1:ncol(psdf_hsc_mmms_signrand_o2),
+  values_to = "value",
+  names_to = "type")
+psdf_mmms_signrand_long_o2$conservation_level_long = base::rep(
+  "total BL6 markers", nrow(psdf_mmms_signrand_long_o2))
+
+psdf_mmms_signrand_score_1_o2 <- psdf_mmms_signrand_long_o2[
+  psdf_mmms_signrand_long_o2$type %in% c("adjusted_rand_index"),]
+psdf_mmms_signrand_score_2_o2 <- psdf_mmms_signrand_long_o2[
+  psdf_mmms_signrand_long_o2$type %in% c("variation_information"),]
+psdf_mmms_signrand_score_3_o2 <- psdf_mmms_signrand_long_o2[
+  psdf_mmms_signrand_long_o2$type %in% c("mean_prop_cells_cluster"),]
+```
+
+# Prep all gene number boxplots etc.
+
+## OWN
+
+```{r own_numberdf_1}
 # get the number of genes used for each gene set
 nr_sign_used <- sce_hsc_recl$cluster_signt_genes_used[1]
 nr_mark_used <- sce_hsc_recl$cluster_consm_genes_used[1]
@@ -618,7 +858,7 @@ max_genes <- nr_mmms_used
 
 make dfs for visualisation of gene numbers with boxplots.
 
-```{r b_prep7}
+```{r own_numberdf_2}
 vis_df_sign <- base::data.frame(
   type_y = "conserved identity signature",
   type_fill = "conserved identity signature",
@@ -626,7 +866,7 @@ vis_df_sign <- base::data.frame(
 )
 ```
 
-```{r b_prep8}
+```{r own_numberdf_3}
 vis_df_mark <- base::data.frame(
   type_y = c(
     "conserved markers",
@@ -657,7 +897,7 @@ vis_df_mark$type_y <- factor(vis_df_mark$type_y, levels = base::rev(c(
 )))
 ```
 
-```{r b_prep9}
+```{r own_numberdf_4}
 vis_df_mmms <- base::data.frame(
   type_y = c(
     "total BL6 markers",
@@ -686,6 +926,246 @@ vis_df_mmms$type_y <- factor(vis_df_mmms$type_y, levels = base::rev(c(
   "permutation gene set"
 )))
 ```
+
+## Other 1
+
+```{r o1_numberdf_1}
+
+# get the number of genes used for each gene set
+nr_sign_used <- selected_score_df_list_o1$seu_sign$nr_genes_used[1]
+
+nr_mark_used <- selected_score_df_list_o1$seu_mark$nr_genes_used[1]
+nr_mmms_used <- selected_score_df_list_o1$seu_mmms$nr_genes_used[1]
+
+nr_mark_left <- nr_mark_used - nr_sign_used
+nr_mark_rand <- nr_mark_left # same number but keep for tracking purpose
+
+nr_mmms_left <- nr_mmms_used - nr_sign_used
+nr_mmms_rand <- nr_mmms_left
+
+#max_genes <- nr_mmms_used
+```
+
+```{r o1_numberdf_2}
+e_vis_df_sign <- base::data.frame(
+  type_y = "conserved identity signature",
+  type_fill = "conserved identity signature",
+  number = nr_sign_used
+)
+```
+
+```{r o1_numberdf_3}
+e_vis_df_mark <- base::data.frame(
+  type_y = c(
+    "conserved markers",
+    "conserved markers",
+    "permutation gene set",
+    "permutation gene set"),
+  type_fill = c(
+    "conserved identity signature",
+    "conserved markers",
+    "conserved identity signature",
+    "random genes"),
+  number = c(
+    nr_sign_used,
+    nr_mark_left,
+    nr_sign_used,
+    nr_mark_rand)
+)
+
+# factor for plot
+e_vis_df_mark$type_fill <- factor(e_vis_df_mark$type_fill, levels = base::rev(c(
+  "conserved identity signature",
+  "conserved markers",
+  "random genes"
+)))
+e_vis_df_mark$type_y <- factor(e_vis_df_mark$type_y, levels = base::rev(c(
+  "conserved markers",
+  "permutation gene set"
+)))
+```
+
+```{r o1_numberdf_4}
+e_vis_df_mmms <- base::data.frame(
+  type_y = c(
+    "total BL6 markers",
+    "total BL6 markers",
+    "permutation gene set",
+    "permutation gene set"),
+  type_fill = c(
+    "conserved identity signature",
+    "total BL6 markers",
+    "conserved identity signature",
+    "random genes"),
+  number = c(
+    nr_sign_used,
+    nr_mmms_left,
+    nr_sign_used,
+    nr_mmms_rand)
+)
+
+e_vis_df_mmms$type_fill <- factor(e_vis_df_mmms$type_fill, levels = base::rev(c(
+  "conserved identity signature",
+  "total BL6 markers",
+  "random genes"
+)))
+e_vis_df_mmms$type_y <- factor(e_vis_df_mmms$type_y, levels = base::rev(c(
+  "total BL6 markers",
+  "permutation gene set"
+)))
+```
+
+## Other 2
+
+```{r o2_numberdf_1}
+
+# get the number of genes used for each gene set
+nr_sign_used <- selected_score_df_list_o2$seu_sign$nr_genes_used[1]
+
+nr_mark_used <- selected_score_df_list_o2$seu_mark$nr_genes_used[1]
+nr_mmms_used <- selected_score_df_list_o2$seu_mmms$nr_genes_used[1]
+
+nr_mark_left <- nr_mark_used - nr_sign_used
+nr_mark_rand <- nr_mark_left # same number but keep for tracking purpose
+
+nr_mmms_left <- nr_mmms_used - nr_sign_used
+nr_mmms_rand <- nr_mmms_left
+
+#max_genes <- nr_mmms_used
+```
+
+```{r o2_numberdf_2}
+g_vis_df_sign <- base::data.frame(
+  type_y = "conserved identity signature",
+  type_fill = "conserved identity signature",
+  number = nr_sign_used
+)
+```
+
+```{r o2_numberdf_3}
+g_vis_df_mark <- base::data.frame(
+  type_y = c(
+    "conserved markers",
+    "conserved markers",
+    "permutation gene set",
+    "permutation gene set"),
+  type_fill = c(
+    "conserved identity signature",
+    "conserved markers",
+    "conserved identity signature",
+    "random genes"),
+  number = c(
+    nr_sign_used,
+    nr_mark_left,
+    nr_sign_used,
+    nr_mark_rand)
+)
+
+# factor for plot
+g_vis_df_mark$type_fill <- factor(g_vis_df_mark$type_fill, levels = base::rev(c(
+  "conserved identity signature",
+  "conserved markers",
+  "random genes"
+)))
+g_vis_df_mark$type_y <- factor(g_vis_df_mark$type_y, levels = base::rev(c(
+  "conserved markers",
+  "permutation gene set"
+)))
+```
+
+```{r o2_numberdf_4}
+g_vis_df_mmms <- base::data.frame(
+  type_y = c(
+    "total BL6 markers",
+    "total BL6 markers",
+    "permutation gene set",
+    "permutation gene set"),
+  type_fill = c(
+    "conserved identity signature",
+    "total BL6 markers",
+    "conserved identity signature",
+    "random genes"),
+  number = c(
+    nr_sign_used,
+    nr_mmms_left,
+    nr_sign_used,
+    nr_mmms_rand)
+)
+
+g_vis_df_mmms$type_fill <- factor(g_vis_df_mmms$type_fill, levels = base::rev(c(
+  "conserved identity signature",
+  "total BL6 markers",
+  "random genes"
+)))
+g_vis_df_mmms$type_y <- factor(g_vis_df_mmms$type_y, levels = base::rev(c(
+  "total BL6 markers",
+  "permutation gene set"
+)))
+```
+
+## Mins and Maxs
+
+```{r minmax}
+
+
+psdf_hsc_sign_rand_o1$variation_information <- 0-
+  psdf_hsc_sign_rand_o1$variation_information
+psdf_hsc_sign_rand_o2$variation_information <- 0-
+  psdf_hsc_sign_rand_o2$variation_information
+
+# think exacty about which value is even part of the data!!
+all_vi <- c(
+  
+  # actual scores
+  score_df_hsc$value[score_df_hsc$type == "variation_information"],
+  
+  # permuted background scores for conserved signature
+  psdf_hsc_sign_rand$variation_information,
+  
+  # permuted gene set scores
+  psdf_hsc_mmms_signrand$variation_information,
+  psdf_hsc_mark_signrand$variation_information,
+  
+  # other dataset 1
+  score_df_hsc_o1$value[score_df_hsc_o1$type == "variation_information"],
+  psdf_hsc_sign_rand_o1$variation_information,
+  psdf_hsc_mmms_signrand_o1$variation_information,
+  psdf_hsc_mark_signrand_o1$variation_information,
+  
+  # other dataset 2
+  score_df_hsc_o2$value[score_df_hsc_o2$type == "variation_information"],
+  psdf_hsc_sign_rand_o2$variation_information,
+  psdf_hsc_mmms_signrand_o2$variation_information,
+  psdf_hsc_mark_signrand_o2$variation_information
+  
+  )
+
+stopifnot(all_vi <= 0)
+min_vi <- base::min(all_vi- 0.5)
+
+print(score1)
+print(score2)
+print(score3)
+
+#TODO: generate max_vi for entire figure
+#TODO: also generate new score3_max for entire figure
+# score1 currently adjusted rand index
+score1_min <- 0
+score1_max <- 1
+
+score2_min <- min_vi
+score2_max <- 0
+
+score3_min <- 0
+score3_max <- 1
+```
+
+## B
+
+(Re-) clustering metrics to compare re-clustering of own dataset with signature
+genes, conserved markers or all BL6 markers, permuted with different sets of
+random genes as indicated (signature + random_conserved_markers,
+signature + conserved markers + random_bl6_markers). 
 
 #### Plot Components
 
@@ -717,16 +1197,13 @@ b_theme_plot_left1 <- b_base_plot_left1+
     values = col_cons_long)+
   ggplot2::theme(
     legend.position = "none",
-    axis.text.x = element_text(
-      hjust = 0.5),
+    axis.text.x = element_text(hjust = 0.5),
     axis.text.y = element_blank(),
-    axis.title = element_blank(),
-    plot.title = element_text(
-      hjust = 0.5))+
+    plot.title = element_text(hjust = 0.5))+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.25, 0.5, 0.75, 1),
     position = "top", 
-    limits = c(0, score1_max))+
+    limits = c(score1_min, score1_max))+
   ggplot2::ggtitle(score1_long) 
 ```
 
@@ -749,7 +1226,7 @@ b_theme_plot_left2 <- b_base_plot_left2+
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
   ggplot2::scale_x_continuous(
-    limits = c(0, score1_max))
+    limits = c(score1_min, score1_max))
 ```
 
 ```{r b_base_plot_left3}
@@ -771,7 +1248,7 @@ b_theme_plot_left3 <- b_base_plot_left3+
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
   ggplot2::scale_x_continuous(
-    limits = c(0, score1_max))
+    limits = c(score1_min, score1_max))
 ```
 
 ```{r b_construct_a, fig.height = 2.8, fig.width = 5}
@@ -794,43 +1271,37 @@ b_base_plot_mleft1 <- ggplot2::ggplot(
   aes(y = conservation_level_long,
       x = value,
       color = conservation_level_long))+
-  ggplot2::geom_vline(
-    xintercept = 1.5,
-      color = color_hline_background,
-    linewidth = 3)+
-  ggplot2::geom_vline(
-    xintercept = 4.5,
-    color = color_hline_background,
-    linewidth = 3)+
+  # ggplot2::geom_vline(
+  #   xintercept = 1.5,
+  #     color = color_hline_background,
+  #   linewidth = 3)+
+  # ggplot2::geom_vline(
+  #   xintercept = 4.5,
+  #   color = color_hline_background,
+  #   linewidth = 3)+
   ggplot2::geom_point(
     size = point_plot_size)
 ```
 
 ```{r b_theme_plot_mleft1}
 b_theme_plot_mleft1 <- b_base_plot_mleft1+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::scale_color_manual(
     "Score",
     values = col_cons_long)+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color, 
       angle = 0,
       hjust = 0.5,
       vjust = 0.5),
     axis.text.y = element_blank(),
     axis.title = element_blank(),
     plot.title = element_text(
-      size = plot_title_size,
-      face = plot_title_face,
-      color = plot_title_color, 
       hjust = 0.5))+
   ggplot2::scale_x_continuous(
     position = "top",
-    limit = c(0, max_vi),
+    limit = c(0, score2_max),
     breaks=c(0, 1, 2, 3, 4, 5))+
   ggplot2::ggtitle("Variation of information")
 ```
@@ -846,7 +1317,7 @@ b_base_plot_mleft2 <- make_pattern_density_plot(
 
 ```{r b_theme_plot_mleft2}
 b_theme_plot_mleft2 <- b_base_plot_mleft2+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -854,7 +1325,7 @@ b_theme_plot_mleft2 <- b_base_plot_mleft2+
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
   ggplot2::scale_x_continuous(
-    limits = c(0, score2_max))
+    limits = c(score2_min, score2_max))
 ```
 
 ```{r b_base_plot_mleft3}
@@ -868,7 +1339,7 @@ b_base_plot_mleft3 <- make_pattern_density_plot(
 
 ```{r b_theme_plot_mleft3}
 b_theme_plot_mleft3 <- b_base_plot_mleft3+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -913,29 +1384,23 @@ b_base_plot_mright1 <- ggplot2::ggplot(
 
 ```{r b_theme_plot_mright1}
 b_theme_plot_mright1 <- b_base_plot_mright1+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::scale_color_manual(
     "Score",
     values = col_cons_long)+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color, 
       angle = 0,
       hjust = 0.5,
       vjust = 0.5),
     axis.text.y = element_blank(),
     axis.title = element_blank(),
     plot.title = element_text(
-      size = plot_title_size,
-      face = plot_title_face,
-      color = plot_title_color, 
       hjust = 0.5))+
   ggplot2::scale_x_continuous(
     position = "top", 
-    limits = c(0, 1))+
+    limits = c(score3_min, score3_max))+
   ggplot2::ggtitle("Mean prop. cells/cluster")
 ```
 
@@ -950,7 +1415,7 @@ b_base_plot_mright2 <- make_pattern_density_plot(
 
 ```{r b_theme_plot_mright2}
 b_theme_plot_mright2 <- b_base_plot_mright2+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -958,7 +1423,7 @@ b_theme_plot_mright2 <- b_base_plot_mright2+
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
   ggplot2::scale_x_continuous(
-    limits = c(0, score3_max))
+    limits = c(score3_min, score3_max))
 ```
 
 ```{r b_base_plot_mright3}
@@ -972,7 +1437,7 @@ b_base_plot_mright3 <- make_pattern_density_plot(
 
 ```{r b_theme_plot_mright3}
 b_theme_plot_mright3 <- b_base_plot_mright3+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -980,7 +1445,7 @@ b_theme_plot_mright3 <- b_base_plot_mright3+
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
   ggplot2::scale_x_continuous(
-    limits = c(0, score3_max))
+    limits = c(score3_min, score3_max))
 ```
 
 ```{r b_construct_c, fig.height = 2.8, fig.width = 2.8}
@@ -1008,20 +1473,13 @@ b_base_plot_right1 <- ggplot2::ggplot(
 
 ```{r b_theme_plot_right1}
 b_theme_plot_right1 <- b_base_plot_right1+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.title.y = element_blank(),
     axis.text.y = element_blank(),
-    axis.text.x = element_text(
-      size = axis_text_size,
-      face = axis_text_face,
-      color = axis_text_color),
     axis.title.x = element_blank(),
     plot.title = element_text(
-      size = plot_title_size,
-      face = plot_title_face,
-      color = plot_title_color,
       hjust = 0.5))+
   ggplot2::scale_x_continuous(
     position = "top", 
@@ -1054,7 +1512,7 @@ b_base_plot_right2 <- ggplot2::ggplot(
 
 ```{r b_theme_plot_right2}
 b_theme_plot_right2 <- b_base_plot_right2+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.title = element_blank(),
@@ -1091,7 +1549,7 @@ b_base_plot_right3 <- ggplot2::ggplot(
 
 ```{r b_theme_plot_right3}
 b_theme_plot_right3 <- b_base_plot_right3+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     axis.title.y = element_blank(),
     axis.text.y = element_blank(),
@@ -1136,15 +1594,7 @@ b_legend_right_plot <- ggplot2::ggplot(
     pattern_colour = pattern_line_colour,
     pattern_density =pattern_density_val,
     pattern_spacing = pattern_spacing_val)+
-  ggplot2::theme(
-    legend.title = element_text(
-      size = legend_title_size,
-      face = legend_title_face,
-      color = legend_title_color),
-    legend.text = element_text(
-      size = legend_text_size,
-      face = legend_text_face,
-      color = legend_text_color))+
+  theme_all+
   ggplot2::scale_fill_manual(
     "re-clustering gene sets",
     values = col_cons_long)
@@ -1205,23 +1655,6 @@ b_all_plot
 Can re-use conserved signature DFs generated for part B.
 Make DFs for conserved signature permuted scores.
 
-```{r c_prep1}
-psdf_sign_rand_long <- tidyr::pivot_longer(
-  psdf_hsc_sign_rand, 
-  c = 1:ncol(psdf_hsc_sign_rand),
-  values_to = "value",
-  names_to = "type")
-
-psdf_sign_rand_long$conservation_level_long <- base::rep(
-  "conserved identity signature", nrow(psdf_sign_rand_long))
-
-psdf_sign_rand_score_1 <- psdf_sign_rand_long[psdf_sign_rand_long$type %in% 
-                                               c("adjusted_rand_index"),]
-psdf_sign_rand_score_2 <- psdf_sign_rand_long[psdf_sign_rand_long$type %in% 
-                                               c("variation_information"),]
-psdf_sign_rand_score_3 <- psdf_sign_rand_long[psdf_sign_rand_long$type %in% 
-                                               c("mean_prop_cells_cluster"),]
-```
 
 Make DF with gene numbers also for conserved signature background permutation.
 
@@ -1263,26 +1696,15 @@ c_base_plot_left <- make_pattern_density_plot(
 
 ```{r c_theme_plot_left}
 c_theme_plot_left <- c_base_plot_left+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
-    axis.text.x = element_text(
-      face = axis_text_face,
-      color = axis_text_color,
-      size = axis_text_size),
     plot.title = element_text(
-      size = plot_title_size,
-      face = plot_title_face,
-      color = plot_title_color,
       hjust = 0.5),
-    axis.text.y = element_text(
-      face = axis_text_face,
-      color = axis_text_color,
-      size = axis_text_size),  
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
   ggplot2::scale_x_continuous(
-    limits = c(0, score1_max), 
+    limits = c(score1_min, score1_max), 
     position = "top")+
   ggplot2::ggtitle("Adjusted rand index")
 ```
@@ -1300,23 +1722,16 @@ c_base_plot_mleft <- make_pattern_density_plot(
 
 ```{r c_theme_plot_mleft}
 c_theme_plot_mleft <- c_base_plot_mleft+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
-    axis.text.x = element_text(
-      face = axis_text_face,
-      color = axis_text_color,
-      size = axis_text_size),
     plot.title = element_text(
-      size = plot_title_size,
-      face = plot_title_face,
-      color = plot_title_color,
       hjust = 0.5),
     axis.text.y = element_blank(),  
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
   ggplot2::scale_x_continuous(
-    limits = c(0, score2_max), 
+    limits = c(score2_min, score2_max), 
     position = "top")+
   ggplot2::ggtitle("Variation of Information")
 ```
@@ -1334,23 +1749,16 @@ c_base_plot_mright <- make_pattern_density_plot(
 
 ```{r c_theme_plot_mright}
 c_theme_plot_mright <- c_base_plot_mright+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
-    axis.text.x = element_text(
-      face = axis_text_face,
-      color = axis_text_color,
-      size = axis_text_size),
     plot.title = element_text(
-      size = plot_title_size,
-      face = plot_title_face,
-      color = plot_title_color,
       hjust = 0.5),
     axis.text.y = element_blank(),  
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
   ggplot2::scale_x_continuous(
-    limits = c(0, score3_max), 
+    limits = c(score3_min, score3_max), 
     position = "top")+
   ggplot2::ggtitle("Mean prop. cells/cluster")
 ```
@@ -1381,21 +1789,15 @@ c_base_plot_right <- ggplot2::ggplot(
 
 ```{r c_theme_plot_right}
 c_theme_plot_right <- c_base_plot_right+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     axis.title.y = element_blank(),
     axis.text.y = element_blank(),
     legend.position = "none",
     axis.text.x = element_text(
-      size = axis_text_size,
-      face = axis_text_face,
-      color = axis_text_color,
       hjust = 0.5),
     axis.title.x = element_blank(),
     plot.title = element_text(
-      size = plot_title_size,
-      face = plot_title_face,
-      color = plot_title_color,
       hjust = 0.5))+
   ggplot2::scale_x_continuous(
     limits = c(0, max_genes),
@@ -1428,23 +1830,6 @@ c_theme_plot
 ## D 
 
 #### Prep
-
-```{r d_prep1}
-
-resolution_df_o1 <- resolution_df[resolution_df$dataset == dataset_o1,]
-
-selected_seu_list <- lapply(seu_hsc_recl_list_o1, function(seu_list){
-  
-  conslev_curr <- seu_list[[1]]@misc$used_genes
-  
-  resdf_temp <- resolution_df_o1[resolution_df_o1$conservation_level == conslev_curr,]
-  res_curr <- resdf_temp$resolution
-  
-  seu_return <- seu_list[[res_curr]]
-  return(seu_return)
-  
-})
-```
 
 ```{r d_prep_conserved_signature}
 d_mat_sign <- base::table(selected_seu_list$seu_sign$cell_type, 
@@ -1521,15 +1906,13 @@ d_mmms_base_plot <- ggplot2::ggplot(
 
 ```{r d_sign_theme_plot}
 d_sign_theme_plot <- d_sign_base_plot+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.title = element_blank(),
     axis.text = element_blank(),
     axis.ticks.y = element_blank(),
     plot.title = element_text(
-      size = plot_title_size,
-      face = plot_title_face,
       hjust = 0.5,
       color = col_cons_long["conserved identity signature"]))+
   ggplot2::scale_fill_gradientn(
@@ -1541,19 +1924,13 @@ d_sign_theme_plot <- d_sign_base_plot+
 
 ```{r d_mark_theme_plot}
 d_mark_theme_plot <- d_mark_base_plot+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.title.x = element_blank(),
     axis.text = element_blank(),
     axis.ticks.y = element_blank(),
-    axis.title.y = element_text(
-      size = axis_title_size,
-      face = axis_title_face,
-      color = axis_title_color),
     plot.title = element_text(
-      size = plot_title_size,
-      face = plot_title_face,
       hjust = 0.5,
       color = col_cons_long["conserved markers"]))+
   ggplot2::scale_fill_gradientn(
@@ -1566,27 +1943,19 @@ d_mark_theme_plot <- d_mark_base_plot+
 
 ```{r d_mmms_theme_plot}
 d_mmms_theme_plot <- d_mmms_base_plot+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_text(
-      size = axis_text_size,
-      face = axis_text_face,
-      color = axis_text_color,
       angle = 90,
       hjust = 0,
       vjust = 0.5),
     axis.title.x = element_text(
-      size = axis_title_size,
-      face = axis_title_face,
-      color = axis_title_color,
       margin = margin(t = 0.3, unit = "cm")),
     axis.title.y = element_blank(),
     axis.ticks.y = element_blank(),
     axis.text.y = element_blank(),
     plot.title = element_text(
-      size = plot_title_size,
-      face = plot_title_face,
       hjust = 0.5,
       color = col_cons_long["total BL6 markers"]))+
   ggplot2::scale_fill_gradientn(
@@ -1608,9 +1977,6 @@ d_theme_plot <- ggpubr::ggarrange(
   d_mmms_theme_plot+
   ggplot2::theme(
     axis.text.x = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color, 
       angle = 90,
       hjust = 0,
       vjust = 0.5)),
@@ -1628,187 +1994,6 @@ d_theme_plot
 ```
 
 ## E
-
-#### Prep
-
-##### perm plots
-
-```{r e_prep1}
-selected_score_df_list_o1 <- lapply(score_df_hsc_list_o1, function(score_df_list){
-  
-  conslev_curr <- score_df_list[[1]]$conservation_level[1]
-  
-  resdf_temp <- resolution_df_o1[
-    resolution_df_o1$conservation_level == conslev_curr,]
-  res_curr <- resdf_temp$resolution
-  
-  score_df_return <- score_df_list[[res_curr]]
-  return(score_df_return)
-  
-})
-score_df_hsc_o1 <- dplyr::bind_rows(selected_score_df_list_o1)
-```
-
-```{r e_prep2}
-score_df_sign_o1 <- score_df_hsc_o1[
-  score_df_hsc_o1$conservation_level == "conserved_signature",]
-score_df_sign_o1$conservation_level_long <- "conserved identity signature"
-
-score_df_sign_score_1_o1 <- score_df_sign_o1[
-  score_df_sign_o1$type == "adjusted_rand_index",]
-score_df_sign_score_2_o1 <- score_df_sign_o1[
-  score_df_sign_o1$type == "variation_information",]
-score_df_sign_score_3_o1 <- score_df_sign_o1[
-  score_df_sign_o1$type == "mean_prop_cells_cluster",]
-```
-
-```{r e_prep3}
-score_df_mark_o1 <- score_df_hsc_o1[
-  score_df_hsc_o1$conservation_level == "conserved_markers",]
-score_df_mark_o1$conservation_level_long <- "conserved markers"
-
-score_df_mark_score_1_o1 <- score_df_mark_o1[
-  score_df_mark_o1$type == "adjusted_rand_index",]
-score_df_mark_score_2_o1 <- score_df_mark_o1[
-  score_df_mark_o1$type == "variation_information",]
-score_df_mark_score_3_o1 <- score_df_mark_o1[
-  score_df_mark_o1$type == "mean_prop_cells_cluster",]
-```
-
-```{r e_prep4}
-psdf_mark_signrand_long_o1 <- pivot_longer(
-  psdf_hsc_mark_signrand_o1, 
-  c = 1:ncol(psdf_hsc_mark_signrand_o1),
-  values_to = "value",
-  names_to = "type")
-psdf_mark_signrand_long_o1$conservation_level_long = base::rep(
-  "conserved markers", nrow(psdf_mark_signrand_long_o1))
-
-psdf_mark_signrand_score_1_o1 <- psdf_mark_signrand_long_o1[
-  psdf_mark_signrand_long_o1$type %in% c("adjusted_rand_index"),]
-psdf_mark_signrand_score_2_o1 <- psdf_mark_signrand_long_o1[
-  psdf_mark_signrand_long_o1$type %in% c("variation_information"),]
-psdf_mark_signrand_score_3_o1 <- psdf_mark_signrand_long_o1[
-  psdf_mark_signrand_long_o1$type %in% c("mean_prop_cells_cluster"),]
-```
-
-```{r e_prep5}
-score_df_mmms_o1  <- score_df_hsc_o1[
-  score_df_hsc_o1$conservation_level == "mmusall_markers",]
-score_df_mmms_o1$conservation_level_long <- "total BL6 markers"
-
-score_df_mmms_score_1_o1 <- score_df_mmms_o1[
-  score_df_mmms_o1$type == "adjusted_rand_index",]
-score_df_mmms_score_2_o1 <- score_df_mmms_o1[
-  score_df_mmms_o1$type == "variation_information",]
-score_df_mmms_score_3_o1 <- score_df_mmms_o1[
-  score_df_mmms_o1$type == "mean_prop_cells_cluster",]
-```
-
-```{r e_prep6}
-psdf_mmms_signrand_long_o1 <- tidyr::pivot_longer(
-  psdf_hsc_mmms_signrand_o1, 
-  c = 1:ncol(psdf_hsc_mmms_signrand_o1),
-  values_to = "value",
-  names_to = "type")
-psdf_mmms_signrand_long_o1$conservation_level_long = base::rep(
-  "total BL6 markers", nrow(psdf_mmms_signrand_long_o1))
-
-psdf_mmms_signrand_score_1_o1 <- psdf_mmms_signrand_long_o1[
-  psdf_mmms_signrand_long_o1$type %in% c("adjusted_rand_index"),]
-psdf_mmms_signrand_score_2_o1 <- psdf_mmms_signrand_long_o1[
-  psdf_mmms_signrand_long_o1$type %in% c("variation_information"),]
-psdf_mmms_signrand_score_3_o1 <- psdf_mmms_signrand_long_o1[
-  psdf_mmms_signrand_long_o1$type %in% c("mean_prop_cells_cluster"),]
-```
-
-```{r e_prep7}
-
-# get the number of genes used for each gene set
-nr_sign_used <- selected_score_df_list_o1$seu_sign$nr_genes_used[1]
-
-nr_mark_used <- selected_score_df_list_o1$seu_mark$nr_genes_used[1]
-nr_mmms_used <- selected_score_df_list_o1$seu_mmms$nr_genes_used[1]
-
-nr_mark_left <- nr_mark_used - nr_sign_used
-nr_mark_rand <- nr_mark_left # same number but keep for tracking purpose
-
-nr_mmms_left <- nr_mmms_used - nr_sign_used
-nr_mmms_rand <- nr_mmms_left
-
-max_genes <- nr_mmms_used
-```
-
-```{r e_prep8}
-e_vis_df_sign <- base::data.frame(
-  type_y = "conserved identity signature",
-  type_fill = "conserved identity signature",
-  number = nr_sign_used
-)
-```
-
-```{r e_prep9}
-e_vis_df_mark <- base::data.frame(
-  type_y = c(
-    "conserved markers",
-    "conserved markers",
-    "permutation gene set",
-    "permutation gene set"),
-  type_fill = c(
-    "conserved identity signature",
-    "conserved markers",
-    "conserved identity signature",
-    "random genes"),
-  number = c(
-    nr_sign_used,
-    nr_mark_left,
-    nr_sign_used,
-    nr_mark_rand)
-)
-
-# factor for plot
-e_vis_df_mark$type_fill <- factor(e_vis_df_mark$type_fill, levels = base::rev(c(
-  "conserved identity signature",
-  "conserved markers",
-  "random genes"
-)))
-e_vis_df_mark$type_y <- factor(e_vis_df_mark$type_y, levels = base::rev(c(
-  "conserved markers",
-  "permutation gene set"
-)))
-```
-
-```{r e_prep10}
-e_vis_df_mmms <- base::data.frame(
-  type_y = c(
-    "total BL6 markers",
-    "total BL6 markers",
-    "permutation gene set",
-    "permutation gene set"),
-  type_fill = c(
-    "conserved identity signature",
-    "total BL6 markers",
-    "conserved identity signature",
-    "random genes"),
-  number = c(
-    nr_sign_used,
-    nr_mmms_left,
-    nr_sign_used,
-    nr_mmms_rand)
-)
-
-e_vis_df_mmms$type_fill <- factor(e_vis_df_mmms$type_fill, levels = base::rev(c(
-  "conserved identity signature",
-  "total BL6 markers",
-  "random genes"
-)))
-e_vis_df_mmms$type_y <- factor(e_vis_df_mmms$type_y, levels = base::rev(c(
-  "total BL6 markers",
-  "permutation gene set"
-)))
-```
-
-#### Plot parts
 
 ##### part left, score1: Adjusted Rand index
 
@@ -1832,34 +2017,25 @@ e_base_plot_left1 <- ggplot2::ggplot(
 
 ```{r e_theme_plot_left1}
 e_theme_plot_left1 <- e_base_plot_left1+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::scale_color_manual(
     "Score",
     values = col_cons_long)+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color, 
       angle = 0,
       hjust = 0.5,
       vjust = 0.5),
     axis.text.y = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color,
       vjust = 0.5),
     axis.title = element_blank(),
     plot.title = element_text(
-      size = plot_title_size,
-      face = plot_title_face,
-      color = plot_title_color, 
       hjust = 0.5))+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.25, 0.5, 0.75, 1),
     position = "top", 
-    limits = c(0, score1_max))+
+    limits = c(score1_min, score1_max))+
   ggplot2::ggtitle(score1_long) 
 ```
 
@@ -1874,20 +2050,17 @@ e_base_plot_left2 <- make_pattern_density_plot(
 
 ```{r e_theme_plot_left2}
 e_theme_plot_left2 <- e_base_plot_left2+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_blank(),
     axis.text.y = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color,
       vjust = 0.5),
     axis.line.x = element_blank(),
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
   ggplot2::scale_x_continuous(
-    limits = c(0, score1_max))
+    limits = c(score1_min, score1_max))
 ```
 
 ```{r e_base_plot_left3}
@@ -1901,7 +2074,7 @@ e_base_plot_left3 <- make_pattern_density_plot(
 
 ```{r e_theme_plot_left3}
 e_theme_plot_left3 <- e_base_plot_left3+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_blank(),
@@ -1914,7 +2087,7 @@ e_theme_plot_left3 <- e_base_plot_left3+
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
   ggplot2::scale_x_continuous(
-    limits = c(0, score1_max))
+    limits = c(score1_min, score1_max))
 ```
 
 ```{r e_construct_left, fig.height = 2.8, fig.width = 5}
@@ -1951,29 +2124,23 @@ e_base_plot_mleft1 <- ggplot2::ggplot(
 
 ```{r e_theme_plot_mleft1}
 e_theme_plot_mleft1 <- e_base_plot_mleft1+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::scale_color_manual(
     "Score",
     values = col_cons_long)+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color, 
       angle = 0,
       hjust = 0.5,
       vjust = 0.5),
     axis.text.y = element_blank(),
     axis.title = element_blank(),
     plot.title = element_text(
-      size = plot_title_size,
-      face = plot_title_face,
-      color = plot_title_color, 
       hjust = 0.5))+
   ggplot2::scale_x_continuous(
     position = "top",
-    limit = c(0, max_vi),
+    limit = c(score2_min, score2_max),
     breaks=c(0, 1, 2, 3, 4, 5))+
   ggplot2::ggtitle("Variation of information")
 ```
@@ -1989,7 +2156,7 @@ e_base_plot_mleft2 <- make_pattern_density_plot(
 
 ```{r e_theme_plot_mleft2}
 e_theme_plot_mleft2 <- e_base_plot_mleft2+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -1997,7 +2164,7 @@ e_theme_plot_mleft2 <- e_base_plot_mleft2+
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
   ggplot2::scale_x_continuous(
-    limits = c(0, score2_max))
+    limits = c(score2_min, score2_max))
 ```
 
 ```{r e_base_plot_mleft3}
@@ -2011,7 +2178,7 @@ e_base_plot_mleft3 <- make_pattern_density_plot(
 
 ```{r e_theme_plot_mleft3}
 e_theme_plot_mleft3 <- e_base_plot_mleft3+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -2019,7 +2186,7 @@ e_theme_plot_mleft3 <- e_base_plot_mleft3+
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
   ggplot2::scale_x_continuous(
-    limits = c(0, score2_max))
+    limits = c(score2_min, score2_max))
 ```
 
 ```{r e_construct_mleft, fig.height = 2.8, fig.width = 2.8}
@@ -2056,29 +2223,23 @@ e_base_plot_mright1 <- ggplot2::ggplot(
 
 ```{r e_theme_plot_mright1}
 e_theme_plot_mright1 <- e_base_plot_mright1+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::scale_color_manual(
     "Score",
     values = col_cons_long)+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color, 
       angle = 0,
       hjust = 0.5,
       vjust = 0.5),
     axis.text.y = element_blank(),
     axis.title = element_blank(),
     plot.title = element_text(
-      size = plot_title_size,
-      face = plot_title_face,
-      color = plot_title_color, 
       hjust = 0.5))+
   ggplot2::scale_x_continuous(
     position = "top", 
-    limits = c(0, 1))+
+    limits = c(score3_min, score3_max))+
   ggplot2::ggtitle("Mean prop. cells/cluster")
 ```
 
@@ -2093,7 +2254,7 @@ e_base_plot_mright2 <- make_pattern_density_plot(
 
 ```{r e_theme_plot_mright2}
 e_theme_plot_mright2 <- e_base_plot_mright2+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -2101,7 +2262,7 @@ e_theme_plot_mright2 <- e_base_plot_mright2+
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
   ggplot2::scale_x_continuous(
-    limits = c(0, score3_max))
+    limits = c(score3_min, score3_max))
 ```
 
 ```{r e_base_plot_mright3}
@@ -2115,7 +2276,7 @@ e_base_plot_mright3 <- make_pattern_density_plot(
 
 ```{r e_theme_plot_mright3}
 e_theme_plot_mright3 <- e_base_plot_mright3+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -2123,7 +2284,7 @@ e_theme_plot_mright3 <- e_base_plot_mright3+
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
   ggplot2::scale_x_continuous(
-    limits = c(0, score3_max))
+    limits = c(score3_min, score3_max))
 ```
 
 ```{r e_construct_mright, fig.height = 2.8, fig.width = 2.8}
@@ -2151,20 +2312,13 @@ e_base_plot_right1 <- ggplot2::ggplot(
 
 ```{r e_theme_plot_right1}
 e_theme_plot_right1 <- e_base_plot_right1+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.title.y = element_blank(),
     axis.text.y = element_blank(),
-    axis.text.x = element_text(
-      size = axis_text_size,
-      face = axis_text_face,
-      color = axis_text_color),
     axis.title.x = element_blank(),
     plot.title = element_text(
-      size = plot_title_size,
-      face = plot_title_face,
-      color = plot_title_color,
       hjust = 0.5))+
   ggplot2::scale_x_continuous(
     position = "top", 
@@ -2197,7 +2351,7 @@ e_base_plot_right2 <- ggplot2::ggplot(
 
 ```{r e_theme_plot_right2}
 e_theme_plot_right2 <- e_base_plot_right2+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.title = element_blank(),
@@ -2234,7 +2388,7 @@ e_base_plot_right3 <- ggplot2::ggplot(
 
 ```{r e_theme_plot_right3}
 e_theme_plot_right3 <- e_base_plot_right3+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     axis.title.y = element_blank(),
     axis.text.y = element_blank(),
@@ -2285,31 +2439,12 @@ e_all_plot
 w <- 11.3
 h <- 2.7
 
-pdf(output_pdf_f_plot, width = w, height = h)
-e_all_plot
-dev.off()
+# pdf(output_pdf_f_plot, width = w, height = h)
+# e_all_plot
+# dev.off()
 ```
 
 ## F
-
-#### Prep
-
-```{r f_prep1}
-
-resolution_df_o2 <- resolution_df[resolution_df$dataset == dataset_o2,]
-
-selected_seu_list_o2 <- lapply(seu_hsc_recl_list_o2, function(seu_list){
-  
-  conslev_curr <- seu_list[[1]]@misc$used_genes
-  
-  resdf_temp <- resolution_df_o2[resolution_df_o2$conservation_level == conslev_curr,]
-  res_curr <- resdf_temp$resolution
-  
-  seu_return <- seu_list[[res_curr]]
-  return(seu_return)
-  
-})
-```
 
 ```{r f_prep_conserved_signature}
 f_mat_sign <- base::table(selected_seu_list_o2$seu_sign$cell_type, 
@@ -2386,15 +2521,13 @@ f_mmms_base_plot <- ggplot2::ggplot(
 
 ```{r f_sign_theme_plot}
 f_sign_theme_plot <- f_sign_base_plot+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.title = element_blank(),
     axis.text = element_blank(),
     axis.ticks.y = element_blank(),
     plot.title = element_text(
-      size = plot_title_size,
-      face = plot_title_face,
       hjust = 0.5,
       color = col_cons_long["conserved identity signature"]))+
   ggplot2::scale_fill_gradientn(
@@ -2406,19 +2539,13 @@ f_sign_theme_plot <- f_sign_base_plot+
 
 ```{r f_mark_theme_plot}
 f_mark_theme_plot <- f_mark_base_plot+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.title.x = element_blank(),
     axis.text = element_blank(),
     axis.ticks.y = element_blank(),
-    axis.title.y = element_text(
-      size = axis_title_size,
-      face = axis_title_face,
-      color = axis_title_color),
     plot.title = element_text(
-      size = plot_title_size,
-      face = plot_title_face,
       hjust = 0.5,
       color = col_cons_long["conserved markers"]))+
   ggplot2::scale_fill_gradientn(
@@ -2431,27 +2558,19 @@ f_mark_theme_plot <- f_mark_base_plot+
 
 ```{r f_mmms_theme_plot}
 f_mmms_theme_plot <- f_mmms_base_plot+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_text(
-      size = axis_text_size,
-      face = axis_text_face,
-      color = axis_text_color,
       angle = 90,
       hjust = 0,
       vjust = 0.5),
     axis.title.x = element_text(
-      size = axis_title_size,
-      face = axis_title_face,
-      color = axis_title_color,
       margin = margin(t = 0.3, unit = "cm")),
     axis.title.y = element_blank(),
     axis.ticks.y = element_blank(),
     axis.text.y = element_blank(),
     plot.title = element_text(
-      size = plot_title_size,
-      face = plot_title_face,
       hjust = 0.5,
       color = col_cons_long["total BL6 markers"]))+
   ggplot2::scale_fill_gradientn(
@@ -2552,194 +2671,13 @@ de_plot
 # then, the text sizes as WE WANT THEM EXACTLY can be added.
 # but for now, keep like this
 
-pdf(output_pdf_de_plot, width = w, height = h)
-de_plot
-dev.off()
+# pdf(output_pdf_de_plot, width = w, height = h)
+# de_plot
+# dev.off()
 #knitr::knit_exit()
 ```
 
 ## G
-
-#### Prep
-
-##### perm plots
-
-```{r g_prep1}
-selected_score_df_list_o2 <- lapply(score_df_hsc_list_o2, function(score_df_list){
-  
-  conslev_curr <- score_df_list[[1]]$conservation_level[1]
-  
-  resdf_temp <- resolution_df_o2[
-    resolution_df_o2$conservation_level == conslev_curr,]
-  res_curr <- resdf_temp$resolution
-  
-  score_df_return <- score_df_list[[res_curr]]
-  return(score_df_return)
-  
-})
-score_df_hsc_o2 <- dplyr::bind_rows(selected_score_df_list_o2)
-```
-
-```{r g_prep2}
-score_df_sign_o2 <- score_df_hsc_o2[
-  score_df_hsc_o2$conservation_level == "conserved_signature",]
-score_df_sign_o2$conservation_level_long <- "conserved identity signature"
-
-score_df_sign_score_1_o2 <- score_df_sign_o2[
-  score_df_sign_o2$type == "adjusted_rand_index",]
-score_df_sign_score_2_o2 <- score_df_sign_o2[
-  score_df_sign_o2$type == "variation_information",]
-score_df_sign_score_3_o2 <- score_df_sign_o2[
-  score_df_sign_o2$type == "mean_prop_cells_cluster",]
-```
-
-```{r g_prep3}
-score_df_mark_o2 <- score_df_hsc_o2[
-  score_df_hsc_o2$conservation_level == "conserved_markers",]
-score_df_mark_o2$conservation_level_long <- "conserved markers"
-
-score_df_mark_score_1_o2 <- score_df_mark_o2[
-  score_df_mark_o2$type == "adjusted_rand_index",]
-score_df_mark_score_2_o2 <- score_df_mark_o2[
-  score_df_mark_o2$type == "variation_information",]
-score_df_mark_score_3_o2 <- score_df_mark_o2[
-  score_df_mark_o2$type == "mean_prop_cells_cluster",]
-```
-
-```{r g_prep4}
-psdf_mark_signrand_long_o2 <- pivot_longer(
-  psdf_hsc_mark_signrand_o2, 
-  c = 1:ncol(psdf_hsc_mark_signrand_o2),
-  values_to = "value",
-  names_to = "type")
-psdf_mark_signrand_long_o2$conservation_level_long = base::rep(
-  "conserved markers", nrow(psdf_mark_signrand_long_o2))
-
-psdf_mark_signrand_score_1_o2 <- psdf_mark_signrand_long_o2[
-  psdf_mark_signrand_long_o2$type %in% c("adjusted_rand_index"),]
-psdf_mark_signrand_score_2_o2 <- psdf_mark_signrand_long_o2[
-  psdf_mark_signrand_long_o2$type %in% c("variation_information"),]
-psdf_mark_signrand_score_3_o2 <- psdf_mark_signrand_long_o2[
-  psdf_mark_signrand_long_o2$type %in% c("mean_prop_cells_cluster"),]
-```
-
-```{r g_prep5}
-score_df_mmms_o2  <- score_df_hsc_o2[
-  score_df_hsc_o2$conservation_level == "mmusall_markers",]
-score_df_mmms_o2$conservation_level_long <- "total BL6 markers"
-
-score_df_mmms_score_1_o2 <- score_df_mmms_o2[
-  score_df_mmms_o2$type == "adjusted_rand_index",]
-score_df_mmms_score_2_o2 <- score_df_mmms_o2[
-  score_df_mmms_o2$type == "variation_information",]
-score_df_mmms_score_3_o2 <- score_df_mmms_o2[
-  score_df_mmms_o2$type == "mean_prop_cells_cluster",]
-```
-
-```{r g_prep6}
-psdf_mmms_signrand_long_o2 <- tidyr::pivot_longer(
-  psdf_hsc_mmms_signrand_o2, 
-  c = 1:ncol(psdf_hsc_mmms_signrand_o2),
-  values_to = "value",
-  names_to = "type")
-psdf_mmms_signrand_long_o2$conservation_level_long = base::rep(
-  "total BL6 markers", nrow(psdf_mmms_signrand_long_o2))
-
-psdf_mmms_signrand_score_1_o2 <- psdf_mmms_signrand_long_o2[
-  psdf_mmms_signrand_long_o2$type %in% c("adjusted_rand_index"),]
-psdf_mmms_signrand_score_2_o2 <- psdf_mmms_signrand_long_o2[
-  psdf_mmms_signrand_long_o2$type %in% c("variation_information"),]
-psdf_mmms_signrand_score_3_o2 <- psdf_mmms_signrand_long_o2[
-  psdf_mmms_signrand_long_o2$type %in% c("mean_prop_cells_cluster"),]
-```
-
-```{r g_prep7}
-
-# get the number of genes used for each gene set
-nr_sign_used <- selected_score_df_list_o2$seu_sign$nr_genes_used[1]
-
-nr_mark_used <- selected_score_df_list_o2$seu_mark$nr_genes_used[1]
-nr_mmms_used <- selected_score_df_list_o2$seu_mmms$nr_genes_used[1]
-
-nr_mark_left <- nr_mark_used - nr_sign_used
-nr_mark_rand <- nr_mark_left # same number but keep for tracking purpose
-
-nr_mmms_left <- nr_mmms_used - nr_sign_used
-nr_mmms_rand <- nr_mmms_left
-
-max_genes <- nr_mmms_used
-```
-
-```{r g_prep8}
-g_vis_df_sign <- base::data.frame(
-  type_y = "conserved identity signature",
-  type_fill = "conserved identity signature",
-  number = nr_sign_used
-)
-```
-
-```{r g_prep9}
-g_vis_df_mark <- base::data.frame(
-  type_y = c(
-    "conserved markers",
-    "conserved markers",
-    "permutation gene set",
-    "permutation gene set"),
-  type_fill = c(
-    "conserved identity signature",
-    "conserved markers",
-    "conserved identity signature",
-    "random genes"),
-  number = c(
-    nr_sign_used,
-    nr_mark_left,
-    nr_sign_used,
-    nr_mark_rand)
-)
-
-# factor for plot
-g_vis_df_mark$type_fill <- factor(g_vis_df_mark$type_fill, levels = base::rev(c(
-  "conserved identity signature",
-  "conserved markers",
-  "random genes"
-)))
-g_vis_df_mark$type_y <- factor(g_vis_df_mark$type_y, levels = base::rev(c(
-  "conserved markers",
-  "permutation gene set"
-)))
-```
-
-```{r g_prep10}
-g_vis_df_mmms <- base::data.frame(
-  type_y = c(
-    "total BL6 markers",
-    "total BL6 markers",
-    "permutation gene set",
-    "permutation gene set"),
-  type_fill = c(
-    "conserved identity signature",
-    "total BL6 markers",
-    "conserved identity signature",
-    "random genes"),
-  number = c(
-    nr_sign_used,
-    nr_mmms_left,
-    nr_sign_used,
-    nr_mmms_rand)
-)
-
-g_vis_df_mmms$type_fill <- factor(g_vis_df_mmms$type_fill, levels = base::rev(c(
-  "conserved identity signature",
-  "total BL6 markers",
-  "random genes"
-)))
-g_vis_df_mmms$type_y <- factor(g_vis_df_mmms$type_y, levels = base::rev(c(
-  "total BL6 markers",
-  "permutation gene set"
-)))
-```
-
-#### Plot parts
 
 ##### part left, score1: Adjusted Rand index
 
@@ -2763,34 +2701,25 @@ g_base_plot_left1 <- ggplot2::ggplot(
 
 ```{r g_theme_plot_left1}
 g_theme_plot_left1 <- g_base_plot_left1+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::scale_color_manual(
     "Score",
     values = col_cons_long)+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color, 
       angle = 0,
       hjust = 0.5,
       vjust = 0.5),
     axis.text.y = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color,
       vjust = 0.5),
     axis.title = element_blank(),
     plot.title = element_text(
-      size = plot_title_size,
-      face = plot_title_face,
-      color = plot_title_color, 
       hjust = 0.5))+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.25, 0.5, 0.75, 1),
     position = "top", 
-    limits = c(0, score1_max))+
+    limits = c(score1_min, score1_max))+
   ggplot2::ggtitle(score1_long) 
 ```
 
@@ -2805,7 +2734,7 @@ g_base_plot_left2 <- make_pattern_density_plot(
 
 ```{r g_theme_plot_left2}
 g_theme_plot_left2 <- g_base_plot_left2+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_blank(),
@@ -2818,7 +2747,7 @@ g_theme_plot_left2 <- g_base_plot_left2+
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
   ggplot2::scale_x_continuous(
-    limits = c(0, score1_max))
+    limits = c(score1_min, score1_max))
 ```
 
 ```{r g_base_plot_left3}
@@ -2832,20 +2761,17 @@ g_base_plot_left3 <- make_pattern_density_plot(
 
 ```{r g_theme_plot_left3}
 g_theme_plot_left3 <- g_base_plot_left3+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_blank(),
     axis.text.y = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color,
       vjust = 0.5),
     axis.line.x = element_blank(),
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
   ggplot2::scale_x_continuous(
-    limits = c(0, score1_max))
+    limits = c(score1_min, score1_max))
 ```
 
 ```{r g_construct_left, fig.height = 2.8, fig.width = 5}
@@ -2882,29 +2808,23 @@ g_base_plot_mleft1 <- ggplot2::ggplot(
 
 ```{r g_theme_plot_mleft1}
 g_theme_plot_mleft1 <- g_base_plot_mleft1+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::scale_color_manual(
     "Score",
     values = col_cons_long)+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color, 
       angle = 0,
       hjust = 0.5,
       vjust = 0.5),
     axis.text.y = element_blank(),
     axis.title = element_blank(),
     plot.title = element_text(
-      size = plot_title_size,
-      face = plot_title_face,
-      color = plot_title_color, 
       hjust = 0.5))+
   ggplot2::scale_x_continuous(
     position = "top",
-    limit = c(0, max_vi),
+    limit = c(score2_min, score2_max),
     breaks=c(0, 1, 2, 3, 4, 5))+
   ggplot2::ggtitle("Variation of information")
 ```
@@ -2920,7 +2840,7 @@ g_base_plot_mleft2 <- make_pattern_density_plot(
 
 ```{r g_theme_plot_mleft2}
 g_theme_plot_mleft2 <- g_base_plot_mleft2+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -2928,7 +2848,7 @@ g_theme_plot_mleft2 <- g_base_plot_mleft2+
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
   ggplot2::scale_x_continuous(
-    limits = c(0, score2_max))
+    limits = c(score2_min, score2_max))
 ```
 
 ```{r g_base_plot_mleft3}
@@ -2942,7 +2862,7 @@ g_base_plot_mleft3 <- make_pattern_density_plot(
 
 ```{r g_theme_plot_mleft3}
 g_theme_plot_mleft3 <- g_base_plot_mleft3+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -2950,7 +2870,7 @@ g_theme_plot_mleft3 <- g_base_plot_mleft3+
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
   ggplot2::scale_x_continuous(
-    limits = c(0, score2_max))
+    limits = c(score2_min, score2_max))
 ```
 
 ```{r g_construct_mleft, fig.height = 2.8, fig.width = 2.8}
@@ -2987,29 +2907,23 @@ g_base_plot_mright1 <- ggplot2::ggplot(
 
 ```{r g_theme_plot_mright1}
 g_theme_plot_mright1 <- g_base_plot_mright1+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::scale_color_manual(
     "Score",
     values = col_cons_long)+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_text(
-      face = axis_text_face,
-      size = axis_text_size,
-      color = axis_text_color, 
       angle = 0,
       hjust = 0.5,
       vjust = 0.5),
     axis.text.y = element_blank(),
     axis.title = element_blank(),
     plot.title = element_text(
-      size = plot_title_size,
-      face = plot_title_face,
-      color = plot_title_color, 
       hjust = 0.5))+
   ggplot2::scale_x_continuous(
     position = "top", 
-    limits = c(0, 1))+
+    limits = c(score3_min, score3_max))+
   ggplot2::ggtitle("Mean prop. cells/cluster")
 ```
 
@@ -3024,7 +2938,7 @@ g_base_plot_mright2 <- make_pattern_density_plot(
 
 ```{r g_theme_plot_mright2}
 g_theme_plot_mright2 <- g_base_plot_mright2+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -3032,7 +2946,7 @@ g_theme_plot_mright2 <- g_base_plot_mright2+
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
   ggplot2::scale_x_continuous(
-    limits = c(0, score3_max))
+    limits = c(score3_min, score3_max))
 ```
 
 ```{r g_base_plot_mright3}
@@ -3046,7 +2960,7 @@ g_base_plot_mright3 <- make_pattern_density_plot(
 
 ```{r g_theme_plot_mright3}
 g_theme_plot_mright3 <- g_base_plot_mright3+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -3054,7 +2968,7 @@ g_theme_plot_mright3 <- g_base_plot_mright3+
     axis.ticks.x = element_blank(),
     axis.title = element_blank())+
   ggplot2::scale_x_continuous(
-    limits = c(0, score3_max))
+    limits = c(score3_min, score3_max))
 ```
 
 ```{r g_construct_mright, fig.height = 2.8, fig.width = 2.8}
@@ -3082,20 +2996,13 @@ g_base_plot_right1 <- ggplot2::ggplot(
 
 ```{r g_theme_plot_right1}
 g_theme_plot_right1 <- g_base_plot_right1+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.title.y = element_blank(),
     axis.text.y = element_blank(),
-    axis.text.x = element_text(
-      size = axis_text_size,
-      face = axis_text_face,
-      color = axis_text_color),
     axis.title.x = element_blank(),
     plot.title = element_text(
-      size = plot_title_size,
-      face = plot_title_face,
-      color = plot_title_color,
       hjust = 0.5))+
   ggplot2::scale_x_continuous(
     position = "top", 
@@ -3128,7 +3035,7 @@ g_base_plot_right2 <- ggplot2::ggplot(
 
 ```{r g_theme_plot_right2}
 g_theme_plot_right2 <- g_base_plot_right2+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     legend.position = "none",
     axis.title = element_blank(),
@@ -3165,7 +3072,7 @@ g_base_plot_right3 <- ggplot2::ggplot(
 
 ```{r g_theme_plot_right3}
 g_theme_plot_right3 <- g_base_plot_right3+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::theme(
     axis.title.y = element_blank(),
     axis.text.y = element_blank(),
@@ -3210,14 +3117,12 @@ g_all_plot
 ```
 
 ```{r g_plot_export}
-pdf(output_pdf_g_plot, width = 11.3, height = 2.7)
-g_all_plot
-dev.off()
+# pdf(output_pdf_g_plot, width = 11.3, height = 2.7)
+# g_all_plot
+# dev.off()
 ```
 
-## G
-
-pval plot
+## H: P Value plot
 
 ```{r h_prep1}
 
@@ -3289,6 +3194,7 @@ corr_pval_df_sub$condition_long <- factor(
 ```
 
 ```{r h_base_plot, fig.width = 10, fig.height= 3} 
+# check max genes?
 h_base_plot <- ggplot2::ggplot(
   corr_pval_df_sub,
   aes(y = condition_long, 
@@ -3299,14 +3205,15 @@ h_base_plot <- ggplot2::ggplot(
   ggplot2::facet_grid(cols = vars(corr_pval_df_sub$score_long),
                       switch = "y",
                       rows = vars(corr_pval_df_sub$cons_level_long))+
-  ggplot2::theme_classic()+
-  ggplot2::scale_x_continuous(limits = c(0, max(corr_pval_df_sub$nr_genes_used)))+
+  ggplot2::scale_x_continuous(
+    limits = c(0, 
+               max(corr_pval_df_sub$nr_genes_used)))+
   ggplot2::scale_color_manual(values = color_significance)
 ```
 
 ```{r h_theme_plot, fig.width = 10, fig.height = 3} 
+# check max genes?
 h_theme_plot <- h_base_plot+
-  ggplot2::theme_classic()+
   theme_all+
   ggplot2::scale_x_continuous(
     position = "bottom",
@@ -3337,27 +3244,18 @@ h_legend_base_plot <- ggplot2::ggplot(
   ggplot2::facet_grid(cols = vars(corr_pval_df$score_long),
                       switch = "y",
                       rows = vars(corr_pval_df$cons_level_long))+
-  ggplot2::theme_classic()+
+  theme_all+
   ggplot2::scale_x_continuous(limits = c(0, max(corr_pval_df$nr_genes_used)))+
   ggplot2::scale_color_manual(values = color_significance)
 ```
 
 ```{r h_legend_theme_plot, fig.width = 3, fig.height= 3}
-h_legend_theme_plot <- g_legend_base_plot+
-   ggplot2::theme_classic()+
+h_legend_theme_plot <- h_legend_base_plot+
+   theme_all+
   ggplot2::scale_x_continuous(
     limits = c(0, base::max(corr_pval_df_sub$nr_genes_used)))+
   ggplot2::scale_color_manual("", values = color_significance)+
-  ggplot2::scale_size_continuous("10 adjusted p val")+
-  ggplot2::theme(
-    legend.title = element_text(
-      size = legend_title_size,
-      color = legend_title_color,
-      face = legend_title_face),
-    legend.text = element_text(
-      size = legend_text_size,
-      color = legend_text_color,
-      face = legend_text_face))
+  ggplot2::scale_size_continuous("10 adjusted p val")
 
 h_legend_theme <- ggpubr::get_legend(h_legend_theme_plot)
 
@@ -3366,13 +3264,18 @@ h_legend
 ```
 
 ```{r h_plot_export}
-pdf(output_pdf_h_plot, width = 9.3, height = 3)
-h_theme_plot
-dev.off()
+# pdf(output_pdf_h_plot, width = 9.3, height = 3)
+# h_theme_plot
+# dev.off()
 ```
 
 ```{r h_legend_export}
-pdf(output_pdf_h_legend, width = 3, height = 3)
-h_legend
-dev.off()
+# pdf(output_pdf_h_legend, width = 3, height = 3)
+# h_legend
+# dev.off()
 ```
+
+```{r sessioninfo}
+utils::sessionInfo()
+```
+

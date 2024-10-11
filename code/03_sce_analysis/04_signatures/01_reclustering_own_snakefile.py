@@ -275,12 +275,13 @@ if RUN_PERM_GENESETS:
           functions_reclustering = "../../source/sce_functions_reclustering.R",
           k_graph_list = config["values"]["02_sce_anno"]["k_graph_list"],
           resolution_louvain_list = config["values"]["02_sce_anno"]["resolution_louvain_list"],
-          nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
+          #nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
+          nr_cores = 4,
           iterations = config["values"]["03_sce_analysis"]["iterations"],
           #iterations = 40,
           cut_off_prop = config["values"]["03_sce_analysis"]["reclustering_cutoff_prop"]
       conda:
-          "../../envs/reclustering_own_scores.yml"
+          "../../envs/reclustering_own_scores_temp.yml"
       output:
           perm_score_df_mark = OUTPUT_DAT + "/05_perg/perm_score_df_mark_{fraction}",
           perm_score_df_mmms = OUTPUT_DAT + "/05_perg/perm_score_df_mmms_{fraction}",
@@ -364,13 +365,14 @@ if RUN_OWN_SIGN_PERM:
           resolution_louvain_list = config["values"]["02_sce_anno"]["resolution_louvain_list"],
           cut_off_prop = config["values"]["03_sce_analysis"]["reclustering_cutoff_prop"],
           iterations = config["values"]["03_sce_analysis"]["iterations"],
-          nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
+          #nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
+          nr_cores = 4,
           #iterations = 40,
           functions_reclustering = "../../source/sce_functions_reclustering.R",
           cts_exclude = CELL_TYPES_EXCLUDE,       
           cons_level_use = "conserved_signature"      
       conda:
-          "../../envs/reclustering_own_scores.yml"
+          "../../envs/reclustering_own_scores_temp.yml"
       output:
           perm_score_df = OUTPUT_DAT_TEMP + "/06_psig/perm_score_df_{fraction}"
       script: 
@@ -413,13 +415,14 @@ if RUN_OWN_MARK_PERM:
           resolution_louvain_list = config["values"]["02_sce_anno"]["resolution_louvain_list"],
           cut_off_prop = config["values"]["03_sce_analysis"]["reclustering_cutoff_prop"],
           iterations = config["values"]["03_sce_analysis"]["iterations"],
-          nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
+          #nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
+          nr_cores = 4,
           #iterations = 40,
           functions_reclustering = "../../source/sce_functions_reclustering.R",
           cts_exclude = CELL_TYPES_EXCLUDE,       
           cons_level_use = "conserved_markers"      
       conda:
-          "../../envs/reclustering_own_scores.yml"
+          "../../envs/reclustering_own_scores_temp.yml"
       output:
           perm_score_df = OUTPUT_DAT_TEMP + "/06_pmrk/perm_score_df_{fraction}" ##### OUTPUT TEMP
       script: 
@@ -450,13 +453,14 @@ if RUN_OWN_MMMS_PERM:
           resolution_louvain_list = config["values"]["02_sce_anno"]["resolution_louvain_list"],
           cut_off_prop = config["values"]["03_sce_analysis"]["reclustering_cutoff_prop"],
           iterations = config["values"]["03_sce_analysis"]["iterations"],
-          nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
+          #nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
+          nr_cores = 4,
           #iterations = 40,
           functions_reclustering = "../../source/sce_functions_reclustering.R",
           cts_exclude = CELL_TYPES_EXCLUDE,       
           cons_level_use = "mmusall_markers"      
       conda:
-          "../../envs/reclustering_own_scores.yml"
+          "../../envs/reclustering_own_scores_temp.yml"
       output:
           perm_score_df = OUTPUT_DAT_TEMP + "/06_pmmm/perm_score_df_{fraction}" ##### OUTPUT TEMP
       script: 

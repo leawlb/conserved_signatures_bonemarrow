@@ -27,7 +27,7 @@ library(Seurat, quietly = TRUE)
 ```
 
 ```{r load_manual_basepath}
-base_path_input <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+base_path_input <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp"
 base_path_output_temp <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp"
 ```
 
@@ -43,25 +43,31 @@ base_path_output_temp <- snakemake@params[["base_path_output_temp"]]
 # SCE with reclustering vectors for each gene set
 sce_hsc_recl <- base::readRDS(base::paste0(
   base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/03_recl/sce_hsc"))
+  "/04_signatures/01_reclustering_own/03_recl/sce_hsc"))
 
 # dataframe of re-clustering scores for each gene set
 score_df_hsc <- base::readRDS(base::paste0(
   base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/04_rcls/score_df_hsc"))
+  "/04_signatures/01_reclustering_own/04_rcls/score_df_hsc"))
 
 # dataframes of re-clustering scores after permutation comparing gene sets
 psdf_hsc_mark_signrand <- base::readRDS(base::paste0(
   base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_perg/perm_score_df_mark_hsc"))
+  "/04_signatures/01_reclustering_own/05_perg/perm_score_df_mark_hsc"))
 psdf_hsc_mmms_signrand <- base::readRDS(base::paste0(
   base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_perg/perm_score_df_mmms_hsc"))
+  "/04_signatures/01_reclustering_own/05_perg/perm_score_df_mmms_hsc"))
 
 # dataframes of re-clustering scores after background permutation
 psdf_hsc_sign_rand <- base::readRDS(base::paste0(
   base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/06_psig/perm_score_df_hsc"))
+  "/04_signatures/01_reclustering_own/06_psig/perm_score_df_hsc"))
+psdf_hsc_mark_rand <- base::readRDS(base::paste0(
+  base_path_input,
+  "/04_signatures/01_reclustering_own/06_pmrk/perm_score_df_hsc"))
+psdf_hsc_mmms_rand <- base::readRDS(base::paste0(
+  base_path_input,
+  "/04_signatures/01_reclustering_own/06_pmmm/perm_score_df_hsc"))
 ```
 
 ```{r load_manual_other1}
@@ -251,34 +257,34 @@ make_pattern_density_plot <- function(
 ```
 
 ```{r export_paths}
-output_pdf_a_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_a.pdf")
-output_pdf_a_legend <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_a_legend.pdf")
-output_pdf_b_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_b.pdf")
-output_pdf_b_legend <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_b_legend.pdf")
-output_pdf_c_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_c.pdf")
-output_pdf_d_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_d.pdf")
-output_pdf_e_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_e.pdf")
-output_pdf_f_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_f.pdf")
-output_pdf_g_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_g.pdf")
-output_pdf_de_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_de.pdf")
-output_pdf_f_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_f.pdf")
-output_pdf_g_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_g.pdf")
-output_pdf_h_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_h.pdf")
-output_pdf_h_legend <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_h_legend.pdf")
+# output_pdf_a_plot <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_a.pdf")
+# output_pdf_a_legend <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_a_legend.pdf")
+# output_pdf_b_plot <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_b.pdf")
+# output_pdf_b_legend <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_b_legend.pdf")
+# output_pdf_c_plot <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_c.pdf")
+# output_pdf_d_plot <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_d.pdf")
+# output_pdf_e_plot <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_e.pdf")
+# output_pdf_f_plot <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_f.pdf")
+# output_pdf_g_plot <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_g.pdf")
+# output_pdf_de_plot <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_de.pdf")
+# output_pdf_f_plot <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_f.pdf")
+# output_pdf_g_plot <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_g.pdf")
+# output_pdf_h_plot <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_h.pdf")
+# output_pdf_h_legend <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_h_legend.pdf")
 ```
 
 # A Heatmaps Own

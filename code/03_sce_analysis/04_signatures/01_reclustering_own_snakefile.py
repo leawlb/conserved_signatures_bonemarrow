@@ -8,6 +8,7 @@ OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own"
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/04_signatures/01_reclustering_own"
+OUTPUT_DAT_TEMP = "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/04_signatures/01_reclustering_own"
 
 COLORS_REF = config["base"] + config["metadata_paths"]["colors_ref"]
 COLORS = config["base"] + config["metadata_paths"]["colors"]
@@ -15,6 +16,8 @@ COLORS = config["base"] + config["metadata_paths"]["colors"]
 CELL_TYPES_EXCLUDE = config["values"]["03_sce_analysis"]["cell_types_exclude"]
 
 RUN_OWN_SIGN_PERM = config["run_own_sign_permutation"]
+RUN_OWN_MARK_PERM = config["run_own_mark_permutation"]
+RUN_OWN_MMMS_PERM = config["run_own_mmms_permutation"]
 RUN_PERM_GENESETS = config["run_permutation_genesets"]
 
 ENSEMBL_MUS = config["base"] + config["metadata_paths"]["ensembl_mus"]
@@ -39,16 +42,16 @@ fractions = get_list(metadata = METADATA, column = "Fraction_ID")
 
 targets = []
 for f in fractions:
-  targets = targets + [OUTPUT_DAT + "/01_gens/geneset_list_" + f]
+  targets = targets + [OUTPUT_DAT_TEMP + "/01_gens/geneset_list_" + f]
 
-  targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_sign_" + f]
-  targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_mark_" + f]
-  targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_ndge_" + f]
-  targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_mmms_" + f]
+  targets = targets + [OUTPUT_DAT_TEMP + "/02_endf/ensembl_sign_" + f]
+  targets = targets + [OUTPUT_DAT_TEMP + "/02_endf/ensembl_mark_" + f]
+  targets = targets + [OUTPUT_DAT_TEMP + "/02_endf/ensembl_ndge_" + f]
+  targets = targets + [OUTPUT_DAT_TEMP + "/02_endf/ensembl_mmms_" + f]
   
-  targets = targets + [OUTPUT_DAT + "/03_recl/sce_" + f]
-  targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_" + f]
-  targets = targets + [OUTPUT_REP + "/reclustering_own_report_" + f + ".html"]
+  targets = targets + [OUTPUT_DAT_TEMP + "/03_recl/sce_" + f]
+  targets = targets + [OUTPUT_DAT_TEMP + "/04_rcls/score_df_" + f]
+  #targets = targets + [OUTPUT_REP + "/reclustering_own_report_" + f + ".html"]
 
   if RUN_PERM_GENESETS:
     targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mark_" + f]
@@ -60,15 +63,23 @@ for f in fractions:
     targets = targets + [OUTPUT_REP + "/perm_genesets_" + f + ".html"]
 
   if RUN_OWN_SIGN_PERM:
-    targets = targets + [OUTPUT_DAT + "/06_psig/perm_score_df_" + f]
-    targets = targets + [OUTPUT_DAT + "/08_expp/sign-vs-rand_" + f]
-    targets = targets + [OUTPUT_REP + "/perm_conserved_signature_" + f + ".html"]
+    targets = targets + [OUTPUT_DAT_TEMP + "/06_psig/perm_score_df_" + f]
+    targets = targets + [OUTPUT_DAT_TEMP + "/08_expp/sign-vs-rand_" + f]
+    #targets = targets + [OUTPUT_REP + "/perm_conserved_signature_" + f + ".html"]
 
-targets = targets + [OUTPUT_REP + "/genesets_summary.html"]
+  if RUN_OWN_MARK_PERM:
+    targets = targets + [OUTPUT_DAT_TEMP + "/06_pmrk/perm_score_df_" + f]
+    targets = targets + [OUTPUT_DAT_TEMP + "/08_expp/mark-vs-rand_" + f]
+
+  if RUN_OWN_MMMS_PERM:
+    targets = targets + [OUTPUT_DAT_TEMP + "/06_pmmm/perm_score_df_" + f]
+    targets = targets + [OUTPUT_DAT_TEMP + "/08_expp/mmms-vs-rand_" + f]
+    
+#targets = targets + [OUTPUT_REP + "/genesets_summary.html"]
 
 #-------------------------------------------------------------------------------
 
-localrules: all, sign_vs_rand, mark_vs_signrand, mmms_vs_signrand
+localrules: all, sign_vs_rand, mark_vs_rand, mmms_vs_rand, mark_vs_signrand, mmms_vs_signrand
 
 rule all: 
     input:
@@ -94,7 +105,7 @@ rule export_genesets:
         marker_cons = OUTPUT_BASE + "/sce_objects/03_sce_analysis/03_marker_conservation/cons_markers_{fraction}.RData",
         sce_input = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10",
     output:
-        geneset_list = OUTPUT_DAT + "/01_gens/geneset_list_{fraction}"
+        geneset_list = OUTPUT_DAT_TEMP + "/01_gens/geneset_list_{fraction}"
     params:
         cts_exclude = CELL_TYPES_EXCLUDE
     script:
@@ -103,8 +114,8 @@ rule export_genesets:
 # visualise gene sets across species and cell types, especially SIGN
 rule genesets_summary:
     input: 
-        geneset_list_hsc = OUTPUT_DAT + "/01_gens/geneset_list_hsc",
-        geneset_list_str = OUTPUT_DAT + "/01_gens/geneset_list_str",
+        geneset_list_hsc = OUTPUT_DAT_TEMP + "/01_gens/geneset_list_hsc",
+        geneset_list_str = OUTPUT_DAT_TEMP + "/01_gens/geneset_list_str",
         sce_hsc = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_hsc-10",
         sce_str = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_str-10"
     output:
@@ -131,10 +142,10 @@ rule prepare_ensembl:
         ensembl_zeb = ENSEMBL_ZEB,
         ensembl_nmr = ENSEMBL_NMR
     output:
-        ensembl_sign = OUTPUT_DAT + "/02_endf/ensembl_sign_{fraction}",
-        ensembl_mark = OUTPUT_DAT + "/02_endf/ensembl_mark_{fraction}",
-        ensembl_ndge = OUTPUT_DAT + "/02_endf/ensembl_ndge_{fraction}",
-        ensembl_mmms = OUTPUT_DAT + "/02_endf/ensembl_mmms_{fraction}"
+        ensembl_sign = OUTPUT_DAT_TEMP + "/02_endf/ensembl_sign_{fraction}",
+        ensembl_mark = OUTPUT_DAT_TEMP + "/02_endf/ensembl_mark_{fraction}",
+        ensembl_ndge = OUTPUT_DAT_TEMP + "/02_endf/ensembl_ndge_{fraction}",
+        ensembl_mmms = OUTPUT_DAT_TEMP + "/02_endf/ensembl_mmms_{fraction}"
     script:
         "01_scripts_own/02_prepare_ensembl.R"
         
@@ -183,7 +194,7 @@ rule reclustering_own:
         cts_exclude = CELL_TYPES_EXCLUDE,
         functions_reclustering = "../../source/sce_functions_reclustering.R"
     output:
-        sce_output = OUTPUT_DAT + "/03_recl/sce_{fraction}"
+        sce_output = OUTPUT_DAT_TEMP + "/03_recl/sce_{fraction}"
         # contains re-clustered vectors
         # cts_exclude already removed + factor levels removed
         # HSC sub-sampled to 25,000 cells
@@ -202,7 +213,7 @@ rule reclustering_own_scores:
     conda:
         "../../envs/reclustering_scores.yml"
     output:
-        score_df = OUTPUT_DAT + "/04_rcls/score_df_{fraction}"
+        score_df = OUTPUT_DAT_TEMP + "/04_rcls/score_df_{fraction}"
     script:
         "01_scripts_own/04_reclustering_own_scores.R"
         
@@ -361,7 +372,7 @@ if RUN_OWN_SIGN_PERM:
       conda:
           "../../envs/reclustering_own_scores.yml"
       output:
-          perm_score_df = OUTPUT_DAT + "/06_psig/perm_score_df_{fraction}"
+          perm_score_df = OUTPUT_DAT_TEMP + "/06_psig/perm_score_df_{fraction}"
       script: 
           "01_scripts_own/06_permutation_background.R"
 
@@ -387,7 +398,81 @@ if RUN_OWN_SIGN_PERM:
           resolution_louvain_list = config["values"]["02_sce_anno"]["resolution_louvain_list"],
           comparison = "sign-vs-rand"
       output:
-          pval_score_df_output = OUTPUT_DAT + "/08_expp/sign-vs-rand_{fraction}"
+          pval_score_df_output = OUTPUT_DAT_TEMP + "/08_expp/sign-vs-rand_{fraction}"
+      script:
+          "01_scripts_own/08_export_pval.R"
+
+if RUN_OWN_MARK_PERM:
+
+  rule permutation_own_background_mark:
+      input:
+          sce_input = rules.reclustering_own.output,
+          geneset_list = rules.export_genesets.output,
+      params:
+          k_graph_list = config["values"]["02_sce_anno"]["k_graph_list"],
+          resolution_louvain_list = config["values"]["02_sce_anno"]["resolution_louvain_list"],
+          cut_off_prop = config["values"]["03_sce_analysis"]["reclustering_cutoff_prop"],
+          iterations = config["values"]["03_sce_analysis"]["iterations"],
+          nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
+          #iterations = 40,
+          functions_reclustering = "../../source/sce_functions_reclustering.R",
+          cts_exclude = CELL_TYPES_EXCLUDE,       
+          cons_level_use = "conserved_markers"      
+      conda:
+          "../../envs/reclustering_own_scores.yml"
+      output:
+          perm_score_df = OUTPUT_DAT_TEMP + "/06_pmrk/perm_score_df_{fraction}" ##### OUTPUT TEMP
+      script: 
+          "01_scripts_own/06_permutation_background.R"
+
+  # compare conserved signature to random background
+  rule mark_vs_rand:
+      input:
+          orig_score_df_input = rules.reclustering_own_scores.output.score_df,
+          perm_score_df_input = rules.permutation_own_background_mark.output.perm_score_df
+      params:
+          cons_level_use = "conserved_markers",
+          resolution_louvain_list = config["values"]["02_sce_anno"]["resolution_louvain_list"],
+          comparison = "mark-vs-rand"
+      output:
+          pval_score_df_output = OUTPUT_DAT_TEMP + "/08_expp/mark-vs-rand_{fraction}"
+      script:
+          "01_scripts_own/08_export_pval.R"
+
+if RUN_OWN_MMMS_PERM:
+
+  rule permutation_own_background_mmms:
+      input:
+          sce_input = rules.reclustering_own.output,
+          geneset_list = rules.export_genesets.output,
+      params:
+          k_graph_list = config["values"]["02_sce_anno"]["k_graph_list"],
+          resolution_louvain_list = config["values"]["02_sce_anno"]["resolution_louvain_list"],
+          cut_off_prop = config["values"]["03_sce_analysis"]["reclustering_cutoff_prop"],
+          iterations = config["values"]["03_sce_analysis"]["iterations"],
+          nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
+          #iterations = 40,
+          functions_reclustering = "../../source/sce_functions_reclustering.R",
+          cts_exclude = CELL_TYPES_EXCLUDE,       
+          cons_level_use = "mmusall_markers"      
+      conda:
+          "../../envs/reclustering_own_scores.yml"
+      output:
+          perm_score_df = OUTPUT_DAT_TEMP + "/06_pmmm/perm_score_df_{fraction}" ##### OUTPUT TEMP
+      script: 
+          "01_scripts_own/06_permutation_background.R"
+
+  # compare conserved signature to random background
+  rule mmms_vs_rand:
+      input:
+          orig_score_df_input = rules.reclustering_own_scores.output.score_df,
+          perm_score_df_input = rules.permutation_own_background_mmms.output.perm_score_df
+      params:
+          cons_level_use = "mmusall_markers",
+          resolution_louvain_list = config["values"]["02_sce_anno"]["resolution_louvain_list"],
+          comparison = "mmms-vs-rand"
+      output:
+          pval_score_df_output = OUTPUT_DAT_TEMP + "/08_expp/mmms-vs-rand_{fraction}"
       script:
           "01_scripts_own/08_export_pval.R"
 

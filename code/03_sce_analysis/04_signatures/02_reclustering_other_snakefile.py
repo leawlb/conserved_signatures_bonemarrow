@@ -8,6 +8,8 @@ OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT_01 = OUTPUT_BASE + "/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own"
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other"
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/04_signatures/02_reclustering_other"
+OUTPUT_DAT_TEMP = "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/04_signatures/02_reclustering_other"
+OUTPUT_DAT_TEMP_01 = "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/04_signatures/01_reclustering_own"
 
 RESOLUTION_OTHER = config["base"] + config["metadata_paths"]["resolution_other"]
 FRAME_OTHER = config["base"] + config["metadata_paths"]["frame_other"]
@@ -39,38 +41,38 @@ print(datasets_other)
 targets = []
      
 for d in datasets_other:
-  targets = targets + [OUTPUT_DAT + "/03_recl/reclustered_" + d + "_list"]
-  targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_" + d + "_list"]
-  targets = targets + [OUTPUT_REP + "/all/reclustering_other_report_" + d + ".html"]
-  targets = targets + [OUTPUT_REP + "/final/reclustering_other_final_report_" + d + ".html"]
+  targets = targets + [OUTPUT_DAT_TEMP + "/03_recl/reclustered_" + d + "_list"]
+  targets = targets + [OUTPUT_DAT_TEMP + "/04_rcls/score_df_" + d + "_list"]
+  #targets = targets + [OUTPUT_REP + "/all/reclustering_other_report_" + d + ".html"]
+  #targets = targets + [OUTPUT_REP + "/final/reclustering_other_final_report_" + d + ".html"]
  
   #testing reclustering scores
   #targets = targets + [OUTPUT_REP + "/test_scores/test_reclustering_scores_" + d + ".html"]
 
   # permutation
   if RUN_PERM_GENESETS:
-    targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mark_" + d]
-    targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mmms_" + d]
-    targets = targets + [OUTPUT_DAT + "/05_perg/perm_score_df_mmms_mark_" + d]
-    targets = targets + [OUTPUT_REP + "/genesets/perm_genesets_" + d + ".html"]
-    targets = targets + [OUTPUT_DAT + "/08_expp/mark-vs-signrand_" + d]
-    targets = targets + [OUTPUT_DAT + "/08_expp/mmms-vs-signrand_" + d]
-    #targets = targets + [OUTPUT_DAT + "/08_expp/mmms-vs-markrand_" + d]
+    targets = targets + [OUTPUT_DAT_TEMP + "/05_perg/perm_score_df_mark_" + d]
+    targets = targets + [OUTPUT_DAT_TEMP + "/05_perg/perm_score_df_mmms_" + d]
+    targets = targets + [OUTPUT_DAT_TEMP + "/05_perg/perm_score_df_mmms_mark_" + d]
+    #targets = targets + [OUTPUT_REP + "/genesets/perm_genesets_" + d + ".html"]
+    targets = targets + [OUTPUT_DAT_TEMP + "/08_expp/mark-vs-signrand_" + d]
+    targets = targets + [OUTPUT_DAT_TEMP + "/08_expp/mmms-vs-signrand_" + d]
+    #targets = targets + [OUTPUT_DAT_TEMP + "/08_expp/mmms-vs-markrand_" + d]
 
   if RUN_PERM_BACKGROUND_SIGN:
-    targets = targets + [OUTPUT_DAT + "/06_psig/perm_score_df_" + d]
-    targets = targets + [OUTPUT_REP + "/conserved_signature/perm_conserved_signature_" + d + ".html"]
-    targets = targets + [OUTPUT_DAT + "/08_expp/sign-vs-rand_" + d]
+    targets = targets + [OUTPUT_DAT_TEMP + "/06_psig/perm_score_df_" + d]
+    #targets = targets + [OUTPUT_REP + "/conserved_signature/perm_conserved_signature_" + d + ".html"]
+    targets = targets + [OUTPUT_DAT_TEMP + "/08_expp/sign-vs-rand_" + d]
 
   """
   if RUN_PERM_BACKGROUND_MARK:
-    targets = targets + [OUTPUT_DAT + "/07_pmrk/perm_score_df_" + d]
+    targets = targets + [OUTPUT_DAT_TEMP + "/07_pmrk/perm_score_df_" + d]
     targets = targets + [OUTPUT_REP + "/conserved_markers/perm_conserved_markers_" + d + ".html"]
-    targets = targets + [OUTPUT_DAT + "/08_expp/mark-vs-rand_" + d]
+    targets = targets + [OUTPUT_DAT_TEMP + "/08_expp/mark-vs-rand_" + d]
   """
   
 if RUN_PVAL_CORRECTION:
-  targets = targets + [OUTPUT_DAT + "/09_crpv/all_corrected_pval"]
+  targets = targets + [OUTPUT_DAT_TEMP + "/09_crpv/all_corrected_pval"]
 
 #-------------------------------------------------------------------------------
 
@@ -117,9 +119,9 @@ rule all:
 rule reclustering_other:
     input:
         seu_input = config["base"] + config["metadata_paths"]["datasets_other_path"] + "/{dataset}",
-        ensembl_sign = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_sign_{fraction}", fraction = fractions),
-        ensembl_mark = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_mark_{fraction}", fraction = fractions),
-        ensembl_mmms = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_mmms_{fraction}", fraction = fractions)
+        ensembl_sign = expand(OUTPUT_DAT_TEMP_01 + "/02_endf/ensembl_sign_{fraction}", fraction = fractions),
+        ensembl_mark = expand(OUTPUT_DAT_TEMP_01 + "/02_endf/ensembl_mark_{fraction}", fraction = fractions),
+        ensembl_mmms = expand(OUTPUT_DAT_TEMP_01 + "/02_endf/ensembl_mmms_{fraction}", fraction = fractions)
     params:
         reclustering_functions = "../../source/sce_functions_reclustering.R",
         cut_off_prop = config["values"]["03_sce_analysis"]["reclustering_cutoff_prop"], 
@@ -127,7 +129,7 @@ rule reclustering_other:
         datasets_other_hsc = datasets_other_hsc,
         datasets_other_str = datasets_other_str
     output:
-        seu_output = OUTPUT_DAT + "/03_recl/reclustered_{dataset}_list"
+        seu_output = OUTPUT_DAT_TEMP + "/03_recl/reclustered_{dataset}_list"
     script: 
         "02_scripts_other/03_reclustering_other.R"
 
@@ -178,7 +180,7 @@ rule reclustering_other_scores:
     conda:
         "../../envs/reclustering_scores.yml"
     output:
-        score_df_list = OUTPUT_DAT + "/04_rcls/score_df_{dataset}_list"
+        score_df_list = OUTPUT_DAT_TEMP + "/04_rcls/score_df_{dataset}_list"
     script:
         "02_scripts_other/04_reclustering_other_scores.R"
         
@@ -227,9 +229,9 @@ if RUN_PERM_GENESETS:
   rule permutation_genesets:
       input:
           seu_preprocessed = config["base"] + config["metadata_paths"]["reclustering"] + "/prepared/{dataset}",
-          ensembl_sign = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_sign_{fraction}", fraction = fractions),
-          ensembl_mark = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_mark_{fraction}", fraction = fractions),
-          ensembl_mmms = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_mmms_{fraction}", fraction = fractions)
+          ensembl_sign = expand(OUTPUT_DAT_TEMP_01 + "/02_endf/ensembl_sign_{fraction}", fraction = fractions),
+          ensembl_mark = expand(OUTPUT_DAT_TEMP_01 + "/02_endf/ensembl_mark_{fraction}", fraction = fractions),
+          ensembl_mmms = expand(OUTPUT_DAT_TEMP_01 + "/02_endf/ensembl_mmms_{fraction}", fraction = fractions)
       params:
           reclustering_functions = "../../source/sce_functions_reclustering.R",
           #iterations = 100,
@@ -241,11 +243,11 @@ if RUN_PERM_GENESETS:
           datasets_other_hsc = datasets_other_hsc,
           datasets_other_str = datasets_other_str     
       conda:
-          "../../envs/reclustering_scores_permutation.yml"
+          "../../envs/reclustering_scores_permutation_temp.yml"
       output:
-          perm_score_df_mark = OUTPUT_DAT + "/05_perg/perm_score_df_mark_{dataset}",
-          perm_score_df_mmms = OUTPUT_DAT + "/05_perg/perm_score_df_mmms_{dataset}",
-          perm_score_df_mmms_mark = OUTPUT_DAT + "/05_perg/perm_score_df_mmms_mark_{dataset}"
+          perm_score_df_mark = OUTPUT_DAT_TEMP + "/05_perg/perm_score_df_mark_{dataset}",
+          perm_score_df_mmms = OUTPUT_DAT_TEMP + "/05_perg/perm_score_df_mmms_{dataset}",
+          perm_score_df_mmms_mark = OUTPUT_DAT_TEMP + "/05_perg/perm_score_df_mmms_mark_{dataset}"
       script: 
           "02_scripts_other/05_permutation_genesets.R"
 
@@ -257,9 +259,9 @@ if RUN_PERM_GENESETS:
           perm_score_df_mark = rules.permutation_genesets.output.perm_score_df_mark,
           perm_score_df_mmms = rules.permutation_genesets.output.perm_score_df_mmms,
           perm_score_df_mmms_mark = rules.permutation_genesets.output.perm_score_df_mmms_mark,
-          ensembl_sign = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_sign_{fraction}", fraction = fractions),
-          ensembl_mark = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_mark_{fraction}", fraction = fractions),
-          ensembl_mmms = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_mmms_{fraction}", fraction = fractions)
+          ensembl_sign = expand(OUTPUT_DAT_TEMP_01 + "/02_endf/ensembl_sign_{fraction}", fraction = fractions),
+          ensembl_mark = expand(OUTPUT_DAT_TEMP_01 + "/02_endf/ensembl_mark_{fraction}", fraction = fractions),
+          ensembl_mmms = expand(OUTPUT_DAT_TEMP_01 + "/02_endf/ensembl_mmms_{fraction}", fraction = fractions)
       params:
           resolution_df = RESOLUTION_OTHER,
           datasets_other_hsc = datasets_other_hsc,
@@ -282,7 +284,7 @@ if RUN_PERM_GENESETS:
           cons_level_use_alt = "seu_mark", # alternative name for cons level
           comparison = "mark-vs-signrand" # record comparison
       output:
-          pval_score_df_output = OUTPUT_DAT + "/08_expp/mark-vs-signrand_{dataset}"
+          pval_score_df_output = OUTPUT_DAT_TEMP + "/08_expp/mark-vs-signrand_{dataset}"
       script:
           "02_scripts_other/08_export_pval.R"  
 
@@ -297,7 +299,7 @@ if RUN_PERM_GENESETS:
           cons_level_use_alt = "seu_mmms",
           comparison = "mmms-vs-signrand"
       output:
-          pval_score_df_output = OUTPUT_DAT + "/08_expp/mmms-vs-signrand_{dataset}"
+          pval_score_df_output = OUTPUT_DAT_TEMP + "/08_expp/mmms-vs-signrand_{dataset}"
       script:
           "02_scripts_other/08_export_pval.R" 
 
@@ -338,9 +340,9 @@ if RUN_PERM_BACKGROUND_SIGN:
           datasets_other_hsc = datasets_other_hsc,
           datasets_other_str = datasets_other_str
       conda:
-          "../../envs/reclustering_scores_permutation.yml"
+          "../../envs/reclustering_scores_permutation_temp.yml"
       output:
-          perm_score_df = OUTPUT_DAT + "/06_psig/perm_score_df_{dataset}"
+          perm_score_df = OUTPUT_DAT_TEMP + "/06_psig/perm_score_df_{dataset}"
       script: 
           "02_scripts_other/06_permutation_background.R"
 
@@ -355,7 +357,7 @@ if RUN_PERM_BACKGROUND_SIGN:
           cons_level_use_alt = "seu_sign", 
           comparison = "sign-vs-rand"
       output:
-          pval_score_df_output = OUTPUT_DAT + "/08_expp/sign-vs-rand_{dataset}"
+          pval_score_df_output = OUTPUT_DAT_TEMP + "/08_expp/sign-vs-rand_{dataset}"
       script:
           "02_scripts_other/08_export_pval.R"
           
@@ -440,17 +442,17 @@ if RUN_PERM_BACKGROUND_MARK:
 # other tests will eventually be removed once decision is final
 if RUN_PVAL_CORRECTION:
   
-  
+  # check this later
   rule pval_correction:
       input:
-          own_sign_rand = expand(OUTPUT_DAT_01 + "/08_expp/sign-vs-rand_{fraction}", fraction = fractions),
-          own_mark_signrand = expand(OUTPUT_DAT_01 + "/08_expp/mark-vs-signrand_{fraction}", fraction = fractions),
-          own_mmms_signrand = expand(OUTPUT_DAT_01 + "/08_expp/mmms-vs-signrand_{fraction}", fraction = fractions),
-          other_sign_rand = expand(OUTPUT_DAT + "/08_expp/sign-vs-rand_{dataset}", dataset = datasets_other),
-          other_mark_signrand = expand(OUTPUT_DAT  + "/08_expp/mark-vs-signrand_{dataset}", dataset = datasets_other),
-          other_mmms_signrand = expand(OUTPUT_DAT + "/08_expp/mmms-vs-signrand_{dataset}", dataset = datasets_other)
+          own_sign_rand = expand(OUTPUT_DAT_TEMP_01 + "/08_expp/sign-vs-rand_{fraction}", fraction = fractions),
+          own_mark_signrand = expand(OUTPUT_DAT_TEMP_01 + "/08_expp/mark-vs-signrand_{fraction}", fraction = fractions),
+          own_mmms_signrand = expand(OUTPUT_DAT_TEMP_01 + "/08_expp/mmms-vs-signrand_{fraction}", fraction = fractions),
+          other_sign_rand = expand(OUTPUT_DAT_TEMP + "/08_expp/sign-vs-rand_{dataset}", dataset = datasets_other),
+          other_mark_signrand = expand(OUTPUT_DAT_TEMP  + "/08_expp/mark-vs-signrand_{dataset}", dataset = datasets_other),
+          other_mmms_signrand = expand(OUTPUT_DAT_TEMP + "/08_expp/mmms-vs-signrand_{dataset}", dataset = datasets_other)
       output:
-          pval_corrected_df = OUTPUT_DAT + "/09_crpv/all_corrected_pval"
+          pval_corrected_df = OUTPUT_DAT_TEMP + "/09_crpv/all_corrected_pval"
       script:
           "02_scripts_other/09_correct_all_pvals.R"
 

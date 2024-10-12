@@ -91,13 +91,25 @@ subclustering_genes <- base::unique(unlist(subclustering_gene_list))
 print(length(subclustering_genes))
 stopifnot(!subclustering_genes %in% rownames(sce))
 
+
 # extract gene set to be tested (based on "cons_level_use")
-test_IDs_list <- lapply(geneset_list, function(geneset){
-  test_ids <- geneset[[which(names(geneset) == cons_level_use)]]
-  return(test_ids)
-})
+if(cons_level_use != "mmusall_markers"){
+  test_IDs_list <- lapply(geneset_list, function(geneset){
+    test_ids <- geneset[[which(names(geneset) == cons_level_use)]]
+    return(test_ids)
+  })
+}else if(cons_level_use == "mmusall_markers"){
+  test_IDs_list <- lapply(geneset_list, function(geneset){
+    mmus_markers <- geneset$conserved_df$gene[
+      which(!is.na(geneset$conserved_df$mmus))]
+    return(mmus_markers)
+  })
+}
+
 test_IDs <- base::unique(unlist(test_IDs_list))
 test_IDs <- test_IDs[test_IDs %in% rownames(sce)]
+
+print(length(test_IDs))
 
 # get the number of genes to be tested
 # the same number of random genes will be used for the permutation test

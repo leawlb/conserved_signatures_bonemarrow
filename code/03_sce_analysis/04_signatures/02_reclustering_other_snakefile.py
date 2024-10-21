@@ -17,6 +17,7 @@ FRAME_OTHER = config["base"] + config["metadata_paths"]["frame_other"]
 RUN_PERM_GENESETS = config["run_permutation_genesets"]
 RUN_PERM_BACKGROUND_SIGN = config["run_permutation_background_sign"]
 RUN_PERM_BACKGROUND_MARK = config["run_permutation_background_mark"]
+RUN_PERM_BACKGROUND_MMMS = config["run_permutation_background_mmms"]
 RUN_PVAL_CORRECTION = config["run_pval_correction"]
 
 METADATA = pd.read_csv(config["base"] + config["metadata_paths"]["table"])
@@ -31,7 +32,8 @@ print(METADATA)
 fractions = get_list(metadata = METADATA, column = "Fraction_ID")
 
 # define datasets to be tested
-datasets_other_hsc = ["ts_hscs_progenitors", "ts_bone_marrow", "mus_weinreb_hspc", "mus_tm_bonemarrow", "nmr_sorted_hspc", "zeb_all_hspc"]
+# nmr_sorted_hspc, zeb_all_hspc
+datasets_other_hsc = ["ts_hscs_progenitors", "ts_bone_marrow", "mus_weinreb_hspc", "mus_tm_bonemarrow"]
 datasets_other_str = ["ts_all_stromal", "li_all_stromal", "mus_tik_stromal", "mus_bar_stromal"]
 datasets_other = datasets_other_hsc + datasets_other_str
 print(datasets_other)
@@ -51,11 +53,11 @@ for d in datasets_other:
 
   # permutation
   if RUN_PERM_GENESETS:
-    targets = targets + [OUTPUT_DAT_TEMP + "/05_perg/perm_score_df_mark_" + d]
+    #targets = targets + [OUTPUT_DAT_TEMP + "/05_perg/perm_score_df_mark_" + d]
     targets = targets + [OUTPUT_DAT_TEMP + "/05_perg/perm_score_df_mmms_" + d]
-    targets = targets + [OUTPUT_DAT_TEMP + "/05_perg/perm_score_df_mmms_mark_" + d]
+    #targets = targets + [OUTPUT_DAT_TEMP + "/05_perg/perm_score_df_mmms_mark_" + d]
     #targets = targets + [OUTPUT_REP + "/genesets/perm_genesets_" + d + ".html"]
-    targets = targets + [OUTPUT_DAT_TEMP + "/08_expp/mark-vs-signrand_" + d]
+    #targets = targets + [OUTPUT_DAT_TEMP + "/08_expp/mark-vs-signrand_" + d]
     targets = targets + [OUTPUT_DAT_TEMP + "/08_expp/mmms-vs-signrand_" + d]
     #targets = targets + [OUTPUT_DAT_TEMP + "/08_expp/mmms-vs-markrand_" + d]
 
@@ -70,13 +72,17 @@ for d in datasets_other:
     targets = targets + [OUTPUT_REP + "/conserved_markers/perm_conserved_markers_" + d + ".html"]
     targets = targets + [OUTPUT_DAT_TEMP + "/08_expp/mark-vs-rand_" + d]
   """
-  
+
+  if RUN_PERM_BACKGROUND_MMMS:
+    targets = targets + [OUTPUT_DAT_TEMP + "/07_pmms/perm_score_df_" + d]
+    targets = targets + [OUTPUT_DAT_TEMP + "/08_expp/mmms-vs-rand_" + d]
+
 if RUN_PVAL_CORRECTION:
   targets = targets + [OUTPUT_DAT_TEMP + "/09_crpv/all_corrected_pval"]
 
 #-------------------------------------------------------------------------------
 
-localrules: all, pval_correction, sign_vs_rand, mark_vs_signrand, mmms_vs_signrand
+localrules: all, pval_correction, sign_vs_rand, mark_vs_signrand, mmms_vs_signrand, mmms_vs_rand
 
 rule all: 
     input:
@@ -433,6 +439,48 @@ if RUN_PERM_BACKGROUND_MARK:
           "02_permutation_other_background_report.Rmd"
 
 """
+
+if RUN_PERM_BACKGROUND_MMMS:
+
+  # requires conda channel genomedk
+  rule permutation_background_mmms:
+      input:
+          seu_preprocessed = config["base"] + config["metadata_paths"]["reclustering"] + "/prepared/{dataset}",
+          ensembl_paths = expand(OUTPUT_DAT_01 + "/02_endf/ensembl_mmms_{fraction}", fraction = fractions)
+      params:
+          reclustering_functions = "../../source/sce_functions_reclustering.R",
+          iterations = 100,
+          resolution_df = RESOLUTION_OTHER,
+          #nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
+          #iterations = config["values"]["03_sce_analysis"]["nr_cores"],
+          nr_cores = 4,
+          cut_off_prop = config["values"]["03_sce_analysis"]["reclustering_cutoff_prop"],
+          cons_level_use = "mmusall_markers",
+          datasets_other_hsc = datasets_other_hsc,
+          datasets_other_str = datasets_other_str       
+      conda:
+          "../../envs/reclustering_scores_permutation.yml"
+      output:
+          perm_score_df = OUTPUT_DAT_TEMP + "/07_pmms/perm_score_df_{dataset}"
+      script: 
+          "02_scripts_other/06_permutation_background.R"
+
+  # export pvals: compare conserved markers to random background
+  rule mmms_vs_rand:
+      input:
+          orig_score_df_list_input = rules.reclustering_other_scores.output.score_df_list,
+          perm_score_df_input = rules.permutation_background_mmms.output.perm_score_df
+      params:
+          resolution_df = RESOLUTION_OTHER,
+          cons_level_use = "mmusall_markers",
+          cons_level_use_alt = "seu_mmms",
+          comparison = "mmms-vs-rand"
+      output:
+          pval_score_df_output = OUTPUT_DAT_TEMP + "/08_expp/mmms-vs-rand_{dataset}"
+      script:
+          "02_scripts_other/08_export_pval.R"
+          
+
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------

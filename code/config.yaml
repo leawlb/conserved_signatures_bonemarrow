@@ -110,6 +110,7 @@ recluster_other: False
 run_permutation_genesets: False
 run_permutation_background_sign: False
 run_permutation_background_mark: False
+run_permutation_background_mmms: False
 run_own_permutation_background_sign: False
 run_own_sign_permutation: False
 run_own_mark_permutation: False

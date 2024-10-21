@@ -55,12 +55,18 @@ score_df_hsc <- base::readRDS(base::paste0(
   "/04_signatures/01_reclustering_own/04_rcls/score_df_hsc"))
 
 # dataframes of re-clustering scores after background permutation
+
+# signature vs random
 psdf_hsc_sign_rand <- base::readRDS(base::paste0(
   base_path_input,
   "/04_signatures/01_reclustering_own/06_psig/perm_score_df_hsc"))
+
+# conserved markers vs random
 psdf_hsc_mark_rand <- base::readRDS(base::paste0(
   base_path_input,
   "/04_signatures/01_reclustering_own/06_pmrk/perm_score_df_hsc"))
+
+# BL6 markers vs random
 psdf_hsc_mmms_rand <- base::readRDS(base::paste0(
   base_path_input,
   "/04_signatures/01_reclustering_own/06_pmmm/perm_score_df_hsc"))
@@ -84,28 +90,35 @@ dataset_o1 <- "mus_tm_bonemarrow"
 # list of seurat objects with reclustering vectors for each gene set and resolution
 seu_hsc_recl_list_o1 <- base::readRDS(base::paste0(
   base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_mus_tm_bonemarrow_list"))
+  "/04_signatures/02_reclustering_other/03_recl/reclustered_mus_tm_bonemarrow_list"))
 
 # list of dataframes of re-clustering scores for each gene set and resolution
 score_df_hsc_list_o1 <- base::readRDS(base::paste0(
   base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_mus_tm_bonemarrow_list"))
+  "/04_signatures/02_reclustering_other/04_rcls/score_df_mus_tm_bonemarrow_list"))
 
-# dataframes of re-clustering scores after permutation comparing gene sets
-psdf_hsc_mark_signrand_o1 <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mark_mus_tm_bonemarrow"))
-psdf_hsc_mmms_signrand_o1 <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_mus_tm_bonemarrow"))
-psdf_hsc_mmms_markrand_o1 <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_mark_mus_tm_bonemarrow"))
 
-# perm score DF from background permutation (SIGN)
+# dataframes of re-clustering scores after permutation comparing to background
 psdf_hsc_sign_rand_o1 <- base::readRDS(base::paste0(
   base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/06_psig/perm_score_df_mus_tm_bonemarrow"))
+  "/04_signatures/02_reclustering_other/06_psig/perm_score_df_mus_tm_bonemarrow"))
+psdf_hsc_sign_mmms_o1 <- base::readRDS(base::paste0(
+  base_path_input,
+  "/04_signatures/02_reclustering_other/07_pmms/perm_score_df_mus_tm_bonemarrow"))
+
+# dataframes of re-clustering scores after permutation comparing gene sets
+# psdf_hsc_mark_signrand_o1 <- base::readRDS(base::paste0(
+#   base_path_input,
+#   "/04_signatures/02_reclustering_other/05_perg/perm_score_df_mark_mus_tm_bonemarrow"))
+psdf_hsc_mmms_signrand_o1 <- base::readRDS(base::paste0(
+  base_path_input,
+  "/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_mus_tm_bonemarrow"))
+# psdf_hsc_mmms_markrand_o1 <- base::readRDS(base::paste0(
+#   base_path_input,
+#   "/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_mark_mus_tm_bonemarrow"))
+
+# perm score DF from background permutation (SIGN)
+
 ```
 
 ```{r load_manual_other2}
@@ -118,28 +131,33 @@ dataset_o2 <- "mus_weinreb_hspc"
 # list of seurat objects with reclustering vectors for each gene set and resolution
 seu_hsc_recl_list_o2 <- base::readRDS(base::paste0(
   base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_mus_weinreb_hspc_list"))
+  "/04_signatures/02_reclustering_other/03_recl/reclustered_mus_weinreb_hspc_list"))
 
 # list of dataframes of re-clustering scores for each gene set and resolution
 score_df_hsc_list_o2 <- base::readRDS(base::paste0(
   base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_mus_weinreb_hspc_list"))
-
-# dataframes of re-clustering scores after permutation comparing gene sets
-psdf_hsc_mark_signrand_o2 <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mark_mus_weinreb_hspc"))
-psdf_hsc_mmms_signrand_o2 <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_mus_weinreb_hspc"))
-psdf_hsc_mmms_markrand_o2 <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_mark_mus_weinreb_hspc"))
+  "/04_signatures/02_reclustering_other/04_rcls/score_df_mus_weinreb_hspc_list"))
 
 # perm score DF from background permutation (SIGN)
 psdf_hsc_sign_rand_o2 <- base::readRDS(base::paste0(
   base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/06_psig/perm_score_df_mus_weinreb_hspc"))
+  "/04_signatures/02_reclustering_other/06_psig/perm_score_df_mus_weinreb_hspc"))
+psdf_hsc_mmms_rand_o2 <- base::readRDS(base::paste0(
+  base_path_input,
+  "/04_signatures/02_reclustering_other/07_pmms/perm_score_df_mus_weinreb_hspc"))
+
+# dataframes of re-clustering scores after permutation comparing gene sets
+# psdf_hsc_mark_signrand_o2 <- base::readRDS(base::paste0(
+#   base_path_input,
+#   "/04_signatures/02_reclustering_other/05_perg/perm_score_df_mark_mus_weinreb_hspc"))
+psdf_hsc_mmms_signrand_o2 <- base::readRDS(base::paste0(
+  base_path_input,
+  "/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_mus_weinreb_hspc"))
+# psdf_hsc_mmms_markrand_o2 <- base::readRDS(base::paste0(
+#   base_path_input,
+#   "/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_mark_mus_weinreb_hspc"))
+
+
 ```
 
 ```{r load_manual_remaining}
@@ -723,16 +741,16 @@ score_df_sign_score_3_o1 <- score_df_sign_o1[
 ```
 
 ```{r o1_scoredf_3, eval = FALSE, include = FALSE}
-score_df_mark_o1 <- score_df_hsc_o1[
-  score_df_hsc_o1$conservation_level == "conserved_markers",]
-score_df_mark_o1$conservation_level_long <- "conserved markers"
-
-score_df_mark_score_1_o1 <- score_df_mark_o1[
-  score_df_mark_o1$type == score1,]
-score_df_mark_score_2_o1 <- score_df_mark_o1[
-  score_df_mark_o1$type == score2,]
-score_df_mark_score_3_o1 <- score_df_mark_o1[
-  score_df_mark_o1$type == score3,]
+# score_df_mark_o1 <- score_df_hsc_o1[
+#   score_df_hsc_o1$conservation_level == "conserved_markers",]
+# score_df_mark_o1$conservation_level_long <- "conserved markers"
+# 
+# score_df_mark_score_1_o1 <- score_df_mark_o1[
+#   score_df_mark_o1$type == score1,]
+# score_df_mark_score_2_o1 <- score_df_mark_o1[
+#   score_df_mark_o1$type == score2,]
+# score_df_mark_score_3_o1 <- score_df_mark_o1[
+#   score_df_mark_o1$type == score3,]
 ```
 
 ```{r o1_scoredf_4}
@@ -751,13 +769,19 @@ score_df_mmms_score_3_o1 <- score_df_mmms_o1[
 ```{r o1_scoredf_5}
 
 head(psdf_hsc_sign_rand_o1)
+head(psdf_hsc_mmms_rand_o1)
 
 # get the required permuted score DFs
 head(psdf_hsc_mmms_signrand_o1)
-#head(psdf_hsc_mark_signrand_o1)
+#head(psdf_hsc_mmms_signrand_o1)
 
+# sign and mmms vs random
 psdf_hsc_sign_rand_o1$variation_information <- 0-
   psdf_hsc_sign_rand_o1$variation_information
+psdf_hsc_mmms_rand_o1$variation_information <- 0-
+  psdf_hsc_mmms_rand_o1$variation_information
+
+# mmms vs signature + random
 psdf_hsc_mmms_signrand_o1$variation_information <- 0-
   psdf_hsc_mmms_signrand_o1$variation_information
 
@@ -785,20 +809,20 @@ psdf_mmms_signrand_score_3_o1 <- psdf_mmms_signrand_long_o1[
 
 ```{r o1_scoredf_7, include = FALSE, eval = FALSE}
 
-psdf_mark_signrand_long_o1 <- tidyr::pivot_longer(
-  psdf_hsc_mark_signrand_o1, 
-  c = 1:ncol(psdf_hsc_mark_signrand_o1),
-  values_to = "value",
-  names_to = "type")
-psdf_mark_signrand_long_o1$conservation_level_long = base::rep(
-  "conserved markers", nrow(psdf_mark_signrand_long_o1))
-
-psdf_mark_signrand_score_1_o1 <- psdf_mark_signrand_long_o1[
-  psdf_mark_signrand_long_o1$type == score1,]
-psdf_mark_signrand_score_2_o1 <- psdf_mark_signrand_long_o1[
-  psdf_mark_signrand_long_o1$type == score2,]
-psdf_mark_signrand_score_3_o1 <- psdf_mark_signrand_long_o1[
-  psdf_mark_signrand_long_o1$type == score3,]
+# psdf_mark_signrand_long_o1 <- tidyr::pivot_longer(
+#   psdf_hsc_mark_signrand_o1, 
+#   c = 1:ncol(psdf_hsc_mark_signrand_o1),
+#   values_to = "value",
+#   names_to = "type")
+# psdf_mark_signrand_long_o1$conservation_level_long = base::rep(
+#   "conserved markers", nrow(psdf_mark_signrand_long_o1))
+# 
+# psdf_mark_signrand_score_1_o1 <- psdf_mark_signrand_long_o1[
+#   psdf_mark_signrand_long_o1$type == score1,]
+# psdf_mark_signrand_score_2_o1 <- psdf_mark_signrand_long_o1[
+#   psdf_mark_signrand_long_o1$type == score2,]
+# psdf_mark_signrand_score_3_o1 <- psdf_mark_signrand_long_o1[
+#   psdf_mark_signrand_long_o1$type == score3,]
 ```
 
 ### OTHER 2 
@@ -850,17 +874,17 @@ score_df_sign_score_3_o2 <- score_df_sign_o2[
   score_df_sign_o2$type == score3,]
 ```
 
-```{r o2_scoredf_3}
-score_df_mark_o2 <- score_df_hsc_o2[
-  score_df_hsc_o2$conservation_level == "conserved_markers",]
-score_df_mark_o2$conservation_level_long <- "conserved markers"
-
-score_df_mark_score_1_o2 <- score_df_mark_o2[
-  score_df_mark_o2$type == score1,]
-score_df_mark_score_2_o2 <- score_df_mark_o2[
-  score_df_mark_o2$type == score2,]
-score_df_mark_score_3_o2 <- score_df_mark_o2[
-  score_df_mark_o2$type == score3,]
+```{r o2_scoredf_3, include = FALSE, eval = FALSE}
+# score_df_mark_o2 <- score_df_hsc_o2[
+#   score_df_hsc_o2$conservation_level == "conserved_markers",]
+# score_df_mark_o2$conservation_level_long <- "conserved markers"
+# 
+# score_df_mark_score_1_o2 <- score_df_mark_o2[
+#   score_df_mark_o2$type == score1,]
+# score_df_mark_score_2_o2 <- score_df_mark_o2[
+#   score_df_mark_o2$type == score2,]
+# score_df_mark_score_3_o2 <- score_df_mark_o2[
+#   score_df_mark_o2$type == score3,]
 ```
 
 ```{r o2_scoredf_4}
@@ -879,6 +903,7 @@ score_df_mmms_score_3_o2 <- score_df_mmms_o2[
 ```{r o2_scoredf_5}
 
 head(psdf_hsc_sign_rand_o2)
+head(psdf_hsc_mmms_rand_o2)
 
 # get the required permuted score DFs
 head(psdf_hsc_mmms_signrand_o2)
@@ -886,9 +911,11 @@ head(psdf_hsc_mmms_signrand_o2)
 
 psdf_hsc_sign_rand_o2$variation_information <- 0-
   psdf_hsc_sign_rand_o2$variation_information
+psdf_hsc_mmms_rand_o2$variation_information <- 0-
+  psdf_hsc_mmms_rand_o2$variation_information
+
 psdf_hsc_mmms_signrand_o2$variation_information <- 0-
   psdf_hsc_mmms_signrand_o2$variation_information
-
 # psdf_hsc_mark_signrand_o2$variation_information <- 0-
 #   psdf_hsc_mark_signrand_o2$variation_information
 ```
@@ -912,21 +939,21 @@ psdf_mmms_signrand_score_3_o2 <- psdf_mmms_signrand_long_o2[
 ```
 
 ```{r o2_scoredf_7, include = FALSE, eval = FALSE}
-
-psdf_mark_signrand_long_o2 <- pivot_longer(
-  psdf_hsc_mark_signrand_o2, 
-  c = 1:ncol(psdf_hsc_mark_signrand_o2),
-  values_to = "value",
-  names_to = "type")
-psdf_mark_signrand_long_o2$conservation_level_long = base::rep(
-  "conserved markers", nrow(psdf_mark_signrand_long_o2))
-
-psdf_mark_signrand_score_1_o2 <- psdf_mark_signrand_long_o2[
-  psdf_mark_signrand_long_o2$type == score1,]
-psdf_mark_signrand_score_2_o2 <- psdf_mark_signrand_long_o2[
-  psdf_mark_signrand_long_o2$type == score2,]
-psdf_mark_signrand_score_3_o2 <- psdf_mark_signrand_long_o2[
-  psdf_mark_signrand_long_o2$type == score3,]
+# 
+# psdf_mark_signrand_long_o2 <- pivot_longer(
+#   psdf_hsc_mark_signrand_o2, 
+#   c = 1:ncol(psdf_hsc_mark_signrand_o2),
+#   values_to = "value",
+#   names_to = "type")
+# psdf_mark_signrand_long_o2$conservation_level_long = base::rep(
+#   "conserved markers", nrow(psdf_mark_signrand_long_o2))
+# 
+# psdf_mark_signrand_score_1_o2 <- psdf_mark_signrand_long_o2[
+#   psdf_mark_signrand_long_o2$type == score1,]
+# psdf_mark_signrand_score_2_o2 <- psdf_mark_signrand_long_o2[
+#   psdf_mark_signrand_long_o2$type == score2,]
+# psdf_mark_signrand_score_3_o2 <- psdf_mark_signrand_long_o2[
+#   psdf_mark_signrand_long_o2$type == score3,]
 ```
 
 # Prep all gene number boxplots etc.
@@ -1330,12 +1357,14 @@ all_vi <- c(
   # other dataset 1
   score_df_hsc_o1$value[score_df_hsc_o1$type == "variation_information"],
   psdf_hsc_sign_rand_o1$variation_information,
+  psdf_hsc_mmms_rand_o1$variation_information,
   psdf_hsc_mmms_signrand_o1$variation_information,
   #psdf_hsc_mark_signrand_o1$variation_information,
   
   # other dataset 2
   score_df_hsc_o2$value[score_df_hsc_o2$type == "variation_information"],
   psdf_hsc_sign_rand_o2$variation_information,
+  psdf_hsc_mmms_rand_o2$variation_information,
   psdf_hsc_mmms_signrand_o2$variation_information
   #psdf_hsc_mark_signrand_o2$variation_information
 )
@@ -1357,12 +1386,14 @@ all_meanprop <- c(
   # other dataset 1
   score_df_hsc_o1$value[score_df_hsc_o1$type == "mean_prop_cells_cluster"],
   psdf_hsc_sign_rand_o1$mean_prop_cells_cluster,
+  psdf_hsc_mmms_rand_o1$mean_prop_cells_cluster,
   psdf_hsc_mmms_signrand_o1$mean_prop_cells_cluster,
   #psdf_hsc_mark_signrand_o1$mean_prop_cells_cluster,
   
   # other dataset 2
   score_df_hsc_o2$value[score_df_hsc_o2$type == "mean_prop_cells_cluster"],
   psdf_hsc_sign_rand_o2$mean_prop_cells_cluster,
+  psdf_hsc_mmms_rand_o2$mean_prop_cells_cluster,
   psdf_hsc_mmms_signrand_o2$mean_prop_cells_cluster
   #psdf_hsc_mark_signrand_o2$mean_prop_cells_cluster
 )

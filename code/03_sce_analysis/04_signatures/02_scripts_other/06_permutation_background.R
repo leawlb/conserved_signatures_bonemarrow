@@ -38,6 +38,7 @@ iterations <- snakemake@params[["iterations"]]
 
 # which conservation level to use
 cons_level_use <- snakemake@params[["cons_level_use"]]
+print(cons_level_use)
 
 #-------------------------------------------------------------------------------
 
@@ -88,6 +89,7 @@ resolution_df <- resolution_df[resolution_df$dataset == dataset_curr,]
 # always use the same resolution as for the original gene set
 resl <- resolution_df$resolution[
   resolution_df$conservation_level == cons_level_use]
+print(resl)
 
 #-------------------------------------------------------------------------------
 

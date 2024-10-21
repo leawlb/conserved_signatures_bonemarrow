@@ -46,6 +46,9 @@ max_size_dotplots <- 4
 # specify one theme for all, customize elements per plot
 theme_all <- ggplot2::theme_classic()+
   ggplot2::theme(
+    plot.background = element_blank(),
+    legend.background = element_blank(),
+    panel.background = element_blank(),
     axis.text = element_text(
       size = axis_text_size,
       face = axis_text_face,

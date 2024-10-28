@@ -190,7 +190,7 @@ score1 <- "adjusted_rand_index"
 score3 <- "mean_prop_cells_cluster"
 
 score2_long <- "Variation\nof information"
-score1_long <- "Adjusted\nrand index"
+score1_long <- "Adjusted\nRand index"
 score3_long <- "Mean prop.\ncells/cluster"
 
 nr_genes_title <- "# re-clustering\ngenes"
@@ -256,43 +256,50 @@ make_pattern_density_plot <- function(
 ```
 
 ```{r export_paths}
-output_pdf_a_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_a.pdf")
-output_pdf_a_legend <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_a_legend.pdf")
-output_pdf_b_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_b.pdf")
-output_pdf_b_legend <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_b_legend.pdf")
-output_pdf_c_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_c.pdf")
-output_pdf_d_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_d.pdf")
-output_pdf_e_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_e.pdf")
-output_pdf_f_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_f.pdf")
-output_pdf_g_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_g.pdf")
-output_pdf_de_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_de.pdf")
-output_pdf_f_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_f.pdf")
-output_pdf_g_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_g.pdf")
-output_pdf_h_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_h.pdf")
-output_pdf_h_legend <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure3_h_legend.pdf")
 
-output_bigplot_own_poster <- base::paste0(
-   base_path_output_temp, "/manuscript1/figures/figure3_bigplot_own_poster.pdf")
-output_pdf_a_plot_poster <- base::paste0(
-   base_path_output_temp, "/manuscript1/figures/figure3_a_poster.pdf")
-output_pdf_bp_legend_poster <- base::paste0(
-   base_path_output_temp, "/manuscript1/figures/figure3_pb_legend_poster.pdf")
+output_pdf_heatmap_own_plot <- base::paste0(
+   base_path_output_temp, "/manuscript1/figures/figure3_heatmap_own.pdf")
+output_pdf_heatmaps_others_plot <- base::paste0(
+   base_path_output_temp, "/manuscript1/figures/figure3_heatmaps_others.pdf")
+output_pdf_ALL_plot <- base::paste0(
+   base_path_output_temp, "/manuscript1/figures/figure3_all_dist_plots.pdf")
+
+# output_pdf_a_plot <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_a.pdf")
+# output_pdf_a_legend <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_a_legend.pdf")
+# output_pdf_b_plot <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_b.pdf")
+# output_pdf_b_legend <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_b_legend.pdf")
+# output_pdf_c_plot <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_c.pdf")
+# output_pdf_d_plot <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_d.pdf")
+# output_pdf_e_plot <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_e.pdf")
+# output_pdf_f_plot <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_f.pdf")
+# output_pdf_g_plot <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_g.pdf")
+# output_pdf_de_plot <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_de.pdf")
+# output_pdf_f_plot <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_f.pdf")
+# output_pdf_g_plot <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_g.pdf")
+# output_pdf_h_plot <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_h.pdf")
+# output_pdf_h_legend <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure3_h_legend.pdf")
+# 
+# output_bigplot_own_poster <- base::paste0(
+#    base_path_output_temp, "/manuscript1/figures/figure3_bigplot_own_poster.pdf")
+# output_pdf_a_plot_poster <- base::paste0(
+#    base_path_output_temp, "/manuscript1/figures/figure3_a_poster.pdf")
+# output_pdf_bp_legend_poster <- base::paste0(
+#    base_path_output_temp, "/manuscript1/figures/figure3_pb_legend_poster.pdf")
 ```
-
 
 # Permutation Plots
 
@@ -633,7 +640,24 @@ psdf_mmms_rand_score_3_o1 <- psdf_mmms_rand_long_o1[
 #   psdf_mark_signrand_long_o1$type == score3,]
 ```
 
-TODO: mmms_vs_signrand is mssing here
+```{r o1_scoredf_8}
+# mmms_vs_signrand
+psdf_mmms_signrand_long_o1 <- tidyr::pivot_longer(
+  psdf_hsc_mmms_signrand_o1, 
+  c = c("mean_prop_cells_cluster", "adjusted_rand_index", "variation_information"),
+  values_to = "value",
+  names_to = "type")
+
+psdf_mmms_signrand_long_o1$conservation_level_long <- base::rep(
+  "conserved identity signature", nrow(psdf_mmms_signrand_long_o1))
+
+psdf_mmms_signrand_score_1_o1 <- psdf_mmms_signrand_long_o1[
+  psdf_mmms_signrand_long_o1$type == score1,]
+psdf_mmms_signrand_score_2_o1 <- psdf_mmms_signrand_long_o1[
+  psdf_mmms_signrand_long_o1$type == score2,]
+psdf_mmms_signrand_score_3_o1 <- psdf_mmms_signrand_long_o1[
+  psdf_mmms_signrand_long_o1$type == score3,]
+```
 
 ### OTHER 2 
 
@@ -761,22 +785,22 @@ psdf_mmms_rand_score_3_o2 <- psdf_mmms_rand_long_o2[
   psdf_mmms_rand_long_o2$type == score3,]
 ```
 
-```{r o2_scoredf_8, include = FALSE, eval = FALSE}
-# 
-# psdf_mmms_signrand_long_o2 <- tidyr::pivot_longer(
-#   psdf_hsc_mmms_signrand_o2, 
-#   c = 1:ncol(psdf_hsc_mmms_signrand_o2),
-#   values_to = "value",
-#   names_to = "type")
-# psdf_mmms_signrand_long_o2$conservation_level_long = base::rep(
-#   "BL6 markers", nrow(psdf_mmms_signrand_long_o2))
-# 
-# psdf_mmms_signrand_score_1_o2 <- psdf_mmms_signrand_long_o2[
-#   psdf_mmms_signrand_long_o2$type == score1,]
-# psdf_mmms_signrand_score_2_o2 <- psdf_mmms_signrand_long_o2[
-#   psdf_mmms_signrand_long_o2$type == score2,]
-# psdf_mmms_signrand_score_3_o2 <- psdf_mmms_signrand_long_o2[
-#   psdf_mmms_signrand_long_o2$type  == score3,]
+```{r o2_scoredf_8}
+
+psdf_mmms_signrand_long_o2 <- tidyr::pivot_longer(
+  psdf_hsc_mmms_signrand_o2,
+  c = 1:ncol(psdf_hsc_mmms_signrand_o2),
+  values_to = "value",
+  names_to = "type")
+psdf_mmms_signrand_long_o2$conservation_level_long = base::rep(
+  "BL6 markers", nrow(psdf_mmms_signrand_long_o2))
+
+psdf_mmms_signrand_score_1_o2 <- psdf_mmms_signrand_long_o2[
+  psdf_mmms_signrand_long_o2$type == score1,]
+psdf_mmms_signrand_score_2_o2 <- psdf_mmms_signrand_long_o2[
+  psdf_mmms_signrand_long_o2$type == score2,]
+psdf_mmms_signrand_score_3_o2 <- psdf_mmms_signrand_long_o2[
+  psdf_mmms_signrand_long_o2$type  == score3,]
 ```
 
 ```{r o2_scoredf_9, include = FALSE, eval = FALSE}
@@ -1075,7 +1099,7 @@ vis_df_mmms_rand_o1$type_y <- factor(
   "permutation gene set")))
 ```
 
-```{r}
+```{r o1_numberdf_5}
 vis_df_mmms_signrand_o1 <- base::data.frame(
   type_y = c(
     "BL6 markers",
@@ -1103,7 +1127,6 @@ vis_df_mmms_signrand_o1$type_y <- factor(
   "BL6 markers",
   "permutation gene set")))
 ```
-
 
 ```{r o1_numberdf_4_old, include = FALSE, eval = FALSE}
 # vis_df_mmms_o1 <- base::data.frame(
@@ -1445,7 +1468,7 @@ base_plot_bp1_own
 theme_plot_bp1_own<- base_plot_bp1_own+
   theme_all+
   ggplot2::scale_x_continuous(
-    breaks=c(0, 200, 400, 600, 800),
+    breaks=c(0,  400, 800),
     position = "top", 
     limits = c(0, max_genes))+
   ggplot2::theme(
@@ -1490,7 +1513,7 @@ base_plot_bp2_own
 theme_plot_bp2_own <- base_plot_bp2_own+
   theme_all+
   ggplot2::scale_x_continuous(
-    breaks=c(0, 200, 400, 600, 800),
+    breaks=c(0,  400, 800),
     position = "top", 
     limits = c(0, max_genes))+
   ggplot2::theme(
@@ -1533,7 +1556,7 @@ base_plot_bp3_own
 theme_plot_bp3_own <- base_plot_bp3_own+
   theme_all+
   ggplot2::scale_x_continuous(
-    breaks=c(0, 200, 400, 600, 800),
+    breaks=c(0,  400, 800),
     position = "top", 
     limits = c(0, max_genes))+
   ggplot2::theme(
@@ -1571,7 +1594,7 @@ theme_plot_ai1_own <- base_plot_ai1_own+
       hjust = 0.5,
       size = axis_title_size))+
   ggplot2::scale_x_continuous(
-    breaks=c(0, 0.25, 0.5, 0.75, 1),
+    breaks=c(0, 0.5, 1),
     position = "top", 
     limits = c(score1_min, score1_max))+
   ggplot2::ggtitle(score1_long) 
@@ -1598,7 +1621,7 @@ theme_plot_ai2_own <- base_plot_ai2_own+
     axis.title = element_blank(),
     plot.title = element_blank())+
   ggplot2::scale_x_continuous(
-    breaks=c(0, 0.25, 0.5, 0.75, 1),
+    breaks=c(0, 0.5, 1),
     position = "top", 
     limits = c(score1_min, score1_max))+
   ggplot2::ggtitle(score1_long) 
@@ -1625,7 +1648,7 @@ theme_plot_ai3_own <- base_plot_ai3_own+
     axis.title = element_blank(),
     plot.title = element_blank())+
   ggplot2::scale_x_continuous(
-    breaks=c(0, 0.25, 0.5, 0.75, 1),
+    breaks=c(0, 0.5, 1),
     position = "top", 
     limits = c(score1_min, score1_max))+
   ggplot2::ggtitle(score1_long) 
@@ -1800,6 +1823,8 @@ theme_plot_mp3_own <- base_plot_mp3_own+
   ggplot2::ggtitle(score3_long) 
 ```
 
+### Assemble
+
 ```{r assemble_bigplot_own, fig.width = 12, fig.height = 10}
 
 b_plot_bp_own <- ggpubr::ggarrange(
@@ -1853,7 +1878,7 @@ b_plot <- ggpubr::ggarrange(
 b_plot
 ```
 
-```{r assemble_bigplot_own_poster, fig.width = 12, fig.height = 10}
+```{r assemble_bigplot_own_poster, fig.width = 12, fig.height = 10, eval = FALSE, include = FALSE}
 
 b_plot_bp_own_poster <- ggpubr::ggarrange(
   ncol = 1,
@@ -1882,7 +1907,7 @@ b_plot_vi_own_poster <- ggpubr::ggarrange(
 
 ```
 
-```{r fig.width = 9, fig.height = 3.5}
+```{r fig.width = 9, fig.height = 3.5, eval = FALSE, include = FALSE}
 b_plot_poster <- ggpubr::ggarrange(
   ncol = 3,
   align = "v",
@@ -1894,11 +1919,6 @@ b_plot_poster <- ggpubr::ggarrange(
 b_plot_poster
 ```
 
-```{r export_bc_plot_pdf}
-pdf(output_bigplot_own_poster, width = 9, height = 3.5)
-b_plot_poster
-dev.off()
-```
 
 ## Plots: Comparing OTHER 1 scores to random background
 
@@ -1935,7 +1955,7 @@ base_plot_bp1_o1
 theme_plot_bp1_o1 <- base_plot_bp1_o1+
   theme_all+
   ggplot2::scale_x_continuous(
-    breaks=c(0, 200, 400, 600, 800),
+    breaks=c(0,  400, 800),
     position = "top", 
     limits = c(0, max_genes))+
   ggplot2::theme(
@@ -1979,7 +1999,7 @@ base_plot_bp3_o1
 theme_plot_bp3_o1 <- base_plot_bp3_o1+
   theme_all+
   ggplot2::scale_x_continuous(
-    breaks=c(0, 200, 400, 600, 800),
+    breaks=c(0,  400, 800),
     position = "top", 
     limits = c(0, max_genes))+
   ggplot2::theme(
@@ -1993,64 +2013,10 @@ theme_plot_bp3_o1 <- base_plot_bp3_o1+
       hjust = 0))
 ```
 
-#### MMMS vs SIGNRAND boxplots
-
-```{r base_plot_bp1_o1_signrand}
-base_plot_bp1_o1_signrand <- ggplot2::ggplot(
-  vis_df_mmms_signrand_o1,
-  aes(y = type_y, 
-      x =  number,
-      fill = type_fill,
-      color = type_fill,
-      pattern = type_fill,
-      pattern_alpha = type_fill))+
-  ggpattern::geom_col_pattern(
-    #color = NA, 
-    pattern_angle = 110,
-    pattern_fill = pattern_fill_color,
-    pattern_colour = pattern_line_colour,
-    pattern_density = pattern_density_val,
-    pattern_spacing = pattern_spacing_val
-  )+
-  ggplot2::scale_fill_manual(values = col_cons_long)+
-  ggplot2::scale_color_manual(values = col_cons_long)+
-  ggpattern::scale_pattern_alpha_manual(
-    values = c("conserved identity signature" = 0,
-               "BL6 markers" = 0, 
-               "random genes" = 1)
-  )
-base_plot_bp1_o1_signrand
-```
-
-```{r theme_plot_bp1_o1_signrand, fig.width = 4, fig.height = 2}
-theme_plot_bp1_o1_signrand <- base_plot_bp1_o1_signrand+
-  theme_all+
-  ggplot2::scale_x_continuous(
-    breaks=c(0, 200, 400, 600, 800),
-    position = "top", 
-    limits = c(0, max_genes))+
-  ggplot2::theme(
-    legend.position = "none",
-    plot.title = element_text(
-      hjust = 0.5,
-      size = axis_title_size),
-    axis.title = element_blank(),
-    axis.text.y = element_text(
-      hjust = 0))+
-  ggplot2::ggtitle(nr_genes_title)
-```
-
-
-
-```{r theme_plot_bp1_o1_signrand, fig.width = 4, fig.height = 3}
-legend_bp_all_poster_theme <- ggpubr::get_legend(base_plot_bp1_o1_signrand+theme_all)
-legend_bp_all_poster <- ggpubr::ggarrange(legend_bp_all_poster_theme)
-```
-
 ```{r a_legend_export}
-pdf(output_pdf_bp_legend_poster, width = 4, height = 3)
-legend_bp_all_poster
-dev.off()
+# pdf(output_pdf_bp_legend_poster, width = 4, height = 3)
+# legend_bp_all_poster
+# dev.off()
 ```
 
 #### Adjusted Rand index (Score 1)
@@ -2077,7 +2043,7 @@ theme_plot_ai1_o1 <- base_plot_ai1_o1+
       hjust = 0.5,
       size = axis_title_size))+
   ggplot2::scale_x_continuous(
-    breaks=c(0, 0.25, 0.5, 0.75, 1),
+    breaks=c(0, 0.5, 1),
     position = "top", 
     limits = c(score1_min, score1_max))+
   ggplot2::ggtitle(score1_long) 
@@ -2104,7 +2070,7 @@ theme_plot_ai3_o1 <- base_plot_ai3_o1+
     axis.title = element_blank(),
     plot.title = element_blank())+
   ggplot2::scale_x_continuous(
-    breaks=c(0, 0.25, 0.5, 0.75, 1),
+    breaks=c(0, 0.5, 1),
     position = "top", 
     limits = c(score1_min, score1_max))+
   ggplot2::ggtitle(score1_long) 
@@ -2225,6 +2191,7 @@ theme_plot_mp3_o1 <- base_plot_mp3_o1+
   ggplot2::ggtitle(score3_long) 
 ```
 
+
 ### Assemble
 
 ```{r bigplot_assemble_o1, fig.width = 12, fig.height = 10}
@@ -2311,7 +2278,7 @@ base_plot_bp1_o2
 theme_plot_bp1_o2<- base_plot_bp1_o2+
   theme_all+
   ggplot2::scale_x_continuous(
-    breaks=c(0, 200, 400, 600, 800),
+    breaks=c(0,  400, 800),
     position = "top", 
     limits = c(0, max_genes))+
   ggplot2::theme(
@@ -2355,7 +2322,7 @@ base_plot_bp3_o2
 theme_plot_bp3_o2 <- base_plot_bp3_o2+
   theme_all+
   ggplot2::scale_x_continuous(
-    breaks=c(0, 200, 400, 600, 800),
+    breaks=c(0,  400, 800),
     position = "top", 
     limits = c(0, max_genes))+
   ggplot2::theme(
@@ -2402,7 +2369,7 @@ base_plot_bp1_o2_signrand
 theme_plot_bp1_o2_signrand <- base_plot_bp1_o2_signrand+
   theme_all+
   ggplot2::scale_x_continuous(
-    breaks=c(0, 200, 400, 600, 800),
+    breaks=c(0,  400, 800),
     position = "top", 
     limits = c(0, max_genes))+
   ggplot2::theme(
@@ -2440,7 +2407,7 @@ theme_plot_ai1_o2 <- base_plot_ai1_o2+
       hjust = 0.5,
       size = axis_title_size))+
   ggplot2::scale_x_continuous(
-    breaks=c(0, 0.25, 0.5, 0.75, 1),
+    breaks=c(0, 0.5, 1),
     position = "top", 
     limits = c(score1_min, score1_max))+
   ggplot2::ggtitle(score1_long) 
@@ -2467,7 +2434,7 @@ theme_plot_ai3_o2 <- base_plot_ai3_o2+
     axis.title = element_blank(),
     plot.title = element_blank())+
   ggplot2::scale_x_continuous(
-    breaks=c(0, 0.25, 0.5, 0.75, 1),
+    breaks=c(0, 0.5, 1),
     position = "top", 
     limits = c(score1_min, score1_max))+
   ggplot2::ggtitle(score1_long) 
@@ -2625,7 +2592,7 @@ plot_mp_o2 <- ggpubr::ggarrange(
 
 ```
 
-```{r fig.width = 12, fig.height = 3}
+```{r big_plot_o2, fig.width = 12, fig.height = 3}
 big_plot_o2 <- ggpubr::ggarrange(
   ncol = 4,
   align = "hv",
@@ -2640,7 +2607,7 @@ big_plot_o2
 
 ## Assemble Other alternative
 
-```{r}
+```{r assemble_bigplot_others_alt}
 
 plot_bp_o2 <- ggpubr::ggarrange(
   ncol = 1,
@@ -2700,7 +2667,7 @@ plot_mp_o2 <- ggpubr::ggarrange(
 
 ```
 
-```{r fig.width = 12, fig.height = 5}
+```{r big_plot_o1o2, fig.width = 12, fig.height = 5}
 big_plot_o2 <- ggpubr::ggarrange(
   ncol = 4,
   align = "hv",
@@ -2713,7 +2680,7 @@ big_plot_o2 <- ggpubr::ggarrange(
 big_plot_o2
 ```
 
-```{r}
+```{r theme_big_plot_o1o2_ow}
 
 plot_bp_o2 <- ggpubr::ggarrange(
   ncol = 1,
@@ -2773,8 +2740,8 @@ plot_mp_o2 <- ggpubr::ggarrange(
 
 ```
 
-```{r fig.width = 12, fig.height = 5}
-big_plot_o2 <- ggpubr::ggarrange(
+```{r big_plot_o1o2_ow, fig.width = 12, fig.height = 5}
+big_plot_o1o2_ow <- ggpubr::ggarrange(
   ncol = 4,
   align = "hv",
   plot_bp_o2,
@@ -2784,6 +2751,472 @@ big_plot_o2 <- ggpubr::ggarrange(
   widths = c(2, 1, 1, 1)
 )
 big_plot_o2
+```
+
+
+## Plots: Compariong OTHER scores to signature + random background
+
+#### Boxplots 
+
+```{r base_plot_bp1_o1_signrand}
+base_plot_bp1_o1_signrand <- ggplot2::ggplot(
+  vis_df_mmms_signrand_o1,
+  aes(y = type_y, 
+      x =  number,
+      fill = type_fill,
+      color = type_fill,
+      pattern = type_fill,
+      pattern_alpha = type_fill))+
+  ggpattern::geom_col_pattern(
+    #color = NA, 
+    pattern_angle = 110,
+    pattern_fill = pattern_fill_color,
+    pattern_colour = pattern_line_colour,
+    pattern_density = pattern_density_val,
+    pattern_spacing = pattern_spacing_val
+  )+
+  ggplot2::scale_fill_manual(values = col_cons_long)+
+  ggplot2::scale_color_manual(values = col_cons_long)+
+  ggpattern::scale_pattern_alpha_manual(
+    values = c("conserved identity signature" = 0,
+               "BL6 markers" = 0, 
+               "random genes" = 1)
+  )
+base_plot_bp1_o1_signrand
+```
+
+```{r theme_plot_bp1_o1_signrand}
+theme_plot_bp1_o1_signrand <- base_plot_bp1_o1_signrand+
+  theme_all+
+  ggplot2::scale_x_continuous(
+    breaks=c(0, 400, 800),
+    position = "top", 
+    limits = c(0, max_genes))+
+  ggplot2::theme(
+    plot.title = element_text(
+      hjust = 0.5,
+      size = axis_title_size),
+    legend.position = "none",
+    axis.title = element_blank(),
+    axis.text.y = element_text(
+      hjust = 0))+
+  ggplot2::ggtitle(nr_genes_title)
+```
+
+```{r base_plot_bp2_o2_signrand}
+base_plot_bp2_o2_signrand <- ggplot2::ggplot(
+  vis_df_mmms_signrand_o2,
+  aes(y = type_y, 
+      x =  number,
+      fill = type_fill,
+      color = type_fill,
+      pattern = type_fill,
+      pattern_alpha = type_fill))+
+  ggpattern::geom_col_pattern(
+    #color = NA, 
+    pattern_angle = 110,
+    pattern_fill = pattern_fill_color,
+    pattern_colour = pattern_line_colour,
+    pattern_density = pattern_density_val,
+    pattern_spacing = pattern_spacing_val
+  )+
+  ggplot2::scale_fill_manual(values = col_cons_long)+
+  ggplot2::scale_color_manual(values = col_cons_long)+
+  ggpattern::scale_pattern_alpha_manual(
+    values = c("conserved identity signature" = 0,
+               "BL6 markers" = 0, 
+               "random genes" = 1)
+  )
+base_plot_bp2_o2_signrand
+```
+
+```{r theme_plot_bp2_o2_signrand}
+theme_plot_bp2_o2_signrand <- base_plot_bp2_o2_signrand+
+  theme_all+
+  ggplot2::scale_x_continuous(
+    breaks=c(0, 400, 800),
+    position = "top", 
+    limits = c(0, max_genes))+
+  ggplot2::theme(
+    plot.title = element_text(
+      hjust = 0.5,
+      size = axis_title_size),
+    legend.position = "none",
+    axis.title = element_blank(),
+    axis.text.y = element_text(
+      hjust = 0))+
+  ggplot2::ggtitle(nr_genes_title)
+```
+
+#### Adjusted Rand index
+
+```{r base_plot_ai1_o1_signrand}
+base_plot_ai1_o1_signrand <- make_pattern_density_plot(
+  score_df = score_df_mmms_score_1_o1, # the actual score is the same as before
+  perm_score_df = psdf_mmms_signrand_score_1_o1,
+  color_cons = col_cons_long["BL6 markers"],
+  ylabel = "BL6 markers"
+)
+base_plot_ai1_o1_signrand
+```
+
+```{r theme_plot_ai1_o1_signrand}
+theme_plot_ai1_o1_signrand <- base_plot_ai1_o1_signrand+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.text.x = element_text(hjust = 0.5),
+    axis.text.y = element_blank(),
+    axis.title = element_blank(),
+    plot.title = element_text(
+      hjust = 0.5,
+      size = axis_title_size))+
+  ggplot2::scale_x_continuous(
+    breaks=c(0, 0.5, 1),
+    position = "top", 
+    limits = c(score1_min, score1_max))+
+  ggplot2::ggtitle(score1_long) 
+```
+
+```{r base_plot_ai2_o2_signrand}
+base_plot_ai2_o2_signrand <- make_pattern_density_plot(
+  score_df = score_df_mmms_score_1_o2, # the actual score is the same as before
+  perm_score_df = psdf_mmms_signrand_score_1_o2,
+  color_cons = col_cons_long["BL6 markers"],
+  ylabel = "BL6 markers"
+)
+base_plot_ai2_o2_signrand
+```
+
+```{r theme_plot_ai2_o2_signrand}
+theme_plot_ai2_o2_signrand <- base_plot_ai2_o2_signrand+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.text.x = element_text(hjust = 0.5),
+    axis.text.y = element_blank(),
+    axis.title = element_blank(),
+    plot.title = element_text(
+      hjust = 0.5,
+      size = axis_title_size))+
+  ggplot2::scale_x_continuous(
+    breaks=c(0, 0.5, 1),
+    position = "top", 
+    limits = c(score1_min, score1_max))+
+  ggplot2::ggtitle(score1_long) 
+```
+
+#### Variation information
+
+```{r base_plot_vi1_o1_signrand}
+base_plot_vi1_o1_signrand <- make_pattern_density_plot(
+  score_df = score_df_mmms_score_2_o1,
+  perm_score_df = psdf_mmms_signrand_score_2_o1,
+  color_cons = col_cons_long["BL6 markers"],
+  ylabel = "BL6 markers"
+)
+base_plot_vi1_o1_signrand
+```
+
+```{r theme_plot_vi1_o1_signrand}
+theme_plot_vi1_o1_signrand <- base_plot_vi1_o1_signrand+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.text.x = element_text(hjust = 0.5),
+    axis.text.y = element_blank(),
+    axis.title = element_blank(),
+    plot.title = element_text(
+      hjust = 0.5,
+      size = axis_title_size))+
+  ggplot2::scale_x_continuous(
+    breaks=c(-5, -2.5, 0),
+    position = "top", 
+    limits = c(score2_min, score2_max))+
+  ggplot2::ggtitle(base::paste0("0-", score2_long))
+```
+
+```{r base_plot_vi2_o2_signrand}
+base_plot_vi2_o2_signrand <- make_pattern_density_plot(
+  score_df = score_df_mmms_score_2_o2,
+  perm_score_df = psdf_mmms_signrand_score_2_o2,
+  color_cons = col_cons_long["BL6 markers"],
+  ylabel = "BL6 markers"
+)
+base_plot_vi2_o2_signrand
+```
+
+```{r theme_plot_vi2_o2_signrand}
+theme_plot_vi2_o2_signrand <- base_plot_vi2_o2_signrand+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.text.x = element_text(hjust = 0.5),
+    axis.text.y = element_blank(),
+    axis.title = element_blank(),
+    plot.title = element_text(
+      hjust = 0.5,
+      size = axis_title_size))+
+  ggplot2::scale_x_continuous(
+    breaks=c(-5, -2.5, 0),
+    position = "top", 
+    limits = c(score2_min, score2_max))+
+  ggplot2::ggtitle(base::paste0("0-", score2_long))
+```
+
+#### Mean prop (Score 3)
+
+```{r base_plot_mp1_o1_signrand}
+base_plot_mp1_o1_signrand <- make_pattern_density_plot(
+  score_df = score_df_mmms_score_3_o1,
+  perm_score_df = psdf_mmms_signrand_score_3_o1,
+  color_cons = col_cons_long["BL6 markers"],
+  ylabel = "BL6 markers"
+)
+base_plot_mp1_o1_signrand
+```
+
+```{r theme_plot_mp1_o1_signrand}
+theme_plot_mp1_o1_signrand <- base_plot_mp1_o1_signrand+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.text.x = element_text(hjust = 0.5),
+    axis.text.y = element_blank(),
+    axis.title = element_blank(),
+    plot.title = element_text(
+      hjust = 0.5,
+      size = axis_title_size))+
+  ggplot2::scale_x_continuous(
+    breaks=c(0, 0.2, 0.4),
+    position = "top", 
+    limits = c(score3_min, score3_max))+
+  ggplot2::ggtitle(score3_long) 
+```
+
+```{r base_plot_mp2_o2_signrand}
+base_plot_mp2_o2_signrand <- make_pattern_density_plot(
+  score_df = score_df_mmms_score_3_o2,
+  perm_score_df = psdf_mmms_signrand_score_3_o2,
+  color_cons = col_cons_long["BL6 markers"],
+  ylabel = "BL6 markers"
+)
+base_plot_mp2_o2_signrand
+```
+
+```{r theme_plot_mp1_o1_signrand}
+theme_plot_mp2_o2_signrand <- base_plot_mp2_o2_signrand+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.text.x = element_text(hjust = 0.5),
+    axis.text.y = element_blank(),
+    axis.title = element_blank(),
+    plot.title = element_text(
+      hjust = 0.5,
+      size = axis_title_size))+
+  ggplot2::scale_x_continuous(
+    breaks=c(0, 0.2, 0.4),
+    position = "top", 
+    limits = c(score3_min, score3_max))+
+  ggplot2::ggtitle(score3_long) 
+```
+
+### Assemble
+
+```{r assemble_signrand}
+
+plot_bp_signrand <- ggpubr::ggarrange(
+  ncol = 1,
+  heights = c(1.8, 1),
+  align = "v",
+  theme_plot_bp1_o1_signrand,
+  theme_plot_bp2_o2_signrand+ggplot2::theme(
+    plot.title = element_blank(),
+    axis.text.x = element_blank(),
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.x = element_blank())
+)
+
+plot_ai_signrand <- ggpubr::ggarrange(
+  ncol = 1,
+  heights = c(1.8, 1),
+  align = "v",
+  theme_plot_ai1_o1_signrand,
+  theme_plot_ai2_o2_signrand+ggplot2::theme(
+    plot.title = element_blank(),
+    axis.text.x = element_blank(),
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.x = element_blank())
+)
+
+plot_vi_signrand <- ggpubr::ggarrange(
+  ncol = 1,
+  heights = c(1.8, 1),
+  align = "v",
+  theme_plot_vi1_o1_signrand,
+  theme_plot_vi2_o2_signrand+ggplot2::theme(
+    plot.title = element_blank(),
+    axis.text.x = element_blank(),
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.x = element_blank())
+)
+
+plot_mp_signrand <- ggpubr::ggarrange(
+  ncol = 1,
+  heights = c(1.8, 1),
+  align = "v",
+  theme_plot_mp1_o1_signrand,
+  theme_plot_mp2_o2_signrand+ggplot2::theme(
+    plot.title = element_blank(),
+    axis.text.x = element_blank(),
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.x = element_blank())
+)
+
+```
+
+```{r big_plot_signrand, fig.width = 12, fig.height = 3}
+big_plot_signrand <- ggpubr::ggarrange(
+  ncol = 4,
+  align = "hv",
+  plot_bp_signrand,
+  plot_ai_signrand,
+  plot_vi_signrand,
+  plot_mp_signrand, 
+  widths = c(2, 1, 1, 1)
+)
+big_plot_signrand
+```
+
+## Assemble ALL
+
+```{r assemble_signrand, fig.height = 20, fig.width = 5}
+
+other_than_1 <- 1.6
+
+plot_bp_all <- ggpubr::ggarrange(
+  ncol = 1,
+  heights = c(other_than_1, 1, 1, other_than_1, 1, 1, 1, other_than_1, 1),
+  align = "v",
+  theme_plot_bp1_own,
+  theme_plot_bp2_own,
+  theme_plot_bp3_own,  
+  theme_plot_bp1_o1,
+  theme_plot_bp1_o2+ggplot2::theme(
+    plot.title = element_blank(),
+    axis.text.x = element_blank(),
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.x = element_blank()),
+  theme_plot_bp3_o1,
+  theme_plot_bp3_o2,
+  theme_plot_bp1_o1_signrand,
+  theme_plot_bp2_o2_signrand+ggplot2::theme(
+    plot.title = element_blank(),
+    axis.text.x = element_blank(),
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.x = element_blank())
+)
+
+plot_ai_all <- ggpubr::ggarrange(
+  ncol = 1,
+  heights = c(other_than_1, 1, 1, other_than_1, 1, 1, 1, other_than_1, 1),
+  align = "v",
+  theme_plot_ai1_own,
+  theme_plot_ai2_own,
+  theme_plot_ai3_own,  
+  theme_plot_ai1_o1,
+  theme_plot_ai1_o2+ggplot2::theme(
+    plot.title = element_blank(),
+    axis.text.x = element_blank(),
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.x = element_blank()),
+  theme_plot_ai3_o1,
+  theme_plot_ai3_o2,
+  theme_plot_ai1_o1_signrand,
+  theme_plot_ai2_o2_signrand+ggplot2::theme(
+    plot.title = element_blank(),
+    axis.text.x = element_blank(),
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.x = element_blank())
+)
+
+plot_vi_all <- ggpubr::ggarrange(
+  ncol = 1,
+  heights = c(other_than_1, 1, 1, other_than_1, 1, 1, 1, other_than_1, 1),
+  align = "v",
+  theme_plot_vi1_own,
+  theme_plot_vi2_own,
+  theme_plot_vi3_own,  
+  theme_plot_vi1_o1,
+  theme_plot_vi1_o2+ggplot2::theme(
+    plot.title = element_blank(),
+    axis.text.x = element_blank(),
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.x = element_blank()),
+  theme_plot_vi3_o1,
+  theme_plot_vi3_o2,
+  theme_plot_vi1_o1_signrand,
+  theme_plot_vi2_o2_signrand+ggplot2::theme(
+    plot.title = element_blank(),
+    axis.text.x = element_blank(),
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.x = element_blank())
+)
+
+plot_mp_all <- ggpubr::ggarrange(
+  ncol = 1,
+  heights = c(other_than_1, 1, 1, other_than_1, 1, 1, 1, other_than_1, 1),
+  align = "v",
+  theme_plot_mp1_own,
+  theme_plot_mp2_own,
+  theme_plot_mp3_own,  
+  theme_plot_mp1_o1,
+  theme_plot_mp1_o2+ggplot2::theme(
+    plot.title = element_blank(),
+    axis.text.x = element_blank(),
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.x = element_blank()),
+  theme_plot_mp3_o1,
+  theme_plot_mp3_o2,
+  theme_plot_mp1_o1_signrand,
+  theme_plot_mp2_o2_signrand+ggplot2::theme(
+    plot.title = element_blank(),
+    axis.text.x = element_blank(),
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title.x = element_blank())
+)
+```
+
+```{r big_plot_ALL, fig.width = 12, fig.height = 13}
+big_plot_ALL <- ggpubr::ggarrange(
+  ncol = 4,
+  align = "hv",
+  plot_bp_all,
+  plot_ai_all,
+  plot_vi_all,
+  plot_mp_all, 
+  widths = c(2, 1, 1, 1)
+)
+big_plot_ALL
+```
+
+```{r big_plot_ALL_export}
+pdf(output_pdf_ALL_plot, width = 12, height = 13)
+big_plot_ALL
+dev.off()
 ```
 
 # Own Heatmaps
@@ -2822,7 +3255,7 @@ mark_df <- base::as.data.frame(mat_mark)
 
 mark_df$Var2 <- factor(
   mark_df$Var2,
-  levels = base::rev(c(1, 3, 8, 10, 5, 2, 11, 4, 6, 7, 12, 9)))
+  levels = base::rev(c(1, 3, 9, 5, 2, 6, 4, 7, 10, 8)))
 ```
 
 ```{r mat_mmms}
@@ -2969,22 +3402,22 @@ a_theme_plot <- ggpubr::ggarrange(
 a_theme_plot
 ```
 
-```{r a_assemble, fig.height = 7, fig.width = 3}
+```{r a_assemble, fig.height = 7, fig.width = 3, eval = FALSE, include = FALSE}
 
-a_theme_plot_poster <- ggpubr::ggarrange(
-  ncol = 1,
-  a_mmms_theme_plot,
-  a_sign_theme_plot+
-  ggplot2::theme(
-    axis.text.x = element_text(
-      angle = 90,
-      hjust = 0,
-      vjust = 0.5)),
-  align = "v",
-  heights = c(1, 1.9)
-)
-
-a_theme_plot_poster
+# a_theme_plot_poster <- ggpubr::ggarrange(
+#   ncol = 1,
+#   a_mmms_theme_plot,
+#   a_sign_theme_plot+
+#   ggplot2::theme(
+#     axis.text.x = element_text(
+#       angle = 90,
+#       hjust = 0,
+#       vjust = 0.5)),
+#   align = "v",
+#   heights = c(1, 1.9)
+# )
+# 
+# a_theme_plot_poster
 ```
 
 ```{r a_construct_legend, fig.width = 5, fig.height = 1}
@@ -2993,21 +3426,21 @@ a_legend
 ```
 
 ```{r a_plot_export}
-# pdf(output_pdf_a_plot, width = 3.7, height = 7)
-# a_theme_plot
-# dev.off()
+pdf(output_pdf_heatmap_own_plot, width = 4, height = 7)
+a_theme_plot
+dev.off()
 ```
 
 ```{r a_legend_export}
-pdf(output_pdf_a_legend, width = 5, height = 1)
-a_legend
-dev.off()
+# pdf(output_pdf_a_legend, width = 5, height = 1)
+# a_legend
+# dev.off()
 ```
 
 ```{r a_plot_export_poster}
-pdf(output_pdf_a_plot_poster, width = 3, height = 7)
-a_theme_plot_poster
-dev.off()
+# pdf(output_pdf_a_plot_poster, width = 3, height = 7)
+# a_theme_plot_poster
+# dev.off()
 ```
 
 # Other Heatmaps
@@ -3042,8 +3475,6 @@ sign_df_o1$Var2 <- factor(
   levels = base::rev(c(1, 0, 4, 8, 5, 6, 7, 3, 2)))
 ```
 
-
-
 ### Plot Components Other 1
 
 ```{r mmms_base_plot_o1}
@@ -3053,6 +3484,7 @@ mmms_base_plot_o1 <- ggplot2::ggplot(
       y = Var2,
       fill = Freq))+
   ggplot2::geom_tile()
+mmms_base_plot_o1
 ```
 
 ```{r sign_base_plot_o1}
@@ -3062,6 +3494,7 @@ sign_base_plot_o1 <- ggplot2::ggplot(
       y = Var2,
       fill = Freq))+
   ggplot2::geom_tile()
+sign_base_plot_o1
 ```
 
 ```{r mmms_theme_plot_o1}
@@ -3097,7 +3530,6 @@ sign_theme_plot_o1 <- sign_base_plot_o1+
   ggplot2::xlab("Original cell types")
 ```
 
-
 ### Assemble
 
 ```{r d_construct, fig.width = 3.2, fig.height = 9.2, eval = FALSE, include = FALSE}
@@ -3117,7 +3549,6 @@ d_theme_plot <- ggpubr::ggarrange(
 
 d_theme_plot
 ```
-
 
 ### Prep Other 2
 
@@ -3151,7 +3582,6 @@ sign_df_o2$Var2 <- factor(
   levels = base::rev(c(3, 4, 6, 8, 9, 7, 5, 2, 11, 10, 1, 0)))
 ```
 
-
 ### Plot Other 2
 
 ```{r mmms_base_plot_o2}
@@ -3161,6 +3591,7 @@ mmms_base_plot_o2 <- ggplot2::ggplot(
       y = Var2,
       fill = Freq))+
   ggplot2::geom_tile()
+mmms_base_plot_o2
 ```
 
 ```{r sign_base_plot_o2}
@@ -3170,6 +3601,7 @@ sign_base_plot_o2 <- ggplot2::ggplot(
       y = Var2,
       fill = Freq))+
   ggplot2::geom_tile()
+sign_base_plot_o2
 ```
 
 ```{r mmms_theme_plot_o2}
@@ -3205,7 +3637,6 @@ sign_theme_plot_o2 <- mmms_base_plot_o2+
   ggplot2::xlab("Original cell types")
 ```
 
-
 ### Assemble
 
 ```{r f_assemble, fig.width = 3.2, fig.height = 6, eval = FALSE, include = FALSE}
@@ -3220,7 +3651,6 @@ f_theme_plot <- ggpubr::ggarrange(
 
 f_theme_plot
 ```
-
 
 ### Construct both together
 
@@ -3260,283 +3690,299 @@ sign_plots_title <- annotate_figure(
 
 ```
 
-```{r de_construct2, fig.width = 4, fig.height = 7}
+```{r de_construct2, fig.width = 4, fig.height = 8}
 de_plot <- ggpubr::ggarrange(
   mmms_plots_title,
   sign_plots_title,
   nrow = 2,
   align = "hv",
-  heights = c(1, 3.5)
+  heights = c(1, 3)
 )
 
 de_plot
 ```
 
+```{r output_pdf_heatmaps_others_plot}
+pdf(output_pdf_heatmaps_others_plot, width = 4, height = 8)
+de_plot
+dev.off()
+```
+
+```{r check_corr_pval_df}
+corr_pval_df[
+  corr_pval_df$conservation_level == "mmusall_markers" &
+    corr_pval_df$condition == "mus_tm_bonemarrow" &
+    corr_pval_df$comparison == "mmms-vs-signrand",]
+```
+
+
 # Corrected Pval Plot
 
 ### Prep
 
-```{r pval_general}
+```{r pval_general, eval = FALSE, include = FALSE}
 
 # add more columns for nicer visualisation
-corr_pval_df$color_id <- vector(length = nrow(corr_pval_df))
-corr_pval_df$color_id[corr_pval_df$pval_corrected < 0.05] <- "pval adj. < 0.05"
-corr_pval_df$color_id[corr_pval_df$pval_corrected == 0] <- "pval adj. = 0"
-corr_pval_df$color_id[corr_pval_df$pval_corrected >= 0.05] <- "non-significant"
-
-corr_pval_df$cons_level_long <- vector(length = nrow(corr_pval_df))
-corr_pval_df$cons_level_long[
-  corr_pval_df$conservation_level == "conserved_signature"] <- "conserved identity signature"
-corr_pval_df$cons_level_long[
-  corr_pval_df$conservation_level == "conserved_markers"] <- "conserved markers"
-corr_pval_df$cons_level_long[
-  corr_pval_df$conservation_level == "mmusall_markers"] <- "BL6 markers"
-
-corr_pval_df$score_long <- vector(length = nrow(corr_pval_df))
-corr_pval_df$score_long[
-  corr_pval_df$type == "adjusted_rand_index"] <- "Adjusted rand index"
-corr_pval_df$score_long[
-  corr_pval_df$type == "variation_information"] <- "Variation of information"
-corr_pval_df$score_long[
-  corr_pval_df$type == "mean_prop_cells_cluster"] <- "Mean prop. cells/cluster"
-
-corr_pval_df$cons_level_long <- factor(
-  corr_pval_df$cons_level_long, levels = c(
-    "conserved identity signature",
-    "conserved markers",
-    "BL6 markers"))
-
-corr_pval_df$cons_level_long_rev <- corr_pval_df$cons_level_long
-corr_pval_df$cons_level_long_rev <- factor(
-  corr_pval_df$cons_level_long_rev, levels = rev(c(
-    "conserved identity signature",
-    "conserved markers",
-    "BL6 markers")))
-
-corr_pval_df$score_long <- factor(
-  corr_pval_df$score_long, levels = c(
-    "Adjusted rand index",
-    "Variation of information",
-    "Mean prop. cells/cluster"))
-
-corr_pval_df$color_id <- factor(
-  corr_pval_df$color_id, levels = rev(c(
-    "non-significant",
-    "pval adj. < 0.05",
-    "pval adj. = 0")))
-
-color_significance <- c("non-significant" = "grey70",
-                        "pval adj. < 0.05" = "black", 
-                        "pval adj. = 0" = "blue")
+# corr_pval_df$color_id <- vector(length = nrow(corr_pval_df))
+# corr_pval_df$color_id[corr_pval_df$pval_corrected < 0.05] <- "pval adj. < 0.05"
+# corr_pval_df$color_id[corr_pval_df$pval_corrected == 0] <- "pval adj. = 0"
+# corr_pval_df$color_id[corr_pval_df$pval_corrected >= 0.05] <- "non-significant"
+# 
+# corr_pval_df$cons_level_long <- vector(length = nrow(corr_pval_df))
+# corr_pval_df$cons_level_long[
+#   corr_pval_df$conservation_level == "conserved_signature"] <- "conserved identity signature"
+# corr_pval_df$cons_level_long[
+#   corr_pval_df$conservation_level == "conserved_markers"] <- "conserved markers"
+# corr_pval_df$cons_level_long[
+#   corr_pval_df$conservation_level == "mmusall_markers"] <- "BL6 markers"
+# 
+# corr_pval_df$score_long <- vector(length = nrow(corr_pval_df))
+# corr_pval_df$score_long[
+#   corr_pval_df$type == "adjusted_rand_index"] <- "Adjusted Rand index"
+# corr_pval_df$score_long[
+#   corr_pval_df$type == "variation_information"] <- "Variation of information"
+# corr_pval_df$score_long[
+#   corr_pval_df$type == "mean_prop_cells_cluster"] <- "Mean prop. cells/cluster"
+# 
+# corr_pval_df$cons_level_long <- factor(
+#   corr_pval_df$cons_level_long, levels = c(
+#     "conserved identity signature",
+#     "conserved markers",
+#     "BL6 markers"))
+# 
+# corr_pval_df$cons_level_long_rev <- corr_pval_df$cons_level_long
+# corr_pval_df$cons_level_long_rev <- factor(
+#   corr_pval_df$cons_level_long_rev, levels = rev(c(
+#     "conserved identity signature",
+#     "conserved markers",
+#     "BL6 markers")))
+# 
+# corr_pval_df$score_long <- factor(
+#   corr_pval_df$score_long, levels = c(
+#     "Adjusted Rand index",
+#     "Variation of information",
+#     "Mean prop. cells/cluster"))
+# 
+# corr_pval_df$color_id <- factor(
+#   corr_pval_df$color_id, levels = rev(c(
+#     "non-significant",
+#     "pval adj. < 0.05",
+#     "pval adj. = 0")))
+# 
+# color_significance <- c("non-significant" = "grey70",
+#                         "pval adj. < 0.05" = "black", 
+#                         "pval adj. = 0" = "blue")
 ```
 
 ### OWN
 
-```{r pval_own1}
-corr_pval_df_sub <- corr_pval_df[corr_pval_df$condition == "hsc",]
+```{r pval_own1, eval = FALSE, include = FALSE}
+# corr_pval_df_sub <- corr_pval_df[corr_pval_df$condition == "hsc",]
 ```
 
-```{r pval_own2}
-corr_pval_df_sub
+```{r pval_own2, eval = FALSE, include = FALSE}
+# corr_pval_df_sub
 ```
 
-```{r pval_base_plot_owm, fig.width = 10, fig.height= 3} 
-pval_base_plot_owm <- ggplot2::ggplot(
-  corr_pval_df_sub,
-  aes(y = cons_level_long, 
-      x = nr_genes_used,
-      color = color_id, 
-      size = 10^-pval_corrected))+
-  ggplot2::geom_point(alpha = 1)+
-  ggplot2::facet_grid(cols = vars(corr_pval_df_sub$score_long),
-                      switch = "y")
+```{r pval_base_plot_owm, fig.width = 10, fig.height= 3l, eval = FALSE, include = FALSE} 
+# pval_base_plot_owm <- ggplot2::ggplot(
+#   corr_pval_df_sub,
+#   aes(y = cons_level_long, 
+#       x = nr_genes_used,
+#       color = color_id, 
+#       size = 10^-pval_corrected))+
+#   ggplot2::geom_point(alpha = 1)+
+#   ggplot2::facet_grid(cols = vars(corr_pval_df_sub$score_long),
+#                       switch = "y")
 ```
 
-```{r pval_theme_plot_own, fig.width = 9, fig.height = 2} 
-pval_theme_plot_own <- pval_base_plot_owm+
-  theme_all+
-  ggplot2::scale_x_continuous(
-    position = "bottom",
-    limits = c(0, max_genes),
-    breaks = c(0, 200, 400, 600, 800))+
-  ggplot2::scale_color_manual(values = color_significance)+
-  ggplot2::theme(
-    axis.text.y = element_text(
-      hjust = 0),
-    strip.text.x = element_text(
-      size = axis_title_size,
-      color = axis_title_color,
-      face = axis_title_face),
-    strip.background = element_blank(),
-    axis.title.y = element_blank(),
-    strip.placement = "outside",
-    legend.position = "none")+
-  ggplot2::xlab("# re-clustering genes")
-pval_theme_plot_own
+```{r pval_theme_plot_own, fig.width = 9, fig.height = 2l, eval = FALSE, include = FALSE} 
+# pval_theme_plot_own <- pval_base_plot_owm+
+#   theme_all+
+#   ggplot2::scale_x_continuous(
+#     position = "bottom",
+#     limits = c(0, max_genes),
+#     breaks = c(0,  400, 800))+
+#   ggplot2::scale_color_manual(values = color_significance)+
+#   ggplot2::theme(
+#     axis.text.y = element_text(
+#       hjust = 0),
+#     strip.text.x = element_text(
+#       size = axis_title_size,
+#       color = axis_title_color,
+#       face = axis_title_face),
+#     strip.background = element_blank(),
+#     axis.title.y = element_blank(),
+#     strip.placement = "outside",
+#     legend.position = "none")+
+#   ggplot2::xlab("# re-clustering genes")
+# pval_theme_plot_own
 ```
 
 ### OTHERS
 
 #### VS RAND
 
-```{r pval_others}
-
-corr_pval_df_others <- corr_pval_df[
-  corr_pval_df$condition %in%
-    c("mus_weinreb_hspc", "mus_tm_bonemarrow"),]
-
-corr_pval_df_others <- corr_pval_df_others[
-  corr_pval_df_others$conservation_level != "conserved_markers",]
-
-corr_pval_df_others <- corr_pval_df_others[
-  corr_pval_df_others$comparison != "mmms-vs-signrand",]
-
-corr_pval_df_others$condition_long <- vector(length = nrow(corr_pval_df_others))
-corr_pval_df_others$condition_long[
-  corr_pval_df_others$condition == "mus_weinreb_hspc"] <- "Weinreb et al."
-corr_pval_df_others$condition_long[
-  corr_pval_df_others$condition == "mus_tm_bonemarrow"] <- "tabula muris"
-
-corr_pval_df_others$condition_long <- factor(
-  corr_pval_df_others$condition_long, levels = rev(c(
-    "tabula muris",
-    "Weinreb et al.")))
+```{r pval_othersl, eval = FALSE, include = FALSE}
+# 
+# corr_pval_df_others <- corr_pval_df[
+#   corr_pval_df$condition %in%
+#     c("mus_weinreb_hspc", "mus_tm_bonemarrow"),]
+# 
+# corr_pval_df_others <- corr_pval_df_others[
+#   corr_pval_df_others$conservation_level != "conserved_markers",]
+# 
+# corr_pval_df_others <- corr_pval_df_others[
+#   corr_pval_df_others$comparison != "mmms-vs-signrand",]
+# 
+# corr_pval_df_others$condition_long <- vector(length = nrow(corr_pval_df_others))
+# corr_pval_df_others$condition_long[
+#   corr_pval_df_others$condition == "mus_weinreb_hspc"] <- "Weinreb et al."
+# corr_pval_df_others$condition_long[
+#   corr_pval_df_others$condition == "mus_tm_bonemarrow"] <- "tabula muris"
+# 
+# corr_pval_df_others$condition_long <- factor(
+#   corr_pval_df_others$condition_long, levels = rev(c(
+#     "tabula muris",
+#     "Weinreb et al.")))
 ```
 
-```{r pval_base_plot_others, fig.width = 10, fig.height= 3} 
-pval_base_plot_others <- ggplot2::ggplot(
-  corr_pval_df_others,
-  aes(y = condition_long, 
-      x = nr_genes_used,
-      color = color_id, 
-      size = 10^-pval_corrected))+
-  ggplot2::geom_point(alpha = 1)+
-  ggplot2::facet_grid(cols = vars(corr_pval_df_others$score_long),
-                      switch = "y",
-                      rows = vars(corr_pval_df_others$cons_level_long_rev))
+```{r pval_base_plot_others, fig.width = 10, fig.height= 3l, eval = FALSE, include = FALSE} 
+# pval_base_plot_others <- ggplot2::ggplot(
+#   corr_pval_df_others,
+#   aes(y = condition_long, 
+#       x = nr_genes_used,
+#       color = color_id, 
+#       size = 10^-pval_corrected))+
+#   ggplot2::geom_point(alpha = 1)+
+#   ggplot2::facet_grid(cols = vars(corr_pval_df_others$score_long),
+#                       switch = "y",
+#                       rows = vars(corr_pval_df_others$cons_level_long_rev))
 ```
 
-```{r pval_theme_plot_others, fig.width = 10, fig.height = 2} 
-pval_theme_plot_others <- pval_base_plot_others+
-  theme_all+
-  ggplot2::scale_x_continuous(
-    position = "bottom",
-    limits = c(0, max_genes),
-    breaks = c(0, 200, 400, 600, 800))+
-  ggplot2::scale_color_manual(values = color_significance)+
-  ggplot2::theme(
-    axis.text.y = element_text(
-      hjust = 0),
-    strip.text.x = element_text(
-      size = axis_title_size,
-      color = axis_title_color,
-      face = axis_title_face),
-    strip.text.y.left = element_text(
-      size = axis_text_size,
-      color = axis_text_color,
-      face = axis_title_face,
-      angle = 0,
-      hjust = 0),
-    strip.background = element_blank(),
-    axis.title.y = element_blank(),
-    strip.placement = "outside",
-    legend.position = "none")+
-  ggplot2::xlab("# re-clustering genes")
-pval_theme_plot_others
+```{r pval_theme_plot_others, fig.width = 10, fig.height = 2l, eval = FALSE, include = FALSE} 
+# pval_theme_plot_others <- pval_base_plot_others+
+#   theme_all+
+#   ggplot2::scale_x_continuous(
+#     position = "bottom",
+#     limits = c(0, max_genes),
+#     breaks = c(0,  400, 800))+
+#   ggplot2::scale_color_manual(values = color_significance)+
+#   ggplot2::theme(
+#     axis.text.y = element_text(
+#       hjust = 0),
+#     strip.text.x = element_text(
+#       size = axis_title_size,
+#       color = axis_title_color,
+#       face = axis_title_face),
+#     strip.text.y.left = element_text(
+#       size = axis_text_size,
+#       color = axis_text_color,
+#       face = axis_title_face,
+#       angle = 0,
+#       hjust = 0),
+#     strip.background = element_blank(),
+#     axis.title.y = element_blank(),
+#     strip.placement = "outside",
+#     legend.position = "none")+
+#   ggplot2::xlab("# re-clustering genes")
+# pval_theme_plot_others
 ```
 
 #### VS SIGN-RAND
 
-```{r pval_others2}
+```{r pval_others2l, eval = FALSE, include = FALSE}
 
-corr_pval_df_others2 <- corr_pval_df[
-  corr_pval_df$condition %in%
-    c("mus_weinreb_hspc", "mus_tm_bonemarrow"),]
-
-corr_pval_df_others2 <- corr_pval_df_others2[
-  corr_pval_df_others$conservation_level != "conserved_markers",]
-
-corr_pval_df_others2 <- corr_pval_df_others2[
-  corr_pval_df_others2$comparison == "mmms-vs-signrand",]
-
-corr_pval_df_others2$condition_long <- vector(length = nrow(corr_pval_df_others2))
-corr_pval_df_others2$condition_long[
-  corr_pval_df_others2$condition == "mus_weinreb_hspc"] <- "Weinreb et al."
-corr_pval_df_others2$condition_long[
-  corr_pval_df_others2$condition == "mus_tm_bonemarrow"] <- "tabula muris"
-
-corr_pval_df_others2$condition_long <- factor(
-  corr_pval_df_others2$condition_long, levels = rev(c(
-    "tabula muris",
-    "Weinreb et al.")))
+# corr_pval_df_others2 <- corr_pval_df[
+#   corr_pval_df$condition %in%
+#     c("mus_weinreb_hspc", "mus_tm_bonemarrow"),]
+# 
+# corr_pval_df_others2 <- corr_pval_df_others2[
+#   corr_pval_df_others$conservation_level != "conserved_markers",]
+# 
+# corr_pval_df_others2 <- corr_pval_df_others2[
+#   corr_pval_df_others2$comparison == "mmms-vs-signrand",]
+# 
+# corr_pval_df_others2$condition_long <- vector(length = nrow(corr_pval_df_others2))
+# corr_pval_df_others2$condition_long[
+#   corr_pval_df_others2$condition == "mus_weinreb_hspc"] <- "Weinreb et al."
+# corr_pval_df_others2$condition_long[
+#   corr_pval_df_others2$condition == "mus_tm_bonemarrow"] <- "tabula muris"
+# 
+# corr_pval_df_others2$condition_long <- factor(
+#   corr_pval_df_others2$condition_long, levels = rev(c(
+#     "tabula muris",
+#     "Weinreb et al.")))
 ```
 
-```{r pval_base_plot_others2, fig.width = 10, fig.height= 3} 
-pval_base_plot_others2 <- ggplot2::ggplot(
-  corr_pval_df_others2,
-  aes(y = condition_long, 
-      x = nr_genes_used,
-      color = color_id, 
-      size = 10^-pval_corrected))+
-  ggplot2::geom_point(alpha = 1)+
-  ggplot2::facet_grid(cols = vars(corr_pval_df_others2$score_long),
-                      switch = "y")
+```{r pval_base_plot_others2, fig.width = 10, fig.height= 3l, eval = FALSE, include = FALSE} 
+# pval_base_plot_others2 <- ggplot2::ggplot(
+#   corr_pval_df_others2,
+#   aes(y = condition_long, 
+#       x = nr_genes_used,
+#       color = color_id, 
+#       size = 10^-pval_corrected))+
+#   ggplot2::geom_point(alpha = 1)+
+#   ggplot2::facet_grid(cols = vars(corr_pval_df_others2$score_long),
+#                       switch = "y")
 ```
 
-```{r pval_theme_plot_others2, fig.width = 8, fig.height = 2} 
-pval_theme_plot_others2 <- pval_base_plot_others2+
-  theme_all+
-  ggplot2::scale_x_continuous(
-    position = "bottom",
-    limits = c(0, max_genes),
-    breaks = c(0, 200, 400, 600, 800))+
-  ggplot2::scale_color_manual(values = color_significance)+
-  ggplot2::theme(
-    axis.text.y = element_text(
-      hjust = 0),
-    strip.text.x = element_text(
-      size = axis_title_size,
-      color = axis_title_color,
-      face = axis_title_face),
-    strip.text.y.left = element_text(
-      size = axis_text_size,
-      color = axis_text_color,
-      face = axis_title_face,
-      angle = 0,
-      hjust = 0),
-    strip.background = element_blank(),
-    axis.title.y = element_blank(),
-    strip.placement = "outside",
-    legend.position = "none")+
-  ggplot2::xlab("# re-clustering genes")
-pval_theme_plot_others2
+```{r pval_theme_plot_others2, fig.width = 8, fig.height = 2l, eval = FALSE, include = FALSE} 
+# pval_theme_plot_others2 <- pval_base_plot_others2+
+#   theme_all+
+#   ggplot2::scale_x_continuous(
+#     position = "bottom",
+#     limits = c(0, max_genes),
+#     breaks = c(0,  400, 800))+
+#   ggplot2::scale_color_manual(values = color_significance)+
+#   ggplot2::theme(
+#     axis.text.y = element_text(
+#       hjust = 0),
+#     strip.text.x = element_text(
+#       size = axis_title_size,
+#       color = axis_title_color,
+#       face = axis_title_face),
+#     strip.text.y.left = element_text(
+#       size = axis_text_size,
+#       color = axis_text_color,
+#       face = axis_title_face,
+#       angle = 0,
+#       hjust = 0),
+#     strip.background = element_blank(),
+#     axis.title.y = element_blank(),
+#     strip.placement = "outside",
+#     legend.position = "none")+
+#   ggplot2::xlab("# re-clustering genes")
+# pval_theme_plot_others2
 ```
 
-```{r pval_legend_base_plot}
-pval_legend_base_plot <- ggplot2::ggplot(
-  corr_pval_df,
-  aes(y = condition, 
-      x = nr_genes_used,
-      color = color_id, 
-      size = 10^-pval_corrected))+
-  ggplot2::geom_point(alpha = 1)+
-  ggplot2::facet_grid(cols = vars(corr_pval_df$score_long),
-                      switch = "y",
-                      rows = vars(corr_pval_df$cons_level_long))
+```{r pval_legend_base_plotl, eval = FALSE, include = FALSE}
+# pval_legend_base_plot <- ggplot2::ggplot(
+#   corr_pval_df,
+#   aes(y = condition, 
+#       x = nr_genes_used,
+#       color = color_id, 
+#       size = 10^-pval_corrected))+
+#   ggplot2::geom_point(alpha = 1)+
+#   ggplot2::facet_grid(cols = vars(corr_pval_df$score_long),
+#                       switch = "y",
+#                       rows = vars(corr_pval_df$cons_level_long))
 ```
 
-```{r pval_legend_theme_plot, fig.width = 4, fig.height= 4}
-pval_legend_theme_plot <- pval_legend_base_plot+
-  theme_all+
-  ggplot2::scale_color_manual("", values = color_significance)+
-  ggplot2::scale_size_continuous("10 adjusted p val")
-
-pval_legend_theme <- ggpubr::get_legend(pval_legend_theme_plot)
-
-pval_legend <- ggpubr::ggarrange(pval_legend_theme)
-pval_legend
+```{r pval_legend_theme_plot, fig.width = 4, fig.height= 4l, eval = FALSE, include = FALSE}
+# pval_legend_theme_plot <- pval_legend_base_plot+
+#   theme_all+
+#   ggplot2::scale_color_manual("", values = color_significance)+
+#   ggplot2::scale_size_continuous("10 adjusted p val")
+# 
+# pval_legend_theme <- ggpubr::get_legend(pval_legend_theme_plot)
+# 
+# pval_legend <- ggpubr::ggarrange(pval_legend_theme)
+# pval_legend
 ```
 
+
+# UTILS
 
 ```{r sessioninfo}
 utils::sessionInfo()

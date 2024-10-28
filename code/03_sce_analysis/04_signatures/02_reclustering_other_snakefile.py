@@ -494,10 +494,13 @@ if RUN_PVAL_CORRECTION:
   rule pval_correction:
       input:
           own_sign_rand = expand(OUTPUT_DAT_TEMP_01 + "/08_expp/sign-vs-rand_{fraction}", fraction = fractions),
-          own_mark_signrand = expand(OUTPUT_DAT_TEMP_01 + "/08_expp/mark-vs-signrand_{fraction}", fraction = fractions),
-          own_mmms_signrand = expand(OUTPUT_DAT_TEMP_01 + "/08_expp/mmms-vs-signrand_{fraction}", fraction = fractions),
+          own_mmms_rand = expand(OUTPUT_DAT_TEMP_01 + "/08_expp/mmms-vs-rand_{fraction}", fraction = fractions),
+          own_mark_rand = expand(OUTPUT_DAT_TEMP_01 + "/08_expp/mark-vs-rand_{fraction}", fraction = fractions),
+          #own_mark_signrand = expand(OUTPUT_DAT_TEMP_01 + "/08_expp/mark-vs-signrand_{fraction}", fraction = fractions),
+          #own_mmms_signrand = expand(OUTPUT_DAT_TEMP_01 + "/08_expp/mmms-vs-signrand_{fraction}", fraction = fractions),
           other_sign_rand = expand(OUTPUT_DAT_TEMP + "/08_expp/sign-vs-rand_{dataset}", dataset = datasets_other),
-          other_mark_signrand = expand(OUTPUT_DAT_TEMP  + "/08_expp/mark-vs-signrand_{dataset}", dataset = datasets_other),
+          other_mmms_rand = expand(OUTPUT_DAT_TEMP + "/08_expp/mmms-vs-rand_{dataset}", dataset = datasets_other),
+          #other_mark_signrand = expand(OUTPUT_DAT_TEMP  + "/08_expp/mark-vs-signrand_{dataset}", dataset = datasets_other),
           other_mmms_signrand = expand(OUTPUT_DAT_TEMP + "/08_expp/mmms-vs-signrand_{dataset}", dataset = datasets_other)
       output:
           pval_corrected_df = OUTPUT_DAT_TEMP + "/09_crpv/all_corrected_pval"

@@ -376,6 +376,12 @@ de_plot
 dev.off()
 ```
 
+```{r export_bc_plot_pdf}
+pdf(output_pdf_de, width = 13, height = 13)
+de_plot
+dev.off()
+```
+
 ```{r bc_assemble_legends, fig.width = 3, fig.height = 5.1}
 
 d_legend

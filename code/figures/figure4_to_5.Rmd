@@ -230,16 +230,20 @@ source("determine_params.R")
 ```
 
 ```{r export_paths}
-# output_pdf_a_plot <- base::paste0(
-#   base_path, "/manuscript1/figures/figure4_a.pdf")
-# output_pdf_a_legend <- base::paste0(
-#   base_path, "/manuscript1/figures/figure4_a_legend.pdf")
-# output_pdf_bcd_plot <- base::paste0(
-#   base_path, "/manuscript1/figures/figure4_bcd.pdf")
-# output_pdf_e_plot <- base::paste0(
-#   base_path, "/manuscript1/figures/figure4_e.pdf")
-# output_pdf_e_legend <- base::paste0(
-#   base_path, "/manuscript1/figures/figure4_e_legend.pdf")
+output_pdf_a_plot <- base::paste0(
+  base_path_output_temp, "/manuscript1/figures/figure4_a.pdf")
+output_pdf_a_legend <- base::paste0(
+  base_path_output_temp, "/manuscript1/figures/figure4_a_legend.pdf")
+output_pdf_bcd_plot <- base::paste0(
+  base_path_output_temp, "/manuscript1/figures/figure4_bcd.pdf")
+output_pdf_e_plot <- base::paste0(
+  base_path_output_temp, "/manuscript1/figures/figure4_e.pdf")
+output_pdf_e_plot_poster <- base::paste0(
+  base_path_output_temp, "/manuscript1/figures/figure4_e_poster.pdf")
+output_pdf_e_legend <- base::paste0(
+  base_path_output_temp, "/manuscript1/figures/figure4_e_legend.pdf")
+output_pdf_plots_single_poster <- base::paste0(
+  base_path_output_temp, "/manuscript1/figures/figure4_heatmap_poster.pdf")
 ```
 
 ## A Expression heat map
@@ -507,6 +511,51 @@ sign_theme_plot <- sign_base_plot+
   ggplot2::ylab("New clusters")
 ```
 
+```{r mat_mmms}
+mat_mmms <- base::table(
+  sce_str_recl$celltypes, 
+  sce_str_recl$cluster_mmusm)
+
+# normalise per column = new clusters and turn into DF
+for(i in 1:ncol(mat_mmms)){
+  mat_mmms[,i] <- mat_mmms[,i]/base::sum(mat_mmms[,i])
+}
+mmms_df <- base::as.data.frame(mat_mmms)
+
+#manually factorise clusters for nice order
+mmms_df$Var2 <- factor(
+  mmms_df$Var2,
+  levels = base::rev(c(1, 10, 9, 2, 4, 8, 5, 3, 6, 7)))
+```
+
+```{r sign_base_plot}
+mmms_base_plot <- ggplot2::ggplot(
+  mmms_df, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+```
+
+```{r sign_theme_plot}
+mmms_theme_plot <- mmms_base_plot+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.text = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(
+      angle = 90,
+      hjust = 0,
+      vjust = 0.5),
+    axis.ticks.y = element_blank())+
+  ggplot2::scale_fill_gradientn(
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  ggplot2::ylab("New clusters")
+```
+
 ### Other 2
 
 ```{r mat_sign_o2}
@@ -539,6 +588,49 @@ sign_theme_plot_o2 <- sign_base_plot_o2+
   ggplot2::theme(
     legend.position = "none",
     axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    axis.text.x = element_text(
+      angle = 90,
+      hjust = 0,
+      vjust = 0.5),
+    axis.ticks.y = element_blank())+
+  ggplot2::scale_fill_gradientn(
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  ggplot2::xlab("Original cell types")
+```
+
+```{r mat_sign_o2}
+mat_mmms_o2 <- base::table(selected_seu_list_o2$seu_mmms$cell_type, 
+                           selected_seu_list_o2$seu_mmms$seurat_clusters)
+
+# normalise per column = new clusters and turn into DF
+for(i in 1:ncol(mat_mmms_o2)){
+  mat_mmms_o2[,i] <- mat_mmms_o2[,i]/base::sum(mat_mmms_o2[,i])
+}
+mmms_df_o2 <- base::as.data.frame(mat_mmms_o2)
+
+mmms_df_o2$Var2 <- factor(
+  mmms_df_o2$Var2,
+  levels = base::rev(c(0, 3, 11, 5, 7, 10, 9, 8, 12, 6, 4, 2, 1)))
+```
+
+```{r sign_base_plot_o2}
+mmms_base_plot_o2 <- ggplot2::ggplot(
+  mmms_df_o2, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+```
+
+```{r sign_theme_plot_o2}
+mmms_theme_plot_o2 <- mmms_base_plot_o2+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.title = element_blank(),
     axis.text.y = element_blank(),
     axis.text.x = element_text(
       angle = 90,
@@ -597,6 +689,48 @@ sign_theme_plot_o3 <- sign_base_plot_o3+
     breaks = c(0, 0.5, 1))
 ```
 
+```{r mat_mmms_o3}
+mat_mmms_o3 <- base::table(selected_seu_list_o3$seu_mmms$cell_type, 
+                           selected_seu_list_o3$seu_mmms$seurat_clusters)
+
+for(i in 1:ncol(mat_mmms_o3)){
+  mat_mmms_o3[,i] <- mat_mmms_o3[,i]/base::sum(mat_mmms_o3[,i])
+}
+mmms_df_o3 <- base::as.data.frame(mat_mmms_o3)
+
+mmms_df_o3$Var2 <- factor(
+  mmms_df_o3$Var2,
+  levels = base::rev(c(2, 1, 7, 6, 0, 9, 8, 5, 4, 3)))
+```
+
+```{r mmms_base_plot_o3}
+mmms_base_plot_o3 <- ggplot2::ggplot(
+  mmms_df_o3, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+```
+
+```{r mmms_theme_plot_o3}
+mmms_theme_plot_o3 <- mmms_base_plot_o3+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.title = element_blank(),
+    axis.text.y = element_blank(),
+    axis.text.x = element_text(
+      angle = 90,
+      hjust = 0,
+      vjust = 0.5),
+    axis.ticks.y = element_blank())+
+   ggplot2::scale_fill_gradientn(
+    "Proportion of cells per cluster",
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))
+```
+
 ### Assemble
 
 ```{r assemble_bcd, fig.width = 8, fig.height = 6}
@@ -625,55 +759,106 @@ bcd_theme_plot
 dev.off()
 ```
 
+```{r assemble_poster, fig.width = 8, fig.height = 8}
+
+mmms_plots <- ggpubr::ggarrange(
+  ncol = 3,
+  mmms_theme_plot+theme(axis.text.x = element_blank()),
+  mmms_theme_plot_o2+theme(axis.text.x = element_blank()),
+  mmms_theme_plot_o3+theme(axis.text.x = element_blank()))
+
+mmms_theme_plot_together <- ggpubr::annotate_figure(
+  mmms_plots,
+  top = ggpubr::text_grob(
+    "BL6 markers", 
+    color = col_cons_long["BL6 markers"], 
+    face = plot_title_face,
+    size = plot_title_size))
+
+sign_plots <- ggpubr::ggarrange(
+  ncol = 3,
+  sign_theme_plot,
+  sign_theme_plot_o2,
+  sign_theme_plot_o3)
+
+sign_theme_plot_together <- ggpubr::annotate_figure(
+  sign_plots,
+  top = ggpubr::text_grob(
+    "conserved identity signature", 
+    color = col_cons_long["conserved identity signature"], 
+    face = plot_title_face,
+    size = plot_title_size))
+
+plots_single_poster <- ggpubr::ggarrange(
+  ncol = 1,
+  align = "hv",
+  heights = c(1, 2.4),
+  mmms_theme_plot_together,
+  sign_theme_plot_together)
+
+```
+
+```{r e_plot_export}
+pdf(output_pdf_plots_single_poster, width = 8, height = 8)
+plots_single_poster
+dev.off()
+```
+
 ## E PVal plot
 
 #### Prep
 
 ```{r e_prep1}
 
+# TODO: disable for not using for poster
+corr_pval_df <- corr_pval_df[corr_pval_df$conservation_level != "conserved_markers",]
+corr_pval_df <- corr_pval_df[corr_pval_df$type != "mean_prop_cells_cluster",]
+corr_pval_df <- corr_pval_df[corr_pval_df$comparison != "mmms-vs-signrand",]
+
 # add more columns for nicer visualisation
 corr_pval_df$color_id <- vector(length = nrow(corr_pval_df))
-corr_pval_df$color_id[corr_pval_df$pval_corrected < 0.05] <- "significant"
-corr_pval_df$color_id[corr_pval_df$pval_corrected == 0] <- "is_null"
-corr_pval_df$color_id[corr_pval_df$pval_corrected >= 0.05] <- "non_significant"
+corr_pval_df$color_id[corr_pval_df$pval_corrected < 0.05] <- "pval adj. < 0.05"
+corr_pval_df$color_id[corr_pval_df$pval_corrected == 0] <- "pval adj. = 0"
+corr_pval_df$color_id[corr_pval_df$pval_corrected >= 0.05] <- "non-significant"
 
 corr_pval_df$cons_level_long <- vector(length = nrow(corr_pval_df))
 corr_pval_df$cons_level_long[
   corr_pval_df$conservation_level == "conserved_signature"] <- "conserved identity signature"
+# corr_pval_df$cons_level_long[
+#   corr_pval_df$conservation_level == "conserved_markers"] <- "conserved markers"
 corr_pval_df$cons_level_long[
-  corr_pval_df$conservation_level == "conserved_markers"] <- "conserved markers"
-corr_pval_df$cons_level_long[
-  corr_pval_df$conservation_level == "mmusall_markers"] <- "all BL6 markers"
+  corr_pval_df$conservation_level == "mmusall_markers"] <- "BL6 markers"
 
 corr_pval_df$score_long <- vector(length = nrow(corr_pval_df))
 corr_pval_df$score_long[
   corr_pval_df$type == "adjusted_rand_index"] <- "Adjusted rand index"
 corr_pval_df$score_long[
   corr_pval_df$type == "variation_information"] <- "Variation of information"
-corr_pval_df$score_long[
-  corr_pval_df$type == "mean_prop_cells_cluster"] <- "Mean prop. cells/cluster"
+# corr_pval_df$score_long[
+#   corr_pval_df$type == "mean_prop_cells_cluster"] <- "Mean prop. cells/cluster"
 
 corr_pval_df$cons_level_long <- factor(
   corr_pval_df$cons_level_long, levels = c(
-    "conserved identity signature",
-    "conserved markers",
-    "all BL6 markers"))
+    #"conserved markers",
+    "BL6 markers",
+    "conserved identity signature"))
 
 corr_pval_df$score_long <- factor(
   corr_pval_df$score_long, levels = c(
     "Adjusted rand index",
-    "Variation of information",
-    "Mean prop. cells/cluster"))
+    "Variation of information"#,
+    #"Mean prop. cells/cluster"
+    ))
 
 corr_pval_df$color_id <- factor(
   corr_pval_df$color_id, levels = rev(c(
-    "non_significant",
-    "significant",
-    "is_null")))
+    "non-significant",
+    "pval adj. < 0.05",
+    "pval adj. = 0")))
 
-color_significance <- c("non_significant" = "grey70",
-                        "significant" = "black", 
-                        "is_null" = "blue")
+color_significance <- c("non-significant" = "grey70",
+                        "pval adj. < 0.05" = "black", 
+                        "pval adj. = 0" = "blue")
 ```
 
 ```{r e_prep2_subset}
@@ -707,6 +892,37 @@ corr_pval_df_sub$condition_long <- factor(
     "Stromal tabula sapiens")))
 ```
 
+```{r e_prep2_subset}
+
+corr_pval_df_sub <- corr_pval_df[corr_pval_df$condition %in% c(
+  "hsc",
+  "mus_weinreb_hspc",
+  "mus_tm_bonemarrow",
+  "ts_hscs_progenitors",
+  "ts_bone_marrow"),]
+
+corr_pval_df_sub$condition_long <- vector(length = nrow(corr_pval_df_sub))
+corr_pval_df_sub$condition_long[
+  corr_pval_df_sub$condition == "mus_bar_stromal"] <- "Baryawno et al."
+corr_pval_df_sub$condition_long[
+  corr_pval_df_sub$condition == "mus_tik_stromal"] <- "Tikhonova et al."
+corr_pval_df_sub$condition_long[
+  corr_pval_df_sub$condition == "li_all_stromal"] <- "Li et al."
+corr_pval_df_sub$condition_long[
+  corr_pval_df_sub$condition == "ts_all_stromal"] <- "Stromal tabula sapiens"
+corr_pval_df_sub$condition_long[
+  corr_pval_df_sub$condition == "str"] <- "Niche"
+
+
+corr_pval_df_sub$condition_long <- factor(
+  corr_pval_df_sub$condition_long, levels = rev(c(
+    "Niche",
+    "Tikhonova et al.",
+    "Baryawno et al.",
+    "Li et al.",
+    "Stromal tabula sapiens")))
+```
+
 ```{r e_print_for_control}
 print(corr_pval_df_sub)
 ```
@@ -714,7 +930,7 @@ print(corr_pval_df_sub)
 ```{r e_base_plot, fig.width = 10, fig.height= 3} 
 e_base_plot <- ggplot2::ggplot(
   corr_pval_df_sub,
-  aes(y = condition_long, 
+  aes(y = condition, 
       x = nr_genes_used,
       color = color_id, 
       size = 10^-pval_corrected))+

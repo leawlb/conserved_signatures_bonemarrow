@@ -23,10 +23,10 @@ library(tidyverse, quietly = TRUE)
 library(Seurat, quietly = TRUE)
 ```
 
-```{r load_manual, eval = FALSE, include = FALSE}
+```{r load_manual}
 
 # load data for manual use here
-base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/"
+base_path_temp <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/"
 brain_path <- "scRNAseq/main_analysis/sce_objects/08_sce_brain/"
   
 colors_path <- base::paste0(
@@ -37,7 +37,7 @@ source("../source/colors.R")
 
 ```
 
-```{r load_snakemake}
+```{r load_snakemake, include = FALSE, eval = FALSE}
 # colors
 colors_path <- snakemake@params[["colors_path"]]
 colors_source <- snakemake@params[["colors"]]
@@ -61,11 +61,13 @@ col_cons_long <- c(
 
 ```{r export_paths}
 output_pdf_b_plot <- base::paste0(
-  base_path, "manuscript1/figures/figure6_b.pdf")
+  base_path_temp, "manuscript1/figures/figure6_b.pdf")
 output_pdf_b_legend <- base::paste0(
-  base_path, "manuscript1/figures/figure6_b_legend.pdf")
+  base_path_temp, "manuscript1/figures/figure6_b_legend.pdf")
 output_pdf_c_plot <- base::paste0(
-  base_path, "manuscript1/figures/figure6_c.pdf")
+  base_path_temp, "manuscript1/figures/figure6_c.pdf")
+output_pdf_c_plot_poster <- base::paste0(
+  base_path_temp, "manuscript1/figures/figure6_poster.pdf")
 ```
 
 ## A
@@ -162,9 +164,9 @@ b_plot_theme <- b_plot +
 #### Construct
 
 ```{r b_plot_export}
-pdf(output_pdf_b_plot, width = 3, height = 9)
-b_plot_theme
-dev.off()
+# pdf(output_pdf_b_plot, width = 3, height = 9)
+# b_plot_theme
+# dev.off()
 ```
 
 
@@ -288,9 +290,30 @@ c_plot <- ggpubr::ggarrange(
 )
 ```
 
-```{r c_plot_export}
-pdf(output_pdf_c_plot, width = 9, height = 4)
-c_plot
-dev.off()
+```{r eval = FALSE, include = FALSE, fig.width = 5, fig.height = 4}
+c_plot_poster <- ggpubr::ggarrange(
+  ncol = 1,
+  plotted_gg_mouse[["sig"]]+theme_all+
+    theme(axis.text.x = element_text(hjust = 0, angle = 90, vjust = 0.5),
+          legend.position = "none",
+          plot.title = element_text(
+            hjust = 0.5,
+            color = col_cons_long["conserved identity signature"]),
+          axis.text.y = element_blank(),
+          axis.ticks.y = element_blank())+
+    xlab("Original cell types")
+)
 ```
 
+
+```{r c_plot_export}
+# pdf(output_pdf_c_plot, width = 9, height = 4)
+# c_plot
+# dev.off()
+```
+
+```{r c_plot_export_poster, eval = FALSE, include = FALSE}
+pdf(output_pdf_c_plot_poster, width = 5, height = 4)
+c_plot_poster
+dev.off()
+```

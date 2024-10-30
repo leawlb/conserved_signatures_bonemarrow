@@ -64,6 +64,17 @@ gene_df <- utils::read.csv(gene_list_dtplt,
   as.is=TRUE, 
   colClasses = "character")
 
+# gene list for subclustering
+gene_list_subclustering <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/02_sce_anno/gene_list_subclustering.txt"
+
+subclustering_df <- utils::read.csv(gene_list_subclustering, 
+  header = TRUE, 
+  sep = ";", 
+  check.names=FALSE, 
+  stringsAsFactors=FALSE, 
+  as.is=TRUE, 
+  colClasses = "character")
+
 ```
 
 ```{r pdf_output}
@@ -98,6 +109,43 @@ source("determine_params.R")
 ct_hsc <- "HSCs"
 ct_str <- "Adipo/CARs"
 ```
+
+## Obtain data
+
+Obtain data needed only for text, e.g. cell numbers.
+
+```{r obtain_data}
+# nr of cells
+ncol(sce_hsc)
+ncol(sce_str)
+
+# median nr of UMIs per cell
+# remove lots of unneccessary stuff to avoid overloading the environment
+sce_hsc_met <- sce_hsc
+sce_str_met <- sce_str
+rowData(sce_hsc_met) <- rowData(sce_hsc_met)[,c(2, 3, 4)]
+rowData(sce_str_met) <- rowData(sce_str_met)[,c(2, 3, 4)]
+
+reducedDim(sce_hsc_met) <- NULL
+reducedDim(sce_str_met) <- NULL
+
+assays(sce_hsc_met) <- list(assays(sce_hsc_met)[["counts_before_BC"]])
+names(assays(sce_hsc_met)) <- "counts_before_BC"
+assays(sce_str_met) <- list(assays(sce_str_met)[["counts_before_BC"]])
+names(assays(sce_str_met)) <- "counts_before_BC"
+
+qc_df <- scuttle::perCellQCMetrics(cbind(sce_hsc_met, sce_str_met), assay.type = "counts_before_BC")
+median(qc_df$sum)
+
+rm(sce_hsc_met)
+rm(sce_str_met)
+gc()
+
+# nr of subclustering genes, and which genes are subclustering genes
+subclustering_df[subclustering_df$purpose == "subclustering",]
+
+```
+
 
 ## A - C
 

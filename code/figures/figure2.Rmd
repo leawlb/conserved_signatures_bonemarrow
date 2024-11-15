@@ -57,6 +57,9 @@ base_path_output_temp <- snakemake@params[["base_path_output_temp"]]
 sce_hsc <- base::readRDS(base::paste0(
   base_path_input, 
   "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10"))
+sce_str <- base::readRDS(base::paste0(
+  base_path_input, 
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10"))
 
 # list of gene sets for HSPCs (conserved signature, conserved markers, etc.)
 geneset_list_hsc <- base::readRDS(base::paste0(
@@ -138,6 +141,40 @@ output_pdf_aging_theme_legend <- base::paste0(
   base_path_output_temp,
   "/manuscript1/figures/figure2_aging_legend.pdf")
 ```
+
+## Obtain data
+
+```{r obtain_data}
+# nr of detected transcripted genes
+# remove lots of unneccessary stuff to avoid overloading the environment
+#sce_hsc_met <- sce_hsc
+#sce_str_met <- sce_str
+#rowData(sce_hsc_met) <- rowData(sce_hsc_met)[,c(2, 3, 4)]
+#rowData(sce_str_met) <- rowData(sce_str_met)[,c(2, 3, 4)]
+
+#sce_all <- cbind(sce_hsc_met, sce_str_met)
+print(length(which(rowSums(assays(sce_hsc)$counts_before_BC) > 0)))
+print(length(which(rowSums(assays(sce_str)$counts_before_BC) > 0)))
+
+rm(sce_hsc_met)
+rm(sce_str_met)
+rm(sce_str)
+rm(sce_all)
+
+gc()
+
+# nr of conserved signature genes identified
+
+conserved_signature_genes <- lapply(geneset_list_hsc, function(geneset_list){
+  conserved_signature_genes <- geneset_list$conserved_signature
+  return(conserved_signature_genes)
+})
+all_conserved_signature_genes <- unique(unlist(conserved_signature_genes))
+length(all_conserved_signature_genes)
+
+conserved_signature_genes$HSCs
+```
+
 
 ## Expression heatmap conserved signature
 

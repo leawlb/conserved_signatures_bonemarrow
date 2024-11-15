@@ -242,6 +242,16 @@ output_pdf_e_legend <- base::paste0(
   base_path_output_temp, "/manuscript1/figures/figure5_e_legend.pdf")
 ```
 
+## Obtain data
+
+```{r obtain_data}
+print(sort(geneset_list_str$Fibroblasts$conserved_signature))
+print(sort(geneset_list_str$`Sinusoidal ECs`$conserved_signature))
+print(sort(geneset_list_str$`Sinusoidal/Venular ECs`$conserved_signature))
+print(sort(geneset_list_str$`Arteriolar/Capillary ECs`$conserved_signature))
+```
+
+
 ## A Expression heat map
 
 Expression of conserved signature genes in all mouse species across HSPC

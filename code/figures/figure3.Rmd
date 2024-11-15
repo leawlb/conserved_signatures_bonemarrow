@@ -301,6 +301,18 @@ output_pdf_ALL_plot <- base::paste0(
 #    base_path_output_temp, "/manuscript1/figures/figure3_pb_legend_poster.pdf")
 ```
 
+# Obtain data for text
+
+```{r obtain_data}
+print(sce_hsc_recl$cluster_signt_genes_used[1])
+print(sce_hsc_recl$cluster_consm_genes_used[1])
+print(sce_hsc_recl$cluster_mmusm_genes_used[1])
+
+library(scater)
+plotReducedDim(sce_hsc_recl, "UMAP", colour_by = "Cd79b")
+```
+
+
 # Permutation Plots
 
 ## PREP ALL SCORE DFs 

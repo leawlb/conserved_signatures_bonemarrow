@@ -66,6 +66,10 @@ colors_path <- base::paste0(
   base_path_input,
   "/metadata/colors/colors.txt")
 
+ensembl_sign <- readRDS(base::paste0(
+  base_path_output_temp,
+  "/04_signatures/01_reclustering_own/02_endf/ensembl_sign_hsc"))
+
 source("../source/colors.R")
 source("../source/plotting.R")
 source("../source/sce_functions_reclustering.R")
@@ -211,27 +215,610 @@ output_pdf_c_legend <- base::paste0(
 #   base_path_output_temp, "/manuscript1/figures/figure5_e_legend.pdf")
 ```
 
-## ABC: Reclustering heatmaps 
+## Reclustering heatmaps 
 
-### Other 1
+### Re-annotate reclustered populations based on signature genes only
+
+```{r prepare_annotate_o1}
+
+seu_sign_o1 <- selected_seu_list_o1$seu_sign
+reclustered_o1 <- base::unique(seu_sign_o1$seurat_clusters)
+
+clust_list_o1 <- as.list(reclustered_o1)
+
+ct_markers_o1 <- lapply(clust_list_o1, function(x){
+  markers <- Seurat::FindMarkers(seu_sign_o1,
+                                 test.use = "wilcox",
+                                 ident.1 = x)
+  markers <- markers[base::order(base::abs(markers$avg_log2FC), 
+                                 decreasing=TRUE),]
+  markers$which_cluster <- base::rep(x, nrow(markers))
+  markers <- rownames_to_column(markers, var = "genes")
+  
+  # need to add only ensembl gene symbols as I will not be using others
+  markers$symbol <- markers$genes
+  markers$symbol <- ensembl_sign$HSAPIENS_SYMBOL[base::match(markers$genes, ensembl_sign$ENSG_ID)]
+  return(markers)
+})
+names(ct_markers_o1) <- reclustered_o1
+
+ct_markers_df_o1 <- bind_rows(ct_markers_o1)
+head(ct_markers_df_o1)
+
+```
+
+```{r prepare_annotate_o2}
+
+seu_sign_o2 <- selected_seu_list_o2$seu_sign
+reclustered_o2 <- base::unique(seu_sign_o2$seurat_clusters)
+
+clust_list_o2 <- as.list(reclustered_o2)
+
+ct_markers_o2 <- lapply(clust_list_o2, function(x){
+  markers <- Seurat::FindMarkers(seu_sign_o2,
+                                 test.use = "wilcox",
+                                 ident.1 = x)
+  markers <- markers[base::order(base::abs(markers$avg_log2FC), 
+                                 decreasing=TRUE),]
+  markers$which_cluster <- base::rep(x, nrow(markers))
+  markers <- rownames_to_column(markers, var = "genes")
+  
+  # need to add only ensembl gene symbols as I will not be using others
+  markers$symbol <- markers$genes
+  markers$symbol <- ensembl_sign$HSAPIENS_SYMBOL[base::match(markers$genes, ensembl_sign$ENSG_ID)]
+  return(markers)
+})
+names(ct_markers_o2) <- reclustered_o2
+
+ct_markers_df_o2 <- bind_rows(ct_markers_o2)
+head(ct_markers_df_o2)
+
+```
+
+```{r prepare_annotate_o2_hsc_only}
+
+seu_sign_o2_hsc <- seu_sign_o2[,seu_sign_o2$seurat_clusters %in% c("4", "10", "1")]
+reclustered_o2_hsc <- base::unique(seu_sign_o2_hsc$seurat_clusters)
+
+clust_list_o2_hsc <- as.list(unfactor(reclustered_o2_hsc))
+
+ct_markers_o2_hsc <- lapply(clust_list_o2_hsc, function(x){
+  markers <- Seurat::FindMarkers(seu_sign_o2_hsc,
+                                 test.use = "wilcox",
+                                 ident.1 = x)
+  markers <- markers[base::order(base::abs(markers$avg_log2FC), 
+                                 decreasing=TRUE),]
+  markers$which_cluster <- base::rep(x, nrow(markers))
+  markers <- rownames_to_column(markers, var = "genes")
+  
+  # need to add only ensembl gene symbols as I will not be using others
+  markers$symbol <- markers$genes
+  markers$symbol <- ensembl_sign$HSAPIENS_SYMBOL[base::match(markers$genes, ensembl_sign$ENSG_ID)]
+  return(markers)
+})
+names(ct_markers_o2_hsc) <- reclustered_o2_hsc
+
+ct_markers_df_o2_hsc <- bind_rows(ct_markers_o2_hsc)
+head(ct_markers_df_o2_hsc)
+
+```
+
+```{r prepare_annotate_o2_mono_only}
+
+seu_sign_o2_mono <- seu_sign_o2[,seu_sign_o2$seurat_clusters %in% c("9", "0")]
+reclustered_o2_mono <- base::unique(seu_sign_o2_mono$seurat_clusters)
+
+clust_list_o2_mono <- as.list(unfactor(reclustered_o2_mono))
+
+ct_markers_o2_mono <- lapply(clust_list_o2_mono, function(x){
+  markers <- Seurat::FindMarkers(seu_sign_o2_mono,
+                                 test.use = "wilcox",
+                                 ident.1 = x)
+  markers <- markers[base::order(base::abs(markers$avg_log2FC), 
+                                 decreasing=TRUE),]
+  markers$which_cluster <- base::rep(x, nrow(markers))
+  markers <- rownames_to_column(markers, var = "genes")
+  
+  # need to add only ensembl gene symbols as I will not be using others
+  markers$symbol <- markers$genes
+  markers$symbol <- ensembl_sign$HSAPIENS_SYMBOL[base::match(markers$genes, ensembl_sign$ENSG_ID)]
+  return(markers)
+})
+names(ct_markers_o2_mono) <- reclustered_o2_mono
+
+ct_markers_df_o2_mono <- bind_rows(ct_markers_o2_mono)
+head(ct_markers_df_o2_mono)
+
+# monos 9: TMEM176A TMEM176B LTB MEIS1 H2AX ANXA2 HMBS FABP5 CYC1 MDH2 BOLA3 TRIB2 SELL TCF4 CLEC12A LY86 COPE TMEM147
+
+# - TMEM176A TMEM176B (immature) dendritic like 
+# - LTB: early dendritic cells/precursors
+# - MEIS1: progenitor state
+# - H2AX: dna repair, differentiation
+# - ANXA2: general inflammation in mono macro and DC
+# - HMBS: erythrocytes?
+# - FABP5: expressed in macrophages and dendritic cells
+# - TCF4: DC critical
+
+
+# monos 0: MS4A2 CKAP2L H1-3 KNL1 MSI2 CDCA8 RACGAP1 MYB CENPA TPX2 KIF20B H1-4 H1-2 ANXA3 MKI67 CENPF CENPE H1-10 PNRC1
+
+# - MS4A2: mast cell IgE related
+# - CKAP2L: cell cycle/spindle related 
+# - H1 histone linkers: in earlier monos, because they are downregulated during diff https://pmc.ncbi.nlm.nih.gov/articles/PMC4288251/
+# - KNL1: related to proliferation
+# - MSI2 progenitor/cancer
+# - CDC8: cell division
+# - TPX2 also related to cell cycle
+
+```
+
+#### Others - 1
+
+```{r umap_others_1}
+DimPlot(seu_sign_o1, dims = c(1,2), group.by = "seurat_clusters")
+seu_sign_o1$annotated_reclustered <- vector(length = ncol(seu_sign_o1))
+```
+
+```{r 4_others_1}
+nr <- "4"
+markers <- ct_markers_o1[[nr]]$genes[
+  !is.na(ct_markers_o1[[nr]]$symbol) &
+    ct_markers_o1[[nr]]$avg_log2FC > 0 &
+    ct_markers_o1[[nr]]$p_val_adj < 0.05]
+
+length(markers)/length(ct_markers_o1[[nr]]$genes) 
+
+ct_markers_o1[[nr]][
+  !is.na(ct_markers_o1[[nr]]$symbol) & 
+    ct_markers_o1[[nr]]$avg_log2FC > 0 &
+    ct_markers_o1[[nr]]$p_val_adj < 0.05,]
+
+FeaturePlot(seu_sign_o1, markers[1:6])
+
+seu_sign_o1$annotated_reclustered[seu_sign_o1$seurat_clusters == nr] <- "HSCs"
+```
+
+```{r 5_others_1}
+nr <- "5"
+markers <- ct_markers_o1[[nr]]$genes[
+  !is.na(ct_markers_o1[[nr]]$symbol) &
+    ct_markers_o1[[nr]]$avg_log2FC > 0 &
+    ct_markers_o1[[nr]]$p_val_adj < 0.05]
+
+length(markers)/length(ct_markers_o1[[nr]]$genes) 
+
+ct_markers_o1[[nr]][
+  !is.na(ct_markers_o1[[nr]]$symbol) & 
+    ct_markers_o1[[nr]]$avg_log2FC > 0 &
+    ct_markers_o1[[nr]]$p_val_adj < 0.05,]
+
+FeaturePlot(seu_sign_o1, markers[1:6])
+
+seu_sign_o1$annotated_reclustered[seu_sign_o1$seurat_clusters == nr] <- "Mk/Ery p."
+```
+
+```{r 6_others_1}
+nr <- "6"
+markers <- ct_markers_o1[[nr]]$genes[
+  !is.na(ct_markers_o1[[nr]]$symbol) &
+    ct_markers_o1[[nr]]$avg_log2FC > 0 &
+    ct_markers_o1[[nr]]$p_val_adj < 0.05]
+
+length(markers)/length(ct_markers_o1[[nr]]$genes) 
+
+ct_markers_o1[[nr]][
+  !is.na(ct_markers_o1[[nr]]$symbol) & 
+    ct_markers_o1[[nr]]$avg_log2FC > 0 &
+    ct_markers_o1[[nr]]$p_val_adj < 0.05,]
+
+FeaturePlot(seu_sign_o1, markers[1:6])
+
+seu_sign_o1$annotated_reclustered[seu_sign_o1$seurat_clusters == nr] <- "Mk p."
+```
+
+```{r 8_others_1}
+nr <- "8"
+markers <- ct_markers_o1[[nr]]$genes[
+  !is.na(ct_markers_o1[[nr]]$symbol) &
+    ct_markers_o1[[nr]]$avg_log2FC > 0 &
+    ct_markers_o1[[nr]]$p_val_adj < 0.05]
+
+length(markers)/length(ct_markers_o1[[nr]]$genes) 
+
+ct_markers_o1[[nr]][
+  !is.na(ct_markers_o1[[nr]]$symbol) & 
+    ct_markers_o1[[nr]]$avg_log2FC > 0 &
+    ct_markers_o1[[nr]]$p_val_adj < 0.05,]
+
+FeaturePlot(seu_sign_o1, markers[1:6])
+
+seu_sign_o1$annotated_reclustered[seu_sign_o1$seurat_clusters == nr] <- "Late Ery p."
+```
+
+```{r 1_others_1}
+nr <- "1"
+markers <- ct_markers_o1[[nr]]$genes[
+  !is.na(ct_markers_o1[[nr]]$symbol) &
+    ct_markers_o1[[nr]]$avg_log2FC > 0 &
+    ct_markers_o1[[nr]]$p_val_adj < 0.05]
+
+length(markers)/length(ct_markers_o1[[nr]]$genes) 
+
+ct_markers_o1[[nr]][
+  !is.na(ct_markers_o1[[nr]]$symbol) & 
+    ct_markers_o1[[nr]]$avg_log2FC > 0 &
+    ct_markers_o1[[nr]]$p_val_adj < 0.05,]
+
+FeaturePlot(seu_sign_o1, markers[1:6])
+
+seu_sign_o1$annotated_reclustered[seu_sign_o1$seurat_clusters == nr] <- "Ery p."
+```
+
+```{r 7_others_1}
+nr <- "7"
+markers <- ct_markers_o1[[nr]]$genes[
+  !is.na(ct_markers_o1[[nr]]$symbol) &
+    ct_markers_o1[[nr]]$avg_log2FC > 0 &
+    ct_markers_o1[[nr]]$p_val_adj < 0.05]
+
+length(markers)/length(ct_markers_o1[[nr]]$genes) 
+
+ct_markers_o1[[nr]][
+  !is.na(ct_markers_o1[[nr]]$symbol) & 
+    ct_markers_o1[[nr]]$avg_log2FC > 0 &
+    ct_markers_o1[[nr]]$p_val_adj < 0.05,]
+
+FeaturePlot(seu_sign_o1, markers[1:6])
+
+seu_sign_o1$annotated_reclustered[seu_sign_o1$seurat_clusters == nr] <- "Early myeloid p."
+```
+
+```{r 3_others_1}
+nr <- "3"
+markers <- ct_markers_o1[[nr]]$genes[
+  !is.na(ct_markers_o1[[nr]]$symbol) &
+    ct_markers_o1[[nr]]$avg_log2FC > 0 &
+    ct_markers_o1[[nr]]$p_val_adj < 0.05]
+
+length(markers)/length(ct_markers_o1[[nr]]$genes) 
+
+ct_markers_o1[[nr]][
+  !is.na(ct_markers_o1[[nr]]$symbol) & 
+    ct_markers_o1[[nr]]$avg_log2FC > 0 &
+    ct_markers_o1[[nr]]$p_val_adj < 0.05,]
+
+FeaturePlot(seu_sign_o1, markers[1:6])
+
+seu_sign_o1$annotated_reclustered[seu_sign_o1$seurat_clusters == nr] <- "Neutro p."
+```
+
+```{r 2_others_o1}
+nr <- "2"
+markers <- ct_markers_o1[[nr]]$genes[
+  !is.na(ct_markers_o1[[nr]]$symbol) &
+    ct_markers_o1[[nr]]$avg_log2FC > 0 &
+    ct_markers_o1[[nr]]$p_val_adj < 0.05]
+
+length(markers)/length(ct_markers_o1[[nr]]$genes) 
+
+ct_markers_o1[[nr]][
+  !is.na(ct_markers_o1[[nr]]$symbol) & 
+    ct_markers_o1[[nr]]$avg_log2FC > 0 &
+    ct_markers_o1[[nr]]$p_val_adj < 0.05,]
+
+FeaturePlot(seu_sign_o1, markers[1:6])
+
+seu_sign_o1$annotated_reclustered[seu_sign_o1$seurat_clusters == nr] <- "Cycling myeloid p."
+```
+
+```{r 0_others_1}
+nr <- "0"
+markers <- ct_markers_o1[[nr]]$genes[
+  !is.na(ct_markers_o1[[nr]]$symbol) &
+    ct_markers_o1[[nr]]$avg_log2FC > 0 &
+    ct_markers_o1[[nr]]$p_val_adj < 0.05]
+
+length(markers)/length(ct_markers_o1[[nr]]$genes) 
+
+ct_markers_o1[[nr]][
+  !is.na(ct_markers_o1[[nr]]$symbol) & 
+    ct_markers_o1[[nr]]$avg_log2FC > 0 &
+    ct_markers_o1[[nr]]$p_val_adj < 0.05,]
+
+FeaturePlot(seu_sign_o1, markers[1:6])
+
+seu_sign_o1$annotated_reclustered[seu_sign_o1$seurat_clusters == nr] <- "batch - Smart-seq2"
+```
+
+#### Others - 2
+
+```{r umap_others_2}
+DimPlot(seu_sign_o2, dims = c(1,2), group.by = "seurat_clusters")
+DimPlot(seu_sign_o2, dims = c(1,2), group.by = "assay")
+DimPlot(seu_sign_o2, dims = c(1,2), group.by = "donor_id")
+DimPlot(seu_sign_o2, dims = c(1,2), group.by = "sex")
+DimPlot(seu_sign_o2, dims = c(1,2), group.by = "development_stage")
+DimPlot(seu_sign_o2, dims = c(1,2), group.by = "tissue")
+
+seu_sign_o2$annotated_reclustered <- vector(length = ncol(seu_sign_o2))
+```
+
+```{r 1_others_2}
+nr <- "1"
+markers <- ct_markers_o2[[nr]]$gene[
+  !is.na(ct_markers_o2[[nr]]$symbol) &
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05]
+
+length(markers)/length(ct_markers_o2[[nr]]$genes) 
+
+ct_markers_o2[[nr]][
+  !is.na(ct_markers_o2[[nr]]$symbol) & 
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,]
+
+FeaturePlot(seu_sign_o2, markers[1:6])
+
+seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "HSCs - batch 10X 3'V2"
+```
+
+```{r 4_others_2}
+nr <- "4"
+markers <- ct_markers_o2[[nr]]$genes[
+  !is.na(ct_markers_o2[[nr]]$symbol) &
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05]
+
+length(markers)/length(ct_markers_o2[[nr]]$genes) 
+
+ct_markers_o2[[nr]][
+  !is.na(ct_markers_o2[[nr]]$symbol) & 
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,]
+
+FeaturePlot(seu_sign_o2, markers[1:6])
+
+seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "HSCs - batch 10X 5'V3"
+
+```
+
+```{r 10_others_2}
+nr <- "10"
+markers <- ct_markers_o2[[nr]]$genes[
+  !is.na(ct_markers_o2[[nr]]$symbol) &
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05]
+
+length(markers)/length(ct_markers_o2[[nr]]$genes) 
+
+ct_markers_o2[[nr]][
+  !is.na(ct_markers_o2[[nr]]$symbol) & 
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,]
+
+FeaturePlot(seu_sign_o2, markers[1:6])
+FeaturePlot(seu_sign_o2, markers[7:12])
+FeaturePlot(seu_sign_o2, markers[13:18])
+
+seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "HSCs - mixed"
+```
+
+```{r 3_others_2}
+nr <- "3"
+markers <- ct_markers_o2[[nr]]$genes[
+  !is.na(ct_markers_o2[[nr]]$symbol) &
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05]
+
+length(markers)/length(ct_markers_o2[[nr]]$genes) 
+
+ct_markers_o2[[nr]][
+  !is.na(ct_markers_o2[[nr]]$symbol) & 
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,]
+
+FeaturePlot(seu_sign_o2, markers[1:6])
+
+seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Early Cycling"
+
+```
+
+```{r 6_others_2}
+nr <- "6"
+markers <- ct_markers_o2[[nr]]$genes[
+  !is.na(ct_markers_o2[[nr]]$symbol) &
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05]
+
+length(markers)/length(ct_markers_o2[[nr]]$genes) 
+
+ct_markers_o2[[nr]][
+  !is.na(ct_markers_o2[[nr]]$symbol) & 
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,]
+
+FeaturePlot(seu_sign_o2, markers[1:6])
+
+seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Neutro"
+
+```
+
+```{r 2_others_2}
+nr <- "2"
+markers <- ct_markers_o2[[nr]]$genes[
+  !is.na(ct_markers_o2[[nr]]$symbol) &
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05]
+
+length(markers)/length(ct_markers_o2[[nr]]$genes) 
+
+ct_markers_o2[[nr]][
+  !is.na(ct_markers_o2[[nr]]$symbol) & 
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,]
+
+FeaturePlot(seu_sign_o2, markers[1:6])
+
+seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Myeloid p."
+
+```
+
+```{r 9_others_2}
+nr <- "9"
+markers <- ct_markers_o2[[nr]]$genes[
+  !is.na(ct_markers_o2[[nr]]$symbol) &
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05]
+
+length(markers)/length(ct_markers_o2[[nr]]$genes) 
+
+ct_markers_o2[[nr]][
+  !is.na(ct_markers_o2[[nr]]$symbol) & 
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,]
+
+# comparing both mono subsets directly
+ct_markers_o2_mono[[nr]][
+  !is.na(ct_markers_o2_mono[[nr]]$symbol) & 
+    ct_markers_o2_mono[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2_mono[[nr]]$p_val_adj < 0.05,]
+
+FeaturePlot(seu_sign_o2, markers[1:6])
+FeaturePlot(seu_sign_o2, markers[7:12])
+
+seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Mono (Dendritic) p."
+```
+
+```{r 0_others_2}
+nr <- "0"
+markers <- ct_markers_o2[[nr]]$genes[
+  !is.na(ct_markers_o2[[nr]]$symbol) &
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05]
+
+length(markers)/length(ct_markers_o2[[nr]]$genes) 
+
+ct_markers_o2[[nr]][
+  !is.na(ct_markers_o2[[nr]]$symbol) & 
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,]
+
+# comparing both mono subsets directly
+ct_markers_o2_mono[[nr]][
+  !is.na(ct_markers_o2_mono[[nr]]$symbol) & 
+    ct_markers_o2_mono[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2_mono[[nr]]$p_val_adj < 0.05,]
+
+FeaturePlot(seu_sign_o2, markers[1:6])
+FeaturePlot(seu_sign_o2, markers[7:12])
+
+seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Mono (Cycling) p."
+```
+
+```{r 5_others_2}
+nr <- "5"
+markers <- ct_markers_o2[[nr]]$genes[
+  !is.na(ct_markers_o2[[nr]]$symbol) &
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05]
+
+length(markers)/length(ct_markers_o2[[nr]]$genes) 
+
+ct_markers_o2[[nr]][
+  !is.na(ct_markers_o2[[nr]]$symbol) & 
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,]
+
+FeaturePlot(seu_sign_o2, markers[1:6])
+FeaturePlot(seu_sign_o2, markers[7:12])
+
+seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Lymphoid"
+```
+
+```{r 7_others_2}
+nr <- "7"
+markers <- ct_markers_o2[[nr]]$gene[
+  !is.na(ct_markers_o2[[nr]]$symbol) &
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05]
+
+length(markers)/length(ct_markers_o2[[nr]]$genes) 
+
+ct_markers_o2[[nr]][
+  !is.na(ct_markers_o2[[nr]]$symbol) & 
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,]
+
+FeaturePlot(seu_sign_o2, markers[1:6])
+
+seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Mk/Ery p. - batch 10X 3'V2"
+```
+
+
+```{r 8_others_2}
+nr <- "8"
+markers <- ct_markers_o2[[nr]]$gene[
+  !is.na(ct_markers_o2[[nr]]$symbol) &
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05]
+
+length(markers)/length(ct_markers_o2[[nr]]$genes) 
+
+ct_markers_o2[[nr]][
+  !is.na(ct_markers_o2[[nr]]$symbol) & 
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,]
+
+FeaturePlot(seu_sign_o2, markers[1:6])
+
+seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Mk/Ery p. - batch 10X 5'V3"
+```
+
+### Make plots
+
+#### Other 1
 
 ```{r mat_sign_o1}
-mat_sign_o1 <- base::table(selected_seu_list_o1$seu_sign$cell_type, 
-                           selected_seu_list_o1$seu_sign$seurat_clusters)
+mat_sign_o1_anno <- base::table(seu_sign_o1$cell_type, 
+                                seu_sign_o1$annotated_reclustered)
 
-for(i in 1:ncol(mat_sign_o1)){
-  mat_sign_o1[,i] <- mat_sign_o1[,i]/base::sum(mat_sign_o1[,i])
+for(i in 1:ncol(mat_sign_o1_anno)){
+  mat_sign_o1_anno[,i] <- mat_sign_o1_anno[,i]/base::sum(mat_sign_o1_anno[,i])
 }
-sign_df_o1 <- base::as.data.frame(mat_sign_o1)
+sign_df_o1_anno <- base::as.data.frame(mat_sign_o1_anno)
 
-sign_df_o1$Var2 <- factor(
-  sign_df_o1$Var2,
-  levels = base::rev(c(4, 0, 5, 6, 8, 1, 7, 3, 2)))
+sign_df_o1_anno$Var2 <- factor(
+  sign_df_o1_anno$Var2,
+  levels = base::rev(c("HSCs", 
+                       "Mk/Ery p.",
+                       "Mk p.", 
+                       "Ery p.",
+                       "Late Ery p.",
+                       "Early myeloid p.", 
+                       "Neutro p.",
+                       "Cycling myeloid p.",
+                       "batch - Smart-seq2" )))
+
+levels(sign_df_o1_anno$Var1)
+
+sign_df_o1_anno$Var1 <- unfactor(sign_df_o1_anno$Var1)
+sign_df_o1_anno$Var1[sign_df_o1_anno$Var1 == "hematopoietic stem cell"] <- "HSC"
+sign_df_o1_anno$Var1[sign_df_o1_anno$Var1 == "common myeloid progenitor"] <- "common myeloid p."
+sign_df_o1_anno$Var1[sign_df_o1_anno$Var1 == "erythroid progenitor cell"] <- "erythroid p."
+
+sign_df_o1_anno$Var1 <- factor(
+  sign_df_o1_anno$Var1,
+  levels = base::c("HSC", 
+                   "common myeloid p.",
+                   "erythroid p.",
+                   "granulocyte"
+                   ))
 ```
 
 ```{r sign_base_plot_o1}
 sign_base_plot_o1 <- ggplot2::ggplot(
-  sign_df_o1, 
+  sign_df_o1_anno, 
   aes(x = Var1, 
       y = Var2,
       fill = Freq))+
@@ -244,22 +831,26 @@ sign_theme_plot_o1 <- sign_base_plot_o1+
   ggplot2::theme(
     legend.position = "none",
     axis.title.x = element_blank(),
-    axis.text.y = element_blank(),
     axis.ticks.y = element_blank(),
+    axis.text.y  = element_text(
+      vjust = 0.5,
+      hjust = 0),
     axis.text.x = element_text(
       angle = 90,
       vjust = 0.5,
-      hjust = 0))+
+      hjust = 1))+
   ggplot2::scale_fill_gradientn(
     colors = mycolors_to1,
     limits = c(0, 1),
     breaks = c(0, 0.5, 1))+
-  ggplot2::ylab("New clusters")
+  ggplot2::ylab("Reclustered + re-annotated")
 ```
 
+#### Others 2
+
 ```{r mat_sign_o2}
-mat_sign_o2 <- base::table(selected_seu_list_o2$seu_sign$cell_type, 
-                          selected_seu_list_o2$seu_sign$seurat_clusters)
+mat_sign_o2 <- base::table(seu_sign_o2$cell_type, 
+                            seu_sign_o2$annotated_reclustered)
 
 for(i in 1:ncol(mat_sign_o2)){
   mat_sign_o2[,i] <- mat_sign_o2[,i]/base::sum(mat_sign_o2[,i])
@@ -268,7 +859,41 @@ sign_df_o2 <- base::as.data.frame(mat_sign_o2)
 
 sign_df_o2$Var2 <- factor(
   sign_df_o2$Var2,
-  levels = base::rev(c(1, 4, 10, 3, 6, 2, 9, 0, 5, 7, 8)))
+  levels = base::rev(c(
+    "HSCs - batch 10X 5' V3",
+    "HSCs - batch 10X 3' V2",
+    "HSCs - mixed",
+    "Early Cycling",
+    "Neutro",
+    "Myeloid p.",
+    "Mono (Dendritic) p.",
+    "Mono (Cycling) p.",
+    "Lymphoid",
+      "Mk/Ery p. - batch 10X 5' V3",
+    "Mk/Ery p. - batch 10X 3' V2"
+  )))
+
+
+sign_df_o2$Var1 <- unfactor(sign_df_o2$Var1)
+sign_df_o2$Var1[sign_df_o2$Var1 == "hematopoietic stem cell"] <- "HSC"
+sign_df_o2$Var1[sign_df_o2$Var1 == "hematopoietic multipotent progenitor cell"] <- "hematopoietic MPP"
+sign_df_o2$Var1[sign_df_o2$Var1 == "common myeloid progenitor"] <- "common myeloid p."
+sign_df_o2$Var1[sign_df_o2$Var1 == "granulocyte monocyte progenitor cell"] <- "granulocyte monocyte p."
+sign_df_o2$Var1[sign_df_o2$Var1 == "early lymphoid progenitor"] <- "early lymphoid p."
+sign_df_o2$Var1[sign_df_o2$Var1 == "megakaryocyte-erythroid progenitor cell"] <- "megakaryocyte-erythroid p."
+
+sign_df_o2$Var1 <- factor(
+  sign_df_o2$Var1,
+  levels = base::c(
+    "HSC",
+    "hematopoietic MPP",
+    "common myeloid p.",
+    "granulocyte monocyte p.",
+    "promonocyte",
+    "promyelocyte",
+    "early lymphoid p.",
+    "megakaryocyte-erythroid p."
+  ))
 ```
 
 ```{r sign_base_plot_o2}
@@ -280,48 +905,45 @@ sign_base_plot_o2 <- ggplot2::ggplot(
   ggplot2::geom_tile()
 ```
 
-```{r sign_theme_plot_o2}
+```{r sign_theme_plot_o2, fig.height = 6, fig.width = 6}
 sign_theme_plot_o2 <- sign_base_plot_o2+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
-    axis.title = element_blank(),
-    axis.text.y = element_blank(),
+    #axis.title.x = element_blank(),
+    #axis.text.y = element_blank(),
     axis.text.x = element_text(
       angle = 90,
+      hjust = 1, 
+      vjust = 0.5),
+    axis.text.y = element_text(
       hjust = 0, 
       vjust = 0.5),
     axis.ticks.y = element_blank())+
   ggplot2::scale_fill_gradientn(
     colors = mycolors_to1,
     limits = c(0, 1),
-    breaks = c(0, 0.5, 1))
+    breaks = c(0, 0.5, 1))+
+  ggplot2::ylab("Reclustered + re-annotated")+
+  ggplot2::xlab("Original cell types")
 ```
 
 
 ### Assemble
 
-```{r ab_plotparts, fig.width = 6, fig.height = 6}
+```{r ab_plotparts, fig.width = 5, fig.height = 9}
 
 sign_plots_ab <- ggpubr::ggarrange(
-  ncol = 2,
-  align = "hv",
+  ncol = 1,
+  align = "v",
   sign_theme_plot_o1,
   sign_theme_plot_o2,
-  widths = c(1, 1))
-
-sign_plots_title_ab <- annotate_figure(
-  sign_plots_ab,
-  top = ggpubr::text_grob(
-    "Conserved identity signature", 
-    color = col_cons_long["conserved identity signature"], 
-    face = plot_title_face,
-    size = plot_title_size))
+  heights = c(2, 2.6))
 ```
 
 ```{r ab_plot_export}
-pdf(output_pdf_ab_plot, width = 6, height = 6)
-sign_plots_title_ab
+pdf(output_pdf_ab_plot, width = 5, height = 9)
+sign_plots_ab
 dev.off()
 ```
 
@@ -345,11 +967,11 @@ corr_pval_df$cons_level_long[
 
 corr_pval_df$score_long <- vector(length = nrow(corr_pval_df))
 corr_pval_df$score_long[
-  corr_pval_df$type == "adjusted_rand_index"] <- "Adjusted rand index"
+  corr_pval_df$type == "adjusted_rand_index"] <- "Adjusted Rand Index"
 corr_pval_df$score_long[
-  corr_pval_df$type == "variation_information"] <- "Variation of information"
+  corr_pval_df$type == "variation_information"] <- "Variation of Information"
 corr_pval_df$score_long[
-  corr_pval_df$type == "mean_prop_cells_cluster"] <- "Mean prop. cells/cluster"
+  corr_pval_df$type == "mean_prop_cells_cluster"] <- "Mean prop."
 
 corr_pval_df$cons_level_long <- factor(
   corr_pval_df$cons_level_long, levels = c(
@@ -359,9 +981,9 @@ corr_pval_df$cons_level_long <- factor(
 
 corr_pval_df$score_long <- factor(
   corr_pval_df$score_long, levels = c(
-    "Adjusted rand index",
-    "Variation of information",
-    "Mean prop. cells/cluster"))
+    "Adjusted Rand Index",
+    "Variation of Information",
+    "Mean prop."))
 
 corr_pval_df$color_id <- factor(
   corr_pval_df$color_id, levels = rev(c(
@@ -389,29 +1011,34 @@ corr_pval_df_sub$condition_long[
   corr_pval_df_sub$condition == dataset_o1] <- "tabula sapiens BM"
 corr_pval_df_sub$condition_long[
   corr_pval_df_sub$condition == dataset_o2] <- "tabula sapiens fetal"
+corr_pval_df_sub$condition_long[
+  corr_pval_df_sub$condition == "mus_tm_bonemarrow"] <- "tabula muris"
+corr_pval_df_sub$condition_long[
+  corr_pval_df_sub$condition == "mus_weinreb_hspc"] <- "Weinreb et al."
 
 corr_pval_df_sub$condition_long <- factor(
   corr_pval_df_sub$condition_long, levels = rev(c(
-    "mus_tm_bonemarrow",
-    "mus_weinreb_hspc",
+    "tabula muris",
+    "Weinreb et al.",
     "tabula sapiens BM",
     "tabula sapiens fetal")))
 
 corr_pval_df_sub$comparison <- factor(
   corr_pval_df_sub$comparison, levels = c(
-    "mmms-vs-rand",
     "sign-vs-rand",
     "mmms-vs-signrand"))
 
-# corr_pval_df_sub <- corr_pval_df_sub[
-#   corr_pval_df_sub$comparison %in% c("mmms-vs-signrand", "sign-vs-rand"),]
+corr_pval_df_sub <- corr_pval_df_sub[
+  corr_pval_df_sub$comparison %in% c("mmms-vs-signrand", "sign-vs-rand"),]
+
+corr_pval_df_sub$x_axis <- rep("1", nrow(corr_pval_df_sub))
 ```
 
 ```{r d_base_plot, fig.width = 10, fig.height= 3} 
 d_base_plot <- ggplot2::ggplot(
   corr_pval_df_sub,
   aes(y = condition_long, 
-      x = nr_genes_used,
+      x = x_axis,
       color = color_id, 
       size = 10^-pval_corrected))+
   ggplot2::geom_point(alpha = 1)+
@@ -419,23 +1046,27 @@ d_base_plot <- ggplot2::ggplot(
                       switch = "y",
                       rows = vars(corr_pval_df_sub$comparison))+
   ggplot2::theme_classic()+
-  ggplot2::scale_x_continuous(limits = c(0, max(corr_pval_df_sub$nr_genes_used)))+
   ggplot2::scale_color_manual(values = color_significance)
 ```
 
-```{r d_theme_plot, fig.width = 10, fig.height = 5} 
+```{r d_theme_plot, fig.width = 8, fig.height = 3} 
 d_theme_plot <- d_base_plot+
   theme_all+
-  ggplot2::scale_x_continuous(
-    limits = c(0, base::max(corr_pval_df_sub$nr_genes_used)))+
+  # ggplot2::scale_x_continuous(
+  #   limits = c(0, base::max(corr_pval_df_sub$nr_genes_used)))+
   ggplot2::scale_color_manual(values = color_significance)+
   ggplot2::theme(
+    legend.position = "none",
     strip.text.x = element_text(
-      size = plot_title_size,
-      color = plot_title_color,
-      face = plot_title_face,
+      size = axis_title_size,
+      color = axis_title_color,
+      face = axis_title_face,
       hjust = 1,
       angle = 0),
+    axis.text.y = element_text(
+      hjust = 0),
+    axis.text.x = element_blank(),   
+    axis.ticks.x = element_blank(),   
     strip.text.y.left = element_text(
       size = axis_text_size,
       color = axis_text_color,
@@ -445,12 +1076,7 @@ d_theme_plot <- d_base_plot+
     strip.background = element_blank(),
     strip.placement = "outside",
     axis.title.y = element_blank(),
-    axis.title = element_text(
-      size = axis_title_size,
-      color = axis_title_color,
-      face = axis_title_face),
-    legend.position = "none")+
-  ggplot2::xlab("# re-clustering genes")
+    axis.title = element_blank())
 d_theme_plot
 ```
 
@@ -494,7 +1120,7 @@ d_legend
 ```
 
 ```{r d_plot_export}
-pdf(output_pdf_c_plot, width = 10, height = 5)
+pdf(output_pdf_c_plot, width = 7, height = 3)
 d_theme_plot
 dev.off()
 ```

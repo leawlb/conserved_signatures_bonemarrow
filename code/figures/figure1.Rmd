@@ -79,19 +79,19 @@ subclustering_df <- utils::read.csv(gene_list_subclustering,
 
 ```{r pdf_output}
 # define output paths for pdf export
-output_pdf_de <- base::paste0(
-  base_path_output_temp,
-  "/manuscript1/figures/figure1_de.pdf")
-output_png_de <- base::paste0(
-  base_path_output_temp,
-  "/manuscript1/figures/figure1_de.png")
-
-output_pdf_de_legend1 <- base::paste0(
-  base_path_output_temp,
-  "/manuscript1/figures/figure1_de_legend1.pdf")
-output_pdf_de_legend2 <- base::paste0(
-  base_path_output_temp,
-  "/manuscript1/figures/figure1_de_legend2.pdf")
+# output_pdf_de <- base::paste0(
+#   base_path_output_temp,
+#   "/manuscript1/figures/figure1_de.pdf")
+# output_png_de <- base::paste0(
+#   base_path_output_temp,
+#   "/manuscript1/figures/figure1_de.png")
+# 
+# output_pdf_de_legend1 <- base::paste0(
+#   base_path_output_temp,
+#   "/manuscript1/figures/figure1_de_legend1.pdf")
+# output_pdf_de_legend2 <- base::paste0(
+#   base_path_output_temp,
+#   "/manuscript1/figures/figure1_de_legend2.pdf")
 
 output_pdf_f <- base::paste0(
   base_path_output_temp,
@@ -99,6 +99,14 @@ output_pdf_f <- base::paste0(
 output_pdf_f_legend <- base::paste0(
   base_path_output_temp, 
   "/manuscript1/figures/figure1_f_legend.pdf")
+
+
+output_pdf_hsc_umaps <- base::paste0(
+   base_path_output_temp,
+   "/manuscript1/figures/figure1_b.pdf")
+output_pdf_str_umaps <- base::paste0(
+   base_path_output_temp,
+   "/manuscript1/figures/figure1_c.pdf")
 ```
 
 ```{r params}
@@ -182,31 +190,35 @@ sce_str$species_pub[sce_str$Species_ID == "mspr"] <- "SPRETUS"
 sce_str$species_pub[sce_str$Species_ID == "mcar"] <- "CAROLI"
 sce_str$species_pub <- factor(sce_str$species_pub, 
                               levels = names(col_spc_pub))
+```
 
+```{r d_prep2}
 hsc_umap <- base::as.data.frame(
   SingleCellExperiment::reducedDim(
     sce_hsc, type = "UMAP"))
-hsc_umap$color_by <- sce_hsc$species_pub 
+hsc_umap$color_by <- sce_hsc$celltypes 
+hsc_umap$species <- sce_hsc$species_pub 
 hsc_umap <- hsc_umap[base::sample(
   1:nrow(hsc_umap),
   nrow(hsc_umap),
   replace = FALSE),]
 hsc_umap$color_by <- factor(
   hsc_umap$color_by,
-  levels = names(col_spc_pub)
+  levels = names(col_cts_hsc)
 )
 
 str_umap <- base::as.data.frame(
   SingleCellExperiment::reducedDim(
     sce_str, type = "UMAP"))
-str_umap$color_by <- sce_str$species_pub
+str_umap$color_by <- sce_str$celltypes
+str_umap$species <- sce_str$species_pub 
 str_umap <- str_umap[base::sample(
   1:nrow(str_umap),
   nrow(str_umap),
   replace = FALSE),]
 str_umap$color_by <- factor(
   str_umap$color_by,
-  levels = names(col_spc_pub)
+  levels = names(col_cts_str)
 )
 ```
 
@@ -221,10 +233,11 @@ d_base_plot_left <- ggplot2::ggplot(
     alpha = umap_point_alpha)+
   ggplot2::xlim(c(base::min(hsc_umap$X1)-1, base::max(hsc_umap$X1))+1)+
   ggplot2::ylim(c(base::min(hsc_umap$X2)-1, base::max(hsc_umap$X2))+1)+
-  ggplot2::scale_color_manual("Mouse species", values = col_spc_pub)
+  ggplot2::scale_color_manual(values = col_cts_hsc)+
+  facet_grid(rows = vars(hsc_umap$species))
 ```
 
-```{r d_theme_plot_left}
+```{r d_theme_plot_left, fig.height = 8, fig.width = 3}
 d_theme_plot_left <- d_base_plot_left+
   cowplot::theme_nothing()
 ```
@@ -240,10 +253,11 @@ d_base_plot_right <- ggplot2::ggplot(
     alpha = umap_point_alpha)+
   ggplot2::xlim(c(base::min(str_umap$X1)-1, base::max(str_umap$X1))+1)+
   ggplot2::ylim(c(base::min(str_umap$X2)-1, base::max(str_umap$X2))+1)+
-  ggplot2::scale_color_manual("Mouse species", values = col_spc_pub)
+  ggplot2::scale_color_manual(values = col_cts_str)+
+  facet_grid(rows = vars(str_umap$species))
 ```
 
-```{r d_theme_plot_right}
+```{r d_theme_plot_right, fig.height = 8, fig.width = 3}
 d_theme_plot_right <- d_base_plot_right+
   cowplot::theme_nothing()
 ```
@@ -252,7 +266,7 @@ d_theme_plot_right <- d_base_plot_right+
 
 only one required
 
-```{r d_legend_plot}
+```{r d_legend_plot, eval = FALSE, include = FALSE}
 d_legend_plot <- ggplot2::ggplot(
   hsc_umap, 
   aes(x = X1,
@@ -264,7 +278,7 @@ d_legend_plot <- ggplot2::ggplot(
   ggplot2::scale_color_manual("Mouse species", values = col_spc_pub)
 ```
 
-```{r d_legend_theme_plot}
+```{r d_legend_theme_plot, eval = FALSE, include = FALSE}
 d_legend_theme_plot <- d_legend_plot+
   theme_all+
   ggplot2::theme(legend.key.height = unit(0.3, "lines"))
@@ -281,7 +295,7 @@ colored by cell type.
 
 #### Plot Components
 
-```{r e_prep}
+```{r e_prep, eval = FALSE, include = FALSE}
 hsc_umap <- base::as.data.frame(
   SingleCellExperiment::reducedDim(
     sce_hsc, type = "UMAP"))
@@ -301,7 +315,7 @@ str_umap <- str_umap[base::sample(
   replace = FALSE),]
 ```
 
-```{r e_base_plot_left}
+```{r e_base_plot_left, eval = FALSE, include = FALSE}
 e_base_plot_left <- ggplot2::ggplot(
   hsc_umap, 
   aes(x = X1,
@@ -315,12 +329,12 @@ e_base_plot_left <- ggplot2::ggplot(
   ggplot2::scale_color_manual("Cell type", values = col_cts_hsc)
 ```
 
-```{r e_theme_plot_left}
+```{r e_theme_plot_left, eval = FALSE, include = FALSE}
 e_theme_plot_left <- e_base_plot_left+
   cowplot::theme_nothing()
 ```
 
-```{r e_base_plot_right}
+```{r e_base_plot_right, eval = FALSE, include = FALSE}
 e_base_plot_right <- ggplot2::ggplot(
   str_umap, 
   aes(x = X1,
@@ -334,7 +348,7 @@ e_base_plot_right <- ggplot2::ggplot(
   ggplot2::scale_color_manual("Cell type", values = col_cts_str)
 ```
 
-```{r e_theme_plot_right}
+```{r e_theme_plot_right, eval = FALSE, include = FALSE}
 e_theme_plot_right <- e_base_plot_right+
   cowplot::theme_nothing()
 ```
@@ -394,7 +408,7 @@ e_theme_legend
 
 ## DE together
 
-```{r bc_construct, fig.width = 13, fig.height = 13}
+```{r bc_construct, fig.width = 13, fig.height = 13, eval = FALSE, include = FALSE}
 de_plot_top <- ggpubr::ggarrange(
   align = "hv",
   d_theme_plot_left,
@@ -418,19 +432,25 @@ de_plot <- ggpubr::ggarrange(
 de_plot
 ```
 
-```{r export_bc_plot}
+```{r export_bc_plot, eval = FALSE, include = FALSE}
 png(output_png_de, width = 13*100, height = 13*100)
 de_plot
 dev.off()
 ```
 
 ```{r export_bc_plot_pdf}
-pdf(output_pdf_de, width = 13, height = 13)
-de_plot
+pdf(output_pdf_hsc_umaps, width = 3, height = 8)
+d_theme_plot_left
 dev.off()
 ```
 
-```{r bc_assemble_legends, fig.width = 3, fig.height = 5.1}
+```{r export_bc_plot_pdf}
+pdf(output_pdf_str_umaps, width = 3, height = 8)
+d_theme_plot_right
+dev.off()
+```
+
+```{r bc_assemble_legends, fig.width = 3, fig.height = 5.1, eval = FALSE, include = FALSE}
 
 d_legend
 

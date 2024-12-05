@@ -1,21 +1,25 @@
 
-base: "/omics/odcf/analysis/OE0538_projects/DO-0008"
-#data_paths:
-  #main: "/data/main_analysis"
-  #cellranger_output: "/data/main_analysis/sce_objects/00_cellranger_output" 
-  #fourgenomes_output: "/data/fourgenomes/sce_objects/00_cellranger_output" 
+base: "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun"
+base_input: "/omics/odcf/analysis/OE0538_projects/DO-0008"
+
+# all base files for 01_01 that require input generated elsewhere.
+# store where required but add full correct paths here
+# all downstream paths will build on "base""
+table: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/00_alignment/metadata.csv"
+cellranger_output: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/00_cellranger_output" 
+fourgenomes_output: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/fourgenomes/sce_objects/00_cellranger_output" 
+ensembl_mspr: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/01_sce_prep/ensembl_mspr/ensembl_list_mspr"
+
+# references for 01_02 reference annotation, generated elsewhere
+ref_baccin_sce: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/01_sce_prep/references_processed/ref_baccin_sce"
+ref_dahlin_sce: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/01_sce_prep/references_processed/ref_dahlin_sce"
+ref_dolgalev_sce: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/01_sce_prep/references_processed/ref_dolgalev_sce"
+
 scRNAseq_data_paths:
   main: "/data/scRNAseq/main_analysis"
-  cellranger_output: "/data/scRNAseq/main_analysis/sce_objects/00_cellranger_output" 
-  fourgenomes_output: "/data/scRNAseq/fourgenomes/sce_objects/00_cellranger_output" 
 metadata_paths: 
-  table: "/data/metadata/scRNAseq/00_alignment/metadata.csv"
   colors: "/data/metadata/colors/colors.txt"
   colors_ref: "/data/metadata/colors/colors_references.txt"
-  ensembl_mspr: "/data/metadata/scRNAseq/01_sce_prep/ensembl_mspr/ensembl_list_mspr"
-  ref_baccin_sce: "/data/metadata/scRNAseq/01_sce_prep/references_processed/ref_baccin_sce"
-  ref_dahlin_sce: "/data/metadata/scRNAseq/01_sce_prep/references_processed/ref_dahlin_sce"
-  ref_dolgalev_sce: "/data/metadata/scRNAseq/01_sce_prep/references_processed/ref_dolgalev_sce"
   gene_list_clusters: "/data/metadata/scRNAseq/02_sce_anno/gene_list_clusters.txt"
   gene_list_subclustering: "/data/metadata/scRNAseq/02_sce_anno/gene_list_subclustering.txt"
   gene_list_dotplot: "/data/metadata/scRNAseq/02_sce_anno/gene_list_dotplot.txt"
@@ -63,7 +67,7 @@ values:
     logFC_sample_dmgs: 0.25 # logFC threshold for excluding DMGs per sample
     minPC_sample_dmgs: 0.05 # min percent of cells expressing DMGs per sample
   02_sce_anno:  
-    nr_hvgs_batch_correction: 10000 # nr of top hvgs to be used for subsetting  
+    nr_hvgs_batch_correction: 10000 # nr of top hvgs to be used for batch correction  
     batch_use: "Object_ID" # if changed run ENTIRE batch_correction_snakefile
     seeds_umap:
       str: 6 # for nicer plots after batch correction

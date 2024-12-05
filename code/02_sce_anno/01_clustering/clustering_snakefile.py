@@ -12,18 +12,18 @@ OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/02_sce_anno"
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/02_sce_anno"
 
-ANNO_CLUSTERS = config["base"] + config["metadata_paths"]["annotation_clusters"]
-GENES_CLUSTERS = config["base"] + config["metadata_paths"]["gene_list_clusters"]
+ANNO_CLUSTERS = config["base_input"] + config["metadata_paths"]["annotation_clusters"]
+GENES_CLUSTERS = config["base_input"] + config["metadata_paths"]["gene_list_clusters"]
 
-COLORS_REF = config["base"] + config["metadata_paths"]["colors_ref"]
-COLORS = config["base"] + config["metadata_paths"]["colors"]
+COLORS_REF = config["base_input"] + config["metadata_paths"]["colors_ref"]
+COLORS = config["base_input"] + config["metadata_paths"]["colors"]
 
 VALUES =  config["values"]["02_sce_anno"]
 BATCH_USE = VALUES["batch_use"] # which colData to use as batch
 
 RUN_ANNO_REPORTS = config["run_anno_reports"]
 
-METADATA = pd.read_csv(config["base"] + config["metadata_paths"]["table"])
+METADATA = pd.read_csv(config["table"])
 def get_list(metadata, column):
   values = METADATA[column]
   values = values.drop_duplicates()
@@ -98,6 +98,8 @@ rule run_mnncorrect:
         sce_input = OUTPUT_BASE + "/sce_objects/01_sce_prep/08_mrge/fractions/sce_{fraction}-08"
     output:
         sce_output = OUTPUT_DAT + "/01_mnnc/sce_{fraction}_" + BATCH_USE + "-01"
+    resources:
+        mem_mb=30000
     params:
         batch_use = BATCH_USE,
         nr_hvgs_BC = VALUES["nr_hvgs_batch_correction"], 
@@ -114,6 +116,8 @@ rule make_batchcorrection_reports:
     input:
         sce_input_raw = OUTPUT_BASE + "/sce_objects/01_sce_prep/08_mrge/fractions/sce_{fraction}-08",
         sce_input_corrected = rules.run_mnncorrect.output
+    resources:
+        mem_mb = 65000
     output:
         OUTPUT_REP + "/01_batch_correction/batch_correction_report_{fraction}_" + BATCH_USE + ".html"
     params:
@@ -136,6 +140,8 @@ rule louvain_clustering:
         sce_input = rules.run_mnncorrect.output
     output:
         sce_output = OUTPUT_DAT + "/02_clst/sce_{fraction}-02"
+    resources:
+        mem_mb = 50000
     params:
         k_graph_list = VALUES["k_graph_list"],
         resolution_louvain_list = VALUES["resolution_louvain_list"]
@@ -149,6 +155,8 @@ Make clustering reports
 rule make_clustering_report:
     input:
         sce_l = rules.louvain_clustering.output
+    resources:
+        mem_mb = 50000
     params:
         colors_ref_path = COLORS_REF,
         colors_path = COLORS,
@@ -171,6 +179,8 @@ output = output + expand(OUTPUT_DAT + "/03_sepd/str_cluster_{cluster}-sep", clus
 rule separate_sce:
     input: 
         sce_input = expand(OUTPUT_DAT + "/02_clst/sce_{fraction}-02", fraction = fractions)
+    resources:
+        mem_mb = 40000
     output:
         output = output
     script:
@@ -188,6 +198,8 @@ rule find_markers:
         sce_input = rules.louvain_clustering.output
     output:
         markers = OUTPUT_DAT + "/04_annc/01_markers/markers_{fraction}"
+    resources:
+        mem_mb = 50000
     params:
         nr_hvgs = config["values"]["nr_hvgs"]
     script:
@@ -197,6 +209,8 @@ rule find_markers:
 rule go_analysis:
     input: 
         markers = rules.find_markers.output
+    resources:
+        mem_mb = 5000
     output:
         go = OUTPUT_DAT + "/04_annc/02_goan/go_{fraction}"
     script:
@@ -213,6 +227,8 @@ if RUN_ANNO_REPORTS:
           gene_list = GENES_CLUSTERS
       output:
           OUTPUT_REP + "/03_anno_clusters/annotation_{fraction}_cluster_{cluster}.html"
+      resources:
+        mem_mb = 200000
       params:
           colors_ref_path = COLORS_REF,
           colors_path = COLORS,
@@ -227,6 +243,8 @@ rule assign_annotation:
     input:
         sce_input = rules.louvain_clustering.output,
         anno_clusters = ANNO_CLUSTERS
+    resources:
+        mem_mb = 80000  
     output:      
         sce_output = OUTPUT_DAT + "/04_annc/03_sce/sce_{fraction}-04"
     script:
@@ -244,6 +262,8 @@ rule run_mnncorrect_species:
         sce_input = OUTPUT_BASE + "/sce_objects/01_sce_prep/08_mrge/species/sce_{species}_{fraction}-08"
     output:
         sce_output = OUTPUT_DAT + "/01_mnnc/comparison/sce_{species}_{fraction}_" + BATCH_USE + "-01"
+    resources:
+        mem_mb = 20000
     params:
         batch_use = BATCH_USE,
         nr_hvgs_BC = VALUES["nr_hvgs_batch_correction"], 
@@ -258,6 +278,8 @@ rule louvain_clustering_species:
         sce_input = rules.run_mnncorrect_species.output
     output:
         sce_output = OUTPUT_DAT + "/02_clst/comparison/sce_{species}_{fraction}-02"
+    resources:
+        mem_mb = 10000
     params:
         k_graph_list = VALUES["k_graph_list"],
         resolution_louvain_list = VALUES["resolution_louvain_list"]
@@ -273,6 +295,8 @@ rule make_clustering_comparison_report:
         sce_l = rules.assign_annotation.output,
         sce_l_species = rules.louvain_clustering_species.output,
         sce_l_celltypes = rules.assign_annotation.output
+    resources:
+        mem_mb = 80000
     params:
         colors_path = COLORS,
         plotting = "../../source/plotting.R",

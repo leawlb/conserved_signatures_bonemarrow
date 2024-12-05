@@ -8,7 +8,7 @@ OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/01_sce_prep"
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/01_sce_prep/03_integration"
 
-METADATA = pd.read_csv(config["base"] + config["metadata_paths"]["table"])
+METADATA = pd.read_csv(config["table"])
 def get_list(metadata, column):
   values = METADATA[column]
   values = values.drop_duplicates()
@@ -21,7 +21,7 @@ individuals = get_list(metadata = METADATA, column = "Object_ID")
 fractions = get_list(metadata = METADATA, column = "Fraction_ID")
 ages = get_list(metadata = METADATA, column = "Age_ID")
 
-COLORS_REF = config["base"] + config["metadata_paths"]["colors_ref"]
+COLORS_REF = config["base_input"] + config["metadata_paths"]["colors_ref"]
 
 #-------------------------------------------------------------------------------
 
@@ -57,6 +57,8 @@ rule merge_datasets_fractions:
     output:
         sce_output_hsc = OUTPUT_DAT + "/08_mrge/fractions/sce_hsc-08",
         sce_output_str = OUTPUT_DAT + "/08_mrge/fractions/sce_str-08"
+    resources:
+        mem_mb=40000
     params:
         individuals = individuals,
         species = species,
@@ -73,6 +75,8 @@ rule merge_datasets_species:
     output:
         sce_output_hsc = OUTPUT_DAT + "/08_mrge/species/sce_{species}_hsc-08",
         sce_output_str = OUTPUT_DAT + "/08_mrge/species/sce_{species}_str-08"
+    resources:
+        mem_mb=20000
     params:
         individuals = individuals,
         species = species,
@@ -89,6 +93,8 @@ rule merge_datasets_ages:
     output:
         sce_output_old = OUTPUT_DAT + "/08_mrge/ages/sce_{species}_old-08",
         sce_output_yng = OUTPUT_DAT + "/08_mrge/ages/sce_{species}_yng-08"
+    resources:
+        mem_mb=13000
     params:
         individuals = individuals,
         species = species,
@@ -107,6 +113,8 @@ rule make_reports_fractions:
         sce_input = OUTPUT_DAT + "/08_mrge/fractions/sce_{fraction}-08"
     output:
         OUTPUT_REP + "/fractions/integration_report_{fraction}.html"
+    resources:
+        mem_mb=10000
     params:
         colors_ref_path = COLORS_REF,
         plotting = "../../source/plotting.R",
@@ -119,6 +127,8 @@ rule make_reports_species:
         sce_input = OUTPUT_DAT + "/08_mrge/species/sce_{species}_{fraction}-08"
     output:
         OUTPUT_REP + "/species/integration_report_{species}_{fraction}.html"
+    resources:
+        mem_mb=10000
     params:
         colors_ref_path = COLORS_REF,
         plotting = "../../source/plotting.R",
@@ -131,6 +141,8 @@ rule make_reports_ages:
         sce_input = OUTPUT_DAT + "/08_mrge/ages/sce_{species}_{age}-08"
     output:
         OUTPUT_REP + "/ages/integration_report_{species}_{age}.html"
+    resources:
+        mem_mb=5000
     params:
         colors_ref_path = COLORS_REF,
         plotting = "../../source/plotting.R",

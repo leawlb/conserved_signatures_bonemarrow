@@ -1249,15 +1249,13 @@ sce_hsc_all_pseudotime <- base::readRDS(base::paste0(
  base_path_input,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/04_psce/sce_hsc_pseudotime"))
 
-# fully annotated SCE object (HSPCs), erythroid branch cells only, with 
-# pseudotime and erythroid differentiation probability
+# fully annotated SCE object (HSPCs), lymphoid branch cells only, with 
+# pseudotime and lymphoid differentiation probability
 ery_pseudo <- base::readRDS(base::paste0(
   base_path_input, 
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/05_bsce/sce_ery"))
 
 ```
-
-TODO: Think about naming of erythroid branch and other branches
 
 ```{r pt_umaps1}
 
@@ -1292,8 +1290,10 @@ hsc_umap_ery <- hsc_umap_ery[base::sample(
 
 # make it so that pseudotime values are only kept for cells that are in the
 # ery branch
+ery_cut_off <- min(ery_pseudo$Erythroid)
+
 sce_hsc$pt_ery <- sce_hsc$pseudotime
-sce_hsc$pt_ery[sce_hsc$ery < 0.5] <- NA
+sce_hsc$pt_ery[sce_hsc$ery < ery_cut_off] <- NA
 
 hsc_umap_comb <- base::as.data.frame(
   SingleCellExperiment::reducedDim(

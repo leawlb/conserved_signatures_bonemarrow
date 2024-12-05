@@ -11,6 +11,8 @@ knitr::opts_chunk$set(echo = TRUE)
 Generate Figure 4, current title:
 "Mouse conserved marker genes alone are effective at identifying homologous cell types in evolutionarily distant species."
 
+Also contains supplementary figure parts because it's easier.
+
 #### Load objects
 
 ```{r seed, message = FALSE}
@@ -19,6 +21,7 @@ set.seed(37)
 ```
 
 ```{r load_packages, message = FALSE}
+library(Seurat, quietly = TRUE)
 library(SingleCellExperiment, quietly = TRUE)
 library(ggpubr, quietly = TRUE)
 library(tidyverse, quietly = TRUE)
@@ -531,6 +534,33 @@ FeaturePlot(seu_sign_o1, markers[1:6])
 seu_sign_o1$annotated_reclustered[seu_sign_o1$seurat_clusters == nr] <- "batch - Smart-seq2"
 ```
 
+```{r}
+seu_sign_o1$annotated_reclustered <- factor(seu_sign_o1$annotated_reclustered,
+                                            levels = c("HSCs",
+                                                       "Mk/Ery p.",
+                                                       "Mk p.",
+                                                       "Ery p.",
+                                                       "Late Ery p.",
+                                                       "Early myeloid p.",
+                                                       "Neutro p.",
+                                                       "Cycling myeloid p.",
+                                                       "batch - Smart-seq2"))
+plot_suppl_a1 <- DimPlot(seu_sign_o1, dims = c(1,2), group.by = "annotated_reclustered")
+plot_suppl_a2 <- DimPlot(seu_sign_o1, dims = c(1,2), group.by = "cell_type")
+plot_suppl_a3 <- DimPlot(seu_sign_o1, dims = c(1,2), group.by = "assay")
+```
+
+```{r fig.width = 16, fig.height = 3.5}
+suppl_plot_a <- ggpubr::ggarrange(
+  plot_suppl_a1,
+  plot_suppl_a2,
+  plot_suppl_a3,
+  nrow = 1,
+  align = "hv"
+)
+```
+
+
 #### Others - 2
 
 ```{r umap_others_2}
@@ -773,9 +803,61 @@ ct_markers_o2[[nr]][
 FeaturePlot(seu_sign_o2, markers[1:6])
 
 seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Mk/Ery p. - batch 10X 5'V3"
+stop()
 ```
 
+```{r}
+seu_sign_o2$annotated_reclustered <- factor(seu_sign_o2$annotated_reclustered,
+                                            levels = c(  
+    "HSCs - batch 10X 5'V3",
+    "HSCs - batch 10X 3'V2",
+    "HSCs - mixed",
+    "Early Cycling",
+    "Neutro",
+    "Myeloid p.",
+    "Mono (Dendritic) p.",
+    "Mono (Cycling) p.",
+    "Lymphoid",
+    "Mk/Ery p. - batch 10X 5'V3",
+    "Mk/Ery p. - batch 10X 3'V2"))
+
+seu_sign_o2$cell_type <- unfactor(seu_sign_o2$cell_type)
+seu_sign_o2$cell_type[seu_sign_o2$cell_type == "hematopoietic stem cell"] <- "HSC"
+seu_sign_o2$cell_type[seu_sign_o2$cell_type == "hematopoietic multipotent progenitor cell"] <- "hematopoietic MPP"
+seu_sign_o2$cell_type[seu_sign_o2$cell_type == "common myeloid progenitor"] <- "common myeloid p."
+seu_sign_o2$cell_type[seu_sign_o2$cell_type == "granulocyte monocyte progenitor cell"] <- "granulocyte monocyte p."
+seu_sign_o2$cell_type[seu_sign_o2$cell_type == "early lymphoid progenitor"] <- "early lymphoid p."
+seu_sign_o2$cell_type[seu_sign_o2$cell_type == "megakaryocyte-erythroid progenitor cell"] <- "megakaryocyte-erythroid p."
+
+seu_sign_o2$cell_type <- factor(
+  seu_sign_o2$cell_type,
+  levels = base::c(
+    "HSC",
+    "hematopoietic MPP",
+    "common myeloid p.",
+    "granulocyte monocyte p.",
+    "promonocyte",
+    "promyelocyte",
+    "early lymphoid p.",
+    "megakaryocyte-erythroid p."
+  ))
+
+plot_suppl_b1 <- DimPlot(seu_sign_o2, dims = c(1,2), group.by = "annotated_reclustered")
+plot_suppl_b2 <- DimPlot(seu_sign_o2, dims = c(1,2), group.by = "cell_type")
+plot_suppl_b3 <- DimPlot(seu_sign_o2, dims = c(1,2), group.by = "assay")
+```
+
+```{r fig.width = 16, fig.height = 3.5}
+suppl_plot_b <- ggpubr::ggarrange(
+  plot_suppl_b1,
+  plot_suppl_b2,
+  plot_suppl_b3,
+  nrow = 1,
+  align = "hv"
+)
+```
 ### Make plots
+
 
 #### Other 1
 

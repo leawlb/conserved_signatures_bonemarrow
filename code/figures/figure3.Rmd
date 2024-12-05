@@ -102,7 +102,7 @@ psdf_hsc_mmms_signrand_o1 <- base::readRDS(base::paste0(
   "/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_mus_tm_bonemarrow"))
 ```
 
-```{r load_manual_other2}
+```{r load_manual_other2, include = FALSE, eval = FALSE}
 #-------------------------------------------------------------------------------
 #### OTHER MOUSE DATASET 2 (HSPC)
 #### MUS_WEINREB_HSPC

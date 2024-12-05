@@ -15,11 +15,11 @@ OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/01_sce_prep"
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/01_sce_prep/01_preprocessing"
 
 # directories of raw input data
-CELLRANGER_OUT = config["base"] + config["scRNAseq_data_paths"]["cellranger_output"] 
-FOURGENOMES_OUT = config["base"] + config["scRNAseq_data_paths"]["fourgenomes_output"]
+CELLRANGER_OUT = config["cellranger_output"] 
+FOURGENOMES_OUT = config["fourgenomes_output"]
 
 # load metadata table to obtain species, individuals, fractions to be used
-METADATA = pd.read_csv(config["base"] + config["metadata_paths"]["table"])
+METADATA = pd.read_csv(config["table"])
 
 # function to extract the required variables
 def get_list(metadata, column):
@@ -93,7 +93,7 @@ rule get_sample_dmgs:
     input:
         sce_input = rules.remove_droplets.output,
         sce_fg = FOURGENOMES_OUT +  "/{species}/sce_{individual}-01",
-        ensembl_list_mspr = config["base"] + config["metadata_paths"]["ensembl_mspr"]
+        ensembl_list_mspr = config["ensembl_mspr"]
     output:
         dmgs = OUTPUT_DAT + "/02_mapp/{species}/dmgs_{individual}"
     resources:
@@ -174,11 +174,11 @@ rule make_dmg_reports:
         sce_fg = FOURGENOMES_OUT + "/{species}/sce_{individual}-01",
         dmgs = rules.get_sample_dmgs.output,
         dmg_list = rules.merge_dmgs.output,
-        ensembl_list_mspr = config["base"] + config["metadata_paths"]["ensembl_mspr"]
+        ensembl_list_mspr = config["ensembl_mspr"]
     output:
         OUTPUT_REP + "/dmgs/{species}/preprocessing_dmg_report_{individual}.html"
     resources:
-        mem_mb=10000
+        mem_mb=20000
     params:
         nr_hvgs = config["values"]["nr_hvgs"],
         plotting = "../../source/plotting.R" # path to source file
@@ -199,6 +199,8 @@ rule make_qc_reports:
         sce_dimr = rules.reduce_dims.output
     output:
         OUTPUT_REP + "/qc/{species}/preprocessing_qc_report_{individual}.html"
+    resources:
+        mem_mb=20000
     params:
         cutoff_umis = VALUES["cutoff_umis"],
         cutoff_doublets = VALUES["cutoff_doublets"],
@@ -223,6 +225,8 @@ if config["run_preprocessing_summary"]:
           sce_input_path = OUTPUT_DAT + "/01_drop/"
       output:
           OUTPUT_REP + "/qc/preprocessing_qc_summary.html"
+      resources:
+          mem_mb=20000     
       params:
           cutoff_sum = VALUES["cutoff_sum"],
           cutoff_detected = VALUES["cutoff_detected"],

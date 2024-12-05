@@ -1,1 +1,1 @@
-snakemake --cluster "bsub -n2 -q medium -R rusage[mem=80GB]" -p -j66 -c4 -s integration_snakefile.py --configfile ../../config.yaml --latency-wait 30 -n
+snakemake --cluster "bsub -n2 -q medium -R rusage[mem={resources.mem_mb}]" -p -j66 -c2 -s integration_snakefile.py --configfile ../../config.yaml --latency-wait 30 -n

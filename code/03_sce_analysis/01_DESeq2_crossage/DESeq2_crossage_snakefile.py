@@ -8,13 +8,13 @@ OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/03_sce_analysis/01_DESeq2_crossage"
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/01_DESeq2_crossage"
 
-COLORS = config["base"] + config["metadata_paths"]["colors"]
+COLORS = config["base_input"] + config["metadata_paths"]["colors"]
 
 CELL_TYPES_EXCLUDE = config["values"]["03_sce_analysis"]["cell_types_exclude"]
 print(CELL_TYPES_EXCLUDE)
 
 # objects from config
-METADATA = pd.read_csv(config["base"] + config["metadata_paths"]["table"])
+METADATA = pd.read_csv(config["table"])
 def get_list(metadata, column):
   values = METADATA[column]
   values = values.drop_duplicates()
@@ -37,8 +37,8 @@ for f in fractions:
     targets = targets + [OUTPUT_DAT + "/01_desq/deseq_" + s + "_" + f]
     targets = targets + [OUTPUT_DAT + "/02_dsqc/rlog_" + s + "_" + f]
     targets = targets + [OUTPUT_DAT + "/02_dsqc/sva_" + s + "_"+ f]
-    targets = targets + [OUTPUT_REP + "/bulk/bulk_quality_report_" + s + "_" + f + ".html"]
-    targets = targets + [OUTPUT_REP + "/sva/sva_report_" + s + "_" + f + ".html"]
+    #targets = targets + [OUTPUT_REP + "/bulk/bulk_quality_report_" + s + "_" + f + ".html"]
+    #targets = targets + [OUTPUT_REP + "/sva/sva_report_" + s + "_" + f + ".html"]
     #targets = targets + [OUTPUT_DAT + "/03_tdsq/deseq_" + s + "_" + f]
     #targets = targets + [OUTPUT_DAT + "/04_dres/res_" + s + "_" + f]
     #targets = targets + [OUTPUT_REP + "/dge/dge_report_" + s + "_" + f + ".html"]
@@ -79,6 +79,8 @@ rule aggregate_convert:
       deseq_output = expand(OUTPUT_DAT + "/01_desq/deseq_{species}_{{fraction}}", species = species)
   params:
       cell_types_exclude = CELL_TYPES_EXCLUDE
+  resources:
+      mem_mb=50000
   script:
       "scripts/01_aggregate_convert.R"
 
@@ -93,6 +95,8 @@ rule qc_deseq:
     output:
         rlog = OUTPUT_DAT + "/02_dsqc/rlog_{species}_{fraction}",
         sva = OUTPUT_DAT + "/02_dsqc/sva_{species}_{fraction}"
+    resources:
+        mem_mb=5000
     script:
         "scripts/02_prep_qc_deseq.R"  
 
@@ -109,6 +113,8 @@ rule preprocessing_deseq:
         sva = rules.qc_deseq.output.sva
     output:
         deseq_output = OUTPUT_DAT + "/03_tdsq/deseq_{species}_{fraction}"
+    resources:
+        mem_mb=5000
     script:
         "scripts/03_deseq_ages.R"    
 
@@ -123,6 +129,8 @@ rule export_dge_results:
         deseq_input = rules.preprocessing_deseq.output
     output:
         res_list = OUTPUT_DAT + "/04_dres/res_{species}_{fraction}",
+    resources:
+        mem_mb=5000
     script:
         "scripts/04_export_dge_results.R"    
 
@@ -137,6 +145,8 @@ rule age_bulk_report:
         rlog = rules.qc_deseq.output.rlog
     output:
         OUTPUT_REP + "/bulk/bulk_quality_report_{species}_{fraction}.html"
+    resources:
+        mem_mb=5000
     params:
         colors_path = COLORS,
         plotting = "../../source/plotting.R",
@@ -148,6 +158,8 @@ rule sva_report:
     input: 
         dsq_list = OUTPUT_DAT + "/01_desq/deseq_{species}_{fraction}",
         sva_list = rules.qc_deseq.output.sva
+    resources:
+        mem_mb=5000
     output:
         OUTPUT_REP + "/sva/sva_report_{species}_{fraction}.html"
     script:
@@ -158,6 +170,8 @@ rule dge_report:
         res_list = rules.export_dge_results.output.res_list,
     output:
         OUTPUT_REP + "/dge/dge_report_{species}_{fraction}.html"
+    resources:
+        mem_mb=5000
     params:
         colors_path = COLORS,
         plotting = "../../source/plotting.R",

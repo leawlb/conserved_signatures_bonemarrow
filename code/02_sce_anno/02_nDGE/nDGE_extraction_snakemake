@@ -1,1 +1,1 @@
-snakemake --cluster "bsub -q medium -n6 -R rusage[mem=50GB]" -p -j40 -c6 -s nDGE_extraction_snakefile.py --configfile ../../config.yaml --latency-wait 120 -n
+snakemake --cluster "bsub -q medium -n6 -R rusage[mem={resources.mem_mb}]" -p -j40 -c6 -s nDGE_extraction_snakefile.py --configfile ../../config.yaml --latency-wait 120 -n

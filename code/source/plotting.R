@@ -54,16 +54,16 @@ umap_gene <- function(sce, color_by){
         y = X2, 
         color = SummarizedExperiment::assays(sce)[["logcounts"]][
           rownames(SummarizedExperiment::assays(sce)[["logcounts"]]) == color_by,]))+
-    ggplot2:scale_color_gradientn(color_by, colors = c("black", 
+    ggplot2::scale_color_gradientn(color_by, colors = c("black", 
                                                        "darkorange3", 
                                                        "orange", 
                                                        "lightgoldenrod"))+
-    ggplot2:geom_point(size = 0.01)+
-    ggplot2:theme_classic()+
-    ggplot2:theme(axis.text = element_blank(),
+    ggplot2::geom_point(size = 0.01)+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text = element_blank(),
                   axis.ticks = element_blank())+
-    ggplot2:ylab("UMAP 2")+
-    ggplot2:xlab("UMAP 1")
+    ggplot2::ylab("UMAP 2")+
+    ggplot2::xlab("UMAP 1")
 
   return(base)
 }

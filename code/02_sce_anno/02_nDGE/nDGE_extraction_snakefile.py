@@ -8,13 +8,13 @@ OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/02_sce_anno"
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/02_sce_anno/04_nDGE"
 
-COLORS_REF = config["base"] + config["metadata_paths"]["colors_ref"]
-COLORS = config["base"] + config["metadata_paths"]["colors"]
+COLORS_REF = config["base_input"] + config["metadata_paths"]["colors_ref"]
+COLORS = config["base_input"] + config["metadata_paths"]["colors"]
 
-GENES_CLUSTERS = config["base"] + config["metadata_paths"]["gene_list_clusters"]
-SV_PATH = config["base"] + config["metadata_paths"]["sources_variation"]["annotation_species"]
+GENES_CLUSTERS = config["base_input"] + config["metadata_paths"]["gene_list_clusters"]
+SV_PATH = config["base_input"] + config["metadata_paths"]["sources_variation"]["annotation_species"]
 
-METADATA = pd.read_csv(config["base"] + config["metadata_paths"]["table"])
+METADATA = pd.read_csv(config["table"])
 def get_list(metadata, column):
   values = METADATA[column]
   values = values.drop_duplicates()
@@ -39,12 +39,12 @@ print(tf)
 
 targets = []
 for c in clusters_hsc:
-  targets = targets + [OUTPUT_REP + "/ndge/ndge_report_cluster_" + c + "_hsc.html"] 
+  #targets = targets + [OUTPUT_REP + "/ndge/ndge_report_cluster_" + c + "_hsc.html"] 
   targets = targets + [OUTPUT_REP + "/ndge/ndge_report_sv_" + c + "_hsc.html"] 
   targets = targets + [OUTPUT_REP + "/bulk/bulk_quality_report_cluster_" + c + "_hsc.html"] 
 
 for c in clusters_str:
-  targets = targets + [OUTPUT_REP + "/ndge/ndge_report_cluster_" + c + "_str.html"] 
+  #targets = targets + [OUTPUT_REP + "/ndge/ndge_report_cluster_" + c + "_str.html"] 
   targets = targets + [OUTPUT_REP + "/ndge/ndge_report_sv_" + c + "_str.html"] 
   targets = targets + [OUTPUT_REP + "/bulk/bulk_quality_report_cluster_" + c + "_str.html"] 
 
@@ -82,6 +82,8 @@ rule aggregate_convert:
         sce_input = OUTPUT_DAT + "/04_annc/03_sce/sce_{fraction}-04"
     output:
         deseq_output = OUTPUT_DAT + "/05_desq/deseq_{fraction}-05"
+    resources:
+        mem_mb=25000
     script:
         "scripts/05_aggregate_convert.R"
 
@@ -93,6 +95,8 @@ rule qc_deseq:
     output:
         rlog = OUTPUT_DAT + "/06_dsqc/rlog_{fraction}",
         sva = OUTPUT_DAT + "/06_dsqc/sva_{fraction}"
+    resources:
+        mem_mb=5000
     script:
         "scripts/06_prep_qc_deseq.R"  
 
@@ -104,6 +108,8 @@ rule preprocessing_deseq:
         deseq_input = rules.aggregate_convert.output,
         sva = rules.qc_deseq.output.sva,
         sv_path = SV_PATH
+    resources:
+        mem_mb=5000
     output:
         deseq_output = OUTPUT_DAT + "/07_tdsq/deseq_{fraction}-07"
     script:
@@ -119,6 +125,8 @@ rule export_results_ndge:
         species = species,
         clusters_hsc = clusters_hsc,
         clusters_str = clusters_str
+    resources:
+        mem_mb=5000
     output:
         # lists sorted by cluster 
         cluster_res = OUTPUT_DAT + "/08_nres/" + tf + "/res_{fraction}_cluster",
@@ -139,6 +147,8 @@ rule ndge_bulk_report:
         rlog = rules.qc_deseq.output.rlog
     output:
         OUTPUT_REP + "/bulk/bulk_quality_report_cluster_{cluster}_{fraction}.html"
+    resources:
+        mem_mb=25000
     params:
         colors_path = COLORS,
         plotting = "../../source/plotting.R",
@@ -156,6 +166,8 @@ rule ndge_sv_report:
         sva_list = rules.qc_deseq.output.sva
     output:
         OUTPUT_REP + "/ndge/ndge_report_sv_{cluster}_{fraction}.html"
+    resources:
+        mem_mb=25000
     params:
         plotting = "../../source/plotting.R"
     script:
@@ -174,6 +186,8 @@ rule ndge_cluster_report:
         gene_list = GENES_CLUSTERS
     output:
         OUTPUT_REP + "/ndge/ndge_report_cluster_{cluster}_{fraction}.html"
+    resources:
+        mem_mb=15000
     params:
         padj_cutoff = PADJ_CUTOFF,
         fc_cutoff = FC_CUTOFF,

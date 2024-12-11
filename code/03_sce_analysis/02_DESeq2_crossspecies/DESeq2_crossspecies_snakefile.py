@@ -8,14 +8,14 @@ OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/03_sce_analysis/02_DESeq2_crossspecies"
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/02_DESeq2_crossspecies"
 
-COLORS = config["base"] + config["metadata_paths"]["colors"]
+COLORS = config["base_input"] + config["metadata_paths"]["colors"]
 
 CELL_TYPES_EXCLUDE = config["values"]["03_sce_analysis"]["cell_types_exclude"]
 print(CELL_TYPES_EXCLUDE)
-SV_PATH = config["base"] + config["metadata_paths"]["sources_variation"]["analysis_species"]
+SV_PATH = config["base_input"] + config["metadata_paths"]["sources_variation"]["analysis_species"]
 print(SV_PATH)
 
-METADATA = pd.read_csv(config["base"] + config["metadata_paths"]["table"])
+METADATA = pd.read_csv(config["table"])
 def get_list(metadata, column):
   values = METADATA[column]
   values = values.drop_duplicates()
@@ -28,7 +28,7 @@ fractions = get_list(metadata = METADATA, column = "Fraction_ID")
 species = get_list(metadata = METADATA, column = "Species_ID")
 print(fractions)
 
-CELLTYPES = pd.read_csv(config["base"] + config["metadata_paths"]["annotation_final"], sep = ";")
+CELLTYPES = pd.read_csv(config["base_input"] + config["metadata_paths"]["annotation_final"], sep = ";")
 
 # make cell types list from annotation
 values = CELLTYPES.iloc[:,1]
@@ -107,6 +107,8 @@ rule all:
 rule aggregate_convert:
   input:
       sce_input = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10"
+  resources:
+      mem_mb=30000
   output:
       deseq_output = OUTPUT_DAT + "/01_desq/deseq_{fraction}"
   script:
@@ -120,6 +122,8 @@ rule aggregate_convert:
 rule qc_deseq:
     input:
         deseq_input = rules.aggregate_convert.output
+    resources:
+        mem_mb=5000
     output:
         rlog = OUTPUT_DAT + "/02_dsqc/rlog_{fraction}",
         sva = OUTPUT_DAT + "/02_dsqc/sva_{fraction}"
@@ -132,6 +136,8 @@ output = output + expand(OUTPUT_DAT + "/03_sepd/str_{celltype}-sep", celltype = 
 rule separate_sce:
     input: 
         sce_input = expand(OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10", fraction = fractions)
+    resources:
+        mem_mb=50000
     output:
         output = output
     script:
@@ -145,6 +151,8 @@ rule celltype_sva_report:
         sep = OUTPUT_DAT + "/03_sepd/{fraction}_{celltype}-sep",
         dsq_list = rules.aggregate_convert.output,
         sva_list = rules.qc_deseq.output.sva
+    resources:
+        mem_mb=5000
     output:
         OUTPUT_REP + "/sva/sva_report_{fraction}_{celltype}.html"
     params:
@@ -158,6 +166,8 @@ rule celltype_bulk_report:
         sep = OUTPUT_DAT + "/03_sepd/{fraction}_{celltype}-sep",
         sce_input = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10",
         rlog = rules.qc_deseq.output.rlog
+    resources:
+        mem_mb=25000
     output:
         OUTPUT_REP + "/bulk/bulk_quality_report_{fraction}_{celltype}.html"
     params:
@@ -187,6 +197,8 @@ rule preprocessing_deseq:
         deseq_input = rules.aggregate_convert.output,
         sva = rules.qc_deseq.output.sva,
         sv_path = SV_PATH
+    resources:
+        mem_mb=5000
     output:
         deseq_output = OUTPUT_DAT + "/04_tdsq/deseq_{fraction}"
     script:
@@ -205,6 +217,8 @@ rule export_results_dge:
         deseq_input = rules.preprocessing_deseq.output
     params:
         species = species
+    resources:
+        mem_mb=5000
     output:
         celltype_res = OUTPUT_DAT + "/04_dres/res_{fraction}_celltype",
         celltype_res_dfs = OUTPUT_DAT + "/04_dres/res_{fraction}_celltype_dfs",
@@ -225,6 +239,8 @@ rule export_results_ndge:
         fc_cutoff = FC_CUTOFF,
         species = species,
         cts_exclude = CELL_TYPES_EXCLUDE
+    resources:
+        mem_mb=5000
     output:
         celltype_res = OUTPUT_DAT + "/06_nres/" + tf + "/res_{fraction}_celltype",
         celltype_resdf_list = OUTPUT_DAT + "/06_nres/" + tf + "/res_{fraction}_celltype_dfs",
@@ -251,6 +267,8 @@ rule celltype_dge_report:
         celltype_res = rules.export_results_dge.output.celltype_res,
     output:
         OUTPUT_REP + "/dge/dge_report_{fraction}_{celltype}.html"
+    resources:
+        mem_mb=5000
     params:
         padj_cutoff = PADJ_CUTOFF,
         fc_cutoff = FC_CUTOFF,
@@ -269,6 +287,8 @@ rule celltype_ndge_report:
         celltype_shared_genes_list = rules.export_results_ndge.output.celltype_shared_genes_list,
     output:
         OUTPUT_REP + "/ndge/ndge_report_{fraction}_{celltype}.html"
+    resources:
+        mem_mb=25000
     params:
         padj_cutoff = PADJ_CUTOFF,
         fc_cutoff = FC_CUTOFF,

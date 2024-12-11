@@ -54,7 +54,7 @@ colors_path <- base::paste0(
 source("../source/colors.R")
 
 # gene list for dotplot 
-gene_list_dtplt <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/02_sce_anno/gene_list_dotplot.txt"
+gene_list_dtplt <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/metadata_temp/gene_list_dotplot.txt"
 
 gene_df <- utils::read.csv(gene_list_dtplt, 
   header = TRUE, 
@@ -79,34 +79,32 @@ subclustering_df <- utils::read.csv(gene_list_subclustering,
 
 ```{r pdf_output}
 # define output paths for pdf export
-# output_pdf_de <- base::paste0(
-#   base_path_output_temp,
-#   "/manuscript1/figures/figure1_de.pdf")
-# output_png_de <- base::paste0(
-#   base_path_output_temp,
-#   "/manuscript1/figures/figure1_de.png")
-# 
-# output_pdf_de_legend1 <- base::paste0(
-#   base_path_output_temp,
-#   "/manuscript1/figures/figure1_de_legend1.pdf")
-# output_pdf_de_legend2 <- base::paste0(
-#   base_path_output_temp,
-#   "/manuscript1/figures/figure1_de_legend2.pdf")
-
-output_pdf_f <- base::paste0(
+output_pdf_umap_species_hsc <- base::paste0(
   base_path_output_temp,
-  "/manuscript1/figures/figure1_f.pdf")
-output_pdf_f_legend <- base::paste0(
-  base_path_output_temp, 
-  "/manuscript1/figures/figure1_f_legend.pdf")
+  "/manuscript1/figures_new/figure1_umap_species_hsc.pdf")
+output_pdf_umap_species_str <- base::paste0(
+  base_path_output_temp,
+  "/manuscript1/figures_new/figure1_umap_species_str.pdf")
+output_pdf_umap_species_legend <- base::paste0(
+  base_path_output_temp,
+  "/manuscript1/figures_new/figure1_umap_species_legend.pdf")
 
+output_pdf_umap_spec_sep_hsc <- base::paste0(
+  base_path_output_temp,
+  "/manuscript1/figures_new/figure1_umap_specsep_hsc.pdf") 
+output_pdf_umap_spec_sep_str <- base::paste0(
+  base_path_output_temp,
+  "/manuscript1/figures_new/figure1_umap_specsep_str.pdf") 
+output_pdf_umap_spec_sep_legend <- base::paste0(
+  base_path_output_temp,
+  "/manuscript1/figures_new/figure1_umap_specsep_legend.pdf") 
 
-output_pdf_hsc_umaps <- base::paste0(
-   base_path_output_temp,
-   "/manuscript1/figures/figure1_b.pdf")
-output_pdf_str_umaps <- base::paste0(
-   base_path_output_temp,
-   "/manuscript1/figures/figure1_c.pdf")
+output_pdf_dotplot <- base::paste0(
+  base_path_output_temp,
+  "/manuscript1/figures_new/figure1_dotplot.pdf") 
+output_pdf_dotplot_legend <- base::paste0(
+  base_path_output_temp,
+  "/manuscript1/figures_new/figure1_dotplot_legend.pdf") 
 ```
 
 ```{r params}
@@ -116,6 +114,37 @@ source("determine_params.R")
 # specific params
 ct_hsc <- "HSCs"
 ct_str <- "Adipo/CARs"
+```
+
+```{r prep_sces}
+
+# randomize the barcodes
+sce_hsc <- sce_hsc[,base::sample(
+  x = c(1:ncol(sce_hsc)), 
+  size = ncol(sce_hsc),
+  replace = FALSE)]
+
+sce_str <- sce_str[,base::sample(
+  x = c(1:ncol(sce_str)), 
+  size = ncol(sce_str),
+  replace = FALSE)]
+
+# change species names to currently used abbreviations
+sce_hsc$species_pub <- vector(length = ncol(sce_hsc))
+sce_hsc$species_pub[sce_hsc$Species_ID == "mmus"] <- "BL6"
+sce_hsc$species_pub[sce_hsc$Species_ID == "mcas"] <- "CAST"
+sce_hsc$species_pub[sce_hsc$Species_ID == "mspr"] <- "SPRET"
+sce_hsc$species_pub[sce_hsc$Species_ID == "mcar"] <- "CAROLI"
+sce_hsc$species_pub <- factor(sce_hsc$species_pub, 
+                              levels = names(col_spc_pub))
+
+sce_str$species_pub <- vector(length = ncol(sce_str))
+sce_str$species_pub[sce_str$Species_ID == "mmus"] <- "BL6"
+sce_str$species_pub[sce_str$Species_ID == "mcas"] <- "CAST"
+sce_str$species_pub[sce_str$Species_ID == "mspr"] <- "SPRET"
+sce_str$species_pub[sce_str$Species_ID == "mcar"] <- "CAROLI"
+sce_str$species_pub <- factor(sce_str$species_pub, 
+                              levels = names(col_spc_pub))
 ```
 
 ## Obtain data
@@ -155,42 +184,105 @@ subclustering_df[subclustering_df$purpose == "subclustering",]
 ```
 
 
-## A - C
-
-A: Model of experimental design.
-HSPCs were extracted by flushing and Niche 
-cells were extracted by crushing and digesting the bone followed by FACS 
-sorting and sequencing.
-
-B: Species Evolutionary Tree
-
-C: Cell type identification model
-
-## D UMAPs integrated species
+## UMAPs Species
 
 HSPCs (left) and Niche cells (right) clustered in UMAP space, 
-colored by mouse species
+colored by species.
 
-#### Plot Components
+```{r species_prep}
+hsc_umap_species <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_hsc, type = "UMAP"))
+hsc_umap_species$color_by <- sce_hsc$species_pub
+hsc_umap_species <- hsc_umap_species[base::sample(
+  1:nrow(hsc_umap_species),
+  nrow(hsc_umap_species),
+  replace = FALSE),]
 
-```{r d_prep}
-# change species names to currently used abbreviations
-sce_hsc$species_pub <- vector(length = ncol(sce_hsc))
-sce_hsc$species_pub[sce_hsc$Species_ID == "mmus"] <- "BL6"
-sce_hsc$species_pub[sce_hsc$Species_ID == "mcas"] <- "CAST"
-sce_hsc$species_pub[sce_hsc$Species_ID == "mspr"] <- "SPRETUS"
-sce_hsc$species_pub[sce_hsc$Species_ID == "mcar"] <- "CAROLI"
-sce_hsc$species_pub <- factor(sce_hsc$species_pub, 
-                              levels = names(col_spc_pub))
-
-sce_str$species_pub <- vector(length = ncol(sce_str))
-sce_str$species_pub[sce_str$Species_ID == "mmus"] <- "BL6"
-sce_str$species_pub[sce_str$Species_ID == "mcas"] <- "CAST"
-sce_str$species_pub[sce_str$Species_ID == "mspr"] <- "SPRETUS"
-sce_str$species_pub[sce_str$Species_ID == "mcar"] <- "CAROLI"
-sce_str$species_pub <- factor(sce_str$species_pub, 
-                              levels = names(col_spc_pub))
+str_umap_species <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_str, type = "UMAP"))
+str_umap_species$color_by <- sce_str$species_pub
+str_umap_species <- str_umap_species[base::sample(
+  1:nrow(str_umap_species),
+  nrow(str_umap_species),
+  replace = FALSE),]
 ```
+
+```{r species_base_plot_left}
+species_base_plot_left <- ggplot2::ggplot(
+  hsc_umap_species, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(hsc_umap_species$X1)-1, 
+                  base::max(hsc_umap_species$X1))+1)+
+  ggplot2::ylim(c(base::min(hsc_umap_species$X2)-1,
+                  base::max(hsc_umap_species$X2))+1)+
+  ggplot2::scale_color_manual("Species", values = col_spc_pub)
+```
+
+```{r species_theme_plot_left, fig.width = 4, fig.height = 3}
+species_theme_plot_left <- species_base_plot_left+
+  cowplot::theme_nothing()
+species_theme_plot_left
+```
+
+```{r species_base_plot_right}
+species_base_plot_right <- ggplot2::ggplot(
+  str_umap_species, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(str_umap_species$X1)-1,
+                  base::max(str_umap_species$X1))+1)+
+  ggplot2::ylim(c(base::min(str_umap_species$X2)-1, 
+                  base::max(str_umap_species$X2))+1)+
+  ggplot2::scale_color_manual("Species", values = col_spc_pub)
+```
+
+```{r species_theme_plot_right, fig.width = 4, fig.height = 3}
+species_theme_plot_right <- species_base_plot_right+
+  cowplot::theme_nothing()
+species_theme_plot_right
+```
+
+#### Legend
+
+only one required
+
+```{r species_legend_plot}
+species_legend_plot <- ggplot2::ggplot(
+  hsc_umap_species, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_legend_point_size,
+    alpha = umap_legend_point_alpha)+
+  ggplot2::scale_color_manual("Mouse species", values = col_spc_pub)
+```
+
+```{r species_legend_theme_plot, fig.width = 2, fig.height = 2}
+species_legend_theme_plot <- species_legend_plot+
+  theme_all+
+  ggplot2::theme(legend.key.height = unit(0.3, "lines"))
+species_theme_legend <- ggpubr::get_legend(species_legend_theme_plot)
+species_legend <- ggpubr::ggarrange(species_theme_legend)
+
+species_legend
+```
+
+## UMAPs integrated species
+
+HSPCs (left) and Niche cells (right) clustered in UMAP space, 
+separated by mouse species
 
 ```{r d_prep2}
 hsc_umap <- base::as.data.frame(
@@ -222,8 +314,8 @@ str_umap$color_by <- factor(
 )
 ```
 
-```{r d_base_plot_left}
-d_base_plot_left <- ggplot2::ggplot(
+```{r ctspc_base_plot_left}
+ctspc_base_plot_left <- ggplot2::ggplot(
   hsc_umap, 
   aes(x = X1,
       y = X2,
@@ -237,13 +329,14 @@ d_base_plot_left <- ggplot2::ggplot(
   facet_grid(rows = vars(hsc_umap$species))
 ```
 
-```{r d_theme_plot_left, fig.height = 8, fig.width = 3}
-d_theme_plot_left <- d_base_plot_left+
+```{r ctspc_theme_plot_left, fig.height = 9, fig.width = 3}
+ctspc_theme_plot_left <- ctspc_base_plot_left+
   cowplot::theme_nothing()
+ctspc_theme_plot_left
 ```
 
-```{r d_base_plot_right}
-d_base_plot_right <- ggplot2::ggplot(
+```{r ctspc_base_plot_right}
+ctspc_base_plot_right <- ggplot2::ggplot(
   str_umap, 
   aes(x = X1,
       y = X2,
@@ -257,17 +350,18 @@ d_base_plot_right <- ggplot2::ggplot(
   facet_grid(rows = vars(str_umap$species))
 ```
 
-```{r d_theme_plot_right, fig.height = 8, fig.width = 3}
-d_theme_plot_right <- d_base_plot_right+
+```{r d_theme_plot_right, fig.height = 10, fig.width = 4}
+ctspc_theme_plot_right <- ctspc_base_plot_right+
   cowplot::theme_nothing()
+ctspc_theme_plot_right
 ```
+
+#### Legend for cell types
 
 #### Legend
 
-only one required
-
-```{r d_legend_plot, eval = FALSE, include = FALSE}
-d_legend_plot <- ggplot2::ggplot(
+```{r ct_legend_plot_left}
+ct_legend_plot_left <- ggplot2::ggplot(
   hsc_umap, 
   aes(x = X1,
       y = X2,
@@ -275,27 +369,63 @@ d_legend_plot <- ggplot2::ggplot(
   ggplot2::geom_point(
     size = umap_legend_point_size,
     alpha = umap_legend_point_alpha)+
-  ggplot2::scale_color_manual("Mouse species", values = col_spc_pub)
+  ggplot2::scale_color_manual("Cell type", values = col_cts_hsc)
 ```
 
-```{r d_legend_theme_plot, eval = FALSE, include = FALSE}
-d_legend_theme_plot <- d_legend_plot+
+```{r ct_legend_plot_right}
+ct_legend_plot_right <- ggplot2::ggplot(
+  str_umap, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_legend_point_size,
+    alpha = umap_legend_point_alpha)+
+  ggplot2::scale_color_manual("Cell type", values = col_cts_str)
+```
+
+```{r ct_theme_legend_plot_left, fig.width = 3, fig.height = 4}
+ct_theme_legend_plot_left <- ct_legend_plot_left+
   theme_all+
   ggplot2::theme(legend.key.height = unit(0.3, "lines"))
-d_theme_legend <- ggpubr::get_legend(d_legend_theme_plot)
-d_legend <- ggpubr::ggarrange(d_theme_legend)
+ct_legend_left_theme <- ggpubr::get_legend(ct_theme_legend_plot_left)
 
-d_legend
+ct_legend_left <- ggpubr::ggarrange(ct_legend_left_theme) 
+ct_legend_left
 ```
 
-## E UMAPs Cell Types
+
+```{r ct_theme_legend_plot_right, fig.width = 3, fig.height = 3}
+ct_theme_legend_plot_right <- ct_legend_plot_right+
+  theme_all+
+  ggplot2::theme(
+    legend.title = element_blank(),
+    legend.key.height = unit(0.3, "lines")
+  )
+ct_legend_right_theme <- ggpubr::get_legend(ct_theme_legend_plot_right)
+
+ct_legend_right <- ggpubr::ggarrange(ct_legend_right_theme) 
+ct_legend_right
+```
+
+```{r e_theme_legend, fig.height = 7, fig.width = 3}
+ct_legend <- ggpubr::ggarrange(
+  ncol = 1,
+  align = "v",
+  ct_legend_left,
+  ct_legend_right)
+
+ct_legend
+```
+
+## UMAPs Cell Types
 
 HSPCs (left) and Niche cells (right) clustered in UMAP space, 
 colored by cell type.
 
 #### Plot Components
 
-```{r e_prep, eval = FALSE, include = FALSE}
+```{r ct_prep, eval = FALSE, include = FALSE}
 hsc_umap <- base::as.data.frame(
   SingleCellExperiment::reducedDim(
     sce_hsc, type = "UMAP"))
@@ -315,8 +445,8 @@ str_umap <- str_umap[base::sample(
   replace = FALSE),]
 ```
 
-```{r e_base_plot_left, eval = FALSE, include = FALSE}
-e_base_plot_left <- ggplot2::ggplot(
+```{r ct_base_plot_left, eval = FALSE, include = FALSE}
+ct_base_plot_left <- ggplot2::ggplot(
   hsc_umap, 
   aes(x = X1,
       y = X2,
@@ -329,13 +459,13 @@ e_base_plot_left <- ggplot2::ggplot(
   ggplot2::scale_color_manual("Cell type", values = col_cts_hsc)
 ```
 
-```{r e_theme_plot_left, eval = FALSE, include = FALSE}
-e_theme_plot_left <- e_base_plot_left+
+```{r ct_theme_plot_left, eval = FALSE, include = FALSE}
+ct_theme_plot_left <- ct_base_plot_left+
   cowplot::theme_nothing()
 ```
 
-```{r e_base_plot_right, eval = FALSE, include = FALSE}
-e_base_plot_right <- ggplot2::ggplot(
+```{r ct_base_plot_right, eval = FALSE, include = FALSE}
+ct_base_plot_right <- ggplot2::ggplot(
   str_umap, 
   aes(x = X1,
       y = X2,
@@ -348,65 +478,12 @@ e_base_plot_right <- ggplot2::ggplot(
   ggplot2::scale_color_manual("Cell type", values = col_cts_str)
 ```
 
-```{r e_theme_plot_right, eval = FALSE, include = FALSE}
-e_theme_plot_right <- e_base_plot_right+
+```{r ct_theme_plot_right, eval = FALSE, include = FALSE}
+ct_theme_plot_right <- ct_base_plot_right+
   cowplot::theme_nothing()
 ```
 
-#### Legend
-
-```{r e_legend_plot_left}
-e_legend_plot_left <- ggplot2::ggplot(
-  hsc_umap, 
-  aes(x = X1,
-      y = X2,
-      color = color_by))+
-  ggplot2::geom_point(
-    size = umap_legend_point_size,
-    alpha = umap_legend_point_alpha)+
-  ggplot2::scale_color_manual("Cell type", values = col_cts_hsc)
-```
-
-```{r e_legend_plot_right}
-e_legend_plot_right <- ggplot2::ggplot(
-  str_umap, 
-  aes(x = X1,
-      y = X2,
-      color = color_by))+
-  ggplot2::geom_point(
-    size = umap_legend_point_size,
-    alpha = umap_legend_point_alpha)+
-  ggplot2::scale_color_manual("Cell type", values = col_cts_str)
-```
-
-```{r e_theme_legend_plot_left}
-e_theme_legend_plot_left <- e_legend_plot_left+
-  theme_all+
-  ggplot2::theme(legend.key.height = unit(0.3, "lines"))
-e_legend_left <- ggpubr::get_legend(e_theme_legend_plot_left)
-```
-
-```{r e_theme_legend_plot_right}
-e_theme_legend_plot_right <- e_legend_plot_right+
-  theme_all+
-  ggplot2::theme(
-    legend.title = element_blank(),
-    legend.key.height = unit(0.3, "lines")
-  )
-e_legend_right <- ggpubr::get_legend(e_theme_legend_plot_right)
-```
-
-```{r e_theme_legend, fig.height = 6, fig.width = 4}
-e_theme_legend <- ggpubr::ggarrange(
-  ncol = 1,
-  align = "v",
-  e_legend_left,
-  e_legend_right)
-
-e_theme_legend
-```
-
-## DE together
+## Assemble UMAPs
 
 ```{r bc_construct, fig.width = 13, fig.height = 13, eval = FALSE, include = FALSE}
 de_plot_top <- ggpubr::ggarrange(
@@ -432,50 +509,63 @@ de_plot <- ggpubr::ggarrange(
 de_plot
 ```
 
-```{r export_bc_plot, eval = FALSE, include = FALSE}
-png(output_png_de, width = 13*100, height = 13*100)
-de_plot
-dev.off()
-```
-
-```{r export_bc_plot_pdf}
-pdf(output_pdf_hsc_umaps, width = 3, height = 8)
-d_theme_plot_left
-dev.off()
-```
-
-```{r export_bc_plot_pdf}
-pdf(output_pdf_str_umaps, width = 3, height = 8)
-d_theme_plot_right
-dev.off()
-```
-
-```{r bc_assemble_legends, fig.width = 3, fig.height = 5.1, eval = FALSE, include = FALSE}
-
-d_legend
-
-de_legend_2 <- ggpubr::ggarrange(
+```{r umap_construct1, fig.width = 8, fig.height = 3}
+species_plot <- ggpubr::ggarrange(
   align = "hv",
-  e_legend_left,
-  e_legend_right,
-  ncol = 1)
-
-de_legend_2
+  species_theme_plot_left,
+  species_theme_plot_right,
+  ncol = 2
+)
+species_plot
 ```
 
-```{r export_bc_legend1}
-pdf(output_pdf_de_legend1, width = 3, height = 2)
-d_legend
+```{r umap_construct2, fig.width = 8, fig.height = 10}
+species_sep_plot <- ggpubr::ggarrange(
+  align = "hv",
+  ctspc_theme_plot_left,
+  ctspc_theme_plot_right,  
+  ncol = 2
+)
+species_sep_plot
+```
+
+```{r export_species_plot_left_pdf}
+pdf(output_pdf_umap_species_hsc, width = 4, height = 3)
+species_theme_plot_left
 dev.off()
 ```
 
-```{r export_bc_legend2}
-pdf(output_pdf_de_legend2, width = 3, height = 5.1)
-de_legend_2
+```{r export_species_plot_right_pdf}
+pdf(output_pdf_umap_species_str, width = 4, height = 3)
+species_theme_plot_right
 dev.off()
 ```
 
-## F DOTPLOT
+```{r export_species_legend_pdf}
+pdf(output_pdf_umap_species_legend, width = 2, height = 2)
+species_legend
+dev.off()
+```
+
+```{r export_ctspc_left_pdf}
+pdf(output_pdf_umap_spec_sep_hsc, width = 3, height = 9)
+ctspc_theme_plot_left
+dev.off()
+```
+
+```{r export_ctspc_right_pdf}
+pdf(output_pdf_umap_spec_sep_str, width = 3, height = 9)
+ctspc_theme_plot_right
+dev.off()
+```
+
+```{r export_ctspc_legend_pdf}
+pdf(output_pdf_umap_spec_sep_legend, width = 4, height = 7)
+ct_legend
+dev.off()
+```
+
+## DOTPLOT
 
 Average gene expression of well-known marker genes that were not used for
 cell type sub-clustering per species for HSCs (top left) and Adipo/CARs 
@@ -484,7 +574,7 @@ cell type sub-clustering per species for HSCs (top left) and Adipo/CARs
 
 #### Prepare
 
-```{r f_prepare}
+```{r dp_prepare}
 # get genes
 gene_df_hsc <- gene_df[gene_df$fraction == "hsc",]
 genes_hsc <- gene_df_hsc$gene
@@ -549,7 +639,7 @@ vis_df_str$gene <- factor(
   levels = gene_df_str$gene)
 ```
 
-```{r f_function}
+```{r dp_function}
 get_perc_expressed <- function(vis_df, sce){
   
   vis_df <- vis_df
@@ -582,7 +672,7 @@ vis_df_hsc <- get_perc_expressed(vis_df_hsc, sce_hsc)
 vis_df_str <- get_perc_expressed(vis_df_str, sce_str)
 ```
 
-```{r f_prepare_ct}
+```{r dp_prepare_ct}
 # aggregate
 sce_hsc_ct <- sce_hsc[,sce_hsc$celltypes == ct_hsc]
 agg_ct_hsc <- scuttle::aggregateAcrossCells(
@@ -645,7 +735,7 @@ vis_df_ct_str <- get_perc_expressed(vis_df_ct_str, sce_str)
 
 #### Plots
 
-```{r f_base_plot_top_left}
+```{r dp_base_plot_top_left}
 
 # make background grid
 background_hsc <- data.frame(
@@ -689,7 +779,7 @@ background_hsc$xmin <- base::match(background_hsc$xmin,
 background_hsc$xmax <- base::match(background_hsc$xmax, 
                                    levels(vis_df_ct_hsc$gene))
 
-f_base_plot_top_left <- ggplot2::ggplot(
+dp_base_plot_top_left <- ggplot2::ggplot(
   vis_df_ct_hsc, 
   aes(x = gene,
       y = species,
@@ -707,13 +797,14 @@ f_base_plot_top_left <- ggplot2::ggplot(
   ggplot2::geom_point()
 ```
 
-```{r f_theme_plot_top_left}
-f_theme_plot_top_left <- f_base_plot_top_left+
+```{r dp_theme_plot_top_left}
+dp_theme_plot_top_left <- dp_base_plot_top_left+
   theme_all+
   ggplot2::scale_x_discrete(position = "top")+
   ggplot2::theme(
     axis.title = element_blank(),
     axis.text.x.top = element_text(
+      size = axis_text_size_small,
       hjust = 0,
       vjust = 0.5,
       angle = 90),
@@ -732,7 +823,7 @@ f_theme_plot_top_left <- f_base_plot_top_left+
      limits = c(0, 100))
 ```
 
-```{r f_base_plot_top_right}
+```{r dp_base_plot_top_right}
 # make background grid
 background_str <- data.frame(
   xmin = c(
@@ -773,7 +864,7 @@ background_str$xmin <- base::match(background_str$xmin,
 background_str$xmax <- base::match(background_str$xmax,
                                    levels(vis_df_ct_str$gene))
 
-f_base_plot_top_right <- ggplot2::ggplot(
+dp_base_plot_top_right <- ggplot2::ggplot(
   vis_df_ct_str, 
   aes(x = gene,
       y = species,
@@ -792,12 +883,13 @@ f_base_plot_top_right <- ggplot2::ggplot(
   ggplot2::geom_point()
 ```
 
-```{r f_theme_plot_top_right}
-f_theme_plot_top_right <- f_base_plot_top_right+
+```{r dp_theme_plot_top_right}
+dp_theme_plot_top_right <- dp_base_plot_top_right+
   theme_all+
   ggplot2::theme(
     axis.title = element_blank(),
     axis.text.x.top = element_text(
+      size = axis_text_size_small,
       hjust = 0,
       vjust = 0.5,
       angle = 90),
@@ -815,8 +907,8 @@ f_theme_plot_top_right <- f_base_plot_top_right+
   )
 ```
 
-```{r f_base_plot_bottom_left}
-f_base_plot_bottom_left <- ggplot2::ggplot(
+```{r dp_base_plot_bottom_left}
+dp_base_plot_bottom_left <- ggplot2::ggplot(
   vis_df_hsc, 
   aes(x = gene,
       y = celltypes,
@@ -834,8 +926,8 @@ f_base_plot_bottom_left <- ggplot2::ggplot(
   ggplot2::geom_point()
 ```
 
-```{r f_theme_plot_bottom_left}
-f_theme_plot_bottom_left <- f_base_plot_bottom_left+
+```{r dp_theme_plot_bottom_left}
+dp_theme_plot_bottom_left <- dp_base_plot_bottom_left+
   theme_all+
   ggplot2::theme(
     axis.title = element_blank(),
@@ -855,8 +947,8 @@ f_theme_plot_bottom_left <- f_base_plot_bottom_left+
   )
 ```
 
-```{r f_base_plot_bottom_right}
-f_base_plot_bottom_right <- ggplot2::ggplot(
+```{r dp_base_plot_bottom_right}
+dp_base_plot_bottom_right <- ggplot2::ggplot(
   vis_df_str, 
   aes(x = gene,
       y = celltypes,
@@ -874,8 +966,8 @@ f_base_plot_bottom_right <- ggplot2::ggplot(
   ggplot2::geom_point()
 ```
 
-```{r f_theme_plot_bottom_right}
-f_theme_plot_bottom_right <- f_base_plot_bottom_right+
+```{r dp_theme_plot_bottom_right}
+dp_theme_plot_bottom_right <- dp_base_plot_bottom_right+
   theme_all+
   ggplot2::theme(
     axis.title = element_blank(),
@@ -900,8 +992,8 @@ f_theme_plot_bottom_right <- f_base_plot_bottom_right+
 
 Since logcounts have different upper limits in HSPCs vs Niche, need two.
 
-```{r f_legend_base_plot_left}
-f_legend_base_plot_left <- ggplot2::ggplot(
+```{r dp_legend_base_plot_left}
+dp_legend_base_plot_left <- ggplot2::ggplot(
   vis_df_hsc, 
   aes(x = gene,
       y = celltypes,
@@ -909,8 +1001,8 @@ f_legend_base_plot_left <- ggplot2::ggplot(
   ggplot2::geom_point()
 ```
 
-```{r f_legend_theme_plot_left}
-f_legend_theme_plot_left <- f_legend_base_plot_left+
+```{r dp_legend_theme_plot_left}
+dp_legend_theme_plot_left <- dp_legend_base_plot_left+
   theme_all+
   ggplot2::theme(
     legend.title.position = "top",
@@ -922,11 +1014,11 @@ f_legend_theme_plot_left <- f_legend_base_plot_left+
     "logcounts",
     max_size = max_size_dotplots,
     limits = c(0, base::max(vis_df_hsc$expression)))
-f_legend_left <- ggpubr::get_legend(f_legend_theme_plot_left)
+dp_legend_left <- ggpubr::get_legend(dp_legend_theme_plot_left)
 ```
 
-```{r f_legend_base_plot_middle}
-f_legend_base_plot_middle <- ggplot2::ggplot(
+```{r dp_legend_base_plot_middle}
+dp_legend_base_plot_middle <- ggplot2::ggplot(
   vis_df_str, 
   aes(x = gene,
       y = celltypes,
@@ -934,8 +1026,8 @@ f_legend_base_plot_middle <- ggplot2::ggplot(
   ggplot2::geom_point()
 ```
 
-```{r f_legend_theme_plot_middle}
-f_legend_theme_plot_middle <- f_legend_base_plot_middle+
+```{r dp_legend_theme_plot_middle}
+dp_legend_theme_plot_middle <- dp_legend_base_plot_middle+
   theme_all+
   ggplot2::theme(
     legend.title.position = "top",
@@ -949,11 +1041,11 @@ f_legend_theme_plot_middle <- f_legend_base_plot_middle+
     colors = mycolors_to100,
     limits = c(0, 100)
   )
-f_legend_middle <- ggpubr::get_legend(f_legend_theme_plot_middle)
+dp_legend_middle <- ggpubr::get_legend(dp_legend_theme_plot_middle)
 ```
 
-```{r f_legend_base_plot_right}
-f_legend_base_plot_right <- ggplot2::ggplot(
+```{r dp_legend_base_plot_right}
+dp_legend_base_plot_right <- ggplot2::ggplot(
   vis_df_str, 
   aes(x = gene,
       y = celltypes,
@@ -961,8 +1053,8 @@ f_legend_base_plot_right <- ggplot2::ggplot(
   ggplot2::geom_point()
 ```
 
-```{r f_legend_theme_plot_right}
-f_legend_theme_plot_right <- f_legend_base_plot_right+
+```{r dp_legend_theme_plot_right}
+dp_legend_theme_plot_right <- dp_legend_base_plot_right+
   theme_all+
   ggplot2::theme(
     legend.title.position = "top",
@@ -974,66 +1066,58 @@ f_legend_theme_plot_right <- f_legend_base_plot_right+
     "logcounts",
     max_size = max_size_dotplots,
     limits = c(0, base::max(vis_df_ct_str$expression)))
-f_legend_right <- ggpubr::get_legend(f_legend_theme_plot_right)
+dp_legend_right <- ggpubr::get_legend(dp_legend_theme_plot_right)
 ```
 
 #### Assemble
 
-```{r f_theme_plot, fig.width = 16, fig.height = 6}
-f_theme_plot <- ggpubr::ggarrange(
-  f_theme_plot_top_left, 
-  f_theme_plot_top_right,
-  f_theme_plot_bottom_left,
-  f_theme_plot_bottom_right,
+```{r dp_theme_plot, fig.width = 16, fig.height = 6, eval = FALSE, include = FALSE}
+dp_theme_plot <- ggpubr::ggarrange(
+  dp_theme_plot_top_left, 
+  dp_theme_plot_top_right,
+  dp_theme_plot_bottom_left,
+  dp_theme_plot_bottom_right,
   heights = c(1,1.8),
   widths = c(1, 1.1),
   align = "v")
 
-f_theme_plot
+dp_theme_plot
 ```
 
-```{r f_theme_plot2, fig.width = 16, fig.height = 6}
-f_theme_plot2 <- ggpubr::ggarrange(
-  f_theme_plot_top_left + theme(
-    plot.margin = margin(t = 10, r = 5, b = 20, l = 5, unit = "pt")), 
-  f_theme_plot_top_right + theme(
-    plot.margin = margin(t = 5, r = 5, b = 20, l = 5, unit = "pt")),
-  f_theme_plot_bottom_left,
-  f_theme_plot_bottom_right,
-  heights = c(1,1.8),
-  widths = c(1, 1.1))
+```{r dp_theme_plot2, fig.width = 16, fig.height = 6}
+dp_theme_plot2 <- ggpubr::ggarrange(
+  dp_theme_plot_top_left + theme(
+    plot.margin = margin(t = 10, r = 5, b = 20, l = 10, unit = "pt")), 
+  dp_theme_plot_top_right + theme(
+    plot.margin = margin(t = 5, r = 5, b = 20, l = 10, unit = "pt")),
+  dp_theme_plot_bottom_left,
+  dp_theme_plot_bottom_right,
+  heights = c(1.1,1.8),
+  widths = c(1, 1.03))
 
-f_theme_plot2
+dp_theme_plot2
 ```
 
-```{r f_theme_legends, fig.width = 7, fig.height = 1}
-f_theme_legends <- ggpubr::ggarrange(
+```{r dp_theme_legends, fig.width = 7, fig.height = 1}
+dp_theme_legends <- ggpubr::ggarrange(
   nrow = 1,
-  f_legend_left,
-  f_legend_middle,
-  f_legend_right
+  dp_legend_left,
+  dp_legend_middle,
+  dp_legend_right
   )
 
-f_theme_legends
+dp_theme_legends
 ```
 
-```{r f_theme_legend_right, fig.width = 4, fig.height = 2}
-f_theme_legend_right <- ggpubr::ggarrange(
-  f_legend_right
-  )
-
-f_theme_legend_right
-```
-
-```{r export_f}
-pdf(output_pdf_f, width = 16, height = 6)
-f_theme_plot2
+```{r export_dp}
+pdf(output_pdf_dotplot, width = 15.5, height = 6)
+dp_theme_plot2
 dev.off()
 ```
 
-```{r export_f_legend}
-pdf(output_pdf_f_legend, width = 7, height = 1)
-f_theme_legends
+```{r export_dp_legend}
+pdf(output_pdf_dotplot_legend, width = 7, height = 1)
+dp_theme_legends
 dev.off()
 ```
 

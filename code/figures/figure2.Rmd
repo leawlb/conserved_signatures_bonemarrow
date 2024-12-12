@@ -92,54 +92,54 @@ celltype <- "HSCs"
 ```
 
 ```{r export_paths}
-output_pdf_pt_umap1_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure2_pt_umap1.pdf")
-output_pdf_pt_umap2_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure2_pt_umap2.pdf")
+# output_pdf_pt_umap1_plot <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure2_pt_umap1.pdf")
+# output_pdf_pt_umap2_plot <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure2_pt_umap2.pdf")
 output_pdf_pt_umap3_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure2_pt_umap3.pdf")
-
-output_pdf_pt_umap_legend1 <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure2_pt_umap_legend_1.pdf")
-output_pdf_pt_umap_legend2 <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure2_pt_umap_legend_2.pdf")
+  base_path_output_temp, "/manuscript1/figures_new/figure2_pt_umap3.pdf")
+# 
+# output_pdf_pt_umap_legend1 <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure2_pt_umap_legend_1.pdf")
+# output_pdf_pt_umap_legend2 <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure2_pt_umap_legend_2.pdf")
 output_pdf_pt_umap_legend3 <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure2_pt_umap_legend_3.pdf")
-
-output_pdf_pt_ranking_plot_long <- base::paste0(
-  base_path_output_temp,
-  "/manuscript1/figures/figure2_pt_ranking_plot_long.pdf")
-output_pdf_pt_ranking_plot_wide <- base::paste0(
-  base_path_output_temp, 
-  "/manuscript1/figures/figure2_pt_ranking_plot_wide.pdf")
-
+  base_path_output_temp, "/manuscript1/figures_new/figure2_pt_umap_legend_3.pdf")
+# 
+# output_pdf_pt_ranking_plot_long <- base::paste0(
+#   base_path_output_temp,
+#   "/manuscript1/figures/figure2_pt_ranking_plot_long.pdf")
+# output_pdf_pt_ranking_plot_wide <- base::paste0(
+#   base_path_output_temp, 
+#   "/manuscript1/figures/figure2_pt_ranking_plot_wide.pdf")
+# 
 output_pdf_sign_heatmap_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure2_sign_heatmap_plot.pdf")
+  base_path_output_temp, "/manuscript1/figures_new/figure2_sign_heatmap_plot.pdf")
 output_pdf_sign_heatmap_legend <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure2_sign_heatmap_legend.pdf")
+  base_path_output_temp, "/manuscript1/figures_new/figure2_sign_heatmap_legend.pdf")
 
 output_pdf_heatmap_spec_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure2_heatmap_spec_plot.pdf")
+  base_path_output_temp, "/manuscript1/figures_new/figure2_heatmap_spec_plot.pdf")
 
-output_pdf_two_hms <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure2_two_hms.pdf")
-
-output_pdf_heatmap_conds_long_plot <- base::paste0(
-  base_path_output_temp,
-  "/manuscript1/figures/figure2_heatmap_conds_long_plot.pdf")
-output_pdf_heatmap_conds_wide_plot <- base::paste0(
-  base_path_output_temp,
-  "/manuscript1/figures/figure2_heatmap_conds_wide_plot.pdf")
-output_pdf_heatmap_conds_stacked_plot <- base::paste0(
-  base_path_output_temp,
-  "/manuscript1/figures/figure2_heatmap_conds_stacked_plot.pdf")
-
-output_pdf_aging_theme_plot <- base::paste0(
-  base_path_output_temp,
-  "/manuscript1/figures/figure2_aging_plot.pdf")
-output_pdf_aging_theme_legend <- base::paste0(
-  base_path_output_temp,
-  "/manuscript1/figures/figure2_aging_legend.pdf")
+# output_pdf_two_hms <- base::paste0(
+#   base_path_output_temp, "/manuscript1/figures/figure2_two_hms.pdf")
+# 
+# output_pdf_heatmap_conds_long_plot <- base::paste0(
+#   base_path_output_temp,
+#   "/manuscript1/figures/figure2_heatmap_conds_long_plot.pdf")
+# output_pdf_heatmap_conds_wide_plot <- base::paste0(
+#   base_path_output_temp,
+#   "/manuscript1/figures/figure2_heatmap_conds_wide_plot.pdf")
+# output_pdf_heatmap_conds_stacked_plot <- base::paste0(
+#   base_path_output_temp,
+#   "/manuscript1/figures/figure2_heatmap_conds_stacked_plot.pdf")
+# 
+# output_pdf_aging_theme_plot <- base::paste0(
+#   base_path_output_temp,
+#   "/manuscript1/figures/figure2_aging_plot.pdf")
+# output_pdf_aging_theme_legend <- base::paste0(
+#   base_path_output_temp,
+#   "/manuscript1/figures/figure2_aging_legend.pdf")
 ```
 
 ## Obtain data
@@ -189,7 +189,7 @@ cell types (scaled by z-score per gene).
 sce_hsc$species_pub <- vector(length = ncol(sce_hsc))
 sce_hsc$species_pub[sce_hsc$Species_ID == "mmus"] <- "BL6"
 sce_hsc$species_pub[sce_hsc$Species_ID == "mcas"] <- "CAST"
-sce_hsc$species_pub[sce_hsc$Species_ID == "mspr"] <- "SPRETUS"
+sce_hsc$species_pub[sce_hsc$Species_ID == "mspr"] <- "SPRET"
 sce_hsc$species_pub[sce_hsc$Species_ID == "mcar"] <- "CAROLI"
 sce_hsc$species_pub <- factor(sce_hsc$species_pub, 
                               levels = names(col_spc_pub))
@@ -357,7 +357,7 @@ sign_heatmap_legend_theme <- ggpubr::get_legend(sign_heatmap_theme_plot)
 
 ### Assemble
 
-```{r sign_heatmap_assemble, fig.width = 6, fig.height = 9}
+```{r sign_heatmap_assemble, fig.width = 6, fig.height = 10}
 sign_heatmap_plot <- ggpubr::ggarrange(
   sign_heatmap_theme_plot + ggplot2::theme(legend.position = "none")
 )
@@ -369,7 +369,7 @@ sign_heatmap_legend <- ggpubr::ggarrange(sign_heatmap_legend_theme)
 ```
 
 ```{r output_pdf_sign_heatmap_plot}
-pdf(output_pdf_sign_heatmap_plot, width = 6, height = 8)
+pdf(output_pdf_sign_heatmap_plot, width = 6, height = 10)
 sign_heatmap_plot
 dev.off()
 ```
@@ -1340,7 +1340,7 @@ pt_umaps_base_plot_2 <- ggplot2::ggplot(
   ggplot2::ylim(c(base::min(hsc_umap_pt$X2)-1, base::max(hsc_umap_pt$X2))+1)+
   ggplot2::scale_color_gradientn(
     "Erythroid cell fate probability",
-    colours = c("grey80", col_cts_hsc["Erythroid progs."]))
+    colours = c("grey80", "blue4"))
 ```
 
 ```{r pt_umaps_theme_plot_2, fig.width = 3, fig.height = 3}
@@ -1363,11 +1363,9 @@ pt_umaps_base_plot_3 <- ggplot2::ggplot(
   ggplot2::scale_color_gradientn(
     limits = c(0, 1),
     breaks = c(0, 0.5, 1),
-    na.value = "grey90",
+    na.value = "grey80",
     "Pseudotime within\nErythroid branch",
-    colours = c(col_cts_hsc["HSCs"], col_cts_hsc["Erythroid progs."]))
-
-#"#950F41"
+    colours = c("#DAD0FB", "#251555"))
 ```
 
 ```{r pt_umaps_theme_plot_3, fig.width = 3, fig.height = 3}
@@ -1418,7 +1416,7 @@ dev.off()
 ```
 
 ```{r pt_umaps3_export}
-pdf(output_pdf_pt_umap3_plot, width = 2.5, height = 2.5)
+pdf(output_pdf_pt_umap3_plot, width = 4, height = 3)
 pt_umaps_theme_plot_3
 dev.off()
 ```

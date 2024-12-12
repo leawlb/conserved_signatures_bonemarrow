@@ -5,10 +5,16 @@ library(Seurat)
 library(tidyverse)
 
 ###### Hematapoetic
-data <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10")
-# prior markers determined
-markers_cons_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_sign/signature_list_hsc")
+#data <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10")
+data_hsc <- readRDS(snakemake@input[["data_hsc"]])
+data <- data_hsc
 
+print(data)
+
+# prior markers determined
+#markers_cons_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_sign/signature_list_hsc")
+markers_cons_hsc <- readRDS(snakemake@input[["markers_cons_hsc"]])
+  
 metadata <- data@colData@listData %>% 
   as.data.frame() %>%
   select(-Sample)
@@ -96,8 +102,10 @@ for(y in age){
   }
 }
 
+#save(markers_conservation_hsc,
+#     file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/03_marker_conservation/02_age/cons_markers_hsc.RData")
 save(markers_conservation_hsc,
-     file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/03_marker_conservation/02_age/cons_markers_hsc.RData")
+     file = snakemake@output[["output_hsc"]])
 
 # ## PLOT ##
 # 
@@ -224,9 +232,15 @@ ggsave("02_age_figs/02_age_hsc_totals.pdf",
 
 ###### Stromal
 
-data <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10")
-markers_cons_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_sign/signature_list_str")
+#data <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10")
+#markers_cons_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_sign/signature_list_str")
 
+data_str <- readRDS(snakemake@input[["data_str"]])
+data <- data_str
+
+print(data)
+
+markers_cons_str <- readRDS(snakemake@input[["markers_cons_str"]])
 
 metadata <- data@colData@listData %>% 
   as.data.frame() %>%
@@ -316,9 +330,10 @@ for(y in age){
 }
 
 
+#save(markers_conservation_str,
+#     file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/03_marker_conservation/02_age/cons_markers_str.RData")
 save(markers_conservation_str,
-     file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/03_marker_conservation/02_age/cons_markers_str.RData")
-
+     file = snakemake@output[["output_str"]])
 
 ## PLOT ##
 

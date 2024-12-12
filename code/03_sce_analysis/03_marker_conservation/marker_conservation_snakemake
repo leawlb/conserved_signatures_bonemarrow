@@ -1,0 +1,4 @@
+snakemake --cluster "bsub -n6 -q medium -R rusage[mem={resources.mem_mb}]" -p -j45 -c6 -s marker_conservation_snakefile.py --configfile ../../config.yaml --latency-wait 60 -n
+
+# for also running age comparison AFTER signature generation
+snakemake --cluster "bsub -n6 -q medium -R rusage[mem={resources.mem_mb}]" -p -j45 -c6 -s marker_conservation_snakefile.py --configfile ../../config.yaml --latency-wait 60 --config run_age_comparison=True -n

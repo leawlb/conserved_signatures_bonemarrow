@@ -5,7 +5,11 @@ library(dplyr)
 ## identify stromal markers per species per cell type ##
 ########################################################
 
-data <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10")
+#data <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10")
+data_str <- readRDS(snakemake@input[["data_str"]])
+data <- data_str
+
+print(data)
 
 metadata <- data@colData@listData %>% 
   as.data.frame() %>%
@@ -83,15 +87,20 @@ for(ct in cell_types){
   markers_conservation_str[[ct]] <- genes
 }
 
+#save(markers_conservation_str,
+#     file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/03_marker_conservation/cons_markers_str.RData")
 save(markers_conservation_str,
-     file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/03_marker_conservation/cons_markers_str.RData")
-
+     file = snakemake@output[["output_str"]])
 
 #########################
 ## same analysis, HSCs ##
 #########################
 
-data <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10")
+#data <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10")
+data_hsc <- readRDS(snakemake@input[["data_hsc"]])
+data <- data_hsc
+
+print(data)
 
 metadata <- data@colData@listData %>% 
   as.data.frame() %>%
@@ -169,5 +178,7 @@ for(ct in cell_types){
   markers_conservation_hsc[[ct]] <- genes
 }
 
+#save(markers_conservation_hsc,
+#     file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/03_marker_conservation/cons_markers_hsc.RData")
 save(markers_conservation_hsc,
-     file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/03_marker_conservation/cons_markers_hsc.RData")
+     file = snakemake@output[["output_hsc"]])

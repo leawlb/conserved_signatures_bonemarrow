@@ -27,12 +27,7 @@ library(Seurat, quietly = TRUE)
 ```
 
 ```{r load_manual_basepath}
-base_path_input <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data"
-```
-
-```{r base_path_snakemake, eval = FALSE, include = FALSE}
-base_path_input <- snakemake@input[["base_path_input"]]
-base_path_output_temp <- snakemake@params[["base_path_output_temp"]]
+base_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data"
 ```
 
 ```{r load_manual}
@@ -41,29 +36,29 @@ base_path_output_temp <- snakemake@params[["base_path_output_temp"]]
 
 # SCE with reclustering vectors for each gene set
 sce_hsc_recl <- base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/03_recl/sce_hsc"))
 
 # dataframe of re-clustering scores for each gene set
 score_df_hsc <- base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/04_rcls/score_df_hsc"))
 
 # dataframes of re-clustering scores after background permutation
 
 # signature vs random
 psdf_hsc_sign_rand <- base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_psig/perm_score_df_hsc"))
 
 # conserved markers vs random
 psdf_hsc_mark_rand <- base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_pmrk/perm_score_df_hsc"))
 
 # BL6 markers vs random
 psdf_hsc_mmms_rand <- base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_pmmm/perm_score_df_hsc"))
 ```
 
@@ -76,28 +71,28 @@ dataset_o1 <- "mus_tm_bonemarrow"
 
 # list of seurat objects with reclustering vectors for each gene set and resolution
 seu_hsc_recl_list_o1 <- base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_mus_tm_bonemarrow_list"))
 
 # list of dataframes of re-clustering scores for each gene set and resolution
 score_df_hsc_list_o1 <- base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_mus_tm_bonemarrow_list"))
 
 
 # dataframes of re-clustering scores after permutation comparing to background
 psdf_hsc_sign_rand_o1 <- base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_psig/perm_score_df_mus_tm_bonemarrow"))
 
 psdf_hsc_mmms_rand_o1 <- base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_pmms/perm_score_df_mus_tm_bonemarrow"))
 
 # dataframes of re-clustering scores after permutation comparing gene sets
 # BL6 markers vs signature + random
 psdf_hsc_mmms_signrand_o1 <- base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_mus_tm_bonemarrow"))
 ```
 
@@ -110,27 +105,27 @@ dataset_o2 <- "mus_weinreb_hspc"
 
 # list of seurat objects with reclustering vectors for each gene set and resolution
 seu_hsc_recl_list_o2 <- base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_mus_weinreb_hspc_list"))
 
 # list of dataframes of re-clustering scores for each gene set and resolution
 score_df_hsc_list_o2 <- base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_mus_weinreb_hspc_list"))
 
 # perm score DF from background permutation (SIGN)
 psdf_hsc_sign_rand_o2 <- base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_psig/perm_score_df_mus_weinreb_hspc"))
 psdf_hsc_mmms_rand_o2 <- base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_pmms/perm_score_df_mus_weinreb_hspc"))
 
 # dataframes of re-clustering scores after permutation comparing gene sets
 # BL6 markers vs signature + random
 
 psdf_hsc_mmms_signrand_o2 <- base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_mus_weinreb_hspc"))
 ```
 
@@ -140,12 +135,12 @@ psdf_hsc_mmms_signrand_o2 <- base::readRDS(base::paste0(
 
 # list of gene sets for HSPCs (conserved signature, conserved markers, etc.)
 geneset_list_hsc <-base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"))
 
 # data frame containing the correct resolutions for other datasets as visually determined
 resolution_df_path <- base::paste0(
-  base_path_input,
+  base_path,
   "/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt")
 
 resolution_df <- utils::read.csv(file = resolution_df_path, 
@@ -156,17 +151,17 @@ resolution_df <- utils::read.csv(file = resolution_df_path,
                                as.is=TRUE, 
                                colClasses = "character")
 
-corr_pval_df <-  readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/09_crpv/all_corrected_pval"))
+# corr_pval_df <-  readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/09_crpv/all_corrected_pval"))
 
 colors_path <- base::paste0(
-  base_path_input,
+  base_path,
   "/metadata/colors/colors.txt")
 
 source("../source/colors.R")
 source("../source/plotting.R")
-source("../source/sce_functions_reclustering.R")
+#source("../source/sce_functions_reclustering.R")
 ```
 
 ```{r params}
@@ -259,22 +254,22 @@ make_pattern_density_plot <- function(
 ```{r export_paths}
 
 output_pdf_heatmap_own_plot <- base::paste0(
-   base_path_input, "/manuscript1/figure3/figure3_heatmap_own.pdf")
+   base_path, "/manuscript1/figure3/figure3_heatmap_own.pdf")
 output_pdf_a_legend <- base::paste0(
-  base_path_input, "/manuscript1/figure3/figure3_a_legend.pdf")
+  base_path, "/manuscript1/figure3/figure3_a_legend.pdf")
 
 output_pdf_own_perm_plot <-  base::paste0(
-   base_path_input, "/manuscript1/figure3/figure3_own_perm.pdf")
+   base_path, "/manuscript1/figure3/figure3_own_perm.pdf")
 output_pdf_o1_perm_plot <-  base::paste0(
-   base_path_input, "/manuscript1/figure3/figure3_o1_perm.pdf")
+   base_path, "/manuscript1/figure3/figure3_o1_perm.pdf")
 output_pdf_mmms_sign_plot <-  base::paste0(
-   base_path_input, "/manuscript1/figure3/figure3_mmms_sign.pdf")
+   base_path, "/manuscript1/figure3/figure3_mmms_sign.pdf")
 
 output_pdf_heatmaps_others_plot <- base::paste0(
-   base_path_input, "/manuscript1/figure3/figure3_heatmaps_others.pdf")
+   base_path, "/manuscript1/figure3/figure3_heatmaps_others.pdf")
 
 output_pdf_ALL_plot <- base::paste0(
-   base_path_input, "/manuscript1/figure3/figure3_all_dist_plots.pdf")
+   base_path, "/manuscript1/figure3/figure3_all_dist_plots.pdf")
 ```
 
 # Obtain data for text
@@ -3156,17 +3151,17 @@ plot_mp_all <- ggpubr::ggarrange(
 )
 ```
 
-```{r big_plot_ALL, fig.width = 12, fig.height = 8}
-big_plot_ALL <- ggpubr::ggarrange(
-  ncol = 4,
-  align = "hv",
-  plot_bp_all,
-  plot_ai_all,
-  plot_vi_all,
-  plot_mp_all, 
-  widths = c(2, 1, 1, 1)
-)
-big_plot_ALL
+```{r big_plot_ALL, fig.width = 12, fig.height = 12}
+# big_plot_ALL <- ggpubr::ggarrange(
+#   ncol = 4,
+#   align = "hv",
+#   plot_bp_all,
+#   plot_ai_all,
+#   plot_vi_all,
+#   plot_mp_all, 
+#   widths = c(2, 1, 1, 1)
+# )
+# big_plot_ALL
 ```
 
 ```{r big_plot_ALL_export}
@@ -3212,7 +3207,6 @@ mark_df <- base::as.data.frame(mat_mark)
 mark_df$Var2 <- factor(
   mark_df$Var2,
   levels = base::rev(c(7, 5, 10, 4, 2, 3, 9, 6, 8, 11, 1)))
-a_mmms_base_plot
 ```
 
 ```{r mat_mmms}

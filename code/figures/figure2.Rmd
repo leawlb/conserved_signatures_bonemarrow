@@ -43,36 +43,30 @@ library(grDevices, quietly = TRUE) # this is not currently in conda envt
 ```
 
 ```{r base_path}
-base_path_input <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data/"
-```
-
-```{r base_path_snakemake, eval = FALSE, include = FALSE}
-base_path_input <- snakemake@input[["base_path_input"]]
-base_path_output_temp <- snakemake@params[["base_path_output_temp"]]
+base_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data/"
 ```
 
 ```{r load_manual}
-# fully annotated SCE object (HSPCs)
+# fully annotated SCE objects
 sce_hsc <- base::readRDS(base::paste0(
-  base_path_input, 
+  base_path, 
   "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10"))
 sce_str <- base::readRDS(base::paste0(
-  base_path_input, 
+  base_path, 
   "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10"))
 
-# list of gene sets for HSPCs (conserved signature, conserved markers, etc.)
+# list of gene sets for HSPCs (signature genes, conserved markers, etc.)
 geneset_list_hsc <- base::readRDS(base::paste0(
-  base_path_input, 
-  "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"))
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"))
 
 # conserved markers per cell type per age (markers_conservation_hsc)
-# don't forget to run "age" part for conserved markers
 base::load(base::paste0(
-base_path_input,
-"scRNAseq/main_analysis/sce_objects/03_sce_analysis/03_marker_conservation/02_age/cons_markers_hsc.RData"))
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/03_marker_conservation/02_age/cons_markers_hsc.RData"))
   
 colors_path <- base::paste0(
-  base_path_input, 
+  base_path, 
   "/metadata/colors/colors.txt")
 
 source("../source/colors.R")
@@ -94,24 +88,26 @@ celltype <- "HSCs"
 ```{r export_paths}
 
 output_pdf_pt_umap3_plot <- base::paste0(
-  base_path_input, "/manuscript1/figure2/figure2_pt_umap3.pdf")
+  base_path, "/manuscript1/figure2/figure2_pt_umap3.pdf")
 
 output_pdf_pt_umap_legend3 <- base::paste0(
-  base_path_input, "/manuscript1/figure2/figure2_pt_umap_legend_3.pdf")
+  base_path, "/manuscript1/figure2/figure2_pt_umap_legend_3.pdf")
 
 output_pdf_sign_heatmap_plot <- base::paste0(
-  base_path_input, "/manuscript1/figure2/figure2_sign_heatmap_plot.pdf")
+  base_path, "/manuscript1/figure2/figure2_sign_heatmap_plot.pdf")
 output_pdf_sign_heatmap_legend <- base::paste0(
-  base_path_input, "/manuscript1/figure2/figure2_sign_heatmap_legend.pdf")
+  base_path, "/manuscript1/figure2/figure2_sign_heatmap_legend.pdf")
 
 output_pdf_heatmap_spec_plot <- base::paste0(
-  base_path_input, "/manuscript1/figure2/figure2_heatmap_spec_plot.pdf")
+  base_path, "/manuscript1/figure2/figure2_heatmap_spec_plot.pdf")
 
+output_pdf_pt_scaled <- base::paste0(
+  base_path, "/manuscript1/figure2/figure2_pt_scaled_plot.pdf")
 output_pdf_heatmap_conds_stacked_plot <- base::paste0(
-  base_path_input, "/manuscript1/figure2/figure2_cond_plot.pdf")
+  base_path, "/manuscript1/figure2/figure2_cond_plot.pdf")
 
 output_pdf_aging_theme_plot <- base::paste0(
-  base_path_input, "/manuscript1/figure2/figure2_aging_plot.pdf")
+  base_path, "/manuscript1/figure2/figure2_aging_plot.pdf")
 ```
 
 ## Obtain data
@@ -347,9 +343,9 @@ dev.off()
 ```
 
 ```{r output_sign_heatmap_legend}
-# pdf(output_pdf_sign_heatmap_legend, width = 4, height = 2)
-# sign_heatmap_legend
-# dev.off()
+pdf(output_pdf_sign_heatmap_legend, width = 4, height = 2)
+sign_heatmap_legend
+dev.off()
 ```
 
 ```{r sign_heatmap_remove}
@@ -503,28 +499,6 @@ heatmap_spec_plot
 pdf(output_pdf_heatmap_spec_plot, width = 4.2, height = 2.17)
 heatmap_spec_plot
 dev.off()
-```
-
-### TWO-HEATMAP ASSEMBLY
-
-```{r two_heatmap_assembly, fig.height = 13, fig.width = 6, include = FALSE, eval = FALSE}
-two_hms <- ggpubr::ggarrange(
-  sign_heatmap_theme_plot+ggplot2::theme(
-    legend.position = "none",
-    plot.margin = margin(l = 0, unit = "cm")),
-  heatmap_spec_theme_plot+ggplot2::theme(
-    plot.margin = margin(t = 4, r = 4, unit = "cm")),
-  ncol = 1,
-  align = "hv",
-  heights = c(10, 3)
-)
-two_hms
-```
-
-```{r output_pdf_two_hms, include = FALSE, eval = FALSE}
-# pdf(output_pdf_two_hms, width = 6, height = 13)
-# two_hms
-# dev.off()
 ```
 
 ```{r heatmap_spec_plot_remove}
@@ -894,18 +868,6 @@ marker_3_theme_stacked <- marker_3_wide+
   ggplot2::scale_x_discrete(expand = c(0, 0))
 ```
 
-```{r heatmap_conds7, fig.width = 9, fig.height = 3.5, include = FALSE, eval = FALSE}
-print(
-  ggpubr::ggarrange(
-    marker_1,
-    marker_2,
-    marker_3,
-    nrow = 1,
-    widths = c(0.4, 0.3, 0.3)
-  )
-)
-```
-
 ```{r heatmap_conds_assemble_long, fig.width = 4.5, fig.height = 9}
 heatmap_conds_long_plot <- ggpubr::ggarrange(
     marker_1_theme_long,
@@ -1202,33 +1164,36 @@ dev.off()
 ```
 
 ```{r output_pdf_aging_theme_legend}
-# pdf(output_pdf_aging_theme_legend, width = 4, height = 2)
-# aging_legend
-# dev.off()
+pdf(output_pdf_aging_theme_legend, width = 4, height = 2)
+aging_legend
+dev.off()
 ```
 
 ## Pseudotime-UMAPs
 
+Load pseudotime-related data now.
+
 ```{r load_large}
 # fully annotated SCE object (HSPCs) with diffusion pseudotime
 sce_hsc_all_pseudotime <- base::readRDS(base::paste0(
- base_path_input,
+ base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/04_psce/sce_hsc_pseudotime"))
 
-# fully annotated SCE object (HSPCs), lymphoid branch cells only, with 
-# pseudotime and lymphoid differentiation probability
-ery_pseudo <- base::readRDS(base::paste0(
-  base_path_input, 
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/05_bsce/sce_ery"))
-
-```
-
-```{r pt_umaps1}
 
 # transfer pseudotime info, then remove pseudotime SCE object
 sce_hsc$pseudotime <- sce_hsc_all_pseudotime$dpt_pseudotime
 rm(sce_hsc_all_pseudotime)
 gc()
+
+# fully annotated SCE object (HSPCs), lymphoid branch cells only, with 
+# pseudotime and lymphoid differentiation probability
+ery_pseudo <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/05_bsce/sce_ery"))
+
+```
+
+```{r pt_umaps1}
 
 # add ery info
 # ery object is still needed later
@@ -1369,34 +1334,10 @@ pt_umaps_legend3 <- ggpubr::ggarrange(pt_umaps_legend3_theme)
 pt_umaps_legend3
 ```
 
-```{r pt_umaps1_export}
-# pdf(output_pdf_pt_umap1_plot, width = 2.5, height = 2.5)
-# pt_umaps_theme_plot_1
-# dev.off()
-```
-
-```{r pt_umaps2_export}
-# pdf(output_pdf_pt_umap2_plot, width = 2.5, height = 2.5)
-# pt_umaps_theme_plot_2
-# dev.off()
-```
-
 ```{r pt_umaps3_export}
 pdf(output_pdf_pt_umap3_plot, width = 4, height = 3)
 pt_umaps_theme_plot_3
 dev.off()
-```
-
-```{r output_pdf_pt_umap_legend1}
-# pdf(output_pdf_pt_umap_legend1, width = 3, height = 2)
-# pt_umaps_legend1
-# dev.off()
-```
-
-```{r output_pdf_pt_umap_legend2}
-# pdf(output_pdf_pt_umap_legend2, width = 3, height = 2)
-# pt_umaps_legend2
-# dev.off()
 ```
 
 ```{r output_pdf_pt_umap_legend3}
@@ -1418,7 +1359,27 @@ rm(
   pt_umaps_legend1_theme,
   pt_umaps_legend2_theme,
   pt_umaps_legend1,
-  pt_umaps_legend2)
+  pt_umaps_legend2,
+  heatmaps_conds_long_plot,
+  heatmaps_conds_stacked_plot,
+  heatmaps_conds_wide_plot,
+  heatmep_spec_bae_plot,
+  heatmap_spec_plot,
+  heatmap_spec_theme_plot,
+  hsc_umap_comb,
+  marker_1_long,
+  marker_1_theme_long,
+  marker_1_theme_stacked,
+  marker_1_theme_wide,
+  marker_2_long,
+  marker_2_theme_long,
+  marker_2_theme_stacked,
+  marker_2_theme_wide,
+  marker_3_long,
+  marker_3_theme_long,
+  marker_3_theme_stacked,
+  marker_3_theme_wide,
+  sce_str)
 gc()
 ```
 
@@ -1539,19 +1500,18 @@ print(
 ```{r hsc_pt_theme_plot}
 # due to using ranks for a different number of data points due to different 
 # numbers of genes, the actual x axis values are not identical, but the
-# "meaning" of the x axis in pseudotime is identical (?)
+# "meaning" of the x axis in pseudotime is identical 
 # --> will remove x axis ticks to avoid confusion
 
 # due to fitting the expression from the lowest to the largest point for each
 # gene individually = min-max scaling, also no direct comparison is necessary 
-# or required
 # --> will remove y axis ticks to avoid confusion
 
 HSC_theme <- HSC_1+ 
   theme_all+
   ggplot2::theme(   
     axis.title = element_blank(),
-    axis.ticks.y = element_blank(),
+    axis.ticks = element_blank(),
     axis.text = element_blank(),
     plot.title = element_text(
       hjust = 0.5))+
@@ -1565,7 +1525,7 @@ MkEry_theme <- MkEry_2+
   theme_all+
   ggplot2::theme(   
     axis.title = element_blank(),
-    axis.ticks.y = element_blank(),
+    axis.ticks = element_blank(),
     axis.text = element_blank(),
     plot.title = element_text(
       hjust = 0.5))+
@@ -1579,7 +1539,7 @@ Ery_theme <- Ery_3+
   theme_all+
   ggplot2::theme(   
     axis.title = element_blank(),
-    axis.ticks.y = element_blank(),
+    axis.ticks = element_blank(),
     axis.text = element_blank(),
     plot.title = element_text(
       hjust = 0.5))+
@@ -1619,7 +1579,7 @@ pt_ranking_plot_long <- ggpubr::annotate_figure(
     "Conserved identity signature genes", 
     color = col_cons_long["conserved identity signature"], 
     face = plot_title_face,
-    size = plot_title_size),
+    size = plot_title_size,),
   bottom = ggpubr::text_grob(
     "Pseudotime ranks\nof erythroid branch cells", 
     color = axis_title_color, 
@@ -1636,9 +1596,9 @@ pt_ranking_plot_long
 ```
 
 ```{r output_pdf_pt_ranking_plot_long}
-# pdf(output_pdf_pt_ranking_plot_long, width = 4, height = 8.1)
-# pt_ranking_plot_long
-# dev.off()
+pdf(output_pdf_pt_scaled, width = 4, height = 8.1)
+pt_ranking_plot_long
+dev.off()
 ```
 
 ```{r pt_ranking_remove2}

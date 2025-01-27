@@ -84,6 +84,7 @@ pattern_spacing_val <- 0.03
 
 celltype <- "HSCs"
 
+colors_z_score <- c("skyblue2", "white", "red3")
 colors_z_score_cond <- c("purple3", "white", "orange")
 ```
 
@@ -1398,7 +1399,7 @@ pt_umaps_base_plot_3 <- ggplot2::ggplot(
     breaks = c(0, 0.5, 1),
     na.value = "grey90",
     "Pseudotime within\nErythroid branch",
-    colours = c("grey20", "#4684FF"))
+    colours = c("#061F42", "#8FBEFF"))
 ```
 
 ```{r pt_umaps_theme_plot_3, fig.width = 3, fig.height = 3}

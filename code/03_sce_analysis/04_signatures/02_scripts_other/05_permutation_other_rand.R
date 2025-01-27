@@ -3,10 +3,10 @@
 
 
 #-------------------------------------------------------------------------------
-# determine random number generator for sample()
-# Mersenne-Twister" is default
-RNGkind("Mersenne-Twister") 
-set.seed(37)
+
+# determine random number generator for sample
+library(parallel)
+RNGkind("L'Ecuyer-CMRG") # using this for usages of parallel is necessary
 
 #-------------------------------------------------------------------------------
 
@@ -15,14 +15,9 @@ library(dplyr, quietly = TRUE)
 library(BiocGenerics, quietly = TRUE)
 library(S4Vectors, quietly = TRUE)
 
-# for using mclapply
-library(parallel, quietly = TRUE)
-
 # for calculating scores
 library(mclust, quietly = TRUE)
-library(mcclust, quietly = TRUE)
 library(bluster, quietly = TRUE)
-library(dendextend, quietly = TRUE)
 
 source(snakemake@params[["reclustering_functions"]])
 
@@ -182,7 +177,8 @@ res_df_list <- parallel::mclapply(
   resolution = resl,
   mc.preschedule = TRUE,
   mc.cores = nr_cores,
-  mc.silent = TRUE)
+  mc.silent = TRUE,
+  mc.set.seed = TRUE)
 
 # res_df_list <- lapply(X = as.list(c(1:iterations)),
 #                                   FUN = permuting_reclustering_scores_seurat,

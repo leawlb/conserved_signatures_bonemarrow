@@ -156,6 +156,22 @@ clustering_orig <- function(sce, k_graph, resolution_louvain){
 
 #-------------------------------------------------------------------------------
 
+# reclustering score calculation requires a function which is not easily
+# available (the package mcclust is only available from the anaconda
+# distribution R channel, which I cannot use anymore)
+# therefore the entire mcclust github was downloaded and only the vi.dist 
+# function will be used 
+# see more info on the download in 03_04 01_reclustering_own_snakefile.py
+
+# https://doi.org/10.32614/CRAN.package.mcclust
+# https://github.com/cran/mcclust
+# Author: Arno Fritsch
+
+print(getwd()) # working directory is 03_04 
+source("../../source/mcclust/mcclust-master/R/vi.dist.R")
+
+#-------------------------------------------------------------------------------
+
 # calculate chosen scores for evaluating re-clustering
 
 calculate_scores <- function(
@@ -222,9 +238,10 @@ calculate_scores <- function(
   score_2 <- mclust::adjustedRandIndex(cluster_vector1, cluster_vector2)
   
   # Variation of Information
-  score_3 <- mcclust::vi.dist(S4Vectors::unfactor(cluster_vector1),
-                              S4Vectors::unfactor(cluster_vector2))
-  
+  # FROM MCCLUST GITHUB
+  score_3 <- vi.dist(S4Vectors::unfactor(cluster_vector1),
+                     S4Vectors::unfactor(cluster_vector2))
+   
   print("scores 2 and 3")
   
   #-----------------------------------------------------------------------------

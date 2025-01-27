@@ -3,6 +3,7 @@
 #-------------------------------------------------------------------------------
 
 OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
+print(OUTPUT_BASE)
 
 RUN_AGE_COMP = config["run_age_comparison"]
 
@@ -32,7 +33,8 @@ rule marker_per_sp_per_celltype:
         data_str = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_str-10",
         data_hsc = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_hsc-10"
     resources:
-        mem_mb=50000
+        mem_mb=50000,
+          queue = "long"
     output:
         output_str = OUTPUT_BASE + "/sce_objects/03_sce_analysis/03_marker_conservation/cons_markers_str.RData",
         output_hsc = OUTPUT_BASE + "/sce_objects/03_sce_analysis/03_marker_conservation/cons_markers_hsc.RData"
@@ -46,14 +48,15 @@ if RUN_AGE_COMP:
 
   rule marker_per_age_comparison:
       input:
-          data_str = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_str-10",
           data_hsc = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_hsc-10",
-          markers_cons_hsc = OUTPUT_BASE + "/sce_objects/03_sce_analysis/04_signatures/01_sign/signature_list_hsc",
-          markers_cons_str = OUTPUT_BASE + "/sce_objects/03_sce_analysis/04_signatures/01_sign/signature_list_str"
+          data_str = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_str-10",
+          markers_cons_hsc = OUTPUT_BASE + "/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc",
+          markers_cons_str = OUTPUT_BASE + "/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_str"
       resources:
-          mem_mb=10000
+          mem_mb=50000,
+          queue = "long"
       output:
           output_str = OUTPUT_BASE + "/sce_objects/03_sce_analysis/03_marker_conservation/02_age/cons_markers_str.RData",
           output_hsc = OUTPUT_BASE + "/sce_objects/03_sce_analysis/03_marker_conservation/02_age/cons_markers_hsc.RData"
       script:
-          "02_marker_per_age_comparison.R"
+          "02_marker_age_comparison.R"

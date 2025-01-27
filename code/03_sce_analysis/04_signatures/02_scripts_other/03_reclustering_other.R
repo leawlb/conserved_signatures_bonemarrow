@@ -1,10 +1,9 @@
 
 # recluster datasets from other species using different gene sets
 
-
-# determine random number generator for sample()
-# Mersenne-Twister" is default
-RNGkind("Mersenne-Twister") 
+# determine random number generator for sample
+library(parallel)
+RNGkind("L'Ecuyer-CMRG") # using this for usages of parallel is necessary
 
 set.seed(37)
 
@@ -12,7 +11,6 @@ set.seed(37)
 
 library(Seurat, quietly = TRUE)
 library(SeuratObject, quietly = TRUE)
-library(parallel, quietly = TRUE)
 
 source(snakemake@params[["reclustering_functions"]])
 
@@ -208,7 +206,8 @@ seu_sign_list_reclustered <- mclapply(
   features = conserved_signature_IDs,
   mc.preschedule = TRUE, 
   mc.cores = nr_cores,
-  mc.silent = TRUE)
+  mc.silent = TRUE,
+  mc.set.seed = TRUE)
 
 # for testing without mclapply
 # seu_sign_list_reclustered <- lapply(
@@ -233,7 +232,8 @@ seu_mark_list_reclustered <- mclapply(
   features = conserved_marker_IDs,
   mc.preschedule = TRUE, 
   mc.cores = nr_cores,
-  mc.silent = TRUE)
+  mc.silent = TRUE,
+  mc.set.seed = TRUE)
 names(seu_mark_list_reclustered) <- base::as.character(unlist(resolution_list))
 
 print("done conserved marker gene reclustering")
@@ -247,7 +247,8 @@ seu_mmms_list_reclustered <- mclapply(
   features = mmusall_marker_IDs,
   mc.preschedule = TRUE, 
   mc.cores = nr_cores,
-  mc.silent = TRUE)
+  mc.silent = TRUE,
+  mc.set.seed = TRUE)
 names(seu_mmms_list_reclustered) <- base::as.character(unlist(resolution_list))
 
 print("done BL6 marker gene reclustering")
@@ -261,7 +262,8 @@ seu_rand_list_reclustered <- mclapply(
   features = random_features,
   mc.preschedule = TRUE, 
   mc.cores = nr_cores,
-  mc.silent = TRUE)
+  mc.silent = TRUE,
+  mc.set.seed = TRUE)
 names(seu_rand_list_reclustered) <- base::as.character(unlist(resolution_list))
 
 print("done random gene reclustering")

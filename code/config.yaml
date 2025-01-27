@@ -1,10 +1,8 @@
 
-base: "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun"
-base_input: "/omics/odcf/analysis/OE0538_projects/DO-0008"
+# INPUT # 
 
-# all base files for 01_01 that require input generated elsewhere.
-# store where required but add full correct paths here
-# all downstream paths will build on "base""
+# all base files that generated previously/elsewhere
+# store where required; add full paths here
 table: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/00_alignment/metadata.csv"
 cellranger_output: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/00_cellranger_output" 
 fourgenomes_output: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/fourgenomes/sce_objects/00_cellranger_output" 
@@ -15,21 +13,36 @@ ref_baccin_sce: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRN
 ref_dahlin_sce: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/01_sce_prep/references_processed/ref_dahlin_sce"
 ref_dolgalev_sce: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/01_sce_prep/references_processed/ref_dolgalev_sce"
 
+
+# BASE #
+
+# the general directory that should contain all output data 
+# all downstream output paths build on "base"
+base: "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun"
+base_input: "/omics/odcf/analysis/OE0538_projects/DO-0008" # disable after move to normal shares
+
+
+# OUTPUT # 
+
 scRNAseq_data_paths:
   main: "/data/scRNAseq/main_analysis"
 metadata_paths: 
   colors: "/data/metadata/colors/colors.txt"
   colors_ref: "/data/metadata/colors/colors_references.txt"
+  
   gene_list_clusters: "/data/metadata/scRNAseq/02_sce_anno/gene_list_clusters.txt"
   gene_list_subclustering: "/data/metadata/scRNAseq/02_sce_anno/gene_list_subclustering.txt"
   gene_list_dotplot: "/data/metadata/scRNAseq/02_sce_anno/gene_list_dotplot.txt"
   gene_list_dotplot_short: "/data/metadata/scRNAseq/02_sce_anno/gene_list_dotplot_short.txt"
+  
   annotation_clusters: "/data/metadata/scRNAseq/02_sce_anno/annotation_clusters.txt"
+  annotation_subclusters: "/data/metadata/scRNAseq/02_sce_anno/annotation_subclusters.txt"
+  annotation_final: "/data/metadata/scRNAseq/02_sce_anno/annotation_final.txt"  
+
   sources_variation: 
     annotation_species: "/data/metadata/scRNAseq/02_sce_anno/sources_variation.txt"
     analysis_species: "/data/metadata/scRNAseq/03_sce_analysis/sources_variation_species.txt"
-  annotation_subclusters: "/data/metadata/scRNAseq/02_sce_anno/annotation_subclusters.txt"
-  annotation_final: "/data/metadata/scRNAseq/02_sce_anno/annotation_final.txt"
+
   reclustering: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm"
   ensembl_mus: "/data/metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_mus"
   ensembl_hum: "/data/metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_hum"
@@ -38,6 +51,7 @@ metadata_paths:
   datasets_other_path: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared"
   resolution_other: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt"
   frame_other: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_frame.txt"
+  
   assignment: "/data/metadata/scRNAseq/05_cci_prep/assignment.txt"
   assignment_reverse: "/data/metadata/scRNAseq/05_cci_prep/assignment_reverse.txt"
   assignment_no_ct_removal: "/data/metadata/scRNAseq/06_cci_alt/assignment_no_ct_removal.txt"
@@ -110,14 +124,18 @@ run_marker_reports: False
 
 ran_li_ipynb: False
 
-recluster_other: False
-run_permutation_genesets: False
-run_permutation_background_sign: False
-run_permutation_background_mark: False
-run_permutation_background_mmms: False
-run_own_permutation_background_sign: False
-run_own_sign_permutation: False
-run_own_mark_permutation: False
-run_own_mmms_permutation: False
+
+run_sign_rand_own_permutation: False
+run_mark_rand_own_permutation: False
+run_mmms_rand_own_permutation: False
+run_genesets_sign_own_permutation: False
+
+run_sign_rand_other_permutation: False
+run_mark_rand_other_permutation: False
+run_mmms_rand_other_permutation: False
+run_genesets_sign_rand_other_permutation: False
+
 run_pval_correction: False
-run_age_comparison: False
+
+
+run_age_comparison: False # what is that?

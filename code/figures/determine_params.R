@@ -75,18 +75,18 @@ theme_all <- ggplot2::theme_classic()+
 # TODO: put in colors later
 colors_z_score <- c("blue3", "white", "red3")
 
-col_cons <- c("conserved_signature" = "#FF4900",
-              "conserved_markers" = "#FF9E1C",
-              "mmusall_markers" = "#2DCA67",
-              "ndges" = "#ea91adff",
-              "random_features" = "grey80")
+col_cons <- c("conserved_signature" = "#C8451D",
+              "conserved_markers" = "#EF8700",
+              "mmusall_markers" = "#94B88E",
+              "ndges" = "#4684FF",
+              "random_features" = "#C3C3C3")
 
 col_cons_long <- c(
-  "conserved identity signature" = "#FF4900",
-  "conserved markers" = "#FF9E1C",
-  "BL6 markers" = "#2DCA67",
-  "ndges" = "#ea91adff",
-  "random genes" = "grey80",
+  "conserved identity signature" = "#C8451D",
+  "conserved markers" = "#EF8700",
+  "BL6 markers" = "#94B88E",
+  "ndges" = "#4684FF",
+  "random genes" = "#C3C3C3",
   "species-specific marker genes" = "grey50")
 
 col_spc_pub <- c(

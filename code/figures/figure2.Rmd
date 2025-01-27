@@ -12,17 +12,17 @@ Generate Figure 2, current title:
 "Cell type conserved signature genes are robust across mouse species and age."
 
 Because Figure 2 requires so much data, it is ordered by how big each chunk of 
-data is, not by the actual panel order.
+data is.
 
-- Expression Heatmap signature genes (B)
-- Expression Heatmap species-specific genes (C)
-- Expression heatmaps condition (F)
-- Number of marker genes (G)
+- Expression Heatmap signature genes 
+- Expression Heatmap species-specific genes 
+- Expression heatmaps condition 
+- Number of marker genes 
 
 Anything using erythroid or pseudotime data comes later:
 Relevant data is also loaded later to save space before that.
-- Pseudotime and Erythroid Branch UMAPs (D)
-- Pseudotime ranking and scaling (E)
+- Pseudotime and Erythroid Branch UMAPs
+- Pseudotime ranking and scaling 
 
 #### Load objects
 
@@ -43,8 +43,7 @@ library(grDevices, quietly = TRUE) # this is not currently in conda envt
 ```
 
 ```{r base_path}
-base_path_input <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/"
-base_path_output_temp <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/"
+base_path_input <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data/"
 ```
 
 ```{r base_path_snakemake, eval = FALSE, include = FALSE}
@@ -67,6 +66,7 @@ geneset_list_hsc <- base::readRDS(base::paste0(
   "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"))
 
 # conserved markers per cell type per age (markers_conservation_hsc)
+# don't forget to run "age" part for conserved markers
 base::load(base::paste0(
 base_path_input,
 "scRNAseq/main_analysis/sce_objects/03_sce_analysis/03_marker_conservation/02_age/cons_markers_hsc.RData"))
@@ -92,54 +92,26 @@ celltype <- "HSCs"
 ```
 
 ```{r export_paths}
-# output_pdf_pt_umap1_plot <- base::paste0(
-#   base_path_output_temp, "/manuscript1/figures/figure2_pt_umap1.pdf")
-# output_pdf_pt_umap2_plot <- base::paste0(
-#   base_path_output_temp, "/manuscript1/figures/figure2_pt_umap2.pdf")
+
 output_pdf_pt_umap3_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures_new/figure2_pt_umap3.pdf")
-# 
-# output_pdf_pt_umap_legend1 <- base::paste0(
-#   base_path_output_temp, "/manuscript1/figures/figure2_pt_umap_legend_1.pdf")
-# output_pdf_pt_umap_legend2 <- base::paste0(
-#   base_path_output_temp, "/manuscript1/figures/figure2_pt_umap_legend_2.pdf")
+  base_path_input, "/manuscript1/figure2/figure2_pt_umap3.pdf")
+
 output_pdf_pt_umap_legend3 <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures_new/figure2_pt_umap_legend_3.pdf")
-# 
-# output_pdf_pt_ranking_plot_long <- base::paste0(
-#   base_path_output_temp,
-#   "/manuscript1/figures/figure2_pt_ranking_plot_long.pdf")
-# output_pdf_pt_ranking_plot_wide <- base::paste0(
-#   base_path_output_temp, 
-#   "/manuscript1/figures/figure2_pt_ranking_plot_wide.pdf")
-# 
+  base_path_input, "/manuscript1/figure2/figure2_pt_umap_legend_3.pdf")
+
 output_pdf_sign_heatmap_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures_new/figure2_sign_heatmap_plot.pdf")
+  base_path_input, "/manuscript1/figure2/figure2_sign_heatmap_plot.pdf")
 output_pdf_sign_heatmap_legend <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures_new/figure2_sign_heatmap_legend.pdf")
+  base_path_input, "/manuscript1/figure2/figure2_sign_heatmap_legend.pdf")
 
 output_pdf_heatmap_spec_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures_new/figure2_heatmap_spec_plot.pdf")
+  base_path_input, "/manuscript1/figure2/figure2_heatmap_spec_plot.pdf")
 
-# output_pdf_two_hms <- base::paste0(
-#   base_path_output_temp, "/manuscript1/figures/figure2_two_hms.pdf")
-# 
-# output_pdf_heatmap_conds_long_plot <- base::paste0(
-#   base_path_output_temp,
-#   "/manuscript1/figures/figure2_heatmap_conds_long_plot.pdf")
-# output_pdf_heatmap_conds_wide_plot <- base::paste0(
-#   base_path_output_temp,
-#   "/manuscript1/figures/figure2_heatmap_conds_wide_plot.pdf")
-# output_pdf_heatmap_conds_stacked_plot <- base::paste0(
-#   base_path_output_temp,
-#   "/manuscript1/figures/figure2_heatmap_conds_stacked_plot.pdf")
-# 
-# output_pdf_aging_theme_plot <- base::paste0(
-#   base_path_output_temp,
-#   "/manuscript1/figures/figure2_aging_plot.pdf")
-# output_pdf_aging_theme_legend <- base::paste0(
-#   base_path_output_temp,
-#   "/manuscript1/figures/figure2_aging_legend.pdf")
+output_pdf_heatmap_conds_stacked_plot <- base::paste0(
+  base_path_input, "/manuscript1/figure2/figure2_cond_plot.pdf")
+
+output_pdf_aging_theme_plot <- base::paste0(
+  base_path_input, "/manuscript1/figure2/figure2_aging_plot.pdf")
 ```
 
 ## Obtain data
@@ -357,7 +329,7 @@ sign_heatmap_legend_theme <- ggpubr::get_legend(sign_heatmap_theme_plot)
 
 ### Assemble
 
-```{r sign_heatmap_assemble, fig.width = 6, fig.height = 10}
+```{r sign_heatmap_assemble, fig.width = 6.5, fig.height = 8}
 sign_heatmap_plot <- ggpubr::ggarrange(
   sign_heatmap_theme_plot + ggplot2::theme(legend.position = "none")
 )
@@ -369,16 +341,15 @@ sign_heatmap_legend <- ggpubr::ggarrange(sign_heatmap_legend_theme)
 ```
 
 ```{r output_pdf_sign_heatmap_plot}
-pdf(output_pdf_sign_heatmap_plot, width = 6, height = 10)
+pdf(output_pdf_sign_heatmap_plot, width = 6.5, height = 8)
 sign_heatmap_plot
 dev.off()
 ```
 
 ```{r output_sign_heatmap_legend}
-pdf(output_pdf_sign_heatmap_legend, width = 4, height = 2)
-sign_heatmap_legend
-dev.off()
-#knitr::knit_exit()
+# pdf(output_pdf_sign_heatmap_legend, width = 4, height = 2)
+# sign_heatmap_legend
+# dev.off()
 ```
 
 ```{r sign_heatmap_remove}
@@ -521,7 +492,7 @@ heatmap_spec_theme_plot <- heatmap_spec_base_plot+
 
 ### Assemble
 
-```{r heatmap_spec_assemble, fig.width = 6, fig.height = 2}
+```{r heatmap_spec_assemble, fig.width = 4.2, fig.height = 2.17}
 heatmap_spec_plot <- ggpubr::ggarrange(
   heatmap_spec_theme_plot
 )
@@ -529,14 +500,14 @@ heatmap_spec_plot
 ```
 
 ```{r output_pdf_heatmap_spec_plot}
-pdf(output_pdf_heatmap_spec_plot, width = 6, height = 2)
+pdf(output_pdf_heatmap_spec_plot, width = 4.2, height = 2.17)
 heatmap_spec_plot
 dev.off()
 ```
 
 ### TWO-HEATMAP ASSEMBLY
 
-```{r two_heatmap_assembly, fig.height = 13, fig.width = 6}
+```{r two_heatmap_assembly, fig.height = 13, fig.width = 6, include = FALSE, eval = FALSE}
 two_hms <- ggpubr::ggarrange(
   sign_heatmap_theme_plot+ggplot2::theme(
     legend.position = "none",
@@ -550,10 +521,10 @@ two_hms <- ggpubr::ggarrange(
 two_hms
 ```
 
-```{r output_pdf_two_hms}
-pdf(output_pdf_two_hms, width = 6, height = 13)
-two_hms
-dev.off()
+```{r output_pdf_two_hms, include = FALSE, eval = FALSE}
+# pdf(output_pdf_two_hms, width = 6, height = 13)
+# two_hms
+# dev.off()
 ```
 
 ```{r heatmap_spec_plot_remove}
@@ -957,7 +928,7 @@ heatmap_conds_wide_plot <- ggpubr::ggarrange(
 heatmap_conds_wide_plot
 ```
 
-```{r heatmap_conds_assemble_stacked, fig.width = 4.5, fig.height = 9}
+```{r heatmap_conds_assemble_stacked, fig.width = 6, fig.height = 10}
 heatmap_conds_stacked_plot <- ggpubr::ggarrange(
     marker_1_theme_stacked,
     marker_2_theme_stacked,
@@ -969,19 +940,19 @@ heatmap_conds_stacked_plot
 ```
 
 ```{r output_pdf_heatmap_conds_long_plot}
-pdf(output_pdf_heatmap_conds_long_plot, width = 4.5, height = 9)
-heatmap_conds_long_plot
-dev.off()
+# pdf(output_pdf_heatmap_conds_long_plot, width = 4.5, height = 9)
+# heatmap_conds_long_plot
+# dev.off()
 ```
 
 ```{r output_pdf_heatmap_conds_wide_plot}
-pdf(output_pdf_heatmap_conds_wide_plot, width = 9, height = 4.5)
-heatmap_conds_wide_plot
-dev.off()
+# pdf(output_pdf_heatmap_conds_wide_plot, width = 9, height = 4.5)
+# heatmap_conds_wide_plot
+# dev.off()
 ```
 
 ```{r output_pdf_heatmap_conds_stacked_plot}
-pdf(output_pdf_heatmap_conds_stacked_plot, width = 4.5, height = 9)
+pdf(output_pdf_heatmap_conds_stacked_plot, width = 6, height = 10)
 heatmap_conds_stacked_plot
 dev.off()
 ```
@@ -1167,26 +1138,21 @@ aging_theme_plot_wide <- ggplot2::ggplot(
   theme_all+
   ggplot2::theme(
     axis.title.x = element_blank(),
-    axis.text.x = element_text(
-      vjust = 0.5,
-      hjust = 0,
-      angle = 90),
+    axis.text.x = element_blank(),
     legend.position = "none",
     plot.title = element_text(
       hjust = 0.5,
       color = col_cons_long["conserved markers"]))+
   ggplot2::labs(
     x = NULL, 
-    y = "# conserved markers identified", 
+    y = "# conserved markers", 
     fill = NULL) +
   ggplot2::scale_fill_manual(
     values = c("young_in_markers" = "grey30",
                "n_markers" = col_cons_long[["conserved markers"]],
                "old_in_markers" = "grey80"))+
-  ggplot2::scale_x_continuous(
-    position = "top",
-    expand  = expansion(c(0,0)))+
   ggplot2::scale_x_discrete(
+    position = "top",
     expand = c(0, 0))
 ```
 
@@ -1225,20 +1191,20 @@ aging_legend
 aging_theme_plot_long
 ```
 
-```{r aging_plot_assemble_wide, fig.width = 5, fig.height = 4.5}
+```{r aging_plot_assemble_wide, fig.width = 4.57, fig.height = 2.7}
 aging_theme_plot_wide
 ```
 
 ```{r output_pdf_aging_theme_plot}
-pdf(output_pdf_aging_theme_plot, width = 5, height = 4.5)
+pdf(output_pdf_aging_theme_plot, width = 4.57, height = 2.7)
 aging_theme_plot_wide
 dev.off()
 ```
 
 ```{r output_pdf_aging_theme_legend}
-pdf(output_pdf_aging_theme_legend, width = 4, height = 2)
-aging_legend
-dev.off()
+# pdf(output_pdf_aging_theme_legend, width = 4, height = 2)
+# aging_legend
+# dev.off()
 ```
 
 ## Pseudotime-UMAPs
@@ -1340,7 +1306,7 @@ pt_umaps_base_plot_2 <- ggplot2::ggplot(
   ggplot2::ylim(c(base::min(hsc_umap_pt$X2)-1, base::max(hsc_umap_pt$X2))+1)+
   ggplot2::scale_color_gradientn(
     "Erythroid cell fate probability",
-    colours = c("grey80", "blue4"))
+    colours = c("grey80", col_cts_hsc["Erythroid progs."]))
 ```
 
 ```{r pt_umaps_theme_plot_2, fig.width = 3, fig.height = 3}
@@ -1363,9 +1329,9 @@ pt_umaps_base_plot_3 <- ggplot2::ggplot(
   ggplot2::scale_color_gradientn(
     limits = c(0, 1),
     breaks = c(0, 0.5, 1),
-    na.value = "grey80",
+    na.value = "grey90",
     "Pseudotime within\nErythroid branch",
-    colours = c("#DAD0FB", "#251555"))
+    colours = c("grey20", "#4684FF"))
 ```
 
 ```{r pt_umaps_theme_plot_3, fig.width = 3, fig.height = 3}
@@ -1404,15 +1370,15 @@ pt_umaps_legend3
 ```
 
 ```{r pt_umaps1_export}
-pdf(output_pdf_pt_umap1_plot, width = 2.5, height = 2.5)
-pt_umaps_theme_plot_1
-dev.off()
+# pdf(output_pdf_pt_umap1_plot, width = 2.5, height = 2.5)
+# pt_umaps_theme_plot_1
+# dev.off()
 ```
 
 ```{r pt_umaps2_export}
-pdf(output_pdf_pt_umap2_plot, width = 2.5, height = 2.5)
-pt_umaps_theme_plot_2
-dev.off()
+# pdf(output_pdf_pt_umap2_plot, width = 2.5, height = 2.5)
+# pt_umaps_theme_plot_2
+# dev.off()
 ```
 
 ```{r pt_umaps3_export}
@@ -1422,15 +1388,15 @@ dev.off()
 ```
 
 ```{r output_pdf_pt_umap_legend1}
-pdf(output_pdf_pt_umap_legend1, width = 3, height = 2)
-pt_umaps_legend1
-dev.off()
+# pdf(output_pdf_pt_umap_legend1, width = 3, height = 2)
+# pt_umaps_legend1
+# dev.off()
 ```
 
 ```{r output_pdf_pt_umap_legend2}
-pdf(output_pdf_pt_umap_legend2, width = 3, height = 2)
-pt_umaps_legend2
-dev.off()
+# pdf(output_pdf_pt_umap_legend2, width = 3, height = 2)
+# pt_umaps_legend2
+# dev.off()
 ```
 
 ```{r output_pdf_pt_umap_legend3}
@@ -1490,8 +1456,7 @@ plot_HSCs <- plot_data[,c(colnames(plot_data)[1:6],
   gather(gene, expression,
          -pseudotime, -celltypes, -Mouse_ID, 
          -Species_ID, -Age_weeks, -Age_ID)
-col_HSCs <- grDevices::colorRampPalette(c("grey95", 
-                                          col_cts_hsc["HSCs"], 
+col_HSCs <- grDevices::colorRampPalette(c("grey90", 
                                           "grey5"))
 palette_HSCs <- col_HSCs(length(geneset_list_hsc[["HSCs"]][["conserved_signature"]]))
 
@@ -1501,8 +1466,7 @@ plot_MkEry <- plot_data[,c(colnames(plot_data)[1:6],
   gather(gene, expression,
          -pseudotime, -celltypes, -Mouse_ID, 
          -Species_ID, -Age_weeks, -Age_ID)
-col_MkEry <- grDevices::colorRampPalette(c("grey95", 
-                                           col_cts_hsc["Mk/Ery progs."], 
+col_MkEry <- grDevices::colorRampPalette(c("grey90", 
                                            "grey5"))
 palette_MkEry <- col_MkEry(length(geneset_list_hsc[["Mk/Ery progs."]][["conserved_signature"]]))
 
@@ -1512,8 +1476,7 @@ plot_Ery <- plot_data[,c(colnames(plot_data)[1:6],
   gather(gene, expression,
          -pseudotime, -celltypes, -Mouse_ID, 
          -Species_ID, -Age_weeks, -Age_ID)
-col_Ery <- grDevices::colorRampPalette(c("grey95", 
-                                         col_cts_hsc["Erythroid progs."], 
+col_Ery <- grDevices::colorRampPalette(c("grey90", 
                                          "grey5"))
 palette_Ery <- col_Ery(length(geneset_list_hsc[["Erythroid progs."]][["conserved_signature"]]))
 ```
@@ -1588,7 +1551,7 @@ HSC_theme <- HSC_1+
   theme_all+
   ggplot2::theme(   
     axis.title = element_blank(),
-    axis.ticks = element_blank(),
+    axis.ticks.y = element_blank(),
     axis.text = element_blank(),
     plot.title = element_text(
       hjust = 0.5))+
@@ -1602,7 +1565,7 @@ MkEry_theme <- MkEry_2+
   theme_all+
   ggplot2::theme(   
     axis.title = element_blank(),
-    axis.ticks = element_blank(),
+    axis.ticks.y = element_blank(),
     axis.text = element_blank(),
     plot.title = element_text(
       hjust = 0.5))+
@@ -1616,7 +1579,7 @@ Ery_theme <- Ery_3+
   theme_all+
   ggplot2::theme(   
     axis.title = element_blank(),
-    axis.ticks = element_blank(),
+    axis.ticks.y = element_blank(),
     axis.text = element_blank(),
     plot.title = element_text(
       hjust = 0.5))+
@@ -1649,17 +1612,16 @@ pt_ranking_theme_plot_long <- ggpubr::ggarrange(
   )
 ```
 
-```{r pt_ranking_assemble2, fig.width = 4, fig.height = 10}
+```{r pt_ranking_assemble2, fig.width = 3.9, fig.height = 9}
 pt_ranking_plot_long <- ggpubr::annotate_figure(
   pt_ranking_theme_plot_long,
   top = ggpubr::text_grob(
     "Conserved identity signature genes", 
-    #color = col_cons_long["conserved identity signature"], 
-    face = plot_title_color,
+    color = col_cons_long["conserved identity signature"], 
     face = plot_title_face,
     size = plot_title_size),
   bottom = ggpubr::text_grob(
-    "Pseudotime ranks \nof erythroid branch cells", 
+    "Pseudotime ranks\nof erythroid branch cells", 
     color = axis_title_color, 
     face = axis_title_face,
     size = axis_title_size),
@@ -1674,9 +1636,9 @@ pt_ranking_plot_long
 ```
 
 ```{r output_pdf_pt_ranking_plot_long}
-pdf(output_pdf_pt_ranking_plot_long, width = 4, height = 8.1)
-pt_ranking_plot_long
-dev.off()
+# pdf(output_pdf_pt_ranking_plot_long, width = 4, height = 8.1)
+# pt_ranking_plot_long
+# dev.off()
 ```
 
 ```{r pt_ranking_remove2}
@@ -1722,9 +1684,9 @@ pt_ranking_plot_wide
 ```
 
 ```{r output_pdf_pt_ranking_plot_wide}
-pdf(output_pdf_pt_ranking_plot_wide, width = 8, height = 4)
-pt_ranking_plot_wide
-dev.off()
+# pdf(output_pdf_pt_ranking_plot_wide, width = 8, height = 4)
+# pt_ranking_plot_wide
+# dev.off()
 ```
 
 ```{r pt_ranking_remove3}

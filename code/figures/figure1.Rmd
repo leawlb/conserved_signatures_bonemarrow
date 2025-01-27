@@ -8,8 +8,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Generate Figure 1, current title:
-""
+Generate Figure 1
 
 #### Load objects
 
@@ -26,8 +25,8 @@ library(scuttle, quietly = TRUE)
 ```
 
 ```{r base_path}
-base_path_input <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/"
-base_path_output_temp <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp"
+base_path_input <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data/"
+base_path_output_temp <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data/"
 ```
 
 ```{r base_path_snakemake, eval = FALSE, include = FALSE}
@@ -36,7 +35,6 @@ base_path_output_temp <- snakemake@params[["base_path_output_temp"]]
 ```
 
 ```{r load_manual}
-
 # load data for manual use here
 
 # fully annotated SCE objects
@@ -48,15 +46,30 @@ sce_str <- base::readRDS(base::paste0(
   "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10"))
 
 colors_path <- base::paste0(
-  base_path_input, 
-  "/metadata/colors/colors.txt")
+  "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt")
 
 source("../source/colors.R")
+```
 
+```{r load_manual_short}
 # gene list for dotplot 
-gene_list_dtplt <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/metadata_temp/gene_list_dotplot.txt"
+gene_list_dtplt <- base::paste0(
+  base_path_input, 
+  "/metadata/scRNAseq/02_sce_anno/gene_list_dotplot.txt")
 
 gene_df <- utils::read.csv(gene_list_dtplt, 
+  header = TRUE, 
+  sep = ";", 
+  check.names=FALSE, 
+  stringsAsFactors=FALSE, 
+  as.is=TRUE, 
+  colClasses = "character")
+
+order_list_dotplot <- base::paste0(
+  base_path_input, 
+  "/metadata/scRNAseq/02_sce_anno/dotplot_order.txt")
+
+dotplot_order_df <- utils::read.csv(order_list_dotplot, 
   header = TRUE, 
   sep = ";", 
   check.names=FALSE, 
@@ -81,30 +94,30 @@ subclustering_df <- utils::read.csv(gene_list_subclustering,
 # define output paths for pdf export
 output_pdf_umap_species_hsc <- base::paste0(
   base_path_output_temp,
-  "/manuscript1/figures_new/figure1_umap_species_hsc.pdf")
+  "/manuscript1/figure1/figure1_umap_species_hsc.pdf")
 output_pdf_umap_species_str <- base::paste0(
   base_path_output_temp,
-  "/manuscript1/figures_new/figure1_umap_species_str.pdf")
+  "/manuscript1/figure1/figure1_umap_species_str.pdf")
 output_pdf_umap_species_legend <- base::paste0(
   base_path_output_temp,
-  "/manuscript1/figures_new/figure1_umap_species_legend.pdf")
+  "/manuscript1/figure1/figure1_umap_species_legend.pdf")
 
 output_pdf_umap_spec_sep_hsc <- base::paste0(
   base_path_output_temp,
-  "/manuscript1/figures_new/figure1_umap_specsep_hsc.pdf") 
+  "/manuscript1/figure1/figure1_umap_specsep_hsc.pdf") 
 output_pdf_umap_spec_sep_str <- base::paste0(
   base_path_output_temp,
-  "/manuscript1/figures_new/figure1_umap_specsep_str.pdf") 
+  "/manuscript1/figure1/figure1_umap_specsep_str.pdf") 
 output_pdf_umap_spec_sep_legend <- base::paste0(
   base_path_output_temp,
-  "/manuscript1/figures_new/figure1_umap_specsep_legend.pdf") 
+  "/manuscript1/figure1/figure1_umap_specsep_legend.pdf") 
 
 output_pdf_dotplot <- base::paste0(
   base_path_output_temp,
-  "/manuscript1/figures_new/figure1_dotplot.pdf") 
+  "/manuscript1/figure1/figure1_dotplot.pdf") 
 output_pdf_dotplot_legend <- base::paste0(
   base_path_output_temp,
-  "/manuscript1/figures_new/figure1_dotplot_legend.pdf") 
+  "/manuscript1/figure1/figure1_dotplot_legend.pdf") 
 ```
 
 ```{r params}
@@ -576,14 +589,17 @@ cell type sub-clustering per species for HSCs (top left) and Adipo/CARs
 
 ```{r dp_prepare}
 # get genes
-gene_df_hsc <- gene_df[gene_df$fraction == "hsc",]
+gene_df_hsc <- gene_df[gene_df$fraction == "hsc" & grepl("Visualisation", gene_df$use),]
+gene_order_hsc <- dotplot_order_df[dotplot_order_df$Fraction == "hsc",]
 genes_hsc <- gene_df_hsc$gene
+genes_ordered_hsc <- unique(gene_order_hsc$Gene)
 
-gene_df_str <- gene_df[which(gene_df$fraction == "str" & 
-                               gene_df$use == "short"),]
-genes_str <- gene_df_str$gene
+gene_df_str <- gene_df[gene_df$fraction == "str" & grepl("Visualisation", gene_df$use),]
+gene_order_str <- dotplot_order_df[dotplot_order_df$Fraction == "str",]
+genes_str <- unique(gene_df_str$gene)
+genes_ordered_str <- unique(gene_order_str$Gene)
 
-# agrgegate across cell types, get average expression, use normalized counts
+# aggregate across cell types, get average expression, use normalized counts
 agg_hsc <- scuttle::aggregateAcrossCells(
   sce_hsc, 
   id=colData(sce_hsc)[,c("celltypes")], 
@@ -632,11 +648,11 @@ vis_df_str$celltypes <- factor(
 # factor genes for correct order
 vis_df_hsc$gene <- factor(
   vis_df_hsc$gene, 
-  levels = gene_df_hsc$gene)
+  levels = genes_ordered_hsc)
 
 vis_df_str$gene <- factor(
   vis_df_str$gene, 
-  levels = gene_df_str$gene)
+  levels = genes_ordered_str)
 ```
 
 ```{r dp_function}
@@ -721,12 +737,12 @@ vis_df_ct_str$celltypes <- base::rep(ct_str, nrow(vis_df_ct_str))
 vis_df_ct_hsc$species <- factor(vis_df_ct_hsc$species, 
                                 levels = base::rev(names(col_spc_pub)))
 vis_df_ct_hsc$gene <- factor(vis_df_ct_hsc$gene,
-                             levels = gene_df_hsc$gene)
+                             levels = genes_ordered_hsc)
 
 vis_df_ct_str$species <- factor(vis_df_ct_str$species, 
                               levels = base::rev(names(col_spc_pub)))
 vis_df_ct_str$gene <- factor(vis_df_ct_str$gene,
-                             levels = gene_df_str$gene)
+                             levels = genes_ordered_str)
 
 # perc expressed
 vis_df_ct_hsc <- get_perc_expressed(vis_df_ct_hsc, sce_hsc)
@@ -740,31 +756,31 @@ vis_df_ct_str <- get_perc_expressed(vis_df_ct_str, sce_str)
 # make background grid
 background_hsc <- data.frame(
   xmin = c(
-    "Mecom",
-    "Adgrl4",
-    "Dctpp1",
-    "Cebpa",
-    "Irf8",
-    "Cebpe",
-    "Flt3",
-    "Hdc",
-    "Gata2",
-    "Gata1",
-    "Klf1",
-    "Mki67"),  # start of each segment (character values)
+    "Mecom", # HSC
+    "Adgrl4", # MPP
+    "Dctpp1", # Activated
+    "Cebpa", # Myeloid
+    "Irf8", # Mono
+    "Cebpe", # Neutro
+    "Satb1", # Lymph
+    "Hdc", # BM
+    "Itga2b", # Mk
+    "Gata2", # Mk ery
+    "Klf1", # Ery
+    "Mki67"), # Cycling # start of each segment (character values)
   xmax = c(
-    "Meis1",
-    "Cd34",
-    "Hells",
-    "Cebpa",
-    "Ccr2",
-    "S100a8",
-    "Dntt",
-    "Cpa3",
-    "Pf4",
-    "Car2",
-    "Hba-a1",
-    "Lockd"
+    "Meis1", # HSC
+    "Flt3", # MPP
+    "Hells", # Activated
+    "Cebpa", # Myeloid
+    "Ccr2", # Mono
+    "S100a8", # Neutro 
+    "Il7r", # Lymph
+    "Cpa3", # BM
+    "Pf4", # Mk
+    "Car2", # Mk ery
+    "Hba-a1", # Ery
+    "Lockd" # Cycling
   ),  # end of each segment (character values)
   ymin = -Inf,              # covers full height
   ymax = Inf,
@@ -773,6 +789,7 @@ background_hsc <- data.frame(
     rep(c("white", "grey80"), 5),
     "white")  # alternating colors
 )
+
 
 background_hsc$xmin <- base::match(background_hsc$xmin, 
                                    levels(vis_df_ct_hsc$gene))
@@ -834,10 +851,11 @@ background_str <- data.frame(
     "Cdh5",
     "Ly6a",
     "Car4",
-    "Vwf",
+    "Nr2f2",
     "Tfpi",
     "Lyve1",
-    "Tagln"
+    "Tagln",
+    "Rgs4"
     ),  
   xmax = c(
     "Lepr",
@@ -849,14 +867,15 @@ background_str <- data.frame(
     "Timp4",
     "Lrg1",
     "Flt4",
-    "Prox1",
-    "Steap4"
+    "Cxcl21a",
+    "Acta2",
+    "Rgs5"
   ), 
   ymin = -Inf,             
   ymax = Inf,
   fill = c(
     "grey80",
-    rep(c("white", "grey80"),  5)) 
+    rep(c("white", "grey80"),  5), "white") 
 )
 
 background_str$xmin <- base::match(background_str$xmin,
@@ -915,18 +934,18 @@ dp_base_plot_bottom_left <- ggplot2::ggplot(
       color = percent_expressed,
       size = expression))+
   ggplot2::geom_rect(
-    data = background_hsc, 
+    data = background_hsc,
     aes(xmin = xmin - 0.5,
-        xmax = xmax + 0.5, 
+        xmax = xmax + 0.5,
         ymin = ymin,
         ymax = ymax),
-    fill = background_hsc$fill,
-    inherit.aes = FALSE, 
-    alpha = 0.2)+
+  fill = background_hsc$fill,
+  inherit.aes = FALSE,
+  alpha = 0.2)+
   ggplot2::geom_point()
 ```
 
-```{r dp_theme_plot_bottom_left}
+```{r dp_theme_plot_bottom_left, fig.width = 25, fig.height = 6}
 dp_theme_plot_bottom_left <- dp_base_plot_bottom_left+
   theme_all+
   ggplot2::theme(
@@ -955,18 +974,18 @@ dp_base_plot_bottom_right <- ggplot2::ggplot(
       color = percent_expressed,
       size = expression))+
   ggplot2::geom_rect(
-    data = background_str, 
+    data = background_str,
     aes(xmin = xmin - 0.5,
-        xmax = xmax + 0.5, 
+        xmax = xmax + 0.5,
         ymin = ymin,
         ymax = ymax),
     fill = background_str$fill,
-    inherit.aes = FALSE, 
+    inherit.aes = FALSE,
     alpha = 0.2)+
   ggplot2::geom_point()
 ```
 
-```{r dp_theme_plot_bottom_right}
+```{r dp_theme_plot_bottom_right, fig.width = 20,fig.height = 5}
 dp_theme_plot_bottom_right <- dp_base_plot_bottom_right+
   theme_all+
   ggplot2::theme(
@@ -1093,7 +1112,7 @@ dp_theme_plot2 <- ggpubr::ggarrange(
   dp_theme_plot_bottom_left,
   dp_theme_plot_bottom_right,
   heights = c(1.1,1.8),
-  widths = c(1, 1.03))
+  widths = c(1.1, 1))
 
 dp_theme_plot2
 ```

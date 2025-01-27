@@ -5,31 +5,36 @@
 
 library(biomaRt, quietly = TRUE)
 set.seed(37)
-options(timeout=300)
+
+sessionInfo()
+packageVersion('biomaRt')
+options(timeout=10000)
 
 #-------------------------------------------------------------------------------
 
 # get ensembl mouse and human ID conversion table (download)
 
-mart_m <- biomaRt::useMart(
+# Ensembl release 113 - October 2024
+mart_m <- biomaRt::useEnsembl(
   "ensembl",
   dataset="mmusculus_gene_ensembl",
   host="https://www.ensembl.org")
 
-mart_h <- biomaRt::useMart(
+mart_h <- biomaRt::useEnsembl(
   "ensembl",
   dataset="hsapiens_gene_ensembl",
   host="https://www.ensembl.org")
 
-mart_z <- biomaRt::useMart(
+mart_z <- biomaRt::useEnsembl(
   "ensembl",
   dataset="drerio_gene_ensembl",
   host="https://www.ensembl.org")
 
-mart_n <- biomaRt::useMart(
+mart_n <- biomaRt::useEnsembl(
   "ensembl",
   dataset="hgfemale_gene_ensembl",
   host="https://www.ensembl.org")
+
 
 # get ensembl dfs with required attributes
 

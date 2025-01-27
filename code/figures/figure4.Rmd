@@ -30,13 +30,11 @@ library(ggpattern, quietly = TRUE) # not in conda env
 ```
 
 ```{r base_path}
-base_path_input <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/"
-base_path_output_temp <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/"
+base_path_input <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data"
 ```
 
 ```{r base_path_snakemake, eval = FALSE, include = FALSE}
 base_path_input <- snakemake@input[["base_path_input"]]
-base_path_output_temp <- snakemake@params[["base_path_output_temp"]]
 ```
 
 ```{r load_manual_remaining}
@@ -70,8 +68,8 @@ colors_path <- base::paste0(
   "/metadata/colors/colors.txt")
 
 ensembl_sign <- readRDS(base::paste0(
-  base_path_output_temp,
-  "/04_signatures/01_reclustering_own/02_endf/ensembl_sign_hsc"))
+  base_path_input,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/02_endf/ensembl_sign_hsc"))
 
 source("../source/colors.R")
 source("../source/plotting.R")
@@ -85,7 +83,7 @@ source("../source/sce_functions_reclustering.R")
 
 dataset_o1 <- "ts_bone_marrow"
 
-seu_orig_o1 <- seu_str_recl_list_o1 <- base::readRDS(base::paste0(
+seu_orig_o1 <-  base::readRDS(base::paste0(
   base_path_input,
   "/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_bone_marrow"))
 

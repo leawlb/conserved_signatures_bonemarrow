@@ -27,9 +27,7 @@ library(Seurat, quietly = TRUE)
 ```
 
 ```{r load_manual_basepath}
-base_path_input <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp"
-base_path_output_temp <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp"
-base_path_input_prev <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/"
+base_path_input <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data"
 ```
 
 ```{r base_path_snakemake, eval = FALSE, include = FALSE}
@@ -44,29 +42,29 @@ base_path_output_temp <- snakemake@params[["base_path_output_temp"]]
 # SCE with reclustering vectors for each gene set
 sce_hsc_recl <- base::readRDS(base::paste0(
   base_path_input,
-  "/04_signatures/01_reclustering_own/03_recl/sce_hsc"))
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/03_recl/sce_hsc"))
 
 # dataframe of re-clustering scores for each gene set
 score_df_hsc <- base::readRDS(base::paste0(
   base_path_input,
-  "/04_signatures/01_reclustering_own/04_rcls/score_df_hsc"))
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/04_rcls/score_df_hsc"))
 
 # dataframes of re-clustering scores after background permutation
 
 # signature vs random
 psdf_hsc_sign_rand <- base::readRDS(base::paste0(
   base_path_input,
-  "/04_signatures/01_reclustering_own/06_psig/perm_score_df_hsc"))
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_psig/perm_score_df_hsc"))
 
 # conserved markers vs random
 psdf_hsc_mark_rand <- base::readRDS(base::paste0(
   base_path_input,
-  "/04_signatures/01_reclustering_own/06_pmrk/perm_score_df_hsc"))
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_pmrk/perm_score_df_hsc"))
 
 # BL6 markers vs random
 psdf_hsc_mmms_rand <- base::readRDS(base::paste0(
   base_path_input,
-  "/04_signatures/01_reclustering_own/06_pmmm/perm_score_df_hsc"))
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_pmmm/perm_score_df_hsc"))
 ```
 
 ```{r load_manual_other1}
@@ -79,27 +77,28 @@ dataset_o1 <- "mus_tm_bonemarrow"
 # list of seurat objects with reclustering vectors for each gene set and resolution
 seu_hsc_recl_list_o1 <- base::readRDS(base::paste0(
   base_path_input,
-  "/04_signatures/02_reclustering_other/03_recl/reclustered_mus_tm_bonemarrow_list"))
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_mus_tm_bonemarrow_list"))
 
 # list of dataframes of re-clustering scores for each gene set and resolution
 score_df_hsc_list_o1 <- base::readRDS(base::paste0(
   base_path_input,
-  "/04_signatures/02_reclustering_other/04_rcls/score_df_mus_tm_bonemarrow_list"))
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_mus_tm_bonemarrow_list"))
 
 
 # dataframes of re-clustering scores after permutation comparing to background
 psdf_hsc_sign_rand_o1 <- base::readRDS(base::paste0(
   base_path_input,
-  "/04_signatures/02_reclustering_other/06_psig/perm_score_df_mus_tm_bonemarrow"))
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_psig/perm_score_df_mus_tm_bonemarrow"))
+
 psdf_hsc_mmms_rand_o1 <- base::readRDS(base::paste0(
   base_path_input,
-  "/04_signatures/02_reclustering_other/07_pmms/perm_score_df_mus_tm_bonemarrow"))
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_pmms/perm_score_df_mus_tm_bonemarrow"))
 
 # dataframes of re-clustering scores after permutation comparing gene sets
 # BL6 markers vs signature + random
 psdf_hsc_mmms_signrand_o1 <- base::readRDS(base::paste0(
   base_path_input,
-  "/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_mus_tm_bonemarrow"))
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_mus_tm_bonemarrow"))
 ```
 
 ```{r load_manual_other2, include = FALSE, eval = FALSE}
@@ -112,27 +111,27 @@ dataset_o2 <- "mus_weinreb_hspc"
 # list of seurat objects with reclustering vectors for each gene set and resolution
 seu_hsc_recl_list_o2 <- base::readRDS(base::paste0(
   base_path_input,
-  "/04_signatures/02_reclustering_other/03_recl/reclustered_mus_weinreb_hspc_list"))
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_mus_weinreb_hspc_list"))
 
 # list of dataframes of re-clustering scores for each gene set and resolution
 score_df_hsc_list_o2 <- base::readRDS(base::paste0(
   base_path_input,
-  "/04_signatures/02_reclustering_other/04_rcls/score_df_mus_weinreb_hspc_list"))
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_mus_weinreb_hspc_list"))
 
 # perm score DF from background permutation (SIGN)
 psdf_hsc_sign_rand_o2 <- base::readRDS(base::paste0(
   base_path_input,
-  "/04_signatures/02_reclustering_other/06_psig/perm_score_df_mus_weinreb_hspc"))
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_psig/perm_score_df_mus_weinreb_hspc"))
 psdf_hsc_mmms_rand_o2 <- base::readRDS(base::paste0(
   base_path_input,
-  "/04_signatures/02_reclustering_other/07_pmms/perm_score_df_mus_weinreb_hspc"))
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_pmms/perm_score_df_mus_weinreb_hspc"))
 
 # dataframes of re-clustering scores after permutation comparing gene sets
 # BL6 markers vs signature + random
 
 psdf_hsc_mmms_signrand_o2 <- base::readRDS(base::paste0(
   base_path_input,
-  "/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_mus_weinreb_hspc"))
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_mus_weinreb_hspc"))
 ```
 
 ```{r load_manual_remaining}
@@ -142,11 +141,11 @@ psdf_hsc_mmms_signrand_o2 <- base::readRDS(base::paste0(
 # list of gene sets for HSPCs (conserved signature, conserved markers, etc.)
 geneset_list_hsc <-base::readRDS(base::paste0(
   base_path_input,
-  "/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"))
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"))
 
 # data frame containing the correct resolutions for other datasets as visually determined
 resolution_df_path <- base::paste0(
-  base_path_input_prev,
+  base_path_input,
   "/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt")
 
 resolution_df <- utils::read.csv(file = resolution_df_path, 
@@ -159,10 +158,10 @@ resolution_df <- utils::read.csv(file = resolution_df_path,
 
 corr_pval_df <-  readRDS(base::paste0(
   base_path_input,
-  "/04_signatures/02_reclustering_other/09_crpv/all_corrected_pval"))
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/09_crpv/all_corrected_pval"))
 
 colors_path <- base::paste0(
-  base_path_input_prev,
+  base_path_input,
   "/metadata/colors/colors.txt")
 
 source("../source/colors.R")
@@ -189,11 +188,11 @@ score2 <- "variation_information"
 score1 <- "adjusted_rand_index"
 score3 <- "mean_prop_cells_cluster"
 
-score2_long <- "Variation\nof information"
-score1_long <- "Adjusted\nRand index"
-score3_long <- "Mean prop.\ncells/cluster"
+score2_long <- "Variation of\ninformation"
+score1_long <- "Adjusted Rand\nindex"
+score3_long <- "Mean\nproportion"
 
-nr_genes_title <- "# re-clustering\ngenes"
+nr_genes_title <- "#genes\n "
 ```
 
 ```{r density_plot_function}
@@ -260,47 +259,22 @@ make_pattern_density_plot <- function(
 ```{r export_paths}
 
 output_pdf_heatmap_own_plot <- base::paste0(
-   base_path_output_temp, "/manuscript1/figures/figure3_heatmap_own.pdf")
-output_pdf_heatmaps_others_plot <- base::paste0(
-   base_path_output_temp, "/manuscript1/figures/figure3_heatmaps_others.pdf")
-output_pdf_ALL_plot <- base::paste0(
-   base_path_output_temp, "/manuscript1/figures/figure3_all_dist_plots.pdf")
+   base_path_input, "/manuscript1/figure3/figure3_heatmap_own.pdf")
+output_pdf_a_legend <- base::paste0(
+  base_path_input, "/manuscript1/figure3/figure3_a_legend.pdf")
 
-# output_pdf_a_plot <- base::paste0(
-#   base_path_output_temp, "/manuscript1/figures/figure3_a.pdf")
-# output_pdf_a_legend <- base::paste0(
-#   base_path_output_temp, "/manuscript1/figures/figure3_a_legend.pdf")
-# output_pdf_b_plot <- base::paste0(
-#   base_path_output_temp, "/manuscript1/figures/figure3_b.pdf")
-# output_pdf_b_legend <- base::paste0(
-#   base_path_output_temp, "/manuscript1/figures/figure3_b_legend.pdf")
-# output_pdf_c_plot <- base::paste0(
-#   base_path_output_temp, "/manuscript1/figures/figure3_c.pdf")
-# output_pdf_d_plot <- base::paste0(
-#   base_path_output_temp, "/manuscript1/figures/figure3_d.pdf")
-# output_pdf_e_plot <- base::paste0(
-#   base_path_output_temp, "/manuscript1/figures/figure3_e.pdf")
-# output_pdf_f_plot <- base::paste0(
-#   base_path_output_temp, "/manuscript1/figures/figure3_f.pdf")
-# output_pdf_g_plot <- base::paste0(
-#   base_path_output_temp, "/manuscript1/figures/figure3_g.pdf")
-# output_pdf_de_plot <- base::paste0(
-#   base_path_output_temp, "/manuscript1/figures/figure3_de.pdf")
-# output_pdf_f_plot <- base::paste0(
-#   base_path_output_temp, "/manuscript1/figures/figure3_f.pdf")
-# output_pdf_g_plot <- base::paste0(
-#   base_path_output_temp, "/manuscript1/figures/figure3_g.pdf")
-# output_pdf_h_plot <- base::paste0(
-#   base_path_output_temp, "/manuscript1/figures/figure3_h.pdf")
-# output_pdf_h_legend <- base::paste0(
-#   base_path_output_temp, "/manuscript1/figures/figure3_h_legend.pdf")
-# 
-# output_bigplot_own_poster <- base::paste0(
-#    base_path_output_temp, "/manuscript1/figures/figure3_bigplot_own_poster.pdf")
-# output_pdf_a_plot_poster <- base::paste0(
-#    base_path_output_temp, "/manuscript1/figures/figure3_a_poster.pdf")
-# output_pdf_bp_legend_poster <- base::paste0(
-#    base_path_output_temp, "/manuscript1/figures/figure3_pb_legend_poster.pdf")
+output_pdf_own_perm_plot <-  base::paste0(
+   base_path_input, "/manuscript1/figure3/figure3_own_perm.pdf")
+output_pdf_o1_perm_plot <-  base::paste0(
+   base_path_input, "/manuscript1/figure3/figure3_o1_perm.pdf")
+output_pdf_mmms_sign_plot <-  base::paste0(
+   base_path_input, "/manuscript1/figure3/figure3_mmms_sign.pdf")
+
+output_pdf_heatmaps_others_plot <- base::paste0(
+   base_path_input, "/manuscript1/figure3/figure3_heatmaps_others.pdf")
+
+output_pdf_ALL_plot <- base::paste0(
+   base_path_input, "/manuscript1/figure3/figure3_all_dist_plots.pdf")
 ```
 
 # Obtain data for text
@@ -309,9 +283,6 @@ output_pdf_ALL_plot <- base::paste0(
 print(sce_hsc_recl$cluster_signt_genes_used[1])
 print(sce_hsc_recl$cluster_consm_genes_used[1])
 print(sce_hsc_recl$cluster_mmusm_genes_used[1])
-
-library(scater)
-plotReducedDim(sce_hsc_recl, "UMAP", colour_by = "Cd79b")
 ```
 
 
@@ -1483,17 +1454,16 @@ theme_plot_bp1_own<- base_plot_bp1_own+
   theme_all+
   ggplot2::scale_x_continuous(
     breaks=c(0,  400, 800),
-    position = "top", 
     limits = c(0, max_genes))+
   ggplot2::theme(
     legend.position = "none",
     plot.title = element_text(
       hjust = 0.5,
       size = axis_title_size),
+    axis.ticks.x = element_blank(),
+    axis.line.x = element_blank(),
     axis.title = element_blank(),
-    axis.text.y = element_text(
-      hjust = 0))+
-  ggplot2::ggtitle(nr_genes_title)
+    axis.text = element_blank())
 ```
 
 ```{r base_plot_bp2_own}
@@ -1532,13 +1502,11 @@ theme_plot_bp2_own <- base_plot_bp2_own+
     limits = c(0, max_genes))+
   ggplot2::theme(
     legend.position = "none",
-    axis.text.x = element_blank(),
-    axis.title.x = element_blank(),
+    axis.text = element_blank(),
+    axis.title = element_blank(),
     axis.line.x = element_blank(),
     axis.ticks.x = element_blank(),
-    axis.title.y = element_blank(),
-    axis.text.y = element_text(
-      hjust = 0))
+    axis.title.y = element_blank())
 ```
 
 ```{r base_plot_bp3_own}
@@ -1571,17 +1539,14 @@ theme_plot_bp3_own <- base_plot_bp3_own+
   theme_all+
   ggplot2::scale_x_continuous(
     breaks=c(0,  400, 800),
-    position = "top", 
+    position = "bottom", 
     limits = c(0, max_genes))+
   ggplot2::theme(
     legend.position = "none",
     axis.title.y = element_blank(),
-    axis.text.x = element_blank(),
-    axis.ticks.x = element_blank(),
-    axis.title.x = element_blank(),
-    axis.line.x = element_blank(),
-    axis.text.y = element_text(
-      hjust = 0))
+    axis.text.y = element_blank(),
+    axis.text.x = element_text(hjust = 0.5))+
+  ggplot2::xlab(nr_genes_title)
 ```
 
 #### Adjusted Rand index (Score 1)
@@ -1601,17 +1566,15 @@ theme_plot_ai1_own <- base_plot_ai1_own+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
-    axis.text.x = element_text(hjust = 0.5),
-    axis.text.y = element_blank(),
+    axis.text = element_blank(),
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
     axis.title = element_blank(),
-    plot.title = element_text(
-      hjust = 0.5,
-      size = axis_title_size))+
+    plot.title = element_blank())+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.5, 1),
     position = "top", 
-    limits = c(score1_min, score1_max))+
-  ggplot2::ggtitle(score1_long) 
+    limits = c(score1_min, score1_max))
 ```
 
 ```{r base_plot_ai2_own}
@@ -1656,16 +1619,14 @@ theme_plot_ai3_own <- base_plot_ai3_own+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
-    axis.text = element_blank(),
-    axis.line.x = element_blank(),
-    axis.ticks.x = element_blank(),
-    axis.title = element_blank(),
+    axis.text.y = element_blank(),
+    axis.title.y = element_blank(),
     plot.title = element_blank())+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.5, 1),
-    position = "top", 
+    position = "bottom", 
     limits = c(score1_min, score1_max))+
-  ggplot2::ggtitle(score1_long) 
+  ggplot2::xlab(score1_long) 
 ```
 
 #### Variation information (Score 2)
@@ -1685,17 +1646,15 @@ theme_plot_vi1_own <- base_plot_vi1_own+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
-    axis.text.x = element_text(hjust = 0.5),
-    axis.text.y = element_blank(),
+    axis.text = element_blank(),
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank(),
     axis.title = element_blank(),
-    plot.title = element_text(
-      hjust = 0.5,
-      size = axis_title_size))+
+    plot.title = element_blank())+
   ggplot2::scale_x_continuous(
     breaks=c(-5, -2.5, 0),
     position = "top", 
-    limits = c(score2_min, score2_max))+
-  ggplot2::ggtitle(base::paste0("0-", score2_long))
+    limits = c(score2_min, score2_max))
 ```
 
 ```{r base_plot_vi2_own}
@@ -1740,16 +1699,16 @@ theme_plot_vi3_own <- base_plot_vi3_own+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
-    axis.text = element_blank(),
-    axis.line.x = element_blank(),
-    axis.ticks.x = element_blank(),
-    axis.title = element_blank(),
+    axis.text.y = element_blank(),
+    axis.text.x = element_text(
+      hjust = 0.5),
+    axis.title.y = element_blank(),
     plot.title = element_blank())+
   ggplot2::scale_x_continuous(
     breaks=c(-5, -2.5, 0),
-    position = "top", 
+    position = "bottom", 
     limits = c(score2_min, score2_max))+
-  ggplot2::ggtitle(score2_long) 
+  ggplot2::xlab(score2_long) 
 ```
 
 #### Mean prop (Score 3)
@@ -1769,17 +1728,14 @@ theme_plot_mp1_own <- base_plot_mp1_own+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
-    axis.text.x = element_text(hjust = 0.5),
-    axis.text.y = element_blank(),
+    axis.text = element_blank(),
     axis.title = element_blank(),
-    plot.title = element_text(
-      hjust = 0.5,
-      size = axis_title_size))+
+    axis.ticks.x = element_blank(),
+    axis.line.x = element_blank())+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.2, 0.4),
     position = "top", 
-    limits = c(score3_min, score3_max))+
-  ggplot2::ggtitle(score3_long) 
+    limits = c(score3_min, score3_max))
 ```
 
 ```{r base_plot_mp2_own}
@@ -1825,16 +1781,16 @@ theme_plot_mp3_own <- base_plot_mp3_own+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
-    axis.text = element_blank(),
-    axis.line.x = element_blank(),
-    axis.ticks.x = element_blank(),
-    axis.title = element_blank(),
+    axis.text.y = element_blank(),
+    axis.text.x = element_text(
+      hjust = 0.5),
+    axis.title.y = element_blank(),
     plot.title = element_blank())+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.2, 0.4),
-    position = "top", 
+    position = "bottom", 
     limits = c(score3_min, score3_max))+
-  ggplot2::ggtitle(score3_long) 
+  ggplot2::xlab(score3_long) 
 ```
 
 ### Assemble
@@ -1843,7 +1799,7 @@ theme_plot_mp3_own <- base_plot_mp3_own+
 
 b_plot_bp_own <- ggpubr::ggarrange(
   ncol = 1,
-  heights = c(1.7, 1, 1),
+  heights = c(1, 1, 1.7),
   align = "v",
   theme_plot_bp1_own,
   theme_plot_bp2_own,
@@ -1852,7 +1808,7 @@ b_plot_bp_own <- ggpubr::ggarrange(
 
 b_plot_ai_own <- ggpubr::ggarrange(
   ncol = 1,
-  heights = c(1.7, 1, 1),
+  heights = c(1, 1, 1.7),
   align = "v",
   theme_plot_ai1_own,
   theme_plot_ai2_own,
@@ -1861,7 +1817,7 @@ b_plot_ai_own <- ggpubr::ggarrange(
 
 b_plot_vi_own <- ggpubr::ggarrange(
   ncol = 1,
-  heights = c(1.7, 1, 1),
+  heights = c(1, 1, 1.7),
   align = "v",
   theme_plot_vi1_own,
   theme_plot_vi2_own,
@@ -1870,7 +1826,7 @@ b_plot_vi_own <- ggpubr::ggarrange(
 
 b_plot_mp_own <- ggpubr::ggarrange(
   ncol = 1,
-  heights = c(1.7, 1, 1),
+  heights = c(1, 1, 1.7),
   align = "v",
   theme_plot_mp1_own,
   theme_plot_mp2_own,
@@ -1879,7 +1835,7 @@ b_plot_mp_own <- ggpubr::ggarrange(
 
 ```
 
-```{r fig.width = 12, fig.height = 4.5}
+```{r fig.width = 9, fig.height = 6.2}
 b_plot <- ggpubr::ggarrange(
   ncol = 4,
   align = "hv",
@@ -1887,9 +1843,15 @@ b_plot <- ggpubr::ggarrange(
   b_plot_ai_own,
   b_plot_vi_own,
   b_plot_mp_own, 
-  widths = c(1.8, 1, 1, 1)
+  widths = c(1, 1, 1, 1)
 )
 b_plot
+```
+
+```{r big_plot_ALL_export}
+pdf(output_pdf_own_perm_plot, width = 9, height = 6.2)
+b_plot
+dev.off()
 ```
 
 ```{r assemble_bigplot_own_poster, fig.width = 12, fig.height = 10, eval = FALSE, include = FALSE}
@@ -1972,14 +1934,10 @@ theme_plot_bp1_o1 <- base_plot_bp1_o1+
     position = "top", 
     limits = c(0, max_genes))+
   ggplot2::theme(
-    plot.title = element_text(
-      hjust = 0.5,
-      size = axis_title_size),
+    plot.title = element_blank(),
     legend.position = "none",
     axis.title = element_blank(),
-    axis.text.y = element_text(
-      hjust = 0))+
-  ggplot2::ggtitle(nr_genes_title)
+    axis.text = element_blank())
 ```
 
 ```{r base_plot_bp3_o1}
@@ -2017,13 +1975,11 @@ theme_plot_bp3_o1 <- base_plot_bp3_o1+
     limits = c(0, max_genes))+
   ggplot2::theme(
     legend.position = "none",
-    axis.title.y = element_blank(),
-    axis.text.x = element_blank(),
+    axis.title = element_blank(),
+    axis.text = element_blank(),
     axis.ticks.x = element_blank(),
     axis.title.x = element_blank(),
-    axis.line.x = element_blank(),
-    axis.text.y = element_text(
-      hjust = 0))
+    axis.line.x = element_blank())
 ```
 
 ```{r a_legend_export}
@@ -2049,17 +2005,13 @@ theme_plot_ai1_o1 <- base_plot_ai1_o1+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
-    axis.text.x = element_text(hjust = 0.5),
-    axis.text.y = element_blank(),
+    axis.text = element_blank(),
     axis.title = element_blank(),
-    plot.title = element_text(
-      hjust = 0.5,
-      size = axis_title_size))+
+    plot.title = element_blank())+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.5, 1),
     position = "top", 
-    limits = c(score1_min, score1_max))+
-  ggplot2::ggtitle(score1_long) 
+    limits = c(score1_min, score1_max))
 ```
 
 ```{r base_plot_ai3_o1}
@@ -2106,17 +2058,13 @@ theme_plot_vi1_o1 <- base_plot_vi1_o1+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
-    axis.text.x = element_text(hjust = 0.5),
-    axis.text.y = element_blank(),
+    axis.text = element_blank(),
     axis.title = element_blank(),
-    plot.title = element_text(
-      hjust = 0.5,
-      size = axis_title_size))+
+    plot.title = element_blank())+
   ggplot2::scale_x_continuous(
     breaks=c(-5, -2.5, 0),
     position = "top", 
-    limits = c(score2_min, score2_max))+
-  ggplot2::ggtitle(base::paste0("0-", score2_long))
+    limits = c(score2_min, score2_max))
 ```
 
 ```{r base_plot_vi3_o1}
@@ -2163,17 +2111,13 @@ theme_plot_mp1_o1 <- base_plot_mp1_o1+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
-    axis.text.x = element_text(hjust = 0.5),
-    axis.text.y = element_blank(),
+    axis.text = element_blank(),
     axis.title = element_blank(),
-    plot.title = element_text(
-      hjust = 0.5,
-      size = axis_title_size))+
+    plot.title = element_blank())+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.2, 0.4),
     position = "top", 
-    limits = c(score3_min, score3_max))+
-  ggplot2::ggtitle(score3_long) 
+    limits = c(score3_min, score3_max))
 ```
 
 ```{r base_plot_mp3_o1}
@@ -2206,11 +2150,11 @@ theme_plot_mp3_o1 <- base_plot_mp3_o1+
 
 ### Assemble
 
-```{r bigplot_assemble_o1, fig.width = 12, fig.height = 10}
+```{r bigplot_assemble_o1, fig.width = 10, fig.height = 4}
 
 plot_bp_o1 <- ggpubr::ggarrange(
   ncol = 1,
-  heights = c(1.8, 1),
+  heights = c(1, 1),
   align = "v",
   theme_plot_bp1_o1,
   theme_plot_bp3_o1
@@ -2218,7 +2162,7 @@ plot_bp_o1 <- ggpubr::ggarrange(
 
 plot_ai_o1 <- ggpubr::ggarrange(
   ncol = 1,
-  heights = c(1.8, 1),
+  heights = c(1, 1),
   align = "v",
   theme_plot_ai1_o1,
   theme_plot_ai3_o1
@@ -2226,7 +2170,7 @@ plot_ai_o1 <- ggpubr::ggarrange(
 
 plot_vi_o1 <- ggpubr::ggarrange(
   ncol = 1,
-  heights = c(1.8, 1),
+  heights = c(1, 1),
   align = "v",
   theme_plot_vi1_o1,
   theme_plot_vi3_o1
@@ -2234,7 +2178,7 @@ plot_vi_o1 <- ggpubr::ggarrange(
 
 plot_mp_o1 <- ggpubr::ggarrange(
   ncol = 1,
-  heights = c(1.8, 1),
+  heights = c(1, 1),
   align = "v",
   theme_plot_mp1_o1,
   theme_plot_mp3_o1
@@ -2242,17 +2186,23 @@ plot_mp_o1 <- ggpubr::ggarrange(
 
 ```
 
-```{r fig.width = 15, fig.height = 3}
+```{r fig.width = 9, fig.height = 3.5}
 big_plot_o1 <- ggpubr::ggarrange(
   nrow = 1,
-  align = "v",
+  align = "hv",
   plot_bp_o1,
   plot_ai_o1,
   plot_vi_o1,
   plot_mp_o1, 
-  widths = c(1.6, 1, 1, 1)
+  widths = c(1, 1, 1, 1)
 )
 big_plot_o1
+```
+
+```{r big_plot_ALL_export}
+pdf(output_pdf_o1_perm_plot, width = 9, height = 3.5)
+big_plot_o1
+dev.off()
 ```
 
 ## Plots: Comparing OTHER 2 scores to random background
@@ -2805,14 +2755,10 @@ theme_plot_bp1_o1_signrand <- base_plot_bp1_o1_signrand+
     position = "top", 
     limits = c(0, max_genes))+
   ggplot2::theme(
-    plot.title = element_text(
-      hjust = 0.5,
-      size = axis_title_size),
+    plot.title = element_blank(),
     legend.position = "none",
     axis.title = element_blank(),
-    axis.text.y = element_text(
-      hjust = 0))+
-  ggplot2::ggtitle(nr_genes_title)
+    axis.text.y = element_blank())
 ```
 
 ```{r base_plot_bp2_o2_signrand, eval = FALSE, include = FALSE}
@@ -2880,14 +2826,11 @@ theme_plot_ai1_o1_signrand <- base_plot_ai1_o1_signrand+
     axis.text.x = element_text(hjust = 0.5),
     axis.text.y = element_blank(),
     axis.title = element_blank(),
-    plot.title = element_text(
-      hjust = 0.5,
-      size = axis_title_size))+
+    plot.title = element_blank())+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.5, 1),
     position = "top", 
-    limits = c(score1_min, score1_max))+
-  ggplot2::ggtitle(score1_long) 
+    limits = c(score1_min, score1_max))
 ```
 
 ```{r base_plot_ai2_o2_signrand, eval = FALSE, include = FALSE}
@@ -2938,14 +2881,11 @@ theme_plot_vi1_o1_signrand <- base_plot_vi1_o1_signrand+
     axis.text.x = element_text(hjust = 0.5),
     axis.text.y = element_blank(),
     axis.title = element_blank(),
-    plot.title = element_text(
-      hjust = 0.5,
-      size = axis_title_size))+
+    plot.title = element_blank())+
   ggplot2::scale_x_continuous(
     breaks=c(-5, -2.5, 0),
     position = "top", 
-    limits = c(score2_min, score2_max))+
-  ggplot2::ggtitle(base::paste0("0-", score2_long))
+    limits = c(score2_min, score2_max))
 ```
 
 ```{r base_plot_vi2_o2_signrand, eval = FALSE, include = FALSE}
@@ -2996,14 +2936,11 @@ theme_plot_mp1_o1_signrand <- base_plot_mp1_o1_signrand+
     axis.text.x = element_text(hjust = 0.5),
     axis.text.y = element_blank(),
     axis.title = element_blank(),
-    plot.title = element_text(
-      hjust = 0.5,
-      size = axis_title_size))+
+    plot.title = element_blank())+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.2, 0.4),
     position = "top", 
-    limits = c(score3_min, score3_max))+
-  ggplot2::ggtitle(score3_long) 
+    limits = c(score3_min, score3_max))
 ```
 
 ```{r base_plot_mp2_o2_signrand, eval = FALSE, include = FALSE}
@@ -3092,7 +3029,7 @@ plot_mp_signrand <- ggpubr::ggarrange(
 
 ```
 
-```{r big_plot_signrand, fig.width = 12, fig.height = 3}
+```{r big_plot_signrand, fig.width = 9, fig.height = 1.85}
 big_plot_signrand <- ggpubr::ggarrange(
   ncol = 4,
   align = "h",
@@ -3100,9 +3037,16 @@ big_plot_signrand <- ggpubr::ggarrange(
   theme_plot_ai1_o1_signrand,
   theme_plot_vi1_o1_signrand,
   theme_plot_mp1_o1_signrand, 
-  widths = c(2, 1, 1, 1)
+  widths = c(1, 1, 1, 1)
 )
 big_plot_signrand
+```
+
+
+```{r big_plot_ALL_export}
+pdf(output_pdf_mmms_sign_plot, width = 9, height = 1.85)
+big_plot_signrand
+dev.off()
 ```
 
 ## Assemble ALL
@@ -3226,9 +3170,9 @@ big_plot_ALL
 ```
 
 ```{r big_plot_ALL_export}
-pdf(output_pdf_ALL_plot, width = 12, height = 8)
-big_plot_ALL
-dev.off()
+# pdf(output_pdf_ALL_plot, width = 12, height = 8)
+# big_plot_ALL
+# dev.off()
 ```
 
 # Own Heatmaps
@@ -3252,7 +3196,7 @@ sign_df <- base::as.data.frame(mat_sign)
 # manually factorise clusters for nice order
 sign_df$Var2 <- factor(
   sign_df$Var2,
-  levels = base::rev(c(1, 3, 2, 6, 8, 9, 4, 5, 7)))
+  levels = base::rev(c(5, 4, 3, 2, 6, 8, 7, 1)))
 ```
 
 ```{r mat_mark}
@@ -3267,7 +3211,8 @@ mark_df <- base::as.data.frame(mat_mark)
 
 mark_df$Var2 <- factor(
   mark_df$Var2,
-  levels = base::rev(c(1, 3, 9, 5, 2, 6, 4, 7, 10, 8)))
+  levels = base::rev(c(7, 5, 10, 4, 2, 3, 9, 6, 8, 11, 1)))
+a_mmms_base_plot
 ```
 
 ```{r mat_mmms}
@@ -3282,7 +3227,7 @@ mmms_df <- base::as.data.frame(mat_mmms)
 
 mmms_df$Var2 <- factor(
   mmms_df$Var2,
-  levels = base::rev(c(1, 3, 10, 11, 12, 5, 2, 9, 4, 6, 14, 13, 8, 7)))
+  levels = base::rev(c(12, 9, 6, 5, 4, 3, 2, 8, 7, 11, 10, 13, 1)))
 ```
 
 ### Plot Components
@@ -3321,10 +3266,8 @@ a_mmms_theme_plot <- a_mmms_base_plot+
     legend.position = "none",
     axis.text = element_blank(),
     axis.title = element_blank(),
-    axis.ticks.y = element_blank(),
-    plot.title = element_text(
-      hjust = 0.5,
-      color = col_cons_long["BL6 markers"]))+
+    plot.title = element_blank(),
+    axis.ticks.y = element_blank())+
   ggplot2::scale_fill_gradientn(
     colors = mycolors_to1,
     limits = c(0, 1),
@@ -3337,13 +3280,11 @@ a_mark_theme_plot <- a_mark_base_plot+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
-    axis.title.x = element_blank(),
+    axis.title = element_blank(),
     axis.text = element_blank(),
     axis.ticks.y = element_blank(),
-    plot.title = element_text(
-      hjust = 0.5,
-      color = col_cons_long["conserved markers"]))+
-  ggplot2::ylab("New clusters")+
+    plot.title = element_blank())+
+ # ggplot2::ylab("New clusters")+
   ggplot2::scale_fill_gradientn(
     colors = mycolors_to1,
     limits = c(0, 1),
@@ -3363,11 +3304,9 @@ a_sign_theme_plot <- a_sign_base_plot+
       margin = margin(t = 0.3, unit = "cm")),
     axis.text.x = element_text(
       angle = 90,
-      hjust = 0,
+      hjust = 1,
       vjust = 0.5),
-    plot.title = element_text(
-      hjust = 0.5,
-      color = col_cons_long["conserved identity signature"]))+
+    plot.title = element_blank())+
   ggplot2::xlab("Original cell types")+
   ggplot2::scale_fill_gradientn(
     colors = mycolors_to1,
@@ -3395,20 +3334,15 @@ a_legend_theme <- ggpubr::get_legend(a_legend_plot)
 
 ### Assemble
 
-```{r a_assemble, fig.height = 7, fig.width = 4}
+```{r a_assemble, fig.height = 7.8, fig.width = 3}
 
 a_theme_plot <- ggpubr::ggarrange(
   ncol = 1,
   a_mmms_theme_plot,
   a_mark_theme_plot,
-  a_sign_theme_plot+
-  ggplot2::theme(
-    axis.text.x = element_text(
-      angle = 90,
-      hjust = 0,
-      vjust = 0.5)),
+  a_sign_theme_plot,
   align = "v",
-  heights = c(1, 1, 2.1)
+  heights = c(1, 1, 2.5)
 )
 
 a_theme_plot
@@ -3432,21 +3366,21 @@ a_theme_plot
 # a_theme_plot_poster
 ```
 
-```{r a_construct_legend, fig.width = 5, fig.height = 1}
+```{r a_construct_legend, fig.width = 6, fig.height = 1}
 a_legend <- ggpubr::ggarrange(a_legend_theme)
 a_legend
 ```
 
 ```{r a_plot_export}
-pdf(output_pdf_heatmap_own_plot, width = 4, height = 7)
+pdf(output_pdf_heatmap_own_plot, width = 3, height = 7.8)
 a_theme_plot
 dev.off()
 ```
 
 ```{r a_legend_export}
-# pdf(output_pdf_a_legend, width = 5, height = 1)
-# a_legend
-# dev.off()
+pdf(output_pdf_a_legend, width = 6, height = 1)
+a_legend
+dev.off()
 ```
 
 ```{r a_plot_export_poster}
@@ -3465,31 +3399,31 @@ levels(selected_seu_list_o1$seu_mmms$cell_type)
 selected_seu_list_o1$seu_mmms$cell_type <- unfactor(selected_seu_list_o1$seu_mmms$cell_type)
 
 selected_seu_list_o1$seu_mmms$cell_type[
-  selected_seu_list_o1$seu_mmms$cell_type == "Slamf1-positive multipotent progenitor cell"] <- "Slamf1+ p."
+  selected_seu_list_o1$seu_mmms$cell_type == "Slamf1-positive multipotent progenitor cell"] <- "Slamf1+ MPP"
 selected_seu_list_o1$seu_mmms$cell_type[
-  selected_seu_list_o1$seu_mmms$cell_type == "Slamf1-negative multipotent progenitor cell"] <- "Slamf1- p."
+  selected_seu_list_o1$seu_mmms$cell_type == "Slamf1-negative multipotent progenitor cell"] <- "Slamf1- MPP."
 selected_seu_list_o1$seu_mmms$cell_type[
-  selected_seu_list_o1$seu_mmms$cell_type == "granulocyte monocyte progenitor cell"] <- "granu-mono p."
+  selected_seu_list_o1$seu_mmms$cell_type == "granulocyte monocyte progenitor cell"] <- "granu-mono prog"
 selected_seu_list_o1$seu_mmms$cell_type[
   selected_seu_list_o1$seu_mmms$cell_type == "granulocytopoietic cell"] <- "granulocytopoietic"
 selected_seu_list_o1$seu_mmms$cell_type[
   selected_seu_list_o1$seu_mmms$cell_type == "hematopoietic precursor cell"] <- "hematopoietic precursor"
 selected_seu_list_o1$seu_mmms$cell_type[
-  selected_seu_list_o1$seu_mmms$cell_type == "common lymphoid progenitor"] <- "common lymphoid p."
+  selected_seu_list_o1$seu_mmms$cell_type == "common lymphoid progenitor"] <- "common lymphoid pro"
 selected_seu_list_o1$seu_mmms$cell_type[
-  selected_seu_list_o1$seu_mmms$cell_type ==  "megakaryocyte-erythroid progenitor cell"] <-  "mk-ery p."
+  selected_seu_list_o1$seu_mmms$cell_type ==  "megakaryocyte-erythroid progenitor cell"] <-  "mk-ery prog"
 
 
 selected_seu_list_o1$seu_mmms$cell_type <- factor(
   selected_seu_list_o1$seu_mmms$cell_type,
   levels = c(
-    "Slamf1+ p.",
-    "Slamf1- p.",
+    "Slamf1+ MPP",
+    "Slamf1- MPP",
     "hematopoietic precursor",
     "granulocytopoietic",
-    "granu-mono p.",
-    "mk-ery p.",
-    "common lymphoid p.",
+    "granu-mono prog",
+    "mk-ery prog",
+    "common lymphoid prog",
     "immature B cell"
   ))
 
@@ -3501,31 +3435,31 @@ levels(selected_seu_list_o1$seu_sign$cell_type)
 selected_seu_list_o1$seu_sign$cell_type <- unfactor(selected_seu_list_o1$seu_sign$cell_type)
 
 selected_seu_list_o1$seu_sign$cell_type[
-  selected_seu_list_o1$seu_sign$cell_type == "Slamf1-positive multipotent progenitor cell"] <- "Slamf1+ p."
+  selected_seu_list_o1$seu_sign$cell_type == "Slamf1-positive multipotent progenitor cell"] <- "Slamf1+ MPP"
 selected_seu_list_o1$seu_sign$cell_type[
-  selected_seu_list_o1$seu_sign$cell_type == "Slamf1-negative multipotent progenitor cell"] <- "Slamf1- p."
+  selected_seu_list_o1$seu_sign$cell_type == "Slamf1-negative multipotent progenitor cell"] <- "Slamf1- MPP"
 selected_seu_list_o1$seu_sign$cell_type[
-  selected_seu_list_o1$seu_sign$cell_type == "granulocyte monocyte progenitor cell"] <- "granu-mono p."
+  selected_seu_list_o1$seu_sign$cell_type == "granulocyte monocyte progenitor cell"] <- "granu-mono prog"
 selected_seu_list_o1$seu_sign$cell_type[
   selected_seu_list_o1$seu_sign$cell_type == "granulocytopoietic cell"] <- "granulocytopoietic"
 selected_seu_list_o1$seu_sign$cell_type[
   selected_seu_list_o1$seu_sign$cell_type == "hematopoietic precursor cell"] <- "hematopoietic precursor"
 selected_seu_list_o1$seu_sign$cell_type[
-  selected_seu_list_o1$seu_sign$cell_type == "common lymphoid progenitor"] <- "common lymphoid p."
+  selected_seu_list_o1$seu_sign$cell_type == "common lymphoid progenitor"] <- "common lymphoid prog"
 selected_seu_list_o1$seu_sign$cell_type[
-  selected_seu_list_o1$seu_sign$cell_type ==  "megakaryocyte-erythroid progenitor cell"] <-  "mk-ery p."
+  selected_seu_list_o1$seu_sign$cell_type ==  "megakaryocyte-erythroid progenitor cell"] <-  "mk-ery prog"
 
 
 selected_seu_list_o1$seu_sign$cell_type <- factor(
   selected_seu_list_o1$seu_sign$cell_type,
   levels = c(
-    "Slamf1+ p.",
-    "Slamf1- p.",
+    "Slamf1+ MPP",
+    "Slamf1- MPP",
     "hematopoietic precursor",
     "granulocytopoietic",
-    "granu-mono p.",
-    "mk-ery p.",
-    "common lymphoid p.",
+    "granu-mono prog",
+    "mk-ery prog",
+    "common lymphoid prog",
     "immature B cell"
   ))
 
@@ -3586,7 +3520,7 @@ mmms_theme_plot_o1 <- mmms_base_plot_o1+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
-    axis.title.x = element_blank(),
+    axis.title = element_blank(),
     axis.text = element_blank(),
     axis.ticks.y = element_blank())+
   ggplot2::scale_fill_gradientn(
@@ -3603,9 +3537,9 @@ sign_theme_plot_o1 <- sign_base_plot_o1+
     legend.position = "none",
     axis.text.x = element_text(
       angle = 90,
-      hjust = 0,
+      hjust = 1,
       vjust = 0.5),
-    axis.title.x = element_blank(),
+    axis.title = element_blank(),
     axis.ticks.y = element_blank(),
     axis.text.y = element_blank())+
   ggplot2::scale_fill_gradientn(
@@ -3643,26 +3577,21 @@ sign_plots_title <- annotate_figure(
 
 ```
 
-```{r d_construct, fig.width = 4, fig.height = 6}
+```{r d_construct, fig.width = 3, fig.height = 6.5}
 
 d_theme_plot <- ggpubr::ggarrange(
   ncol = 1,
-  mmms_plots_title,
-  sign_plots_title+
-  ggplot2::theme(
-    axis.text.x = element_text(
-      angle = 90,
-      hjust = 0,
-      vjust = 0.5)),
+  mmms_theme_plot_o1,
+  sign_theme_plot_o1,
   align = "v",
-  heights = c(1, 2.4)
+  heights = c(1, 2.8)
 )
 
 d_theme_plot
 ```
 
 ```{r a_plot_export}
-pdf(output_pdf_heatmaps_others_plot, width = 4, height = 6)
+pdf(output_pdf_heatmaps_others_plot, width = 3, height = 6.5)
 d_theme_plot
 dev.off()
 ```
@@ -3820,9 +3749,9 @@ de_plot
 ```
 
 ```{r output_pdf_heatmaps_others_plot}
-pdf(output_pdf_heatmaps_others_plot, width = 4, height = 8)
-de_plot
-dev.off()
+# pdf(output_pdf_heatmaps_others_plot, width = 4, height = 8)
+# de_plot
+# dev.off()
 ```
 
 ```{r check_corr_pval_df}
@@ -4097,7 +4026,6 @@ corr_pval_df[
 # pval_legend <- ggpubr::ggarrange(pval_legend_theme)
 # pval_legend
 ```
-
 
 # UTILS
 

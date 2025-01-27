@@ -28,6 +28,7 @@ library(Seurat, quietly = TRUE)
 # load data for manual use here
 base_path_temp <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/"
 brain_path <- "scRNAseq/main_analysis/sce_objects/08_sce_brain/"
+base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/"
   
 colors_path <- base::paste0(
   base_path, 
@@ -51,23 +52,25 @@ source(colors_source)
 # global params
 source("determine_params.R")
 
-col_cons_long <- c(
-  "conserved identity signature" = "#db5b00ff",
-  "conserved markers" = "#eb9523ff",
-  "total BL6 markers" = "#a7c5a3ff",
-  "ndges" = "#ea91adff",
-  "random genes" = "grey80")
+# col_cons_long <- c(
+#   "conserved identity signature" = "#db5b00ff",
+#   "conserved markers" = "#eb9523ff",
+#   "total BL6 markers" = "#a7c5a3ff",
+#   "ndges" = "#ea91adff",
+#   "random genes" = "grey80")
 ```
 
 ```{r export_paths}
 output_pdf_b_plot <- base::paste0(
-  base_path_temp, "manuscript1/figures/figure6_b.pdf")
+  base_path_temp, "manuscript1/figures_new/figure6_b.pdf")
 output_pdf_b_legend <- base::paste0(
-  base_path_temp, "manuscript1/figures/figure6_b_legend.pdf")
+  base_path_temp, "manuscript1/figures_new/figure6_b_legend.pdf")
 output_pdf_c_plot <- base::paste0(
-  base_path_temp, "manuscript1/figures/figure6_c.pdf")
-output_pdf_c_plot_poster <- base::paste0(
-  base_path_temp, "manuscript1/figures/figure6_poster.pdf")
+  base_path_temp, "manuscript1/figures_new/figure6_c.pdf")
+output_pdf_d_plot <- base::paste0(
+  base_path_temp, "manuscript1/figures_new/figure6_d.pdf")
+output_pdf_e_plot <- base::paste0(
+  base_path_temp, "manuscript1/figures_new/figure6_e.pdf")
 ```
 
 ## A
@@ -164,11 +167,10 @@ b_plot_theme <- b_plot +
 #### Construct
 
 ```{r b_plot_export}
-# pdf(output_pdf_b_plot, width = 3, height = 9)
-# b_plot_theme
-# dev.off()
+pdf(output_pdf_b_plot, width = 5, height = 9)
+b_plot_theme
+dev.off()
 ```
-
 
 ## C
 
@@ -178,8 +180,8 @@ Mouse cell type identification using only primate marker genes.
 
 ```{r c_prep1}
 # establish order of clusters for plotting based on 04_recluster.R
-# core = conserved markers; sig = conserved identity signature genes
-factorize_mouse <- list(core = c(10,2,5,7,6,0,4,8,9,1,12,3,11),
+# hs = human only markers; sig = conserved identity signature genes
+factorize_mouse <- list(hs = c(2,11,10,4,6,7,3,5,8,9,0,12,1),
                         sig = c(0,11,6,10,2,7,8,4,5,9,3,1,12))
 ```
 
@@ -187,8 +189,8 @@ factorize_mouse <- list(core = c(10,2,5,7,6,0,4,8,9,1,12,3,11),
 # loop through all three primate species and across core and sig genes sets
 # to create normalized matrices for plotting
 plot_gg_mouse <- list()
-for(genes in c("core", "sig")){
-  data <- readRDS(paste0(base_path, 
+for(genes in c("hs", "sig")){
+  data <- readRDS(paste0(base_path_temp, 
                          brain_path, 
                          "04_recluster/mouse_reclust_", genes, ".rds"))
   
@@ -211,7 +213,7 @@ for(genes in c("core", "sig")){
 
 ```{r c_base_plot}
 plotted_gg_mouse <- list()
-for(genes in c("core", "sig")){
+for(genes in c("hs", "sig")){
   plotted_gg_mouse[[genes]] <- ggplot(plot_gg_mouse[[genes]], 
          aes(x = factor(subclass_label, 
                               levels = c("L2/3 IT", "L5 IT", "L6 IT", 
@@ -223,7 +225,7 @@ for(genes in c("core", "sig")){
 ```
 
 ```{r c_set_theme}
-plotted_gg_mouse[["core"]] <- plotted_gg_mouse[["core"]] + 
+plotted_gg_mouse[["hs"]] <- plotted_gg_mouse[["hs"]] + 
     ggplot2::theme_classic() +
     ggplot2::theme(
       legend.position = "none",
@@ -245,8 +247,8 @@ plotted_gg_mouse[["core"]] <- plotted_gg_mouse[["core"]] +
         size = plot_title_size,
         face = plot_title_face,
         hjust = 0.5,
-        color = col_cons_long["conserved markers"])) +
-    ggplot2::ggtitle("Conserved markers") +
+        color = col_cons_long["total human markers"])) +
+    ggplot2::ggtitle("Total human markers") +
     ggplot2::scale_fill_gradientn(
       colors = mycolors_to1,
       limits = c(0, 1),
@@ -280,40 +282,198 @@ plotted_gg_mouse[["sig"]] <- plotted_gg_mouse[["sig"]] +
 
 #### Construct
 
-```{r c_construct, fig.width = 3, fig.height = 4}
+```{r c_construct, fig.width = 5, fig.height = 6}
 c_plot <- ggpubr::ggarrange(
   ncol = 1,
-  plotted_gg_mouse[["sig"]] ,
-  plotted_gg_mouse[["core"]],
+  plotted_gg_mouse[["sig"]],
+  plotted_gg_mouse[["hs"]],
   align = "v",
-  heights = c(1, 1.5)
-)
-```
-
-```{r eval = FALSE, include = FALSE, fig.width = 5, fig.height = 4}
-c_plot_poster <- ggpubr::ggarrange(
-  ncol = 1,
-  plotted_gg_mouse[["sig"]]+theme_all+
-    theme(axis.text.x = element_text(hjust = 0, angle = 90, vjust = 0.5),
-          legend.position = "none",
-          plot.title = element_text(
-            hjust = 0.5,
-            color = col_cons_long["conserved identity signature"]),
-          axis.text.y = element_blank(),
-          axis.ticks.y = element_blank())+
-    xlab("Original cell types")
+  heights = c(1, 1.2)
 )
 ```
 
 
 ```{r c_plot_export}
-# pdf(output_pdf_c_plot, width = 9, height = 4)
-# c_plot
-# dev.off()
-```
-
-```{r c_plot_export_poster, eval = FALSE, include = FALSE}
-pdf(output_pdf_c_plot_poster, width = 5, height = 4)
-c_plot_poster
+pdf(output_pdf_c_plot, width = 5, height = 6)
+c_plot
 dev.off()
 ```
+
+##D
+
+Number of mouse cortex cells that are able to be accurately re-annotated using clustering based on human marker genes or primate identity signature genes.
+
+#### Prep
+
+```{r d_prep1}
+mouse_hs <- readRDS(paste0(base_path_temp, brain_path, 
+                           "04_recluster/mouse_reclust_hs.rds"))
+mouse_sig <- readRDS(paste0(base_path_temp, brain_path, 
+                            "04_recluster/mouse_reclust_sig.rds"))
+```
+
+```{r d_prep2}
+plot_hs <- mouse_hs@meta.data[,c("subclass_label", "seurat_clusters")] %>%
+  table() %>% 
+  as.matrix() %>%
+  as.data.frame() %>%
+  group_by(seurat_clusters) %>%
+  mutate(clust_prop = Freq/sum(Freq),
+         clust_assigned = (max(clust_prop)==clust_prop)) %>%
+  filter(subclass_label != "L6 IT Car3") %>%
+  group_by(clust_assigned, subclass_label) %>%
+  mutate(Count = sum(Freq)) %>%
+  select(-seurat_clusters, -clust_prop, -Freq) %>%
+  unique()
+
+plot_sig <- mouse_sig@meta.data[,c("subclass_label", "seurat_clusters")] %>%
+  table() %>% 
+  as.matrix() %>%
+  as.data.frame() %>%
+  group_by(seurat_clusters) %>%
+  mutate(clust_prop = Freq/sum(Freq),
+         clust_assigned = (max(clust_prop)==clust_prop)) %>%
+  filter(subclass_label != "L6 IT Car3") %>%
+  group_by(clust_assigned, subclass_label) %>%
+  mutate(Count = sum(Freq)) %>%
+  select(-seurat_clusters, -clust_prop, -Freq) %>%
+  unique()
+
+all_data <- rbind(
+  mutate(plot_hs, genes = "human markers"),
+  mutate(plot_sig, genes = "identity signature")
+)
+```
+
+#### Construct
+
+```{r d_construct, fig.width = 4, fig.height = 4}
+d_plot <- ggplot(all_data,
+       aes(y = factor(genes, 
+                      levels = c("identity signature", "human markers")),
+           x = Count,
+           fill = clust_assigned)) +
+  facet_wrap(~factor(subclass_label, 
+                     levels = c("L2/3 IT", "L5 IT", "L6 IT", 
+                                "L5 ET", "L5/6 NP", "L6 CT", "L6b")), 
+             ncol = 1,
+             strip.position = "right") +
+  geom_col(position = "stack") +
+  theme_classic() +
+  theme(strip.text.y = element_text(angle = 0),
+    strip.background = element_rect(color = "white"),
+    axis.text.y = element_text(color = c(col_cons_long["conserved identity signature"], 
+                                         col_cons_long["total human markers"]))) +
+  scale_x_continuous(breaks = c(0, 1000, 2000)) +
+  labs(y = NULL, 
+       x = "Mouse cells", 
+       fill = "Accurately\nAssigned") +
+  scale_fill_manual(values = c(max(mycolors_to1_grey), 
+                               min(mycolors_to1_grey)))
+```
+
+
+```{r d_plot_export}
+pdf(output_pdf_d_plot, width = 4, height = 4)
+d_plot
+dev.off()
+```
+
+## E
+
+Summarized consensus annotation information across clustering methods
+
+#### Prep
+
+```{r e_prep}
+plot_hs_clust <- mouse_hs@meta.data[,c("subclass_label", "seurat_clusters")] %>%
+  table() %>% 
+  as.matrix() %>%
+  as.data.frame() %>%
+  group_by(seurat_clusters) %>%
+  mutate(clust_assigned = (max(Freq)==Freq)) %>%
+  filter(clust_assigned == T) %>%
+  select(-clust_assigned, -Freq)
+
+plot_sig_clust <- mouse_sig@meta.data[,c("subclass_label", "seurat_clusters")] %>%
+  table() %>% 
+  as.matrix() %>%
+  as.data.frame() %>%
+  group_by(seurat_clusters) %>%
+  mutate(clust_assigned = (max(Freq)==Freq)) %>%
+  filter(clust_assigned == T) %>%
+  select(-clust_assigned, -Freq)
+
+test_hs <- lapply(mouse_hs@meta.data$seurat_clusters, 
+               function(x){
+                 plot_hs_clust[which(plot_hs_clust$seurat_clusters == x), "subclass_label"]}) %>% 
+  unlist()
+mouse_hs@meta.data$correct <- mouse_hs@meta.data$subclass_label == test_hs
+
+test_sig <- lapply(mouse_sig@meta.data$seurat_clusters, 
+               function(x){
+                 plot_sig_clust[which(plot_sig_clust$seurat_clusters == x), "subclass_label"]}) %>% 
+  unlist()
+mouse_sig@meta.data$correct <- mouse_sig@meta.data$subclass_label == test_sig
+
+rownames <- rownames(mouse_sig@meta.data)
+mouse_sig@meta.data <- merge(mouse_sig@meta.data, # correct.x is signature markers
+                             mouse_hs@meta.data[,c("nCount_RNA", "nFeature_RNA", "sample_id", "correct")], # correct.y is human markers
+                             by = c("nCount_RNA", "nFeature_RNA", "sample_id")) %>%
+  mutate(correct = paste(correct.x, correct.y))
+rownames(mouse_sig@meta.data) <- rownames
+
+# table(mouse_sig@meta.data$correct)
+# 
+# FALSE FALSE  FALSE TRUE  TRUE FALSE   TRUE TRUE 
+# 388         306         398        7150 
+```
+
+#### Construct
+
+```{r e_construct}
+input <- c(
+  'Bakken&signature&human' = as.integer(table(mouse_sig@meta.data$correct)[4]),
+  'Bakken&signature' = as.integer(table(mouse_sig@meta.data$correct)[3]),
+  'Bakken&human' = as.integer(table(mouse_sig@meta.data$correct)[2]),
+  'Bakken' = as.integer(table(mouse_sig@meta.data$correct)[1])
+)
+
+ups <- upset(fromExpression(input), 
+             order.by = "degree",
+             sets = c("human", "signature", "Bakken"),
+             keep.order = T,
+             mainbar.y.label = 'Mouse cells',
+      number.angles = 0, 
+      text.scale = 2, 
+      point.size = 3, 
+      line.size = 1.5
+      )
+
+skip_set_size_plot <- function(ups) {
+  main <- ups$Main_bar
+  ## find panel grob
+  panel_idx <- grep("panel", main$layout$name, fixed = TRUE)
+  ## find text grob
+  text_idx <- which(
+    vapply(main$grobs[[panel_idx]]$children, 
+           \(x) inherits(x, "text"), 
+           logical(1)))
+  tG <- main$grobs[[panel_idx]]$children[[text_idx]]
+  tG$label <- scales::label_percent(0.1)(as.numeric(tG$label) / 
+                                                  sum(as.numeric(tG$label)))
+  main$grobs[[panel_idx]]$children[[text_idx]] <- tG
+  grid::grid.newpage()
+  grid::grid.draw(gridExtra::arrangeGrob(main, 
+                                         ups$Matrix, 
+                                         heights = ups$mb.ratio))
+}
+```
+
+```{r e_plot_export}
+pdf(output_pdf_e_plot, width = 6, height = 4)
+skip_set_size_plot(ups)
+dev.off()
+```
+
+

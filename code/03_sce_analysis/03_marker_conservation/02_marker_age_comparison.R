@@ -5,16 +5,19 @@ library(Seurat)
 library(tidyverse)
 
 ###### Hematapoetic
-#data <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10")
+#data_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10")
+#data_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10")
 data_hsc <- readRDS(snakemake@input[["data_hsc"]])
 data <- data_hsc
 
 print(data)
 
 # prior markers determined
-#markers_cons_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_sign/signature_list_hsc")
+#markers_cons_hsc_prev <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_sign/signature_list_hsc")
+#markers_cons_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc")
 markers_cons_hsc <- readRDS(snakemake@input[["markers_cons_hsc"]])
-  
+
+
 metadata <- data@colData@listData %>% 
   as.data.frame() %>%
   select(-Sample)
@@ -50,6 +53,7 @@ for(y in age){
                              ident.1 = cells,
                              only.pos = TRUE,
                              min.pct = 0.1) # Require genes to be expressed in at least 10% of cells in each group
+      print("done")
       # Add these markers to the list of markers for this cell type
       markers_list[[paste(s, ct, y, sep = "_")]] <- markers
       # identify what percentage of each animals' cells per type express identified markers
@@ -102,6 +106,7 @@ for(y in age){
   }
 }
 
+
 #save(markers_conservation_hsc,
 #     file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/03_marker_conservation/02_age/cons_markers_hsc.RData")
 save(markers_conservation_hsc,
@@ -110,45 +115,45 @@ save(markers_conservation_hsc,
 # ## PLOT ##
 # 
 # load("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/03_marker_conservation/02_age/cons_markers_hsc.RData")
-conserved_genes <- data.frame(celltype = rep(names(markers_cons_hsc)),
-                              young = 0,
-                              both = 0,
-                              old = 0,
-                              n_markers = 0,
-                              young_in_markers = 0,
-                              both_in_markers = 0,
-                              old_in_markers = 0)
-for(ct in names(markers_cons_hsc)){
-  young <- markers_conservation_hsc[[grep(paste(ct, "young", sep = "_"),
-                                      names(markers_conservation_hsc),
-                                      value = T)]] %>% as.data.frame()
-  young$gene <- rownames(young)
-  young <- young[complete.cases(young),]
-
-  old <- markers_conservation_hsc[[grep(paste(ct, "old", sep = "_"),
-                                    names(markers_conservation_hsc),
-                                    value = T)]] %>% as.data.frame()
-  old$gene <- rownames(old)
-  old <- old[complete.cases(old),]
-
-  both <- young$gene[young$gene %in% old$gene]
-
-  mark <- markers_cons_hsc[[grep(ct,
-                                 names(markers_cons_hsc),
-                                 value = T)]][["conserved_df"]]
-  mark <- mark[complete.cases(mark),]
-
-  conserved_genes[which(conserved_genes$celltype == ct),1] <- ct
-
-  conserved_genes[which(conserved_genes$celltype == ct),2:8] <-
-    c(nrow(young),
-      length(both),
-      nrow(old),
-      nrow(mark),
-      sum(young$gene %in% mark$gene),
-      sum(both %in% mark$gene),
-      sum(old$gene %in% mark$gene)) %>% as.numeric()
-}
+# conserved_genes <- data.frame(celltype = rep(names(markers_cons_hsc)),
+#                               young = 0,
+#                               both = 0,
+#                               old = 0,
+#                               n_markers = 0,
+#                               young_in_markers = 0,
+#                               both_in_markers = 0,
+#                               old_in_markers = 0)
+# for(ct in names(markers_cons_hsc)){
+#   young <- markers_conservation_hsc[[grep(paste(ct, "young", sep = "_"),
+#                                       names(markers_conservation_hsc),
+#                                       value = T)]] %>% as.data.frame()
+#   young$gene <- rownames(young)
+#   young <- young[complete.cases(young),]
+# 
+#   old <- markers_conservation_hsc[[grep(paste(ct, "old", sep = "_"),
+#                                     names(markers_conservation_hsc),
+#                                     value = T)]] %>% as.data.frame()
+#   old$gene <- rownames(old)
+#   old <- old[complete.cases(old),]
+# 
+#   both <- young$gene[young$gene %in% old$gene]
+# 
+#   mark <- markers_cons_hsc[[grep(ct,
+#                                  names(markers_cons_hsc),
+#                                  value = T)]][["conserved_df"]]
+#   mark <- mark[complete.cases(mark),]
+# 
+#   conserved_genes[which(conserved_genes$celltype == ct),1] <- ct
+# 
+#   conserved_genes[which(conserved_genes$celltype == ct),2:8] <-
+#     c(nrow(young),
+#       length(both),
+#       nrow(old),
+#       nrow(mark),
+#       sum(young$gene %in% mark$gene),
+#       sum(both %in% mark$gene),
+#       sum(old$gene %in% mark$gene)) %>% as.numeric()
+# }
 
 
 # plot_hsc <- data.frame(celltype = conserved_genes$celltype,
@@ -190,44 +195,44 @@ for(ct in names(markers_cons_hsc)){
 #        height = length(names(markers_cons_hsc)),
 #        width = 4)
 
-plot_hsc <- data.frame(celltype = conserved_genes$celltype,
-                       both_in_mark = conserved_genes$both_in_markers,
-                       old_and_mark = conserved_genes$old_in_markers - conserved_genes$both_in_markers,
-                       young_and_mark = conserved_genes$young_in_markers - conserved_genes$both_in_markers,
-                       only_yng = conserved_genes$young - conserved_genes$young_in_markers,
-                       only_old = conserved_genes$old - conserved_genes$old_in_markers) %>%
-  gather("category", "count", -celltype)
-
-ggplot(plot_hsc,
-       aes(x = celltype,
-           y = count,
-           fill = factor(category,
-                         levels = c("only_yng",
-                                    "young_and_mark",
-                                    "both_in_mark",
-                                    "old_and_mark",
-                                    "only_old")))) +
-  geom_col(position = "fill") +
-  theme_classic() +
-  labs(x = NULL, y = "% marker genes identified", fill = NULL) +
-  theme(axis.text.x = element_text(angle = 90, h = 1))
-ggsave("02_age_figs/02_age_hsc_stack.pdf",
-       width = length(names(markers_cons_hsc)),
-       height = 4)
-
-plot_hsc2 <- gather(conserved_genes[,c("celltype", "n_markers", "young_in_markers", "old_in_markers")], 
-                    "group", "count", -celltype)
-ggplot(plot_hsc2,
-       aes(x = celltype,
-           y = count,
-           fill = group)) +
-  geom_col(position = "dodge") +
-  theme_classic() +
-  labs(x = NULL, y = "# marker genes identified", fill = NULL) +
-  theme(axis.text.x = element_text(angle = 90, h = 1))
-ggsave("02_age_figs/02_age_hsc_totals.pdf",
-       width = length(names(markers_cons_hsc)),
-       height = 4)
+# plot_hsc <- data.frame(celltype = conserved_genes$celltype,
+#                        both_in_mark = conserved_genes$both_in_markers,
+#                        old_and_mark = conserved_genes$old_in_markers - conserved_genes$both_in_markers,
+#                        young_and_mark = conserved_genes$young_in_markers - conserved_genes$both_in_markers,
+#                        only_yng = conserved_genes$young - conserved_genes$young_in_markers,
+#                        only_old = conserved_genes$old - conserved_genes$old_in_markers) %>%
+#   gather("category", "count", -celltype)
+# 
+# ggplot(plot_hsc,
+#        aes(x = celltype,
+#            y = count,
+#            fill = factor(category,
+#                          levels = c("only_yng",
+#                                     "young_and_mark",
+#                                     "both_in_mark",
+#                                     "old_and_mark",
+#                                     "only_old")))) +
+#   geom_col(position = "fill") +
+#   theme_classic() +
+#   labs(x = NULL, y = "% marker genes identified", fill = NULL) +
+#   theme(axis.text.x = element_text(angle = 90, h = 1))
+# ggsave("02_age_figs/02_age_hsc_stack.pdf",
+#        width = length(names(markers_cons_hsc)),
+#        height = 4)
+# 
+# plot_hsc2 <- gather(conserved_genes[,c("celltype", "n_markers", "young_in_markers", "old_in_markers")], 
+#                     "group", "count", -celltype)
+# ggplot(plot_hsc2,
+#        aes(x = celltype,
+#            y = count,
+#            fill = group)) +
+#   geom_col(position = "dodge") +
+#   theme_classic() +
+#   labs(x = NULL, y = "# marker genes identified", fill = NULL) +
+#   theme(axis.text.x = element_text(angle = 90, h = 1))
+# ggsave("02_age_figs/02_age_hsc_totals.pdf",
+#        width = length(names(markers_cons_hsc)),
+#        height = 4)
 
 
 ###### Stromal
@@ -329,6 +334,7 @@ for(y in age){
   }
 }
 
+print(markers_conservation_str)
 
 #save(markers_conservation_str,
 #     file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/03_marker_conservation/02_age/cons_markers_str.RData")
@@ -339,45 +345,45 @@ save(markers_conservation_str,
 
 # load("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/03_marker_conservation/02_age/cons_markers_str.RData")
 
-conserved_genes <- data.frame(celltype = rep(names(markers_cons_str)),
-                              young = 0,
-                              both = 0,
-                              old = 0,
-                              n_markers = 0,
-                              young_in_markers = 0,
-                              both_in_markers = 0,
-                              old_in_markers = 0)
-for(ct in names(markers_cons_str)){
-  young <- markers_conservation_str[[grep(paste(ct, "young", sep = "_"),
-                                      names(markers_conservation_str),
-                                      value = T)]] %>% as.data.frame()
-  young$gene <- rownames(young)
-  young <- young[complete.cases(young),]
-
-  old <- markers_conservation_str[[grep(paste(ct, "old", sep = "_"),
-                                    names(markers_conservation_str),
-                                    value = T)]] %>% as.data.frame()
-  old$gene <- rownames(old)
-  old <- old[complete.cases(old),]
-
-  both <- young$gene[young$gene %in% old$gene]
-
-  mark <- markers_cons_str[[grep(ct,
-                             names(markers_cons_str),
-                             value = T)]][["conserved_df"]]
-  mark <- mark[complete.cases(mark),]
-
-  conserved_genes[which(conserved_genes$celltype == ct),1] <- ct
-
-  conserved_genes[which(conserved_genes$celltype == ct),2:8] <-
-    c(nrow(young),
-      length(both),
-      nrow(old),
-      nrow(mark),
-      sum(young$gene %in% mark$gene),
-      sum(both %in% mark$gene),
-      sum(old$gene %in% mark$gene)) %>% as.numeric()
-}
+# conserved_genes <- data.frame(celltype = rep(names(markers_cons_str)),
+#                               young = 0,
+#                               both = 0,
+#                               old = 0,
+#                               n_markers = 0,
+#                               young_in_markers = 0,
+#                               both_in_markers = 0,
+#                               old_in_markers = 0)
+# for(ct in names(markers_cons_str)){
+#   young <- markers_conservation_str[[grep(paste(ct, "young", sep = "_"),
+#                                       names(markers_conservation_str),
+#                                       value = T)]] %>% as.data.frame()
+#   young$gene <- rownames(young)
+#   young <- young[complete.cases(young),]
+# 
+#   old <- markers_conservation_str[[grep(paste(ct, "old", sep = "_"),
+#                                     names(markers_conservation_str),
+#                                     value = T)]] %>% as.data.frame()
+#   old$gene <- rownames(old)
+#   old <- old[complete.cases(old),]
+# 
+#   both <- young$gene[young$gene %in% old$gene]
+# 
+#   mark <- markers_cons_str[[grep(ct,
+#                              names(markers_cons_str),
+#                              value = T)]][["conserved_df"]]
+#   mark <- mark[complete.cases(mark),]
+# 
+#   conserved_genes[which(conserved_genes$celltype == ct),1] <- ct
+# 
+#   conserved_genes[which(conserved_genes$celltype == ct),2:8] <-
+#     c(nrow(young),
+#       length(both),
+#       nrow(old),
+#       nrow(mark),
+#       sum(young$gene %in% mark$gene),
+#       sum(both %in% mark$gene),
+#       sum(old$gene %in% mark$gene)) %>% as.numeric()
+# }
 
 
 # plot_str <- data.frame(celltype = conserved_genes$celltype,
@@ -417,41 +423,41 @@ for(ct in names(markers_cons_str)){
 #        height = length(names(markers_cons_str)),
 #        width = 4)
 
-plot_str <- data.frame(celltype = conserved_genes$celltype,
-                       both_in_mark = conserved_genes$both_in_markers,
-                       old_and_mark = conserved_genes$old_in_markers - conserved_genes$both_in_markers,
-                       young_and_mark = conserved_genes$young_in_markers - conserved_genes$both_in_markers,
-                       only_yng = conserved_genes$young - conserved_genes$young_in_markers,
-                       only_old = conserved_genes$old - conserved_genes$old_in_markers) %>%
-  gather("category", "count", -celltype)
-
-ggplot(plot_str,
-       aes(x = celltype,
-           y = count,
-           fill = factor(category,
-                         levels = c("only_yng",
-                                    "young_and_mark",
-                                    "both_in_mark",
-                                    "old_and_mark",
-                                    "only_old")))) +
-  geom_col(position = "fill") +
-  theme_classic() +
-  labs(x = NULL, y = "% marker genes identified", fill = NULL) +
-  theme(axis.text.x = element_text(angle = 90, h = 1))
-ggsave("02_age_figs/02_age_str_stack.pdf",
-       width = length(names(markers_cons_str)),
-       height = 4)
-
-plot_str2 <- gather(conserved_genes[,c("celltype", "n_markers", "young_in_markers", "old_in_markers")], 
-                    "group", "count", -celltype)
-ggplot(plot_str2,
-       aes(x = celltype,
-           y = count,
-           fill = group)) +
-  geom_col(position = "dodge") +
-  theme_classic() +
-  labs(x = NULL, y = "# marker genes identified", fill = NULL) +
-  theme(axis.text.x = element_text(angle = 90, h = 1))
-ggsave("02_age_figs/02_age_str_totals.pdf",
-       width = length(names(markers_cons_str)),
-       height = 4)
+# plot_str <- data.frame(celltype = conserved_genes$celltype,
+#                        both_in_mark = conserved_genes$both_in_markers,
+#                        old_and_mark = conserved_genes$old_in_markers - conserved_genes$both_in_markers,
+#                        young_and_mark = conserved_genes$young_in_markers - conserved_genes$both_in_markers,
+#                        only_yng = conserved_genes$young - conserved_genes$young_in_markers,
+#                        only_old = conserved_genes$old - conserved_genes$old_in_markers) %>%
+#   gather("category", "count", -celltype)
+# 
+# ggplot(plot_str,
+#        aes(x = celltype,
+#            y = count,
+#            fill = factor(category,
+#                          levels = c("only_yng",
+#                                     "young_and_mark",
+#                                     "both_in_mark",
+#                                     "old_and_mark",
+#                                     "only_old")))) +
+#   geom_col(position = "fill") +
+#   theme_classic() +
+#   labs(x = NULL, y = "% marker genes identified", fill = NULL) +
+#   theme(axis.text.x = element_text(angle = 90, h = 1))
+# ggsave("02_age_figs/02_age_str_stack.pdf",
+#        width = length(names(markers_cons_str)),
+#        height = 4)
+# 
+# plot_str2 <- gather(conserved_genes[,c("celltype", "n_markers", "young_in_markers", "old_in_markers")], 
+#                     "group", "count", -celltype)
+# ggplot(plot_str2,
+#        aes(x = celltype,
+#            y = count,
+#            fill = group)) +
+#   geom_col(position = "dodge") +
+#   theme_classic() +
+#   labs(x = NULL, y = "# marker genes identified", fill = NULL) +
+#   theme(axis.text.x = element_text(angle = 90, h = 1))
+# ggsave("02_age_figs/02_age_str_totals.pdf",
+#        width = length(names(markers_cons_str)),
+#        height = 4)

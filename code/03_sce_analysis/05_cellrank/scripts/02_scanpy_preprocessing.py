@@ -11,6 +11,7 @@
 
 import sys
 
+print(sys.path)
 
 import scanpy as sc
 import numpy as np

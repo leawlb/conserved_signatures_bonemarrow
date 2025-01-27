@@ -10,8 +10,8 @@
 #-------------------------------------------------------------------------------
 
 # determine random number generator for sample
-# Mersenne-Twister" is default
-RNGkind("Mersenne-Twister") 
+library(parallel)
+RNGkind("L'Ecuyer-CMRG") # using this for usages of parallel is necessary
 
 set.seed(37)
 
@@ -19,7 +19,6 @@ library(scater, quietly = TRUE)
 library(scran, quietly = TRUE)
 library(bluster, quietly = TRUE)
 library(tidyverse, quietly = TRUE)
-library(parallel, quietly = TRUE)
 
 source(snakemake@params[["functions_reclustering"]])
 
@@ -60,7 +59,7 @@ print(cts_exclude)
 
 #-------------------------------------------------------------------------------
 # get the required gene sets
-# sub-clustering genes will be removed in total downstream
+# sub-clustering genes will be removed IN TOTAL downstream
 
 # get all signature genes
 conserved_signature_list <- lapply(geneset_list, function(geneset){
@@ -115,12 +114,12 @@ sce$celltypes <- factor(
 # if fraction is hsc, downsample to accelerate re-clustering
 if(fraction_curr == "hsc"){
   # set a different seed so the same numbers are not generated accidentally 
-  set.seed(147)
+  set.seed(14744)
   
-  downample_pos <- base::sample(c(1:ncol(sce)), 25000, replace = FALSE)
-  sce <- sce[,downample_pos]
+  downsample_pos <- base::sample(c(1:ncol(sce)), 25000, replace = FALSE)
+  sce <- sce[,downsample_pos]
   print(dim(sce))
-  print(head(downample_pos))
+  print(head(downsample_pos))
   
   # set seed back to seed
   set.seed(37)
@@ -129,6 +128,9 @@ if(fraction_curr == "hsc"){
 #-------------------------------------------------------------------------------
 
 # subset to all genes that are not subclustering genes
+# SUBCLUSTERING GENES REMOVED IN TOTAL
+print(subclustering_genes)
+print(length(subclustering_genes))
 sce <- sce[which(!rownames(sce) %in% subclustering_genes)]
 print(dim(sce))
 
@@ -156,6 +158,8 @@ stopifnot(!rownames(sce_mmusm) %in% subclustering_genes)
 # re-cluster and add clusters to SCE object
 # exactly how the data was originally clustered
 
+set.seed(37)
+
 # cluster each subsetted sce object
 sce_list <- list("sce_signt" = sce_signt,
                  "sce_consm" = sce_consm, 
@@ -169,14 +173,8 @@ clustered_list <- mclapply(
   resolution_louvain = resolution_louvain,
   mc.preschedule = TRUE, 
   mc.cores = nr_cores,
-  mc.silent = TRUE)
-
-# for testing without mclapply
-# clustered_list <- lapply(
-#   sce_list,
-#   clustering_orig,
-#   k_graph = k_graph, 
-#   resolution_louvain = resolution_louvain)
+  mc.silent = TRUE,
+  mc.set.seed = TRUE)
 
 #-------------------------------------------------------------------------------
 # transfer clustering info to original sce

@@ -4,8 +4,8 @@
 # permutation of own dataset reclustering
 
 # determine random number generator for sample
-# Mersenne-Twister" is default
-RNGkind("Mersenne-Twister") 
+library(parallel, quietly = TRUE)
+RNGkind("L'Ecuyer-CMRG") # using this for usages of parallel is necessary
 set.seed(37)
 
 #-------------------------------------------------------------------------------
@@ -15,12 +15,8 @@ library(scran, quietly = TRUE)
 library(bluster, quietly = TRUE)
 library(SingleCellExperiment, quietly = TRUE)
 library(dplyr, quietly = TRUE)
-
-library(parallel, quietly = TRUE)
-
 library(mclust, quietly = TRUE)
-library(mcclust, quietly = TRUE)
-library(dendextend, quietly = TRUE)
+
 
 source(snakemake@params[["functions_reclustering"]])
 
@@ -190,7 +186,8 @@ res_df_list <- parallel::mclapply(
   k_graph = k_graph,
   mc.preschedule = TRUE,
   mc.cores = nr_cores,
-  mc.silent = TRUE)
+  mc.silent = TRUE,
+  mc.set.seed = TRUE)
 
 # for testing without mclapply
 # res_df_list <- lapply(

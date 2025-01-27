@@ -22,8 +22,9 @@ set.seed(37)
 library(SingleCellExperiment, quietly = TRUE)
 library(ggpubr, quietly = TRUE)
 library(tidyverse, quietly = TRUE)
-library(gghalves, quietly = TRUE) # not in conda env
-library(ggpattern, quietly = TRUE) # not in conda env
+library(Seurat, quietly = TRUE)
+#library(gghalves, quietly = TRUE) # not in conda env
+#library(ggpattern, quietly = TRUE) # not in conda env
 ```
 
 ```{r load_manual_basepath}
@@ -236,15 +237,15 @@ source("determine_params.R")
 
 ```{r export_paths}
 output_pdf_a_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure5_a.pdf")
+  base_path_output_temp, "/manuscript1/figures_new/figure5_a.pdf")
 output_pdf_a_legend <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure5_a_legend.pdf")
+  base_path_output_temp, "/manuscript1/figures_new/figure5_a_legend.pdf")
 output_pdf_bcd_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure5_bcd.pdf")
+  base_path_output_temp, "/manuscript1/figures_new/figure5_bcd.pdf")
 output_pdf_e_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure5_e.pdf")
+  base_path_output_temp, "/manuscript1/figures_new/figure5_e.pdf")
 output_pdf_e_legend <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure5_e_legend.pdf")
+  base_path_output_temp, "/manuscript1/figures_new/figure5_e_legend.pdf")
 ```
 
 ## Obtain data
@@ -281,7 +282,7 @@ cts_str <- as.list(names(geneset_list_str))
 sce_str$species_pub <- vector(length = ncol(sce_str))
 sce_str$species_pub[sce_str$Species_ID == "mmus"] <- "BL6"
 sce_str$species_pub[sce_str$Species_ID == "mcas"] <- "CAST"
-sce_str$species_pub[sce_str$Species_ID == "mspr"] <- "SPRETUS"
+sce_str$species_pub[sce_str$Species_ID == "mspr"] <- "SPRET"
 sce_str$species_pub[sce_str$Species_ID == "mcar"] <- "CAROLI"
 sce_str$species_pub <- factor(sce_str$species_pub, 
                               levels = names(col_spc_pub))
@@ -452,7 +453,7 @@ a_legend <- ggpubr::ggarrange(a_legend)
 
 #### Assemble
 
-```{r a_assemble, fig.width = 5.5, fig.height = 6}
+```{r a_assemble, fig.width = 5, fig.height = 5}
 a_plot <- ggpubr::ggarrange(
   a_theme_plot + theme(legend.position = "none",
                        plot.title = element_blank())
@@ -461,7 +462,7 @@ a_plot
 ```
 
 ```{r a_plot_export}
-pdf(output_pdf_a_plot, width = 5.5, height = 6)
+pdf(output_pdf_a_plot, width = 6.5, height = 4)
 a_plot
 dev.off()
 ```
@@ -470,6 +471,7 @@ dev.off()
 pdf(output_pdf_a_legend, width = 3, height = 3)
 a_legend
 dev.off()
+knitr::knit_exit()
 ```
 
 ## BCD Re-clusterung Heatmaps 
@@ -506,7 +508,7 @@ head(ct_markers_df_o2)
 
 ```
 
-```{r prepare_annotate_o2}
+```{r prepare_annotate_o2_ec}
 
 # all ECs
 seu_sign_o2_ec <- seu_sign_o2[,seu_sign_o2$seurat_clusters %in% c("6", "1", "2", "3")]
@@ -575,7 +577,7 @@ seu_sign_o3$annotated_reclustered <- vector(length = ncol(seu_sign_o3))
 
 2, 6, 1, 0, 7, 4, 5, 3
 
-```{r 2_others_3}
+```{r 2_others2}
 nr <- "2"
 markers <- ct_markers_o3[[nr]]$gene[
   !is.na(ct_markers_o3[[nr]]$symbol) & 
@@ -641,7 +643,7 @@ FeaturePlot(seu_sign_o3, "ENSG00000141338") #ABCA8
 seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "Fibro CAR"
 ```
 
-```{r 2_others_3}
+```{r 2_others_6}
 nr <- "6"
 markers <- ct_markers_o3[[nr]]$gene[
   !is.na(ct_markers_o3[[nr]]$symbol) & 
@@ -704,7 +706,7 @@ FeaturePlot(seu_sign_o3, "ENSG00000141338") #ABCA8
 seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "Osteo-Chondro CAR"
 ```
 
-```{r 2_others_3}
+```{r 2_others_1}
 nr <- "1"
 markers <- ct_markers_o3[[nr]]$gene[
   !is.na(ct_markers_o3[[nr]]$symbol) & 
@@ -770,7 +772,7 @@ FeaturePlot(seu_sign_o3, "ENSG00000140092") #FBLN5
 seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "Osteo CAR"
 ```
 
-```{r 2_others_3}
+```{r 2_others_0}
 nr <- "0"
 markers <- ct_markers_o3[[nr]]$gene[
   !is.na(ct_markers_o3[[nr]]$symbol) & 
@@ -827,7 +829,7 @@ FeaturePlot(seu_sign_o3, markers[13:18])
 seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "Adipo CAR"
 ```
 
-```{r 2_others_3}
+```{r 2_others_7}
 DimPlot(seu_sign_o3, dims = c(1,2), group.by = "seurat_clusters")
 
 nr <- "7"
@@ -850,7 +852,7 @@ FeaturePlot(seu_sign_o3, markers[13:18])
 seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "Osteo-Chondro"
 ```
 
-```{r 2_others_3}
+```{r 2_others_4}
 nr <- "4"
 markers <- ct_markers_o3[[nr]]$gene[
   !is.na(ct_markers_o3[[nr]]$symbol) & 
@@ -958,7 +960,7 @@ seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "EC3"
 
 ```
 
-```{r 2_others_3}
+```{r 2_others_5}
 nr <- "5"
 markers <- ct_markers_o3[[nr]]$gene[
   !is.na(ct_markers_o3[[nr]]$symbol) & 
@@ -981,7 +983,7 @@ seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "EC2"
 
 #### Others -2
 
-```{r umap_others_1}
+```{r umap_others_2}
 DimPlot(seu_sign_o2, dims = c(1,2), group.by = "seurat_clusters")
 DimPlot(seu_sign_o2, dims = c(1,2), group.by = "batch")
 
@@ -1054,7 +1056,7 @@ seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Adipo/C
 
 ```
 
-```{r 5_others_1}
+```{r 5_others}
 nr <- "5"
 markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
@@ -1079,7 +1081,7 @@ FeaturePlot(seu_sign_o2, markers[13:18])
 seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Adipo/CAR - batch non-pbs"
 ```
 
-```{r 5_others_1}
+```{r 4_others_1}
 nr <- "4"
 markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
@@ -1255,7 +1257,7 @@ seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Osteo1"
 
 ```
 
-```{r 8_others_1}
+```{r 12_others_1}
 nr <- "12"
 markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
@@ -1286,7 +1288,7 @@ seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Osteo2"
 
 ```
 
-```{r 12_others_1}
+```{r 13_others_1}
 
 nr <- "13"
 markers <- ct_markers_o2[[nr]]$genes[
@@ -1478,7 +1480,7 @@ seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Art/Cap
 
 ```
 
-```{r 6_others_2}
+```{r 1_others_2}
 
 nr <- "1"
 
@@ -1578,7 +1580,7 @@ FeaturePlot(seu_sign_o2, "Cd34")
 
 ```
 
-```{r 6_others_2}
+```{r 2_others_2}
 
 nr <- "2"
 
@@ -1672,7 +1674,7 @@ FeaturePlot(seu_sign_o2, "Rgcc") # capillary
  
 ```
 
-```{r 6_others_2}
+```{r 3_others_2}
 
 nr <- "3"
 

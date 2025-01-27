@@ -10,9 +10,7 @@ set.seed(37)
 #-------------------------------------------------------------------------------
 
 library(mclust, quietly = TRUE)
-library(mcclust, quietly = TRUE)
 library(bluster, quietly = TRUE)
-library(dendextend, quietly = TRUE)
 library(S4Vectors, quietly = TRUE)
 
 source(file = snakemake@params[["reclustering_functions"]])

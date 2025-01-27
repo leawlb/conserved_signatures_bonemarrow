@@ -1,11 +1,15 @@
 library(Seurat, quietly = TRUE)
 library(tidyverse, quietly = TRUE)
 
-data <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/08_sce_brain/sample.combined_exc_4_species_integration.RDS")
+base_path_temp <-"/omics/groups/OE0433/internal_temp/veronica/projects/conserved_genes/"
+base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/"
+brain_path <- "scRNAseq/main_analysis/sce_objects/08_sce_brain/"
+
+data <- readRDS(paste0(base_path, "metadata/scRNAseq/08_sce_brain/sample.combined_exc_4_species_integration.RDS"))
 data.updated <- UpdateSeuratObject(object = data)  # available data is v3 Seurat
 
-nDEGs <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/08_sce_brain/01_list_nDEGs_all.rds")
-core_markers <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/08_sce_brain/02_marker_conserved_primates.rds")
+nDEGs <- readRDS(paste0(base_path, brain_path, "01_list_nDEGs_all.rds"))
+core_markers <- readRDS(paste0(base_path, brain_path, "02_marker_conserved_primates.rds"))
 
 # clustering resolutions are based on values optimized using conserved markers
 resolution <- data.frame(species = c("human", "marmoset", "macaque", "mouse"),
@@ -48,7 +52,7 @@ for(sp in c("human", "marmoset", "macaque", "mouse")){
   species <- FindClusters(species, 
                           resolution = resolution[which(resolution$species == sp), "resolution"])
   saveRDS(species,
-          file = paste0("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/08_sce_brain/04_recluster/",
+          file = paste0(base_path_temp, brain_path, "04_recluster/",
                         sp, "_reclust_sig.rds"))
   
   species <- RunPCA(species,
@@ -63,7 +67,7 @@ for(sp in c("human", "marmoset", "macaque", "mouse")){
   species <- FindClusters(species, 
                           resolution = resolution[which(resolution$species == sp), "resolution"])
   saveRDS(species,
-          file = paste0("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/08_sce_brain/04_recluster/",
+          file = paste0(base_path_temp, brain_path, "04_recluster/",
                         sp, "_reclust_core.rds"))
 }
 
@@ -74,7 +78,7 @@ for(sp in c("human", "marmoset", "macaque", "mouse")){
 # identify proper order of patterns for final visualization
 for(sp in c("human", "marmoset", "macaque", "mouse")){
   for(genes in c("core", "sig")){
-    data <- readRDS(paste0("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/08_sce_brain/04_recluster/",
+    data <- readRDS(paste0(base_path, brain_path, "04_recluster/",
                            sp, "_reclust_", genes, ".rds"))
     
     plot <- data@meta.data[,c("subclass_label", "seurat_clusters")] %>%
@@ -109,3 +113,65 @@ for(sp in c("human", "marmoset", "macaque", "mouse")){
 }
 
 
+
+
+
+############################################
+## cluster mouse using only human markers ##
+############################################
+markers_conservation <- readRDS(paste0(base_path, brain_path, "02_marker_expression_primates.rds"))
+human_markers <- do.call(rbind, markers_conservation) %>%
+  as.data.frame() %>%
+  filter(!is.na(human)) %>% 
+  rownames() %>%
+  sub("\\..*", "", .) %>%
+  unique()
+
+species <- subset(data.updated, subset = orig.ident == "mouse")
+
+DefaultAssay(species) <- "RNA"
+species <- ScaleData(species)
+species <- RunPCA(species,
+                  features = human_markers)
+species <- RunUMAP(species,
+                   reduction = "pca",
+                   dims = 1:50,
+                   n.components = 2)
+species <- FindNeighbors(species,
+                         reduction = "pca",
+                         dims = 1:50)
+species <- FindClusters(species, 
+                        resolution = resolution[which(resolution$species == "mouse"), "resolution"])
+saveRDS(species,
+        file = paste0(base_path_temp, brain_path, "04_recluster/mouse_reclust_hs.rds"))
+
+plot <- species@meta.data[,c("subclass_label", "seurat_clusters")] %>%
+  table() %>% as.matrix()
+
+plot_gg <- plot %>%
+  as.data.frame() %>%
+  group_by(seurat_clusters) %>%
+  mutate(clust_prop = Freq/sum(Freq)) %>%
+  ungroup %>%
+  group_by(subclass_label) %>%
+  mutate(subclass_prop = Freq/sum(Freq))
+
+print(
+  ggplot(plot_gg, 
+         aes(x = factor(subclass_label, 
+                        levels = c("L2/3 IT", "L5 IT", "L6 IT", "L6 IT Car3", 
+                                   "L5 ET", "L5/6 NP", "L6 CT", "L6b")), 
+             y = seurat_clusters, 
+             fill = clust_prop*100)) + 
+    geom_tile() +
+    scale_fill_continuous("% cells/cluster", 
+                          limits=c(0, 100), 
+                          breaks=seq(0,100,by=20),
+                          low = "white", high = "blue") +
+    theme_classic()+
+    theme(axis.ticks = element_blank(),
+          axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1)) +
+    labs(y  = "new clusters", x = "original cell types", title = "Mouse Human markers")
+)
+# order = 2, 11, 10, 4, 6, 7, 3, 5, 8, 9, 0, 12, 1
+# 5626 human markers

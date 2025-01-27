@@ -8,8 +8,9 @@ OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/03_sce_analysis/05_cellrank"
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/05_cellrank"
 
-COLORS = config["base"] + config["metadata_paths"]["colors"]
+COLORS = config["base_input"] + config["metadata_paths"]["colors"]
 
+print(OUTPUT_DAT)
 #-------------------------------------------------------------------------------
 
 targets = []
@@ -43,8 +44,13 @@ rule export_to_adata:
         adata_output = OUTPUT_DAT + "/01_adat/adata_hsc_01.h5ad"
     conda:
         "../../envs/zellkonverter_export.yml"
+    resources:
+        mem_mb=30000,
+        queue="medium"
+    threads: 4
     script:
         "scripts/01_export_to_adata.R"
+
 
 # basic scanpy pre-processing steps to prepare for cellrank
 # calculate neighbors, diffusion, pseudotime
@@ -55,6 +61,10 @@ rule scanpy_preprocessing:
         adata_output = OUTPUT_DAT + "/02_scnp/adata_hsc_02.h5ad"
     conda:
         "../../envs/cellrank.yml"
+    resources:
+        mem_mb=10000,
+        queue="medium"
+    threads: 10
     script:
         "scripts/02_scanpy_preprocessing.py"
   
@@ -71,6 +81,10 @@ rule cellrank:
         n_states_terminal = 3
     conda:
         "../../envs/cellrank.yml"
+    resources:
+        mem_mb=10000,
+        queue="medium"
+    threads: 10
     script:
         "scripts/03_cellrank.py"
 
@@ -83,6 +97,10 @@ rule import_to_sce:
         sce_output = OUTPUT_DAT + "/04_psce/sce_hsc_pseudotime"
     conda:
         "../../envs/zellkonverter_import.yml"
+    resources:
+        mem_mb=30000,
+        queue="medium"
+    threads: 4
     script:
         "scripts/04_import_to_sce.R"
 
@@ -97,6 +115,10 @@ rule cellrank_report:
         colors_path = COLORS,
         colors = "../../source/colors.R",
         plotting = "../../source/plotting.R"
+    resources:
+        mem_mb=100000,
+        queue="medium"
+    threads: 4
     script:
         "cellrank_report.Rmd"
         
@@ -112,5 +134,11 @@ rule separate_by_branch:
         sce_ery = OUTPUT_DAT + "/05_bsce/sce_ery",
         sce_lym = OUTPUT_DAT + "/05_bsce/sce_lym",
         sce_neu = OUTPUT_DAT + "/05_bsce/sce_neu"
+    resources:
+        mem_mb=100000,
+        queue="medium"
+    threads: 4
     script:
         "scripts/05_separate_by_branch.R"
+
+

@@ -25,13 +25,7 @@ library(scuttle, quietly = TRUE)
 ```
 
 ```{r base_path}
-base_path_input <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data/"
-base_path_output_temp <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data/"
-```
-
-```{r base_path_snakemake, eval = FALSE, include = FALSE}
-base_path_input <- snakemake@input[["base_path_input"]]
-base_path_output_temp <- snakemake@params[["base_path_output_temp"]]
+base_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data/"
 ```
 
 ```{r load_manual}
@@ -39,22 +33,17 @@ base_path_output_temp <- snakemake@params[["base_path_output_temp"]]
 
 # fully annotated SCE objects
 sce_hsc <- base::readRDS(base::paste0(
-  base_path_input, 
+  base_path, 
   "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10"))
 sce_str <- base::readRDS(base::paste0(
-  base_path_input, 
+  base_path, 
   "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10"))
-
-colors_path <- base::paste0(
-  "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt")
-
-source("../source/colors.R")
 ```
 
 ```{r load_manual_short}
-# gene list for dotplot 
+# gene list for dotplot with details
 gene_list_dtplt <- base::paste0(
-  base_path_input, 
+  base_path, 
   "/metadata/scRNAseq/02_sce_anno/gene_list_dotplot.txt")
 
 gene_df <- utils::read.csv(gene_list_dtplt, 
@@ -65,8 +54,9 @@ gene_df <- utils::read.csv(gene_list_dtplt,
   as.is=TRUE, 
   colClasses = "character")
 
+# list containing genes in the correct order for the dotplot
 order_list_dotplot <- base::paste0(
-  base_path_input, 
+  base_path, 
   "/metadata/scRNAseq/02_sce_anno/dotplot_order.txt")
 
 dotplot_order_df <- utils::read.csv(order_list_dotplot, 
@@ -77,8 +67,10 @@ dotplot_order_df <- utils::read.csv(order_list_dotplot,
   as.is=TRUE, 
   colClasses = "character")
 
-# gene list for subclustering
-gene_list_subclustering <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/02_sce_anno/gene_list_subclustering.txt"
+# list of genes used for subclustering
+gene_list_subclustering <- order_list_dotplot <- base::paste0(
+  base_path, 
+  "/metadata/scRNAseq/02_sce_anno/gene_list_subclustering.txt")
 
 subclustering_df <- utils::read.csv(gene_list_subclustering, 
   header = TRUE, 
@@ -88,35 +80,40 @@ subclustering_df <- utils::read.csv(gene_list_subclustering,
   as.is=TRUE, 
   colClasses = "character")
 
+# color table
+colors_path <- base::paste0(
+  base_path,
+  "/metadata/colors/colors.txt")
+source("../source/colors.R")
 ```
 
 ```{r pdf_output}
 # define output paths for pdf export
 output_pdf_umap_species_hsc <- base::paste0(
-  base_path_output_temp,
+  base_path,
   "/manuscript1/figure1/figure1_umap_species_hsc.pdf")
 output_pdf_umap_species_str <- base::paste0(
-  base_path_output_temp,
+  base_path,
   "/manuscript1/figure1/figure1_umap_species_str.pdf")
 output_pdf_umap_species_legend <- base::paste0(
-  base_path_output_temp,
+  base_path,
   "/manuscript1/figure1/figure1_umap_species_legend.pdf")
 
 output_pdf_umap_spec_sep_hsc <- base::paste0(
-  base_path_output_temp,
+  base_path,
   "/manuscript1/figure1/figure1_umap_specsep_hsc.pdf") 
 output_pdf_umap_spec_sep_str <- base::paste0(
-  base_path_output_temp,
+  base_path,
   "/manuscript1/figure1/figure1_umap_specsep_str.pdf") 
 output_pdf_umap_spec_sep_legend <- base::paste0(
-  base_path_output_temp,
+  base_path,
   "/manuscript1/figure1/figure1_umap_specsep_legend.pdf") 
 
 output_pdf_dotplot <- base::paste0(
-  base_path_output_temp,
+  base_path,
   "/manuscript1/figure1/figure1_dotplot.pdf") 
 output_pdf_dotplot_legend <- base::paste0(
-  base_path_output_temp,
+  base_path,
   "/manuscript1/figure1/figure1_dotplot_legend.pdf") 
 ```
 
@@ -162,7 +159,7 @@ sce_str$species_pub <- factor(sce_str$species_pub,
 
 ## Obtain data
 
-Obtain data needed only for text, e.g. cell numbers.
+Obtain data needed only for manuscript text, e.g. cell numbers.
 
 ```{r obtain_data}
 # nr of cells
@@ -184,7 +181,8 @@ names(assays(sce_hsc_met)) <- "counts_before_BC"
 assays(sce_str_met) <- list(assays(sce_str_met)[["counts_before_BC"]])
 names(assays(sce_str_met)) <- "counts_before_BC"
 
-qc_df <- scuttle::perCellQCMetrics(cbind(sce_hsc_met, sce_str_met), assay.type = "counts_before_BC")
+qc_df <- scuttle::perCellQCMetrics(cbind(sce_hsc_met, sce_str_met),
+                                   assay.type = "counts_before_BC")
 median(qc_df$sum)
 
 rm(sce_hsc_met)
@@ -421,7 +419,7 @@ ct_legend_right <- ggpubr::ggarrange(ct_legend_right_theme)
 ct_legend_right
 ```
 
-```{r e_theme_legend, fig.height = 7, fig.width = 3}
+```{r e_theme_legend, fig.height = 7, fig.width = 4}
 ct_legend <- ggpubr::ggarrange(
   ncol = 1,
   align = "v",
@@ -497,30 +495,6 @@ ct_theme_plot_right <- ct_base_plot_right+
 ```
 
 ## Assemble UMAPs
-
-```{r bc_construct, fig.width = 13, fig.height = 13, eval = FALSE, include = FALSE}
-de_plot_top <- ggpubr::ggarrange(
-  align = "hv",
-  d_theme_plot_left,
-  d_theme_plot_right,
-  ncol = 2
-)
-
-de_plot_bottom <- ggpubr::ggarrange(
-  align = "hv",
-  e_theme_plot_left,
-  e_theme_plot_right,  
-  ncol = 2
-)
-
-de_plot <- ggpubr::ggarrange(
-  align = "hv",
-  de_plot_top,
-  de_plot_bottom,
-  ncol = 1
-)
-de_plot
-```
 
 ```{r umap_construct1, fig.width = 8, fig.height = 3}
 species_plot <- ggpubr::ggarrange(
@@ -1117,7 +1091,7 @@ dp_theme_plot2 <- ggpubr::ggarrange(
 dp_theme_plot2
 ```
 
-```{r dp_theme_legends, fig.width = 7, fig.height = 1}
+```{r dp_theme_legends, fig.width = 10, fig.height = 1}
 dp_theme_legends <- ggpubr::ggarrange(
   nrow = 1,
   dp_legend_left,
@@ -1135,7 +1109,7 @@ dev.off()
 ```
 
 ```{r export_dp_legend}
-pdf(output_pdf_dotplot_legend, width = 7, height = 1)
+pdf(output_pdf_dotplot_legend, width = 10, height = 1)
 dp_theme_legends
 dev.off()
 ```

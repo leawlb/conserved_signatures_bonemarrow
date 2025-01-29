@@ -240,6 +240,11 @@ make_pattern_density_plot <- function(
       aes(x = value, y = y_value),
       size = point_plot_size,
       color = color_cons)+
+    geom_vline(
+      color = "grey70",
+      xintercept = score_df$value,
+      linetype = "dashed"
+    )+
     scale_y_continuous(
       limits = c(y_lim_low, y_lim_high),
       breaks = y_lim_break, 
@@ -1449,16 +1454,17 @@ theme_plot_bp1_own<- base_plot_bp1_own+
   theme_all+
   ggplot2::scale_x_continuous(
     breaks=c(0,  400, 800),
+    position = "top", 
     limits = c(0, max_genes))+
   ggplot2::theme(
     legend.position = "none",
     plot.title = element_text(
       hjust = 0.5,
       size = axis_title_size),
-    axis.ticks.x = element_blank(),
-    axis.line.x = element_blank(),
-    axis.title = element_blank(),
-    axis.text = element_blank())
+    #axis.ticks.x = element_blank(),
+    #axis.line.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank())
 ```
 
 ```{r base_plot_bp2_own}
@@ -1538,9 +1544,9 @@ theme_plot_bp3_own <- base_plot_bp3_own+
     limits = c(0, max_genes))+
   ggplot2::theme(
     legend.position = "none",
-    axis.title.y = element_blank(),
-    axis.text.y = element_blank(),
-    axis.text.x = element_text(hjust = 0.5))+
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks.x= element_blank())+
   ggplot2::xlab(nr_genes_title)
 ```
 
@@ -1561,10 +1567,10 @@ theme_plot_ai1_own <- base_plot_ai1_own+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
-    axis.text = element_blank(),
-    axis.line.x = element_blank(),
-    axis.ticks.x = element_blank(),
-    axis.title = element_blank(),
+    axis.text.y = element_blank(),
+    #axis.line.x = element_blank(),
+    #axis.ticks.x = element_blank(),
+    axis.title.y = element_blank(),
     plot.title = element_blank())+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.5, 1),
@@ -1614,8 +1620,9 @@ theme_plot_ai3_own <- base_plot_ai3_own+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
-    axis.text.y = element_blank(),
-    axis.title.y = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title = element_blank(),
     plot.title = element_blank())+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.5, 1),
@@ -1641,10 +1648,10 @@ theme_plot_vi1_own <- base_plot_vi1_own+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
-    axis.text = element_blank(),
-    axis.line.x = element_blank(),
-    axis.ticks.x = element_blank(),
-    axis.title = element_blank(),
+    axis.text.y = element_blank(),
+    #axis.line.x = element_blank(),
+    #axis.ticks.x = element_blank(),
+    axis.title.y = element_blank(),
     plot.title = element_blank())+
   ggplot2::scale_x_continuous(
     breaks=c(-5, -2.5, 0),
@@ -1694,10 +1701,9 @@ theme_plot_vi3_own <- base_plot_vi3_own+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
-    axis.text.y = element_blank(),
-    axis.text.x = element_text(
-      hjust = 0.5),
-    axis.title.y = element_blank(),
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    axis.ticks.x = element_blank(),
     plot.title = element_blank())+
   ggplot2::scale_x_continuous(
     breaks=c(-5, -2.5, 0),
@@ -1723,10 +1729,11 @@ theme_plot_mp1_own <- base_plot_mp1_own+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
-    axis.text = element_blank(),
-    axis.title = element_blank(),
-    axis.ticks.x = element_blank(),
-    axis.line.x = element_blank())+
+    axis.text.y = element_blank(),
+    axis.title.y = element_blank(),
+    #axis.ticks.x = element_blank(),
+    #axis.line.x = element_blank()
+    )+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.2, 0.4),
     position = "top", 
@@ -1776,10 +1783,9 @@ theme_plot_mp3_own <- base_plot_mp3_own+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
-    axis.text.y = element_blank(),
-    axis.text.x = element_text(
-      hjust = 0.5),
-    axis.title.y = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.title = element_blank(),
     plot.title = element_blank())+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.2, 0.4),
@@ -1794,7 +1800,7 @@ theme_plot_mp3_own <- base_plot_mp3_own+
 
 b_plot_bp_own <- ggpubr::ggarrange(
   ncol = 1,
-  heights = c(1, 1, 1.7),
+  heights = c(1.5, 1, 1),
   align = "v",
   theme_plot_bp1_own,
   theme_plot_bp2_own,
@@ -1803,7 +1809,7 @@ b_plot_bp_own <- ggpubr::ggarrange(
 
 b_plot_ai_own <- ggpubr::ggarrange(
   ncol = 1,
-  heights = c(1, 1, 1.7),
+  heights = c(1.5, 1, 1),
   align = "v",
   theme_plot_ai1_own,
   theme_plot_ai2_own,
@@ -1812,7 +1818,7 @@ b_plot_ai_own <- ggpubr::ggarrange(
 
 b_plot_vi_own <- ggpubr::ggarrange(
   ncol = 1,
-  heights = c(1, 1, 1.7),
+  heights = c(1.5, 1, 1),
   align = "v",
   theme_plot_vi1_own,
   theme_plot_vi2_own,
@@ -1821,7 +1827,7 @@ b_plot_vi_own <- ggpubr::ggarrange(
 
 b_plot_mp_own <- ggpubr::ggarrange(
   ncol = 1,
-  heights = c(1, 1, 1.7),
+  heights = c(1.5, 1, 1),
   align = "v",
   theme_plot_mp1_own,
   theme_plot_mp2_own,
@@ -1847,47 +1853,6 @@ b_plot
 pdf(output_pdf_own_perm_plot, width = 9, height = 6.2)
 b_plot
 dev.off()
-```
-
-```{r assemble_bigplot_own_poster, fig.width = 12, fig.height = 10, eval = FALSE, include = FALSE}
-
-b_plot_bp_own_poster <- ggpubr::ggarrange(
-  ncol = 1,
-  heights = c(1.6, 1),
-  align = "v",
-  theme_plot_bp1_own,
-  theme_plot_bp3_own
-)
-
-b_plot_ai_own_poster <- ggpubr::ggarrange(
-  ncol = 1,
-  heights = c(1.6, 1),
-  align = "v",
-  theme_plot_ai1_own,
-  theme_plot_ai3_own
-)
-
-b_plot_vi_own_poster <- ggpubr::ggarrange(
-  ncol = 1,
-  heights = c(1.6, 1),
-  align = "v",
-  theme_plot_vi1_own,
-  theme_plot_vi3_own
-)
-
-
-```
-
-```{r fig.width = 9, fig.height = 3.5, eval = FALSE, include = FALSE}
-b_plot_poster <- ggpubr::ggarrange(
-  ncol = 3,
-  align = "v",
-  b_plot_bp_own_poster,
-  b_plot_ai_own_poster,
-  b_plot_vi_own_poster, 
-  widths = c(2.3, 1, 1)
-)
-b_plot_poster
 ```
 
 ## Plots: Comparing OTHER 1 scores to random background
@@ -1931,8 +1896,8 @@ theme_plot_bp1_o1 <- base_plot_bp1_o1+
   ggplot2::theme(
     plot.title = element_blank(),
     legend.position = "none",
-    axis.title = element_blank(),
-    axis.text = element_blank())
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank())
 ```
 
 ```{r base_plot_bp3_o1}
@@ -2000,8 +1965,8 @@ theme_plot_ai1_o1 <- base_plot_ai1_o1+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
-    axis.text = element_blank(),
-    axis.title = element_blank(),
+    axis.text.y = element_blank(),
+    axis.title.y = element_blank(),
     plot.title = element_blank())+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.5, 1),
@@ -2025,13 +1990,13 @@ theme_plot_ai3_o1 <- base_plot_ai3_o1+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
-    axis.line.x = element_blank(),
+    #axis.line.x = element_blank(),
     axis.ticks.x = element_blank(),
     axis.title = element_blank(),
     plot.title = element_blank())+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.5, 1),
-    position = "top", 
+    position = "bottom", 
     limits = c(score1_min, score1_max))+
   ggplot2::ggtitle(score1_long) 
 ```
@@ -2053,8 +2018,8 @@ theme_plot_vi1_o1 <- base_plot_vi1_o1+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
-    axis.text = element_blank(),
-    axis.title = element_blank(),
+    axis.text.y = element_blank(),
+    axis.title.y = element_blank(),
     plot.title = element_blank())+
   ggplot2::scale_x_continuous(
     breaks=c(-5, -2.5, 0),
@@ -2078,13 +2043,13 @@ theme_plot_vi3_o1 <- base_plot_vi3_o1+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
-    axis.line.x = element_blank(),
+    #axis.line.x = element_blank(),
     axis.ticks.x = element_blank(),
     axis.title = element_blank(),
     plot.title = element_blank())+
   ggplot2::scale_x_continuous(
     breaks=c(-5, -2.5, 0),
-    position = "top", 
+    position = "bottom", 
     limits = c(score2_min, score2_max))+
   ggplot2::ggtitle(score2_long) 
 ```
@@ -2106,8 +2071,8 @@ theme_plot_mp1_o1 <- base_plot_mp1_o1+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
-    axis.text = element_blank(),
-    axis.title = element_blank(),
+    axis.text.y = element_blank(),
+    axis.title.y = element_blank(),
     plot.title = element_blank())+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.2, 0.4),
@@ -2131,13 +2096,13 @@ theme_plot_mp3_o1 <- base_plot_mp3_o1+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
-    axis.line.x = element_blank(),
+    #axis.line.x = element_blank(),
     axis.ticks.x = element_blank(),
     axis.title = element_blank(),
     plot.title = element_blank())+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.2, 0.4),
-    position = "top", 
+    position = "bottom", 
     limits = c(score3_min, score3_max))+
   ggplot2::ggtitle(score3_long) 
 ```
@@ -2149,7 +2114,7 @@ theme_plot_mp3_o1 <- base_plot_mp3_o1+
 
 plot_bp_o1 <- ggpubr::ggarrange(
   ncol = 1,
-  heights = c(1, 1),
+  heights = c(1.5, 1),
   align = "v",
   theme_plot_bp1_o1,
   theme_plot_bp3_o1
@@ -2157,7 +2122,7 @@ plot_bp_o1 <- ggpubr::ggarrange(
 
 plot_ai_o1 <- ggpubr::ggarrange(
   ncol = 1,
-  heights = c(1, 1),
+  heights = c(1.5, 1),
   align = "v",
   theme_plot_ai1_o1,
   theme_plot_ai3_o1
@@ -2165,7 +2130,7 @@ plot_ai_o1 <- ggpubr::ggarrange(
 
 plot_vi_o1 <- ggpubr::ggarrange(
   ncol = 1,
-  heights = c(1, 1),
+  heights = c(1.5, 1),
   align = "v",
   theme_plot_vi1_o1,
   theme_plot_vi3_o1
@@ -2173,7 +2138,7 @@ plot_vi_o1 <- ggpubr::ggarrange(
 
 plot_mp_o1 <- ggpubr::ggarrange(
   ncol = 1,
-  heights = c(1, 1),
+  heights = c(1.5, 1),
   align = "v",
   theme_plot_mp1_o1,
   theme_plot_mp3_o1
@@ -3366,7 +3331,7 @@ a_legend
 ```
 
 ```{r a_plot_export}
-pdf(output_pdf_heatmap_own_plot, width = 3, height = 7.8)
+pdf(output_pdf_heatmap_own_plot, width = 5, height = 7.8)
 a_theme_plot
 dev.off()
 ```
@@ -3585,7 +3550,7 @@ d_theme_plot
 ```
 
 ```{r a_plot_export}
-pdf(output_pdf_heatmaps_others_plot, width = 3, height = 6.5)
+pdf(output_pdf_heatmaps_others_plot, width = 5, height = 6.5)
 d_theme_plot
 dev.off()
 ```
@@ -3593,153 +3558,153 @@ dev.off()
 ### Prep Other 2
 
 ```{r mat_mmms_o2, eval = FALSE, include = FALSE}
-mat_mmms_o2 <- base::table(selected_seu_list_o2$seu_mmms$cell_type, 
-                          selected_seu_list_o2$seu_mmms$seurat_clusters)
-
-for(i in 1:ncol(mat_mmms_o2)){
-  mat_mmms_o2[,i] <- mat_mmms_o2[,i]/base::sum(mat_mmms_o2[,i])
-}
-mmms_df_o2 <- base::as.data.frame(mat_mmms_o2)
-
-mmms_df_o2$Var2 <- factor(
-  mmms_df_o2$Var2,
-  levels = base::rev(c(2, 15, 14, 3, 6, 9, 11, 5, 4, 7, 10, 13, 12, 8, 1, 0)))
+# mat_mmms_o2 <- base::table(selected_seu_list_o2$seu_mmms$cell_type, 
+#                           selected_seu_list_o2$seu_mmms$seurat_clusters)
+# 
+# for(i in 1:ncol(mat_mmms_o2)){
+#   mat_mmms_o2[,i] <- mat_mmms_o2[,i]/base::sum(mat_mmms_o2[,i])
+# }
+# mmms_df_o2 <- base::as.data.frame(mat_mmms_o2)
+# 
+# mmms_df_o2$Var2 <- factor(
+#   mmms_df_o2$Var2,
+#   levels = base::rev(c(2, 15, 14, 3, 6, 9, 11, 5, 4, 7, 10, 13, 12, 8, 1, 0)))
 ```
 
 ```{r mat_sign_o2, eval = FALSE, include = FALSE}
-mat_sign_o2 <- base::table(selected_seu_list_o2$seu_sign$cell_type, 
-                           selected_seu_list_o2$seu_sign$seurat_clusters)
-
-# normalise per column = new clusters and turn into DF
-for(i in 1:ncol(mat_sign_o2)){
-  mat_sign_o2[,i] <- mat_sign_o2[,i]/base::sum(mat_sign_o2[,i])
-}
-sign_df_o2 <- base::as.data.frame(mat_sign_o2)
-
-# manually factorise clusters
-sign_df_o2$Var2 <- factor(
-  sign_df_o2$Var2,
-  levels = base::rev(c(3, 4, 6, 8, 9, 7, 5, 2, 11, 10, 1, 0)))
+# mat_sign_o2 <- base::table(selected_seu_list_o2$seu_sign$cell_type, 
+#                            selected_seu_list_o2$seu_sign$seurat_clusters)
+# 
+# # normalise per column = new clusters and turn into DF
+# for(i in 1:ncol(mat_sign_o2)){
+#   mat_sign_o2[,i] <- mat_sign_o2[,i]/base::sum(mat_sign_o2[,i])
+# }
+# sign_df_o2 <- base::as.data.frame(mat_sign_o2)
+# 
+# # manually factorise clusters
+# sign_df_o2$Var2 <- factor(
+#   sign_df_o2$Var2,
+#   levels = base::rev(c(3, 4, 6, 8, 9, 7, 5, 2, 11, 10, 1, 0)))
 ```
 
 ### Plot Other 2
 
 ```{r mmms_base_plot_o2, eval = FALSE, include = FALSE}
-mmms_base_plot_o2 <- ggplot2::ggplot(
-  mmms_df_o2, 
-  aes(x = Var1, 
-      y = Var2,
-      fill = Freq))+
-  ggplot2::geom_tile()
-mmms_base_plot_o2
+# mmms_base_plot_o2 <- ggplot2::ggplot(
+#   mmms_df_o2, 
+#   aes(x = Var1, 
+#       y = Var2,
+#       fill = Freq))+
+#   ggplot2::geom_tile()
+# mmms_base_plot_o2
 ```
 
 ```{r sign_base_plot_o2, eval = FALSE, include = FALSE}
-sign_base_plot_o2 <- ggplot2::ggplot(
-  sign_df_o2, 
-  aes(x = Var1, 
-      y = Var2,
-      fill = Freq))+
-  ggplot2::geom_tile()
-sign_base_plot_o2
+# sign_base_plot_o2 <- ggplot2::ggplot(
+#   sign_df_o2, 
+#   aes(x = Var1, 
+#       y = Var2,
+#       fill = Freq))+
+#   ggplot2::geom_tile()
+# sign_base_plot_o2
 ```
 
 ```{r mmms_theme_plot_o2, eval = FALSE, include = FALSE}
-mmms_theme_plot_o2 <- mmms_base_plot_o2+
-  theme_all+
-  ggplot2::theme(
-    legend.position = "none",
-    axis.title = element_blank(),
-    axis.text = element_blank(),
-    axis.ticks.y = element_blank())+
-  ggplot2::scale_fill_gradientn(
-    colors = mycolors_to1,
-    limits = c(0, 1),
-    breaks = c(0, 0.5, 1))
+# mmms_theme_plot_o2 <- mmms_base_plot_o2+
+#   theme_all+
+#   ggplot2::theme(
+#     legend.position = "none",
+#     axis.title = element_blank(),
+#     axis.text = element_blank(),
+#     axis.ticks.y = element_blank())+
+#   ggplot2::scale_fill_gradientn(
+#     colors = mycolors_to1,
+#     limits = c(0, 1),
+#     breaks = c(0, 0.5, 1))
 ```
 
 ```{r f_mmms_theme_plot, eval = FALSE, include = FALS}
-sign_theme_plot_o2 <- mmms_base_plot_o2+
-  theme_all+
-  ggplot2::theme(
-    legend.position = "none",
-    axis.text.x = element_text(
-      angle = 90,
-      hjust = 0,
-      vjust = 0.5),
-    axis.title = element_blank(),
-    axis.ticks.y = element_blank(),
-    axis.text.y = element_blank())+
-  ggplot2::scale_fill_gradientn(
-    colors = mycolors_to1,
-    limits = c(0, 1),
-    breaks = c(0, 0.5, 1))+
-  ggplot2::xlab("Original cell types")
+# sign_theme_plot_o2 <- mmms_base_plot_o2+
+#   theme_all+
+#   ggplot2::theme(
+#     legend.position = "none",
+#     axis.text.x = element_text(
+#       angle = 90,
+#       hjust = 0,
+#       vjust = 0.5),
+#     axis.title = element_blank(),
+#     axis.ticks.y = element_blank(),
+#     axis.text.y = element_blank())+
+#   ggplot2::scale_fill_gradientn(
+#     colors = mycolors_to1,
+#     limits = c(0, 1),
+#     breaks = c(0, 0.5, 1))+
+#   ggplot2::xlab("Original cell types")
 ```
 
 ### Assemble
 
 ```{r f_assemble, fig.width = 3.2, fig.height = 6, eval = FALSE, include = FALSE}
 
-f_theme_plot <- ggpubr::ggarrange(
-  ncol = 1,
-  mmms_theme_plot_o2,
-  sign_theme_plot_o2,
-  align = "v",
-  heights = c(1, 1.5)
-)
-
-f_theme_plot
+# f_theme_plot <- ggpubr::ggarrange(
+#   ncol = 1,
+#   mmms_theme_plot_o2,
+#   sign_theme_plot_o2,
+#   align = "v",
+#   heights = c(1, 1.5)
+# )
+# 
+# f_theme_plot
 ```
 
 ### Construct both together
 
 ```{r de_construct, fig.width = 4.5, fig.height = 4, eval = FALSE, include = FALSE}
 
-mmms_plots <- ggpubr::ggarrange(
-  ncol = 2,
-  mmms_theme_plot_o1,
-  mmms_theme_plot_o2)
-
-mmms_plots_title <- annotate_figure(
-  mmms_plots,
-  top = ggpubr::text_grob(
-    "BL6 markers", 
-    color = col_cons_long["BL6 markers"], 
-    face = plot_title_face,
-    size = plot_title_size))
-
-sign_plots <- ggpubr::ggarrange(
-  ncol = 2,
-  align = "hv",
-  sign_theme_plot_o1,
-  sign_theme_plot_o2)
-
-sign_plots_title <- annotate_figure(
-  sign_plots,
-  top = ggpubr::text_grob(
-    "Conserved identity signature", 
-    color = col_cons_long["conserved identity signature"], 
-    face = plot_title_face,
-    size = plot_title_size),
-  bottom = ggpubr::text_grob(
-    "Original cell types",
-    color = axis_title_color,
-    size = axis_title_size,
-    face = axis_title_face))
+# mmms_plots <- ggpubr::ggarrange(
+#   ncol = 2,
+#   mmms_theme_plot_o1,
+#   mmms_theme_plot_o2)
+# 
+# mmms_plots_title <- annotate_figure(
+#   mmms_plots,
+#   top = ggpubr::text_grob(
+#     "BL6 markers", 
+#     color = col_cons_long["BL6 markers"], 
+#     face = plot_title_face,
+#     size = plot_title_size))
+# 
+# sign_plots <- ggpubr::ggarrange(
+#   ncol = 2,
+#   align = "hv",
+#   sign_theme_plot_o1,
+#   sign_theme_plot_o2)
+# 
+# sign_plots_title <- annotate_figure(
+#   sign_plots,
+#   top = ggpubr::text_grob(
+#     "Conserved identity signature", 
+#     color = col_cons_long["conserved identity signature"], 
+#     face = plot_title_face,
+#     size = plot_title_size),
+#   bottom = ggpubr::text_grob(
+#     "Original cell types",
+#     color = axis_title_color,
+#     size = axis_title_size,
+#     face = axis_title_face))
 
 ```
 
 ```{r de_construct2, fig.width = 4, fig.height = 8, eval = FALSE, include = FALSE}
-de_plot <- ggpubr::ggarrange(
-  mmms_plots_title,
-  sign_plots_title,
-  nrow = 2,
-  align = "hv",
-  heights = c(1, 3)
-)
-
-de_plot
+# de_plot <- ggpubr::ggarrange(
+#   mmms_plots_title,
+#   sign_plots_title,
+#   nrow = 2,
+#   align = "hv",
+#   heights = c(1, 3)
+# )
+# 
+# de_plot
 ```
 
 ```{r output_pdf_heatmaps_others_plot}
@@ -3749,10 +3714,10 @@ de_plot
 ```
 
 ```{r check_corr_pval_df}
-corr_pval_df[
-  corr_pval_df$conservation_level == "mmusall_markers" &
-    corr_pval_df$condition == "mus_tm_bonemarrow" &
-    corr_pval_df$comparison == "mmms-vs-signrand",]
+# corr_pval_df[
+#   corr_pval_df$conservation_level == "mmusall_markers" &
+#     corr_pval_df$condition == "mus_tm_bonemarrow" &
+#     corr_pval_df$comparison == "mmms-vs-signrand",]
 ```
 
 

@@ -22,26 +22,19 @@ set.seed(37)
 
 ```{r load, message = FALSE}
 library(mclust, quietly = TRUE)
-#library(mcclust, quietly = TRUE)
 library(bluster, quietly = TRUE)
 library(cluster, quietly = TRUE)
-#library(dendextend, quietly = TRUE)
 library(Seurat, quietly = TRUE)
 library(ggplot2, quietly = TRUE)
-```
-
-```{r manual, include = FALSE, eval = FALSE}
-seu_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_zeb_all_hspc_list")
-
-dataset_curr <- "zeb_all_hspc"
-
-cut_off_ranks <- 0.15
-
 ```
 
 ```{r load_object}
 seu_list_all <- base::readRDS(snakemake@input[["seu_list"]])
 dataset_curr <- snakemake@wildcards[["dataset"]]
+```
+
+```{r source}
+source(file = snakemake@params[["reclustering_functions"]])
 ```
 
 ```{r colors}
@@ -781,20 +774,21 @@ calculate_scores_metrics <- function(seu){
   val1 <- mclust::adjustedRandIndex(seu$seurat_clusters, seu$cell_type)
   
   # fowlkesMallowsIndex
-  val2 <- dendextend::FM_index_R(seu$cell_type, seu$seurat_clusters)[1]
+  #val2 <- dendextend::FM_index_R(seu$cell_type, seu$seurat_clusters)[1]
+  # cannot be tested anymore because I didn't install dendextend into 
+  # the latest env
   
   # variation of information
   # Larger values of the distance metric correspond to greater 
   # dissimilarity between the clusterings. 
-  val3 <- mcclust::vi.dist(seu$cell_type, seu$seurat_clusters)
+  val3 <- vi.dist(seu$cell_type, seu$seurat_clusters)
   
   #val2 <- partitionComparison::compareAll(partition_orig, partition_recl)
   return_df <- data.frame(
     "type" = c("adj_rand", 
-               "fowlkes_mallows",
                "variation_information"),
     "value" = c(val1,
-                val2,
+                #val2,
                 val3),
     "nr_recl" = length(base::unique(seu$seurat_clusters))
   )

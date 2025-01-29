@@ -52,7 +52,7 @@ for d in datasets_other:
   targets = targets + [OUTPUT_REP + "/final/reclustering_other_final_report_" + d + ".html"]
  
   #testing reclustering scores
-  targets = targets + [OUTPUT_REP + "/test_scores/test_reclustering_scores_" + d + ".html"]
+  #targets = targets + [OUTPUT_REP + "/test_scores/test_reclustering_scores_" + d + ".html"]
 
   if RUN_SIGN_RAND_OTHER_PERM:
     targets = targets + [OUTPUT_DAT_OTHER + "/05_psig/perm_score_df_" + d]
@@ -84,7 +84,7 @@ if RUN_PVAL_CORRECTION:
 
 #-------------------------------------------------------------------------------
 
-localrules: all, pval_correction, sign_vs_rand, mark_vs_signrand, mmms_vs_signrand, mmms_vs_rand
+localrules: all, pval_correction, sign_vs_rand, mark_vs_signrand, mmms_vs_signrand, mmms_vs_rand, mark_vs_rand
 
 rule all: 
     input:
@@ -173,6 +173,8 @@ rule test_reclustering_scores:
         seu_list = rules.reclustering_other.output
     output:
         OUTPUT_REP + "/test_scores/test_reclustering_scores_{dataset}.html"
+    params:
+        reclustering_functions = "../../source/sce_functions_reclustering.R",
     conda:
         "../../envs/reclust_scores_perm_others.yml"
     resources:
@@ -310,11 +312,11 @@ if RUN_SIGN_RAND_OTHER_PERM:
       output:
           OUTPUT_REP + "/signature/perm_sign_rand_{dataset}.html"
       resources:
-          mem_mb=5000,
+          mem_mb=50000,
           queue="medium"
       threads: 4
       script: 
-          "02_permutation_rand_other_report.Rmd"
+          "02_permutation_other_rand_report.Rmd"
 
 #-------------------------------------------------------------------------------
 
@@ -368,10 +370,13 @@ if RUN_MARK_RAND_OTHER_PERM:
       params:
           resolution_df = RESOLUTION_OTHER,
           cons_level_use = "conserved_markers"
+      resources:
+          mem_mb=50000,
+          queue = "medium"
       output:
           OUTPUT_REP + "/conserved_markers/perm_cons_rand_{dataset}.html"
       script: 
-          "02_permutation_rand_other_report.Rmd"
+          "02_permutation_other_rand_report.Rmd"
 
 if RUN_MMMS_RAND_OTHER_PERM:
 

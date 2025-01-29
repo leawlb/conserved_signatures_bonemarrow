@@ -35,6 +35,7 @@ rule marker_per_sp_per_celltype:
     resources:
         mem_mb=50000,
           queue = "long"
+    threads: 6
     output:
         output_str = OUTPUT_BASE + "/sce_objects/03_sce_analysis/03_marker_conservation/cons_markers_str.RData",
         output_hsc = OUTPUT_BASE + "/sce_objects/03_sce_analysis/03_marker_conservation/cons_markers_hsc.RData"
@@ -55,6 +56,7 @@ if RUN_AGE_COMP:
       resources:
           mem_mb=50000,
           queue = "long"
+      threads: 30
       output:
           output_str = OUTPUT_BASE + "/sce_objects/03_sce_analysis/03_marker_conservation/02_age/cons_markers_str.RData",
           output_hsc = OUTPUT_BASE + "/sce_objects/03_sce_analysis/03_marker_conservation/02_age/cons_markers_hsc.RData"

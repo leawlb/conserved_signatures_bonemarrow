@@ -1,13 +1,16 @@
 library(Seurat, quietly = TRUE)
 library(ggplot2, quietly = TRUE)
-source("code/source/sce_functions_reclustering.R")
 
-data <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/08_sce_brain/sample.combined_exc_4_species_integration.RDS")
+source("../source/sce_functions_reclustering.R")
+
+#data <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/08_sce_brain/sample.combined_exc_4_species_integration.RDS")
+data <- readRDS(snakemake@input[["data_input"]])
 data.updated <- UpdateSeuratObject(object = data)  # available data is v3 Seurat
-
+print(data)
 
 # Optimize resolution using markers conserved across primate species
-core_markers <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/08_sce_brain/02_marker_conserved_primates.rds")
+#core_markers <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/08_sce_brain/02_marker_conserved_primates.rds")
+core_markers <- readRDS(snakemake@input[["core_markers"]])
 seu_mark_cor <- unique(unlist(core_markers)) # set of marker genes 
 
 # to choose optimal cluster resolution later
@@ -34,8 +37,10 @@ for(species in unique(data.updated$orig.ident)){
   all_scores[[species]] <- scores
 }
 
-saveRDS(all_scores,
-        "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/08_sce_brain/03_resolution_scores.rds")
+#saveRDS(all_scores,
+#        "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/08_sce_brain/03_resolution_scores.rds")
+saveRDS(all_scores, file = snakemake@output[["all_scores"]])
+
 
 # ggplot(all_scores[["human"]],
 #        aes(x = resolution,

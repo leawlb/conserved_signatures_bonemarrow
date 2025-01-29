@@ -6,7 +6,9 @@ library(BiocGenerics, quietly = TRUE)
 set.seed(37)
 
 # Load and update Seurat object
-data <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/08_sce_brain/sample.combined_exc_4_species_integration.RDS")
+#data <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/08_sce_brain/sample.combined_exc_4_species_integration.RDS")
+data <- readRDS(snakemake@input[["data_input"]])
+
 data.updated <- UpdateSeuratObject(object = data)  # available data is v3 Seurat
 DefaultAssay(data.updated) <- "RNA"
 
@@ -114,6 +116,7 @@ res_list_shared_all <- lapply(res_list_shared_comp, function(shared){
   return(shared_all)
 })
 
-saveRDS(res_list_shared_all, 
-        file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/08_sce_brain/01_list_nDEGs_all.rds")
+#saveRDS(res_list_shared_all, 
+#        file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/08_sce_brain/01_list_nDEGs_all.rds")
 
+saveRDS(res_list_shared_all, snakemake@output[["data_output"]])

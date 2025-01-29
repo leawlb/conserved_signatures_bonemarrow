@@ -1,2 +1,0 @@
-
-snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resources.mem_mb}]" -p -j1 -c15 -s brain_snakefile.py --latency-wait 20 --configfile ../config.yaml  -n

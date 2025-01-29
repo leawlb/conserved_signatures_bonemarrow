@@ -60,11 +60,11 @@ geneset_list_hsc <- base::readRDS(base::paste0(
   base_path, 
   "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"))
 
-# conserved markers per cell type per age (markers_conservation_hsc)
-# base::load(base::paste0(
-#   base_path,
-#   "scRNAseq/main_analysis/sce_objects/03_sce_analysis/03_marker_conservation/02_age/cons_markers_hsc.RData"))
-  
+#conserved markers per cell type per age (markers_conservation_hsc)
+base::load(base::paste0(
+  base_path,
+  "scRNAseq/main_analysis/sce_objects/03_sce_analysis/03_marker_conservation/02_age/cons_markers_hsc.RData"))
+
 colors_path <- base::paste0(
   base_path, 
   "/metadata/colors/colors.txt")
@@ -113,6 +113,8 @@ output_pdf_heatmap_conds_stacked_legend <- base::paste0(
 
 output_pdf_aging_theme_plot <- base::paste0(
   base_path, "/manuscript1/figure2/figure2_aging_plot.pdf")
+output_pdf_aging_theme_legend <- base::paste0(
+  base_path, "/manuscript1/figure2/figure2_aging_legend.pdf")
 ```
 
 ## Obtain data

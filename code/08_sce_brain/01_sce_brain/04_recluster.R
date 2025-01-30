@@ -1,11 +1,17 @@
 library(Seurat, quietly = TRUE)
 library(tidyverse, quietly = TRUE)
 
-base_path_temp <-"/omics/groups/OE0433/internal_temp/veronica/projects/conserved_genes/"
-base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/"
-brain_path <- "scRNAseq/main_analysis/sce_objects/08_sce_brain/"
+#base_path_temp <-"/omics/groups/OE0433/internal_temp/veronica/projects/conserved_genes/"
+#base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/"
+#brain_path <- "scRNAseq/main_analysis/sce_objects/08_sce_brain/"
 
-data <- readRDS(paste0(base_path, "metadata/scRNAseq/08_sce_brain/sample.combined_exc_4_species_integration.RDS"))
+base_path_temp <- snakemake@params[["base_path"]] # try and see what happens if base_path is used --- I don't have access to OE0433
+base_path <- snakemake@params[["base_path"]]
+brain_path <- snakemake@params[["brain_path"]]
+
+#data <- readRDS(paste0(base_path, "metadata/scRNAseq/08_sce_brain/sample.combined_exc_4_species_integration.RDS"))
+data <- readRDS(snakemake@input[["data_input"]])
+
 data.updated <- UpdateSeuratObject(object = data)  # available data is v3 Seurat
 
 nDEGs <- readRDS(paste0(base_path, brain_path, "01_list_nDEGs_all.rds"))
@@ -142,8 +148,9 @@ species <- FindNeighbors(species,
                          dims = 1:50)
 species <- FindClusters(species, 
                         resolution = resolution[which(resolution$species == "mouse"), "resolution"])
-saveRDS(species,
-        file = paste0(base_path_temp, brain_path, "04_recluster/mouse_reclust_hs.rds"))
+#saveRDS(species,
+#        file = paste0(base_path_temp, brain_path, "04_recluster/mouse_reclust_hs.rds"))
+saveRDS(species, snakemake@output[["species"]])
 
 plot <- species@meta.data[,c("subclass_label", "seurat_clusters")] %>%
   table() %>% as.matrix()

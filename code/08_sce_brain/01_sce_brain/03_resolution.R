@@ -1,7 +1,7 @@
 library(Seurat, quietly = TRUE)
 library(ggplot2, quietly = TRUE)
 
-source("../source/sce_functions_reclustering.R")
+source("../../source/sce_functions_reclustering.R")
 
 #data <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/08_sce_brain/sample.combined_exc_4_species_integration.RDS")
 data <- readRDS(snakemake@input[["data_input"]])

@@ -81,7 +81,14 @@ rule recluster:
         "04_recluster.R"
 
 """
-# 05_quantify_reclust this is mostly loading and plotting, so no output
-Just run from snakemake_isbm as before, using currently correct base path
+rule quantify_reclust
+
+# 05_quantify_reclust is mostly loading and plotting, so no output 
+aside from a pdf.
+Just run in terminal from snakemake_isbm env as before,
+using currently correct base path
+
+somehow, I couldn't aler 05_quantify_reclust.R so I saved chanegs to the
+basepath in 05_quantify_recluster-copy.R
 """
       

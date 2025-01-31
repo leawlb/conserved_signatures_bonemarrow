@@ -275,8 +275,8 @@ if RUN_SIGN_RAND_OTHER_PERM:
       output:
           perm_score_df = OUTPUT_DAT_OTHER + "/05_psig/perm_score_df_{dataset}"
       resources:
-          mem_mb=200000,
-          queue="long"
+          mem_mb=80000,
+          queue="verylong"
       threads: config["values"]["03_sce_analysis"]["nr_cores"]
       script: 
           "02_scripts_other/05_permutation_other_rand.R"
@@ -340,7 +340,7 @@ if RUN_MARK_RAND_OTHER_PERM:
       output:
           perm_score_df = OUTPUT_DAT_OTHER + "/06_pmrk/perm_score_df_{dataset}"
       resources:
-          mem_mb=200000,
+          mem_mb=100000,
           queue = "long"
       threads: config["values"]["03_sce_analysis"]["nr_cores"]
       script: 
@@ -398,7 +398,7 @@ if RUN_MMMS_RAND_OTHER_PERM:
       output:
           perm_score_df = OUTPUT_DAT_OTHER + "/07_pmms/perm_score_df_{dataset}"
       resources:
-          mem_mb=200000,
+          mem_mb=100000,
           queue="long"
       threads: config["values"]["03_sce_analysis"]["nr_cores"]
       script: 
@@ -449,7 +449,7 @@ if RUN_GNST_SIGN_RAND_OTHER_PERM:
           perm_score_df_mmms = OUTPUT_DAT_OTHER + "/07_perg/perm_score_df_mmms_{dataset}",
           perm_score_df_mmms_mark = OUTPUT_DAT_OTHER + "/07_perg/perm_score_df_mmms_mark_{dataset}"
       resources:
-          mem_mb=200000,
+          mem_mb=100000,
           queue="long"
       threads: config["values"]["03_sce_analysis"]["nr_cores"]
       script: 

@@ -8,8 +8,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Generate Figure 5, current title:
-"Mouse cell type conserved identity signature genes alone are sufficient to identify Niche types."
+Generate Figure 5
 
 #### Load objects
 
@@ -23,32 +22,24 @@ library(SingleCellExperiment, quietly = TRUE)
 library(ggpubr, quietly = TRUE)
 library(tidyverse, quietly = TRUE)
 library(Seurat, quietly = TRUE)
-#library(gghalves, quietly = TRUE) # not in conda env
-#library(ggpattern, quietly = TRUE) # not in conda env
 ```
 
-```{r load_manual_basepath}
-base_path_input <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
-base_path_output_temp <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp"
+```{r define_basepath}
+base_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data/"
 ```
 
-```{r base_path_snakemake, eval = FALSE, include = FALSE}
-base_path_input <- snakemake@input[["base_path_input"]]
-base_path_output_temp <- snakemake@params[["base_path_output_temp"]]
-```
-
-```{r load_manual_remaining}
+```{r load_short}
 #-------------------------------------------------------------------------------
 #### REMAINING
 
 # list of gene sets for HSPCs (conserved signature, conserved markers, etc.)
 geneset_list_str <-base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_str"))
 
 # data frame containing the correct resolutions for other datasets as visually determined
 resolution_df_path <- base::paste0(
-  base_path_input,
+  base_path,
   "/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt")
 
 resolution_df <- utils::read.csv(
@@ -61,61 +52,56 @@ resolution_df <- utils::read.csv(
   colClasses = "character")
 
 # dataframe containing corrected pvalues for all tests
-corr_pval_df <-  readRDS(base::paste0(
-  base_path_output_temp,
-  "/04_signatures/02_reclustering_other/09_crpv/all_corrected_pval"))
-
-colors_path <- base::paste0(
-  base_path_input,
-  "/metadata/colors/colors.txt")
+# corr_pval_df <-  readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/09_crpv/all_corrected_pval"))
 
 ensembl_sign <- readRDS(base::paste0(
-  base_path_output_temp,
-  "/04_signatures/01_reclustering_own/02_endf/ensembl_sign_str"))
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/02_endf/ensembl_sign_str"))
 
+colors_path <- base::paste0(
+  base_path,
+  "/metadata/colors/colors.txt")
 
 source("../source/colors.R")
 source("../source/plotting.R")
-source("../source/sce_functions_reclustering.R")
 ```
 
-```{r load_manual}
+```{r load_own}
 #-------------------------------------------------------------------------------
 #### OWN DATASET (Niche)
 
 # annotated SCE
 sce_str <- base::readRDS(base::paste0(
-  base_path_input, 
+  base_path, 
   "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10"))
 
 # SCE with reclustering vectors for each gene set
 sce_str_recl <- base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/03_recl/sce_str"))
 
 # dataframe of re-clustering scores for each gene set
 score_df_str <- base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/04_rcls/score_df_str"))
 
 # dataframes of re-clustering scores after permutation comparing gene sets
 psdf_str_mark_signrand <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_perg/perm_score_df_mark_str"))
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/06_perg/perm_score_df_mark_str"))
 psdf_str_mmms_signrand <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_perg/perm_score_df_mmms_str"))
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/06_perg/perm_score_df_mmms_str"))
 
 # dataframes of re-clustering scores after background permutation
 psdf_str_sign_rand <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/06_psig/perm_score_df_str"))
-
-cts_exclude <- c("Lymphoid ECs", "Chondrocytes")
-print(cts_exclude)
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_psig/perm_score_df_str"))
 ```
 
-```{r load_manual_other2}
+```{r load_other2}
 #-------------------------------------------------------------------------------
 #### OTHER MOUSE DATASET 2 (Niche)
 #### MUS_TIK_STROMAL
@@ -124,29 +110,29 @@ dataset_o2 <- "mus_tik_stromal"
 
 # list of seurat objects with reclustering vectors for each gene set and resolution
 seu_str_recl_list_o2 <- base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_mus_tik_stromal_list"))
 
 # list of dataframes of re-clustering scores for each gene set and resolution
 score_df_str_list_o2 <- base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_mus_tik_stromal_list"))
 
 # dataframes of re-clustering scores after permutation comparing gene sets
 psdf_str_mark_signrand_o2 <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mark_mus_tik_stromal"))
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mark_mus_tik_stromal"))
 psdf_str_mmms_signrand_o2 <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_mus_tik_stromal"))
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_mus_tik_stromal"))
 psdf_str_mmms_markrand_o2 <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_mark_mus_tik_stromal"))
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_mark_mus_tik_stromal"))
 
 # perm score DF from background permutation (SIGN)
 psdf_str_sign_rand_o2 <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/06_psig/perm_score_df_mus_tik_stromal"))
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_psig/perm_score_df_mus_tik_stromal"))
 ```
 
 ```{r selected_seu_o2}
@@ -170,7 +156,7 @@ rm(seu_str_recl_list_o2)
 gc()
 ```
 
-```{r load_manual_other3}
+```{r load_other3}
 #-------------------------------------------------------------------------------
 #### OTHER MOUSE DATASET 3 (Niche)
 #### li_all_stromal
@@ -179,33 +165,33 @@ dataset_o3 <- "li_all_stromal"
 
 # list of seurat objects with reclustering vectors for each gene set and resolution
 seu_str_recl_list_o3 <- base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_li_all_stromal_list"))
 
 # list of dataframes of re-clustering scores for each gene set and resolution
 score_df_str_list_o3 <- base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_li_all_stromal_list"))
 
 # dataframes of re-clustering scores after permutation comparing gene sets
 psdf_str_mark_signrand_o3 <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mark_li_all_stromal"))
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mark_li_all_stromal"))
 psdf_str_mmms_signrand_o3 <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_li_all_stromal"))
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_li_all_stromal"))
 psdf_str_mmms_markrand_o3 <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_mark_li_all_stromal"))
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_mark_li_all_stromal"))
 
 # perm score DF from background permutation (SIGN)
 psdf_str_sign_rand_o3 <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/06_psig/perm_score_df_li_all_stromal"))
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_psig/perm_score_df_li_all_stromal"))
 
 # perm score DF from background permutation (MARK)
 # psdf_str_mark_rand_o1 <- base::readRDS(base::paste0(
-#   base_path_input,
+#   base_path,
 #   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_pmrk/perm_score_df_li_all_stromal"))
 ```
 
@@ -233,30 +219,34 @@ gc()
 ```{r params}
 # global params
 source("determine_params.R")
+
+cts_exclude <- c("Lymphoid ECs", "Chondrocytes")
+print(cts_exclude)
 ```
 
 ```{r export_paths}
 output_pdf_a_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures_new/figure5_a.pdf")
+  base_path, "/manuscript1/figure5/figure5_a.pdf")
 output_pdf_a_legend <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures_new/figure5_a_legend.pdf")
-output_pdf_bcd_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures_new/figure5_bcd.pdf")
+  base_path, "/manuscript1/figure5/figure5_a_legend.pdf")
+output_pdf_b_plot <- base::paste0(
+  base_path, "/manuscript1/figure5/figure5_b.pdf")
+output_pdf_cd_plot <- base::paste0(
+  base_path, "/manuscript1/figure5/figure5_cd.pdf")
 output_pdf_e_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures_new/figure5_e.pdf")
+  base_path, "/manuscript1/figure5/figure5_e.pdf")
 output_pdf_e_legend <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures_new/figure5_e_legend.pdf")
+  base_path, "/manuscript1/figure5/figure5_e_legend.pdf")
 ```
 
 ## Obtain data
 
 ```{r obtain_data}
-print(sort(geneset_list_str$Fibroblasts$conserved_signature))
-print(sort(geneset_list_str$`Sinusoidal ECs`$conserved_signature))
-print(sort(geneset_list_str$`Sinusoidal/Venular ECs`$conserved_signature))
-print(sort(geneset_list_str$`Arteriolar/Capillary ECs`$conserved_signature))
+#print(sort(geneset_list_str$Fibroblasts$conserved_signature))
+#print(sort(geneset_list_str$`Sinusoidal ECs`$conserved_signature))
+#print(sort(geneset_list_str$`Sinusoidal/Venular ECs`$conserved_signature))
+#print(sort(geneset_list_str$`Arteriolar/Capillary ECs`$conserved_signature))
 ```
-
 
 ## A Expression heat map
 
@@ -382,7 +372,7 @@ agg_str_df$gene <- factor(agg_str_df$gene,
 agg_str_df$species <- factor(agg_str_df$species,
                              levels = base::rev(names(col_spc_pub)))
 
-print(levels(agg_str_df$gene))
+#print(levels(agg_str_df$gene))
 ```
 
 ```{r a_prep6}
@@ -428,7 +418,7 @@ a_theme_plot <- a_base_plot+
     axis.text.y = element_text(
       angle = 0,
       vjust = 0.5,
-      hjust = 0),
+      hjust = 1),
     strip.text.y = element_text(
       face = axis_text_face,
       size = axis_text_size,
@@ -471,13 +461,15 @@ dev.off()
 pdf(output_pdf_a_legend, width = 3, height = 3)
 a_legend
 dev.off()
-knitr::knit_exit()
 ```
 
 ## BCD Re-clusterung Heatmaps 
 
 Heatmaps of own re-clustered HSPC mouse data using signature genes/
 conserved markers/BL6 markers/nDGEs.
+
+For other datasets, this requires BLINDED RE-ANNOTATION BASED ON
+CLUSTER MARKER GENES
 
 ### Prepare
 
@@ -511,7 +503,8 @@ head(ct_markers_df_o2)
 ```{r prepare_annotate_o2_ec}
 
 # all ECs
-seu_sign_o2_ec <- seu_sign_o2[,seu_sign_o2$seurat_clusters %in% c("6", "1", "2", "3")]
+seu_sign_o2_ec <- seu_sign_o2[,seu_sign_o2$seurat_clusters %in%
+                                c("6", "1", "2", "3")]
 
 reclustered_o2_ec <- base::unique(seu_sign_o2_ec$seurat_clusters)
 
@@ -536,8 +529,6 @@ head(ct_markers_df_o2_ec)
 ```
 
 ```{r prepare_annotate_o3}
-
-# 
 
 seu_sign_o3 <- selected_seu_list_o3$seu_sign
 reclustered_o3 <- base::unique(seu_sign_o3$seurat_clusters)
@@ -567,83 +558,16 @@ head(ct_markers_df_o3)
 
 #### Others -3
 
-```{r umap_others_1}
+```{r umap_others_3}
 DimPlot(seu_sign_o3, dims = c(1,2), group.by = "seurat_clusters")
 DimPlot(seu_sign_o3, dims = c(1,2), group.by = "orig.ident")
-DimPlot(seu_sign_o3, dims = c(1,2), group.by = "cell_type_from_publication")
 
 seu_sign_o3$annotated_reclustered <- vector(length = ncol(seu_sign_o3))
 ```
 
-2, 6, 1, 0, 7, 4, 5, 3
+order: 6, 1, 2, 0, 7, 4, 5, 3
 
-```{r 2_others2}
-nr <- "2"
-markers <- ct_markers_o3[[nr]]$gene[
-  !is.na(ct_markers_o3[[nr]]$symbol) & 
-    ct_markers_o3[[nr]]$avg_log2FC > 0 &
-    ct_markers_o3[[nr]]$p_val_adj < 0.05]
-
-ct_markers_o3[[nr]][
-  !is.na(ct_markers_o3[[nr]]$symbol) & 
-    ct_markers_o3[[nr]]$avg_log2FC > 0 &
-    ct_markers_o3[[nr]]$p_val_adj < 0.05,]
-
-FeaturePlot(seu_sign_o3, markers[1:6])
-FeaturePlot(seu_sign_o3, markers[7:12])
-FeaturePlot(seu_sign_o3, markers[13:18])
-
-FeaturePlot(seu_sign_o3, "ENSG00000107562") #Cxcl12
-FeaturePlot(seu_sign_o3, "ENSG00000049130") #Kitl
-
-FeaturePlot(seu_sign_o3, "ENSG00000113721") #PDGFRB
-FeaturePlot(seu_sign_o3, "ENSG00000166147") #FBN1
-FeaturePlot(seu_sign_o3, "ENSG00000168542") #COL3A1
-FeaturePlot(seu_sign_o3, "ENSG00000182326") #C1S
-FeaturePlot(seu_sign_o3, "ENSG00000152583") #SPARCL1
-FeaturePlot(seu_sign_o3, "ENSG00000141338") #ABCA8
-
-
-# PDGFRB, FBN1, COL3A1, C1S, CYP1B1, SPARCL1,  ABCA8
-
-# Pdgfrb  fibroblast activation https://pubmed.ncbi.nlm.nih.gov/23748876/
-#         migration of MSC, but osteo inhibition https://pubmed.ncbi.nlm.nih.gov/18410236/
-#         fibrotic BM https://haematologica.org/article/view/9982
-#         
-
-# FBN1    related to TGFβ, MSC diff, https://pubmed.ncbi.nlm.nih.gov/26610678/
-#         MSC niche/decisions https://www.frontiersin.org/journals/cell-and-developmental-biology/articles/10.3389/fcell.2023.1302285/full
-#         MSC activitiy regulation https://onlinelibrary.wiley.com/doi/full/10.1002/jbmr.2598
-
-# COL3A1  osteoblast diff, bone related https://pubmed.ncbi.nlm.nih.gov/24626604/
-#         fetal MSCs, co-expressed with Dcn, and Clec3b, Col1a1, Pdgfra https://www.nature.com/articles/s41467-022-28775-x
-#         human cancer fibros https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2023.1313536/full
-#         human fibrosis https://www.sciencedirect.com/science/article/pii/S0378111919304652
-#         mouse pdpn-expressing cells in fibrosis https://academic.oup.com/discovimmunology/article/1/1/kyac008/6835131#google_vignette
-          # kind of mixed
-
-# C1S     chondrocytes, ossification https://pubmed.ncbi.nlm.nih.gov/8082118/
-#         cartilage remodelling https://pubmed.ncbi.nlm.nih.gov/8766156/
-
-
-# SPARCL1 MSCs/Progs also related to DCN https://pmc.ncbi.nlm.nih.gov/articles/PMC10192814/
-#         skeletal stem cell https://www.biorxiv.org/content/10.1101/2020.06.17.156836v1.full i think this is just biorxiv of the first one
-#         also expressed in ECs, especially sinusoidal https://www.nature.com/articles/s41467-021-27161-3
-#         negative regulator of adipo https://pmc.ncbi.nlm.nih.gov/articles/PMC8654481/
-#         mouse muscle cell diff https://www.nature.com/articles/s41419-019-2049-4
-#         chondros in arthritis https://www.sciencedirect.com/science/article/pii/S2214031X24000287
-#         liver cancer fibros https://www.sciencedirect.com/science/article/pii/S1936523320304733
-
-# ABCA8   cancer fibro https://www.sciencedirect.com/science/article/pii/S1535947624001336
-#         Ccl11+ fibroblasts https://www.sciencedirect.com/science/article/pii/S2352345X24000286
-#         high density lipo protein efflux https://www.ahajournals.org/doi/pdf/10.1161/atvbaha.117.309574
-#         fibro subset in intestine https://pmc.ncbi.nlm.nih.gov/articles/PMC8604730/
-
-
-seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "Fibro CAR"
-```
-
-```{r 2_others_6}
+```{r others3_cluster6}
 nr <- "6"
 markers <- ct_markers_o3[[nr]]$gene[
   !is.na(ct_markers_o3[[nr]]$symbol) & 
@@ -659,16 +583,12 @@ FeaturePlot(seu_sign_o3, markers[1:6])
 FeaturePlot(seu_sign_o3, markers[7:12])
 FeaturePlot(seu_sign_o3, markers[13:18])
 
-# CXCL14, EDIL3, ABI3BP, SOD3, COL6A3, ABCA8
-
 FeaturePlot(seu_sign_o3, "ENSG00000145824") #CXCL14
 FeaturePlot(seu_sign_o3, "ENSG00000164176") #EDIL3
 FeaturePlot(seu_sign_o3, "ENSG00000154175") #ABI3BP
 FeaturePlot(seu_sign_o3, "ENSG00000109610") #SOD3
 FeaturePlot(seu_sign_o3, "ENSG00000163359") #COL6A3
 FeaturePlot(seu_sign_o3, "ENSG00000141338") #ABCA8
-
-# MSC-like? Osteo-Chondro like?
 
 # CXCL14  human niche stromal cells https://ashpublications.org/blood/article/142/1/73/495206/Characterization-of-the-bone-marrow-niche-in
 #         dermal fibro, anti CXCL12 https://journal-inflammation.biomedcentral.com/articles/10.1186/s12950-015-0109-9
@@ -703,10 +623,10 @@ FeaturePlot(seu_sign_o3, "ENSG00000141338") #ABCA8
 #         osteoblast matrix https://stemcellres.biomedcentral.com/articles/10.1186/s13287-015-0223-x
 #         in chondros https://www.biorxiv.org/content/10.1101/2022.12.19.520461v1.full
 
-seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "Osteo-Chondro CAR"
+seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "Osteo-Chondro-like CAR"
 ```
 
-```{r 2_others_1}
+```{r others3_cluster1}
 nr <- "1"
 markers <- ct_markers_o3[[nr]]$gene[
   !is.na(ct_markers_o3[[nr]]$symbol) & 
@@ -731,26 +651,25 @@ FeaturePlot(seu_sign_o3, "ENSG00000166147") #FBN1
 FeaturePlot(seu_sign_o3, "ENSG00000146374") #RSPO3
 FeaturePlot(seu_sign_o3, "ENSG00000140092") #FBLN5
 
-
 # FSTL1, MME, HP, TJP1, SPARCL1, FBN1, RSPO3
 
-# FSTL1 supprssed osteo during infl https://pubmed.ncbi.nlm.nih.gov/35026647/
-#       MSC protection https://pmc.ncbi.nlm.nih.gov/articles/PMC6330478/
-#       regulator of proliferation and differentiation in MSCs https://stemcellres.biomedcentral.com/articles/10.1186/s13287-022-03042-4
-#       enhance MSC differentiation to chondrocytes https://www.sciencedirect.com/science/article/pii/S156757692030059X
-#       adipogenesis https://pmc.ncbi.nlm.nih.gov/articles/PMC2849861/
+# FSTL1   suppressed osteo during infl https://pubmed.ncbi.nlm.nih.gov/35026647/
+#         MSC protection https://pmc.ncbi.nlm.nih.gov/articles/PMC6330478/
+#         regulator of proliferation and differentiation in MSCs https://stemcellres.biomedcentral.com/articles/10.1186/s13287-022-03042-4
+#         enhance MSC differentiation to chondrocytes https://www.sciencedirect.com/science/article/pii/S156757692030059X
+#         adipogenesis https://pmc.ncbi.nlm.nih.gov/articles/PMC2849861/
 
-# HP    haptoglobin, adipogenesis, https://academic.oup.com/edrv/article/37/4/403/2567100
+# HP      haptoglobin, adipogenesis, https://academic.oup.com/edrv/article/37/4/403/2567100
 
-# MME   osteo and adipo genesis https://pmc.ncbi.nlm.nih.gov/articles/PMC9526692/ # CD92
-#       osteo and adipo genesis https://pubmed.ncbi.nlm.nih.gov/24239963/
-#       enriched in osteoblasts https://pmc.ncbi.nlm.nih.gov/articles/PMC11301355/
-#       preadipocytes https://www.nature.com/articles/s42003-023-04504-y
+# MME     osteo and adipo genesis https://pmc.ncbi.nlm.nih.gov/articles/PMC9526692/ # CD92
+#         osteo and adipo genesis https://pubmed.ncbi.nlm.nih.gov/24239963/
+#         enriched in osteoblasts https://pmc.ncbi.nlm.nih.gov/articles/PMC11301355/
+#         preadipocytes https://www.nature.com/articles/s42003-023-04504-y
 
-# TJP1  tight junction protein, also called ZO1
-#       MSC migration https://www.nature.com/articles/s41420-023-01793-4
-#       can be expressed in MSC https://www.cell.com/cms/10.1016/j.stemcr.2015.02.002/attachment/f3ad90ab-28e4-4980-990b-e6f35611c440/mmc3.pdf
-#       can be expressed in MSC https://pmc.ncbi.nlm.nih.gov/articles/PMC8275434/
+# TJP1    tight junction protein, also called ZO1
+#         MSC migration https://www.nature.com/articles/s41420-023-01793-4
+#         can be expressed in MSC https://www.cell.com/cms/10.1016/j.stemcr.2015.02.002/attachment/f3ad90ab-28e4-4980-990b-e6f35611c440/mmc3.pdf
+#         can be expressed in MSC https://pmc.ncbi.nlm.nih.gov/articles/PMC8275434/
 
 # SPARCL1 MSCs/Progs also related to DCN https://pmc.ncbi.nlm.nih.gov/articles/PMC10192814/
 #         skeletal stem cell https://www.biorxiv.org/content/10.1101/2020.06.17.156836v1.full i think this is just biorxiv of the first one
@@ -766,13 +685,74 @@ FeaturePlot(seu_sign_o3, "ENSG00000140092") #FBLN5
 
 # RSPO3   osteoblast diffhttps://www.nature.com/articles/s41467-021-25124-2
 #         niche https://pmc.ncbi.nlm.nih.gov/articles/PMC9979769/
-#        bone density https://pmc.ncbi.nlm.nih.gov/articles/PMC9681208/
+#         bone density https://pmc.ncbi.nlm.nih.gov/articles/PMC9681208/
 
-
-seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "Osteo CAR"
+seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "Osteo-like CAR"
 ```
 
-```{r 2_others_0}
+```{r others3_cluster2}
+nr <- "2"
+markers <- ct_markers_o3[[nr]]$gene[
+  !is.na(ct_markers_o3[[nr]]$symbol) & 
+    ct_markers_o3[[nr]]$avg_log2FC > 0 &
+    ct_markers_o3[[nr]]$p_val_adj < 0.05]
+
+ct_markers_o3[[nr]][
+  !is.na(ct_markers_o3[[nr]]$symbol) & 
+    ct_markers_o3[[nr]]$avg_log2FC > 0 &
+    ct_markers_o3[[nr]]$p_val_adj < 0.05,]
+
+FeaturePlot(seu_sign_o3, markers[1:6])
+FeaturePlot(seu_sign_o3, markers[7:12])
+FeaturePlot(seu_sign_o3, markers[13:18])
+
+FeaturePlot(seu_sign_o3, "ENSG00000107562") #Cxcl12
+FeaturePlot(seu_sign_o3, "ENSG00000049130") #Kitl
+
+FeaturePlot(seu_sign_o3, "ENSG00000113721") #PDGFRB
+FeaturePlot(seu_sign_o3, "ENSG00000166147") #FBN1
+FeaturePlot(seu_sign_o3, "ENSG00000168542") #COL3A1
+FeaturePlot(seu_sign_o3, "ENSG00000182326") #C1S
+FeaturePlot(seu_sign_o3, "ENSG00000152583") #SPARCL1
+FeaturePlot(seu_sign_o3, "ENSG00000141338") #ABCA8
+
+# PDGFRB, FBN1, COL3A1, C1S, CYP1B1, SPARCL1,  ABCA8
+
+# Pdgfrb  fibroblast activation https://pubmed.ncbi.nlm.nih.gov/23748876/
+#         migration of MSC, but osteo inhibition https://pubmed.ncbi.nlm.nih.gov/18410236/
+#         fibrotic BM https://haematologica.org/article/view/9982
+#         
+
+# FBN1    related to TGFβ, MSC diff, https://pubmed.ncbi.nlm.nih.gov/26610678/
+#         MSC niche/decisions https://www.frontiersin.org/journals/cell-and-developmental-biology/articles/10.3389/fcell.2023.1302285/full
+#         MSC activitiy regulation https://onlinelibrary.wiley.com/doi/full/10.1002/jbmr.2598
+
+# COL3A1  osteoblast diff, bone related https://pubmed.ncbi.nlm.nih.gov/24626604/
+#         fetal MSCs, co-expressed with Dcn, and Clec3b, Col1a1, Pdgfra https://www.nature.com/articles/s41467-022-28775-x
+#         human cancer fibros https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2023.1313536/full
+#         human fibrosis https://www.sciencedirect.com/science/article/pii/S0378111919304652
+#         mouse pdpn-expressing cells in fibrosis https://academic.oup.com/discovimmunology/article/1/1/kyac008/6835131#google_vignette
+
+# C1S     chondrocytes, ossification https://pubmed.ncbi.nlm.nih.gov/8082118/
+#         cartilage remodelling https://pubmed.ncbi.nlm.nih.gov/8766156/
+
+# SPARCL1 MSCs/Progs also related to DCN https://pmc.ncbi.nlm.nih.gov/articles/PMC10192814/
+#         skeletal stem cell https://www.biorxiv.org/content/10.1101/2020.06.17.156836v1.full i think this is just biorxiv of the first one
+#         also expressed in ECs, especially sinusoidal https://www.nature.com/articles/s41467-021-27161-3
+#         negative regulator of adipo https://pmc.ncbi.nlm.nih.gov/articles/PMC8654481/
+#         mouse muscle cell diff https://www.nature.com/articles/s41419-019-2049-4
+#         chondros in arthritis https://www.sciencedirect.com/science/article/pii/S2214031X24000287
+#         liver cancer fibros https://www.sciencedirect.com/science/article/pii/S1936523320304733
+
+# ABCA8   cancer fibro https://www.sciencedirect.com/science/article/pii/S1535947624001336
+#         Ccl11+ fibroblasts https://www.sciencedirect.com/science/article/pii/S2352345X24000286
+#         high density lipo protein efflux https://www.ahajournals.org/doi/pdf/10.1161/atvbaha.117.309574
+#         fibro subset in intestine https://pmc.ncbi.nlm.nih.gov/articles/PMC8604730/
+
+seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "Fibro-like CAR"
+```
+
+```{r others3_cluster0}
 nr <- "0"
 markers <- ct_markers_o3[[nr]]$gene[
   !is.na(ct_markers_o3[[nr]]$symbol) & 
@@ -826,10 +806,10 @@ FeaturePlot(seu_sign_o3, markers[13:18])
 #         expression in adipocytes https://www.nature.com/articles/s41598-020-70625-7
 #         
 
-seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "Adipo CAR"
+seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "Adipo-like CAR"
 ```
 
-```{r 2_others_7}
+```{r others3_cluster7}
 DimPlot(seu_sign_o3, dims = c(1,2), group.by = "seurat_clusters")
 
 nr <- "7"
@@ -852,8 +832,8 @@ FeaturePlot(seu_sign_o3, markers[13:18])
 seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "Osteo-Chondro"
 ```
 
-```{r 2_others_4}
-nr <- "4"
+```{r others3_cluster5}
+nr <- "5"
 markers <- ct_markers_o3[[nr]]$gene[
   !is.na(ct_markers_o3[[nr]]$symbol) & 
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
@@ -868,7 +848,18 @@ FeaturePlot(seu_sign_o3, markers[1:6])
 FeaturePlot(seu_sign_o3, markers[7:12])
 FeaturePlot(seu_sign_o3, markers[13:18])
 
-# TSPAN13, CAPG, MGST1, CD36, GPX1, PPP1R14B, CAVIN2, TXN
+FeaturePlot(seu_sign_o3, "ENSG00000149564") #ESAM
+FeaturePlot(seu_sign_o3, "ENSG00000174059") #CD34
+FeaturePlot(seu_sign_o3, "ENSG00000102760") #RGCC
+FeaturePlot(seu_sign_o3, "ENSG00000066056") #TIE1
+FeaturePlot(seu_sign_o3, "ENSG00000130300") #PLVAP
+
+FeaturePlot(seu_sign_o3, "ENSG00000149564") #CAVIN2
+FeaturePlot(seu_sign_o3, "ENSG00000135218") #CD36
+FeaturePlot(seu_sign_o3, "ENSG00000148400") #Notch1
+
+# some classical EC markers
+# other specufuc genes: TSPAN13, CAPG, MGST1, CD36, GPX1, PPP1R14B, CAVIN2, TXN
 
 # Cd36    also related to fatty acid, FA uptake, angiogenesis, response to injury
 
@@ -894,22 +885,12 @@ FeaturePlot(seu_sign_o3, markers[13:18])
 # RGCC capillary
 # CD34 a little bit
 
+# TIE1, PLVAP, ESAM, CAVIN2, = classical EC markers
+
 seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "EC1"
-
-FeaturePlot(seu_sign_o3, "ENSG00000149564") #ESAM
-FeaturePlot(seu_sign_o3, "ENSG00000174059") #CD34
-FeaturePlot(seu_sign_o3, "ENSG00000102760") #RGCC
-FeaturePlot(seu_sign_o3, "ENSG00000066056") #TIE1
-FeaturePlot(seu_sign_o3, "ENSG00000130300") #PLVAP
-
-FeaturePlot(seu_sign_o3, "ENSG00000149564") #CAVIN2
-FeaturePlot(seu_sign_o3, "ENSG00000135218") #CD36
-FeaturePlot(seu_sign_o3, "ENSG00000148400") #Notch1
-
-
 ```
 
-```{r 2_others_3}
+```{r others3_cluster3}
 nr <- "3"
 markers <- ct_markers_o3[[nr]]$gene[
   !is.na(ct_markers_o3[[nr]]$symbol) & 
@@ -925,9 +906,7 @@ FeaturePlot(seu_sign_o3, markers[1:6])
 FeaturePlot(seu_sign_o3, markers[7:12])
 FeaturePlot(seu_sign_o3, markers[13:18])
 
-# PECAM1, FLI1, ICAM2, CRIP1, FCER1G, SH2D3C, GNGT2, LYN, IFI30, ARPC3, PLEKHO1
-
-# CRIP1
+# PECAM1, FLI1, ICAM2, CRIP1, FCER1G, SH2D3C, GNGT2, LYN, IFI30, ARPC3, PLEKHO1, CRIP1
 
 FeaturePlot(seu_sign_o3, "ENSG00000261371") #PECAM1 # way more in 3
 FeaturePlot(seu_sign_o3, "ENSG00000151702") #FLI1 # more in 3
@@ -935,7 +914,6 @@ FeaturePlot(seu_sign_o3, "ENSG00000179776") #CDH5
 FeaturePlot(seu_sign_o3, "ENSG00000184113") #CLDN5
 FeaturePlot(seu_sign_o3, "ENSG00000125266") #EFNB2
 FeaturePlot(seu_sign_o3, "ENSG00000102755") #FLT1
-
 
 # PCAM1 FLI1 ICAM2 typical EC
 # Fcer1g, IFI30 inflammation
@@ -949,7 +927,6 @@ FeaturePlot(seu_sign_o3, "ENSG00000102755") #FLT1
 
 # Lyn   EC barrier function https://pmc.ncbi.nlm.nih.gov/articles/PMC3862279/
 #       healthy bone marrow EC https://www.nature.com/articles/s41467-023-36824-2 anti-inflammatory
-#       
 
 # IFI30   sprouting angiogenesis zebrafish https://pmc.ncbi.nlm.nih.gov/articles/PMC9325957/
 #         niche interaction https://pmc.ncbi.nlm.nih.gov/articles/PMC8302694/
@@ -957,11 +934,10 @@ FeaturePlot(seu_sign_o3, "ENSG00000102755") #FLT1
 
 
 seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "EC3"
-
 ```
 
-```{r 2_others_5}
-nr <- "5"
+```{r others3_cluster4}
+nr <- "4"
 markers <- ct_markers_o3[[nr]]$gene[
   !is.na(ct_markers_o3[[nr]]$symbol) & 
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
@@ -981,7 +957,7 @@ FeaturePlot(seu_sign_o3, markers[13:18])
 seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "EC2"
 ```
 
-#### Others -2
+#### Others 2
 
 ```{r umap_others_2}
 DimPlot(seu_sign_o2, dims = c(1,2), group.by = "seurat_clusters")
@@ -990,16 +966,14 @@ DimPlot(seu_sign_o2, dims = c(1,2), group.by = "batch")
 seu_sign_o2$annotated_reclustered <- vector(length = ncol(seu_sign_o2))
 ```
 
-0, 11, 5, 4, 7, 10, 9, 8, 12, 13, 6, 1, 2, 3
+Order: 0, 5, 4, 7, 10, 9, 11, 8, 12, 13, 6, 1, 2, 3
 
-```{r 0_others_1}
+```{r others2_cluster0}
 nr <- "0"
 markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
-
-length(markers)/length(ct_markers_o2[[nr]]$genes) 
 
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
@@ -1010,6 +984,8 @@ FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
 FeaturePlot(seu_sign_o2, markers[13:18])
 
+FeaturePlot(seu_sign_o2, "Cxcl12")
+
 # Adipo/CAR
 
 # Mgp, Hp, Notch3, Ebf3, Dpep1, Cxcl12, Cxcl14, Cyp1b1, Esm1
@@ -1019,44 +995,11 @@ FeaturePlot(seu_sign_o2, markers[13:18])
 # Notch3 - osteoblastic - lymphoid niche
 # Dpep1 - adipogenic
 
-seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Adipo/CAR1 - batch pbs"
+seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Adipo/CAR1, pbs"
+# CHECK BATCH
 ```
 
-```{r 11_others_1}
-nr <- "11"
-markers <- ct_markers_o2[[nr]]$genes[
-    ct_markers_o2[[nr]]$avg_log2FC > 0 &
-    ct_markers_o2[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
-
-length(markers)/length(ct_markers_o2[[nr]]$genes) 
-
-ct_markers_o2[[nr]][
-    ct_markers_o2[[nr]]$avg_log2FC > 0 &
-    ct_markers_o2[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,]
-
-FeaturePlot(seu_sign_o2, markers[1:4])
-FeaturePlot(seu_sign_o2, markers[5:8])
-FeaturePlot(seu_sign_o2, markers[9:12])
-FeaturePlot(seu_sign_o2, markers[13:16])
-
-# Adipo/CAR, highly Adipo, batch pbs
-
-# scara5, Pdgfrb, Snrk, Ebf3, Ltbp3, Mgp, Hp, Foxc1, 
-
-# scara5 adipogenesis
-# Pdgfrb fibro
-# ltbp3 early MSC diff, downregulated during osteo, requiored for adipo
-# foxc1, highly adipo
-# snrk, also adipi
-# Notch3, adipo
-
-seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Adipo/CAR2 - batch pbs"
-
-```
-
-```{r 5_others}
+```{r others2_cluster5}
 nr <- "5"
 markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
@@ -1074,21 +1017,21 @@ FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
 FeaturePlot(seu_sign_o2, markers[13:18])
 
-# Adipo-CAR
+FeaturePlot(seu_sign_o2, "Cxcl12")
 
-# Angptl1, Kitl, Esm1, Igfbp5, MMe, C1s1, Dpep1, Vegfc
+# Osteo/CAR
 
-seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Adipo/CAR - batch non-pbs"
+# Alpl, Limch1, Lrp4, Dlx5, Olfml3, Sp7, Pth1r, Satb2
+
+seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Osteo/CAR"
 ```
 
-```{r 4_others_1}
+```{r others2_cluster4}
 nr <- "4"
 markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
-
-length(markers)/length(ct_markers_o2[[nr]]$genes) 
 
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
@@ -1099,14 +1042,17 @@ FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
 FeaturePlot(seu_sign_o2, markers[13:18])
 
-# Osteo/CAR
+FeaturePlot(seu_sign_o2, "Cxcl12")
 
-# Alpl, Limch1, Lrp4, Dlx5, Olfml3, Sp7, 
+# Adipo-CAR
 
-seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Osteo/CAR"
+# Angptl1, Kitl, Esm1, Igfbp5, Mme, C1s1, Dpep1, Vegfc
+
+seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Adipo/CAR3, non-pbs"
+# CHECK BATCH
 ```
 
-```{r 7_others_1}
+```{r others2_cluster7}
 nr <- "7"
 markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
@@ -1128,7 +1074,6 @@ FeaturePlot(seu_sign_o2, markers[13:18])
 
 # Sp7, Runx2, Alpl, Satb2, Ptgis, S100a6, are osteogenic
 # Mmp13 Pth1r, Tpm1 are also chondro
-
 
 # Tpm1 :  mouse chondro https://academic.oup.com/rheumatology/advance-article/doi/10.1093/rheumatology/keae587/7829155
 #         human chondro https://www.nature.com/articles/s41419-021-03832-3
@@ -1157,15 +1102,10 @@ FeaturePlot(seu_sign_o2, markers[13:18])
 #         osteo marker https://pubmed.ncbi.nlm.nih.gov/36442415/
 #         osteo diff https://www.cell.com/fulltext/S0092-8674(06)00578-2
 
- 
-# Osteo without CAR but with chondro
-
 seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Osteo-Chondro"
-
-
 ```
 
-```{r 10_others_1}
+```{r others2_cluster10}
 nr <- "10"
 markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
@@ -1183,13 +1123,12 @@ FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
 FeaturePlot(seu_sign_o2, markers[13:18])
 
-# aspn, edil3, fmod, lum, mmp2 all related to chondro
+# aspn, edil3, fmod, lum, mmp2, Prrx2, Mmp2, Sema3c
 
 seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Chondro1"
-
 ```
 
-```{r 9_others_1}
+```{r others2_cluster9}
 nr <- "9"
 markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
@@ -1214,14 +1153,46 @@ FeaturePlot(seu_sign_o2, markers[13:18])
 # Crispld2 osteogenic potential, cartilage, osteparthritis, cartilage
 # tnxb articular cartilage
 # Itgbl1, developing chondrocytes acc to one study (Song)
-# Sema3c related to Itgbl1, cartilage according to wikipedia
+# Sema3c related to Itgbl1, cartilage
 # Prrx2 osteogenic
 
 seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Chondro2"
-
 ```
 
-```{r 8_others_1}
+```{r others2_cluster11}
+nr <- "11"
+markers <- ct_markers_o2[[nr]]$genes[
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05 &
+    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
+
+length(markers)/length(ct_markers_o2[[nr]]$genes) 
+
+ct_markers_o2[[nr]][
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05 &
+    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,]
+
+FeaturePlot(seu_sign_o2, markers[1:4])
+FeaturePlot(seu_sign_o2, markers[5:8])
+FeaturePlot(seu_sign_o2, markers[9:12])
+FeaturePlot(seu_sign_o2, markers[13:16])
+
+# Adipo/CAR, highly Adipo, batch pbs
+
+# scara5, Pdgfrb, Snrk, Ebf3, Ltbp3, Mgp, Hp, Foxc1, Mgp
+
+# scara5 adipogenesis
+# Pdgfrb fibro
+# ltbp3 early MSC diff, downregulated during osteo, required for adipo
+# foxc1, highly adipo
+# snrk, also adipi
+# Notch3, adipo
+
+seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Adipo/CAR2, pbs"
+```
+
+```{r others2_cluster8}
 nr <- "8"
 markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
@@ -1239,8 +1210,7 @@ FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
 FeaturePlot(seu_sign_o2, markers[13:18])
 
-
-# Serpinf1, Sgms2, Col5a2, Cpe, Dcn, Satb2, sp7, Serpinh1, Lum, Ptgis
+# Serpinf1, Sgms2, Col5a2, Cpe, Dcn, Satb2, Sp7, Serpinh1, Lum, Ptgis
 
 # Serpins related to osteogenesis
 # Sgms2 osteogenesis and osteo blasts
@@ -1249,15 +1219,10 @@ FeaturePlot(seu_sign_o2, markers[13:18])
 # sp7 osteo
 # Ptgis higher in osteo diff
 
-
-# more mature osteo
-
 seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Osteo1"
-
-
 ```
 
-```{r 12_others_1}
+```{r others2_cluster12}
 nr <- "12"
 markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
@@ -1275,20 +1240,16 @@ FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
 FeaturePlot(seu_sign_o2, markers[13:18])
 
-# Ackr3, Jam2, Mustn1, Cryab, Sgms2
+# Ackr3, Jam2, Mustn1, Cryab, Sgms2, Ptgis
 # Ackr3 osteogenic differentiation
-# mustn1 pan osteo muscule, muscle
+# mustn1 pan osteo muscle, muscle
 # cryab increased during osteogebic diff in human, osteogenesis (human)
 # Sgms2 osteogenesis and osteo blasts
-# 
 
 seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Osteo2"
-
-# even more mature osteo
-
 ```
 
-```{r 13_others_1}
+```{r others2_cluster13}
 
 nr <- "13"
 markers <- ct_markers_o2[[nr]]$genes[
@@ -1310,11 +1271,13 @@ FeaturePlot(seu_sign_o2, markers[13:18])
 # highest expression of almost all osteo markers
 
 seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Osteo3"
-
 ```
 
-```{r}
-# compare ct of origin
+```{r compare}
+
+# compare ct of origin for signature genes
+# basically, check which cell type a signature was derived from which
+# may help assignments
 
 geneset_list_str[["Sinusoidal ECs"]]$conserved_signature[which(
   !geneset_list_str[["Sinusoidal ECs"]]$conserved_signature %in% c(
@@ -1379,14 +1342,10 @@ sin_ven <- c(
   "Foxp1",
   "Plvap"
 )
-
-
-
 ```
 
 
-
-```{r 6_others_2}
+```{r others2_cluster6}
 
 nr <- "6"
 markers <- ct_markers_o2[[nr]]$genes[
@@ -1398,8 +1357,6 @@ markers_ec <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
-
-length(markers)/length(ct_markers_o2[[nr]]$genes) 
 
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
@@ -1418,6 +1375,18 @@ FeaturePlot(seu_sign_o2, markers[13:18])
 FeaturePlot(seu_sign_o2, markers_ec[1:6])
 FeaturePlot(seu_sign_o2, markers_ec[7:12])
 FeaturePlot(seu_sign_o2, markers_ec[13:18])
+
+# marker genes (cap)
+FeaturePlot(seu_sign_o2, "Mcf2l")
+FeaturePlot(seu_sign_o2, "Cd34")
+FeaturePlot(seu_sign_o2, "Lims2")
+FeaturePlot(seu_sign_o2, "Mecom")
+FeaturePlot(seu_sign_o2, "Cav1")
+FeaturePlot(seu_sign_o2, "Sparcl1")
+
+# arteriolar genes
+FeaturePlot(seu_sign_o2, "Sox18")
+FeaturePlot(seu_sign_o2, "Efnb2")
 
 # all cell types:
 # Mcf2l, Cd34, Lims2, Cav1,  Sparcl1, Mecom, Fbln2, Podxl, Bcam, Ltbp4
@@ -1464,23 +1433,11 @@ FeaturePlot(seu_sign_o2, markers_ec[13:18])
 #       human brain capillary density (https://pubmed.ncbi.nlm.nih.gov/16116430/)
 #     
 
-# marker genes (cap)
-FeaturePlot(seu_sign_o2, "Mcf2l")
-FeaturePlot(seu_sign_o2, "Cd34")
-FeaturePlot(seu_sign_o2, "Lims2")
-FeaturePlot(seu_sign_o2, "Mecom")
-FeaturePlot(seu_sign_o2, "Cav1")
-FeaturePlot(seu_sign_o2, "Sparcl1")
-
-# arteriolar genes
-FeaturePlot(seu_sign_o2, "Sox18")
-FeaturePlot(seu_sign_o2, "Efnb2")
-
 seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Art/Cap-EC"
-
+knitr::knit_exit()
 ```
 
-```{r 1_others_2}
+```{r others2_cluster1}
 
 nr <- "1"
 
@@ -1512,6 +1469,25 @@ FeaturePlot(seu_sign_o2, markers_ec[1:6])
 FeaturePlot(seu_sign_o2, markers_ec[7:12])
 FeaturePlot(seu_sign_o2, markers_ec[13:18])
 
+
+FeaturePlot(seu_sign_o2, "Axl")
+FeaturePlot(seu_sign_o2, "Lpar6")
+FeaturePlot(seu_sign_o2, "Aebp1")
+FeaturePlot(seu_sign_o2, "Tgfbi")
+
+# AEC transition
+FeaturePlot(seu_sign_o2, "Sox18") # not only cluster 1, also cluster 6 --> ArtcCap
+FeaturePlot(seu_sign_o2, "Clec14a") # not only cluster 1, also cluster 6 --> ArtCap
+
+# VEC transition
+FeaturePlot(seu_sign_o2, "Nr2f2") # not only cluster 1, also clusters 2 and 3
+FeaturePlot(seu_sign_o2, "Ephb4") # not only cluster 1, also clusters 2 and 3
+
+# non capillary
+FeaturePlot(seu_sign_o2, "Rgcc") 
+FeaturePlot(seu_sign_o2, "Cd34") 
+
+
 # this cluster is mostly marked by NEGATIVE markers
 # this could be a populationin transition
 
@@ -1542,9 +1518,6 @@ FeaturePlot(seu_sign_o2, markers_ec[13:18])
 #       related to tumor extravsation, human in several EC types (https://pmc.ncbi.nlm.nih.gov/articles/PMC2216691/)
 #       tgf beta pathway member related to EC barrier (https://pmc.ncbi.nlm.nih.gov/articles/PMC7443870/)
 
-
-
-
 # Sox18 not specific, also expressed in cluster 1
 #       human EC barrier and maturation TF (https://pmc.ncbi.nlm.nih.gov/articles/PMC7054428/)
 #       barrier via Cldn5 (https://grantome.com/grant/NIH/P01-HL134610-04-5237)
@@ -1553,37 +1526,13 @@ FeaturePlot(seu_sign_o2, markers_ec[13:18])
 #       mouse vascular development (https://www.sciencedirect.com/science/article/pii/S1050173801001311)
 #       related to arterial fate (https://www.nature.com/articles/s41375-024-02453-x)
 
-
-"Tgfbi" %in% arteriolar
-"Tgfbi" %in% sinusoidal
-"Tgfbi" %in% sin_ven
-
-
-seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "EC1 - batch non-pbs"
-
-FeaturePlot(seu_sign_o2, "Axl")
-FeaturePlot(seu_sign_o2, "Lpar6")
-FeaturePlot(seu_sign_o2, "Aebp1")
-FeaturePlot(seu_sign_o2, "Tgfbi")
-
-# AEC transition
-FeaturePlot(seu_sign_o2, "Sox18") # not only cluster 1, also cluster 6 --> ArtcCap
-FeaturePlot(seu_sign_o2, "Clec14a") # not only cluster 1, also cluster 6 --> ArtCap
-
-# VEC transition
-FeaturePlot(seu_sign_o2, "Nr2f2") # not only cluster 1, also clusters 2 and 3
-FeaturePlot(seu_sign_o2, "Ephb4") # not only cluster 1, also clusters 2 and 3
-
-# non capillary
-FeaturePlot(seu_sign_o2, "Rgcc") 
-FeaturePlot(seu_sign_o2, "Cd34") 
-
+seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "EC1, non-pbs"
+# CHECK BATCH
 ```
 
-```{r 2_others_2}
+```{r others2_cluster2}
 
 nr <- "2"
-
 markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
@@ -1612,6 +1561,15 @@ FeaturePlot(seu_sign_o2, markers_ec[1:6])
 FeaturePlot(seu_sign_o2, markers_ec[7:12])
 FeaturePlot(seu_sign_o2, markers_ec[13:18])
 
+FeaturePlot(seu_sign_o2, "Tmcc3")
+FeaturePlot(seu_sign_o2, "Spry2")
+FeaturePlot(seu_sign_o2, "Sdc4")
+FeaturePlot(seu_sign_o2, "Nfkbia")
+
+FeaturePlot(seu_sign_o2, "Dll4") # arteriole, angiogenesis
+FeaturePlot(seu_sign_o2, "Klf4") # angiogenesis
+FeaturePlot(seu_sign_o2, "Rgcc") # capillary
+ 
 # also mostly negative markers when comparing to other ECs
 
 # markers all
@@ -1653,28 +1611,10 @@ FeaturePlot(seu_sign_o2, markers_ec[13:18])
 #         EC dysfunction in patients (https://pmc.ncbi.nlm.nih.gov/articles/PMC7564403/)
 #         EC inflammation in patients
 
-
-
-"Sdc4" %in% arteriolar
-"Sdc4" %in% sinusoidal
-"Sdc4" %in% sin_ven
-
-seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "EC2 - batch pbs"
-
-FeaturePlot(seu_sign_o2, "Tmcc3")
-FeaturePlot(seu_sign_o2, "Spry2")
-FeaturePlot(seu_sign_o2, "Sdc4")
-FeaturePlot(seu_sign_o2, "Nfkbia")
-
-FeaturePlot(seu_sign_o2, "Dll4") # arteriole, angiogenesis
-
-FeaturePlot(seu_sign_o2, "Klf4") # angiogenesis
-
-FeaturePlot(seu_sign_o2, "Rgcc") # capillary
- 
+seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "EC2, pbs"
 ```
 
-```{r 3_others_2}
+```{r others2_cluster3}
 
 nr <- "3"
 
@@ -1708,6 +1648,19 @@ FeaturePlot(seu_sign_o2, markers_ec[1:6])
 FeaturePlot(seu_sign_o2, markers_ec[7:12])
 FeaturePlot(seu_sign_o2, markers_ec[13:18])
 
+FeaturePlot(seu_sign_o2, "Vcam1") # activation
+FeaturePlot(seu_sign_o2, "Kdr") # activation
+FeaturePlot(seu_sign_o2, "Cd36") # activation all kind of unspecific
+
+FeaturePlot(seu_sign_o2, "Ier3") 
+FeaturePlot(seu_sign_o2, "Fabp4")
+FeaturePlot(seu_sign_o2, "Fam167b") 
+
+FeaturePlot(seu_sign_o2, "Il6st")
+FeaturePlot(seu_sign_o2, "Fabp4")
+FeaturePlot(seu_sign_o2, "Vcam1")
+FeaturePlot(seu_sign_o2, "Lrg1")
+
 # mostly negative marker genes, too
 
 # markers all
@@ -1724,23 +1677,8 @@ FeaturePlot(seu_sign_o2, markers_ec[13:18])
 # cldn5 - sinusoidal in human, tight junction protein in ECs
 # Fam167b, aorta-specific EC, pancreas ECs, kidney capillary cells
 
-FeaturePlot(seu_sign_o2, "Vcam1") # activation
-FeaturePlot(seu_sign_o2, "Kdr") # activation
-FeaturePlot(seu_sign_o2, "Cd36") # activation all kind of unspecific
-
-FeaturePlot(seu_sign_o2, "Ier3") 
-FeaturePlot(seu_sign_o2, "Fabp4")
-FeaturePlot(seu_sign_o2, "Fam167b") 
-
-seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "EC3 - batch non-pbs"
-
-FeaturePlot(seu_sign_o2, "Il6st")
-FeaturePlot(seu_sign_o2, "Fabp4")
-FeaturePlot(seu_sign_o2, "Vcam1")
-FeaturePlot(seu_sign_o2, "Lrg1")
-
+seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "EC3, non-pbs"
 ```
-
 
 ### Plots
 
@@ -1760,7 +1698,7 @@ sign_df <- base::as.data.frame(mat_sign)
 #manually factorise clusters for nice order
 sign_df$Var2 <- factor(
   sign_df$Var2,
-  levels = base::rev(c(5, 8, 1, 3, 4, 2, 6, 7)))
+  levels = base::rev(c(4, 8, 1, 3, 5, 2, 6, 7)))
 ```
 
 ```{r sign_base_plot}
@@ -1808,9 +1746,9 @@ sign_df_o2$Var2 <- unfactor(sign_df_o2$Var2)
 sign_df_o2$Var2 <- factor(
   sign_df_o2$Var2,
   levels = base::rev(c(
-    "Adipo/CAR1 - batch pbs",
-    "Adipo/CAR2 - batch pbs",
-    "Adipo/CAR - batch non-pbs",
+    "Adipo/CAR1, pbs",
+    "Adipo/CAR2, pbs",
+    "Adipo/CAR3, non-pbs",
     "Osteo/CAR",
     "Osteo-Chondro",
     "Chondro1",
@@ -1819,9 +1757,9 @@ sign_df_o2$Var2 <- factor(
     "Osteo2",
     "Osteo3",
     "Art/Cap-EC",
-    "EC1 - batch non-pbs",
-    "EC2 - batch pbs",
-    "EC3 - batch non-pbs"
+    "EC1, non-pbs",
+    "EC2, pbs",
+    "EC3, non-pbs"
 )))
 
 sign_df_o2$Var1 <- unfactor(sign_df_o2$Var1)
@@ -1831,7 +1769,7 @@ sign_df_o2$Var1[sign_df_o2$Var1 == "P3"] <- "P3 osteo early"
 sign_df_o2$Var1[sign_df_o2$Var1 == "P4"] <- "P4 osteo later"
 
 sign_df_o2$Var1[sign_df_o2$Var1 == "O1"] <- "O1 osteo, Col16a"
-sign_df_o2$Var1[sign_df_o2$Var1 == "O2"] <- "O2 osteo-chondro trans."
+sign_df_o2$Var1[sign_df_o2$Var1 == "O2"] <- "O2 osteo-chondro"
 sign_df_o2$Var1[sign_df_o2$Var1 == "O3"] <- "O3 osteoblasts"
 
 sign_df_o2$Var1[sign_df_o2$Var1 == "V1"] <- "V1 arterial"
@@ -1845,7 +1783,7 @@ sign_df_o2$Var1 <- factor(
     "P3 osteo early",
     "P4 osteo later",
     "O1 osteo, Col16a",
-    "O2 osteo-chondro trans.",
+    "O2 osteo-chondro",
     "O3 osteoblasts",
     "V1 arterial",
     "V2 sinusoidal" 
@@ -1868,7 +1806,7 @@ sign_theme_plot_o2 <- sign_base_plot_o2+
   ggplot2::theme(
     legend.position = "none",
     axis.text.y = element_text(
-      hjust = 0),
+      hjust = 1),
     axis.text.x = element_text(
       angle = 90,
       hjust = 0,
@@ -1897,10 +1835,10 @@ sign_df_o3 <- base::as.data.frame(mat_sign_o3)
 sign_df_o3$Var2 <- factor(
   sign_df_o3$Var2,
   levels = base::rev(c(
-    "Fibro CAR",
-    "Adipo CAR",
-    "Osteo CAR",
-    "Osteo-Chondro CAR",
+    "Fibro-like CAR",
+    "Osteo-Chondro-like CAR",
+    "Osteo-like CAR",
+    "Adipo-like CAR",
     "Osteo-Chondro",
     "EC1",
     "EC2",
@@ -1909,20 +1847,20 @@ sign_df_o3$Var2 <- factor(
 
 sign_df_o3$Var1 <- unfactor(sign_df_o3$Var1)
 sign_df_o3$Var1[sign_df_o3$Var1 == "multipotent stromal stem cells"] <- "stromal stem cell"
-sign_df_o3$Var1[sign_df_o3$Var1 == "balanced prog."] <- "balanced p."
-sign_df_o3$Var1[sign_df_o3$Var1 == "highly adipocytic gene-expressing progenitors"] <- "adipo-expressing p."
-sign_df_o3$Var1[sign_df_o3$Var1 == "osteochondrogenic progenitors 1"] <- "osteo-chondro p. 1"
-sign_df_o3$Var1[sign_df_o3$Var1 == "osteochondrogenic progenitors 2"] <- "osteo-chondro p. 2"
+sign_df_o3$Var1[sign_df_o3$Var1 == "balanced prog."] <- "balanced prog"
+sign_df_o3$Var1[sign_df_o3$Var1 == "highly adipocytic gene-expressing progenitors"] <- "adipo-prog"
+sign_df_o3$Var1[sign_df_o3$Var1 == "osteochondrogenic progenitors 1"] <- "osteo-chondro prog 1"
+sign_df_o3$Var1[sign_df_o3$Var1 == "osteochondrogenic progenitors 2"] <- "osteo-chondro prog 2"
 
 sign_df_o3$Var1 <- factor(
   sign_df_o3$Var1,
   levels = c(
     "stromal stem cell",
-    "balanced p.",
-    "adipo-expressing p.",
+    "balanced prog",
+    "adipo-prog",
     "pre-osteoblast",
-    "osteo-chondro p. 1",
-    "osteo-chondro p. 2",
+    "osteo-chondro prog 1",
+    "osteo-chondro prog 2",
     "pre-fibroblast 1",
     "pre-fibroblast 2",
     "pre-fibroblast 3",
@@ -1946,7 +1884,7 @@ sign_theme_plot_o3 <- sign_base_plot_o3+
     legend.position = "none",
     axis.title = element_blank(),
     axis.text.y = element_text(
-      hjust = 0),
+      hjust = 1),
     axis.text.x = element_text(
       angle = 90,
       hjust = 0,
@@ -1961,203 +1899,26 @@ sign_theme_plot_o3 <- sign_base_plot_o3+
 
 ### Assemble
 
-```{r assemble_bcd, fig.width = 15, fig.height =5.5}
+```{r assemble_cd, fig.width = 15, fig.height =5.5}
 
-sign_plots <- ggpubr::ggarrange(
-  ncol = 3,
+cd_plots <- ggpubr::ggarrange(
+  ncol = 2,
   align = "h",
-  sign_theme_plot,
   sign_theme_plot_o2,
   sign_theme_plot_o3,
-  widths = c(1, 1.6, 1.4))
+  widths = c(1.6, 1.4))
 
 ```
 
-```{r bcd_plot_export}
-pdf(output_pdf_bcd_plot, width = 15, height = 5.5)
-sign_plots
+```{r b_plot_export}
+pdf(output_pdf_b_plot, width = 5, height = 5.5)
+sign_theme_plot
 dev.off()
 ```
 
-## E PVal plot
-
-#### Prep
-
-```{r e_prep1}
-
-corr_pval_df <- corr_pval_df[corr_pval_df$conservation_level != "conserved_markers",]
-
-# add more columns for nicer visualisation
-corr_pval_df$color_id <- vector(length = nrow(corr_pval_df))
-corr_pval_df$color_id[corr_pval_df$pval_corrected < 0.05] <- "significant"
-corr_pval_df$color_id[corr_pval_df$pval_corrected == 0] <- "is_null"
-corr_pval_df$color_id[corr_pval_df$pval_corrected >= 0.05] <- "non_significant"
-
-corr_pval_df$cons_level_long <- vector(length = nrow(corr_pval_df))
-corr_pval_df$cons_level_long[
-  corr_pval_df$conservation_level == "conserved_signature"] <- "conserved identity signature"
-corr_pval_df$cons_level_long[
-  corr_pval_df$conservation_level == "mmusall_markers"] <- "BL6 markers"
-
-corr_pval_df$score_long <- vector(length = nrow(corr_pval_df))
-corr_pval_df$score_long[
-  corr_pval_df$type == "adjusted_rand_index"] <- "Adjusted Rand Index"
-corr_pval_df$score_long[
-  corr_pval_df$type == "variation_information"] <- "Variation of Information"
-corr_pval_df$score_long[
-  corr_pval_df$type == "mean_prop_cells_cluster"] <- "Mean prop."
-
-corr_pval_df$cons_level_long <- factor(
-  corr_pval_df$cons_level_long, levels = c(
-    "BL6 markers",
-    "conserved identity signature"))
-
-corr_pval_df$score_long <- factor(
-  corr_pval_df$score_long, levels = c(
-    "Adjusted Rand Index",
-    "Variation of Information",
-    "Mean prop."
-    ))
-
-corr_pval_df$color_id <- factor(
-  corr_pval_df$color_id, levels = rev(c(
-    "non_significant",
-    "significant",
-    "is_null")))
-
-color_significance <- c("non_significant" = "grey90",
-                        "significant" = "grey40", 
-                        "is_null" = "blue")
-```
-
-```{r e_prep2_subset}
-
-corr_pval_df_sub <- corr_pval_df[corr_pval_df$condition %in% c(
-  "str",
-  "mus_tik_stromal",
-  "mus_bar_stromal",
-  "li_all_stromal",
-  "ts_all_stromal"),]
-
-corr_pval_df_sub <- corr_pval_df_sub[corr_pval_df_sub$comparison != "mmms-vs-rand",]
-
-
-corr_pval_df_sub$condition_long <- vector(length = nrow(corr_pval_df_sub))
-corr_pval_df_sub$condition_long[
-  corr_pval_df_sub$condition == "mus_bar_stromal"] <- "Baryawno et al."
-corr_pval_df_sub$condition_long[
-  corr_pval_df_sub$condition == "mus_tik_stromal"] <- "Tikhonova et al."
-corr_pval_df_sub$condition_long[
-  corr_pval_df_sub$condition == "li_all_stromal"] <- "Li et al."
-corr_pval_df_sub$condition_long[
-  corr_pval_df_sub$condition == "ts_all_stromal"] <- "Stromal tabula sapiens"
-corr_pval_df_sub$condition_long[
-  corr_pval_df_sub$condition == "str"] <- "Niche"
-
-
-corr_pval_df_sub$condition_long <- factor(
-  corr_pval_df_sub$condition_long, levels = rev(c(
-    "Niche",
-    "Tikhonova et al.",
-    "Baryawno et al.",
-    "Li et al.",
-    "Stromal tabula sapiens")))
-
-
-corr_pval_df_sub$comparison <- factor(
-  corr_pval_df_sub$comparison, levels = c(
-    #"mmms-vs-rand",
-    "sign-vs-rand",
-    "mmms-vs-signrand"))
-
-corr_pval_df_sub$x_axis <- rep("1", nrow(corr_pval_df_sub))
-
-```
-
-```{r e_print_for_control}
-print(corr_pval_df_sub)
-```
-
-```{r e_base_plot, fig.width = 10, fig.height= 3} 
-e_base_plot <- ggplot2::ggplot(
-  corr_pval_df_sub,
-  aes(y = condition_long, 
-      x = x_axis,
-      color = color_id, 
-      size = 10^-pval_corrected))+
-  ggplot2::geom_point(alpha = 1)+
-  ggplot2::facet_grid(cols = vars(corr_pval_df_sub$score_long),
-                      switch = "y",
-                      rows = vars(corr_pval_df_sub$comparison))
-```
-
-```{r e_theme_plot, fig.width = 9, fig.height = 3.5} 
-e_theme_plot <- e_base_plot+
-  ggplot2::theme_classic()+
-  theme_all+
-  # ggplot2::scale_x_continuous(
-  #   position = "bottom",
-  #   limits = c(0, base::max(corr_pval_df_sub$nr_genes_used)))+
-  ggplot2::scale_color_manual(values = color_significance)+
-  ggplot2::theme(
-    strip.text.x = element_text(
-      size = axis_title_size,
-      color = axis_title_color,
-      face = axis_title_face),
-    strip.background = element_blank(),
-    strip.text.y.left = element_text(
-      size = axis_text_size,
-      color = axis_text_color,
-      face = axis_text_face,
-      angle = 0,
-      hjust = 0),
-    axis.title = element_blank(),
-    axis.text.x = element_blank(),
-    axis.text.y = element_text(
-      hjust = 0),
-    axis.ticks.x = element_blank(),
-    strip.placement = "outside",
-    legend.position = "none")
-e_theme_plot
-```
-
-```{r e_legend_base_plot}
-e_legend_base_plot <- ggplot2::ggplot(
-  corr_pval_df,
-  aes(y = condition, 
-      x = nr_genes_used,
-      color = color_id, 
-      size = 10^-pval_corrected))+
-  ggplot2::geom_point(alpha = 1)+
-  ggplot2::facet_grid(cols = vars(corr_pval_df$score_long),
-                      switch = "y",
-                      rows = vars(corr_pval_df$cons_level_long))
-```
-
-```{r e_legend_theme_plot, fig.width = 3, fig.height= 3}
-e_legend_theme_plot <- e_legend_base_plot+
-  ggplot2::theme_classic()+
-  theme_all+
-  ggplot2::scale_x_continuous(
-    limits = c(0, base::max(corr_pval_df_sub$nr_genes_used)))+
-  ggplot2::scale_color_manual("", values = color_significance)+
-  ggplot2::scale_size_continuous("10 adjusted p val")
-
-e_legend_theme <- ggpubr::get_legend(e_legend_theme_plot)
-
-e_legend <- ggpubr::ggarrange(e_legend_theme)
-e_legend
-```
-
-```{r e_plot_export}
-pdf(output_pdf_e_plot, width = 9, height = 3.5)
-e_theme_plot
-dev.off()
-```
-
-```{r e_legend_export}
-pdf(output_pdf_e_legend, width = 3, height = 3)
-e_legend
+```{r cd_plot_export}
+pdf(output_pdf_cd_plot, width = 15, height = 7)
+cd_plots
 dev.off()
 ```
 

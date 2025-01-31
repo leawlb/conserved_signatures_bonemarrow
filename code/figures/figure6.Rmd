@@ -8,8 +8,9 @@ date: "2024-09-13"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Generate Figure 6, current title:
-"Cross-species cell type marker identification method is robust at homologous cell type annotation across tissues and species."
+Generate Figure 6
+
+Also includes one plot for Supplementary Figure 6
 
 #### Load objects
 
@@ -21,56 +22,42 @@ set.seed(37)
 ```{r load_packages, message = FALSE}
 library(tidyverse, quietly = TRUE)
 library(Seurat, quietly = TRUE)
+library(UpSetR, quietly = TRUE)
+library(ggpubr, quietly = TRUE)
 ```
 
-```{r load_manual}
+```{r data_paths}
 
-# load data for manual use here
-base_path_temp <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/"
+# define data paths
+base_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data/"
 brain_path <- "scRNAseq/main_analysis/sce_objects/08_sce_brain/"
-base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/"
-  
+
 colors_path <- base::paste0(
   base_path, 
   "/metadata/colors/colors.txt")
 
 source("../source/colors.R")
-
-```
-
-```{r load_snakemake, include = FALSE, eval = FALSE}
-# colors
-colors_path <- snakemake@params[["colors_path"]]
-colors_source <- snakemake@params[["colors"]]
-source(colors_source)
-
-#knitr::knit_exit()
-
 ```
 
 ```{r params}
 # global params
 source("determine_params.R")
-
-# col_cons_long <- c(
-#   "conserved identity signature" = "#db5b00ff",
-#   "conserved markers" = "#eb9523ff",
-#   "total BL6 markers" = "#a7c5a3ff",
-#   "ndges" = "#ea91adff",
-#   "random genes" = "grey80")
 ```
 
 ```{r export_paths}
 output_pdf_b_plot <- base::paste0(
-  base_path_temp, "manuscript1/figures_new/figure6_b.pdf")
+  base_path, "manuscript1/figure6/figure6_b.pdf")
 output_pdf_b_legend <- base::paste0(
-  base_path_temp, "manuscript1/figures_new/figure6_b_legend.pdf")
+  base_path, "manuscript1/figure6/figure6_b_legend.pdf")
 output_pdf_c_plot <- base::paste0(
-  base_path_temp, "manuscript1/figures_new/figure6_c.pdf")
+  base_path, "manuscript1/figure6/figure6_c.pdf")
 output_pdf_d_plot <- base::paste0(
-  base_path_temp, "manuscript1/figures_new/figure6_d.pdf")
+  base_path, "manuscript1/figure6/figure6_d.pdf")
 output_pdf_e_plot <- base::paste0(
-  base_path_temp, "manuscript1/figures_new/figure6_e.pdf")
+  base_path, "manuscript1/figure6/figure6_e.pdf")
+
+output_pdf_s_a_plot <- base::paste0(
+  base_path, "manuscript1/figure6/figures6_a.pdf")
 ```
 
 ## A
@@ -96,7 +83,8 @@ factorize <- list(human = c(9,6,8,13,5,0,10,12,3,14,7,2,11,1,4),
 # to create normalized matrices for plotting
 plot_gg <- list()
 for(sp in c("human", "marmoset", "macaque")){
-  data <- readRDS(paste0(base_path,
+  
+  data <- readRDS(paste0(base_path, # reclustered primate datasets
                          brain_path,
                          "04_recluster/", sp, "_reclust_sig.rds"))
 
@@ -156,7 +144,7 @@ b_plot_theme <- b_plot +
           face = plot_title_face,
           hjust = 0.5,
           color = col_cons_long["conserved identity signature"]))  +
-       ggplot2::ggtitle("Conserved identity signature") +
+       ggplot2::ggtitle("Signature genes") +
        ggplot2::ylab("New clusters") +
        ggplot2::scale_fill_gradientn(
             colors = mycolors_to1,
@@ -190,7 +178,7 @@ factorize_mouse <- list(hs = c(2,11,10,4,6,7,3,5,8,9,0,12,1),
 # to create normalized matrices for plotting
 plot_gg_mouse <- list()
 for(genes in c("hs", "sig")){
-  data <- readRDS(paste0(base_path_temp, 
+  data <- readRDS(paste0(base_path, # reclustered mouse datasets, depending on geneset used for reclustering
                          brain_path, 
                          "04_recluster/mouse_reclust_", genes, ".rds"))
   
@@ -272,7 +260,7 @@ plotted_gg_mouse[["sig"]] <- plotted_gg_mouse[["sig"]] +
         face = plot_title_face,
         hjust = 0.5,
         color = col_cons_long["conserved identity signature"]))  +
-     ggplot2::ggtitle("Conserved identity signature") +
+     ggplot2::ggtitle("Signature genes") +
      ggplot2::scale_fill_gradientn(
           colors = mycolors_to1,
           limits = c(0, 1),
@@ -294,22 +282,30 @@ c_plot <- ggpubr::ggarrange(
 
 
 ```{r c_plot_export}
-pdf(output_pdf_c_plot, width = 5, height = 6)
-c_plot
+pdf(output_pdf_c_plot, width = 5, height = 4)
+plotted_gg_mouse[["sig"]]
 dev.off()
 ```
 
-##D
+Export Supplementary Figure 6 A
+
+```{r s_a_plot_export}
+pdf(output_pdf_s_a_plot, width = 5, height = 4)
+plotted_gg_mouse[["hs"]]
+dev.off()
+```
+
+## D
 
 Number of mouse cortex cells that are able to be accurately re-annotated using clustering based on human marker genes or primate identity signature genes.
 
 #### Prep
 
 ```{r d_prep1}
-mouse_hs <- readRDS(paste0(base_path_temp, brain_path, 
-                           "04_recluster/mouse_reclust_hs.rds"))
-mouse_sig <- readRDS(paste0(base_path_temp, brain_path, 
-                            "04_recluster/mouse_reclust_sig.rds"))
+mouse_hs <- readRDS(paste0(base_path, brain_path, 
+                           "04_recluster/mouse_reclust_hs.rds")) # mouse cells reclustered with human marker genes
+mouse_sig <- readRDS(paste0(base_path, brain_path, 
+                            "04_recluster/mouse_reclust_sig.rds")) # mouse cells reclustered with signature genes
 ```
 
 ```{r d_prep2}
@@ -475,5 +471,3 @@ pdf(output_pdf_e_plot, width = 6, height = 4)
 skip_set_size_plot(ups)
 dev.off()
 ```
-
-

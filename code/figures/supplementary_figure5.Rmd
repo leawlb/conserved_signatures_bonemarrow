@@ -1,5 +1,5 @@
 ---
-title: "Supplementary figure 5"
+title: "Supplementary Figure 5"
 date: '2024-12-04'
 output: html_document
 ---
@@ -8,8 +8,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Generate Figure 5, current title:
-"Mouse cell type conserved identity signature genes alone are sufficient to identify Niche types."
+Generate Figure S5
 
 #### Load objects
 
@@ -24,15 +23,10 @@ library(ggpubr, quietly = TRUE)
 library(tidyverse, quietly = TRUE)
 ```
 
-```{r load_manual_basepath}
-base_path_input <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
-base_path_output_temp <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp"
+```{r load_basepath}
+base_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data/"
 ```
 
-```{r base_path_snakemake, eval = FALSE, include = FALSE}
-base_path_input <- snakemake@input[["base_path_input"]]
-base_path_output_temp <- snakemake@params[["base_path_output_temp"]]
-```
 
 ```{r load_manual_remaining}
 #-------------------------------------------------------------------------------
@@ -40,12 +34,12 @@ base_path_output_temp <- snakemake@params[["base_path_output_temp"]]
 
 # list of gene sets for HSPCs (conserved signature, conserved markers, etc.)
 geneset_list_str <-base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_str"))
 
 # data frame containing the correct resolutions for other datasets as visually determined
 resolution_df_path <- base::paste0(
-  base_path_input,
+  base_path,
   "/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt")
 
 resolution_df <- utils::read.csv(
@@ -59,21 +53,19 @@ resolution_df <- utils::read.csv(
 
 # dataframe containing corrected pvalues for all tests
 corr_pval_df <-  readRDS(base::paste0(
-  base_path_output_temp,
-  "/04_signatures/02_reclustering_other/09_crpv/all_corrected_pval"))
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/09_crpv/all_corrected_pval"))
 
 colors_path <- base::paste0(
-  base_path_input,
+  scRNAseq,
   "/metadata/colors/colors.txt")
 
 ensembl_sign <- readRDS(base::paste0(
-  base_path_output_temp,
-  "/04_signatures/01_reclustering_own/02_endf/ensembl_sign_str"))
-
+  scRNAseq,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/02_endf/ensembl_sign_str"))
 
 source("../source/colors.R")
 source("../source/plotting.R")
-source("../source/sce_functions_reclustering.R")
 ```
 
 ```{r load_manual_other2}
@@ -198,13 +190,187 @@ source("determine_params.R")
 
 ```{r export_paths}
 output_pdf_a_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure5_a.pdf")
-output_pdf_a_legend <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure5_a_legend.pdf")
-output_pdf_bcd_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure5_bcd.pdf")
-output_pdf_e_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure5_e.pdf")
-output_pdf_e_legend <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures/figure5_e_legend.pdf")
+  base_path_output_temp, "/manuscript1/figures5/figures5_a.pdf")
+```
+
+## E PVal plot
+
+#### Prep
+
+```{r e_prep1}
+
+corr_pval_df <- corr_pval_df[corr_pval_df$conservation_level != "conserved_markers",]
+
+# add more columns for nicer visualisation
+corr_pval_df$color_id <- vector(length = nrow(corr_pval_df))
+corr_pval_df$color_id[corr_pval_df$pval_corrected < 0.05] <- "significant"
+corr_pval_df$color_id[corr_pval_df$pval_corrected == 0] <- "is_null"
+corr_pval_df$color_id[corr_pval_df$pval_corrected >= 0.05] <- "non_significant"
+
+corr_pval_df$cons_level_long <- vector(length = nrow(corr_pval_df))
+corr_pval_df$cons_level_long[
+  corr_pval_df$conservation_level == "conserved_signature"] <- "conserved identity signature"
+corr_pval_df$cons_level_long[
+  corr_pval_df$conservation_level == "mmusall_markers"] <- "BL6 markers"
+
+corr_pval_df$score_long <- vector(length = nrow(corr_pval_df))
+corr_pval_df$score_long[
+  corr_pval_df$type == "adjusted_rand_index"] <- "Adjusted Rand Index"
+corr_pval_df$score_long[
+  corr_pval_df$type == "variation_information"] <- "Variation of Information"
+corr_pval_df$score_long[
+  corr_pval_df$type == "mean_prop_cells_cluster"] <- "Mean prop."
+
+corr_pval_df$cons_level_long <- factor(
+  corr_pval_df$cons_level_long, levels = c(
+    "BL6 markers",
+    "conserved identity signature"))
+
+corr_pval_df$score_long <- factor(
+  corr_pval_df$score_long, levels = c(
+    "Adjusted Rand Index",
+    "Variation of Information",
+    "Mean prop."
+    ))
+
+corr_pval_df$color_id <- factor(
+  corr_pval_df$color_id, levels = rev(c(
+    "non_significant",
+    "significant",
+    "is_null")))
+
+color_significance <- c("non_significant" = "grey90",
+                        "significant" = "grey40", 
+                        "is_null" = "blue")
+```
+
+```{r e_prep2_subset}
+
+corr_pval_df_sub <- corr_pval_df[corr_pval_df$condition %in% c(
+  "str",
+  "mus_tik_stromal",
+  "mus_bar_stromal",
+  "li_all_stromal",
+  "ts_all_stromal"),]
+
+corr_pval_df_sub <- corr_pval_df_sub[corr_pval_df_sub$comparison != "mmms-vs-rand",]
+
+
+corr_pval_df_sub$condition_long <- vector(length = nrow(corr_pval_df_sub))
+corr_pval_df_sub$condition_long[
+  corr_pval_df_sub$condition == "mus_bar_stromal"] <- "Baryawno et al."
+corr_pval_df_sub$condition_long[
+  corr_pval_df_sub$condition == "mus_tik_stromal"] <- "Tikhonova et al."
+corr_pval_df_sub$condition_long[
+  corr_pval_df_sub$condition == "li_all_stromal"] <- "Li et al."
+corr_pval_df_sub$condition_long[
+  corr_pval_df_sub$condition == "ts_all_stromal"] <- "Stromal tabula sapiens"
+corr_pval_df_sub$condition_long[
+  corr_pval_df_sub$condition == "str"] <- "Niche"
+
+
+corr_pval_df_sub$condition_long <- factor(
+  corr_pval_df_sub$condition_long, levels = rev(c(
+    "Niche",
+    "Tikhonova et al.",
+    "Baryawno et al.",
+    "Li et al.",
+    "Stromal tabula sapiens")))
+
+
+corr_pval_df_sub$comparison <- factor(
+  corr_pval_df_sub$comparison, levels = c(
+    #"mmms-vs-rand",
+    "sign-vs-rand",
+    "mmms-vs-signrand"))
+
+corr_pval_df_sub$x_axis <- rep("1", nrow(corr_pval_df_sub))
+
+```
+
+```{r e_print_for_control}
+print(corr_pval_df_sub)
+```
+
+```{r e_base_plot, fig.width = 10, fig.height= 3} 
+e_base_plot <- ggplot2::ggplot(
+  corr_pval_df_sub,
+  aes(y = condition_long, 
+      x = x_axis,
+      color = color_id, 
+      size = 10^-pval_corrected))+
+  ggplot2::geom_point(alpha = 1)+
+  ggplot2::facet_grid(cols = vars(corr_pval_df_sub$score_long),
+                      switch = "y",
+                      rows = vars(corr_pval_df_sub$comparison))
+```
+
+```{r e_theme_plot, fig.width = 9, fig.height = 3.5} 
+e_theme_plot <- e_base_plot+
+  ggplot2::theme_classic()+
+  theme_all+
+  # ggplot2::scale_x_continuous(
+  #   position = "bottom",
+  #   limits = c(0, base::max(corr_pval_df_sub$nr_genes_used)))+
+  ggplot2::scale_color_manual(values = color_significance)+
+  ggplot2::theme(
+    strip.text.x = element_text(
+      size = axis_title_size,
+      color = axis_title_color,
+      face = axis_title_face),
+    strip.background = element_blank(),
+    strip.text.y.left = element_text(
+      size = axis_text_size,
+      color = axis_text_color,
+      face = axis_text_face,
+      angle = 0,
+      hjust = 0),
+    axis.title = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_text(
+      hjust = 0),
+    axis.ticks.x = element_blank(),
+    strip.placement = "outside",
+    legend.position = "none")
+e_theme_plot
+```
+
+```{r e_legend_base_plot}
+e_legend_base_plot <- ggplot2::ggplot(
+  corr_pval_df,
+  aes(y = condition, 
+      x = nr_genes_used,
+      color = color_id, 
+      size = 10^-pval_corrected))+
+  ggplot2::geom_point(alpha = 1)+
+  ggplot2::facet_grid(cols = vars(corr_pval_df$score_long),
+                      switch = "y",
+                      rows = vars(corr_pval_df$cons_level_long))
+```
+
+```{r e_legend_theme_plot, fig.width = 3, fig.height= 3}
+e_legend_theme_plot <- e_legend_base_plot+
+  ggplot2::theme_classic()+
+  theme_all+
+  ggplot2::scale_x_continuous(
+    limits = c(0, base::max(corr_pval_df_sub$nr_genes_used)))+
+  ggplot2::scale_color_manual("", values = color_significance)+
+  ggplot2::scale_size_continuous("10 adjusted p val")
+
+e_legend_theme <- ggpubr::get_legend(e_legend_theme_plot)
+
+e_legend <- ggpubr::ggarrange(e_legend_theme)
+e_legend
+```
+
+```{r e_plot_export}
+pdf(output_pdf_e_plot, width = 9, height = 3.5)
+e_theme_plot
+dev.off()
+```
+
+```{r e_legend_export}
+pdf(output_pdf_e_legend, width = 3, height = 3)
+e_legend
+dev.off()
 ```

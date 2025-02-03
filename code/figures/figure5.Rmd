@@ -51,11 +51,6 @@ resolution_df <- utils::read.csv(
   as.is=TRUE, 
   colClasses = "character")
 
-# dataframe containing corrected pvalues for all tests
-# corr_pval_df <-  readRDS(base::paste0(
-#   base_path,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/09_crpv/all_corrected_pval"))
-
 ensembl_sign <- readRDS(base::paste0(
   base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/02_endf/ensembl_sign_str"))
@@ -113,26 +108,26 @@ seu_str_recl_list_o2 <- base::readRDS(base::paste0(
   base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_mus_tik_stromal_list"))
 
-# list of dataframes of re-clustering scores for each gene set and resolution
-score_df_str_list_o2 <- base::readRDS(base::paste0(
-  base_path,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_mus_tik_stromal_list"))
-
-# dataframes of re-clustering scores after permutation comparing gene sets
-psdf_str_mark_signrand_o2 <- base::readRDS(base::paste0(
-  base_path,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mark_mus_tik_stromal"))
-psdf_str_mmms_signrand_o2 <- base::readRDS(base::paste0(
-  base_path,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_mus_tik_stromal"))
-psdf_str_mmms_markrand_o2 <- base::readRDS(base::paste0(
-  base_path,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_mark_mus_tik_stromal"))
-
-# perm score DF from background permutation (SIGN)
-psdf_str_sign_rand_o2 <- base::readRDS(base::paste0(
-  base_path,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_psig/perm_score_df_mus_tik_stromal"))
+# # list of dataframes of re-clustering scores for each gene set and resolution
+# score_df_str_list_o2 <- base::readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_mus_tik_stromal_list"))
+# 
+# # dataframes of re-clustering scores after permutation comparing gene sets
+# psdf_str_mark_signrand_o2 <- base::readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mark_mus_tik_stromal"))
+# psdf_str_mmms_signrand_o2 <- base::readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_mus_tik_stromal"))
+# psdf_str_mmms_markrand_o2 <- base::readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_mark_mus_tik_stromal"))
+# 
+# # perm score DF from background permutation (SIGN)
+# psdf_str_sign_rand_o2 <- base::readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_psig/perm_score_df_mus_tik_stromal"))
 ```
 
 ```{r selected_seu_o2}
@@ -169,25 +164,25 @@ seu_str_recl_list_o3 <- base::readRDS(base::paste0(
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_li_all_stromal_list"))
 
 # list of dataframes of re-clustering scores for each gene set and resolution
-score_df_str_list_o3 <- base::readRDS(base::paste0(
-  base_path,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_li_all_stromal_list"))
-
-# dataframes of re-clustering scores after permutation comparing gene sets
-psdf_str_mark_signrand_o3 <- base::readRDS(base::paste0(
-  base_path,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mark_li_all_stromal"))
-psdf_str_mmms_signrand_o3 <- base::readRDS(base::paste0(
-  base_path,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_li_all_stromal"))
-psdf_str_mmms_markrand_o3 <- base::readRDS(base::paste0(
-  base_path,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_mark_li_all_stromal"))
-
-# perm score DF from background permutation (SIGN)
-psdf_str_sign_rand_o3 <- base::readRDS(base::paste0(
-  base_path,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_psig/perm_score_df_li_all_stromal"))
+# score_df_str_list_o3 <- base::readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_li_all_stromal_list"))
+# 
+# # dataframes of re-clustering scores after permutation comparing gene sets
+# psdf_str_mark_signrand_o3 <- base::readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mark_li_all_stromal"))
+# psdf_str_mmms_signrand_o3 <- base::readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_li_all_stromal"))
+# psdf_str_mmms_markrand_o3 <- base::readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_mark_li_all_stromal"))
+# 
+# # perm score DF from background permutation (SIGN)
+# psdf_str_sign_rand_o3 <- base::readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_psig/perm_score_df_li_all_stromal"))
 
 # perm score DF from background permutation (MARK)
 # psdf_str_mark_rand_o1 <- base::readRDS(base::paste0(
@@ -500,34 +495,6 @@ head(ct_markers_df_o2)
 
 ```
 
-```{r prepare_annotate_o2_ec}
-
-# all ECs
-seu_sign_o2_ec <- seu_sign_o2[,seu_sign_o2$seurat_clusters %in%
-                                c("6", "1", "2", "3")]
-
-reclustered_o2_ec <- base::unique(seu_sign_o2_ec$seurat_clusters)
-
-clust_list_o2_ec <- as.list(reclustered_o2_ec)
-
-ct_markers_o2_ec <- lapply(clust_list_o2_ec, function(x){
-  markers <- Seurat::FindMarkers(seu_sign_o2_ec,
-                                 test.use = "wilcox",
-                                 ident.1 = x)
-  markers <- markers[base::order(base::abs(markers$avg_log2FC), 
-                                 decreasing=TRUE),]
-  markers$which_cluster <- base::rep(x, nrow(markers))
-  markers <- rownames_to_column(markers, var = "genes")
-  
-  return(markers)
-})
-names(ct_markers_o2_ec) <- reclustered_o2_ec
-
-ct_markers_df_o2_ec <- bind_rows(ct_markers_o2_ec)
-head(ct_markers_df_o2_ec)
-
-```
-
 ```{r prepare_annotate_o3}
 
 seu_sign_o3 <- selected_seu_list_o3$seu_sign
@@ -596,6 +563,7 @@ markers <- ct_markers_o3[[nr]]$gene[
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
     ct_markers_o3[[nr]]$p_val_adj < 0.05]
 
+# check "CXCL12", "CXCL14", "EDIL3", "ABI3BP", "SOD3", "COL6A3", "ABCA8" rerun
 ct_markers_o3[[nr]][
   !is.na(ct_markers_o3[[nr]]$symbol) & 
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
@@ -637,8 +605,8 @@ markers <- ct_markers_o3[[nr]]$gene[
   !is.na(ct_markers_o3[[nr]]$symbol) & 
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
     ct_markers_o3[[nr]]$p_val_adj < 0.05]
-# mesenchymal
 
+# check "CXCL12", "FSTL1", "MME", "HP", "TJP1", "SPARCL1", "FBN1", "RSPO3", "FBLN5" rerun
 ct_markers_o3[[nr]][
   !is.na(ct_markers_o3[[nr]]$symbol) & 
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
@@ -682,6 +650,7 @@ markers <- ct_markers_o3[[nr]]$gene[
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
     ct_markers_o3[[nr]]$p_val_adj < 0.05]
 
+# check "CXCL12", "KITL", "PDGFRB", "FBN1", "COL3A1", "C1S", "SPARCL1", "ABCA8" rerun
 ct_markers_o3[[nr]][
   !is.na(ct_markers_o3[[nr]]$symbol) & 
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
@@ -723,6 +692,7 @@ markers <- ct_markers_o3[[nr]]$gene[
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
     ct_markers_o3[[nr]]$p_val_adj < 0.05]
 
+# check "CXCL12", "EMP1", "ID1", "DEPP1", "LMNA", "FABP4", "OSR2", "PPP1R15A" rerun
 ct_markers_o3[[nr]][
   !is.na(ct_markers_o3[[nr]]$symbol) & 
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
@@ -769,6 +739,7 @@ markers <- ct_markers_o3[[nr]]$gene[
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
     ct_markers_o3[[nr]]$p_val_adj < 0.05]
 
+# check "CPE", "SP7", "PTPRD", "RUNX2", "PALS2", "OMD", "MMP13", "PTH1R", "CD9" rerun
 ct_markers_o3[[nr]][
   !is.na(ct_markers_o3[[nr]]$symbol) & 
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
@@ -800,6 +771,7 @@ markers <- ct_markers_o3[[nr]]$gene[
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
     ct_markers_o3[[nr]]$p_val_adj < 0.05]
 
+# check "CD34", "RGCC", "TSPAN13", "CAPG", "MGST1", "GPX1", "PPP1R14B", "TXN", "CD36", "NOTCH1"
 ct_markers_o3[[nr]][
   !is.na(ct_markers_o3[[nr]]$symbol) & 
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
@@ -844,6 +816,7 @@ markers <- ct_markers_o3[[nr]]$gene[
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
     ct_markers_o3[[nr]]$p_val_adj < 0.05]
 
+# check "PECAM1", "FLI1", "ICAM2", "CRIP1", "FCER1G", "SH2D3C"
 ct_markers_o3[[nr]][
   !is.na(ct_markers_o3[[nr]]$symbol) & 
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
@@ -878,6 +851,7 @@ markers <- ct_markers_o3[[nr]]$gene[
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
     ct_markers_o3[[nr]]$p_val_adj < 0.05]
 
+# check "CELF2", "LYN", "PECAM1", "SRGN", "NFKBIA"
 ct_markers_o3[[nr]][
   !is.na(ct_markers_o3[[nr]]$symbol) & 
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
@@ -924,6 +898,7 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
+# check "Mgp", "Cxcl12", "Hp", "Notch3", "Ebf3", "Dpep1", "Cxcl14", "Cyp1b1", "Esm1"
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
@@ -946,7 +921,6 @@ signature_df[signature_df$genes %in% SOI,]
 
 seu_sign_o2$annotated_reclustered[
   seu_sign_o2$seurat_clusters == nr] <- "Adipo/CAR1, pbs"
-# CHECK BATCH
 ```
 
 ```{r others2_cluster5}
@@ -956,6 +930,7 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
+# check "Alpl", "Limch1", "Lrp4", "Dlx5", "Olfml3", "Sp7", "Pth1r", "Satb2", "Cxcl12"
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
@@ -986,6 +961,7 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
+# check "Angptl1", "Kitl", "Esm1", "Igfbp5", "Mme", "C1s1", "Dpep1", "Vegfc", "Cxcl12"
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
@@ -1002,11 +978,10 @@ SOI <-  c("Angptl1", "Kitl", "Esm1", "Igfbp5", "Mme", "C1s1", "Dpep1", "Vegfc",
 signature_df[signature_df$genes %in% SOI,]
 
 # Kitl: CAR
-# Dpeop: adipo
+# Dpep: adipo
 
 seu_sign_o2$annotated_reclustered[
   seu_sign_o2$seurat_clusters == nr] <- "Adipo/CAR3, non-pbs"
-# CHECK BATCH
 ```
 
 ```{r others2_cluster7}
@@ -1016,6 +991,7 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
+# check "Mmp13", "Slit2", "Lrp4", "Ptgis", "Gpc1", "Mrc2", "S100a6", "Satb2", "Pth1r", "Cfh"
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
@@ -1029,8 +1005,8 @@ SOI <-  c("Mmp13", "Slit2", "Lrp4", "Ptgis", "Gpc1", "Mrc2", "S100a6", "Satb2",
           "Pth1r", "Cfh")
 signature_df[signature_df$genes %in% SOI,]
 
-# Sp7, Runx2, Alpl, Satb2, Ptgis, S100a6 are osteogenic
-# Mmp13 Pth1r, Tpm1 are also chondro
+# Sp7, Runx2, Alpl, Satb2, Ptgis, S100a6 are strongly osteogenic
+# Mmp13, Pth1r, Tpm1 are also kind of chondro
 
 seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Osteo-Chondro"
 ```
@@ -1042,6 +1018,7 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
+# check "Aspn", "Edil3", "Fmod", "Lum", "Mmp2", "Prrx2", "Sema3c"
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
@@ -1070,8 +1047,7 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
-length(markers)/length(ct_markers_o2[[nr]]$genes) 
-
+# check "Thbs4", "Clec3b", "Crispld2", "Tnxb", "Itgbl1", "Sema3c", "Prrx2"
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
@@ -1085,7 +1061,7 @@ FeaturePlot(seu_sign_o2, markers[13:18])
 # Clec3b osteoblasts, mineralization
 # Crispld2: osteogenic potential, cartilage, osteparthritis, cartilage
 # Tnxb articular cartilage
-# Itgbl1, developing chondrocytes acc to one study (Song)
+# Itgbl1, developing chondrocytes 
 # Sema3c related to Itgbl1, cartilage
 # Prrx2 osteogenic
 
@@ -1103,6 +1079,7 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
+# check "Scara5", "Pdgfrb", "Snrk", "Ebf3", "Ltbp3", "Mgp", "Hp", "Foxc1"
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
@@ -1133,6 +1110,7 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
+# check "Serpinf1", "Sgms2", "Col5a2", "Cpe", "Dcn", "Satb2", "Sp7", "Serpinh1", "Lum", "Ptgis"
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
@@ -1163,6 +1141,7 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
+# check "Ackr3", "Jam2", "Mustn1", "Cryab", "Sgms2", "Ptgis"
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
@@ -1192,6 +1171,7 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
+# check "Serpinf1", "Cpe", "Col5a2", "Sgms2", "Mmp2", "Thbs1", "Lum", "Col5a1", "Omd", "Ptgis", "Satb2", "Sp7"
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
@@ -1218,28 +1198,15 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
-markers_ec <- ct_markers_o2[[nr]]$genes[
-    ct_markers_o2[[nr]]$avg_log2FC > 0 &
-    ct_markers_o2[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
-
+# check for "Mcf2l", "Cd34", "Lims2", "Mecom", "Cav1", "Sparcl1" in rerun
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,][1:50,]
 
-ct_markers_o2_ec[[nr]][
-    ct_markers_o2_ec[[nr]]$avg_log2FC > 0 &
-    ct_markers_o2_ec[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2_ec[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,][1:50,]
-
 FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
 FeaturePlot(seu_sign_o2, markers[13:18])
-
-FeaturePlot(seu_sign_o2, markers_ec[1:6])
-FeaturePlot(seu_sign_o2, markers_ec[7:12])
-FeaturePlot(seu_sign_o2, markers_ec[13:18])
 
 # marker genes (cap)
 FeaturePlot(seu_sign_o2, "Mcf2l")
@@ -1278,28 +1245,15 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
-markers_ec <- ct_markers_o2_ec[[nr]]$genes[
-    ct_markers_o2_ec[[nr]]$avg_log2FC > 0 &
-    ct_markers_o2_ec[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2_ec[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
-
+# check for "Axl", "Lpar6", "Clec14a", "Ephb4" in rerun
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,][1:50,]
 
-ct_markers_o2_ec[[nr]][
-    #ct_markers_o2_ec[[nr]]$avg_log2FC > 0 &
-    ct_markers_o2_ec[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2_ec[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,][1:50,]
-
 FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
 FeaturePlot(seu_sign_o2, markers[13:18])
-
-FeaturePlot(seu_sign_o2, markers_ec[1:6])
-FeaturePlot(seu_sign_o2, markers_ec[7:12])
-FeaturePlot(seu_sign_o2, markers_ec[13:18])
 
 FeaturePlot(seu_sign_o2, "Axl")
 FeaturePlot(seu_sign_o2, "Lpar6")
@@ -1309,18 +1263,18 @@ FeaturePlot(seu_sign_o2, "Clec14a")
 FeaturePlot(seu_sign_o2, "Prex2")
 FeaturePlot(seu_sign_o2, "Lrg1")
 
-# AEC 
-FeaturePlot(seu_sign_o2, "Sox18") 
-FeaturePlot(seu_sign_o2, "Clec14a") 
+# AEC
+FeaturePlot(seu_sign_o2, "Sox18")
+FeaturePlot(seu_sign_o2, "Clec14a")
 
-# VEC 
-FeaturePlot(seu_sign_o2, "Nr2f2") 
-FeaturePlot(seu_sign_o2, "Ephb4") 
-FeaturePlot(seu_sign_o2, "Vcam1") 
+# VEC
+FeaturePlot(seu_sign_o2, "Nr2f2")
+FeaturePlot(seu_sign_o2, "Ephb4")
+FeaturePlot(seu_sign_o2, "Vcam1")
 
 # non capillary
-FeaturePlot(seu_sign_o2, "Rgcc") 
-FeaturePlot(seu_sign_o2, "Cd34") 
+FeaturePlot(seu_sign_o2, "Rgcc")
+FeaturePlot(seu_sign_o2, "Cd34")
 
 # this cluster is mostly marked by NEGATIVE markers
 
@@ -1332,7 +1286,6 @@ signature_df[signature_df$genes %in% SOI,]
 # Aebp1: tumor ECs, proliferation, migration, angiogenesis, microvessel
 
 seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Ven EC1, non-pbs"
-# CHECK BATCH
 ```
 
 ```{r others2_cluster2}
@@ -1343,28 +1296,15 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
-markers_ec <- ct_markers_o2_ec[[nr]]$genes[
-    ct_markers_o2_ec[[nr]]$avg_log2FC > 0 &
-    ct_markers_o2_ec[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2_ec[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
-
+# check "Tmcc3", "Dll4", "Klf4", "Itga6", "Nr2f2", "Vcam1", "Nfkbia", "Spry2"
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,][1:50,]
 
-ct_markers_o2_ec[[nr]][
-    #ct_markers_o2_ec[[nr]]$avg_log2FC > 0 &
-    ct_markers_o2_ec[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2_ec[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,][1:50,]
-
 FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
 FeaturePlot(seu_sign_o2, markers[13:18])
-
-FeaturePlot(seu_sign_o2, markers_ec[1:6])
-FeaturePlot(seu_sign_o2, markers_ec[7:12])
-FeaturePlot(seu_sign_o2, markers_ec[13:18])
 
 FeaturePlot(seu_sign_o2, "Tmcc3")
 FeaturePlot(seu_sign_o2, "Spry2")
@@ -1385,7 +1325,7 @@ signature_df[signature_df$genes %in% SOI,]
 # Tmcc3  
 # Spry2: related to Dll4, negatively regulate angiogenesis 
 # Klf4: integrity, pro inflammation and prolif, homeostatic, angiogenesis
-# Dll4: arterial diff, restricts vessel branching, sprouting angiogenesis and artery formation, capillary endothelial tip cells, capillarization of liver sinusoids 
+# Dll4: arterial diff, sprouting angiogenesis and artery formation, capillary  tip cells, capillarization of liver sinusoids 
 # Itga6; angiogenesis, tumor ECs, related to sprouting, 
 # Sdc4: wound healing and angiogenesis EC dysfunction or inflammation 
 
@@ -1401,30 +1341,15 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
-markers_ec <- ct_markers_o2_ec[[nr]]$genes[
-    ct_markers_o2_ec[[nr]]$avg_log2FC > 0 &
-    ct_markers_o2_ec[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2_ec[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
-
+# check "Fabp4", "Ier3", "Cd36", "Lrg1", "Srgn", "Cldn5", "Fam167b", "Vcam1"
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,]
 
-ct_markers_o2_ec[[nr]][
-    #ct_markers_o2_ec[[nr]]$avg_log2FC > 0 &
-    ct_markers_o2_ec[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2_ec[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,]
-
-
 FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
 FeaturePlot(seu_sign_o2, markers[13:18])
-
-
-FeaturePlot(seu_sign_o2, markers_ec[1:6])
-FeaturePlot(seu_sign_o2, markers_ec[7:12])
-FeaturePlot(seu_sign_o2, markers_ec[13:18])
 
 FeaturePlot(seu_sign_o2, "Vcam1") # activation
 FeaturePlot(seu_sign_o2, "Kdr") # activation
@@ -1449,7 +1374,8 @@ signature_df[signature_df$genes %in% SOI,]
 # Cldn5 - sinusoidal in human, tight junction protein in ECs
 # Fam167b, aorta-specific EC, pancreas ECs, kidney capillary cells
 
-seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Ven EC2, pbs"
+seu_sign_o2$annotated_reclustered[
+  seu_sign_o2$seurat_clusters == nr] <- "Ven EC2, pbs"
 ```
 
 ### Plots

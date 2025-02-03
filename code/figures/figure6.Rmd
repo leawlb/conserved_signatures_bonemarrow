@@ -150,6 +150,7 @@ b_plot_theme <- b_plot +
             colors = mycolors_to1,
             limits = c(0, 1),
             breaks = c(0, 0.5, 1))
+b_plot_theme
 ```
 
 #### Construct
@@ -210,6 +211,7 @@ for(genes in c("hs", "sig")){
              fill = clust_prop)) + 
     geom_tile()
 }
+plotted_gg_mouse
 ```
 
 ```{r c_set_theme}
@@ -278,6 +280,7 @@ c_plot <- ggpubr::ggarrange(
   align = "v",
   heights = c(1, 1.2)
 )
+c_plot
 ```
 
 
@@ -366,6 +369,7 @@ d_plot <- ggplot(all_data,
        fill = "Accurately\nAssigned") +
   scale_fill_manual(values = c(max(mycolors_to1_grey), 
                                min(mycolors_to1_grey)))
+d_plot
 ```
 
 
@@ -464,6 +468,7 @@ skip_set_size_plot <- function(ups) {
                                          ups$Matrix, 
                                          heights = ups$mb.ratio))
 }
+print(skip_set_size_plot(ups))
 ```
 
 ```{r e_plot_export}

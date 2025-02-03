@@ -546,7 +546,8 @@ ct_markers_o3 <- lapply(clust_list_o3, function(x){
   
   # need to add only ensembl gene symbols as I will not be using others
   markers$symbol <- markers$genes
-  markers$symbol <- ensembl_sign$HSAPIENS_SYMBOL[base::match(markers$genes, ensembl_sign$ENSG_ID)]
+  markers$symbol <- ensembl_sign$HSAPIENS_SYMBOL[
+    base::match(markers$genes, ensembl_sign$ENSG_ID)]
   return(markers)
 })
 names(ct_markers_o3) <- reclustered_o3
@@ -555,6 +556,27 @@ ct_markers_df_o3 <- bind_rows(ct_markers_o3)
 head(ct_markers_df_o3)
 
 ```
+
+```{r prep_bcd}
+# make a signature gene list with cell types of origin for helping annotation
+
+signature_df <- data.frame(
+  genes = unique(ensembl_sign$MMUS_SYMBOL),
+  celltype = vector(length = length(unique(ensembl_sign$MMUS_SYMBOL)), mode = "character")
+)
+
+# ugly solution but works for this purpose
+for(ct in names(geneset_list_str)){
+  for(g in signature_df$genes){
+    if(g %in% geneset_list_str[[ct]]$conserved_signature){
+      signature_df[which(signature_df$genes == g),]$celltype <- paste(
+        signature_df[which(signature_df$genes == g),]$celltype, ct)
+    }
+  }
+}
+
+```
+
 
 #### Others -3
 
@@ -577,12 +599,13 @@ markers <- ct_markers_o3[[nr]]$gene[
 ct_markers_o3[[nr]][
   !is.na(ct_markers_o3[[nr]]$symbol) & 
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
-    ct_markers_o3[[nr]]$p_val_adj < 0.05,]
+    ct_markers_o3[[nr]]$p_val_adj < 0.05,][1:50,]
 
 FeaturePlot(seu_sign_o3, markers[1:6])
 FeaturePlot(seu_sign_o3, markers[7:12])
 FeaturePlot(seu_sign_o3, markers[13:18])
 
+FeaturePlot(seu_sign_o3, "ENSG00000107562") #CXCL12
 FeaturePlot(seu_sign_o3, "ENSG00000145824") #CXCL14
 FeaturePlot(seu_sign_o3, "ENSG00000164176") #EDIL3
 FeaturePlot(seu_sign_o3, "ENSG00000154175") #ABI3BP
@@ -590,40 +613,22 @@ FeaturePlot(seu_sign_o3, "ENSG00000109610") #SOD3
 FeaturePlot(seu_sign_o3, "ENSG00000163359") #COL6A3
 FeaturePlot(seu_sign_o3, "ENSG00000141338") #ABCA8
 
-# CXCL14  human niche stromal cells https://ashpublications.org/blood/article/142/1/73/495206/Characterization-of-the-bone-marrow-niche-in
-#         dermal fibro, anti CXCL12 https://journal-inflammation.biomedcentral.com/articles/10.1186/s12950-015-0109-9
-#         fibro growth factor https://doi.org/10.1073/pnas.0813144106
-#         human umbilical MSCs https://www.nature.com/articles/jhg201463
+# genes of interest
+GOI <- c("CXCL12", "CXCL14", "EDIL3", "ABI3BP", "SOD3", "COL6A3", "ABCA8")
+# mouse symbols of interest
+SOI <- ensembl_sign$MMUS_SYMBOL[ensembl_sign$HSAPIENS_SYMBOL %in% GOI]
+# cell types of origin for signature genes
+signature_df[signature_df$genes %in% SOI,]
 
-# ABCA8   cancer fibro https://www.sciencedirect.com/science/article/pii/S1535947624001336
-#         Ccl11+ fibroblasts https://www.sciencedirect.com/science/article/pii/S2352345X24000286
-#         high density lipo protein efflux https://www.ahajournals.org/doi/pdf/10.1161/atvbaha.117.309574
-#         fibro subset in intestine https://pmc.ncbi.nlm.nih.gov/articles/PMC8604730/
+# CXCL12: CAR cell
+# CXCL14: fibro, stromal, MSC
+# ABCA8: cancer fibro, normal fibro, lipo
+# EDIL3: osteo, EMT, CAR/Osteo
+# ABI3BP: MSC, quiescence, osteogenic and adipogenic differentiation, cartilage
+# SOD3: Chondro + osteogenesis, MSC, cartilage
+# COL6A3: osteoadipo diff, chondro
 
-# EDIL3   osteo diff https://pmc.ncbi.nlm.nih.gov/articles/PMC5705136/
-#         EMT regulator https://www.nature.com/articles/s41420-020-00322-x
-#         CAR and osteo cells, niche https://pmc.ncbi.nlm.nih.gov/articles/PMC5617665/
-#         osteogenic activity https://www.cell.com/iscience/fulltext/S2589-0042(24)00019-1
-
-# ABI3BP  MSC, quiescence, osteogenic and adipogenic differentiation. https://pmc.ncbi.nlm.nih.gov/articles/PMC3775980/
-#         may be non-proliferative https://www.frontiersin.org/journals/cardiovascular-medicine/articles/10.3389/fcvm.2019.00023/full
-#         MSc and osteoporosis, might switch BMSCs between proliferative and differentiating state https://pubmed.ncbi.nlm.nih.gov/38164361/
-#         MSC https://www.sciencedirect.com/science/article/pii/S2352304219300169
-#         articular cartilage https://pmc.ncbi.nlm.nih.gov/articles/PMC4089504/
-#         articular cartilage https://pmc.ncbi.nlm.nih.gov/articles/PMC7402331/
-#         articular cartilage origin paper https://www.sciencedirect.com/science/article/pii/S1063458410003328
-
-# SOD3    chondrogenesis https://pubmed.ncbi.nlm.nih.gov/30654942/
-#         osteogenesis https://pubmed.ncbi.nlm.nih.gov/38141889/
-#         MSC maintenance and differentiation review, chondrogenesis https://cellandbioscience.biomedcentral.com/articles/10.1186/s13578-020-00386-3
-#         cartilage https://www.sciencedirect.com/science/article/pii/S1568163720303846
-
-# COL6A3  osteoadipo diff https://pubmed.ncbi.nlm.nih.gov/38270688/
-#         related to osteoprosos https://pubmed.ncbi.nlm.nih.gov/32999266/
-#         osteoblast matrix https://stemcellres.biomedcentral.com/articles/10.1186/s13287-015-0223-x
-#         in chondros https://www.biorxiv.org/content/10.1101/2022.12.19.520461v1.full
-
-seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "Osteo-Chondro-like CAR"
+seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "Fibro/Chondro-like CAR"
 ```
 
 ```{r others3_cluster1}
@@ -632,16 +637,18 @@ markers <- ct_markers_o3[[nr]]$gene[
   !is.na(ct_markers_o3[[nr]]$symbol) & 
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
     ct_markers_o3[[nr]]$p_val_adj < 0.05]
+# mesenchymal
 
 ct_markers_o3[[nr]][
   !is.na(ct_markers_o3[[nr]]$symbol) & 
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
-    ct_markers_o3[[nr]]$p_val_adj < 0.05,]
+    ct_markers_o3[[nr]]$p_val_adj < 0.05,][1:50,]
 
 FeaturePlot(seu_sign_o3, markers[1:6])
 FeaturePlot(seu_sign_o3, markers[7:12])
 FeaturePlot(seu_sign_o3, markers[13:18])
 
+FeaturePlot(seu_sign_o3, "ENSG00000107562") #CXCL12
 FeaturePlot(seu_sign_o3, "ENSG00000163430") #FSTL1
 FeaturePlot(seu_sign_o3, "ENSG00000196549") #MME
 FeaturePlot(seu_sign_o3, "ENSG00000257017") #HP
@@ -651,43 +658,21 @@ FeaturePlot(seu_sign_o3, "ENSG00000166147") #FBN1
 FeaturePlot(seu_sign_o3, "ENSG00000146374") #RSPO3
 FeaturePlot(seu_sign_o3, "ENSG00000140092") #FBLN5
 
-# FSTL1, MME, HP, TJP1, SPARCL1, FBN1, RSPO3
+GOI <- c("CXCL12", "FSTL1", "MME", "HP", "TJP1", "SPARCL1", "FBN1",
+         "RSPO3", "FBLN5")
+SOI <- ensembl_sign$MMUS_SYMBOL[ensembl_sign$HSAPIENS_SYMBOL %in% GOI]
+signature_df[signature_df$genes %in% SOI,]
 
-# FSTL1   suppressed osteo during infl https://pubmed.ncbi.nlm.nih.gov/35026647/
-#         MSC protection https://pmc.ncbi.nlm.nih.gov/articles/PMC6330478/
-#         regulator of proliferation and differentiation in MSCs https://stemcellres.biomedcentral.com/articles/10.1186/s13287-022-03042-4
-#         enhance MSC differentiation to chondrocytes https://www.sciencedirect.com/science/article/pii/S156757692030059X
-#         adipogenesis https://pmc.ncbi.nlm.nih.gov/articles/PMC2849861/
+# CXCL12: CAR cell
+# FSTL1: MSC protection, differentiation, to chondrocytes, adipogenesis 
+# HP: adipogenesis
+# MME: osteo and adipo genesis, enriched in osteoblasts, preadipocytes
+# TJP1: tight junction protein, MSC migration 
+# SPARCL1: MSCs/Progs, skeletal stem cell, chondro/fibro, negative for adipog.
+# FBN1: related to TGFβ, MSC diff, MSC niche/decisions, MSC activitiy
+# RSPO3: osteoblast, niche, bone density
 
-# HP      haptoglobin, adipogenesis, https://academic.oup.com/edrv/article/37/4/403/2567100
-
-# MME     osteo and adipo genesis https://pmc.ncbi.nlm.nih.gov/articles/PMC9526692/ # CD92
-#         osteo and adipo genesis https://pubmed.ncbi.nlm.nih.gov/24239963/
-#         enriched in osteoblasts https://pmc.ncbi.nlm.nih.gov/articles/PMC11301355/
-#         preadipocytes https://www.nature.com/articles/s42003-023-04504-y
-
-# TJP1    tight junction protein, also called ZO1
-#         MSC migration https://www.nature.com/articles/s41420-023-01793-4
-#         can be expressed in MSC https://www.cell.com/cms/10.1016/j.stemcr.2015.02.002/attachment/f3ad90ab-28e4-4980-990b-e6f35611c440/mmc3.pdf
-#         can be expressed in MSC https://pmc.ncbi.nlm.nih.gov/articles/PMC8275434/
-
-# SPARCL1 MSCs/Progs also related to DCN https://pmc.ncbi.nlm.nih.gov/articles/PMC10192814/
-#         skeletal stem cell https://www.biorxiv.org/content/10.1101/2020.06.17.156836v1.full i think this is just biorxiv of the first one
-#         also expressed in ECs, especially sinusoidal https://www.nature.com/articles/s41467-021-27161-3
-#         negative regulator of adipo https://pmc.ncbi.nlm.nih.gov/articles/PMC8654481/
-#         mouse muscle cell diff https://www.nature.com/articles/s41419-019-2049-4
-#         chondros in arthritis https://www.sciencedirect.com/science/article/pii/S2214031X24000287
-#         liver cancer fibros https://www.sciencedirect.com/science/article/pii/S1936523320304733
-
-# FBN1    related to TGFβ, MSC diff, https://pubmed.ncbi.nlm.nih.gov/26610678/
-#         MSC niche/decisions https://www.frontiersin.org/journals/cell-and-developmental-biology/articles/10.3389/fcell.2023.1302285/full
-#         MSC activitiy regulation https://onlinelibrary.wiley.com/doi/full/10.1002/jbmr.2598
-
-# RSPO3   osteoblast diffhttps://www.nature.com/articles/s41467-021-25124-2
-#         niche https://pmc.ncbi.nlm.nih.gov/articles/PMC9979769/
-#         bone density https://pmc.ncbi.nlm.nih.gov/articles/PMC9681208/
-
-seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "Osteo-like CAR"
+seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "multi-lineage CAR"
 ```
 
 ```{r others3_cluster2}
@@ -700,15 +685,14 @@ markers <- ct_markers_o3[[nr]]$gene[
 ct_markers_o3[[nr]][
   !is.na(ct_markers_o3[[nr]]$symbol) & 
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
-    ct_markers_o3[[nr]]$p_val_adj < 0.05,]
+    ct_markers_o3[[nr]]$p_val_adj < 0.05,][1:50,]
 
 FeaturePlot(seu_sign_o3, markers[1:6])
 FeaturePlot(seu_sign_o3, markers[7:12])
 FeaturePlot(seu_sign_o3, markers[13:18])
 
-FeaturePlot(seu_sign_o3, "ENSG00000107562") #Cxcl12
-FeaturePlot(seu_sign_o3, "ENSG00000049130") #Kitl
-
+FeaturePlot(seu_sign_o3, "ENSG00000107562") #CXCL12
+FeaturePlot(seu_sign_o3, "ENSG00000049130") #KITL
 FeaturePlot(seu_sign_o3, "ENSG00000113721") #PDGFRB
 FeaturePlot(seu_sign_o3, "ENSG00000166147") #FBN1
 FeaturePlot(seu_sign_o3, "ENSG00000168542") #COL3A1
@@ -716,38 +700,18 @@ FeaturePlot(seu_sign_o3, "ENSG00000182326") #C1S
 FeaturePlot(seu_sign_o3, "ENSG00000152583") #SPARCL1
 FeaturePlot(seu_sign_o3, "ENSG00000141338") #ABCA8
 
-# PDGFRB, FBN1, COL3A1, C1S, CYP1B1, SPARCL1,  ABCA8
+GOI <- c("CXCL12", "KITL", "PDGFRB", "FBN1", "COL3A1", "C1S", "SPARCL1",
+         "ABCA8")
+SOI <- ensembl_sign$MMUS_SYMBOL[ensembl_sign$HSAPIENS_SYMBOL %in% GOI]
+signature_df[signature_df$genes %in% SOI,]
 
-# Pdgfrb  fibroblast activation https://pubmed.ncbi.nlm.nih.gov/23748876/
-#         migration of MSC, but osteo inhibition https://pubmed.ncbi.nlm.nih.gov/18410236/
-#         fibrotic BM https://haematologica.org/article/view/9982
-#         
-
-# FBN1    related to TGFβ, MSC diff, https://pubmed.ncbi.nlm.nih.gov/26610678/
-#         MSC niche/decisions https://www.frontiersin.org/journals/cell-and-developmental-biology/articles/10.3389/fcell.2023.1302285/full
-#         MSC activitiy regulation https://onlinelibrary.wiley.com/doi/full/10.1002/jbmr.2598
-
-# COL3A1  osteoblast diff, bone related https://pubmed.ncbi.nlm.nih.gov/24626604/
-#         fetal MSCs, co-expressed with Dcn, and Clec3b, Col1a1, Pdgfra https://www.nature.com/articles/s41467-022-28775-x
-#         human cancer fibros https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2023.1313536/full
-#         human fibrosis https://www.sciencedirect.com/science/article/pii/S0378111919304652
-#         mouse pdpn-expressing cells in fibrosis https://academic.oup.com/discovimmunology/article/1/1/kyac008/6835131#google_vignette
-
-# C1S     chondrocytes, ossification https://pubmed.ncbi.nlm.nih.gov/8082118/
-#         cartilage remodelling https://pubmed.ncbi.nlm.nih.gov/8766156/
-
-# SPARCL1 MSCs/Progs also related to DCN https://pmc.ncbi.nlm.nih.gov/articles/PMC10192814/
-#         skeletal stem cell https://www.biorxiv.org/content/10.1101/2020.06.17.156836v1.full i think this is just biorxiv of the first one
-#         also expressed in ECs, especially sinusoidal https://www.nature.com/articles/s41467-021-27161-3
-#         negative regulator of adipo https://pmc.ncbi.nlm.nih.gov/articles/PMC8654481/
-#         mouse muscle cell diff https://www.nature.com/articles/s41419-019-2049-4
-#         chondros in arthritis https://www.sciencedirect.com/science/article/pii/S2214031X24000287
-#         liver cancer fibros https://www.sciencedirect.com/science/article/pii/S1936523320304733
-
-# ABCA8   cancer fibro https://www.sciencedirect.com/science/article/pii/S1535947624001336
-#         Ccl11+ fibroblasts https://www.sciencedirect.com/science/article/pii/S2352345X24000286
-#         high density lipo protein efflux https://www.ahajournals.org/doi/pdf/10.1161/atvbaha.117.309574
-#         fibro subset in intestine https://pmc.ncbi.nlm.nih.gov/articles/PMC8604730/
+# CXCL12: CAR cell
+# PDGFRB: fibroblast activation, MSC
+# FBN1: related to TGFβ, MSC diff, MSC niche/decisions, MSC activitiy
+# COL3A1: Fibro
+# C1S; chondrocytes, ossification, cartilage remodelling 
+# SPARCL1: MSCs/Progs, skeletal stem cell, chondro/fibro, negative for adipog.
+# ABCA8: cancer fibro, normal fibro, lipo
 
 seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "Fibro-like CAR"
 ```
@@ -768,50 +732,37 @@ FeaturePlot(seu_sign_o3, markers[1:6])
 FeaturePlot(seu_sign_o3, markers[7:12])
 FeaturePlot(seu_sign_o3, markers[13:18])
 
-# EMP1, ID1, DEPP1, LMNA, FABP4, OSR2, PPP1R15A, CCN2, OLFML3, RARRES2
+FeaturePlot(seu_sign_o3, "ENSG00000107562") #CXCL12
+FeaturePlot(seu_sign_o3, "ENSG00000134531") #EMP1
+FeaturePlot(seu_sign_o3, "ENSG00000166147") #ID1
+FeaturePlot(seu_sign_o3, "ENSG00000165507") #DEPP1
+FeaturePlot(seu_sign_o3, "ENSG00000160789") #LMNA  
+FeaturePlot(seu_sign_o3, "ENSG00000170323") #FABP4
+FeaturePlot(seu_sign_o3, "ENSG00000164920") #OSR2
+FeaturePlot(seu_sign_o3, "ENSG00000087074") #PPP1R15A
 
-# EMP1  cancer fibros https://www.frontiersin.org/journals/immunology/articles/10.3389/fimmu.2023.1313536/full
-#       fibro https://onlinelibrary.wiley.com/doi/10.1002/jbm4.10795
-#       general cell adhesion and growth, cancer gene
+GOI <- c("CXCL12", "EMP1", "ID1", "DEPP1", "LMNA", "FABP4", "OSR2",
+         "PPP1R15A")
+SOI <- ensembl_sign$MMUS_SYMBOL[ensembl_sign$HSAPIENS_SYMBOL %in% GOI]
+signature_df[signature_df$genes %in% SOI,]
 
-# ID1   required for HSC niche https://pubmed.ncbi.nlm.nih.gov/19478045/
-#       osteogenic https://bmcgenomics.biomedcentral.com/articles/10.1186/1471-2164-8-70
-
-# DEPP1 committed pre-adipocytes https://www.nature.com/articles/s41413-020-0097-0
-#       cancer fibroblasts https://pmc.ncbi.nlm.nih.gov/articles/PMC10140349/
-#       autoophagy https://faseb.onlinelibrary.wiley.com/doi/pdf/10.1096/fj.202100896R
-
-# LMNA  osteoporosis https://pmc.ncbi.nlm.nih.gov/articles/PMC5978267/
-#       migration and osteogenesis https://pmc.ncbi.nlm.nih.gov/articles/PMC7348862/
-#       anit-chondro diff https://www.sciencedirect.com/science/article/pii/S187350611300086X
-
-# FABP4 adipogenic https://pmc.ncbi.nlm.nih.gov/articles/PMC8910760/
-#       senscence in MSC, fatty acid metabolic activity https://pmc.ncbi.nlm.nih.gov/articles/PMC8891618/
-#       marrow adipocytes https://www.sciencedirect.com/science/article/pii/S0006497118500550
-#       adipogenesis status https://biosignaling.biomedcentral.com/articles/10.1186/s12964-023-01231-z
-#       leukemia bone marrow MSC https://www.nature.com/articles/s41375-019-0568-8
-#       adipocyte control https://pmc.ncbi.nlm.nih.gov/articles/PMC9867004/
-
-# OSRs  uncommited adipose progenitors https://pmc.ncbi.nlm.nih.gov/articles/PMC10604679/
-
-# PPP1R15A  related to weight gain https://www.nature.com/articles/s41598-019-39562-y 
-#           adipocytic signalling https://pmc.ncbi.nlm.nih.gov/articles/PMC9067510/
-#           also called GADD34
-#           related to autphagy and stress
-
-# RARRES2 osteosarcoma stemness, interaction with macrophages https://www.nature.com/articles/s41598-024-52738-5
-#         interaction of SPP1 cells with macrophages https://www.nature.com/articles/s41467-022-29366-6
-#         global adipokine https://pubmed.ncbi.nlm.nih.gov/19303973/
-#         related to obesity and adipocytes https://www.sciencedirect.com/science/article/pii/S2589004223005722
-#         expression in adipocytes https://www.nature.com/articles/s41598-020-70625-7
-#         
+# CXCL12: CAR cell
+# EMP1: fibro, growth
+# ID1: required for HSC niche, osteogenic
+# DEPP1: committed pre-adipocytes, cancer fibroblasts, autoophagy
+# LMNA:  osteoporosis, migration and osteogenesis, anti-chondro diff 
+# FABP4: adipogenic, MSC, fatty acid metabolic, marrow adipocytes, adipogenesis 
+# OSR2:  uncommited adipose progenitors 
+# PPP1R15A: adipocytic signalling, autophagy and stress
 
 seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "Adipo-like CAR"
 ```
 
-```{r others3_cluster7}
+```{r}
 DimPlot(seu_sign_o3, dims = c(1,2), group.by = "seurat_clusters")
+```
 
+```{r others3_cluster7}
 nr <- "7"
 markers <- ct_markers_o3[[nr]]$gene[
   !is.na(ct_markers_o3[[nr]]$symbol) & 
@@ -821,15 +772,25 @@ markers <- ct_markers_o3[[nr]]$gene[
 ct_markers_o3[[nr]][
   !is.na(ct_markers_o3[[nr]]$symbol) & 
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
-    ct_markers_o3[[nr]]$p_val_adj < 0.05,]
+    ct_markers_o3[[nr]]$p_val_adj < 0.05,][1:50,]
 
 FeaturePlot(seu_sign_o3, markers[1:6])
 FeaturePlot(seu_sign_o3, markers[7:12])
 FeaturePlot(seu_sign_o3, markers[13:18])
 
-# CPE, SP7, PTPRD, RUNX2, PALS2, OMD, MMP13, PTH1R, CD9, TGM2
+FeaturePlot(seu_sign_o3, "ENSG00000107562") #CXCL12 actually only weakly expr.
 
+GOI <- c("CPE", "SP7", "PTPRD", "RUNX2", "PALS2", "OMD", "MMP13",
+         "PTH1R", "CD9")
+SOI <- ensembl_sign$MMUS_SYMBOL[ensembl_sign$HSAPIENS_SYMBOL %in% GOI]
+signature_df[signature_df$genes %in% SOI,]
+
+# CPE, SP7, PTPRD, RUNX2, PALS2, OMD, MMP13, PTH1R, CD9
 seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "Osteo-Chondro"
+```
+
+```{r}
+DimPlot(seu_sign_o3, dims = c(1,2), group.by = "seurat_clusters")
 ```
 
 ```{r others3_cluster5}
@@ -842,50 +803,36 @@ markers <- ct_markers_o3[[nr]]$gene[
 ct_markers_o3[[nr]][
   !is.na(ct_markers_o3[[nr]]$symbol) & 
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
-    ct_markers_o3[[nr]]$p_val_adj < 0.05,]
+    ct_markers_o3[[nr]]$p_val_adj < 0.05,][1:50,]
 
 FeaturePlot(seu_sign_o3, markers[1:6])
 FeaturePlot(seu_sign_o3, markers[7:12])
 FeaturePlot(seu_sign_o3, markers[13:18])
 
-FeaturePlot(seu_sign_o3, "ENSG00000149564") #ESAM
+FeaturePlot(seu_sign_o3, "ENSG00000106537") #TSPAN13
+FeaturePlot(seu_sign_o3, "ENSG00000149564") #ESAM # BARELY EXPR
+FeaturePlot(seu_sign_o3, "ENSG00000042493") #CAPG
 FeaturePlot(seu_sign_o3, "ENSG00000174059") #CD34
 FeaturePlot(seu_sign_o3, "ENSG00000102760") #RGCC
-FeaturePlot(seu_sign_o3, "ENSG00000066056") #TIE1
-FeaturePlot(seu_sign_o3, "ENSG00000130300") #PLVAP
-
-FeaturePlot(seu_sign_o3, "ENSG00000149564") #CAVIN2
+FeaturePlot(seu_sign_o3, "ENSG00000008394") #MGST1
 FeaturePlot(seu_sign_o3, "ENSG00000135218") #CD36
-FeaturePlot(seu_sign_o3, "ENSG00000148400") #Notch1
+FeaturePlot(seu_sign_o3, "ENSG00000148400") #NOTCH1
 
-# some classical EC markers
-# other specufuc genes: TSPAN13, CAPG, MGST1, CD36, GPX1, PPP1R14B, CAVIN2, TXN
+GOI <- c("CD34", "RGCC", "TSPAN13", "CAPG", "MGST1", "GPX1",
+         "PPP1R14B", "TXN", "CD36", "NOTCH1")
+SOI <- ensembl_sign$MMUS_SYMBOL[ensembl_sign$HSAPIENS_SYMBOL %in% GOI]
+signature_df[signature_df$genes %in% SOI,]
 
-# Cd36    also related to fatty acid, FA uptake, angiogenesis, response to injury
-
-# TSPAN13 dysfunctional Endothelium https://pubmed.ncbi.nlm.nih.gov/36140731/
-
-# CAPG    motility and shear stress in ECs https://pubmed.ncbi.nlm.nih.gov/12754261/
-#         shear stress exposure https://journals.physiology.org/doi/full/10.1152/ajpcell.00218.2005
-
-# MGST1   antioxidant https://pmc.ncbi.nlm.nih.gov/articles/PMC10586476/
-#         oxidative stress https://www.ahajournals.org/doi/10.1161/HYPERTENSIONAHA.119.13472
-    
-# GPX1    oxidative stress https://pubmed.ncbi.nlm.nih.gov/12829378/ in ECs
-#         endothelial dysfunction, oxidative stress
-#         oxidant stress
-
-# PPP1R14B  endo migration https://www.frontiersin.org/journals/genetics/articles/10.3389/fgene.2021.763561/full
-
-# CAVIN2   EC function, stability, caveolae
-
-# TXN     antioxidant (thioredoxin)
-#         redox sensor (https://pubmed.ncbi.nlm.nih.gov/24130874/)
-
+# CD36: related to FA uptake, angiogenesis, response to injury
+# TSPAN13: dysfunctional endothelium 
+# CAPG: motility and shear stress in ECs 
+# MGST1: antioxidant, oxidative stress
+# GPX1: oxidative stress, endothelial dysfunction
+# PPP1R14B: endo migration
+# CD34: arteriolar
+# TXN: antioxidant (thioredoxin), redox sensor 
 # RGCC capillary
 # CD34 a little bit
-
-# TIE1, PLVAP, ESAM, CAVIN2, = classical EC markers
 
 seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "EC1"
 ```
@@ -900,38 +847,26 @@ markers <- ct_markers_o3[[nr]]$gene[
 ct_markers_o3[[nr]][
   !is.na(ct_markers_o3[[nr]]$symbol) & 
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
-    ct_markers_o3[[nr]]$p_val_adj < 0.05,]
+    ct_markers_o3[[nr]]$p_val_adj < 0.05,][1:50,]
 
 FeaturePlot(seu_sign_o3, markers[1:6])
 FeaturePlot(seu_sign_o3, markers[7:12])
 FeaturePlot(seu_sign_o3, markers[13:18])
 
-# PECAM1, FLI1, ICAM2, CRIP1, FCER1G, SH2D3C, GNGT2, LYN, IFI30, ARPC3, PLEKHO1, CRIP1
+FeaturePlot(seu_sign_o3, "ENSG00000261371") #PECAM1 
+FeaturePlot(seu_sign_o3, "ENSG00000151702") #FLI1
 
-FeaturePlot(seu_sign_o3, "ENSG00000261371") #PECAM1 # way more in 3
-FeaturePlot(seu_sign_o3, "ENSG00000151702") #FLI1 # more in 3
-FeaturePlot(seu_sign_o3, "ENSG00000179776") #CDH5
-FeaturePlot(seu_sign_o3, "ENSG00000184113") #CLDN5
-FeaturePlot(seu_sign_o3, "ENSG00000125266") #EFNB2
-FeaturePlot(seu_sign_o3, "ENSG00000102755") #FLT1
+FeaturePlot(seu_sign_o3, "ENSG00000108622") #ICAM2
+FeaturePlot(seu_sign_o3, "ENSG00000213145") #CRIP1
+FeaturePlot(seu_sign_o3, "ENSG00000158869") #FCER1G
+FeaturePlot(seu_sign_o3, "ENSG00000108622") #ICAM2
+FeaturePlot(seu_sign_o3, "ENSG00000095370") #SH2D3C
 
-# PCAM1 FLI1 ICAM2 typical EC
-# Fcer1g, IFI30 inflammation
+GOI <- c("PECAM1", "FLI1", "ICAM2", "CRIP1", "FCER1G", "SH2D3C")
+SOI <- ensembl_sign$MMUS_SYMBOL[ensembl_sign$HSAPIENS_SYMBOL %in% GOI]
+signature_df[signature_df$genes %in% SOI,]
 
-# CRIP1 prolif
-
-# SH2D3C https://www.ahajournals.org/doi/10.1161/CIRCULATIONAHA.120.052318 capillary signalling
-# GNGT2: signalling
-
-# ARPC3 cytoskeleton
-
-# Lyn   EC barrier function https://pmc.ncbi.nlm.nih.gov/articles/PMC3862279/
-#       healthy bone marrow EC https://www.nature.com/articles/s41467-023-36824-2 anti-inflammatory
-
-# IFI30   sprouting angiogenesis zebrafish https://pmc.ncbi.nlm.nih.gov/articles/PMC9325957/
-#         niche interaction https://pmc.ncbi.nlm.nih.gov/articles/PMC8302694/
-#         upreglated by inflammation https://www.sciencedirect.com/science/article/pii/S0161589015004320
-
+# SH2D3C: capillary signalling
 
 seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "EC3"
 ```
@@ -946,13 +881,21 @@ markers <- ct_markers_o3[[nr]]$gene[
 ct_markers_o3[[nr]][
   !is.na(ct_markers_o3[[nr]]$symbol) & 
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
-    ct_markers_o3[[nr]]$p_val_adj < 0.05,]
+    ct_markers_o3[[nr]]$p_val_adj < 0.05,][1:50,]
 
 FeaturePlot(seu_sign_o3, markers[1:6])
 FeaturePlot(seu_sign_o3, markers[7:12])
 FeaturePlot(seu_sign_o3, markers[13:18])
 
-# NFKBIA, SRGN, PECAM1, SULF2
+FeaturePlot(seu_sign_o3, "ENSG00000048740") #CELF2
+FeaturePlot(seu_sign_o3, "ENSG00000254087") #LYN
+FeaturePlot(seu_sign_o3, "ENSG00000261371") #PECAM1
+FeaturePlot(seu_sign_o3, "ENSG00000122862") #SRGN
+FeaturePlot(seu_sign_o3, "ENSG00000100906") #NFKBIA
+
+GOI <- c("CELF2", "LYN", "PECAM1", "SRGN", "NFKBIA")
+SOI <- ensembl_sign$MMUS_SYMBOL[ensembl_sign$HSAPIENS_SYMBOL %in% GOI]
+signature_df[signature_df$genes %in% SOI,]
 
 seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "EC2"
 ```
@@ -962,6 +905,12 @@ seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "EC2"
 ```{r umap_others_2}
 DimPlot(seu_sign_o2, dims = c(1,2), group.by = "seurat_clusters")
 DimPlot(seu_sign_o2, dims = c(1,2), group.by = "batch")
+# 1 = non-pbs
+# 2 = pbs
+# 3 = non-pbs
+
+# 4 = non-pbs
+# 0 = pbs
 
 seu_sign_o2$annotated_reclustered <- vector(length = ncol(seu_sign_o2))
 ```
@@ -978,7 +927,7 @@ markers <- ct_markers_o2[[nr]]$genes[
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,]
+    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,][1:50,]
 
 FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
@@ -986,16 +935,17 @@ FeaturePlot(seu_sign_o2, markers[13:18])
 
 FeaturePlot(seu_sign_o2, "Cxcl12")
 
-# Adipo/CAR
+SOI <-  c("Mgp", "Cxcl12", "Hp", "Notch3", "Ebf3", "Dpep1", "Cxcl14", "Cyp1b1",
+          "Esm1")
+signature_df[signature_df$genes %in% SOI,]
 
-# Mgp, Hp, Notch3, Ebf3, Dpep1, Cxcl12, Cxcl14, Cyp1b1, Esm1
+# Mgp: adipogenesis
+# Hp: adipocytes
+# Notch3: osteoblastic - lymphoid niche
+# Dpep1: adipogenic
 
-# Mgp - adipogenesis
-# Hp - adipocytes
-# Notch3 - osteoblastic - lymphoid niche
-# Dpep1 - adipogenic
-
-seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Adipo/CAR1, pbs"
+seu_sign_o2$annotated_reclustered[
+  seu_sign_o2$seurat_clusters == nr] <- "Adipo/CAR1, pbs"
 # CHECK BATCH
 ```
 
@@ -1006,12 +956,10 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
-length(markers)/length(ct_markers_o2[[nr]]$genes) 
-
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,]
+    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,][1:50,]
 
 FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
@@ -1019,11 +967,16 @@ FeaturePlot(seu_sign_o2, markers[13:18])
 
 FeaturePlot(seu_sign_o2, "Cxcl12")
 
-# Osteo/CAR
+SOI <-  c("Alpl", "Limch1", "Lrp4", "Dlx5", "Olfml3", "Sp7", "Pth1r", "Satb2",
+          "Cxcl12")
+signature_df[signature_df$genes %in% SOI,]
 
-# Alpl, Limch1, Lrp4, Dlx5, Olfml3, Sp7, Pth1r, Satb2
+# Alpl: Osteo
+# Sp7: Osteo
+# Pth1r: Osteo-Chondro
 
-seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Osteo/CAR"
+seu_sign_o2$annotated_reclustered[
+  seu_sign_o2$seurat_clusters == nr] <- "Osteo/CAR"
 ```
 
 ```{r others2_cluster4}
@@ -1036,7 +989,7 @@ markers <- ct_markers_o2[[nr]]$genes[
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,]
+    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,][1:50,]
 
 FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
@@ -1044,11 +997,15 @@ FeaturePlot(seu_sign_o2, markers[13:18])
 
 FeaturePlot(seu_sign_o2, "Cxcl12")
 
-# Adipo-CAR
+SOI <-  c("Angptl1", "Kitl", "Esm1", "Igfbp5", "Mme", "C1s1", "Dpep1", "Vegfc",
+          "Cxcl12")
+signature_df[signature_df$genes %in% SOI,]
 
-# Angptl1, Kitl, Esm1, Igfbp5, Mme, C1s1, Dpep1, Vegfc
+# Kitl: CAR
+# Dpeop: adipo
 
-seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Adipo/CAR3, non-pbs"
+seu_sign_o2$annotated_reclustered[
+  seu_sign_o2$seurat_clusters == nr] <- "Adipo/CAR3, non-pbs"
 # CHECK BATCH
 ```
 
@@ -1059,48 +1016,21 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
-length(markers)/length(ct_markers_o2[[nr]]$genes) 
-
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,]
+    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,][1:50,]
 
 FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
 FeaturePlot(seu_sign_o2, markers[13:18])
 
-# Mmp13, Slit2, Lrp4, Ptgis, Gpc1, Mrc2, s100a6, Satb2, Pth1r, Cfh
+SOI <-  c("Mmp13", "Slit2", "Lrp4", "Ptgis", "Gpc1", "Mrc2", "S100a6", "Satb2",
+          "Pth1r", "Cfh")
+signature_df[signature_df$genes %in% SOI,]
 
-# Sp7, Runx2, Alpl, Satb2, Ptgis, S100a6, are osteogenic
+# Sp7, Runx2, Alpl, Satb2, Ptgis, S100a6 are osteogenic
 # Mmp13 Pth1r, Tpm1 are also chondro
-
-# Tpm1 :  mouse chondro https://academic.oup.com/rheumatology/advance-article/doi/10.1093/rheumatology/keae587/7829155
-#         human chondro https://www.nature.com/articles/s41419-021-03832-3
-#         human chondro/OA https://pmc.ncbi.nlm.nih.gov/articles/PMC9713432/
-#         mouse tendon development https://www.cell.com/developmental-cell/fulltext/S1534-5807(23)00072-2?dgcid=raven_jbs_aip_email
-# 
-
-# Mmmp13: human chondros https://pmc.ncbi.nlm.nih.gov/articles/PMC5146981/
-#         human chondros https://www.sciencedirect.com/science/article/pii/S0021925820366953
-#         mouse cartilage ans arthritis https://pubmed.ncbi.nlm.nih.gov/19950295/
-#         mouse chondrocytes https://www.nature.com/articles/s41598-019-52125-5
-
-# Pth1r   mouse cartilage but from osteos https://pubmed.ncbi.nlm.nih.gov/25196529/
-#         mouse hypertrophic chondros https://pubmed.ncbi.nlm.nih.gov/11181543/
-#         chondro diff https://elifesciences.org/articles/82142
-#         osteoblasts https://www.nature.com/articles/s41413-023-00255-y
-#         osteo diff https://elifesciences.org/articles/83345
-
-# Ptgis   osteo https://www.sciencedirect.com/science/article/pii/S0006497119386240
-#         endosteal niche https://stemcellsjournals.onlinelibrary.wiley.com/doi/10.1002/stem.3438
-
-# S100a6  chondro apoptosis https://pubmed.ncbi.nlm.nih.gov/33942537/
-#         MSC https://biomarkerres.biomedcentral.com/articles/10.1186/s40364-023-00515-3
-
-# Satb2   mostly osteo, some chondro https://pmc.ncbi.nlm.nih.gov/articles/PMC3118613/
-#         osteo marker https://pubmed.ncbi.nlm.nih.gov/36442415/
-#         osteo diff https://www.cell.com/fulltext/S0092-8674(06)00578-2
 
 seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Osteo-Chondro"
 ```
@@ -1112,20 +1042,25 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
-length(markers)/length(ct_markers_o2[[nr]]$genes) 
-
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,]
+    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,][1:50,]
 
 FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
 FeaturePlot(seu_sign_o2, markers[13:18])
 
-# aspn, edil3, fmod, lum, mmp2, Prrx2, Mmp2, Sema3c
+SOI <-  c("Aspn", "Edil3", "Fmod", "Lum", "Mmp2", "Prrx2", "Sema3c")
+signature_df[signature_df$genes %in% SOI,]
 
-seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Chondro1"
+# Fmod: Chondro/fibro
+# Lum: fibro/chondro
+# Prrx2: chondro, osteogenic
+# Sema3c: Chondro, related to Itgbl1, cartilage
+
+seu_sign_o2$annotated_reclustered[
+  seu_sign_o2$seurat_clusters == nr] <- "Fibro-Chondro"
 ```
 
 ```{r others2_cluster9}
@@ -1140,23 +1075,25 @@ length(markers)/length(ct_markers_o2[[nr]]$genes)
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,]
+    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,][1:50,]
 
 FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
 FeaturePlot(seu_sign_o2, markers[13:18])
 
-# thbs4, clec3b, Crispld2, Mfap5, Tnxb, Itgbl1, Sema3c, Prrx2, Ssc5d
-
-# thbs4 articular cartilage, articular stem and progenitor cells, 
-# clec3b osteoblasts, mineralization
-# Crispld2 osteogenic potential, cartilage, osteparthritis, cartilage
-# tnxb articular cartilage
+# Thbs4: articular cartilage, articular stem and progenitor cells, 
+# Clec3b osteoblasts, mineralization
+# Crispld2: osteogenic potential, cartilage, osteparthritis, cartilage
+# Tnxb articular cartilage
 # Itgbl1, developing chondrocytes acc to one study (Song)
 # Sema3c related to Itgbl1, cartilage
 # Prrx2 osteogenic
 
-seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Chondro2"
+SOI <-  c("Thbs4", "Clec3b", "Crispld2", "Tnxb", "Itgbl1", "Sema3c", "Prrx2")
+signature_df[signature_df$genes %in% SOI,]
+
+seu_sign_o2$annotated_reclustered[
+  seu_sign_o2$seurat_clusters == nr] <- "Chondro"
 ```
 
 ```{r others2_cluster11}
@@ -1166,30 +1103,27 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
-length(markers)/length(ct_markers_o2[[nr]]$genes) 
-
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,]
+    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,][1:50,]
 
 FeaturePlot(seu_sign_o2, markers[1:4])
 FeaturePlot(seu_sign_o2, markers[5:8])
 FeaturePlot(seu_sign_o2, markers[9:12])
 FeaturePlot(seu_sign_o2, markers[13:16])
 
-# Adipo/CAR, highly Adipo, batch pbs
+SOI <-  c("Scara5", "Pdgfrb", "Snrk", "Ebf3", "Ltbp3", "Mgp", "Hp", "Foxc1")
+signature_df[signature_df$genes %in% SOI,]
 
-# scara5, Pdgfrb, Snrk, Ebf3, Ltbp3, Mgp, Hp, Foxc1, Mgp
+# Scara5: adipogenesis
+# Pdgfrb: fibro
+# Ltbp3: early MSC diff, downregulated during osteo, required for adipo
+# Foxc1: highly adipo
+# Snrk:  adipo
 
-# scara5 adipogenesis
-# Pdgfrb fibro
-# ltbp3 early MSC diff, downregulated during osteo, required for adipo
-# foxc1, highly adipo
-# snrk, also adipi
-# Notch3, adipo
-
-seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Adipo/CAR2, pbs"
+seu_sign_o2$annotated_reclustered[
+  seu_sign_o2$seurat_clusters == nr] <- "Adipo/CAR2, pbs"
 ```
 
 ```{r others2_cluster8}
@@ -1199,24 +1133,24 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
-length(markers)/length(ct_markers_o2[[nr]]$genes) 
-
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,]
+    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,][1:50,]
 
 FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
 FeaturePlot(seu_sign_o2, markers[13:18])
 
-# Serpinf1, Sgms2, Col5a2, Cpe, Dcn, Satb2, Sp7, Serpinh1, Lum, Ptgis
+SOI <-  c("Serpinf1", "Sgms2", "Col5a2", "Cpe", "Dcn", "Satb2", "Sp7",
+          "Serpinh1", "Lum", "Ptgis")
+signature_df[signature_df$genes %in% SOI,]
 
-# Serpins related to osteogenesis
-# Sgms2 osteogenesis and osteo blasts
-# col5a2 osteo progenitors, 
-# Satb2 osteogenesis
-# sp7 osteo
+# Serpins; related to osteogenesis
+# Sgms2: osteogenesis and osteo blasts
+# Col5a2: osteo progenitors, 
+# Satb2: osteogenesis
+# Sp7: osteo
 # Ptgis higher in osteo diff
 
 seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Osteo1"
@@ -1229,22 +1163,23 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
-length(markers)/length(ct_markers_o2[[nr]]$genes) 
-
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,]
+    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,][1:50,]
 
 FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
 FeaturePlot(seu_sign_o2, markers[13:18])
 
-# Ackr3, Jam2, Mustn1, Cryab, Sgms2, Ptgis
-# Ackr3 osteogenic differentiation
-# mustn1 pan osteo muscle, muscle
-# cryab increased during osteogebic diff in human, osteogenesis (human)
-# Sgms2 osteogenesis and osteo blasts
+SOI <-  c("Ackr3", "Jam2", "Mustn1", "Cryab", "Sgms2", "Ptgis")
+signature_df[signature_df$genes %in% SOI,]
+
+# Ackr3: osteogenic differentiation
+# Mustn1: pan osteo muscle, muscle
+# Cryab: increased during osteogebic diff in human, osteogenesis 
+# Sgms2: osteogenesis and osteo blasts
+# Ptgis: osteo
 
 seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Osteo2"
 ```
@@ -1257,93 +1192,23 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
-length(markers)/length(ct_markers_o2[[nr]]$genes) 
-
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,]
+    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,][1:50,]
 
 FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
 FeaturePlot(seu_sign_o2, markers[13:18])
 
-# highest expression of almost all osteo markers
+SOI <-  c("Serpinf1", "Cpe", "Col5a2", "Sgms2", "Mmp2", "Thbs1", "Lum",
+          "Col5a1", "Omd", "Ptgis", "Satb2", "Sp7")
+signature_df[signature_df$genes %in% SOI,]
+
+# high expression of Osteo-markers
 
 seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Osteo3"
 ```
-
-```{r compare}
-
-# compare ct of origin for signature genes
-# basically, check which cell type a signature was derived from which
-# may help assignments
-
-geneset_list_str[["Sinusoidal ECs"]]$conserved_signature[which(
-  !geneset_list_str[["Sinusoidal ECs"]]$conserved_signature %in% c(
-    geneset_list_str[["Arteriolar/Capillary ECs"]]$conserved_signature,
-    geneset_list_str[["Sinusoidal/Venular ECs"]]$conserved_signature))]
-
-sinusoidal <- c(
-  "Sox17", 
-  "Fcer1g",
-  "Tgm2",
-  "Npr1",
-  "Kdr", 
-  "Cdh5",
-  "Clec14a",
-  "Mef2c", 
-  "Fcer1g",
-  "Lmo2",
-  "Clec2d",
-  "Cldn5", 
-  "Lrg1")
-
-geneset_list_str[["Arteriolar/Capillary ECs"]]$conserved_signature[which(
-  !geneset_list_str[["Arteriolar/Capillary ECs"]]$conserved_signature %in% c(
-    geneset_list_str[["Sinusoidal ECs"]]$conserved_signature,
-    geneset_list_str[["Sinusoidal/Venular ECs"]]$conserved_signature))]
-
-arteriolar <- c(
-  "Cavin2",
-  "Tagln2",
-  "Itga6", 
-  "Dll4",
-  "Fabp5",
-  "Cdh5",
-  "Mecom", 
-  "Txnip", 
-  "Anxa3", 
-  "Sparcl1",
-  "Cav2",
-  "Robo4",
-  "Rgcc",
-  "Bcam",
-  "Efnb2",
-  "Mcf2l",
-  "Nrp1", 
-  "Tmcc3", 
-  "Carin1", 
-  "Lims2")
-
-geneset_list_str[["Sinusoidal/Venular ECs"]]$conserved_signature[which(
-  !geneset_list_str[["Sinusoidal/Venular ECs"]]$conserved_signature %in% c(
-    geneset_list_str[["SSinusoidal ECs"]]$conserved_signature,
-    geneset_list_str[["Arteriolar/Capillary ECs"]]$conserved_signature))]
-
-sin_ven <- c(
-  "Cd34",
-  "Ndufa8",
-  "Ehd4",
-  "Klf4",
-  "Ephb4",
-  "Ier3",
-  "Nfkbia",
-  "Foxp1",
-  "Plvap"
-)
-```
-
 
 ```{r others2_cluster6}
 
@@ -1361,12 +1226,12 @@ markers_ec <- ct_markers_o2[[nr]]$genes[
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,]
+    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,][1:50,]
 
 ct_markers_o2_ec[[nr]][
     ct_markers_o2_ec[[nr]]$avg_log2FC > 0 &
     ct_markers_o2_ec[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2_ec[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,]
+    ct_markers_o2_ec[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,][1:50,]
 
 FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
@@ -1388,53 +1253,20 @@ FeaturePlot(seu_sign_o2, "Sparcl1")
 FeaturePlot(seu_sign_o2, "Sox18")
 FeaturePlot(seu_sign_o2, "Efnb2")
 
-# all cell types:
-# Mcf2l, Cd34, Lims2, Cav1,  Sparcl1, Mecom, Fbln2, Podxl, Bcam, Ltbp4
+# cap gene
+FeaturePlot(seu_sign_o2, "Rgcc") 
 
-# between ECs:  
-# Mcf2l, Fbln2, Meox2, Sparcl1, Mecom, Cav1, Cd34, Thbs4
+SOI <-  c("Mcf2l", "Cd34", "Lims2", "Mecom", "Cav1", "Sparcl1")
+signature_df[signature_df$genes %in% SOI,]
 
-# Meox2: EC activation, endothelial cell proliferation
-# Sparcl1 _ QUIESCENCE
-
-# Mcf2l mouse pancreas EC, could be related to artery malformations in human, human atherosclerotic coronary arterial tissue 
-#       pan-pancreatic https://www.ahajournals.org/doi/10.1161/ATVBAHA.124.321781
-#       related to a lung capillary disease? https://onlinelibrary.wiley.com/doi/full/10.1002/ajmg.a.63141
-#       capillary signature: https://journals.physiology.org/doi/full/10.1152/physrev.00006.2023
-#       extracted from Art-EC
-
-# Cd34  human capillaries and some venular, but not large vessels (https://www.sciencedirect.com/science/article/pii/S0006497120831425)
-#       renal mouse capillaries (https://bmcnephrol.biomedcentral.com/articles/10.1186/s12882-017-0694-3)
-#       related to EC proliferation (https://www.nature.com/articles/s41598-023-40622-7)
-#       human brain capillaries (https://link.springer.com/article/10.1007/BF00227737)
-#       from sin_ven
-
-# Lims2 human shear stress (https://pmc.ncbi.nlm.nih.gov/articles/PMC7802379/)
-#       capillary and post capillary venule (https://www.sciencedirect.com/science/article/pii/S0022202X22015421)
-#       from arteriolar
-
-# Cav1  no specific to one of our EC subtypes
-#       related to EC differentiation (before angio), downregulated during proliferation, capillary process (https://pubmed.ncbi.nlm.nih.gov/11748236/) human
-#       mouse retinal arterioles (https://molmed.biomedcentral.com/articles/10.1186/s10020-023-00749-9)
-#       Cav1 molecules, and caveolae comprise 30% of the total surface area of capillary endothelial cells (https://www.sciencedirect.com/science/article/pii/S2405844023058619)
-#       
-
-# Sparcl1 from art-cap ECs
-#         quiescence marker, stability, capillary morphogenesis (https://pubmed.ncbi.nlm.nih.gov/33393634/)
-#         pulmonary capillary during inflammation (https://www.nature.com/articles/s41467-024-48589-3)
-
-# Mecom from Art cap ECs
-#       human EC differentiation master regulator (https://www.nature.com/articles/s41467-023-38002-w?fromPaywallRec=false)
-#       related to human vena porta (https://pmc.ncbi.nlm.nih.gov/articles/PMC6379353/)
-#       one of the most differentially expressed arterial TFs in mammals, arterial identity (https://pmc.ncbi.nlm.nih.gov/articles/PMC10844100/)
-#       artery (Kalucka)
-
-# Meox2 human heart capillary (https://pubmed.ncbi.nlm.nih.gov/25561514/)
-#       human brain capillary density (https://pubmed.ncbi.nlm.nih.gov/16116430/)
-#     
+# Mcf2l capillary 
+# Cd34 capillary, EC prolif, progenitor
+# Lims2 shear stress, capillary and post capillary venule
+# Cav1 not specific to one EC subtype, differentiation 30% of capillary surface
+# Sparcl1 quiescence, stability, capillary morphogenesis, capillary inflammation
+# Mecom EC differentiation, arterial identity, artery 
 
 seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Art/Cap-EC"
-knitr::knit_exit()
 ```
 
 ```{r others2_cluster1}
@@ -1454,12 +1286,12 @@ markers_ec <- ct_markers_o2_ec[[nr]]$genes[
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,]
+    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,][1:50,]
 
 ct_markers_o2_ec[[nr]][
     #ct_markers_o2_ec[[nr]]$avg_log2FC > 0 &
     ct_markers_o2_ec[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2_ec[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,]
+    ct_markers_o2_ec[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,][1:50,]
 
 FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
@@ -1469,70 +1301,43 @@ FeaturePlot(seu_sign_o2, markers_ec[1:6])
 FeaturePlot(seu_sign_o2, markers_ec[7:12])
 FeaturePlot(seu_sign_o2, markers_ec[13:18])
 
-
 FeaturePlot(seu_sign_o2, "Axl")
 FeaturePlot(seu_sign_o2, "Lpar6")
 FeaturePlot(seu_sign_o2, "Aebp1")
 FeaturePlot(seu_sign_o2, "Tgfbi")
+FeaturePlot(seu_sign_o2, "Clec14a")
+FeaturePlot(seu_sign_o2, "Prex2")
+FeaturePlot(seu_sign_o2, "Lrg1")
 
-# AEC transition
-FeaturePlot(seu_sign_o2, "Sox18") # not only cluster 1, also cluster 6 --> ArtcCap
-FeaturePlot(seu_sign_o2, "Clec14a") # not only cluster 1, also cluster 6 --> ArtCap
+# AEC 
+FeaturePlot(seu_sign_o2, "Sox18") 
+FeaturePlot(seu_sign_o2, "Clec14a") 
 
-# VEC transition
-FeaturePlot(seu_sign_o2, "Nr2f2") # not only cluster 1, also clusters 2 and 3
-FeaturePlot(seu_sign_o2, "Ephb4") # not only cluster 1, also clusters 2 and 3
+# VEC 
+FeaturePlot(seu_sign_o2, "Nr2f2") 
+FeaturePlot(seu_sign_o2, "Ephb4") 
+FeaturePlot(seu_sign_o2, "Vcam1") 
 
 # non capillary
 FeaturePlot(seu_sign_o2, "Rgcc") 
 FeaturePlot(seu_sign_o2, "Cd34") 
 
-
 # this cluster is mostly marked by NEGATIVE markers
-# this could be a populationin transition
 
-# all cell types:
-# Sox18, Lpar6, Clec14a, Nr2f2, Prex2, Lrg1, Kdr1, Il6st
+SOI <-  c("Axl", "Lpar6", "Clec14a", "Ephb4")
+signature_df[signature_df$genes %in% SOI,]
 
-# ECs only:
-# Axl, Lpar6, Clec14a, Aebp1, Tgfbi, Ephb4, Cd302
+# Axl: flow-dependent modelling, remodelling
+# Lpar6: EC barrier, angiogenesis
+# Aebp1: tumor ECs, proliferation, migration, angiogenesis, microvessel
 
-# Axl:  not specific from any EC type
-#       carotid artery, related to inflammation, apoptosis, and flow-dependent modelling (https://pubmed.ncbi.nlm.nih.gov/16627783/)
-#       vein graft SMC remoddeling (smooth muscle) (https://pubmed.ncbi.nlm.nih.gov/26276821/)
-#       vascular remodelling rat after injury (https://pubmed.ncbi.nlm.nih.gov/17923589/)
-#       carotid remoddelin (https://www.sciencedirect.com/science/article/pii/S000294401200171X)
-
-# Lpar6 also not specific   
-        #there is also a metabolite called Lpar6
-#       EC barrier, human pulmonary arterial (HPAEC) and microvascular (HLMVEC) ECs (https://www.ncbi.nlm.nih.gov/books/NBK597453/)
-#       related to angiogenesis from mouse KO , exrpessed in tumor vessels (https://www.mdpi.com/1422-0067/24/12/9812) 
-#       related to BBB in rat? (https://www.sciencedirect.com/science/article/pii/S0006291X18311690)
-#       human barrier EC function (https://pubmed.ncbi.nlm.nih.gov/23084965/)
-
-# Aebp1 also not specific
-#       tumor ECs, proliferation, migration, and in vitro tubem angiogenesis, microvessel formation (https://pubmed.ncbi.nlm.nih.gov/32086986/)
-      
-# Tgfbi not specific
-#       inhibitor of angiogenesis in ECs mozse (https://www.nature.com/articles/s41598-021-88959-1)
-#       related to tumor extravsation, human in several EC types (https://pmc.ncbi.nlm.nih.gov/articles/PMC2216691/)
-#       tgf beta pathway member related to EC barrier (https://pmc.ncbi.nlm.nih.gov/articles/PMC7443870/)
-
-# Sox18 not specific, also expressed in cluster 1
-#       human EC barrier and maturation TF (https://pmc.ncbi.nlm.nih.gov/articles/PMC7054428/)
-#       barrier via Cldn5 (https://grantome.com/grant/NIH/P01-HL134610-04-5237)
-#       barrier via Cldn5 (https://journals.physiology.org/doi/full/10.1152/ajpheart.01248.2007)
-#       barrier and NFkB (https://www.frontiersin.org/journals/physiology/articles/10.3389/fphys.2022.947537/full)
-#       mouse vascular development (https://www.sciencedirect.com/science/article/pii/S1050173801001311)
-#       related to arterial fate (https://www.nature.com/articles/s41375-024-02453-x)
-
-seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "EC1, non-pbs"
+seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Ven EC1, non-pbs"
 # CHECK BATCH
 ```
 
 ```{r others2_cluster2}
 
-nr <- "2"
+nr <- "3"
 markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
@@ -1546,12 +1351,12 @@ markers_ec <- ct_markers_o2_ec[[nr]]$genes[
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,]
+    ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,][1:50,]
 
 ct_markers_o2_ec[[nr]][
     #ct_markers_o2_ec[[nr]]$avg_log2FC > 0 &
     ct_markers_o2_ec[[nr]]$p_val_adj < 0.05 &
-    ct_markers_o2_ec[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,]
+    ct_markers_o2_ec[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL,][1:50,]
 
 FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
@@ -1566,57 +1371,30 @@ FeaturePlot(seu_sign_o2, "Spry2")
 FeaturePlot(seu_sign_o2, "Sdc4")
 FeaturePlot(seu_sign_o2, "Nfkbia")
 
-FeaturePlot(seu_sign_o2, "Dll4") # arteriole, angiogenesis
 FeaturePlot(seu_sign_o2, "Klf4") # angiogenesis
 FeaturePlot(seu_sign_o2, "Rgcc") # capillary
  
-# also mostly negative markers when comparing to other ECs
+# VEC 
+FeaturePlot(seu_sign_o2, "Nr2f2") 
+FeaturePlot(seu_sign_o2, "Ephb4") 
+FeaturePlot(seu_sign_o2, "Vcam1") 
 
-# markers all
-# Tmcc3, Dll4, Klf4, Itga6
+SOI <-  c("Tmcc3", "Dll4", "Klf4", "Itga6", "Nr2f2", "Vcam1", "Nfkbia", "Spry2")
+signature_df[signature_df$genes %in% SOI,]
 
-# markers ECs
-# Spry2, Tmcc3, Klf4, Sdc4, Nfkbia, Foxc1
+# Tmcc3  
+# Spry2: related to Dll4, negatively regulate angiogenesis 
+# Klf4: integrity, pro inflammation and prolif, homeostatic, angiogenesis
+# Dll4: arterial diff, restricts vessel branching, sprouting angiogenesis and artery formation, capillary endothelial tip cells, capillarization of liver sinusoids 
+# Itga6; angiogenesis, tumor ECs, related to sprouting, 
+# Sdc4: wound healing and angiogenesis EC dysfunction or inflammation 
 
-# Tmcc3   in arteriolar
-#         cannot find anything useful relating to ECs
-
-# Spry2   not specific
-#         embryonic development (https://pubmed.ncbi.nlm.nih.gov/35297995/), related to Dll4, 
-#         negatively impacts negatively regulate angiogenesis (https://bmcmedgenomics.biomedcentral.com/articles/10.1186/1755-8794-8-S1-S8)
-#         RTK for growth and proliferation
-
-# Klf4    from sinusoidal-venous   
-#         related to arterial hypertension, anti-inflammatory and anticoagulant states (https://pubmed.ncbi.nlm.nih.gov/24156273/)
-#         anti-inflammatory program that promotes vascular resilience (https://www.nature.com/articles/s44161-024-00522-z)
-#         vascular integrity, Key EC TF https://pubmed.ncbi.nlm.nih.gov/28239661/
-#         pro inflammation and proliferation, expression is induced by proinflammatory stimuli and shear stress (https://pmc.ncbi.nlm.nih.gov/articles/PMC5391259/)
-#         homeostatic EC genes (homeostatic endothelial gene)
-#         angiogenesis (https://pmc.ncbi.nlm.nih.gov/articles/PMC4467843/)
-
-# Dll4    from arteriolar/Cap ECs
-#         promotes arterial differentiation and restricts vessel branching, angiogenesis in the context of stress (https://pubmed.ncbi.nlm.nih.gov/23533173/)
-#         Dll4–Notch signalling couples sprouting angiogenesis and artery formation (https://www.nature.com/articles/ncb3555)
-#         highly expressed in capillary endothelial tip cells, angiogenesis (https://www.nature.com/articles/srep04031)
-#         capillarization of liver sinusoids (https://www.sciencedirect.com/science/article/pii/S016748891930103X)
-
-# Itga6   arteriolar/Cap ECs
-#         human angiogenesis (https://aacrjournals.org/cancerres/article/70/14/5759/559331/Increased-Expression-of-6-Integrin-in-Endothelial)
-#         tumor ECs, https://pmc.ncbi.nlm.nih.gov/articles/PMC10453423/
-#         related to sprouting (https://pubmed.ncbi.nlm.nih.gov/32409567/)
-#         endothelial sprouting (https://pmc.ncbi.nlm.nih.gov/articles/PMC8909174/#sec4-cells-11-00816)
-
-# Sdc4    not specific
-#         important cell-surface receptor in wound healing and angiogenesis https://pubmed.ncbi.nlm.nih.gov/11160142/
-#         EC dysfunction in patients (https://pmc.ncbi.nlm.nih.gov/articles/PMC7564403/)
-#         EC inflammation in patients
-
-seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "EC2, pbs"
+seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Ven EC3, non-pbs"
 ```
 
 ```{r others2_cluster3}
 
-nr <- "3"
+nr <- "2"
 
 markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
@@ -1658,26 +1436,20 @@ FeaturePlot(seu_sign_o2, "Fam167b")
 
 FeaturePlot(seu_sign_o2, "Il6st")
 FeaturePlot(seu_sign_o2, "Fabp4")
-FeaturePlot(seu_sign_o2, "Vcam1")
 FeaturePlot(seu_sign_o2, "Lrg1")
 
-# mostly negative marker genes, too
+SOI <-  c("Fabp4", "Ier3", "Cd36", "Lrg1", "Srgn", "Cldn5", "Fam167b", "Vcam1")
+signature_df[signature_df$genes %in% SOI,]
 
-# markers all
-# Fabp4, Ier3, Cd36, Srgn, Lrg1, Fam167b
-
-# markers EC
-# only mesenchymal markers, probably contamination (weak)
-
-# Fabp4 in ECs related to VEGFA and DLL4, ECs important source of FABP4, pro-angiogenic
+# Fabp4 in ECs related to VEGFA and DLL4, pro-angiogenic
 # Ier3: immediate early response
 # Cd36: also related to fatty acid, FA uptake, angiogenesis, response to injury
 # Lrg1: angiogenesis, mitogenic, neovascularization, 
 # Srgn: shear-stress response
-# cldn5 - sinusoidal in human, tight junction protein in ECs
+# Cldn5 - sinusoidal in human, tight junction protein in ECs
 # Fam167b, aorta-specific EC, pancreas ECs, kidney capillary cells
 
-seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "EC3, non-pbs"
+seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Ven EC2, pbs"
 ```
 
 ### Plots
@@ -1751,15 +1523,15 @@ sign_df_o2$Var2 <- factor(
     "Adipo/CAR3, non-pbs",
     "Osteo/CAR",
     "Osteo-Chondro",
-    "Chondro1",
-    "Chondro2",
+    "Fibro-Chondro",
+    "Chondro",
     "Osteo1",
     "Osteo2",
     "Osteo3",
     "Art/Cap-EC",
-    "EC1, non-pbs",
-    "EC2, pbs",
-    "EC3, non-pbs"
+    "Ven EC1, non-pbs",
+    "Ven EC2, pbs",
+    "Ven EC3, non-pbs"
 )))
 
 sign_df_o2$Var1 <- unfactor(sign_df_o2$Var1)
@@ -1788,6 +1560,7 @@ sign_df_o2$Var1 <- factor(
     "V1 arterial",
     "V2 sinusoidal" 
 ))
+unique(seu_sign_o2$annotated_reclustered)
 
 ```
 
@@ -1818,6 +1591,7 @@ sign_theme_plot_o2 <- sign_base_plot_o2+
     breaks = c(0, 0.5, 1))+
   ggplot2::xlab("Original cell types")+
   ggplot2::ylab("Reclustered & Re-annotated")
+sign_theme_plot_o2
 ```
 
 ### Other 3
@@ -1836,8 +1610,8 @@ sign_df_o3$Var2 <- factor(
   sign_df_o3$Var2,
   levels = base::rev(c(
     "Fibro-like CAR",
-    "Osteo-Chondro-like CAR",
-    "Osteo-like CAR",
+    "Fibro/Chondro-like CAR",
+    "multi-lineage CAR",
     "Adipo-like CAR",
     "Osteo-Chondro",
     "EC1",
@@ -1895,6 +1669,7 @@ sign_theme_plot_o3 <- sign_base_plot_o3+
     colors = mycolors_to1,
     limits = c(0, 1),
     breaks = c(0, 0.5, 1))
+sign_theme_plot_o3
 ```
 
 ### Assemble

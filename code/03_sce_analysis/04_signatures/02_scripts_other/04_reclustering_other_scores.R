@@ -1,11 +1,9 @@
 
 # get reclustering stores for reclustered datasets from other species
 
-# determine random number generator for sample()
-# Mersenne-Twister" is default
-RNGkind("Mersenne-Twister") 
-
-set.seed(37)
+# determine random number generator for sample
+library(parallel)
+RNGkind("L'Ecuyer-CMRG") # using this for reclustering
 
 #-------------------------------------------------------------------------------
 

@@ -1,9 +1,9 @@
 
 # INPUT # 
 
-# all base files that generated previously/elsewhere
+# all base files generated previously/elsewhere
 # store where required; add full paths here
-table: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/00_alignment/metadata.csv"
+table: "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/reproducibility_test_rerun/data/metadata/scRNAseq/00_alignment/metadata.csv"
 cellranger_output: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/00_cellranger_output" 
 fourgenomes_output: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/fourgenomes/sce_objects/00_cellranger_output" 
 ensembl_mspr: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/01_sce_prep/ensembl_mspr/ensembl_list_mspr"
@@ -18,7 +18,7 @@ ref_dolgalev_sce: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/sc
 
 # the general directory that should contain all output data 
 # all downstream output paths build on "base"
-base: "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun"
+base: "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/reproducibility_test_rerun"
 base_input: "/omics/odcf/analysis/OE0538_projects/DO-0008" # disable after move to normal shares
 
 
@@ -26,6 +26,10 @@ base_input: "/omics/odcf/analysis/OE0538_projects/DO-0008" # disable after move 
 
 scRNAseq_data_paths:
   main: "/data/scRNAseq/main_analysis"
+
+
+# METADATA # 
+
 metadata_paths: 
   colors: "/data/metadata/colors/colors.txt"
   colors_ref: "/data/metadata/colors/colors_references.txt"
@@ -105,17 +109,6 @@ values:
     nr_cores: 20 # nr of cores for parallelization for reclustering and permutation
     iterations: 500 # nr of iterations for permutation
 
-  # 05_cci_prep:
-  #   min_cells: 60 # min number of cells required per cell type to consider for cci
-  #   min_perc: 0.05 # min percentage of cells per cell type a gene must be expressed in to consider for cci
-  #   top_level: 300 # top level of ligand-receptor pairs to ensure even leveling of ranks and scores
-  #   colname_identity: celltypes
-  #   iterations: 250
-  #   min_sp_age_perc: 0.1 # % of iterations that must be successful for stats calc
-  #   nr_cores_age: 20
-  #   nr_cores_cts: 25
-  #   min_sp_cts: 3
-
 # Conditions  
 # in caps for use in R, only first letter capitalized for use in Snakefile
 run_preprocessing_summary: False
@@ -123,7 +116,6 @@ run_anno_reports: False
 run_marker_reports: False
 
 ran_li_ipynb: False
-
 
 run_sign_rand_own_permutation: False
 run_mark_rand_own_permutation: False
@@ -137,5 +129,4 @@ run_genesets_sign_rand_other_permutation: False
 
 run_pval_correction: False
 
-
-run_age_comparison: False # what is that?
+run_age_comparison: False 

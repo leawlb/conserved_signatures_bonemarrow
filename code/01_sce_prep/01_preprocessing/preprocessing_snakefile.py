@@ -8,6 +8,7 @@ import pandas as pd
 
 # base path
 OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
+print(OUTPUT_BASE)
 
 # directory for storing data
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/01_sce_prep"
@@ -74,7 +75,9 @@ rule remove_droplets:
     output:
         sce_output = OUTPUT_DAT + "/01_drop/{species}/sce_{individual}-01"
     resources:
-        mem_mb=10000
+        mem_mb=10000,
+        queue="medium"
+    threads: 2
     params:
         cutoff_umis = VALUES["cutoff_umis"],
         cutoff_doublets = VALUES["cutoff_doublets"]
@@ -97,7 +100,9 @@ rule get_sample_dmgs:
     output:
         dmgs = OUTPUT_DAT + "/02_mapp/{species}/dmgs_{individual}"
     resources:
-        mem_mb=15000
+        mem_mb=15000,
+        queue="short"
+    threads: 2
     params:
         nr_hvgs = config["values"]["nr_hvgs"],
         logFC_sample_dmgs = VALUES["logFC_sample_dmgs"],
@@ -116,7 +121,9 @@ rule merge_dmgs:
     input:
         dmgs = merge_dmgs_input
     resources:
-        mem_mb=100
+        mem_mb=100,
+        queue="short"
+    threads: 1
     output:
         dmg_list = OUTPUT_DAT + "/03_dmgs/dmgs_list_all"
     script:
@@ -130,7 +137,9 @@ rule remove_outliers_dmgs:
     output:
         sce_output = OUTPUT_DAT + "/04_outl/{species}/sce_{individual}-04"
     resources:
-        mem_mb=2000
+        mem_mb=2000,
+        queue="medium"
+    threads: 2
     params:
         cutoff_sum = VALUES["cutoff_sum"],
         cutoff_detected = VALUES["cutoff_detected"],
@@ -145,7 +154,9 @@ rule normalize_expr:
     output:
         sce_output = OUTPUT_DAT + "/05_norm/{species}/sce_{individual}-05"
     resources:
-        mem_mb=2000
+        mem_mb=2000,
+        queue="short"
+    threads: 2
     script:
         "scripts/05_normalize_expr.R"
         
@@ -157,7 +168,9 @@ rule reduce_dims:
     output:
         sce_output = OUTPUT_DAT + "/06_dimr/{species}/sce_{individual}-06" 
     resources:
-        mem_mb=2000
+        mem_mb=2000,
+        queue="short"
+    threads: 2
     params:
         nr_hvgs = config["values"]["nr_hvgs"],
         functions = "../../source/sce_functions.R"
@@ -178,7 +191,9 @@ rule make_dmg_reports:
     output:
         OUTPUT_REP + "/dmgs/{species}/preprocessing_dmg_report_{individual}.html"
     resources:
-        mem_mb=20000
+        mem_mb=20000,
+        queue="medium"
+    threads: 2
     params:
         nr_hvgs = config["values"]["nr_hvgs"],
         plotting = "../../source/plotting.R" # path to source file
@@ -200,7 +215,9 @@ rule make_qc_reports:
     output:
         OUTPUT_REP + "/qc/{species}/preprocessing_qc_report_{individual}.html"
     resources:
-        mem_mb=20000
+        mem_mb=20000,
+        queue="medium"
+    threads: 2
     params:
         cutoff_umis = VALUES["cutoff_umis"],
         cutoff_doublets = VALUES["cutoff_doublets"],
@@ -226,13 +243,15 @@ if config["run_preprocessing_summary"]:
       output:
           OUTPUT_REP + "/qc/preprocessing_qc_summary.html"
       resources:
-          mem_mb=20000     
+          mem_mb=20000,
+          queue="long"
+      threads: 2
       params:
           cutoff_sum = VALUES["cutoff_sum"],
           cutoff_detected = VALUES["cutoff_detected"],
           cutoff_mitos = VALUES["cutoff_mitos"],
           individuals = individuals,
-          metadata = config["metadata_paths"]["table"],
+          metadata = config["table"],
           plotting = "../../source/plotting.R",
           species = species
       script:

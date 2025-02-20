@@ -24,12 +24,11 @@ plot_title_face <- "plain"
 plot_title_size <- 24
 plot_title_color <- "black"
 
-#### OTHER THEME STUFF
+#### COLOR
 
 strip_background_color <- "white"
 strip_background_fill <- "white"
 axis_ticks_color <- "black"
-
 
 #### POINTS ####
 
@@ -38,10 +37,9 @@ umap_point_alpha <- 1
 umap_legend_point_size <- 3
 umap_legend_point_alpha <- 1
 
-
 max_size_dotplots <- 4
 
-
+#### THEME ####
 
 # specify one theme for all, customize elements per plot
 theme_all <- ggplot2::theme_classic()+
@@ -71,27 +69,3 @@ theme_all <- ggplot2::theme_classic()+
       color = legend_title_color),
     axis.ticks = element_line(
       color = axis_ticks_color))
-
-# TODO: put in colors later
-colors_z_score <- c("blue3", "white", "red3")
-
-col_cons <- c("conserved_signature" = "#C8451D",
-              "conserved_markers" = "#EF8700",
-              "mmusall_markers" = "#94B88E",
-              "ndges" = "#4684FF",
-              "random_features" = "#C3C3C3")
-
-col_cons_long <- c(
-  "conserved identity signature" = "#C8451D",
-  "conserved markers" = "#EF8700",
-  "BL6 markers" = "#94B88E",
-  "ndges" = "#4684FF",
-  "random genes" = "#C3C3C3",
-  "species-specific marker genes" = "grey50")
-
-col_spc_pub <- c(
-  "BL6" = "black",
-  "CAST" = "grey70",
-  "SPRET" = "#B35100",
-  "CAROLI" = "#FCC961"
-)

@@ -8,7 +8,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Generate Figure 1
+Generate Figure 1 + print additional data
 
 #### Load objects
 
@@ -29,8 +29,6 @@ base_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/microm
 ```
 
 ```{r load_sce}
-# load data for manual use here
-
 # fully annotated SCE objects
 sce_hsc <- base::readRDS(base::paste0(
   base_path, 
@@ -84,7 +82,9 @@ subclustering_df <- utils::read.csv(gene_list_subclustering,
 colors_path <- base::paste0(
   base_path,
   "/metadata/colors/colors.txt")
+print(colors_path)
 source("../source/colors.R")
+print(col_spc_pub)
 ```
 
 ```{r pdf_output}
@@ -128,7 +128,7 @@ ct_str <- "Adipo/CAR"
 
 ```{r prep_sces}
 
-# randomize the barcodes
+# randomize the barcodes for nicer visualisation
 sce_hsc <- sce_hsc[,base::sample(
   x = c(1:ncol(sce_hsc)), 
   size = ncol(sce_hsc),
@@ -147,6 +147,7 @@ sce_hsc$species_pub[sce_hsc$Species_ID == "mspr"] <- "SPRET"
 sce_hsc$species_pub[sce_hsc$Species_ID == "mcar"] <- "CAROLI"
 sce_hsc$species_pub <- factor(sce_hsc$species_pub, 
                               levels = names(col_spc_pub))
+print(col_spc_pub)
 
 sce_str$species_pub <- vector(length = ncol(sce_str))
 sce_str$species_pub[sce_str$Species_ID == "mmus"] <- "BL6"
@@ -191,9 +192,7 @@ gc()
 
 # nr of subclustering genes, and which genes are subclustering genes
 subclustering_df[subclustering_df$purpose == "subclustering",]
-
 ```
-
 
 ## UMAPs Species
 
@@ -221,6 +220,7 @@ str_umap_species <- str_umap_species[base::sample(
 ```
 
 ```{r species_base_plot_left}
+stopifnot(unique(hsc_umap_species$color_by) %in% names(col_spc_pub))
 species_base_plot_left <- ggplot2::ggplot(
   hsc_umap_species, 
   aes(x = X1,
@@ -229,11 +229,12 @@ species_base_plot_left <- ggplot2::ggplot(
   ggplot2::geom_point(
     size = umap_point_size,
     alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(hsc_umap_species$X1)-1, 
-                  base::max(hsc_umap_species$X1))+1)+
-  ggplot2::ylim(c(base::min(hsc_umap_species$X2)-1,
-                  base::max(hsc_umap_species$X2))+1)+
+  ggplot2::xlim(c((base::min(hsc_umap_species$X1)-1), 
+                  (base::max(hsc_umap_species$X1))+1))+
+  ggplot2::ylim(c((base::min(hsc_umap_species$X2)-1),
+                  (base::max(hsc_umap_species$X2))+1))+
   ggplot2::scale_color_manual("Species", values = col_spc_pub)
+species_base_plot_left
 ```
 
 ```{r species_theme_plot_left, fig.width = 4, fig.height = 3}
@@ -251,10 +252,10 @@ species_base_plot_right <- ggplot2::ggplot(
   ggplot2::geom_point(
     size = umap_point_size,
     alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(str_umap_species$X1)-1,
-                  base::max(str_umap_species$X1))+1)+
-  ggplot2::ylim(c(base::min(str_umap_species$X2)-1, 
-                  base::max(str_umap_species$X2))+1)+
+  ggplot2::xlim(c((base::min(str_umap_species$X1)-1),
+                  (base::max(str_umap_species$X1))+1))+
+  ggplot2::ylim(c((base::min(str_umap_species$X2)-1), 
+                  (base::max(str_umap_species$X2))+1))+
   ggplot2::scale_color_manual("Species", values = col_spc_pub)
 ```
 
@@ -334,8 +335,8 @@ ctspc_base_plot_left <- ggplot2::ggplot(
   ggplot2::geom_point(
     size = umap_point_size,
     alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(hsc_umap$X1)-1, base::max(hsc_umap$X1))+1)+
-  ggplot2::ylim(c(base::min(hsc_umap$X2)-1, base::max(hsc_umap$X2))+1)+
+  ggplot2::xlim(c(base::min(hsc_umap$X1)-1), (base::max(hsc_umap$X1)+1))+
+  ggplot2::ylim(c(base::min(hsc_umap$X2)-1), (base::max(hsc_umap$X2)+1))+
   ggplot2::scale_color_manual(values = col_cts_hsc)+
   facet_grid(rows = vars(hsc_umap$species))
 ```
@@ -355,8 +356,8 @@ ctspc_base_plot_right <- ggplot2::ggplot(
   ggplot2::geom_point(
     size = umap_point_size,
     alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(str_umap$X1)-1, base::max(str_umap$X1))+1)+
-  ggplot2::ylim(c(base::min(str_umap$X2)-1, base::max(str_umap$X2))+1)+
+  ggplot2::xlim(c(base::min(str_umap$X1)-1), (base::max(str_umap$X1)+1))+
+  ggplot2::ylim(c(base::min(str_umap$X2)-1), (base::max(str_umap$X2)+1))+
   ggplot2::scale_color_manual(values = col_cts_str)+
   facet_grid(rows = vars(str_umap$species))
 ```
@@ -563,12 +564,14 @@ cell type sub-clustering per species for HSCs (top left) and Adipo/CARs
 
 ```{r dp_prepare}
 # get genes
-gene_df_hsc <- gene_df[gene_df$fraction == "hsc" & grepl("Visualisation", gene_df$use),]
+gene_df_hsc <- gene_df[
+  gene_df$fraction == "hsc" & grepl("Visualisation", gene_df$use),]
 gene_order_hsc <- dotplot_order_df[dotplot_order_df$Fraction == "hsc",]
 genes_hsc <- gene_df_hsc$gene
 genes_ordered_hsc <- unique(gene_order_hsc$Gene)
 
-gene_df_str <- gene_df[gene_df$fraction == "str" & grepl("Visualisation", gene_df$use),]
+gene_df_str <- gene_df[
+  gene_df$fraction == "str" & grepl("Visualisation", gene_df$use),]
 gene_order_str <- dotplot_order_df[dotplot_order_df$Fraction == "str",]
 genes_str <- unique(gene_df_str$gene)
 genes_ordered_str <- unique(gene_order_str$Gene)
@@ -800,7 +803,7 @@ dp_theme_plot_top_left <- dp_base_plot_top_left+
       vjust = 0.5,
       angle = 90),
     axis.text.y = element_text(
-      hjust = 0),
+      hjust = 1),
     legend.position = "none")+
   ggplot2::ylab("Species")+
   ggplot2::xlab("Gene")+
@@ -812,6 +815,7 @@ dp_theme_plot_top_left <- dp_base_plot_top_left+
      "% expressed",
      colors = mycolors_to100,
      limits = c(0, 100))
+dp_theme_plot_top_left
 ```
 
 ```{r dp_base_plot_top_right}
@@ -841,7 +845,7 @@ background_str <- data.frame(
     "Timp4",
     "Lrg1",
     "Flt4",
-    "Cxcl21a",
+    "Ccl21a",
     "Acta2",
     "Rgs5"
   ), 
@@ -898,6 +902,7 @@ dp_theme_plot_top_right <- dp_base_plot_top_right+
      colors = mycolors_to100,
      limits = c(0, 100)
   )
+dp_theme_plot_top_right
 ```
 
 ```{r dp_base_plot_bottom_left}
@@ -917,6 +922,9 @@ dp_base_plot_bottom_left <- ggplot2::ggplot(
   inherit.aes = FALSE,
   alpha = 0.2)+
   ggplot2::geom_point()
+vis_df_hsc
+dp_base_plot_bottom_left
+#knitr::knit_exit()
 ```
 
 ```{r dp_theme_plot_bottom_left, fig.width = 25, fig.height = 6}
@@ -927,7 +935,7 @@ dp_theme_plot_bottom_left <- dp_base_plot_bottom_left+
     axis.text.x = element_blank(),
     axis.ticks.x = element_blank(),
     axis.text.y = element_text(
-      hjust = 0),
+      hjust = 1),
     legend.position = "none")+
   ggplot2::scale_size_area(
     "logcounts",
@@ -938,6 +946,7 @@ dp_theme_plot_bottom_left <- dp_base_plot_bottom_left+
      colors = mycolors_to100,
      limits = c(0, 100)
   )
+dp_theme_plot_bottom_left
 ```
 
 ```{r dp_base_plot_bottom_right}
@@ -965,7 +974,7 @@ dp_theme_plot_bottom_right <- dp_base_plot_bottom_right+
   ggplot2::theme(
     axis.title = element_blank(),
     axis.text.y = element_text(
-      hjust = 0),
+      hjust = 1),
     axis.text.x = element_blank(),
     axis.ticks.x = element_blank(),
     legend.position = "none")+
@@ -979,6 +988,7 @@ dp_theme_plot_bottom_right <- dp_base_plot_bottom_right+
      colors = mycolors_to100,
      limits = c(0, 100)
   )
+dp_theme_plot_bottom_right
 ```
 
 #### Legends
@@ -998,7 +1008,6 @@ dp_legend_base_plot_left <- ggplot2::ggplot(
 dp_legend_theme_plot_left <- dp_legend_base_plot_left+
   theme_all+
   ggplot2::theme(
-    legend.title.position = "top",
     legend.box.just = "left",
     legend.position = "bottom",
     legend.box = "vertical", # Stack legends vertically
@@ -1006,6 +1015,7 @@ dp_legend_theme_plot_left <- dp_legend_base_plot_left+
   ggplot2::scale_size_area(
     "logcounts",
     max_size = max_size_dotplots,
+    breaks = c(0, 1, 2),
     limits = c(0, base::max(vis_df_hsc$expression)))
 dp_legend_left <- ggpubr::get_legend(dp_legend_theme_plot_left)
 ```
@@ -1023,7 +1033,6 @@ dp_legend_base_plot_middle <- ggplot2::ggplot(
 dp_legend_theme_plot_middle <- dp_legend_base_plot_middle+
   theme_all+
   ggplot2::theme(
-    legend.title.position = "top",
     legend.box.just = "left",
     legend.position = "bottom",
     legend.box = "vertical", # Stack legends vertically
@@ -1050,7 +1059,6 @@ dp_legend_base_plot_right <- ggplot2::ggplot(
 dp_legend_theme_plot_right <- dp_legend_base_plot_right+
   theme_all+
   ggplot2::theme(
-    legend.title.position = "top",
     legend.box.just = "left",
     legend.position = "bottom",
     legend.box = "vertical", # Stack legends vertically
@@ -1060,22 +1068,10 @@ dp_legend_theme_plot_right <- dp_legend_base_plot_right+
     max_size = max_size_dotplots,
     limits = c(0, base::max(vis_df_ct_str$expression)))
 dp_legend_right <- ggpubr::get_legend(dp_legend_theme_plot_right)
+knitr::knit_exit()
 ```
 
 #### Assemble
-
-```{r dp_theme_plot, fig.width = 16, fig.height = 6, eval = FALSE, include = FALSE}
-dp_theme_plot <- ggpubr::ggarrange(
-  dp_theme_plot_top_left, 
-  dp_theme_plot_top_right,
-  dp_theme_plot_bottom_left,
-  dp_theme_plot_bottom_right,
-  heights = c(1,1.8),
-  widths = c(1, 1.1),
-  align = "v")
-
-dp_theme_plot
-```
 
 ```{r dp_theme_plot2, fig.width = 16, fig.height = 6}
 dp_theme_plot2 <- ggpubr::ggarrange(
@@ -1091,9 +1087,9 @@ dp_theme_plot2 <- ggpubr::ggarrange(
 dp_theme_plot2
 ```
 
-```{r dp_theme_legends, fig.width = 10, fig.height = 1}
+```{r dp_theme_legends, fig.width = 6, fig.height = 5}
 dp_theme_legends <- ggpubr::ggarrange(
-  nrow = 1,
+  nrow = 3,
   dp_legend_left,
   dp_legend_middle,
   dp_legend_right

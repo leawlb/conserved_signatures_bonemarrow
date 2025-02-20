@@ -36,6 +36,20 @@ col_mode <-c("marker" = "#EDE2D4",
 col_mode_log <-c("FALSE" = "#EDE2D4",
                  "TRUE" = "#DD5C00")
 
+col_cons <- c("conserved_signature" = "#C8451D",
+              "conserved_markers" = "#EF8700",
+              "mmusall_markers" = "#94B88E",
+              "ndges" = "#4684FF",
+              "random_features" = "#C3C3C3")
+
+col_cons_long <- c(
+  "conserved identity signature" = "#C8451D",
+  "conserved markers" = "#EF8700",
+  "BL6 markers" = "#94B88E",
+  "ndges" = "#4684FF",
+  "random genes" = "#C3C3C3",
+  "species-specific marker genes" = "grey50")
+
 
 #-------------------------------------------------------------------------------
 
@@ -66,8 +80,8 @@ if(exists("colors_path")){
   names(col_spc) <- colors_df[colors_df$purpose == "Species_ID",]$level
   
   col_spc_pub <- colors_df[colors_df$purpose == "Species_ID",]$color
-  names(col_spc_pub) <- c("BL6", "CAST", "SPRETUS", "CAROLI")
-  
+  names(col_spc_pub) <- c("BL6", "CAST", "SPRET", "CAROLI")
+
   col_frc <- colors_df[colors_df$purpose == "Fraction_ID",]$color
   names(col_frc) <- colors_df[colors_df$purpose == "Fraction_ID",]$level
   

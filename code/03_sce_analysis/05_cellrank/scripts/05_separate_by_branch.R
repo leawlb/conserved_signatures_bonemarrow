@@ -29,14 +29,14 @@ sce_hsc$Neutrophil <-  SingleCellExperiment::reducedDims(sce_pseudotime)$lineage
 
 #-------------------------------------------------------------------------------
 # get all cell fate probability values for each lineage from cell type
-vals_ery <- sce_hsc$Erythroid[sce_hsc$celltypes == "Early MPPs"]
+vals_ery <- sce_hsc$Erythroid[sce_hsc$celltypes == "Early MPP"]
 # calculate the cutoff as described
 cut_off_ery <- base::summary(vals_ery)["1st Qu."] - 1.5*stats::IQR(vals_ery)
 
-vals_lym <- sce_hsc$Lymphoid[sce_hsc$celltypes == "Early MPPs"]
+vals_lym <- sce_hsc$Lymphoid[sce_hsc$celltypes == "Early MPP"]
 cut_off_lym <- base::summary(vals_lym)["1st Qu."] - 1.5*stats::IQR(vals_lym)
 
-vals_neu <- sce_hsc$Neutrophil[sce_hsc$celltypes == "Early MPPs"]
+vals_neu <- sce_hsc$Neutrophil[sce_hsc$celltypes == "Early MPP"]
 cut_off_neu <- base::summary(vals_neu)["1st Qu."] - 1.5*stats::IQR(vals_neu)
 
 # separate

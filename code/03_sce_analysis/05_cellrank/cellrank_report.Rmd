@@ -155,11 +155,11 @@ dataframe$max_vis[dataframe$max_vis < 0.5] <- 0
 
 names <- c(50:100)/100
 my_color_ery <- grDevices::colorRampPalette(
-  c("grey80", col_cts_hsc[names(col_cts_hsc) == "Erythroid progs."]))(51)
+  c("grey80", col_cts_hsc[names(col_cts_hsc) == "Erythroid"]))(51)
 my_color_lym <- grDevices::colorRampPalette(
-  c("grey80", col_cts_hsc[names(col_cts_hsc) == "Lymphoid progs."]))(51)
+  c("grey80", col_cts_hsc[names(col_cts_hsc) == "Lymphoid"]))(51)
 my_color_neu <- grDevices::colorRampPalette(
-  c("grey80", col_cts_hsc[names(col_cts_hsc) == "Neutrophil progs."]))(51)
+  c("grey80", col_cts_hsc[names(col_cts_hsc) == "Neutro prog"]))(51)
 names(my_color_ery) <- base::as.numeric(names)
 names(my_color_lym) <- base::as.numeric(names)
 names(my_color_neu) <- base::as.numeric(names)
@@ -206,13 +206,13 @@ ggplot2::ggplot(
 # basically, only lower outlier HSCs, MPPs, or Activated MPPs will be excluded
 # from each branch, as well as any other cell that is below that value
 
-vals_ery <- sce_hsc$Erythroid[sce_hsc$celltypes == "Early MPPs"]
+vals_ery <- sce_hsc$Erythroid[sce_hsc$celltypes == "Early MPP"]
 cut_off_ery <- base::summary(vals_ery)["1st Qu."] - 1.5*stats::IQR(vals_ery)
 
-vals_lym <- sce_hsc$Lymphoid[sce_hsc$celltypes == "Early MPPs"]
+vals_lym <- sce_hsc$Lymphoid[sce_hsc$celltypes == "Early MPP"]
 cut_off_lym <- base::summary(vals_lym)["1st Qu."] - 1.5*stats::IQR(vals_lym)
 
-vals_neu <- sce_hsc$Neutrophil[sce_hsc$celltypes == "Early MPPs"]
+vals_neu <- sce_hsc$Neutrophil[sce_hsc$celltypes == "Early MPP"]
 cut_off_neu <- base::summary(vals_neu)["1st Qu."] - 1.5*stats::IQR(vals_neu)
 ```
 
@@ -226,7 +226,7 @@ ggplot2::ggplot(
   ggplot2::geom_hline(
     yintercept = base::summary(colData(sce_hsc)$Neutrophil[
       colData(sce_hsc)$celltypes == "HSCs"])["1st Qu."],
-    color = col_cts_hsc[names(col_cts_hsc) == "Neutrophil progs."],
+    color = col_cts_hsc[names(col_cts_hsc) == "Neutro prog"],
     linewidth = 2, 
     linetype = "dashed")
 ```
@@ -239,7 +239,7 @@ ggplot2::ggplot(
   ggplot2::theme_classic()+
   ggplot2::geom_hline(
     yintercept = cut_off_neu,
-    color = col_cts_hsc[names(col_cts_hsc) == "Neutrophil progs."],
+    color = col_cts_hsc[names(col_cts_hsc) == "Neutro prog"],
     linewidth = 2, 
     linetype = "dashed")+
   ggplot2::theme(axis.text.x = element_text(angle = 0))
@@ -254,7 +254,7 @@ ggplot2::ggplot(
   ggplot2::theme_classic()+
   ggplot2::geom_hline(
     yintercept = cut_off_neu,
-    color = col_cts_hsc[names(col_cts_hsc) == "Neutrophil progs."],
+    color = col_cts_hsc[names(col_cts_hsc) == "Neutro prog"],
     linewidth = 2, 
     linetype = "dashed")+
   ggplot2::theme(axis.text.x = element_text(angle = 90))
@@ -270,7 +270,7 @@ ggplot2::ggplot(
   ggplot2::geom_hline(
     yintercept = summary(colData(sce_hsc)$Erythroid[
       colData(sce_hsc)$celltypes == "HSCs"])["1st Qu."],
-    color = col_cts_hsc[names(col_cts_hsc) == "Erythroid progs."],
+    color = col_cts_hsc[names(col_cts_hsc) == "Erythroid"],
     linewidth = 2,
     linetype = "dashed")
 ```
@@ -284,7 +284,7 @@ ggplot2::ggplot(
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
   ggplot2::geom_hline(
     yintercept = cut_off_ery,
-    color = col_cts_hsc[names(col_cts_hsc) == "Erythroid progs."],
+    color = col_cts_hsc[names(col_cts_hsc) == "Erythroid"],
     linewidth = 2, 
     linetype = "dashed")
 ```

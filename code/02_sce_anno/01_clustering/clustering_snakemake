@@ -1,5 +1,5 @@
 
-snakemake --cluster "bsub -q medium -n20 -R rusage[mem={resources.mem_mb}]" -p -j8 -c20 -s clustering_snakefile.py --configfile ../../config.yaml --latency-wait 60 --use-conda -n
+snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resources.mem_mb}]" -p -j8 -c20 -s clustering_snakefile.py --configfile ../../config.yaml --latency-wait 60 --use-conda -n
 
 # for anno reports
 snakemake --cluster "bsub -n10 -q long -R rusage[mem={resources.mem_mb}]" -p -j35 -c10 -s clustering_snakefile.py --configfile  ../../config.yaml --config run_anno_reports=True --latency-wait 60 -n

@@ -82,7 +82,7 @@ pattern_density_val <- 0.015
 pattern_spacing_val <- 0.03
 
 
-celltype <- "HSCs"
+celltype <- "HSC"
 
 colors_z_score <- c("skyblue2", "white", "red3")
 colors_z_score_cond <- c("purple3", "white", "orange")
@@ -129,7 +129,7 @@ output_pdf_aging_theme_legend <- base::paste0(
 
 #sce_all <- cbind(sce_hsc_met, sce_str_met)
 print(length(which(rowSums(assays(sce_hsc)$counts_before_BC) > 0)))
-print(length(which(rowSums(assays(sce_str)$counts_before_BC) > 0)))
+#print(length(which(rowSums(assays(sce_str)$counts_before_BC) > 0)))
 
 rm(sce_hsc_met)
 rm(sce_str_met)
@@ -371,7 +371,7 @@ HSCs (scaled by z-score per gene).
 
 ```{r heatmap_spec1}
 # get ct specific data
-hsc_cons_df_ct <- geneset_list_hsc$HSCs$conserved_df
+hsc_cons_df_ct <- geneset_list_hsc$HSC$conserved_df
 
 hsc_mmus_specific <- hsc_cons_df_ct$gene[which(
   !is.na(hsc_cons_df_ct$mmus) &
@@ -1013,12 +1013,12 @@ legend_cond_theme
 ```
 
 ```{r output_pdf_heatmap_conds_stacked_plot}
-pdf(output_pdf_heatmap_conds_stacked_plot, width = 6, height = 10)
-heatmap_conds_stacked_plot
-dev.off()
+# pdf(output_pdf_heatmap_conds_stacked_plot, width = 6, height = 10)
+# heatmap_conds_stacked_plot
+# dev.off()
 ```
 
-```{r output_pdf_heatmap_conds_stacked_plot}
+```{r output_pdf_heatmap_conds_stacked_legend}
 pdf(output_pdf_heatmap_conds_stacked_legend, width = 3, height = 1)
 legend_cond_theme
 dev.off()
@@ -1518,33 +1518,33 @@ plot_data[,7:ncol(plot_data)] <- scale(plot_data[,7:ncol(plot_data)])
 
 ```{r pt_ranking2}
 plot_HSCs <- plot_data[,c(colnames(plot_data)[1:6],
-                           geneset_list_hsc[["HSCs"]][["conserved_signature"]])] %>%
+                           geneset_list_hsc[["HSC"]][["conserved_signature"]])] %>%
   gather(gene, expression,
          -pseudotime, -celltypes, -Mouse_ID, 
          -Species_ID, -Age_weeks, -Age_ID)
 col_HSCs <- grDevices::colorRampPalette(c("grey90", 
                                           "grey5"))
-palette_HSCs <- col_HSCs(length(geneset_list_hsc[["HSCs"]][["conserved_signature"]]))
+palette_HSCs <- col_HSCs(length(geneset_list_hsc[["HSC"]][["conserved_signature"]]))
 
 
 plot_MkEry <- plot_data[,c(colnames(plot_data)[1:6],
-                           geneset_list_hsc[["Mk/Ery progs."]][["conserved_signature"]])] %>%
+                           geneset_list_hsc[["Mk/Ery prog"]][["conserved_signature"]])] %>%
   gather(gene, expression,
          -pseudotime, -celltypes, -Mouse_ID, 
          -Species_ID, -Age_weeks, -Age_ID)
 col_MkEry <- grDevices::colorRampPalette(c("grey90", 
                                            "grey5"))
-palette_MkEry <- col_MkEry(length(geneset_list_hsc[["Mk/Ery progs."]][["conserved_signature"]]))
+palette_MkEry <- col_MkEry(length(geneset_list_hsc[["Mk/Ery prog"]][["conserved_signature"]]))
 
 
 plot_Ery <- plot_data[,c(colnames(plot_data)[1:6],
-                           geneset_list_hsc[["Erythroid progs."]][["conserved_signature"]])] %>%
+                           geneset_list_hsc[["Erythroid"]][["conserved_signature"]])] %>%
   gather(gene, expression,
          -pseudotime, -celltypes, -Mouse_ID, 
          -Species_ID, -Age_weeks, -Age_ID)
 col_Ery <- grDevices::colorRampPalette(c("grey90", 
                                          "grey5"))
-palette_Ery <- col_Ery(length(geneset_list_hsc[["Erythroid progs."]][["conserved_signature"]]))
+palette_Ery <- col_Ery(length(geneset_list_hsc[["Erythroid"]][["conserved_signature"]]))
 ```
 
 ```{r pt_ranking3}
@@ -1620,7 +1620,7 @@ HSC_theme <- HSC_1+
     axis.text = element_blank(),
     plot.title = element_text(
       hjust = 0.5))+
-  ggplot2::ggtitle("HSCs")+
+  ggplot2::ggtitle("HSC")+
   ggplot2::ylab("Expression scaled along pseudo-time ranks")+
   ggplot2::xlab("Pseudo-time ranks of erythroid branch cells")
 ```
@@ -1634,7 +1634,7 @@ MkEry_theme <- MkEry_2+
     axis.text = element_blank(),
     plot.title = element_text(
       hjust = 0.5))+
-  ggplot2::ggtitle("Mk/Ery progs.")+
+  ggplot2::ggtitle("Mk/Ery prog")+
   ggplot2::ylab("Expression scaled along pseudo-time ranks")+
   ggplot2::xlab("Pseudo-time ranks of erythroid branch cells")
 ```
@@ -1648,7 +1648,7 @@ Ery_theme <- Ery_3+
     axis.text = element_blank(),
     plot.title = element_text(
       hjust = 0.5))+
-  ggplot2::ggtitle("Erythroid progs.")+
+  ggplot2::ggtitle("Erythroid")+
   ggplot2::ylab("Expression scaled along pseudo-time ranks")+
   ggplot2::xlab("Pseudo-time ranks of erythroid branch cells")
 ```

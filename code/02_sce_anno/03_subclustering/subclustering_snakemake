@@ -1,5 +1,5 @@
 
-snakemake --cluster "bsub -q medium -n6 -R rusage[mem={resources.mem_mb}]" -p -j40 -c20 -s subclustering_snakefile.py --configfile ../../config.yaml --latency-wait 30 -n
+snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resources.mem_mb}]" -p -j40 -c20 -s subclustering_snakefile.py --configfile ../../config.yaml --latency-wait 30 -n
 
 # for marker reports
-snakemake --cluster "bsub -n10 -q long -R rusage[mem={resources.mem_mb}]" -p -j30 -c10 -s subclustering_snakefile.py --configfile  ../../config.yaml --config run_marker_reports=True --latency-wait 60 -n
+snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resources.mem_mb}]" -p -j30 -c10 -s subclustering_snakefile.py --configfile  ../../config.yaml --config run_marker_reports=True --latency-wait 60 -n

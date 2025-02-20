@@ -12,11 +12,11 @@ OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/02_sce_anno"
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/02_sce_anno"
 
-ANNO_CLUSTERS = config["base_input"] + config["metadata_paths"]["annotation_clusters"]
+ANNO_CLUSTERS = config["base"] + config["metadata_paths"]["annotation_clusters"]
 GENES_CLUSTERS = config["base_input"] + config["metadata_paths"]["gene_list_clusters"]
 
 COLORS_REF = config["base_input"] + config["metadata_paths"]["colors_ref"]
-COLORS = config["base_input"] + config["metadata_paths"]["colors"]
+COLORS = config["base"] + config["metadata_paths"]["colors"]
 
 VALUES =  config["values"]["02_sce_anno"]
 BATCH_USE = VALUES["batch_use"] # which colData to use as batch
@@ -99,12 +99,14 @@ rule run_mnncorrect:
     output:
         sce_output = OUTPUT_DAT + "/01_mnnc/sce_{fraction}_" + BATCH_USE + "-01"
     resources:
-        mem_mb=30000
+        mem_mb=30000,
+        queue = "medium"
     params:
         batch_use = BATCH_USE,
         nr_hvgs_BC = VALUES["nr_hvgs_batch_correction"], 
         nr_hvgs = config["values"]["nr_hvgs"], 
         seeds_umap = VALUES["seeds_umap"]
+    threads: 15
     script:
         "scripts/01_mnncorrect.R"
         
@@ -117,7 +119,8 @@ rule make_batchcorrection_reports:
         sce_input_raw = OUTPUT_BASE + "/sce_objects/01_sce_prep/08_mrge/fractions/sce_{fraction}-08",
         sce_input_corrected = rules.run_mnncorrect.output
     resources:
-        mem_mb = 65000
+        mem_mb = 65000,
+        queue = "medium"
     output:
         OUTPUT_REP + "/01_batch_correction/batch_correction_report_{fraction}_" + BATCH_USE + ".html"
     params:
@@ -127,6 +130,7 @@ rule make_batchcorrection_reports:
         functions = "../../source/sce_functions.R",
         plotting = "../../source/plotting.R",
         colors = "../../source/colors.R"
+    threads: 5
     script:
         "batch_correction_report.Rmd" 
   
@@ -141,10 +145,12 @@ rule louvain_clustering:
     output:
         sce_output = OUTPUT_DAT + "/02_clst/sce_{fraction}-02"
     resources:
-        mem_mb = 50000
+        mem_mb = 50000,
+        queue = "medium"
     params:
         k_graph_list = VALUES["k_graph_list"],
         resolution_louvain_list = VALUES["resolution_louvain_list"]
+    threads: 20
     script:
         "scripts/02_louvain_clustering.R"
   
@@ -156,7 +162,8 @@ rule make_clustering_report:
     input:
         sce_l = rules.louvain_clustering.output
     resources:
-        mem_mb = 50000
+        mem_mb = 50000,
+        queue = "medium"
     params:
         colors_ref_path = COLORS_REF,
         colors_path = COLORS,
@@ -165,6 +172,7 @@ rule make_clustering_report:
         colors = "../../source/colors.R"
     output:
         OUTPUT_REP + "/02_clustering/clustering_report_{fraction}.html"
+    threads: 5
     script:
         "clustering_report.Rmd"
         
@@ -180,9 +188,11 @@ rule separate_sce:
     input: 
         sce_input = expand(OUTPUT_DAT + "/02_clst/sce_{fraction}-02", fraction = fractions)
     resources:
-        mem_mb = 40000
+        mem_mb = 40000,
+        queue = "medium"
     output:
         output = output
+    threads: 1,
     script:
         "scripts/03_separate_dummy.R"
         
@@ -199,9 +209,11 @@ rule find_markers:
     output:
         markers = OUTPUT_DAT + "/04_annc/01_markers/markers_{fraction}"
     resources:
-        mem_mb = 50000
+        mem_mb = 50000,
+        queues = "medium"
     params:
         nr_hvgs = config["values"]["nr_hvgs"]
+    threads: 5
     script:
         "scripts/04_markers_clusters.R"
 
@@ -210,9 +222,11 @@ rule go_analysis:
     input: 
         markers = rules.find_markers.output
     resources:
-        mem_mb = 5000
+        mem_mb = 5000,
+        queues = "medium"
     output:
         go = OUTPUT_DAT + "/04_annc/02_goan/go_{fraction}"
+    threads: 5
     script:
         "scripts/04_go_clusters.R"
 
@@ -228,13 +242,15 @@ if RUN_ANNO_REPORTS:
       output:
           OUTPUT_REP + "/03_anno_clusters/annotation_{fraction}_cluster_{cluster}.html"
       resources:
-        mem_mb = 200000
+        mem_mb = 200000,
+        queues = "long"
       params:
           colors_ref_path = COLORS_REF,
           colors_path = COLORS,
           functions = "../../source/sce_functions.R",
           plotting = "../../source/plotting.R",
           colors = "../../source/colors.R"
+      threads: 5
       script:
           "cluster_anno_report.Rmd"
         
@@ -244,9 +260,11 @@ rule assign_annotation:
         sce_input = rules.louvain_clustering.output,
         anno_clusters = ANNO_CLUSTERS
     resources:
-        mem_mb = 80000  
+        mem_mb = 80000,
+        queue = "medium"
     output:      
         sce_output = OUTPUT_DAT + "/04_annc/03_sce/sce_{fraction}-04"
+    threads: 4
     script:
         "scripts/04_anno_clusters.R"
         
@@ -263,12 +281,14 @@ rule run_mnncorrect_species:
     output:
         sce_output = OUTPUT_DAT + "/01_mnnc/comparison/sce_{species}_{fraction}_" + BATCH_USE + "-01"
     resources:
-        mem_mb = 20000
+        mem_mb = 20000,
+        queue = "medium"
     params:
         batch_use = BATCH_USE,
         nr_hvgs_BC = VALUES["nr_hvgs_batch_correction"], 
         nr_hvgs = config["values"]["nr_hvgs"], 
         seeds_umap = VALUES["seeds_umap"]
+    threads: 15
     script:
         "scripts/01_mnncorrect.R"
 
@@ -279,10 +299,12 @@ rule louvain_clustering_species:
     output:
         sce_output = OUTPUT_DAT + "/02_clst/comparison/sce_{species}_{fraction}-02"
     resources:
-        mem_mb = 10000
+        mem_mb = 10000,
+        queue = "medium"
     params:
         k_graph_list = VALUES["k_graph_list"],
         resolution_louvain_list = VALUES["resolution_louvain_list"]
+    threads: 20
     script:
         "scripts/02_louvain_clustering.R"
 
@@ -296,7 +318,8 @@ rule make_clustering_comparison_report:
         sce_l_species = rules.louvain_clustering_species.output,
         sce_l_celltypes = rules.assign_annotation.output
     resources:
-        mem_mb = 80000
+        mem_mb = 80000,
+        queue = "medium"
     params:
         colors_path = COLORS,
         plotting = "../../source/plotting.R",
@@ -305,5 +328,6 @@ rule make_clustering_comparison_report:
         "../../envs/ggalluvial.yml"
     output:
         OUTPUT_REP + "/02_clustering/comparison/clustering_report_{species}_{fraction}.html"
+    threads: 5
     script:
         "clustering_comparison_report.Rmd"

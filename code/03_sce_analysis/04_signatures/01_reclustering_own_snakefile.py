@@ -12,7 +12,7 @@ OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/04_signatures/0
 print(OUTPUT_DAT)
 print(OUTPUT_REP)
 
-COLORS = config["base_input"] + config["metadata_paths"]["colors"]
+COLORS = config["base"] + config["metadata_paths"]["colors"]
 
 CELL_TYPES_EXCLUDE = config["values"]["03_sce_analysis"]["cell_types_exclude"]
 
@@ -79,8 +79,7 @@ for f in fractions:
     #targets = targets + [OUTPUT_DAT + "/08_expp/mmms-vs-markrand_" + f] # not required atm, remove once decision is final
     targets = targets + [OUTPUT_REP + "/perm_genesets_" + f + ".html"]
 
-
-targets = targets + [OUTPUT_REP + "/genesets_summary.html"]
+#targets = targets + [OUTPUT_REP + "/genesets_summary.html"]
 
 # downloaded code from mcclust, explanation below
 targets = targets + ["../../source/mcclust/mcclust-master/R/vi.dist.R"]

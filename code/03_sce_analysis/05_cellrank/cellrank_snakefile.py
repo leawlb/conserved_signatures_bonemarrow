@@ -8,7 +8,7 @@ OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/03_sce_analysis/05_cellrank"
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/05_cellrank"
 
-COLORS = config["base_input"] + config["metadata_paths"]["colors"]
+COLORS = config["base"] + config["metadata_paths"]["colors"]
 
 print(OUTPUT_DAT)
 #-------------------------------------------------------------------------------
@@ -82,7 +82,7 @@ rule cellrank:
     conda:
         "../../envs/cellrank.yml"
     resources:
-        mem_mb=10000,
+        mem_mb=20000,
         queue="medium"
     threads: 10
     script:

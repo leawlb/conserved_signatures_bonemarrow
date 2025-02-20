@@ -3504,3 +3504,86 @@ ustils::sessionInfo()
 ```
 
 
+# Parking chunks
+
+```{r perm_score_df_sign1, include = FALSE, eval = FALSE}
+# get the required permutated score DFs
+
+# comparing two larger signatures to conserved identity signature
+# head(psdf_hsc_mark_signrand)
+# head(psdf_hsc_mmms_signrand) 
+# 
+# # flip VI for each of them
+# psdf_hsc_mark_signrand$variation_information <- 0-
+#   psdf_hsc_mark_signrand$variation_information
+# psdf_hsc_mmms_signrand$variation_information <- 0-
+#   psdf_hsc_mmms_signrand$variation_information
+```
+
+```{r perm_score_df_sign2, include = FALSE, eval = FALSE}
+# psdf_mark_signrand_long <- tidyr::pivot_longer(
+#   psdf_hsc_mark_signrand, 
+#   c = 1:ncol(psdf_hsc_mark_signrand),
+#   values_to = "value",
+#   names_to = "type")
+# 
+# psdf_mark_signrand_long$conservation_level_long = base::rep(
+#   "conserved markers", nrow(psdf_mark_signrand_long))
+# 
+# psdf_mark_signrand_score_1 <- psdf_mark_signrand_long[
+#   psdf_mark_signrand_long$type == score1,]
+# psdf_mark_signrand_score_2 <- psdf_mark_signrand_long[
+#   psdf_mark_signrand_long$type == score2,]
+# psdf_mark_signrand_score_3 <- psdf_mark_signrand_long[
+#   psdf_mark_signrand_long$type == score3,]
+```
+
+```{r perm_score_df_sign3, include = FALSE, eval = FALSE}
+
+# psdf_mmms_signrand_long <- tidyr::pivot_longer(
+#   psdf_hsc_mmms_signrand, 
+#   c = 1:ncol(psdf_hsc_mmms_signrand),
+#   values_to = "value",
+#   names_to = "type")
+# 
+# psdf_mmms_signrand_long$conservation_level_long = base::rep(
+#   "BL6 markers", nrow(psdf_mmms_signrand_long))
+# 
+# psdf_mmms_signrand_score_1 <- psdf_mmms_signrand_long[
+#   psdf_mmms_signrand_long$type == score1,]
+# psdf_mmms_signrand_score_2 <- psdf_mmms_signrand_long[
+#   psdf_mmms_signrand_long$type == score2,]
+# psdf_mmms_signrand_score_3 <- psdf_mmms_signrand_long[
+#   psdf_mmms_signrand_long$type == score3,]
+```
+
+```{r o1_scoredf_3, eval = FALSE, include = FALSE}
+# score_df_mark_o1 <- score_df_hsc_o1[
+#   score_df_hsc_o1$conservation_level == "conserved_markers",]
+# score_df_mark_o1$conservation_level_long <- "conserved markers"
+# 
+# score_df_mark_score_1_o1 <- score_df_mark_o1[
+#   score_df_mark_o1$type == score1,]
+# score_df_mark_score_2_o1 <- score_df_mark_o1[
+#   score_df_mark_o1$type == score2,]
+# score_df_mark_score_3_o1 <- score_df_mark_o1[
+#   score_df_mark_o1$type == score3,]
+```
+
+```{r o1_scoredf_7, include = FALSE, eval = FALSE}
+
+# psdf_mark_signrand_long_o1 <- tidyr::pivot_longer(
+#   psdf_hsc_mark_signrand_o1, 
+#   c = 1:ncol(psdf_hsc_mark_signrand_o1),
+#   values_to = "value",
+#   names_to = "type")
+# psdf_mark_signrand_long_o1$conservation_level_long = base::rep(
+#   "conserved markers", nrow(psdf_mark_signrand_long_o1))
+# 
+# psdf_mark_signrand_score_1_o1 <- psdf_mark_signrand_long_o1[
+#   psdf_mark_signrand_long_o1$type == score1,]
+# psdf_mark_signrand_score_2_o1 <- psdf_mark_signrand_long_o1[
+#   psdf_mark_signrand_long_o1$type == score2,]
+# psdf_mark_signrand_score_3_o1 <- psdf_mark_signrand_long_o1[
+#   psdf_mark_signrand_long_o1$type == score3,]
+```

@@ -99,8 +99,8 @@ values:
     ndge_fc_cutoff: 1.5 # above which genes are excluded from nDGEs
   03_sce_analysis:
     cell_types_exclude: 
-      - "Lymphatic ECs"
-      - "Chondrocytes"
+      - "Lymphatic EC"
+      - "Chondrocyte"
     reclustering_cutoff_prop: 0.015 # minimum proportion of cells that express a given gene to keep it for permutation
     nr_cores: 20 # nr of cores for parallelization for reclustering and permutation
     iterations: 500 # nr of iterations for permutation

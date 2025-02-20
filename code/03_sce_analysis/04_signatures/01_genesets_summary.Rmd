@@ -51,6 +51,7 @@ geneset_list_str <- base::readRDS(snakemake@input[["geneset_list_str"]])
 
 # cell types to exclude (stromal only)
 cts_exclude <- snakemake@params[["cts_exclude"]]
+print(cts_exclude)
 
 # subset to required cell types (sce_str only)
 sce_str <- sce_str[,which(!sce_str$celltypes %in% cts_exclude)]
@@ -1250,7 +1251,7 @@ Making one example plot for HSCs using all BL6 markers
 
 hsc_cons_df <- geneset_list_hsc$HSCs$conserved_df
 
-agg_hscs <- agg_hsc_list$HSCs
+agg_hscs <- agg_hsc_list$HSC
 
 vis_df_hsc <- base::as.data.frame(
   t(SummarizedExperiment::assays(agg_hscs)$logcounts)) # batchnorm

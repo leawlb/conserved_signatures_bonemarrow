@@ -8,11 +8,10 @@ OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/02_sce_anno"
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/02_sce_anno/04_nDGE"
 
-COLORS_REF = config["base_input"] + config["metadata_paths"]["colors_ref"]
-COLORS = config["base_input"] + config["metadata_paths"]["colors"]
+COLORS = config["base"] + config["metadata_paths"]["colors"]
 
 GENES_CLUSTERS = config["base_input"] + config["metadata_paths"]["gene_list_clusters"]
-SV_PATH = config["base_input"] + config["metadata_paths"]["sources_variation"]["annotation_species"]
+SV_PATH = config["base"] + config["metadata_paths"]["sources_variation"]["annotation_species"]
 
 METADATA = pd.read_csv(config["table"])
 def get_list(metadata, column):
@@ -83,7 +82,9 @@ rule aggregate_convert:
     output:
         deseq_output = OUTPUT_DAT + "/05_desq/deseq_{fraction}-05"
     resources:
-        mem_mb=25000
+        mem_mb=25000,
+        queue = "medium"
+    threads: 4
     script:
         "scripts/05_aggregate_convert.R"
 
@@ -96,7 +97,9 @@ rule qc_deseq:
         rlog = OUTPUT_DAT + "/06_dsqc/rlog_{fraction}",
         sva = OUTPUT_DAT + "/06_dsqc/sva_{fraction}"
     resources:
-        mem_mb=5000
+        mem_mb=5000,
+        queue = "medium"
+    threads: 4
     script:
         "scripts/06_prep_qc_deseq.R"  
 
@@ -109,7 +112,9 @@ rule preprocessing_deseq:
         sva = rules.qc_deseq.output.sva,
         sv_path = SV_PATH
     resources:
-        mem_mb=5000
+        mem_mb=5000,
+        queue = "medium"
+    threads: 4
     output:
         deseq_output = OUTPUT_DAT + "/07_tdsq/deseq_{fraction}-07"
     script:
@@ -126,7 +131,9 @@ rule export_results_ndge:
         clusters_hsc = clusters_hsc,
         clusters_str = clusters_str
     resources:
-        mem_mb=5000
+        mem_mb=5000,
+        queue = "medium"
+    threads: 4
     output:
         # lists sorted by cluster 
         cluster_res = OUTPUT_DAT + "/08_nres/" + tf + "/res_{fraction}_cluster",
@@ -148,7 +155,9 @@ rule ndge_bulk_report:
     output:
         OUTPUT_REP + "/bulk/bulk_quality_report_cluster_{cluster}_{fraction}.html"
     resources:
-        mem_mb=25000
+        mem_mb=25000,
+        queue = "medium"
+    threads: 4
     params:
         colors_path = COLORS,
         plotting = "../../source/plotting.R",
@@ -167,7 +176,9 @@ rule ndge_sv_report:
     output:
         OUTPUT_REP + "/ndge/ndge_report_sv_{cluster}_{fraction}.html"
     resources:
-        mem_mb=25000
+        mem_mb=25000,
+        queue = "medium"
+    threads: 4
     params:
         plotting = "../../source/plotting.R"
     script:
@@ -187,7 +198,9 @@ rule ndge_cluster_report:
     output:
         OUTPUT_REP + "/ndge/ndge_report_cluster_{cluster}_{fraction}.html"
     resources:
-        mem_mb=15000
+        mem_mb=15000,
+        queue = "medium"
+    threads: 4
     params:
         padj_cutoff = PADJ_CUTOFF,
         fc_cutoff = FC_CUTOFF,

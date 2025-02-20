@@ -74,6 +74,15 @@ seu_hsc_recl_list_o1 <- base::readRDS(base::paste0(
   base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_mus_tm_bonemarrow_list"))
 
+# CALIBRATION list of objects, to make sure that clusterings are identical
+# after re-run (testing clusterings instead of whole objects because seurat
+# documents time of running each command, and those will differ)
+seu_hsc_recl_list_o1_CAL <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other_CALIBRATE/03_recl/reclustered_mus_tm_bonemarrow_list"))
+stopifnot(identical(seu_hsc_recl_list_o1_CAL$seu_sign[[1]]$seurat_clusters,
+                seu_hsc_recl_list_o1$seu_sign[[1]]$seurat_clusters))
+
 # list of dataframes of re-clustering scores for each gene set and resolution
 score_df_hsc_list_o1 <- base::readRDS(base::paste0(
   base_path,
@@ -144,14 +153,13 @@ pattern_spacing_val <- 0.09
 
 color_hline_background <- "grey97"
 
-## CHECK SCORE MAX!!
 score2 <- "variation_information"
 score1 <- "adjusted_rand_index"
 score3 <- "mean_prop_cells_cluster"
 
-score2_long <- "Variation of\ninformation"
-score1_long <- "Adjusted Rand\nindex"
-score3_long <- "Mean\nproportion"
+score2_long <- "Variation of\nInformation"
+score1_long <- "Adjusted Rand\nIndex"
+score3_long <- "Mean\nProportion"
 
 nr_genes_title <- "#genes\n "
 ```
@@ -238,9 +246,6 @@ output_pdf_mmms_sign_plot <-  base::paste0(
 
 output_pdf_heatmaps_others_plot <- base::paste0(
    base_path, "/manuscript1/figure3/figure3_heatmaps_others.pdf")
-# 
-# output_pdf_ALL_plot <- base::paste0(
-#    base_path, "/manuscript1/figure3/figure3_all_dist_plots.pdf")
 ```
 
 # Obtain data for text
@@ -381,57 +386,6 @@ psdf_mmms_rand_score_3 <- psdf_mmms_rand_long[
   psdf_mmms_rand_long$type == score3,]
 ```
 
-```{r perm_score_df_sign1, include = FALSE, eval = FALSE}
-# get the required permutated score DFs
-
-# comparing two larger signatures to conserved identity signature
-# head(psdf_hsc_mark_signrand)
-# head(psdf_hsc_mmms_signrand) 
-# 
-# # flip VI for each of them
-# psdf_hsc_mark_signrand$variation_information <- 0-
-#   psdf_hsc_mark_signrand$variation_information
-# psdf_hsc_mmms_signrand$variation_information <- 0-
-#   psdf_hsc_mmms_signrand$variation_information
-```
-
-```{r perm_score_df_sign2, include = FALSE, eval = FALSE}
-# psdf_mark_signrand_long <- tidyr::pivot_longer(
-#   psdf_hsc_mark_signrand, 
-#   c = 1:ncol(psdf_hsc_mark_signrand),
-#   values_to = "value",
-#   names_to = "type")
-# 
-# psdf_mark_signrand_long$conservation_level_long = base::rep(
-#   "conserved markers", nrow(psdf_mark_signrand_long))
-# 
-# psdf_mark_signrand_score_1 <- psdf_mark_signrand_long[
-#   psdf_mark_signrand_long$type == score1,]
-# psdf_mark_signrand_score_2 <- psdf_mark_signrand_long[
-#   psdf_mark_signrand_long$type == score2,]
-# psdf_mark_signrand_score_3 <- psdf_mark_signrand_long[
-#   psdf_mark_signrand_long$type == score3,]
-```
-
-```{r perm_score_df_sign3, include = FALSE, eval = FALSE}
-
-# psdf_mmms_signrand_long <- tidyr::pivot_longer(
-#   psdf_hsc_mmms_signrand, 
-#   c = 1:ncol(psdf_hsc_mmms_signrand),
-#   values_to = "value",
-#   names_to = "type")
-# 
-# psdf_mmms_signrand_long$conservation_level_long = base::rep(
-#   "BL6 markers", nrow(psdf_mmms_signrand_long))
-# 
-# psdf_mmms_signrand_score_1 <- psdf_mmms_signrand_long[
-#   psdf_mmms_signrand_long$type == score1,]
-# psdf_mmms_signrand_score_2 <- psdf_mmms_signrand_long[
-#   psdf_mmms_signrand_long$type == score2,]
-# psdf_mmms_signrand_score_3 <- psdf_mmms_signrand_long[
-#   psdf_mmms_signrand_long$type == score3,]
-```
-
 ### OTHER 1 
 
 ```{r o1_scoredf_1}
@@ -485,19 +439,6 @@ score_df_sign_score_2_o1 <- score_df_sign_o1[
   score_df_sign_o1$type == score2,]
 score_df_sign_score_3_o1 <- score_df_sign_o1[
   score_df_sign_o1$type == score3,]
-```
-
-```{r o1_scoredf_3, eval = FALSE, include = FALSE}
-# score_df_mark_o1 <- score_df_hsc_o1[
-#   score_df_hsc_o1$conservation_level == "conserved_markers",]
-# score_df_mark_o1$conservation_level_long <- "conserved markers"
-# 
-# score_df_mark_score_1_o1 <- score_df_mark_o1[
-#   score_df_mark_o1$type == score1,]
-# score_df_mark_score_2_o1 <- score_df_mark_o1[
-#   score_df_mark_o1$type == score2,]
-# score_df_mark_score_3_o1 <- score_df_mark_o1[
-#   score_df_mark_o1$type == score3,]
 ```
 
 ```{r o1_scoredf_4}
@@ -571,24 +512,6 @@ psdf_mmms_rand_score_2_o1 <- psdf_mmms_rand_long_o1[
   psdf_mmms_rand_long_o1$type == score2,]
 psdf_mmms_rand_score_3_o1 <- psdf_mmms_rand_long_o1[
   psdf_mmms_rand_long_o1$type == score3,]
-```
-
-```{r o1_scoredf_7, include = FALSE, eval = FALSE}
-
-# psdf_mark_signrand_long_o1 <- tidyr::pivot_longer(
-#   psdf_hsc_mark_signrand_o1, 
-#   c = 1:ncol(psdf_hsc_mark_signrand_o1),
-#   values_to = "value",
-#   names_to = "type")
-# psdf_mark_signrand_long_o1$conservation_level_long = base::rep(
-#   "conserved markers", nrow(psdf_mark_signrand_long_o1))
-# 
-# psdf_mark_signrand_score_1_o1 <- psdf_mark_signrand_long_o1[
-#   psdf_mark_signrand_long_o1$type == score1,]
-# psdf_mark_signrand_score_2_o1 <- psdf_mark_signrand_long_o1[
-#   psdf_mark_signrand_long_o1$type == score2,]
-# psdf_mark_signrand_score_3_o1 <- psdf_mark_signrand_long_o1[
-#   psdf_mark_signrand_long_o1$type == score3,]
 ```
 
 ```{r o1_scoredf_8}
@@ -693,40 +616,6 @@ vis_df_mark_rand_own$type_y <- factor(
   "permutation gene set")))
 ```
 
-```{r own_numberdf_3_old, include = FALSE, eval = FALSE}
-# vis_df_mark_own <- base::data.frame(
-#   type_y = c(
-#     "conserved markers",
-#     "conserved markers",
-#     "permutation gene set",
-#     "permutation gene set"),
-#   type_fill = c(
-#     "conserved identity signature",
-#     "conserved markers",
-#     "conserved identity signature",
-#     "random genes"),
-#   number = c(
-#     nr_sign_used_own,
-#     nr_mark_left_own,
-#     nr_sign_used_own,
-#     nr_mark_left_own)
-# )
-
-# vis_df_mark_own$type_fill <- factor(
-#   vis_df_mark_own$type_fill, levels = base::rev(c(
-#   "conserved identity signature",
-#   "conserved markers",
-#   "random genes"
-# )))
-# vis_df_mark_own$type_y <- factor(
-#   vis_df_mark_own$type_y, levels = base::rev(c(
-#   "conserved markers",
-#   "permutation gene set"
-# )))
-
-
-```
-
 ```{r own_numberdf_4}
 vis_df_mmms_rand_own <- base::data.frame(
   type_y = c(
@@ -751,40 +640,6 @@ vis_df_mmms_rand_own$type_y <- factor(
   vis_df_mmms_rand_own$type_y, levels = base::rev(c(
   "BL6 markers",
   "permutation gene set")))
-```
-
-```{r own_numberdf_4_old, include = FALSE, eval = FALSE}
-# 
-# vis_df_mmms_own <- base::data.frame(
-#   type_y = c(
-#     "BL6 markers",
-#     "BL6 markers",
-#     "permutation gene set",
-#     "permutation gene set"),
-#   type_fill = c(
-#     "conserved identity signature",
-#     "BL6 markers",
-#     "conserved identity signature",
-#     "random genes"),
-#   number = c(
-#     nr_sign_used_own,
-#     nr_mmms_left_own,
-#     nr_sign_used_own,
-#     nr_mmms_left_own)
-# )
-
-# vis_df_mmms_own$type_fill <- factor(
-#   vis_df_mmms_own$type_fill, levels = base::rev(c(
-#   "conserved identity signature",
-#   "BL6 markers",
-#   "random genes"
-# )))
-# vis_df_mmms_own$type_y <- factor(
-#   vis_df_mmms_own$type_y, levels = base::rev(c(
-#   "BL6 markers",
-#   "permutation gene set"
-# )))
-
 ```
 
 ## Other 1
@@ -827,39 +682,6 @@ vis_df_sign_rand_o1$type_fill <- factor(
   vis_df_sign_rand_o1$type_fill, levels = base::rev(c(
   "conserved identity signature",
   "random genes")))
-```
-
-```{r o1_numberdf_3, include = FALSE, eval = FALSE}
-# vis_df_mark_o1 <- base::data.frame(
-#   type_y = c(
-#     "conserved markers",
-#     "conserved markers",
-#     "permutation gene set",
-#     "permutation gene set"),
-#   type_fill = c(
-#     "conserved identity signature",
-#     "conserved markers",
-#     "conserved identity signature",
-#     "random genes"),
-#   number = c(
-#     nr_sign_used_o1,
-#     nr_mark_left_o1,
-#     nr_sign_used_o1,
-#     nr_mark_rand_o1)
-# )
-# 
-# # factor for plot
-# vis_df_mark_o1$type_fill <- factor(vis_df_mark_o1$type_fill, 
-#                                    levels = base::rev(c(
-#   "conserved identity signature",
-#   "conserved markers",
-#   "random genes"
-# )))
-# vis_df_mark_o1$type_y <- factor(vis_df_mark_o1$type_y, 
-#                                 levels = base::rev(c(
-#   "conserved markers",
-#   "permutation gene set"
-# )))
 ```
 
 ```{r o1_numberdf_4}
@@ -915,38 +737,6 @@ vis_df_mmms_signrand_o1$type_y <- factor(
   vis_df_mmms_signrand_o1$type_y, levels = base::rev(c(
   "BL6 markers",
   "permutation gene set")))
-```
-
-```{r o1_numberdf_4_old, include = FALSE, eval = FALSE}
-# vis_df_mmms_o1 <- base::data.frame(
-#   type_y = c(
-#     "BL6 markers",
-#     "BL6 markers",
-#     "permutation gene set",
-#     "permutation gene set"),
-#   type_fill = c(
-#     "conserved identity signature",
-#     "BL6 markers",
-#     "conserved identity signature",
-#     "random genes"),
-#   number = c(
-#     nr_sign_used_o1,
-#     nr_mmms_left_o1,
-#     nr_sign_used_o1,
-#     nr_mmms_rand_o1)
-# )
-
-# vis_df_mmms_o1$type_fill <- factor(vis_df_mmms_o1$type_fill, 
-#                                    levels = base::rev(c(
-#   "conserved identity signature",
-#   "BL6 markers",
-#   "random genes"
-# )))
-# vis_df_mmms_o1$type_y <- factor(vis_df_mmms_o1$type_y, 
-#                                 levels = base::rev(c(
-#   "BL6 markers",
-#   "permutation gene set"
-# )))
 ```
 
 ## Mins and Maxs
@@ -1538,12 +1328,6 @@ theme_plot_bp3_o1 <- base_plot_bp3_o1+
     axis.ticks.x = element_blank(),
     axis.title.x = element_blank(),
     axis.line.x = element_blank())
-```
-
-```{r a_legend_export}
-# pdf(output_pdf_bp_legend_poster, width = 4, height = 3)
-# legend_bp_all_poster
-# dev.off()
 ```
 
 #### Adjusted Rand index (Score 1)

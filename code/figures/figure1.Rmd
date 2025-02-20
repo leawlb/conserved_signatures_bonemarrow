@@ -28,7 +28,7 @@ library(scuttle, quietly = TRUE)
 base_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data/"
 ```
 
-```{r load_manual}
+```{r load_sce}
 # load data for manual use here
 
 # fully annotated SCE objects
@@ -40,7 +40,7 @@ sce_str <- base::readRDS(base::paste0(
   "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10"))
 ```
 
-```{r load_manual_short}
+```{r load_short}
 # gene list for dotplot with details
 gene_list_dtplt <- base::paste0(
   base_path, 
@@ -122,8 +122,8 @@ output_pdf_dotplot_legend <- base::paste0(
 source("determine_params.R")
 
 # specific params
-ct_hsc <- "HSCs"
-ct_str <- "Adipo/CARs"
+ct_hsc <- "HSC"
+ct_str <- "Adipo/CAR"
 ```
 
 ```{r prep_sces}

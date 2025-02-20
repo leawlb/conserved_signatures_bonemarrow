@@ -27,8 +27,7 @@ adata = sc.read_h5ad(snakemake.input['adata_input'])
 # Calculate neighbors according to scanpy tutorials based on PCA after BC
 # use random_state=0 as mentioned in cellrank tutorial
 
-# check out if the number 50 relates to PCs or neighbors!
-sc.pp.neighbors(adata, 50, use_rep = 'PCA', random_state=0)
+sc.pp.neighbors(adata, n_neighbors = 50, use_rep = 'PCA', random_state=0)
 
 #-------------------------------------------------------------------------------
 # calculate UMAP for visualisation in python
@@ -42,7 +41,7 @@ sc.tl.diffmap(adata, n_comps=15)
 # calculate diffusion pseudotime 
 # define root cell type
 
-adata.uns['iroot'] = np.flatnonzero(adata.obs['celltypes'] == 'HSCs')[0]
+adata.uns['iroot'] = np.flatnonzero(adata.obs['celltypes'] == 'HSC')[0]
 sc.tl.dpt(adata)
 print(adata)
 

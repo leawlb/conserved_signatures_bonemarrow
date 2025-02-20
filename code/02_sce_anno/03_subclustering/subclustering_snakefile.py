@@ -8,7 +8,7 @@ OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/02_sce_anno"
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/02_sce_anno/05_subclustering"
 
-COLORS = config["base_input"] + config["metadata_paths"]["colors"]
+COLORS = config["base"] + config["metadata_paths"]["colors"]
 COLORS_REF = config["base_input"] + config["metadata_paths"]["colors_ref"]
 
 VALUES =  config["values"]["02_sce_anno"]
@@ -16,11 +16,18 @@ VALUES =  config["values"]["02_sce_anno"]
 GENE_LIST_CLUSTERS = config["base_input"] + config["metadata_paths"]["gene_list_clusters"]
 GENE_LIST_SUBCLUSTERING = config["base_input"] + config["metadata_paths"]["gene_list_subclustering"]
 GENE_LIST_DOTPLOT = config["base_input"] + config["metadata_paths"]["gene_list_dotplot"]
-GENE_LIST_DOTPLOT_SHORT = config["base_input"] + config["metadata_paths"]["gene_list_dotplot_short"]
-ANNO_SUBCLUSTERS = config["base_input"] + config["metadata_paths"]["annotation_subclusters"]
-ANNO_FINAL = config["base_input"] + config["metadata_paths"]["annotation_final"]
+
+ANNO_SUBCLUSTERS = config["base"] + config["metadata_paths"]["annotation_subclusters"]
+ANNO_FINAL = config["base"] + config["metadata_paths"]["annotation_final"]
 
 RUN_MARKER_REPORTS = config["run_marker_reports"]
+
+print(ANNO_FINAL)
+print(ANNO_SUBCLUSTERS)
+
+print(GENE_LIST_CLUSTERS)
+print(GENE_LIST_SUBCLUSTERING)
+print(GENE_LIST_DOTPLOT)
 
 
 #-------------------------------------------------------------------------------
@@ -94,7 +101,9 @@ rule subclustering:
         anno_subcl = ANNO_SUBCLUSTERS,
         genes_list_shared = OUTPUT_DAT + "/08_nres/PC_0.05_FC_1.5/res_{fraction}_cluster_shared"
     resources:
-        mem_mb=25000
+        mem_mb = 25000,
+        queue = "medium"
+    threads: 20
     output:
         sce_output = OUTPUT_DAT + "/09_sbcl/sce_{fraction}_cluster_{cluster}-09"
     script:
@@ -109,7 +118,9 @@ rule subclustering_mclust_report:
     output:
         OUTPUT_REP + "/mclust/mclust_report_{fraction}_cluster_{cluster}.html"
     resources:
-        mem_mb=10000
+        mem_mb=10000,
+        queue = "medium"
+    threads: 4
     params:
         colors_path = COLORS,
         plotting = "../../source/plotting.R",
@@ -139,7 +150,9 @@ rule add_subclusters:
         nr_hvgs = config["values"]["nr_hvgs"],
         seeds_umap = VALUES["seeds_umap_after"]
     resources:
-        mem_mb=35000
+        mem_mb=35000,
+        queue = "medium"
+    threads: 10
     output:
         sce_output = OUTPUT_DAT + "/10_anns/sce_{fraction}-10"
     script:
@@ -156,7 +169,9 @@ rule make_subclustering_results_report_dotplot:
         colors_path = COLORS,
         colors = "../../source/colors.R"
     resources:
-        mem_mb=30000
+        mem_mb=30000,
+        queue = "medium"
+    threads: 4
     output:
         OUTPUT_REP + "/results/results_report_{fraction}_dotplots.html"
     script:
@@ -170,7 +185,9 @@ rule make_subclustering_results_report_umaps:
         plotting = "../../source/plotting.R",
         colors = "../../source/colors.R"
     resources:
-        mem_mb=45000
+        mem_mb=45000,
+        queue = "medium"
+    threads: 4
     output:
         OUTPUT_REP + "/results/results_report_{fraction}_umaps.html"
     script:
@@ -188,7 +205,9 @@ rule separate_sce:
     input: 
         sce_input = expand(OUTPUT_DAT + "/10_anns/sce_{fraction}-10", fraction = fractions)
     resources:
-        mem_mb=25000
+        mem_mb=25000,
+        queue = "medium"
+    threads: 1
     output:
         output = output
     script:
@@ -204,7 +223,9 @@ rule find_markers:
     output:
         markers = OUTPUT_DAT + "/12_anqc/01_markers/markers_{fraction}"
     resources:
-        mem_mb=45000
+        mem_mb=45000,
+        queue = "medium"
+    threads: 10
     params:
         nr_hvgs = config["values"]["nr_hvgs"]
     script:
@@ -215,7 +236,9 @@ rule go_analysis:
     input: 
         markers = rules.find_markers.output
     resources:
-        mem_mb=10000
+        mem_mb=10000,
+        queue = "medium"
+    threads: 10
     output:
         go = OUTPUT_DAT + "/12_anqc/02_go/go_{fraction}"
     script:
@@ -232,7 +255,9 @@ rule make_subclustering_markers_report:
     output:
         OUTPUT_REP + "/markergenes/markergenes_report_{fraction}_subcluster_{subcluster}.html"
     resources:
-        mem_mb=25000
+        mem_mb=25000,
+        queue = "medium"
+    threads: 4
     params:
         colors_path = COLORS,
         plotting = "../../source/plotting.R",

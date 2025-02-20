@@ -10,7 +10,7 @@ import pandas as pd
 
 #-------------------------------------------------------------------------------
 
-# use this command in this repository with snkmk_isbm
+# use this command in this repository with snakemake_isbm
 """
 snakemake --cluster "bsub -q medium -n1 -R rusage[mem=80GB]" -p -j2 -c1 -s figures_snakemake.py --latency-wait 20 --configfile ../config.yaml -n
 """

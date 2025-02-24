@@ -1,0 +1,10 @@
+  # 05_cci_prep:
+  #   min_cells: 60 # min number of cells required per cell type to consider for cci
+  #   min_perc: 0.05 # min percentage of cells per cell type a gene must be expressed in to consider for cci
+  #   top_level: 300 # top level of ligand-receptor pairs to ensure even leveling of ranks and scores
+  #   colname_identity: celltypes
+  #   iterations: 250
+  #   min_sp_age_perc: 0.1 # % of iterations that must be successful for stats calc
+  #   nr_cores_age: 20
+  #   nr_cores_cts: 25
+  #   min_sp_cts: 3

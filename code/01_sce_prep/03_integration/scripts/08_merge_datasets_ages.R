@@ -1,6 +1,7 @@
 #-------------------------------------------------------------------------------
 
 library(scran)
+RNGkind("L'Ecuyer-CMRG") 
 set.seed(37)
 
 source(file = snakemake@params[["functions"]])

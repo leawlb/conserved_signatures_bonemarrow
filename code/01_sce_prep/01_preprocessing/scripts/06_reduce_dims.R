@@ -2,7 +2,10 @@
 # authors: Amy Danson, Lea Wölbert
 # extract highly variable genes and reduce dimensions for QC purposes
 
+RNGkind("L'Ecuyer-CMRG")
 set.seed(37)
+
+
 source(file = snakemake@params[["functions"]])
 
 #-------------------------------------------------------------------------------

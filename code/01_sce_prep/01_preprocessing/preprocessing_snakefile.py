@@ -193,7 +193,7 @@ rule make_dmg_reports:
     resources:
         mem_mb=20000,
         queue="medium"
-    threads: 2
+    threads: 5
     params:
         nr_hvgs = config["values"]["nr_hvgs"],
         plotting = "../../source/plotting.R" # path to source file

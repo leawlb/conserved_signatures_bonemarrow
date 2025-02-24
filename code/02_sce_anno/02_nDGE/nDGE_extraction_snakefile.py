@@ -10,7 +10,7 @@ OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/02_sce_anno/04_nDGE"
 
 COLORS = config["base"] + config["metadata_paths"]["colors"]
 
-GENES_CLUSTERS = config["base_input"] + config["metadata_paths"]["gene_list_clusters"]
+GENES_CLUSTERS = config["base"] + config["metadata_paths"]["gene_list_clusters"]
 SV_PATH = config["base"] + config["metadata_paths"]["sources_variation"]["annotation_species"]
 
 METADATA = pd.read_csv(config["table"])

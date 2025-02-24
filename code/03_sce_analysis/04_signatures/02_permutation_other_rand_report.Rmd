@@ -1,0 +1,270 @@
+---
+title: "Reclustering permutation report"
+author: "Lea Wölbert"
+date: '2024-05-08'
+output: html_document
+---
+
+Plotting the reclustered values for overview/quality assurance.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load objects
+
+```{r seed, message = FALSE}
+set.seed(37)
+```
+
+```{r load, message = FALSE}
+library(Seurat, quietly = TRUE)
+library(tidyverse, quietly = TRUE)
+```
+
+```{r manual, include = FALSE, eval = FALSE}
+seu_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_li_all_stromal_list")
+
+dataset_curr <- "li_all_stromal"
+
+score_df_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_li_all_stromal_list")
+
+perm_score_df <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/06_psig/perm_score_df_li_all_stromal")
+
+resolution_df_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt"
+
+```
+
+```{r manualscript, include = FALSE, eval = FALSE}
+cut_off_prop <- 0.015
+nr_cores <- 1 
+iterations <- 2
+
+source("../../source/sce_functions_reclustering.R")
+
+dataset_curr <- "li_all_stromal"
+cons_level_use <- "conserved_markers"
+
+seu_preprocessed <- base::readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/li_all_stromal")
+
+seu <- seu_preprocessed
+
+# sign
+ensembl_paths <- c("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_endf/ensembl_sign_str")
+
+# mark
+ensembl_paths <- c("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_endf/ensembl_mark_str")
+
+sign_paths <- c("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/02_endf/ensembl_sign_str")
+mark_paths <- c("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/02_endf/ensembl_mark_str")
+mmms_paths <- c("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/02_endf/ensembl_mmms_str")
+
+resolution_df_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt"
+
+```
+
+```{r manualscriptown, include = FALSE, eval = FALSE}
+cut_off_counts <- 0.01
+nr_cores <- 1 
+iterations <- 2
+
+sce <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10")
+
+setwd("repositories/Interspecies_BM_phd/code/03_sce_analysis/04_signatures")
+
+source("../../source/sce_functions_reclustering.R")
+
+fraction_curr <- "str"
+k_graph <- 10
+resolution_louvain <- 0.5
+
+cts_exclude <- c("Lymphatic ECs", "Chondrocytes")
+
+cons_level_use <- "conserved_signature"
+
+ensembl <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_endf/ensembl_sign_str"
+
+```
+
+```{r load_objects}
+
+# current dataset
+dataset_curr <- snakemake@wildcards[["dataset"]] 
+cons_level_use <- snakemake@params[["cons_level_use"]] 
+print(dataset_curr)
+
+# iteration dataframe, containing all scores per iteration
+perm_score_df <- base::readRDS(snakemake@input[["perm_score_df"]])
+
+# score dataframes, containing the calculated scores per re-clustered dataset
+score_df_list_all <- base::readRDS(snakemake@input[["score_df_list"]])
+
+# load seurat list
+seu_list_all <- base::readRDS(snakemake@input[["seu_list"]])
+
+# load the datafram which contains info on which resolution to use
+resolution_df_path <- snakemake@params[["resolution_df"]] 
+print(resolution_df_path)
+
+resolution_df <- utils::read.csv(file = resolution_df_path,
+                                 header = TRUE,
+                                 sep = ";",
+                                 check.names=FALSE,
+                                 stringsAsFactors=FALSE,
+                                 as.is=TRUE,
+                                 colClasses = "character")
+
+resolution_df <- resolution_df[resolution_df$dataset == dataset_curr,]
+resl <- resolution_df$resolution[
+  resolution_df$conservation_level == cons_level_use]
+
+# subset
+if(cons_level_use == "conserved_signature"){
+  seu_reclustered <- seu_list_all$seu_sign[[as.character(resl)]]
+  score_df <- score_df_list_all$seu_sign[[as.character(resl)]]  
+}else if(cons_level_use == "conserved_markers"){
+  seu_reclustered <- seu_list_all$seu_mark[[as.character(resl)]]
+  score_df <- score_df_list_all$seu_mark[[as.character(resl)]]    
+}
+
+iterations <- nrow(perm_score_df)
+```
+
+```{r colors}
+
+# put in colors.txt once color scheme a little more finalized
+col_vec_cons <- c(
+    "conserved_signature" = "yellowgreen",
+    "conserved_markers" = "darkgreen",
+    "mmusall_markers" = "blue2",
+    "random_features" = "purple2")
+
+col_show <- col_vec_cons[names(col_vec_cons) == cons_level_use]
+print(col_show)
+```
+
+```{r print}
+print(head(score_df))
+print(head(perm_score_df))
+print(seu_reclustered)
+```
+
+# Histogram
+
+```{r perm_plots}
+
+scores <- c(
+  "adjusted_rand_index",
+  "mean_prop_cells_cluster")
+
+scores_v <- c(
+  "adjusted_rand_index",
+  "mean_prop_cells_cluster",
+  "variation_information")
+
+for(score in scores_v){
+  
+  print(score)
+  
+  score_df_temp <- score_df[score_df$type == score,]
+  perm_scores <- perm_score_df[,which(colnames(perm_score_df) == score)]
+  
+  if(score != "variation_information"){
+    max <- 1
+    pval = length(which(perm_scores > score_df_temp$value))/length(perm_scores)
+    print(pval)
+  
+  }else{
+    max <- base::max(c(score_df_temp$value, perm_scores))
+    # for variation_information score, the smaller, the better
+    pval = length(which(perm_scores < score_df_temp$value))/length(perm_scores)
+  }
+  
+  plot1 <- ggplot2::ggplot(as.data.frame(perm_scores), aes(x = perm_scores))+
+    ggplot2::geom_histogram(binwidth = 0.02)+
+    ggplot2::geom_vline(xintercept = score_df_temp$value, color = col_show)+
+    ggplot2::theme_classic()+
+    ggplot2::xlim(c(0, max))+
+    ggplot2::ggtitle(base::paste(score, 
+                                 dataset_curr, 
+                                 iterations,
+                                 "iterations",
+                                 "resololution:",
+                                 resl,
+                                 "\n",
+                                 score_df$nr_genes_used[1],
+                                 "genes used"))+
+    annotate("text", 
+             x = 0.8,
+             y = 0.8, 
+             label = base::paste0("pval = ", as.character(pval)))
+  print(plot1)
+}
+```
+
+# In two plots
+
+All scores between 0 and 1
+
+```{r all1, fig.width = 2, fig.height = 4}
+
+score_df_temp <- score_df[score_df$type %in% scores,]
+score_df_temp <- score_df_temp[
+  score_df_temp$conservation_level == cons_level_use,]
+
+perm_score_df_temp <- pivot_longer(
+  perm_score_df,
+  cols = colnames(perm_score_df)[colnames(perm_score_df) %in% scores],
+  values_to = "value",
+  names_to = "type")
+perm_score_df_temp <- perm_score_df_temp[perm_score_df_temp$type %in% scores,]
+
+ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
+  ggplot2::geom_violin(data = perm_score_df_temp,
+                       scale = "width",
+                       position = position_nudge(x = 0.2, y = 0))+
+  ggplot2::geom_point(color = col_show, 
+                      size = 2,
+                      position = position_nudge(x = -0.2, y = 0))+
+  ggplot2::ylim(c(0,1))+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle(base::paste(dataset_curr, 
+                               "\n" ,
+                               iterations,
+                               "\n" ,
+                                resl,
+                               "\n" ,
+                                score_df$nr_genes_used, 
+                               "genes"))
+```
+
+```{r all2, fig.width = 1.2, fig.height = 3}
+
+score_df_temp <- score_df[score_df$type %in% c("variation_information"),]
+score_df_temp <- score_df_temp[
+  score_df_temp$conservation_level == cons_level_use,]
+
+perm_score_df_temp <- pivot_longer(
+  perm_score_df, 
+  cols ="variation_information",
+  values_to = "value",
+  names_to = "type")
+perm_score_df_temp <- perm_score_df_temp[
+  perm_score_df_temp$type %in% c("variation_information"),]
+
+ggplot2::ggplot(score_df_temp, aes(x = type, y = value))+
+  ggplot2::geom_violin(data = perm_score_df_temp,
+                       scale = "width", 
+                       position = position_nudge(x = 0.2, y = 0))+
+  ggplot2::geom_point(color = col_show, 
+                      size = 2,
+                      position = position_nudge(x = -0.2, y = 0))+
+  ggplot2::ylim(c(0, base::max(perm_score_df_temp$value)))+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r session_info}
+sessionInfo()
+```

@@ -8,6 +8,8 @@ OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/01_sce_prep"
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/01_sce_prep/02_ref_anno"
 
+print(OUTPUT_BASE)
+
 METADATA = pd.read_csv(config["table"])
 def get_list(metadata, column):
   values = METADATA[column]
@@ -21,6 +23,7 @@ individuals = get_list(metadata = METADATA, column = "Object_ID")
 
 COLORS_REF = config["base_input"] + config["metadata_paths"]["colors_ref"]
 print(COLORS_REF)
+
 #-------------------------------------------------------------------------------
 
 targets = []

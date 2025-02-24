@@ -4,6 +4,7 @@
 library(scran, quietly = TRUE)
 library(scater, quietly = TRUE)
 library(batchelor, quietly = TRUE)
+
 set.seed(37)
 
 #-------------------------------------------------------------------------------
@@ -102,6 +103,7 @@ print(SingleCellExperiment::reducedDim(sce_bc, type = "PCA")[1:5, 1:5])
 #-------------------------------------------------------------------------------
 # run umap with fraction-specific seed for nice looking plots
 # hvgs are calculated from normalised logcounts
+RNGkind("L'Ecuyer-CMRG") 
 set.seed(seed)
 sce_bc <- scater::runUMAP(sce_bc,
                           dimred = "PCA", 

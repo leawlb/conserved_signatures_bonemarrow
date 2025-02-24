@@ -215,30 +215,6 @@ plot1b <- ggplot2::ggplot(ggdf,
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
   ggplot2::ggtitle(title_full)
 
-plot2a <- ggplot2::ggplot(ggdf,
-                          aes(x = Batch_exp_day,
-                              fill=cluster_louvain,
-                              color = cluster_louvain))+
-  ggplot2::geom_bar(position = "stack")+
-  ggplot2::theme_classic()+
-  ggplot2::scale_fill_manual("Cluster (louvain)", values = col_clust_l)+
-  ggplot2::scale_color_manual("Cluster (louvain)", values = col_clust_l)+
-  ggplot2::theme(axis.text.x = element_text(angle = 90))+
-  ggplot2::ggtitle(title_full)+
-  ggplot2::facet_grid(cols = vars(ggdf$Fraction))
-
-plot2b <- ggplot2::ggplot(ggdf,
-                          aes(x = Batch_exp_day,
-                              fill=cluster_louvain,
-                              color = cluster_louvain))+
-  ggplot2::geom_bar(position = "fill")+
-  ggplot2::theme_classic()+
-  ggplot2::scale_fill_manual("Cluster (louvain)",  values = col_clust_l)+
-  ggplot2::scale_color_manual("Cluster (louvain)", values = col_clust_l)+
-  ggplot2::theme(axis.text.x = element_text(angle = 90))+
-  ggplot2::ggtitle(title_full)+
-  ggplot2::facet_grid(cols = vars(ggdf$Fraction))
-
 plot3a <- ggplot2::ggplot(ggdf,
                           aes(x = cluster_louvain,
                               fill=Age_ID,
@@ -261,42 +237,14 @@ plot3b <- ggplot2::ggplot(ggdf,
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
   ggplot2::ggtitle(title_full)
 
-plot4a <- ggplot2::ggplot(ggdf,
-                          aes(x = Age_ID,
-                              fill=cluster_louvain,
-                              color = cluster_louvain))+
-  ggplot2::geom_bar(position = "stack")+
-  ggplot2::theme_classic()+
-  ggplot2::scale_fill_manual("Cluster (louvain)", values = col_clust_l)+
-  ggplot2::scale_color_manual("Cluster (louvain)", values = col_clust_l)+
-  ggplot2::theme(axis.text.x = element_text(angle = 90))+
-  ggplot2::ggtitle(title_full)
-
-plot4b <- ggplot2::ggplot(ggdf,
-                          aes(x = Age_ID,
-                              fill=cluster_louvain,
-                              color = cluster_louvain))+
-  ggplot2::geom_bar(position = "fill")+
-  ggplot2::theme_classic()+
-  ggplot2::scale_fill_manual("Cluster (louvain)", values = col_clust_l)+
-  ggplot2::scale_color_manual("Cluster (louvain)", values = col_clust_l)+
-  ggplot2::theme(axis.text.y = element_blank(),
-                 axis.text.x = element_text(angle = 90))+
-  ggplot2::ggtitle(title_full)
-
 plot1a
 plot1b
-plot2a
-plot2b
 plot3a
 plot3b
-plot4a
-plot4b
 ```
 
 ```{r qc_plots_spec, fig.width=8, fig.height=4}
 # Species
-# this was disabled
 plot5a <- ggplot2::ggplot(ggdf,
                           aes(x = cluster_louvain,
                               fill=Species_ID,
@@ -328,40 +276,6 @@ plot5b <- ggplot2::ggplot(ggdf,
 plot5b
 ```
 
-```{r qc_plots_spec3, fig.width=8, fig.height=4}
-plot6a <- ggplot2::ggplot(ggdf,
-                          aes(x = Species_ID,
-                              fill=cluster_louvain,
-                              color = cluster_louvain))+
-  ggplot2::geom_bar(position = "stack")+
-  ggplot2::theme_classic()+
-  ggplot2::scale_fill_manual("Cluster (louvain)", values = col_clust_l)+
-  ggplot2::scale_color_manual("Cluster (louvain)", values = col_clust_l)+
-  ggplot2::theme(axis.text.x = element_text(angle = 90),
-                axis.title.y = element_blank())+
-  ggplot2::ggtitle(title_full)
-
-plot6a
-```
-
-```{r qc_plots_spec4, fig.width=8, fig.height=4}
-plot6b <- ggplot2::ggplot(ggdf,
-                          aes(x = Species_ID,
-                              fill=cluster_louvain,
-                              color = cluster_louvain))+
-  ggplot2::geom_bar(position = "fill") +
-  ggplot2::theme_classic()+
-  ggplot2::scale_fill_manual("Cluster (louvain)", values = col_clust_l)+
-  ggplot2::scale_color_manual("Cluster (louvain)", values = col_clust_l)+
-  ggplot2::theme(axis.text.y = element_blank(),
-                 axis.text.x = element_text(angle = 90),
-                 axis.title.y = element_blank())+
-  ggplot2::ggtitle(title_full)
-
-plot6b
-```
-
-
 ```{r qc_plots_no_legend, fig.width=8, fig.height=4}
 # Cell types
 plot7a <- ggplot2::ggplot(ggdf,
@@ -369,19 +283,6 @@ plot7a <- ggplot2::ggplot(ggdf,
                               fill=baccin_celltype_scmapclust,
                               color = baccin_celltype_scmapclust))+
   ggplot2::geom_bar(position = "stack") +
-  ggplot2::theme_classic()+
-  ggplot2::scale_fill_manual(values = col_cts_baccin)+
-  ggplot2::scale_color_manual(values = col_cts_baccin)+
-  ggplot2::theme(legend.position = "none",
-                 axis.text.x = element_text(angle = 90),
-                 axis.title.y = element_blank())+
-  ggplot2::ggtitle(title_full)
-
-plot7b <- ggplot2::ggplot(ggdf,
-                          aes(x = cluster_louvain,
-                              fill=baccin_celltype_scmapclust,
-                              color = baccin_celltype_scmapclust))+
-  ggplot2::geom_bar(position = "fill") +
   ggplot2::theme_classic()+
   ggplot2::scale_fill_manual(values = col_cts_baccin)+
   ggplot2::scale_color_manual(values = col_cts_baccin)+
@@ -405,19 +306,6 @@ plot8a <- ggplot2::ggplot(ggdf,
                  axis.title.y = element_blank())+
   ggplot2::ggtitle(title_full)
 
-plot8b <- ggplot2::ggplot(ggdf,
-                          aes(x = cluster_louvain,
-                              fill=dahlin_celltype_scmapclust,
-                              color = dahlin_celltype_scmapclust))+
-  ggplot2::geom_bar(position = "fill") +
-  ggplot2::theme_classic()+
-  ggplot2::scale_fill_manual(values = col_cts_dahlin)+
-  ggplot2::scale_color_manual(values = col_cts_dahlin)+
-  ggplot2::theme(legend.position = "none",
-                 axis.text.x = element_text(angle = 90),
-                 axis.title.y = element_blank())+
-  ggplot2::ggtitle(title_full)
-
 plot9a <- ggplot2::ggplot(ggdf,
                           aes(x = cluster_louvain,
                               fill=dolgalev_celltype_scmapclust,
@@ -430,36 +318,17 @@ plot9a <- ggplot2::ggplot(ggdf,
                  axis.text.x = element_text(angle = 90),
                  axis.title.y = element_blank())+
   ggplot2::ggtitle(title_full)
-
-plot9b <- ggplot2::ggplot(ggdf,
-                          aes(x = cluster_louvain,
-                              fill=dolgalev_celltype_scmapclust,
-                              color = dolgalev_celltype_scmapclust))+
-  ggplot2::geom_bar(position = "fill") +
-  ggplot2::theme_classic()+
-  ggplot2::scale_fill_manual(values = col_cts_dolgalev)+
-  ggplot2::scale_color_manual(values = col_cts_dolgalev)+
-  ggplot2::theme(legend.position = "none",
-                 axis.text.x = element_text(angle = 90),
-                 axis.title.y = element_blank())+
-  ggplot2::ggtitle(title_full)
 ```
 
 ```{r plots2, fig.width=8, fig.height = 11}
 
 PLOT7a <- ggpubr::ggarrange(plot7a, legend_baccin, ncol = 1)
-PLOT7b <- ggpubr::ggarrange(plot7b, legend_baccin, ncol = 1)
 PLOT8a <- ggpubr::ggarrange(plot8a, legend_dahlin, ncol = 1)
-PLOT8b <- ggpubr::ggarrange(plot8b, legend_dahlin, ncol = 1)
 PLOT9a <- ggpubr::ggarrange(plot9a, legend_dolgalev, ncol = 1)
-PLOT9b <- ggpubr::ggarrange(plot9b, legend_dolgalev, ncol = 1)
 
 PLOT7a
-PLOT7b
 PLOT8a
-PLOT8b
 PLOT9a
-PLOT9b
 ```
 
 ```{r plotx, fig.width=12, fig.height=4}

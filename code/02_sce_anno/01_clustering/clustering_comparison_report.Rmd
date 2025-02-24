@@ -204,26 +204,6 @@ ggplot2::ggplot(data = ggtable_cl,
   ggplot2::scale_fill_manual(values = col_clust_l)
 ```
 
-```{r heatmap_clust}
-ggtable_cl_heatmap <- ggtable_cl
-ggtable_cl_heatmap$Var1 <- unfactor(ggtable_cl_heatmap$Var1)
-ggtable_cl_heatmap$Var2 <- unfactor(ggtable_cl_heatmap$Var2)
-
-ggplot2::ggplot(ggtable_cl_heatmap, aes(x = reorder(Var1, -Freq), 
-                                        y = reorder(Var2, -Freq), 
-                                        fill = Freq))+
-  ggplot2::geom_tile()+
-  ggplot2::theme_classic()+
-  ggplot2::scale_fill_continuous("Frequency", 
-                                 limits=c(0, base::max(ggtable_cl$Freq)),
-                                 breaks=seq(0,base::max(ggtable_cl$Freq),
-                                            by = 300),
-                                 low = "white", high = "red3")+
-  ggplot2::ggtitle(individual_curr)+
-  ggplot2::ylab("species clusters")+
-  ggplot2::xlab("original clusters")
-```
-
 Add annotation if possible.
 
 ```{r prepare_clust_anno}
@@ -272,7 +252,6 @@ ggplot2::ggplot(data = ggtable_cl, aes(axis1 = reorder(Var2, -Freq),
   ggplot2::scale_fill_manual(values = col_clust_l)
 ```
 
-
 ## Only remaining cell types
 
 ```{r prepare_ggdf_ct}
@@ -294,6 +273,9 @@ ggdf_ct$species_cluster_louvain <- base::paste0(ggdf_ct$species_cluster_louvain,
 
 intermed_col_ct <- c(col_num[1:length(base::unique(sce_ct$annotation_cluster))],
                      "grey86")
+intermed_col_ct
+levels(sce_ct$annotation_cluster)
+
 names(intermed_col_ct) <- c(levels(sce_ct$annotation_cluster), "removed")
 
 # make legend

@@ -13,7 +13,7 @@ OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/02_sce_anno"
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/02_sce_anno"
 
 ANNO_CLUSTERS = config["base"] + config["metadata_paths"]["annotation_clusters"]
-GENES_CLUSTERS = config["base_input"] + config["metadata_paths"]["gene_list_clusters"]
+GENES_CLUSTERS = config["base"] + config["metadata_paths"]["gene_list_clusters"]
 
 COLORS_REF = config["base_input"] + config["metadata_paths"]["colors_ref"]
 COLORS = config["base"] + config["metadata_paths"]["colors"]
@@ -210,7 +210,7 @@ rule find_markers:
         markers = OUTPUT_DAT + "/04_annc/01_markers/markers_{fraction}"
     resources:
         mem_mb = 50000,
-        queues = "medium"
+        queue = "medium"
     params:
         nr_hvgs = config["values"]["nr_hvgs"]
     threads: 5
@@ -223,7 +223,7 @@ rule go_analysis:
         markers = rules.find_markers.output
     resources:
         mem_mb = 5000,
-        queues = "medium"
+        queue = "medium"
     output:
         go = OUTPUT_DAT + "/04_annc/02_goan/go_{fraction}"
     threads: 5
@@ -243,7 +243,7 @@ if RUN_ANNO_REPORTS:
           OUTPUT_REP + "/03_anno_clusters/annotation_{fraction}_cluster_{cluster}.html"
       resources:
         mem_mb = 200000,
-        queues = "long"
+        queue = "long"
       params:
           colors_ref_path = COLORS_REF,
           colors_path = COLORS,

@@ -1013,9 +1013,9 @@ legend_cond_theme
 ```
 
 ```{r output_pdf_heatmap_conds_stacked_plot}
-# pdf(output_pdf_heatmap_conds_stacked_plot, width = 6, height = 10)
-# heatmap_conds_stacked_plot
-# dev.off()
+pdf(output_pdf_heatmap_conds_stacked_plot, width = 6, height = 10)
+heatmap_conds_stacked_plot
+dev.off()
 ```
 
 ```{r output_pdf_heatmap_conds_stacked_legend}

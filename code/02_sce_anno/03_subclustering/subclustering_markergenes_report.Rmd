@@ -5,7 +5,7 @@ date: '2023-03-07'
 output: html_document
 ---
 
-Report on marker genes and their expression in the final annotated 
+Report on marker genes and their expression in the finally annotated 
 cell types.
 
 ```{r setup, include=FALSE}

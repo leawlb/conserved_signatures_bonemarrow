@@ -375,23 +375,6 @@ ggplot2::ggplot(data = ggtable_ct, aes(axis1 = Var2, axis2 = Var1, y = Freq))+
   ggplot2::scale_fill_manual("annotated", values = intermed_col_ct)
 ```
 
-```{r heatmap_ct}
-ggplot2::ggplot(ggtable_ct, aes(x = reorder(Var1, -Freq), 
-                                y = reorder(Var2, -Freq), 
-                                fill = Freq))+
-  ggplot2::geom_tile()+
-  ggplot2::theme_classic()+
-  ggplot2::scale_fill_continuous("Frequency", 
-                                 limits=c(0, base::max(ggtable_ct$Freq)),
-                                 breaks=seq(0, base::max(ggtable_ct$Freq), 
-                                            by = 300),
-                                 low = "white", high = "red3")+
-  ggplot2::theme(axis.text.x = element_text(angle = 90))+
-  ggplot2::ggtitle(base::paste("species-specific",individual_curr))+
-  ggplot2::ylab("species clusters")+
-  ggplot2::xlab("original annotated cell types")
-```
-
 ```{r session_info}
 utils::sessionInfo()
 ```

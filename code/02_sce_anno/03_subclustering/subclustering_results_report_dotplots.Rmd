@@ -28,7 +28,7 @@ source("../../source/plotting.R")
 colors_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt"
 source("../../source/colors.R")
 
-dtplt_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/02_sce_anno/gene_list_dotplot.txt"
+dtplt_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/reproducibility_test_rerun/data/metadata/scRNAseq/02_sce_anno/gene_list_dotplot.txt"
 
 
 source("../../source/colors.R")
@@ -37,8 +37,6 @@ source("../../source/colors.R")
 sce <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10")
 umap_base_l(sce, color_by = "celltypes")+
   scale_color_manual(values = col_cts_hsc)
-
-umap_gene(sce, "Il6")
 
 ```
 
@@ -59,22 +57,15 @@ dtplt_path <- snakemake@input[["gene_list_dtplt"]]
 
 ```{r load_objects_csv, message = FALSE}
 # load and subset
-gene_list_dtplt <- utils::read.csv(dtplt_path, 
+gene_list_dtplt_main <- utils::read.csv(dtplt_path, 
   header = TRUE, 
   sep = ";", 
   check.names=FALSE, 
   stringsAsFactors=FALSE, 
   as.is=TRUE, 
   colClasses = "character")
-gene_list_dtplt <- gene_list_dtplt[gene_list_dtplt$fraction == fraction_curr,]
-
-# subset to get list to annotate ECs
-gene_list_dtplt_main <- gene_list_dtplt[
-  gene_list_dtplt$use == "main",] 
-gene_list_dtplt_ECs <- gene_list_dtplt[
-  gene_list_dtplt$use == "ECs",] 
-gene_list_dtplt_short <- gene_list_dtplt[
-  gene_list_dtplt$use == "short",] 
+gene_list_dtplt_main <- gene_list_dtplt_main[
+  gene_list_dtplt_main$fraction == fraction_curr,]
 ```
 
 ```{r colors, message = FALSE}
@@ -110,7 +101,7 @@ agg <- scuttle::aggregateAcrossCells(
 
 ```{r vis_df_all}
 # generate a dataframe containing only genes that will be visualised
-all_genes <- base::unique(gene_list_dtplt$gene)
+all_genes <- base::unique(gene_list_dtplt_main$gene)
 
 # normalized (MultiBatchNorm)
 vis_df_all <- base::as.data.frame(
@@ -139,24 +130,12 @@ vis_df_all$celltypes <- factor(
 stopifnot(!is.na(vis_df_all$celltypes))
 
 gene_list_dtplt_main$gene[which(duplicated(gene_list_dtplt_main$gene))]
-gene_list_dtplt_short$gene[which(duplicated(gene_list_dtplt_short$gene))]
-gene_list_dtplt_ECs$gene[which(duplicated(gene_list_dtplt_ECs$gene))]
 
 vis_df_main <- vis_df_all[vis_df_all$gene %in% gene_list_dtplt_main$gene,]
-vis_df_short <- vis_df_all[vis_df_all$gene %in% gene_list_dtplt_short$gene,]
-vis_df_ECs <- vis_df_all[vis_df_all$gene %in% gene_list_dtplt_ECs$gene,]
 
 vis_df_main$gene <- factor(
   vis_df_main$gene, 
   levels = gene_list_dtplt_main$gene)
-
-vis_df_short$gene <- factor(
-  vis_df_short$gene, 
-  levels = gene_list_dtplt_short$gene)
-
-vis_df_ECs$gene <- factor(
-  vis_df_ECs$gene, 
-  levels = gene_list_dtplt_ECs$gene)
 ```
 
 ```{r perc_expressed_func}
@@ -186,18 +165,6 @@ get_perc_expressed <- function(vis_df){
 }
 
 vis_df_main <- get_perc_expressed(vis_df_main)
-
-# only needs to be calculated for str (for now)
-if(fraction_curr == "str"){
-  vis_df_short <- get_perc_expressed(vis_df_short)
-  vis_df_ECs <- get_perc_expressed(vis_df_ECs)
-  
-  vis_df_ECs <- vis_df_ECs[vis_df_ECs$celltypes %in% c(
-    "Sinusoidal ECs",
-    "Arteriolar/Capillary ECs",
-    "Lymphatic ECs",
-    "Mixed ECs"),]
-}
 ```
 
 ```{r scale, eval = FALSE, include = FALSE}
@@ -218,9 +185,6 @@ get_scale <- function(vis_df){
 }
 
 vis_df <- get_scale(vis_df)
-vis_df_short <- get_scale(vis_df_short)
-vis_df_ECs <- get_scale(vis_df_ECs)
-
 ```
 
 ```{r rowmax, eval = FALSE, include = FALSE}
@@ -316,8 +280,6 @@ if(fraction_curr == "hsc"){
 
 ## Stromal cells
 
-### Main genes
-
 ```{r str_ggdotplot1, fig.width = 15, fig.height = 4}
 # for stromal all/main
 if(fraction_curr == "str"){standard_dotplot(vis_df_main)}
@@ -348,95 +310,14 @@ if(fraction_curr == "str"){
 }
 ```
 
-### Short genes
-
-```{r str_ggdotplot_short2, fig.width = 10, fig.height = 4}
-# for shorter gene list
-if(fraction_curr == "str"){standard_dotplot(vis_df_short)}
-```
-
-### ECs
-
-```{r subset_ec_genes}
-c_arteries <- base::sort(
-  gene_list_dtplt_ECs$gene[gene_list_dtplt_ECs$marker_for == "A"])
-c_capillary <- base::sort(
-  gene_list_dtplt_ECs$gene[gene_list_dtplt_ECs$marker_for == "C"])
-c_venous <- base::sort(
-  gene_list_dtplt_ECs$gene[gene_list_dtplt_ECs$marker_for == "V"])
-c_sinus <- base::sort(
-  gene_list_dtplt_ECs$gene[gene_list_dtplt_ECs$marker_for == "S"])
-c_lymph <- base::sort(
-  gene_list_dtplt_ECs$gene[gene_list_dtplt_ECs$marker_for == "L"])
-c_others <- base::sort(
-  gene_list_dtplt_ECs$gene[gene_list_dtplt_ECs$marker_for == "?"])
-```
-
-```{r str_ggdotplot_ECs, fig.width = 15, fig.height = 3.3}
-# for endothelial cells
-if(fraction_curr == "str"){standard_dotplot(vis_df_ECs)}
-```
-
-#### Arteriolar
-
-```{r str_ggdotplot_art, fig.width = 7, fig.height = 3}
-if(fraction_curr == "str"){
-  vis_df_ECs_art <- vis_df_ECs[vis_df_ECs$gene %in% c_arteries,]
-  standard_dotplot(vis_df_ECs_art)
-}
-```
-
-#### Capillary
-
-```{r str_ggdotplot_cap, fig.width = 7, fig.height = 3.3}
-if(fraction_curr == "str"){
-  vis_df_ECs_cap <- vis_df_ECs[vis_df_ECs$gene %in% c_capillary,]
-  standard_dotplot(vis_df_ECs_cap)
-}
-```
-
-#### Sinusoidal/Venous
-
-```{r str_ggdotplot_ven, fig.width = 7, fig.height = 3.3}
-if(fraction_curr == "str"){
-  vis_df_ECs_ven <- vis_df_ECs[vis_df_ECs$gene %in% c_venous,]
-  standard_dotplot(vis_df_ECs_ven)
-}
-```
-
-```{r str_ggdotplot_sin, fig.width = 6, fig.height = 3.3}
-if(fraction_curr == "str"){
-  vis_df_ECs_ven <- vis_df_ECs[vis_df_ECs$gene %in% c_sinus,]
-  standard_dotplot(vis_df_ECs_ven)
-}
-```
-
-#### Lymphatic
-
-```{r str_ggdotplot_lym, fig.width = 5, fig.height = 3.3}
-if(fraction_curr == "str"){
-  vis_df_ECs_lym <- vis_df_ECs[vis_df_ECs$gene %in% c_lymph,]
-  standard_dotplot(vis_df_ECs_lym)
-}
-```
-
-#### Others/Unknown
-
-```{r str_ggdotplot_others, fig.width = 8, fig.height = 3.3}
-if(fraction_curr == "str"){
-  vis_df_ECs_oth <- vis_df_ECs[vis_df_ECs$gene %in% c_others,]
-  standard_dotplot(vis_df_ECs_oth)
-}
-```
-
 ## Specific cell types for visualisation
 
 ```{r fractionspecific}
 if(fraction_curr == "str"){
-  cell_type <- "Adipo/CARs"
-  gene_list_dtplt_use <- gene_list_dtplt_short
+  cell_type <- "Adipo/CAR"
+  gene_list_dtplt_use <- gene_list_dtplt_main
 }else if(fraction_curr == "hsc"){
-  cell_type <- "HSCs"
+  cell_type <- "HSC"
   gene_list_dtplt_use <- gene_list_dtplt_main
 }
 ```
@@ -525,7 +406,7 @@ if(fraction_curr == "str"){
                                     high = "blue")+
     ggplot2::ggtitle(cell_type)
 }
-knitr::knit_exit()
+#knitr::knit_exit()
 ```
 
 ### All Genes
@@ -541,8 +422,10 @@ vis_df_allall <- rownames_to_column(vis_df_allall, var = "celltype")
 vis_df_allall_long <- pivot_longer(vis_df_allall, c(2:ncol(vis_df_allall)),
                                    names_to = "gene", values_to = "expression")
 
-vis_df_allall_long_hsc <- vis_df_allall_long[vis_df_allall_long$celltype == "HSCs",]
-vis_df_allall_long_hsc[order(vis_df_allall_long_hsc$expression, decreasing = TRUE),]
+vis_df_allall_long_hsc <- vis_df_allall_long[
+  vis_df_allall_long$celltype == "HSC",]
+vis_df_allall_long_hsc[order(vis_df_allall_long_hsc$expression, 
+                             decreasing = TRUE),]
 head(vis_df_allall_long)
 
 ggplot(vis_df_allall_long, aes(x = celltype, y = expression))+
@@ -553,7 +436,8 @@ ggplot(vis_df_allall_long, aes(x = celltype, y = expression))+
 vis_df_allall_long$is_true <- vector(length = nrow(vis_df_allall_long))
 
 vis_df_allall_long$is_true[vis_df_allall_long$gene == "Cd34"] <- TRUE
-vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true, decreasing = TRUE),]
+vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true,
+                                               decreasing = TRUE),]
 ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
                                size = is_true, alpha = is_true))+
   geom_jitter()+
@@ -565,7 +449,8 @@ ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
 
 vis_df_allall_long$is_true <- vector(length = nrow(vis_df_allall_long))
 vis_df_allall_long$is_true[vis_df_allall_long$gene == "Prtn3"] <- TRUE
-vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true, decreasing = TRUE),]
+vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true,
+                                               decreasing = TRUE),]
 ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
                                size = is_true, alpha = is_true))+
   geom_jitter()+
@@ -578,7 +463,8 @@ ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
 
 vis_df_allall_long$is_true <- vector(length = nrow(vis_df_allall_long))
 vis_df_allall_long$is_true[vis_df_allall_long$gene == "Car2"] <- TRUE
-vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true, decreasing = TRUE),]
+vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true, 
+                                               decreasing = TRUE),]
 ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
                                size = is_true, alpha = is_true))+
   geom_jitter()+
@@ -590,7 +476,8 @@ ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
 
 vis_df_allall_long$is_true <- vector(length = nrow(vis_df_allall_long))
 vis_df_allall_long$is_true[vis_df_allall_long$gene == "Myl10"] <- TRUE
-vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true, decreasing = TRUE),]
+vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true,
+                                               decreasing = TRUE),]
 ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
                                size = is_true, alpha = is_true))+
   geom_jitter()+
@@ -602,7 +489,8 @@ ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
 
 vis_df_allall_long$is_true <- vector(length = nrow(vis_df_allall_long))
 vis_df_allall_long$is_true[vis_df_allall_long$gene == "Mpo"] <- TRUE
-vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true, decreasing = TRUE),]
+vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true,
+                                               decreasing = TRUE),]
 ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
                                size = is_true, alpha = is_true))+
   geom_jitter()+
@@ -614,7 +502,8 @@ ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
 
 vis_df_allall_long$is_true <- vector(length = nrow(vis_df_allall_long))
 vis_df_allall_long$is_true[vis_df_allall_long$gene == "Hlf"] <- TRUE
-vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true, decreasing = TRUE),]
+vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true,
+                                               decreasing = TRUE),]
 ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
                                size = is_true, alpha = is_true))+
   geom_jitter()+
@@ -626,7 +515,8 @@ ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
 
 vis_df_allall_long$is_true <- vector(length = nrow(vis_df_allall_long))
 vis_df_allall_long$is_true[vis_df_allall_long$gene == "Lmo2"] <- TRUE
-vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true, decreasing = TRUE),]
+vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true,
+                                               decreasing = TRUE),]
 ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
                                size = is_true, alpha = is_true))+
   geom_jitter()+
@@ -638,7 +528,8 @@ ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
 
 vis_df_allall_long$is_true <- vector(length = nrow(vis_df_allall_long))
 vis_df_allall_long$is_true[vis_df_allall_long$gene == "Car1"] <- TRUE
-vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true, decreasing = TRUE),]
+vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true,
+                                               decreasing = TRUE),]
 ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
                                size = is_true, alpha = is_true))+
   geom_jitter()+
@@ -650,7 +541,8 @@ ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
 
 vis_df_allall_long$is_true <- vector(length = nrow(vis_df_allall_long))
 vis_df_allall_long$is_true[vis_df_allall_long$gene == "Car2"] <- TRUE
-vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true, decreasing = TRUE),]
+vis_df_allall_long <- vis_df_allall_long[order(vis_df_allall_long$is_true, 
+                                               decreasing = TRUE),]
 ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
                                size = is_true, alpha = is_true))+
   geom_jitter()+
@@ -660,7 +552,6 @@ ggplot(vis_df_allall_long, aes(x = celltype, y = expression, color = is_true,
   theme_classic()+
   theme(axis.text.x = element_text(angle = 90))
 ```
-
 
 ```{r session_info}
 utils::sessionInfo()

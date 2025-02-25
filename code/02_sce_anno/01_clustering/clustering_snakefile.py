@@ -242,7 +242,7 @@ if RUN_ANNO_REPORTS:
       output:
           OUTPUT_REP + "/03_anno_clusters/annotation_{fraction}_cluster_{cluster}.html"
       resources:
-        mem_mb = 200000,
+        mem_mb = 80000,
         queue = "long"
       params:
           colors_ref_path = COLORS_REF,
@@ -250,7 +250,7 @@ if RUN_ANNO_REPORTS:
           functions = "../../source/sce_functions.R",
           plotting = "../../source/plotting.R",
           colors = "../../source/colors.R"
-      threads: 5
+      threads: 8
       script:
           "cluster_anno_report.Rmd"
         

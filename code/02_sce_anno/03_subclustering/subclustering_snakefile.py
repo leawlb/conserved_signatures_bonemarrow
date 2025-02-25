@@ -9,13 +9,12 @@ OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/02_sce_anno"
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/02_sce_anno/05_subclustering"
 
 COLORS = config["base"] + config["metadata_paths"]["colors"]
-COLORS_REF = config["base_input"] + config["metadata_paths"]["colors_ref"]
 
 VALUES =  config["values"]["02_sce_anno"]
 
-GENE_LIST_CLUSTERS = config["base_input"] + config["metadata_paths"]["gene_list_clusters"]
-GENE_LIST_SUBCLUSTERING = config["base_input"] + config["metadata_paths"]["gene_list_subclustering"]
-GENE_LIST_DOTPLOT = config["base_input"] + config["metadata_paths"]["gene_list_dotplot"]
+GENE_LIST_CLUSTERS = config["base"] + config["metadata_paths"]["gene_list_clusters"]
+GENE_LIST_SUBCLUSTERING = config["base"] + config["metadata_paths"]["gene_list_subclustering"]
+GENE_LIST_DOTPLOT = config["base"] + config["metadata_paths"]["gene_list_dotplot"]
 
 ANNO_SUBCLUSTERS = config["base"] + config["metadata_paths"]["annotation_subclusters"]
 ANNO_FINAL = config["base"] + config["metadata_paths"]["annotation_final"]
@@ -28,7 +27,6 @@ print(ANNO_SUBCLUSTERS)
 print(GENE_LIST_CLUSTERS)
 print(GENE_LIST_SUBCLUSTERING)
 print(GENE_LIST_DOTPLOT)
-
 
 #-------------------------------------------------------------------------------
 

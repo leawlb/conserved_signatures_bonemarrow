@@ -23,23 +23,6 @@ more or less good-looking versions of the same plot in this script.
 set.seed(37)
 ```
 
-```{r testing, eval = FALSE, include = FALSE}
-source("../../source/plotting.R")
-colors_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt"
-source("../../source/colors.R")
-
-dtplt_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/reproducibility_test_rerun/data/metadata/scRNAseq/02_sce_anno/gene_list_dotplot.txt"
-
-
-source("../../source/colors.R")
-
-#genelist_shared <- base::readRDS(file = snakemake@input[["genes_list_shared"]])
-sce <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10")
-umap_base_l(sce, color_by = "celltypes")+
-  scale_color_manual(values = col_cts_hsc)
-
-```
-
 ```{r load, message = FALSE}
 library(scuttle, quietly = TRUE) 
 ```
@@ -66,6 +49,8 @@ gene_list_dtplt_main <- utils::read.csv(dtplt_path,
   colClasses = "character")
 gene_list_dtplt_main <- gene_list_dtplt_main[
   gene_list_dtplt_main$fraction == fraction_curr,]
+gene_list_dtplt_main <- gene_list_dtplt_main[
+  "Visualisation" %in% gene_list_dtplt_main$use,]
 ```
 
 ```{r colors, message = FALSE}
@@ -107,6 +92,8 @@ all_genes <- base::unique(gene_list_dtplt_main$gene)
 vis_df_all <- base::as.data.frame(
   t(SummarizedExperiment::assays(agg)$logcounts[
     rownames(SummarizedExperiment::assays(agg)$logcounts) %in% all_genes,]))
+vis_df_all
+knitr::knit_exit()
 ```
 
 ```{r vis_df_all_prep}
@@ -347,6 +334,8 @@ vis_df_spec <- tidyr::pivot_longer(vis_df_spec,
                                    names_to = "gene")
 vis_df_spec$celltypes <- base::rep(cell_type, nrow(vis_df_spec))
 
+print(gene_list_dtplt_use)
+table(duplicated(gene_list_dtplt_use$gene))
 ```
 
 ```{r perc_expressed_spec}

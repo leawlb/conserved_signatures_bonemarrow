@@ -243,7 +243,7 @@ gene_exps <- function(gene){
 ```
 
 ```{r markers3}
-found_markers <- rownames(markers)[1:50]
+found_markers <- rownames(markers)[1:50][which(markers[1:50,]$avg_log2FC > 0)]
 
 cluster_curr_char <- base::paste0("cluster_", cluster_curr)
 gene_markers <- gene_list$Gene[gene_list$Fraction == fraction_curr]

@@ -1303,9 +1303,9 @@ plot_HSCs <- plot_data[,c(colnames(plot_data)[1:6],
   gather(gene, expression,
          -pseudotime, -celltypes, -Mouse_ID, 
          -Species_ID, -Age_weeks, -Age_ID)
-#col_HSCs <- grDevices::colorRampPalette(c("grey90", 
-#                                          "grey5"))
-#palette_HSCs <- col_HSCs(length(geneset_list_hsc[["HSC"]][["conserved_signature"]]))
+
+n_col_hsc <- length(geneset_list_hsc[["HSC"]][["conserved_signature"]])
+col_HSCs <- ggpubr::get_palette(palette = c("grey5", "grey90"), k = n_col_hsc)
 
 
 plot_MkEry <- plot_data[,c(colnames(plot_data)[1:6],
@@ -1313,9 +1313,9 @@ plot_MkEry <- plot_data[,c(colnames(plot_data)[1:6],
   gather(gene, expression,
          -pseudotime, -celltypes, -Mouse_ID, 
          -Species_ID, -Age_weeks, -Age_ID)
-#col_MkEry <- grDevices::colorRampPalette(c("grey90", 
-#                                           "grey5"))
-#palette_MkEry <- col_MkEry(length(geneset_list_hsc[["Mk/Ery prog"]][["conserved_signature"]]))
+
+n_col_mke <- length(geneset_list_hsc[["Mk/Ery prog"]][["conserved_signature"]])
+col_MkEry <- ggpubr::get_palette(palette = c("grey5", "grey90"), k = n_col_mke)
 
 
 plot_Ery <- plot_data[,c(colnames(plot_data)[1:6],
@@ -1323,9 +1323,10 @@ plot_Ery <- plot_data[,c(colnames(plot_data)[1:6],
   gather(gene, expression,
          -pseudotime, -celltypes, -Mouse_ID, 
          -Species_ID, -Age_weeks, -Age_ID)
-#col_Ery <- grDevices::colorRampPalette(c("grey90", 
-#                                         "grey5"))
-#palette_Ery <- col_Ery(length(geneset_list_hsc[["Erythroid"]][["conserved_signature"]]))
+
+n_col_ery <- length(geneset_list_hsc[["Erythroid"]][["conserved_signature"]])
+col_Ery <- ggpubr::get_palette(palette = c("grey5", "grey90"), k = n_col_ery)
+
 ```
 
 ```{r pt_ranking3}
@@ -1338,7 +1339,7 @@ HSC_1 <- ggplot(plot_HSCs,
   guides(color = "none") +
   labs(x = "Pseudotime Erythroid", 
        y = "Scaled Expression") +
-  #scale_color_manual(values = rev(palette_HSCs)) +
+  scale_color_manual(values = col_HSCs) +
   theme_classic() +
   theme(legend.text = element_blank(),
         axis.text = element_blank())
@@ -1351,7 +1352,7 @@ MkEry_2 <- ggplot(plot_MkEry,
   guides(color = "none") +
   labs(x = "Pseudotime Erythroid", 
        y = NULL) +
-  #scale_color_manual(values = rev(palette_MkEry)) +
+  scale_color_manual(values = col_MkEry) +
   theme_classic() +
   theme(legend.text = element_blank(),
         axis.text = element_blank())
@@ -1364,7 +1365,7 @@ Ery_3 <- ggplot(plot_Ery,
   guides(color = "none") +
   labs(x = "Pseudotime Erythroid", 
        y = NULL) +
-  #scale_color_manual(values = rev(palette_Ery)) +
+  scale_color_manual(values = col_Ery) +
   theme_classic() +
   theme(legend.text = element_blank(),
         axis.text = element_blank())

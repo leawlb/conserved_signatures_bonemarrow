@@ -18,7 +18,7 @@ ref_dolgalev_sce: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/sc
 
 # the general directory that should contain all output data 
 # all downstream output paths build on "base"
-base: "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/reproducibility_test_rerun"
+base: "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/reproducibility2_test_rerun"
 base_input: "/omics/odcf/analysis/OE0538_projects/DO-0008" # disable after move to normal shares
 
 

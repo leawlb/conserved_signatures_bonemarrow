@@ -8,8 +8,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Generate Figure 3, current title:
-"Mouse cell type signature genes alone are sufficient to identify cell types."
+Generate Figure 3
 
 #### Load objects
 
@@ -22,7 +21,7 @@ set.seed(37)
 library(SingleCellExperiment, quietly = TRUE)
 library(ggpubr, quietly = TRUE)
 library(tidyverse, quietly = TRUE)
-library(ggpattern, quietly = TRUE) # not in conda env
+library(ggpattern, quietly = TRUE) 
 library(Seurat, quietly = TRUE) 
 ```
 
@@ -77,11 +76,11 @@ seu_hsc_recl_list_o1 <- base::readRDS(base::paste0(
 # CALIBRATION list of objects, to make sure that clusterings are identical
 # after re-run (testing clusterings instead of whole objects because seurat
 # documents time of running each command, and those will differ)
-seu_hsc_recl_list_o1_CAL <- base::readRDS(base::paste0(
-  base_path,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other_CALIBRATE/03_recl/reclustered_mus_tm_bonemarrow_list"))
-stopifnot(identical(seu_hsc_recl_list_o1_CAL$seu_sign[[1]]$seurat_clusters,
-                seu_hsc_recl_list_o1$seu_sign[[1]]$seurat_clusters))
+# seu_hsc_recl_list_o1_CAL <- base::readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other_CALIBRATE/03_recl/reclustered_mus_tm_bonemarrow_list"))
+# stopifnot(identical(seu_hsc_recl_list_o1_CAL$seu_sign[[1]]$seurat_clusters,
+#                 seu_hsc_recl_list_o1$seu_sign[[1]]$seurat_clusters))
 
 # list of dataframes of re-clustering scores for each gene set and resolution
 score_df_hsc_list_o1 <- base::readRDS(base::paste0(
@@ -127,6 +126,7 @@ resolution_df <- utils::read.csv(file = resolution_df_path,
                                as.is=TRUE, 
                                colClasses = "character")
 
+# corrected p values (can only load after all p values have been calculated and corrected)
 # corr_pval_df <-  readRDS(base::paste0(
 #   base_path,
 #   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/09_crpv/all_corrected_pval"))
@@ -151,7 +151,7 @@ pattern_density_val <- 0.09
 pattern_spacing_val <- 0.09
 
 
-color_hline_background <- "grey97"
+color_hline_background <- "grey95"
 
 score2 <- "variation_information"
 score1 <- "adjusted_rand_index"
@@ -206,6 +206,11 @@ make_pattern_density_plot <- function(
       pattern_colour = pattern_line_colour,
       pattern_density =pattern_density_val,
       pattern_spacing = pattern_spacing_val)+
+    geom_vline(
+      color = "grey70",
+      xintercept = score_df$value,
+      linetype = "dashed"
+    )+
     geom_point(
       inherit.aes = FALSE, 
       shape = 23,
@@ -214,18 +219,13 @@ make_pattern_density_plot <- function(
       aes(x = value, y = y_value),
       size = point_plot_size,
       color = color_cons)+
-    geom_vline(
-      color = "grey70",
-      xintercept = score_df$value,
-      linetype = "dashed"
-    )+
     scale_y_continuous(
       limits = c(y_lim_low, y_lim_high),
       breaks = y_lim_break, 
       labels = ylabel)
   
   return(p_return)
-  # TODO: add grey background if necessary
+
 }
 
 ```
@@ -234,7 +234,7 @@ make_pattern_density_plot <- function(
 
 output_pdf_heatmap_own_plot <- base::paste0(
    base_path, "/manuscript1/figure3/figure3_heatmap_own.pdf")
-output_pdf_a_legend <- base::paste0(
+output_pdf_heatmap_own_legend <- base::paste0(
   base_path, "/manuscript1/figure3/figure3_a_legend.pdf")
 
 output_pdf_own_perm_plot <-  base::paste0(
@@ -514,7 +514,7 @@ psdf_mmms_rand_score_3_o1 <- psdf_mmms_rand_long_o1[
   psdf_mmms_rand_long_o1$type == score3,]
 ```
 
-```{r o1_scoredf_8}
+```{r o1_scoredf_9}
 # mmms_vs_signrand
 psdf_mmms_signrand_long_o1 <- tidyr::pivot_longer(
   psdf_hsc_mmms_signrand_o1, 
@@ -852,7 +852,8 @@ theme_plot_bp1_own<- base_plot_bp1_own+
     #axis.ticks.x = element_blank(),
     #axis.line.x = element_blank(),
     axis.title.y = element_blank(),
-    axis.text.y = element_blank())
+    axis.text.y = element_blank())+
+  xlab(nr_genes_title)
 ```
 
 ```{r base_plot_bp2_own}
@@ -934,6 +935,7 @@ theme_plot_bp3_own <- base_plot_bp3_own+
     legend.position = "none",
     axis.title = element_blank(),
     axis.text = element_blank(),
+    axis.line.x = element_blank(),
     axis.ticks.x= element_blank())+
   ggplot2::xlab(nr_genes_title)
 ```
@@ -963,7 +965,8 @@ theme_plot_ai1_own <- base_plot_ai1_own+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.5, 1),
     position = "top", 
-    limits = c(score1_min, score1_max))
+    limits = c(score1_min, score1_max))+
+  xlab(score1_long)
 ```
 
 ```{r base_plot_ai2_own}
@@ -1044,7 +1047,8 @@ theme_plot_vi1_own <- base_plot_vi1_own+
   ggplot2::scale_x_continuous(
     breaks=c(-5, -2.5, 0),
     position = "top", 
-    limits = c(score2_min, score2_max))
+    limits = c(score2_min, score2_max))+
+  xlab(score2_long)
 ```
 
 ```{r base_plot_vi2_own}
@@ -1125,7 +1129,8 @@ theme_plot_mp1_own <- base_plot_mp1_own+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.2, 0.4),
     position = "top", 
-    limits = c(score3_min, score3_max))
+    limits = c(score3_min, score3_max))+
+  xlab(score3_long)
 ```
 
 ```{r base_plot_mp2_own}
@@ -1178,7 +1183,7 @@ theme_plot_mp3_own <- base_plot_mp3_own+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.2, 0.4),
     position = "bottom", 
-    limits = c(score3_min, score3_max))+
+    limits = c(score3_min, score3_max))
   ggplot2::xlab(score3_long) 
 ```
 
@@ -1237,7 +1242,7 @@ b_plot <- ggpubr::ggarrange(
 b_plot
 ```
 
-```{r big_plot_ALL_export}
+```{r big_plot_own_export}
 pdf(output_pdf_own_perm_plot, width = 9, height = 6.2)
 b_plot
 dev.off()
@@ -1285,7 +1290,8 @@ theme_plot_bp1_o1 <- base_plot_bp1_o1+
     plot.title = element_blank(),
     legend.position = "none",
     axis.title.y = element_blank(),
-    axis.text.y = element_blank())
+    axis.text.y = element_blank())+
+  ggplot2::xlab(nr_genes_title) 
 ```
 
 ```{r base_plot_bp3_o1}
@@ -1353,7 +1359,8 @@ theme_plot_ai1_o1 <- base_plot_ai1_o1+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.5, 1),
     position = "top", 
-    limits = c(score1_min, score1_max))
+    limits = c(score1_min, score1_max))+
+  ggplot2::xlab(score1_long) 
 ```
 
 ```{r base_plot_ai3_o1}
@@ -1406,7 +1413,8 @@ theme_plot_vi1_o1 <- base_plot_vi1_o1+
   ggplot2::scale_x_continuous(
     breaks=c(-5, -2.5, 0),
     position = "top", 
-    limits = c(score2_min, score2_max))
+    limits = c(score2_min, score2_max))+
+  ggplot2::xlab(score2_long) 
 ```
 
 ```{r base_plot_vi3_o1}
@@ -1459,7 +1467,8 @@ theme_plot_mp1_o1 <- base_plot_mp1_o1+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.2, 0.4),
     position = "top", 
-    limits = c(score3_min, score3_max))
+    limits = c(score3_min, score3_max))+
+  ggplot2::xlab(score3_long) 
 ```
 
 ```{r base_plot_mp3_o1}
@@ -1528,7 +1537,7 @@ plot_mp_o1 <- ggpubr::ggarrange(
 
 ```
 
-```{r fig.width = 9, fig.height = 3.5}
+```{r fig.width = 9, fig.height = 4}
 big_plot_o1 <- ggpubr::ggarrange(
   nrow = 1,
   align = "hv",
@@ -1541,7 +1550,7 @@ big_plot_o1 <- ggpubr::ggarrange(
 big_plot_o1
 ```
 
-```{r big_plot_ALL_export}
+```{r big_plot_other_export}
 pdf(output_pdf_o1_perm_plot, width = 9, height = 3.5)
 big_plot_o1
 dev.off()
@@ -1589,7 +1598,7 @@ theme_plot_bp1_o1_signrand <- base_plot_bp1_o1_signrand+
     plot.title = element_blank(),
     legend.position = "none",
     axis.title = element_blank(),
-    axis.text = element_blank())
+    axis.text.y = element_blank())
 ```
 
 #### Adjusted Rand index
@@ -1610,7 +1619,7 @@ theme_plot_ai1_o1_signrand <- base_plot_ai1_o1_signrand+
   ggplot2::theme(
     legend.position = "none",
     #axis.text.x = element_text(hjust = 0.5),
-    axis.text = element_blank(),
+    axis.text.y = element_blank(),
     axis.title = element_blank(),
     plot.title = element_blank())+
   ggplot2::scale_x_continuous(
@@ -1637,7 +1646,7 @@ theme_plot_vi1_o1_signrand <- base_plot_vi1_o1_signrand+
   ggplot2::theme(
     legend.position = "none",
     #axis.text.x = element_text(hjust = 0.5),
-    axis.text = element_blank(),
+    axis.text.y = element_blank(),
     axis.title = element_blank(),
     plot.title = element_blank())+
   ggplot2::scale_x_continuous(
@@ -1664,7 +1673,7 @@ theme_plot_mp1_o1_signrand <- base_plot_mp1_o1_signrand+
   ggplot2::theme(
     legend.position = "none",
     #axis.text.x = element_text(hjust = 0.5),
-    axis.text = element_blank(),
+    axis.text.y = element_blank(),
     axis.title = element_blank(),
     plot.title = element_blank())+
   ggplot2::scale_x_continuous(
@@ -1751,8 +1760,8 @@ mmms_df$Var2 <- factor(
 
 ### Plot Components
 
-```{r a_sign_base_plot}
-a_sign_base_plot <- ggplot2::ggplot(
+```{r heatmap_own_sign_base_plot}
+heatmap_own_sign_base_plot <- ggplot2::ggplot(
   sign_df, 
   aes(x = Var1, 
       y = Var2,
@@ -1760,8 +1769,8 @@ a_sign_base_plot <- ggplot2::ggplot(
   ggplot2::geom_tile()
 ```
 
-```{r a_mark_base_plot}
-a_mark_base_plot <- ggplot2::ggplot(
+```{r heatmap_own_mark_base_plot}
+heatmap_own_mark_base_plot <- ggplot2::ggplot(
   mark_df, 
   aes(x = Var1, 
       y = Var2,
@@ -1769,8 +1778,8 @@ a_mark_base_plot <- ggplot2::ggplot(
   ggplot2::geom_tile()
 ```
 
-```{r a_mmms_base_plot}
-a_mmms_base_plot <- ggplot2::ggplot(
+```{r heatmap_own_mmms_base_plot}
+heatmap_own_mmms_base_plot <- ggplot2::ggplot(
   mmms_df, 
   aes(x = Var1, 
       y = Var2,
@@ -1778,8 +1787,8 @@ a_mmms_base_plot <- ggplot2::ggplot(
   ggplot2::geom_tile()
 ```
 
-```{r a_mmms_theme_plot}
-a_mmms_theme_plot <- a_mmms_base_plot+
+```{r heatmap_own_mmms_theme_plot}
+heatmap_own_mmms_theme_plot <- heatmap_own_mmms_base_plot+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
@@ -1794,8 +1803,8 @@ a_mmms_theme_plot <- a_mmms_base_plot+
   ggplot2::ggtitle("BL6 markers")
 ```
 
-```{r a_mark_theme_plot}
-a_mark_theme_plot <- a_mark_base_plot+
+```{r heatmap_own_mark_theme_plot}
+heatmap_own_mark_theme_plot <- heatmap_own_mark_base_plot+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
@@ -1811,8 +1820,8 @@ a_mark_theme_plot <- a_mark_base_plot+
   ggplot2::ggtitle("Conserved markers")
 ```
 
-```{r a_sign_theme_plot}
-a_sign_theme_plot <- a_sign_base_plot+
+```{r heatmap_own_sign_theme_plot}
+heatmap_own_sign_theme_plot <- heatmap_own_sign_base_plot+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
@@ -1826,7 +1835,7 @@ a_sign_theme_plot <- a_sign_base_plot+
       hjust = 1,
       vjust = 0.5),
     plot.title = element_blank())+
-  ggplot2::xlab("Original cell types")+
+  ggplot2::xlab("Reference cell types")+
   ggplot2::scale_fill_gradientn(
     colors = mycolors_to1,
     limits = c(0, 1),
@@ -1834,8 +1843,8 @@ a_sign_theme_plot <- a_sign_base_plot+
   ggplot2::ggtitle("Conserved identity signature")
 ```
 
-```{r a_legend_theme_plot}
-a_legend_plot <- a_mmms_base_plot+
+```{r heatmap_own_legend_theme_plot}
+heatmap_own_legend_plot <- heatmap_own_mmms_base_plot+
   theme_all+
   ggplot2::scale_fill_gradientn(
     "Proportion of cells per cluster",
@@ -1848,39 +1857,39 @@ a_legend_plot <- a_mmms_base_plot+
       vjust = 0.85),
     legend.position = "bottom",
   )
-a_legend_theme <- ggpubr::get_legend(a_legend_plot)
+heatmap_own_legend_theme <- ggpubr::get_legend(heatmap_own_legend_plot)
 ```
 
 ### Assemble
 
-```{r a_assemble, fig.height = 7.8, fig.width = 3}
+```{r heatmap_own_assemble, fig.height = 7.8, fig.width = 3}
 
-a_theme_plot <- ggpubr::ggarrange(
+heatmap_own_theme_plot <- ggpubr::ggarrange(
   ncol = 1,
-  a_mmms_theme_plot,
-  a_mark_theme_plot,
-  a_sign_theme_plot,
+  heatmap_own_mmms_theme_plot,
+  heatmap_own_mark_theme_plot,
+  heatmap_own_sign_theme_plot,
   align = "v",
   heights = c(1, 1, 2.5)
 )
 
-a_theme_plot
+heatmap_own_theme_plot
 ```
 
-```{r a_construct_legend, fig.width = 6, fig.height = 1}
-a_legend <- ggpubr::ggarrange(a_legend_theme)
-a_legend
+```{r heatmap_own_construct_legend, fig.width = 6, fig.height = 1}
+heatmap_own_legend <- ggpubr::ggarrange(heatmap_own_legend_theme)
+heatmap_own_legend
 ```
 
-```{r a_plot_export}
-pdf(output_pdf_heatmap_own_plot, width = 5, height = 7.8)
-a_theme_plot
+```{r heatmap_own_plot_export}
+pdf(output_pdf_heatmap_own_plot, width = 6, height = 7.8)
+heatmap_own_theme_plot
 dev.off()
 ```
 
-```{r a_legend_export}
-pdf(output_pdf_a_legend, width = 6, height = 1)
-a_legend
+```{r heatmap_own_legend_export}
+pdf(output_pdf_heatmap_own_legend, width = 6, height = 1)
+heatmap_own_legend
 dev.off()
 ```
 
@@ -1971,7 +1980,7 @@ mmms_df_o1 <- base::as.data.frame(mat_mmms_o1)
 
 mmms_df_o1$Var2 <- factor(
   mmms_df_o1$Var2,
-  levels = base::rev(c(1, 4, 0, 3, 5, 2, 6)))
+  levels = base::rev(c(1, 0, 4, 3, 5, 6, 2, 7)))
 ```
 
 ```{r mat_sign_o1}
@@ -1985,7 +1994,7 @@ sign_df_o1 <- base::as.data.frame(mat_sign_o1)
 
 sign_df_o1$Var2 <- factor(
   sign_df_o1$Var2,
-  levels = base::rev(c(1, 0, 4, 8, 5, 6, 7, 3, 2)))
+  levels = base::rev(c(1, 0, 4, 9, 8, 6, 5, 7, 3, 2)))
 ```
 
 ### Plot Components Other 1
@@ -2041,13 +2050,13 @@ sign_theme_plot_o1 <- sign_base_plot_o1+
     colors = mycolors_to1,
     limits = c(0, 1),
     breaks = c(0, 0.5, 1))+
-  ggplot2::xlab("Original cell types")+
+  ggplot2::xlab("Reference cell types")+
   ggplot2::ylab("Reclustered")
 ```
 
 ### Assemble
 
-```{r d_construct, fig.width = 3, fig.height = 6.5}
+```{r heatmaps_others_plot_construct, fig.width = 3, fig.height = 6.5}
 
 d_theme_plot <- ggpubr::ggarrange(
   ncol = 1,
@@ -2060,8 +2069,8 @@ d_theme_plot <- ggpubr::ggarrange(
 d_theme_plot
 ```
 
-```{r a_plot_export}
-pdf(output_pdf_heatmaps_others_plot, width = 5, height = 6.5)
+```{r heatmaps_others_plot_export}
+pdf(output_pdf_heatmaps_others_plot, width = 6, height = 7)
 d_theme_plot
 dev.off()
 ```

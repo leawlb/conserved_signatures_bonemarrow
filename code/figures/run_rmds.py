@@ -12,6 +12,7 @@ targets = []
 
 targets = targets + [OUTPUT_PATH + "/figure1.html"]
 targets = targets + [OUTPUT_PATH + "/figure2.html"]
+targets = targets + [OUTPUT_PATH + "/figure3.html"]
 targets = targets + [OUTPUT_PATH + "/figure5.html"]
 targets = targets + [OUTPUT_PATH + "/figure6.html"]
 
@@ -44,6 +45,18 @@ rule run_fig2:
         "../envs/ggpattern.yml"
     script:
         "figure2.Rmd"
+  
+rule run_fig3:
+    resources:
+        mem_mb=80000,
+        queues = "medium"
+    output:
+        OUTPUT_PATH + "/figure3.html",
+    threads: 4
+    conda:
+        "../envs/ggpattern.yml"
+    script:
+        "figure3.Rmd"
         
 rule run_fig5:
     resources:

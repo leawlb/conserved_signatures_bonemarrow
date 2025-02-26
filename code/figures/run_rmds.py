@@ -13,6 +13,7 @@ targets = []
 targets = targets + [OUTPUT_PATH + "/figure1.html"]
 targets = targets + [OUTPUT_PATH + "/figure2.html"]
 targets = targets + [OUTPUT_PATH + "/figure3.html"]
+targets = targets + [OUTPUT_PATH + "/figure4.html"]
 targets = targets + [OUTPUT_PATH + "/figure5.html"]
 targets = targets + [OUTPUT_PATH + "/figure6.html"]
 
@@ -57,7 +58,18 @@ rule run_fig3:
         "../envs/ggpattern.yml"
     script:
         "figure3.Rmd"
-        
+
+rule run_fig4:
+    resources:
+        mem_mb=80000,
+        queues = "medium"
+    output:
+        OUTPUT_PATH + "/figure4.html",
+    threads: 4
+    script:
+        "figure4.Rmd"
+
+    
 rule run_fig5:
     resources:
         mem_mb=80000,

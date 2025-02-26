@@ -24,8 +24,6 @@ library(Seurat, quietly = TRUE)
 library(SingleCellExperiment, quietly = TRUE)
 library(ggpubr, quietly = TRUE)
 library(tidyverse, quietly = TRUE)
-#library(gghalves, quietly = TRUE) # not in conda env
-#library(ggpattern, quietly = TRUE) # not in conda env
 ```
 
 ```{r base_path}
@@ -68,7 +66,6 @@ ensembl_sign <- readRDS(base::paste0(
 
 source("../source/colors.R")
 source("../source/plotting.R")
-#source("../source/sce_functions_reclustering.R")
 ```
 
 ```{r load_manual_other1}
@@ -88,11 +85,11 @@ seu_hsc_recl_list_o1 <- base::readRDS(base::paste0(
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_ts_bone_marrow_list"))
 
 # CALIBRATION list of objects, to make sure that clusterings are identical
-seu_hsc_recl_list_o1_CAL <- base::readRDS(base::paste0(
-  base_path,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other_CALIBRATE/03_recl/reclustered_ts_bone_marrow_list"))
-stopifnot(identical(seu_hsc_recl_list_o1_CAL$seu_sign[[1]]$seurat_clusters,
-                seu_hsc_recl_list_o1$seu_sign[[1]]$seurat_clusters))
+# seu_hsc_recl_list_o1_CAL <- base::readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other_CALIBRATE/03_recl/reclustered_ts_bone_marrow_list"))
+# stopifnot(identical(seu_hsc_recl_list_o1_CAL$seu_sign[[1]]$seurat_clusters,
+#                 seu_hsc_recl_list_o1$seu_sign[[1]]$seurat_clusters))
 
 # list of dataframes of re-clustering scores for each gene set and resolution
 score_df_hsc_list_o1 <- base::readRDS(base::paste0(
@@ -752,7 +749,7 @@ seu_sign_o2$annotated_reclustered[
   seu_sign_o2$seurat_clusters == nr] <- "Mk/Ery2 10xV2"
 ```
 
-```{r others2_cluster7}
+```{r others2_cluster11}
 nr <- "11"
 markers <- ct_markers_o2[[nr]]$gene[
   !is.na(ct_markers_o2[[nr]]$symbol) &
@@ -997,7 +994,7 @@ sign_theme_plot_o2 <- sign_base_plot_o2+
     limits = c(0, 1),
     breaks = c(0, 0.5, 1))+
   ggplot2::ylab("Reclustered + re-annotated")+
-  ggplot2::xlab("Original cell types")+
+  ggplot2::xlab("Reference cell types")+
   ggplot2::scale_y_discrete(position = "right")
 sign_theme_plot_o2
 ```

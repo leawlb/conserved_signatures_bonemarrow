@@ -37,14 +37,14 @@ col_mode_log <-c("FALSE" = "#EDE2D4",
                  "TRUE" = "#DD5C00")
 
 col_cons <- c("conserved_signature" = "#C8451D",
-              "conserved_markers" = "#EF8700",
+              "conserved_markers" = "#E48204",
               "mmusall_markers" = "#94B88E",
               "ndges" = "#4684FF",
               "random_features" = "#C3C3C3")
 
 col_cons_long <- c(
   "conserved identity signature" = "#C8451D",
-  "conserved markers" = "#EF8700",
+  "conserved markers" = "#E48204",
   "BL6 markers" = "#94B88E",
   "ndges" = "#4684FF",
   "random genes" = "#C3C3C3",

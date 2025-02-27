@@ -142,8 +142,9 @@ conserved_signature_genes$HSC
 
 Expression of signature genes in all mouse species across HSPC
 cell types (scaled by z-score per gene).
+For Figure 2b.
 
-#### Plot Components
+#### PREP
 
 ```{r sign_heatmap0}
 sce_hsc$species_pub <- vector(length = ncol(sce_hsc))
@@ -269,6 +270,8 @@ agg_hsc_df$is_gene[agg_hsc_df$gene %in% interest_genes] <- "TRUE"
 agg_hsc_df$is_gene <- as.logical(agg_hsc_df$is_gene)
 ```
 
+#### PLOT
+
 ```{r sign_heatmap_base_plot}
 sign_heatmap_base_plot <- ggplot2::ggplot(
   agg_hsc_df,
@@ -314,7 +317,7 @@ sign_heatmap_theme_plot <- sign_heatmap_base_plot+
 sign_heatmap_legend_theme <- ggpubr::get_legend(sign_heatmap_theme_plot)
 ```
 
-### Assemble
+#### Assemble
 
 ```{r sign_heatmap_assemble, fig.width = 6.5, fig.height = 8}
 sign_heatmap_plot <- ggpubr::ggarrange(
@@ -323,9 +326,13 @@ sign_heatmap_plot <- ggpubr::ggarrange(
 sign_heatmap_plot
 ```
 
+#### LEGEND
+
 ```{r sign_heatmap_legend, fig.width = 4, fig.height = 4}
 sign_heatmap_legend <- ggpubr::ggarrange(sign_heatmap_legend_theme)
 ```
+
+#### EXPORT
 
 ```{r output_pdf_sign_heatmap_plot}
 pdf(output_pdf_sign_heatmap_plot, width = 6.5, height = 8)
@@ -348,8 +355,9 @@ gc()
 
 Scaled expression of species-specific marker genes in all mouse species within
 HSCs (scaled by z-score per gene).
+For Figure 2c.
 
-#### Prep
+#### PREP
 
 ```{r heatmap_spec1}
 # get ct specific data
@@ -442,6 +450,8 @@ vis_df_hsc$is_gene <- as.logical(vis_df_hsc$is_gene)
 print(levels(vis_df_hsc$gene))
 ```
 
+#### PLOT
+
 ```{r heatmap_spec_base_plot}
 heatmap_spec_base_plot <- ggplot2::ggplot(
   vis_df_hsc, 
@@ -475,7 +485,7 @@ heatmap_spec_theme_plot <- heatmap_spec_base_plot+
     breaks = vis_df_hsc$gene[vis_df_hsc$is_gene])
 ```
 
-### Assemble
+#### ASSEMBLE
 
 ```{r heatmap_spec_assemble, fig.width = 4.2, fig.height = 2.17}
 heatmap_spec_plot <- ggpubr::ggarrange(
@@ -483,6 +493,8 @@ heatmap_spec_plot <- ggpubr::ggarrange(
 )
 heatmap_spec_plot
 ```
+
+#### EXPORT
 
 ```{r output_pdf_heatmap_spec_plot}
 pdf(output_pdf_heatmap_spec_plot, width = 4.2, height = 2.17)
@@ -500,6 +512,9 @@ gc()
 
 Scaled expression of signature genes [geneX], [geneY], and [geneZ] across
 mouse species and ages (z-score per species and age).
+For Figure 2f.
+
+#### PREP
 
 ```{r heatmap_conds1}
 metadata <- sce_hsc@colData@listData
@@ -595,6 +610,8 @@ max_zs <- base::max(plot_1$z_score, plot_2$z_score, plot_3$z_score)
 min_zs <- base::min(plot_1$z_score, plot_2$z_score, plot_3$z_score)
 midpoint <- (max_zs+min_zs)/2
 ```
+
+#### PLOT
 
 ```{r heatmap_conds4}
 marker_1_wide_zs <- ggplot(plot_1,
@@ -718,6 +735,8 @@ marker_3_theme_stacked <- marker_3_wide_zs+
   ggplot2::scale_x_discrete(expand = c(0, 0))
 ```
 
+#### Assemble
+
 ```{r heatmap_conds_assemble_stacked, fig.width = 6, fig.height = 10}
 heatmap_conds_stacked_plot <- ggpubr::ggarrange(
     marker_1_theme_stacked+theme(legend.position = "none"),
@@ -728,6 +747,8 @@ heatmap_conds_stacked_plot <- ggpubr::ggarrange(
   )
 heatmap_conds_stacked_plot
 ```
+
+#### LEGEND
 
 ```{r heatmap_conds_assemble_legend, fig.width = 3, fig.height = 1}
 legend_cond_plot <- marker_1_theme_stacked+
@@ -741,6 +762,8 @@ legend_cond <- ggpubr::get_legend(legend_cond_plot)
 legend_cond_theme <-  ggpubr::ggarrange(legend_cond)
 legend_cond_theme
 ```
+
+#### EXPORT
 
 ```{r output_pdf_heatmap_conds_stacked_plot}
 pdf(output_pdf_heatmap_conds_stacked_plot, width = 6, height = 10)
@@ -758,6 +781,9 @@ dev.off()
 
 Number of marker genes per HSPC cell type identified when all, only old, 
 or only young mouse samples are included.
+For Figure 2g.
+
+#### PREP
 
 ```{r aging1}
 conserved_genes <- data.frame(celltype = rep(names(geneset_list_hsc)),
@@ -807,6 +833,8 @@ plot_hsc <- gather(conserved_genes[,c("celltype",
                                       "both_in_markers")], 
                    "group", "count", -celltype, -both_in_markers)
 ```
+
+#### PLOT
 
 ```{r aging2, fig.width = 3, fig.height = 5}
 print(
@@ -898,6 +926,8 @@ aging_theme_plot_wide <- ggplot2::ggplot(
     expand = c(0, 0))
 ```
 
+#### LEGEND
+
 ```{r aging_legend_plot}
 
 # this is the same plot but adjusted for legend generation only
@@ -933,6 +963,8 @@ aging_legend
 aging_theme_plot_wide
 ```
 
+#### EXPORT
+
 ```{r output_pdf_aging_theme_plot}
 pdf(output_pdf_aging_theme_plot, width = 4.57, height = 2.7)
 aging_theme_plot_wide
@@ -945,9 +977,12 @@ aging_legend
 dev.off()
 ```
 
-## Pseudotime-UMAPs
+## Pseudotime-UMAP
 
 Load pseudotime-related data now.
+For Figure 2d.
+
+#### PREP
 
 ```{r load_large}
 # fully annotated SCE object (HSPCs) with diffusion pseudotime
@@ -994,6 +1029,8 @@ hsc_umap_comb <- hsc_umap_comb[base::sample(
   replace = FALSE),]
 ```
 
+#### PLOT
+
 ```{r pt_umaps_base_plot_3}
 pt_umaps_base_plot_3 <- ggplot2::ggplot(
   hsc_umap_comb, 
@@ -1021,6 +1058,8 @@ pt_umaps_theme_plot_3 <- pt_umaps_base_plot_3+
 pt_umaps_theme_plot_3
 ```
 
+#### LEGEND
+
 ```{r pt_umaps_legend3, fig.width = 5, fig.height = 3}
 pt_umaps_legend_3_plot <- pt_umaps_base_plot_3+
   theme_all+
@@ -1031,6 +1070,8 @@ pt_umaps_legend3_theme <- ggpubr::get_legend(pt_umaps_legend_3_plot)
 pt_umaps_legend3 <- ggpubr::ggarrange(pt_umaps_legend3_theme)
 pt_umaps_legend3
 ```
+
+#### EXPORT
 
 ```{r pt_umaps3_export}
 pdf(output_pdf_pt_umap3_plot, width = 4, height = 3)
@@ -1063,6 +1104,9 @@ Scaled expression of HSC (top), Mk/Erythroid prog. (middle) or Erythroid prog.
 (bottom) conserved signature genes along diffusion pseudotime trajectory within 
 the erythroid branch. Cells were partitioned into branches based on their 
 lineage differentiation probability calculated by cellrank.
+For Figure 2e.
+
+#### PREP
 
 ```{r pt_ranking1, message = FALSE, warning= FALSE}
 ery_pseudo_seurat <- CreateSeuratObject(counts = ery_pseudo@assays@data@listData[["logcounts"]],
@@ -1114,6 +1158,8 @@ n_col_ery <- length(geneset_list_hsc[["Erythroid"]][["conserved_signature"]])
 col_Ery <- ggpubr::get_palette(palette = c("grey5", "grey90"), k = n_col_ery)
 
 ```
+
+#### PLOT
 
 ```{r pt_ranking3}
 
@@ -1222,6 +1268,8 @@ rm(
 gc()
 ```
 
+#### Assemble
+
 ```{r pt_ranking_assemble, fig.width = 3, fig.height = 7}
 pt_ranking_theme_plot_long <- ggpubr::ggarrange(
     HSC_theme,
@@ -1256,11 +1304,15 @@ pt_ranking_plot_long <- ggpubr::annotate_figure(
 pt_ranking_plot_long
 ```
 
+#### EXPORT
+
 ```{r output_pdf_pt_ranking_plot_long}
 pdf(output_pdf_pt_scaled, width = 4, height = 8.1)
 pt_ranking_plot_long
 dev.off()
 ```
+
+# UTILS
 
 ```{r session_info}
 utils::sessionInfo()

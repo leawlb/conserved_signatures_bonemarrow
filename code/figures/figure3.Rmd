@@ -225,9 +225,7 @@ make_pattern_density_plot <- function(
       labels = ylabel)
   
   return(p_return)
-
 }
-
 ```
 
 ```{r export_paths}
@@ -235,14 +233,14 @@ make_pattern_density_plot <- function(
 output_pdf_heatmap_own_plot <- base::paste0(
    base_path, "/manuscript1/figure3/figure3_heatmap_own.pdf")
 output_pdf_heatmap_own_legend <- base::paste0(
-  base_path, "/manuscript1/figure3/figure3_a_legend.pdf")
+  base_path, "/manuscript1/figure3/figure3_heatmap_legend.pdf")
 
 output_pdf_own_perm_plot <-  base::paste0(
    base_path, "/manuscript1/figure3/figure3_own_perm.pdf")
 output_pdf_o1_perm_plot <-  base::paste0(
-   base_path, "/manuscript1/figure3/figure3_o1_perm.pdf")
+   base_path, "/manuscript1/figure3/figure3_other_perm.pdf")
 output_pdf_mmms_sign_plot <-  base::paste0(
-   base_path, "/manuscript1/figure3/figure3_mmms_sign.pdf")
+   base_path, "/manuscript1/figure3/figure3_mmms_signrand_perm.pdf")
 
 output_pdf_heatmaps_others_plot <- base::paste0(
    base_path, "/manuscript1/figure3/figure3_heatmaps_others.pdf")
@@ -257,7 +255,7 @@ print(sce_hsc_recl$cluster_mmusm_genes_used[1])
 ```
 
 
-# Permutation Plots
+# PREP: Permutation Plots 
 
 ## PREP ALL SCORE DFs 
 
@@ -808,6 +806,8 @@ score3_max <- max_mp
 
 ## Plots: Comparing OWN scores to random background
 
+For Figure 3c.
+
 #### Boxplots
 
 ```{r base_plot_bp1_own}
@@ -1242,6 +1242,8 @@ b_plot <- ggpubr::ggarrange(
 b_plot
 ```
 
+### Export
+
 ```{r big_plot_own_export}
 pdf(output_pdf_own_perm_plot, width = 9, height = 6.2)
 b_plot
@@ -1249,6 +1251,8 @@ dev.off()
 ```
 
 ## Plots: Comparing OTHER 1 scores to random background
+
+For Figure 3e.
 
 #### Boxplots
 
@@ -1498,7 +1502,6 @@ theme_plot_mp3_o1 <- base_plot_mp3_o1+
   ggplot2::ggtitle(score3_long) 
 ```
 
-
 ### Assemble
 
 ```{r bigplot_assemble_o1, fig.width = 10, fig.height = 4}
@@ -1550,13 +1553,17 @@ big_plot_o1 <- ggpubr::ggarrange(
 big_plot_o1
 ```
 
+### Export
+
 ```{r big_plot_other_export}
-pdf(output_pdf_o1_perm_plot, width = 9, height = 3.5)
+pdf(output_pdf_o1_perm_plot, width = 9, height = 4.5)
 big_plot_o1
 dev.off()
 ```
 
 ## Plots: Compariong OTHER scores to signature + random background
+
+For Figure 3f.
 
 #### Boxplots 
 
@@ -1697,9 +1704,10 @@ big_plot_signrand <- ggpubr::ggarrange(
 big_plot_signrand
 ```
 
+### Export
 
 ```{r big_plot_ALL_export}
-pdf(output_pdf_mmms_sign_plot, width = 9, height = 1.85)
+pdf(output_pdf_mmms_sign_plot, width = 9, height = 2)
 big_plot_signrand
 dev.off()
 ```
@@ -1708,6 +1716,7 @@ dev.off()
 
 Heatmaps of own re-clustered HSPC mouse data using signature genes/
 conserved markers/BL6 markers/nDGEs.
+For Figure 3b.
 
 ### Prep
 
@@ -1876,10 +1885,14 @@ heatmap_own_theme_plot <- ggpubr::ggarrange(
 heatmap_own_theme_plot
 ```
 
+### Legend
+
 ```{r heatmap_own_construct_legend, fig.width = 6, fig.height = 1}
 heatmap_own_legend <- ggpubr::ggarrange(heatmap_own_legend_theme)
 heatmap_own_legend
 ```
+
+### Export
 
 ```{r heatmap_own_plot_export}
 pdf(output_pdf_heatmap_own_plot, width = 6, height = 7.8)
@@ -1894,6 +1907,8 @@ dev.off()
 ```
 
 # Other Heatmaps
+
+For Figure 3d.
 
 ### Prep Other 1
 
@@ -2068,6 +2083,8 @@ d_theme_plot <- ggpubr::ggarrange(
 
 d_theme_plot
 ```
+
+### Export
 
 ```{r heatmaps_others_plot_export}
 pdf(output_pdf_heatmaps_others_plot, width = 6, height = 7)

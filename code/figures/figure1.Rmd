@@ -8,7 +8,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Generate Figure 1 + print additional data
+Generate Figure 1 
 
 #### Load objects
 
@@ -198,6 +198,9 @@ subclustering_df[subclustering_df$purpose == "subclustering",]
 
 HSPCs (left) and Niche cells (right) clustered in UMAP space, 
 colored by species.
+For Figure 1b and Figure 1c.
+
+#### Prep
 
 ```{r species_prep}
 hsc_umap_species <- base::as.data.frame(
@@ -218,6 +221,8 @@ str_umap_species <- str_umap_species[base::sample(
   nrow(str_umap_species),
   replace = FALSE),]
 ```
+
+#### Plot
 
 ```{r species_base_plot_left}
 stopifnot(unique(hsc_umap_species$color_by) %in% names(col_spc_pub))
@@ -291,10 +296,13 @@ species_legend <- ggpubr::ggarrange(species_theme_legend)
 species_legend
 ```
 
-## UMAPs integrated species
+## UMAPs celltype separated species 
 
 HSPCs (left) and Niche cells (right) clustered in UMAP space, 
-separated by mouse species
+separated by mouse species.
+For Figure 1d and Figure 1e.
+
+#### PREP
 
 ```{r d_prep2}
 hsc_umap <- base::as.data.frame(
@@ -325,6 +333,8 @@ str_umap$color_by <- factor(
   levels = names(col_cts_str)
 )
 ```
+
+#### PLOT
 
 ```{r ctspc_base_plot_left}
 ctspc_base_plot_left <- ggplot2::ggplot(
@@ -367,8 +377,6 @@ ctspc_theme_plot_right <- ctspc_base_plot_right+
   cowplot::theme_nothing()
 ctspc_theme_plot_right
 ```
-
-#### Legend for cell types
 
 #### Legend
 
@@ -430,71 +438,6 @@ ct_legend <- ggpubr::ggarrange(
 ct_legend
 ```
 
-## UMAPs Cell Types
-
-HSPCs (left) and Niche cells (right) clustered in UMAP space, 
-colored by cell type.
-
-#### Plot Components
-
-```{r ct_prep, eval = FALSE, include = FALSE}
-hsc_umap <- base::as.data.frame(
-  SingleCellExperiment::reducedDim(
-    sce_hsc, type = "UMAP"))
-hsc_umap$color_by <- sce_hsc$celltypes
-hsc_umap <- hsc_umap[base::sample(
-  1:nrow(hsc_umap),
-  nrow(hsc_umap),
-  replace = FALSE),]
-
-str_umap <- base::as.data.frame(
-  SingleCellExperiment::reducedDim(
-    sce_str, type = "UMAP"))
-str_umap$color_by <- sce_str$celltypes
-str_umap <- str_umap[base::sample(
-  1:nrow(str_umap),
-  nrow(str_umap),
-  replace = FALSE),]
-```
-
-```{r ct_base_plot_left, eval = FALSE, include = FALSE}
-ct_base_plot_left <- ggplot2::ggplot(
-  hsc_umap, 
-  aes(x = X1,
-      y = X2,
-      color = color_by))+
-  ggplot2::geom_point(
-    size = umap_point_size,
-    alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(hsc_umap$X1)-1, base::max(hsc_umap$X1))+1)+
-  ggplot2::ylim(c(base::min(hsc_umap$X2)-1, base::max(hsc_umap$X2))+1)+
-  ggplot2::scale_color_manual("Cell type", values = col_cts_hsc)
-```
-
-```{r ct_theme_plot_left, eval = FALSE, include = FALSE}
-ct_theme_plot_left <- ct_base_plot_left+
-  cowplot::theme_nothing()
-```
-
-```{r ct_base_plot_right, eval = FALSE, include = FALSE}
-ct_base_plot_right <- ggplot2::ggplot(
-  str_umap, 
-  aes(x = X1,
-      y = X2,
-      color = color_by))+
-  ggplot2::geom_point(
-    size = umap_point_size,
-    alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(str_umap$X1)-1, base::max(str_umap$X1))+1)+
-  ggplot2::ylim(c(base::min(str_umap$X2)-1, base::max(str_umap$X2))+1)+
-  ggplot2::scale_color_manual("Cell type", values = col_cts_str)
-```
-
-```{r ct_theme_plot_right, eval = FALSE, include = FALSE}
-ct_theme_plot_right <- ct_base_plot_right+
-  cowplot::theme_nothing()
-```
-
 ## Assemble UMAPs
 
 ```{r umap_construct1, fig.width = 8, fig.height = 3}
@@ -516,6 +459,8 @@ species_sep_plot <- ggpubr::ggarrange(
 )
 species_sep_plot
 ```
+
+#### EXPORT
 
 ```{r export_species_plot_left_pdf}
 pdf(output_pdf_umap_species_hsc, width = 4, height = 3)
@@ -559,8 +504,9 @@ Average gene expression of well-known marker genes that were not used for
 cell type sub-clustering per species for HSCs (top left) and Adipo/CARs 
 (top right) or per cell type for HSPC fraction (bottom left) or Niche fraction 
 (bottom right).
+For Figure 1f.
 
-#### Prepare
+#### PREP
 
 ```{r dp_prepare}
 # get genes
@@ -726,10 +672,7 @@ vis_df_ct_hsc <- get_perc_expressed(vis_df_ct_hsc, sce_hsc)
 vis_df_ct_str <- get_perc_expressed(vis_df_ct_str, sce_str)
 ```
 
-#### Plots
-
-```{r dp_base_plot_top_left}
-
+```{r background_hsc}
 # make background grid
 background_hsc <- data.frame(
   xmin = c(
@@ -772,7 +715,55 @@ background_hsc$xmin <- base::match(background_hsc$xmin,
                                    levels(vis_df_ct_hsc$gene))
 background_hsc$xmax <- base::match(background_hsc$xmax, 
                                    levels(vis_df_ct_hsc$gene))
+```
 
+```{r background_str}
+# make background grid
+background_str <- data.frame(
+  xmin = c(
+    "Cxcl12",
+    "Spp1",
+    "Comp",
+    "S100a10",
+    "Cdh5",
+    "Ly6a",
+    "Car4",
+    "Nr2f2",
+    "Tfpi",
+    "Lyve1",
+    "Tagln",
+    "Rgs4"
+    ),  
+  xmax = c(
+    "Lepr",
+    "Bglap",
+    "Fmod",
+    "Thy1",
+    "Pecam1",
+    "Efnb2",
+    "Timp4",
+    "Lrg1",
+    "Flt4",
+    "Ccl21a",
+    "Acta2",
+    "Rgs5"
+  ), 
+  ymin = -Inf,             
+  ymax = Inf,
+  fill = c(
+    "grey80",
+    rep(c("white", "grey80"),  5), "white") 
+)
+
+background_str$xmin <- base::match(background_str$xmin,
+                                   levels(vis_df_ct_str$gene))
+background_str$xmax <- base::match(background_str$xmax,
+                                   levels(vis_df_ct_str$gene))
+```
+
+#### PLOT
+
+```{r dp_base_plot_top_left}
 dp_base_plot_top_left <- ggplot2::ggplot(
   vis_df_ct_hsc, 
   aes(x = gene,
@@ -819,48 +810,6 @@ dp_theme_plot_top_left
 ```
 
 ```{r dp_base_plot_top_right}
-# make background grid
-background_str <- data.frame(
-  xmin = c(
-    "Cxcl12",
-    "Spp1",
-    "Comp",
-    "S100a10",
-    "Cdh5",
-    "Ly6a",
-    "Car4",
-    "Nr2f2",
-    "Tfpi",
-    "Lyve1",
-    "Tagln",
-    "Rgs4"
-    ),  
-  xmax = c(
-    "Lepr",
-    "Bglap",
-    "Fmod",
-    "Thy1",
-    "Pecam1",
-    "Efnb2",
-    "Timp4",
-    "Lrg1",
-    "Flt4",
-    "Ccl21a",
-    "Acta2",
-    "Rgs5"
-  ), 
-  ymin = -Inf,             
-  ymax = Inf,
-  fill = c(
-    "grey80",
-    rep(c("white", "grey80"),  5), "white") 
-)
-
-background_str$xmin <- base::match(background_str$xmin,
-                                   levels(vis_df_ct_str$gene))
-background_str$xmax <- base::match(background_str$xmax,
-                                   levels(vis_df_ct_str$gene))
-
 dp_base_plot_top_right <- ggplot2::ggplot(
   vis_df_ct_str, 
   aes(x = gene,
@@ -986,7 +935,7 @@ dp_theme_plot_bottom_right <- dp_base_plot_bottom_right+
   )
 ```
 
-#### Legends
+#### LEGEND
 
 Since logcounts have different upper limits in HSPCs vs Niche, need two.
 
@@ -1065,7 +1014,7 @@ dp_legend_theme_plot_right <- dp_legend_base_plot_right+
 dp_legend_right <- ggpubr::get_legend(dp_legend_theme_plot_right)
 ```
 
-#### Assemble
+#### ASSEMBLE
 
 ```{r dp_theme_plot2, fig.width = 16, fig.height = 6}
 dp_theme_plot2 <- ggpubr::ggarrange(
@@ -1092,6 +1041,8 @@ dp_theme_legends <- ggpubr::ggarrange(
 dp_theme_legends
 ```
 
+#### EXPORT
+
 ```{r export_dp}
 pdf(output_pdf_dotplot, width = 15.5, height = 6)
 dp_theme_plot2
@@ -1103,6 +1054,8 @@ pdf(output_pdf_dotplot_legend, width = 6, height = 5)
 dp_theme_legends
 dev.off()
 ```
+
+# UTILS
 
 ```{r sessioninfo}
 utils::sessionInfo()

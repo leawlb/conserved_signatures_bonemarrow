@@ -10,7 +10,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Generate Figure 4
 
-Also contains supplementary figure parts because it's easier. FOR NOW
+Also contains supplementary figure parts XYZ. 
+This is because the re-annotated cluster labels are not exported.
 
 #### Load objects
 
@@ -30,7 +31,7 @@ library(tidyverse, quietly = TRUE)
 base_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data"
 ```
 
-```{r load_manual_remaining}
+```{r load_remaining}
 #-------------------------------------------------------------------------------
 #### REMAINING
 
@@ -52,10 +53,6 @@ resolution_df <- utils::read.csv(file = resolution_df_path,
                                as.is=TRUE, 
                                colClasses = "character")
 
-# corr_pval_df <-  readRDS(base::paste0(
-#   base_path_output_temp,
-#   "/04_signatures/02_reclustering_other/09_crpv/all_corrected_pval"))
-
 colors_path <- base::paste0(
   base_path,
   "/metadata/colors/colors.txt")
@@ -68,7 +65,7 @@ source("../source/colors.R")
 source("../source/plotting.R")
 ```
 
-```{r load_manual_other1}
+```{r load_other1}
 #-------------------------------------------------------------------------------
 #### OTHER MOUSE DATASET 1 (HSPC)
 #### TABULA SAPIENS BONE MARROW
@@ -95,22 +92,6 @@ seu_hsc_recl_list_o1 <- base::readRDS(base::paste0(
 score_df_hsc_list_o1 <- base::readRDS(base::paste0(
   base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_ts_bone_marrow_list"))
-
-# # dataframes of re-clustering scores after permutation comparing gene sets
-# psdf_hsc_mark_signrand_o1 <- base::readRDS(base::paste0(
-#   base_path,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mark_ts_bone_marrow"))
-# psdf_hsc_mmms_signrand_o1 <- base::readRDS(base::paste0(
-#   base_path,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_ts_bone_marrow"))
-# psdf_hsc_mmms_markrand_o1 <- base::readRDS(base::paste0(
-#   base_path,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_mark_ts_bone_marrow"))
-#
-# # perm score DF from background permutation (SIGN)
-# psdf_hsc_sign_rand_o1 <- base::readRDS(base::paste0(
-#   base_path,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_psig/perm_score_df_ts_bone_marrow"))
 ```
 
 ```{r selected_seu_o1}
@@ -134,7 +115,7 @@ rm(seu_hsc_recl_list_o1_CAL)
 gc()
 ```
 
-```{r load_manual_other2}
+```{r load_other2}
 #-------------------------------------------------------------------------------
 #### OTHER MOUSE DATASET 2 (HSPC)
 #### Tabula sapiens HSCs and Progs (fetal)
@@ -152,33 +133,12 @@ seu_hsc_recl_list_o2 <- base::readRDS(base::paste0(
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_ts_hscs_progenitors_list"))
 
 # CALIBRATION list of objects, to make sure that clusterings are identical
-seu_hsc_recl_list_o2_CAL <- base::readRDS(base::paste0(
-  base_path,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other_CALIBRATE/03_recl/reclustered_ts_hscs_progenitors_list"))
-stopifnot(identical(seu_hsc_recl_list_o2_CAL$seu_sign[[1]]$seurat_clusters,
-                seu_hsc_recl_list_o2$seu_sign[[1]]$seurat_clusters))
-
-
-# # list of dataframes of re-clustering scores for each gene set and resolution
-# score_df_hsc_list_o2 <- base::readRDS(base::paste0(
+# seu_hsc_recl_list_o2_CAL <- base::readRDS(base::paste0(
 #   base_path,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_ts_hscs_progenitors_list"))
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other_CALIBRATE/03_recl/reclustered_ts_hscs_progenitors_list"))
+# stopifnot(identical(seu_hsc_recl_list_o2_CAL$seu_sign[[1]]$seurat_clusters,
+#                 seu_hsc_recl_list_o2$seu_sign[[1]]$seurat_clusters))
 # 
-# # dataframes of re-clustering scores after permutation comparing gene sets
-# psdf_hsc_mark_signrand_o2 <- base::readRDS(base::paste0(
-#   base_path,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mark_ts_hscs_progenitors"))
-# psdf_hsc_mmms_signrand_o2 <- base::readRDS(base::paste0(
-#   base_path,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_ts_hscs_progenitors"))
-# psdf_hsc_mmms_markrand_o2 <- base::readRDS(base::paste0(
-#   base_path,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_mark_ts_hscs_progenitors"))
-
-# perm score DF from background permutation (SIGN)
-# psdf_hsc_sign_rand_o2 <- base::readRDS(base::paste0(
-#   base_path,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_psig/perm_score_df_ts_hscs_progenitors"))
 ```
 
 ```{r selected_seu_o2}
@@ -208,17 +168,23 @@ source("determine_params.R")
 ```
 
 ```{r export_paths}
-output_pdf_ab_plot <- base::paste0(
-  base_path, "/manuscript1/figure4/figure4_ab.pdf")
-# output_pdf_c_plot <- base::paste0(
-#   base_path, "/manuscript1/figure4/figure4_c.pdf")
-# output_pdf_c_legend <- base::paste0(
-#   base_path, "/manuscript1/figure4/figure4_c_legend.pdf")
+output_pdf_heatmap_plot <- base::paste0(
+  base_path, "/manuscript1/figure4/figure4_heatmap.pdf")
+output_pdf_legend_plot <-  base::paste0(
+  base_path, "/manuscript1/figure4/figure4_legend.pdf")
+
+# two suppl plots with annotations added in this script
+output_pdf_suppl_umaps_o1 <- base::paste0(
+  base_path, "/manuscript1/supp_figure4/supp_figure4_umaps_o1.pdf")
+output_pdf_suppl_umaps_o2 <- base::paste0(
+  base_path, "/manuscript1/supp_figure4/supp_figure4_umaps_o2.pdf")
 ```
 
-## Reclustering heatmaps 
+# Reclustering heatmaps 
 
-### Re-annotate reclustered populations based on signature genes only
+For Figure 4b and Figure 4c.
+
+## PREP: Re-annotate reclustered populations based on signature genes only
 
 ```{r prepare_annotate_o1}
 
@@ -238,7 +204,8 @@ ct_markers_o1 <- lapply(clust_list_o1, function(x){
   
   # need to add only ensembl gene symbols as I will not be using others
   markers$symbol <- markers$genes
-  markers$symbol <- ensembl_sign$HSAPIENS_SYMBOL[base::match(markers$genes, ensembl_sign$ENSG_ID)]
+  markers$symbol <- ensembl_sign$HSAPIENS_SYMBOL[
+    base::match(markers$genes, ensembl_sign$ENSG_ID)]
   return(markers)
 })
 names(ct_markers_o1) <- reclustered_o1
@@ -304,7 +271,9 @@ ct_markers_df_o2_hsc <- bind_rows(ct_markers_o2_hsc)
 head(ct_markers_df_o2_hsc)
 ```
 
-#### Others - 1
+### Others - 1
+
+Print marker genes for each other1-cluster for label annotation.
 
 ```{r umap_others_1}
 DimPlot(seu_sign_o1, dims = c(1,2), group.by = "seurat_clusters")
@@ -326,7 +295,7 @@ markers <- ct_markers_o1[[nr]]$genes[
 ct_markers_o1[[nr]][
   !is.na(ct_markers_o1[[nr]]$symbol) & 
     ct_markers_o1[[nr]]$avg_log2FC > 0 &
-    ct_markers_o1[[nr]]$p_val_adj < 0.05,][1:50,]
+    ct_markers_o1[[nr]]$p_val_adj < 0.05,][1:50, c(1, 3, 6, 8)]
 
 FeaturePlot(seu_sign_o1, markers[1:6])
 
@@ -344,13 +313,12 @@ markers <- ct_markers_o1[[nr]]$genes[
 ct_markers_o1[[nr]][
   !is.na(ct_markers_o1[[nr]]$symbol) & 
     ct_markers_o1[[nr]]$avg_log2FC > 0 &
-    ct_markers_o1[[nr]]$p_val_adj < 0.05,][1:50,]
+    ct_markers_o1[[nr]]$p_val_adj < 0.05,][1:50, c(1, 3, 6, 8)]
 
 FeaturePlot(seu_sign_o1, markers[1:6])
 
 seu_sign_o1$annotated_reclustered[seu_sign_o1$seurat_clusters == nr] <- "Mk/Ery"
 ```
-
 
 ```{r others1_cluster2}
 nr <- "2"
@@ -363,7 +331,7 @@ markers <- ct_markers_o1[[nr]]$genes[
 ct_markers_o1[[nr]][
   !is.na(ct_markers_o1[[nr]]$symbol) & 
     ct_markers_o1[[nr]]$avg_log2FC > 0 &
-    ct_markers_o1[[nr]]$p_val_adj < 0.05,][1:50,]
+    ct_markers_o1[[nr]]$p_val_adj < 0.05,][1:50, c(1, 3, 6, 8)]
 
 FeaturePlot(seu_sign_o1, markers[1:6])
 
@@ -382,7 +350,7 @@ markers <- ct_markers_o1[[nr]]$genes[
 ct_markers_o1[[nr]][
   !is.na(ct_markers_o1[[nr]]$symbol) & 
     ct_markers_o1[[nr]]$avg_log2FC > 0 &
-    ct_markers_o1[[nr]]$p_val_adj < 0.05,][1:50,]
+    ct_markers_o1[[nr]]$p_val_adj < 0.05,][1:50, c(1, 3, 6, 8)]
 
 FeaturePlot(seu_sign_o1, markers[1:6])
 
@@ -401,7 +369,7 @@ markers <- ct_markers_o1[[nr]]$genes[
 ct_markers_o1[[nr]][
   !is.na(ct_markers_o1[[nr]]$symbol) & 
     ct_markers_o1[[nr]]$avg_log2FC > 0 &
-    ct_markers_o1[[nr]]$p_val_adj < 0.05,][1:50,]
+    ct_markers_o1[[nr]]$p_val_adj < 0.05,][, c(1, 3, 6, 8)]
 
 FeaturePlot(seu_sign_o1, markers[1:6])
 
@@ -420,7 +388,7 @@ markers <- ct_markers_o1[[nr]]$genes[
 ct_markers_o1[[nr]][
   !is.na(ct_markers_o1[[nr]]$symbol) & 
     ct_markers_o1[[nr]]$avg_log2FC > 0 &
-    ct_markers_o1[[nr]]$p_val_adj < 0.05,][1:50,]
+    ct_markers_o1[[nr]]$p_val_adj < 0.05,][1:50, c(1, 3, 6, 8)]
 
 FeaturePlot(seu_sign_o1, markers[1:6])
 
@@ -439,7 +407,7 @@ markers <- ct_markers_o1[[nr]]$genes[
 ct_markers_o1[[nr]][
   !is.na(ct_markers_o1[[nr]]$symbol) & 
     ct_markers_o1[[nr]]$avg_log2FC > 0 &
-    ct_markers_o1[[nr]]$p_val_adj < 0.05,]
+    ct_markers_o1[[nr]]$p_val_adj < 0.05, c(1, 3, 6, 8)]
 
 FeaturePlot(seu_sign_o1, markers[1:6])
 
@@ -458,7 +426,7 @@ markers <- ct_markers_o1[[nr]]$genes[
 ct_markers_o1[[nr]][
   !is.na(ct_markers_o1[[nr]]$symbol) & 
     ct_markers_o1[[nr]]$avg_log2FC > 0 &
-    ct_markers_o1[[nr]]$p_val_adj < 0.05,][1:50,]
+    ct_markers_o1[[nr]]$p_val_adj < 0.05,][, c(1, 3, 6, 8)]
 
 FeaturePlot(seu_sign_o1, markers[1:6])
 
@@ -477,13 +445,15 @@ markers <- ct_markers_o1[[nr]]$genes[
 ct_markers_o1[[nr]][
   !is.na(ct_markers_o1[[nr]]$symbol) & 
     ct_markers_o1[[nr]]$avg_log2FC > 0 &
-    ct_markers_o1[[nr]]$p_val_adj < 0.05,][1:50,]
+    ct_markers_o1[[nr]]$p_val_adj < 0.05,][1:50, c(1, 3, 6, 8)]
 
 FeaturePlot(seu_sign_o1, markers[1:6])
 
 seu_sign_o1$annotated_reclustered[seu_sign_o1$seurat_clusters == nr] <- "Cycling Myeloid"
 unique(seu_sign_o1$annotated_reclustered)
 ```
+
+Factorize for nicer plots.
 
 ```{r others1_levels}
 seu_sign_o1$annotated_reclustered <- factor(seu_sign_o1$annotated_reclustered,
@@ -496,7 +466,14 @@ seu_sign_o1$annotated_reclustered <- factor(seu_sign_o1$annotated_reclustered,
                                                        "Mono",
                                                        "Cycling Myeloid",
                                                        "batch, Smart-Seq2"))
+```
 
+#### Supplementary plots
+
+Print some supplementary plots here so they are based on the same
+manual annotation as the main plots.
+
+```{r suppl_plots_o1}
 plot_suppl_a1 <- DimPlot(seu_sign_o1, dims = c(1,2), 
                          group.by = "annotated_reclustered")
 plot_suppl_a2 <- DimPlot(seu_sign_o1, dims = c(1,2), 
@@ -505,18 +482,24 @@ plot_suppl_a3 <- DimPlot(seu_sign_o1, dims = c(1,2),
                          group.by = "assay")
 ```
 
-```{r fig.width = 16, fig.height = 3.5}
-suppl_plot_a <- ggpubr::ggarrange(
+```{r suppl_plots_o1_assemble, fig.width = 16, fig.height = 3.5}
+suppl_plot <- ggpubr::ggarrange(
   plot_suppl_a1,
   plot_suppl_a2,
   plot_suppl_a3,
   nrow = 1,
   align = "hv"
 )
-seu_sign_o1$annotated_reclustered
+suppl_plot
 ```
 
-#### Others - 2
+```{r nsuppl_plots_o1_export, suppl_plot_export_o1}
+pdf(output_pdf_suppl_umaps_o1, width = 16, height = 3.5)
+suppl_plot
+dev.off()
+```
+
+### Others - 2
 
 ```{r umap_others_2}
 DimPlot(seu_sign_o2, dims = c(1,2), group.by = "seurat_clusters")
@@ -544,7 +527,7 @@ markers <- ct_markers_o2[[nr]]$genes[
 ct_markers_o2[[nr]][
   !is.na(ct_markers_o2[[nr]]$symbol) & 
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
-    ct_markers_o2[[nr]]$p_val_adj < 0.05,][1:50,]
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,][c(1, 3, 6, 8)]
 
 FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
@@ -564,7 +547,7 @@ markers <- ct_markers_o2[[nr]]$gene[
 ct_markers_o2[[nr]][
   !is.na(ct_markers_o2[[nr]]$symbol) & 
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
-    ct_markers_o2[[nr]]$p_val_adj < 0.05,]
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,][, c(1, 3, 6, 8)]
 
 FeaturePlot(seu_sign_o2, markers[1:6])
 
@@ -583,7 +566,7 @@ markers <- ct_markers_o2[[nr]]$genes[
 ct_markers_o2[[nr]][
   !is.na(ct_markers_o2[[nr]]$symbol) & 
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
-    ct_markers_o2[[nr]]$p_val_adj < 0.05,]
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,][, c(1, 3, 6, 8)]
 
 FeaturePlot(seu_sign_o2, markers[1:6])
 
@@ -601,7 +584,7 @@ markers <- ct_markers_o2[[nr]]$genes[
 ct_markers_o2[[nr]][
   !is.na(ct_markers_o2[[nr]]$symbol) & 
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
-    ct_markers_o2[[nr]]$p_val_adj < 0.05,][1:50,]
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,][, c(1, 3, 6, 8)]
 
 FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
@@ -623,7 +606,7 @@ markers <- ct_markers_o2[[nr]]$genes[
 ct_markers_o2[[nr]][
   !is.na(ct_markers_o2[[nr]]$symbol) & 
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
-    ct_markers_o2[[nr]]$p_val_adj < 0.05,][1:50,]
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,][, c(1, 3, 6, 8)]
 
 FeaturePlot(seu_sign_o2, markers[1:6])
 
@@ -643,7 +626,7 @@ markers <- ct_markers_o2[[nr]]$genes[
 ct_markers_o2[[nr]][
   !is.na(ct_markers_o2[[nr]]$symbol) & 
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
-    ct_markers_o2[[nr]]$p_val_adj < 0.05,][1:50,]
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,][1:50, c(1, 3, 6, 8)]
 
 FeaturePlot(seu_sign_o2, markers[1:6])
 
@@ -662,7 +645,7 @@ markers <- ct_markers_o2[[nr]]$genes[
 ct_markers_o2[[nr]][
   !is.na(ct_markers_o2[[nr]]$symbol) & 
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
-    ct_markers_o2[[nr]]$p_val_adj < 0.05,][1:50,]
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,][1:50, c(1, 3, 6, 8)]
 
 FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
@@ -682,7 +665,7 @@ markers <- ct_markers_o2[[nr]]$genes[
 ct_markers_o2[[nr]][
   !is.na(ct_markers_o2[[nr]]$symbol) & 
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
-    ct_markers_o2[[nr]]$p_val_adj < 0.05,][1:50,]
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,][1:50, c(1, 3, 6, 8)]
 
 FeaturePlot(seu_sign_o2, markers[1:6])
 
@@ -702,7 +685,7 @@ markers <- ct_markers_o2[[nr]]$genes[
 ct_markers_o2[[nr]][
   !is.na(ct_markers_o2[[nr]]$symbol) & 
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
-    ct_markers_o2[[nr]]$p_val_adj < 0.05,][1:50,]
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,][1:50, c(1, 3, 6, 8)]
 
 FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
@@ -722,7 +705,7 @@ markers <- ct_markers_o2[[nr]]$gene[
 ct_markers_o2[[nr]][
   !is.na(ct_markers_o2[[nr]]$symbol) & 
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
-    ct_markers_o2[[nr]]$p_val_adj < 0.05,][1:50,]
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,][1:50, c(1, 3, 6, 8)]
 
 FeaturePlot(seu_sign_o2, markers[1:6])
 
@@ -741,7 +724,7 @@ markers <- ct_markers_o2[[nr]]$gene[
 ct_markers_o2[[nr]][
   !is.na(ct_markers_o2[[nr]]$symbol) & 
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
-    ct_markers_o2[[nr]]$p_val_adj < 0.05,][1:50,]
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,][1:50, c(1, 3, 6, 8)]
 
 FeaturePlot(seu_sign_o2, markers[1:6])
 
@@ -760,7 +743,7 @@ markers <- ct_markers_o2[[nr]]$gene[
 ct_markers_o2[[nr]][
   !is.na(ct_markers_o2[[nr]]$symbol) & 
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
-    ct_markers_o2[[nr]]$p_val_adj < 0.05,][1:50,]
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,][1:50, c(1, 3, 6, 8)]
 
 FeaturePlot(seu_sign_o2, markers[1:6])
 
@@ -769,6 +752,7 @@ seu_sign_o2$annotated_reclustered[
 unique(seu_sign_o2$annotated_reclustered)
 ```
 
+Factorize for nicer plots.
 
 ```{r others2_level}
 seu_sign_o2$annotated_reclustered <- factor(seu_sign_o2$annotated_reclustered,
@@ -812,7 +796,11 @@ seu_sign_o2$cell_type <- factor(
     "early lymphoid prog",
     "mk-ery prog"
   ))
+```
 
+#### Supplementary Plots
+
+```{r supp_plots_02}
 plot_suppl_b1 <- DimPlot(seu_sign_o2, dims = c(1,2),
                          group.by = "annotated_reclustered")
 plot_suppl_b2 <- DimPlot(seu_sign_o2, dims = c(1,2), 
@@ -821,7 +809,7 @@ plot_suppl_b3 <- DimPlot(seu_sign_o2, dims = c(1,2),
                          group.by = "assay")
 ```
 
-```{r fig.width = 16, fig.height = 3.5}
+```{r supp_plots_02_assemble, fig.width = 16, fig.height = 3.5}
 suppl_plot_b <- ggpubr::ggarrange(
   plot_suppl_b1,
   plot_suppl_b2,
@@ -832,9 +820,17 @@ suppl_plot_b <- ggpubr::ggarrange(
 suppl_plot_b
 ```
 
-### Make plots
+```{r suppl_plot_export_o2}
+pdf(output_pdf_suppl_umaps_o2, width = 16, height = 3.5)
+suppl_plot_b
+dev.off()
+```
 
-#### Other 1
+## Make plots
+
+### Other 1
+
+Figure 4b.
 
 ```{r mat_sign_o1}
 mat_sign_o1_anno <- base::table(seu_sign_o1$cell_type, 
@@ -885,7 +881,7 @@ sign_base_plot_o1 <- ggplot2::ggplot(
   ggplot2::geom_tile()
 ```
 
-```{r sign_theme_plot_o1}
+```{r sign_theme_plot_o1, fig.height = 7, fig.width = 5}
 sign_theme_plot_o1 <- sign_base_plot_o1+
   theme_all+
   ggplot2::theme(
@@ -908,7 +904,9 @@ sign_theme_plot_o1 <- sign_base_plot_o1+
 sign_theme_plot_o1
 ```
 
-#### Others 2
+### Others 2
+
+Figure 4c.
 
 ```{r mat_sign_o2}
 mat_sign_o2 <- base::table(seu_sign_o2$cell_type, 
@@ -974,13 +972,11 @@ sign_base_plot_o2 <- ggplot2::ggplot(
   ggplot2::geom_tile()
 ```
 
-```{r sign_theme_plot_o2, fig.height = 6, fig.width = 6}
+```{r sign_theme_plot_o2, fig.height = 8, fig.width = 6}
 sign_theme_plot_o2 <- sign_base_plot_o2+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
-    #axis.title.x = element_blank(),
-    #axis.text.y = element_blank(),
     axis.text.x = element_text(
       angle = 90,
       hjust = 1, 
@@ -999,208 +995,41 @@ sign_theme_plot_o2 <- sign_base_plot_o2+
 sign_theme_plot_o2
 ```
 
+```{r}
+legend_theme_plot <- sign_base_plot_o2+
+  theme_all+
+  ggplot2::theme(legend.position = "bottom")+
+  ggplot2::scale_fill_gradientn(
+    "Proportion of cells per cluster",
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))
 
-### Assemble
+heatmap_legend_theme <- ggpubr::get_legend(legend_theme_plot)
+heatmap_legend <- ggpubr::ggarrange(heatmap_legend_theme)
+```
 
-```{r ab_plotparts, fig.width = 12, fig.height = 6.5}
+### Assemble and Export
 
-sign_plots_ab <- ggpubr::ggarrange(
+```{r heatmap_plotparts, fig.width = 12, fig.height = 6.5}
+
+sign_plots_heatmap <- ggpubr::ggarrange(
   ncol = 2,
   align = "h",
   sign_theme_plot_o1,
   sign_theme_plot_o2)
-sign_plots_ab
+sign_plots_heatmap
 ```
 
-```{r ab_plot_export}
-pdf(output_pdf_ab_plot, width = 12, height = 6.5)
-sign_plots_ab
-dev.off()
-stop()
-```
-
-## D Pval Plot
-
-```{r d_prep1, eval = FALSE, include = FALSE}
-
-# add more columns for nicer visualisation
-corr_pval_df$color_id <- vector(length = nrow(corr_pval_df))
-corr_pval_df$color_id[corr_pval_df$pval_corrected < 0.05] <- "significant"
-corr_pval_df$color_id[corr_pval_df$pval_corrected == 0] <- "is_null"
-corr_pval_df$color_id[corr_pval_df$pval_corrected >= 0.05] <- "non_significant"
-
-corr_pval_df$cons_level_long <- vector(length = nrow(corr_pval_df))
-corr_pval_df$cons_level_long[
-  corr_pval_df$conservation_level == "conserved_signature"] <- "signature"
-corr_pval_df$cons_level_long[
-  corr_pval_df$conservation_level == "conserved_markers"] <- "conserved markers"
-corr_pval_df$cons_level_long[
-  corr_pval_df$conservation_level == "mmusall_markers"] <- "all BL6 markers"
-
-corr_pval_df$score_long <- vector(length = nrow(corr_pval_df))
-corr_pval_df$score_long[
-  corr_pval_df$type == "adjusted_rand_index"] <- "Adjusted Rand Index"
-corr_pval_df$score_long[
-  corr_pval_df$type == "variation_information"] <- "Variation of Information"
-corr_pval_df$score_long[
-  corr_pval_df$type == "mean_prop_cells_cluster"] <- "Mean prop."
-
-corr_pval_df$cons_level_long <- factor(
-  corr_pval_df$cons_level_long, levels = c(
-    "signature",
-    "conserved markers",
-    "all BL6 markers"))
-
-corr_pval_df$score_long <- factor(
-  corr_pval_df$score_long, levels = c(
-    "Adjusted Rand Index",
-    "Variation of Information",
-    "Mean prop."))
-
-corr_pval_df$color_id <- factor(
-  corr_pval_df$color_id, levels = rev(c(
-    "non_significant",
-    "significant",
-    "is_null")))
-
-color_significance <- c("non_significant" = "grey90",
-                        "significant" = "grey40", 
-                        "is_null" = "blue")
-```
-
-```{r d_prep2_subset, eval = FALSE, include = FALSE}
-
-corr_pval_df_sub <- corr_pval_df[corr_pval_df$condition %in% c(
-  dataset_o1,
-  dataset_o2,
-  "mus_weinreb_hspc",
-  "mus_tm_bonemarrow"),]
-
-corr_pval_df_sub <- corr_pval_df_sub[
-  !corr_pval_df_sub$conservation_level %in% c("conserved_markers", "all BL6 markers"),]
-
-corr_pval_df_sub$condition_long <- corr_pval_df_sub$condition
-corr_pval_df_sub$condition_long[
-  corr_pval_df_sub$condition == dataset_o1] <- "tabula sapiens BM"
-corr_pval_df_sub$condition_long[
-  corr_pval_df_sub$condition == dataset_o2] <- "tabula sapiens fetal"
-corr_pval_df_sub$condition_long[
-  corr_pval_df_sub$condition == "mus_tm_bonemarrow"] <- "tabula muris"
-corr_pval_df_sub$condition_long[
-  corr_pval_df_sub$condition == "mus_weinreb_hspc"] <- "Weinreb et al."
-
-corr_pval_df_sub$condition_long <- factor(
-  corr_pval_df_sub$condition_long, levels = rev(c(
-    "tabula muris",
-    "Weinreb et al.",
-    "tabula sapiens BM",
-    "tabula sapiens fetal")))
-
-corr_pval_df_sub$comparison <- factor(
-  corr_pval_df_sub$comparison, levels = c(
-    "sign-vs-rand",
-    "mmms-vs-signrand"))
-
-corr_pval_df_sub <- corr_pval_df_sub[
-  corr_pval_df_sub$comparison %in% c("mmms-vs-signrand", "sign-vs-rand"),]
-
-corr_pval_df_sub$x_axis <- rep("1", nrow(corr_pval_df_sub))
-```
-
-```{r d_base_plot, fig.width = 10, fig.height= 3, eval = FALSE, include = FALSE} 
-d_base_plot <- ggplot2::ggplot(
-  corr_pval_df_sub,
-  aes(y = condition_long, 
-      x = x_axis,
-      color = color_id, 
-      size = 10^-pval_corrected))+
-  ggplot2::geom_point(alpha = 1)+
-  ggplot2::facet_grid(cols = vars(corr_pval_df_sub$score_long),
-                      switch = "y",
-                      rows = vars(corr_pval_df_sub$comparison))+
-  ggplot2::theme_classic()+
-  ggplot2::scale_color_manual(values = color_significance)
-```
-
-```{r d_theme_plot, fig.width = 8, fig.height = 3, eval = FALSE, include = FALSE} 
-d_theme_plot <- d_base_plot+
-  theme_all+
-  # ggplot2::scale_x_continuous(
-  #   limits = c(0, base::max(corr_pval_df_sub$nr_genes_used)))+
-  ggplot2::scale_color_manual(values = color_significance)+
-  ggplot2::theme(
-    legend.position = "none",
-    strip.text.x = element_text(
-      size = axis_title_size,
-      color = axis_title_color,
-      face = axis_title_face,
-      hjust = 1,
-      angle = 0),
-    axis.text.y = element_text(
-      hjust = 0),
-    axis.text.x = element_blank(),   
-    axis.ticks.x = element_blank(),   
-    strip.text.y.left = element_text(
-      size = axis_text_size,
-      color = axis_text_color,
-      face = axis_text_face,
-      hjust = 0,
-      angle = 0),
-    strip.background = element_blank(),
-    strip.placement = "outside",
-    axis.title.y = element_blank(),
-    axis.title = element_blank())
-d_theme_plot
-```
-
-```{r , eval = FALSE, include = FALSE}
-d_legend_base_plot <- ggplot2::ggplot(
-  corr_pval_df,
-  aes(y = condition, 
-      x = nr_genes_used,
-      color = color_id, 
-      size = 10^-pval_corrected))+
-  ggplot2::geom_point(alpha = 1)+
-  ggplot2::facet_grid(cols = vars(corr_pval_df$score_long),
-                      switch = "y",
-                      rows = vars(corr_pval_df$cons_level_long))+
-  ggplot2::theme_classic()+
-  ggplot2::scale_x_continuous(limits = c(0, max(corr_pval_df$nr_genes_used)))+
-  ggplot2::scale_color_manual(values = color_significance)
-```
-
-```{r d_legend_theme_plot, fig.width = 3, fig.height= 4, eval = FALSE, include = FALSE}
-d_legend_theme_plot <- d_legend_base_plot+
-   ggplot2::theme_classic()+
-  ggplot2::scale_x_continuous(
-    limits = c(0, base::max(corr_pval_df_sub$nr_genes_used)))+
-  ggplot2::scale_color_manual("", values = color_significance)+
-  ggplot2::scale_size_continuous("10 adjusted p val")+
-  ggplot2::theme(
-    legend.title = element_text(
-      size = legend_title_size,
-      color = legend_title_color,
-      face = legend_title_face),
-    legend.text = element_text(
-      size = legend_text_size,
-      color = legend_text_color,
-      face = legend_text_face))
-
-d_legend_theme <- ggpubr::get_legend(d_legend_theme_plot)
-
-d_legend <- ggpubr::ggarrange(d_legend_theme)
-d_legend
-```
-
-```{r d_plot_export, eval = FALSE, include = FALSE}
-pdf(output_pdf_c_plot, width = 7, height = 3)
-d_theme_plot
+```{r heatmap_plot_export}
+pdf(output_pdf_heatmap_plot, width = 12, height = 6.5)
+sign_plots_heatmap
 dev.off()
 ```
 
-```{r d_legend_export, eval = FALSE, include = FALSE}
-pdf(output_pdf_c_legend, width = 3, height = 3)
-d_legend
+```{r heatmap_own_legend_export}
+pdf(output_pdf_legend_plot, width = 6, height = 1)
+heatmap_legend
 dev.off()
 ```
 

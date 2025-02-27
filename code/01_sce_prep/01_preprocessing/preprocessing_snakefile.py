@@ -101,7 +101,7 @@ rule get_sample_dmgs:
         dmgs = OUTPUT_DAT + "/02_mapp/{species}/dmgs_{individual}"
     resources:
         mem_mb=15000,
-        queue="short"
+        queue="medium"
     threads: 2
     params:
         nr_hvgs = config["values"]["nr_hvgs"],
@@ -121,7 +121,7 @@ rule merge_dmgs:
     input:
         dmgs = merge_dmgs_input
     resources:
-        mem_mb=100,
+        mem_mb=1000,
         queue="short"
     threads: 1
     output:
@@ -154,7 +154,7 @@ rule normalize_expr:
     output:
         sce_output = OUTPUT_DAT + "/05_norm/{species}/sce_{individual}-05"
     resources:
-        mem_mb=2000,
+        mem_mb=3000,
         queue="short"
     threads: 2
     script:
@@ -193,7 +193,7 @@ rule make_dmg_reports:
     resources:
         mem_mb=20000,
         queue="medium"
-    threads: 5
+    threads: 6
     params:
         nr_hvgs = config["values"]["nr_hvgs"],
         plotting = "../../source/plotting.R" # path to source file

@@ -155,6 +155,7 @@ print(base::table(rowData(sce)$subclustering_genes))
 gene_var <- scran::modelGeneVar(sce)
 hvgs <- scran::getTopHVGs(gene_var, n = nr_hvgs)
 
+RNGkind("L'Ecuyer-CMRG") 
 set.seed(seed)
 
 # use batch-corrected PC coordinates in "PCA"

@@ -57,16 +57,14 @@ output_pdf_e_plot <- base::paste0(
   base_path, "manuscript1/figure6/figure6_e.pdf")
 
 output_pdf_s_a_plot <- base::paste0(
-  base_path, "manuscript1/figure6/figures6_a.pdf")
+  base_path, "manuscript1/supp_figure6/supp_figure6_allhs_heatmap.pdf")
 ```
 
-## A
+## Primate "own" reclustering heatmaps
 
-A: Model of species used in available data (Bakken 2021 Nature: macaque, human, marmoset as ingroup, mouse as outgroup).
-
-## B
-
-Primate cell type identification using only primate-derived conserved identity signature or conserved marker genes.
+Primate cell type identification using only primate-derived conserved identity
+signature or conserved marker genes.
+For figure 6b.
 
 #### Prep
 
@@ -119,33 +117,32 @@ b_plot <- ggplot(plot_gg_all,
   geom_tile()
 ```
 
-```{r b_set_theme}
+```{r b_set_theme, fig.width = 5, fig.height = 9}
 b_plot_theme <- b_plot + 
       ggplot2::theme_classic() +
+      theme_all+
       ggplot2::theme(
         strip.background = element_blank(),
         legend.position = "none",
-        axis.title.x = element_blank(),
+        #axis.title.x = element_blank(),
         axis.text = element_blank(),
         axis.text.x = element_text(
                           size = axis_text_size,
                           face = axis_text_face,
                           color = axis_text_color,
                           angle = 90,
-                          hjust = 0,
+                          hjust = 1,
                           vjust = 0.5),
         axis.ticks.y = element_blank(),
-        axis.title.y = element_text(
+        axis.line.y = element_blank(),
+        plot.title = element_text(
           size = axis_title_size,
           face = axis_title_face,
-          color = axis_title_color),
-        plot.title = element_text(
-          size = plot_title_size,
-          face = plot_title_face,
           hjust = 0.5,
           color = col_cons_long["conserved identity signature"]))  +
        ggplot2::ggtitle("Signature genes") +
-       ggplot2::ylab("New clusters") +
+       ggplot2::xlab("Reference annotation") +
+       ggplot2::ylab("Reclustered with") +
        ggplot2::scale_fill_gradientn(
             colors = mycolors_to1,
             limits = c(0, 1),
@@ -153,7 +150,7 @@ b_plot_theme <- b_plot +
 b_plot_theme
 ```
 
-#### Construct
+#### Assemble and Export
 
 ```{r b_plot_export}
 pdf(output_pdf_b_plot, width = 5, height = 9)
@@ -161,9 +158,10 @@ b_plot_theme
 dev.off()
 ```
 
-## C
+## Mouse "other" reclustering
 
 Mouse cell type identification using only primate marker genes.
+Figure 6c.
 
 #### Prep
 
@@ -205,8 +203,8 @@ plotted_gg_mouse <- list()
 for(genes in c("hs", "sig")){
   plotted_gg_mouse[[genes]] <- ggplot(plot_gg_mouse[[genes]], 
          aes(x = factor(subclass_label, 
-                              levels = c("L2/3 IT", "L5 IT", "L6 IT", 
-                                         "L5 ET", "L5/6 NP", "L6 CT", "L6b")), 
+                              levels = rev(c("L2/3 IT", "L5 IT", "L6 IT", 
+                                         "L5 ET", "L5/6 NP", "L6 CT", "L6b"))), 
              y = order,
              fill = clust_prop)) + 
     geom_tile()
@@ -214,52 +212,63 @@ for(genes in c("hs", "sig")){
 plotted_gg_mouse
 ```
 
-```{r c_set_theme}
+```{r c_set_theme_hs}
+# this will be a supplementary plot
 plotted_gg_mouse[["hs"]] <- plotted_gg_mouse[["hs"]] + 
     ggplot2::theme_classic() +
+    theme_all+
     ggplot2::theme(
       legend.position = "none",
-      axis.title.x = element_blank(),
       axis.text = element_blank(),
       axis.text.x = element_text(
                     size = axis_text_size,
                     face = axis_text_face,
                     color = axis_text_color,
                     angle = 90,
-                    hjust = 0,
+                    hjust = 1,
                     vjust = 0.5),
       axis.ticks.y = element_blank(),
+      axis.line.y = element_blank(),
       axis.title.y = element_text(
         size = axis_title_size,
         face = axis_title_face,
         color = axis_title_color),
       plot.title = element_text(
-        size = plot_title_size,
-        face = plot_title_face,
+        size = axis_title_size,
+        face = axis_title_face,
         hjust = 0.5,
-        color = col_cons_long["total human markers"])) +
+        color = col_cons_long["BL6 markers"])) +
     ggplot2::ggtitle("Total human markers") +
     ggplot2::scale_fill_gradientn(
       colors = mycolors_to1,
       limits = c(0, 1),
       breaks = c(0, 0.5, 1))+
-    ggplot2::ylab("New clusters") +
-    ggplot2::xlab("Original cell types")
+    ggplot2::ylab("Reclustered with") +
+    ggplot2::xlab("Reference annotation")
+plotted_gg_mouse[["hs"]]
+```
 
+
+```{r c_set_theme_sig}
 plotted_gg_mouse[["sig"]] <- plotted_gg_mouse[["sig"]] + 
-    ggplot2::theme_classic() +
+    theme_all+
     ggplot2::theme(
       legend.position = "none",
       axis.title.x = element_blank(),
-      axis.text = element_blank(),
+      axis.text.y = element_blank(),
+      axis.text.x = element_text(
+        angle = 90,
+        hjust = 0.5,
+        vjust = 0.5),
       axis.ticks.y = element_blank(),
+      axis.line.y = element_blank(),
       axis.title.y = element_text(
         size = axis_title_size,
         face = axis_title_face,
         color = axis_title_color),
       plot.title = element_text(
-        size = plot_title_size,
-        face = plot_title_face,
+        size = axis_title_size,
+        face = axis_title_face,
         hjust = 0.5,
         color = col_cons_long["conserved identity signature"]))  +
      ggplot2::ggtitle("Signature genes") +
@@ -267,28 +276,19 @@ plotted_gg_mouse[["sig"]] <- plotted_gg_mouse[["sig"]] +
           colors = mycolors_to1,
           limits = c(0, 1),
           breaks = c(0, 0.5, 1)) +
-     ggplot2::ylab("New clusters")
+     ggplot2::ylab("Reclustered with")
+plotted_gg_mouse[["sig"]]
 ```
 
-#### Construct
-
-```{r c_construct, fig.width = 5, fig.height = 6}
-c_plot <- ggpubr::ggarrange(
-  ncol = 1,
-  plotted_gg_mouse[["sig"]],
-  plotted_gg_mouse[["hs"]],
-  align = "v",
-  heights = c(1, 1.2)
-)
-c_plot
-```
-
+#### Export
 
 ```{r c_plot_export}
 pdf(output_pdf_c_plot, width = 5, height = 4)
 plotted_gg_mouse[["sig"]]
 dev.off()
 ```
+
+#### Supplementary
 
 Export Supplementary Figure 6 A
 
@@ -298,9 +298,11 @@ plotted_gg_mouse[["hs"]]
 dev.off()
 ```
 
-## D
+## Barplot of accurately assigned cells
 
-Number of mouse cortex cells that are able to be accurately re-annotated using clustering based on human marker genes or primate identity signature genes.
+Number of mouse cortex cells that are able to be accurately re-annotated using 
+clustering based on human marker genes or primate identity signature genes.
+Figure 6d.
 
 #### Prep
 
@@ -344,7 +346,7 @@ all_data <- rbind(
 )
 ```
 
-#### Construct
+#### Assemble
 
 ```{r d_construct, fig.width = 4, fig.height = 4}
 d_plot <- ggplot(all_data,
@@ -361,27 +363,61 @@ d_plot <- ggplot(all_data,
   theme_classic() +
   theme(strip.text.y = element_text(angle = 0),
     strip.background = element_rect(color = "white"),
-    axis.text.y = element_text(color = c(col_cons_long["conserved identity signature"], 
-                                         col_cons_long["total human markers"]))) +
+    axis.text.y = element_text(color = c(
+      col_cons_long["conserved identity signature"], 
+      col_cons_long["total human markers"]))) +
   scale_x_continuous(breaks = c(0, 1000, 2000)) +
   labs(y = NULL, 
        x = "Mouse cells", 
        fill = "Accurately\nAssigned") +
   scale_fill_manual(values = c(max(mycolors_to1_grey), 
                                min(mycolors_to1_grey)))
+```
+
+```{r d_construct2, fig.width = 5, fig.height = 5}
+d_plot <- ggplot(
+  all_data,
+  aes(x = factor(genes, levels = c("identity signature", "human markers")),
+      y = Count,
+      fill = clust_assigned)) +
+  geom_col(position = "stack") +
+  facet_wrap(~factor(subclass_label, 
+                     levels = c("L2/3 IT", "L5 IT", "L6 IT", 
+                                "L5 ET", "L5/6 NP", "L6 CT", "L6b")), 
+             ncol = 7,
+             strip.position = "top") +
+  scale_x_discrete(position = "top") +
+  scale_y_reverse(breaks = c(0, 1000, 2000)) +
+  theme_all+
+  theme(
+    legend.position = "none",
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(
+      angle = 90,
+      color = c(col_cons_long["conserved identity signature"], 
+                col_cons_long["BL6 markers"])),
+    strip.text.x.top = element_blank(),
+    strip.background = element_rect(color = "white")) +
+  labs(x = NULL, 
+       y = "Mouse cells", 
+       fill = "Accurately\nAssigned") +
+  scale_fill_manual(values = c(max(mycolors_to1_grey), 
+                               min(mycolors_to1_grey)))
 d_plot
 ```
 
+#### Export
 
 ```{r d_plot_export}
-pdf(output_pdf_d_plot, width = 4, height = 4)
+pdf(output_pdf_d_plot, width = 5, height = 5)
 d_plot
 dev.off()
 ```
 
-## E
+## Upset plot of accurately assigned cells.
 
 Summarized consensus annotation information across clustering methods
+Figure 6e.
 
 #### Prep
 
@@ -429,9 +465,9 @@ rownames(mouse_sig@meta.data) <- rownames
 # 388         306         398        7150 
 ```
 
-#### Construct
+#### Assemble
 
-```{r e_construct}
+```{r e_construct, fig.height = 4, fig.width = 5}
 input <- c(
   'Bakken&signature&human' = as.integer(table(mouse_sig@meta.data$correct)[4]),
   'Bakken&signature' = as.integer(table(mouse_sig@meta.data$correct)[3]),
@@ -447,7 +483,7 @@ ups <- upset(fromExpression(input),
       number.angles = 0, 
       text.scale = 2, 
       point.size = 3, 
-      line.size = 1.5
+      line.size = 1
       )
 
 skip_set_size_plot <- function(ups) {
@@ -471,8 +507,16 @@ skip_set_size_plot <- function(ups) {
 print(skip_set_size_plot(ups))
 ```
 
+#### Export
+
 ```{r e_plot_export}
-pdf(output_pdf_e_plot, width = 6, height = 4)
+pdf(output_pdf_e_plot, width = 5, height = 4)
 skip_set_size_plot(ups)
 dev.off()
+```
+
+# Utils
+
+```{r session_info}
+utils::sessionInfo()
 ```

@@ -183,6 +183,121 @@ rm(seu_str_recl_list_o3)
 gc()
 ```
 
+```{r load_other2}
+#-------------------------------------------------------------------------------
+#### OTHER MOUSE DATASET 2 (Niche)
+#### MUS_TIK_STROMAL
+
+dataset_o2 <- "mus_tik_stromal"
+
+# list of seurat objects with reclustering vectors for each gene set and resolution
+seu_str_recl_list_o2 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_mus_tik_stromal_list"))
+
+# # list of dataframes of re-clustering scores for each gene set and resolution
+# score_df_str_list_o2 <- base::readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_mus_tik_stromal_list"))
+# 
+# # dataframes of re-clustering scores after permutation comparing gene sets
+# psdf_str_mark_signrand_o2 <- base::readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mark_mus_tik_stromal"))
+# psdf_str_mmms_signrand_o2 <- base::readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_mus_tik_stromal"))
+# psdf_str_mmms_markrand_o2 <- base::readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_mark_mus_tik_stromal"))
+# 
+# # perm score DF from background permutation (SIGN)
+# psdf_str_sign_rand_o2 <- base::readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_psig/perm_score_df_mus_tik_stromal"))
+```
+
+```{r selected_seu_o2}
+
+resolution_df_o2 <- resolution_df[resolution_df$dataset == dataset_o2,]
+
+selected_seu_list_o2 <- lapply(seu_str_recl_list_o2, function(seu_list){
+  
+  conslev_curr <- seu_list[[1]]@misc$used_genes
+  
+  resdf_temp <- resolution_df_o2[
+    resolution_df_o2$conservation_level == conslev_curr,]
+  res_curr <- resdf_temp$resolution
+  
+  seu_return <- seu_list[[res_curr]]
+  return(seu_return)
+  
+})
+
+rm(seu_str_recl_list_o2)
+gc()
+```
+
+```{r load_other3}
+#-------------------------------------------------------------------------------
+#### OTHER MOUSE DATASET 3 (Niche)
+#### li_all_stromal
+
+dataset_o3 <- "li_all_stromal"
+
+# list of seurat objects with reclustering vectors for each gene set and resolution
+seu_str_recl_list_o3 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_li_all_stromal_list"))
+
+# list of dataframes of re-clustering scores for each gene set and resolution
+# score_df_str_list_o3 <- base::readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_li_all_stromal_list"))
+# 
+# # dataframes of re-clustering scores after permutation comparing gene sets
+# psdf_str_mark_signrand_o3 <- base::readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mark_li_all_stromal"))
+# psdf_str_mmms_signrand_o3 <- base::readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_li_all_stromal"))
+# psdf_str_mmms_markrand_o3 <- base::readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_mark_li_all_stromal"))
+# 
+# # perm score DF from background permutation (SIGN)
+# psdf_str_sign_rand_o3 <- base::readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_psig/perm_score_df_li_all_stromal"))
+
+# perm score DF from background permutation (MARK)
+# psdf_str_mark_rand_o1 <- base::readRDS(base::paste0(
+#   base_path,
+#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_pmrk/perm_score_df_li_all_stromal"))
+```
+
+```{r selected_seu_o3}
+
+resolution_df_o3 <- resolution_df[resolution_df$dataset == dataset_o3,]
+
+selected_seu_list_o3 <- lapply(seu_str_recl_list_o3, function(seu_list){
+  
+  conslev_curr <- seu_list[[1]]@misc$used_genes
+  
+  resdf_temp <- resolution_df_o3[
+    resolution_df_o3$conservation_level == conslev_curr,]
+  res_curr <- resdf_temp$resolution
+  
+  seu_return <- seu_list[[res_curr]]
+  return(seu_return)
+  
+})
+
+rm(seu_str_recl_list_o3)
+gc()
+```
+
 ```{r params}
 # global params
 source("determine_params.R")

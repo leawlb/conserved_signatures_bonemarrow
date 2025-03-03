@@ -28,7 +28,7 @@ Relevant data is also loaded later to save space before that.
 #### Load objects
 
 ```{r seed, message = FALSE}
-base::RNGkind(kind = "Mersenne-Twister")
+RNGkind("L'Ecuyer-CMRG") 
 set.seed(37)
 ```
 
@@ -394,6 +394,88 @@ hsc_genes <- c(hsc_mmus_specific,
 
 stopifnot(!duplicated(hsc_genes))
 ```
+
+```{r}
+hsc_mmus_specific
+hsc_mcas_specific
+hsc_mspr_specific
+hsc_mcar_specific
+```
+
+```{r print_ct_bl6specific}
+hsc_cons_df_ct <- geneset_list_hsc$`Early MPP`$conserved_df
+hsc_mmus_specific <- hsc_cons_df_ct$gene[which(
+  !is.na(hsc_cons_df_ct$mmus) &
+    is.na(hsc_cons_df_ct$mcas) &
+    is.na(hsc_cons_df_ct$mspr) &
+    is.na(hsc_cons_df_ct$mcar))]
+hsc_mmus_specific
+
+hsc_cons_df_ct <- geneset_list_hsc$`Early Myeloid`$conserved_df
+hsc_mmus_specific <- hsc_cons_df_ct$gene[which(
+  !is.na(hsc_cons_df_ct$mmus) &
+    is.na(hsc_cons_df_ct$mcas) &
+    is.na(hsc_cons_df_ct$mspr) &
+    is.na(hsc_cons_df_ct$mcar))]
+hsc_mmus_specific
+
+hsc_cons_df_ct <- geneset_list_hsc$Lymphoid$conserved_df
+hsc_mmus_specific <- hsc_cons_df_ct$gene[which(
+  !is.na(hsc_cons_df_ct$mmus) &
+    is.na(hsc_cons_df_ct$mcas) &
+    is.na(hsc_cons_df_ct$mspr) &
+    is.na(hsc_cons_df_ct$mcar))]
+hsc_mmus_specific
+
+hsc_cons_df_ct <- geneset_list_hsc$`Mk prog`$conserved_df
+hsc_mmus_specific <- hsc_cons_df_ct$gene[which(
+  !is.na(hsc_cons_df_ct$mmus) &
+    is.na(hsc_cons_df_ct$mcas) &
+    is.na(hsc_cons_df_ct$mspr) &
+    is.na(hsc_cons_df_ct$mcar))]
+hsc_mmus_specific
+
+hsc_cons_df_ct <- geneset_list_hsc$`Mk/Ery prog`$conserved_df
+hsc_mmus_specific <- hsc_cons_df_ct$gene[which(
+  !is.na(hsc_cons_df_ct$mmus) &
+    is.na(hsc_cons_df_ct$mcas) &
+    is.na(hsc_cons_df_ct$mspr) &
+    is.na(hsc_cons_df_ct$mcar))]
+hsc_mmus_specific
+
+hsc_cons_df_ct <- geneset_list_hsc$`Mono prog`$conserved_df
+hsc_mmus_specific <- hsc_cons_df_ct$gene[which(
+  !is.na(hsc_cons_df_ct$mmus) &
+    is.na(hsc_cons_df_ct$mcas) &
+    is.na(hsc_cons_df_ct$mspr) &
+    is.na(hsc_cons_df_ct$mcar))]
+hsc_mmus_specific
+
+hsc_cons_df_ct <- geneset_list_hsc$`Neutro prog`$conserved_df
+hsc_mmus_specific <- hsc_cons_df_ct$gene[which(
+  !is.na(hsc_cons_df_ct$mmus) &
+    is.na(hsc_cons_df_ct$mcas) &
+    is.na(hsc_cons_df_ct$mspr) &
+    is.na(hsc_cons_df_ct$mcar))]
+hsc_mmus_specific
+
+hsc_cons_df_ct <- geneset_list_hsc$`BM prog`$conserved_df
+hsc_mmus_specific <- hsc_cons_df_ct$gene[which(
+  !is.na(hsc_cons_df_ct$mmus) &
+    is.na(hsc_cons_df_ct$mcas) &
+    is.na(hsc_cons_df_ct$mspr) &
+    is.na(hsc_cons_df_ct$mcar))]
+hsc_mmus_specific
+
+hsc_cons_df_ct <- geneset_list_hsc$Erythroid$conserved_df
+hsc_mmus_specific <- hsc_cons_df_ct$gene[which(
+  !is.na(hsc_cons_df_ct$mmus) &
+    is.na(hsc_cons_df_ct$mcas) &
+    is.na(hsc_cons_df_ct$mspr) &
+    is.na(hsc_cons_df_ct$mcar))]
+hsc_mmus_specific
+```
+
 
 ```{r heatmap_spec2}
 agg_hsc_ct <- agg_hsc_list[[celltype]]

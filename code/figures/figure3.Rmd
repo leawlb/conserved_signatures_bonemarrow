@@ -244,6 +244,9 @@ output_pdf_mmms_sign_plot <-  base::paste0(
 
 output_pdf_heatmaps_others_plot <- base::paste0(
    base_path, "/manuscript1/figure3/figure3_heatmaps_others.pdf")
+
+export_signature_table_path <- base::paste0(
+   base_path, "/manuscript1/hsc_signature_table.csv")
 ```
 
 # Obtain data for text
@@ -254,6 +257,40 @@ print(sce_hsc_recl$cluster_consm_genes_used[1])
 print(sce_hsc_recl$cluster_mmusm_genes_used[1])
 ```
 
+# Export Table 
+
+Exporting a useful table containing all signature genes, their cell type(s) of
+origin, and whether they were originally sub-clustering genes.
+
+```{r export_table}
+
+for(ct in names(geneset_list_hsc)){
+  geneset_list_hsc[[ct]]$ct <- ct
+}
+
+make_export_df <- function(gene_set_list){
+  
+  genes_sub <- gene_set_list$genes_subclustering
+  genes_sign <- gene_set_list$conserved_signature
+  
+  temp_df <- data.frame(
+    "signature_gene" = genes_sign,
+    "celltype" =  base::rep(gene_set_list$ct, length(genes_sign)),
+    "subclustering_gene_for_ct" = vector(length = length(genes_sign))
+  )
+  
+  # add info on whether a gene was a sub-clustering gene for the cell type
+  temp_df$subclustering_gene_for_ct[which(temp_df$signature_gene %in% genes_sub)] <- TRUE
+  return(temp_df)
+}
+
+export_df_list <- lapply(geneset_list_hsc, make_export_df)
+export_df <- bind_rows(export_df_list)
+export_df <- export_df[order(export_df$signature_gene, decreasing = FALSE),]
+head(export_df)
+
+readr::write_delim(export_df, export_signature_table_path, delim = ";", append = FALSE)
+```
 
 # PREP: Permutation Plots 
 

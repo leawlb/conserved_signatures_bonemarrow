@@ -196,6 +196,9 @@ output_pdf_suppl_umaps_o2 <- base::paste0(
   base_path, "/manuscript1/supp_figure5/supp_figure5_umaps_o2.pdf")
 output_pdf_suppl_umaps_o3 <- base::paste0(
   base_path, "/manuscript1/supp_figure5/supp_figure5_umaps_o3.pdf")
+
+export_signature_table_path <- base::paste0(
+   base_path, "/manuscript1/str_signature_table.csv")
 ```
 
 ## Obtain data
@@ -205,6 +208,85 @@ output_pdf_suppl_umaps_o3 <- base::paste0(
 #print(sort(geneset_list_str$`Sinusoidal ECs`$conserved_signature))
 #print(sort(geneset_list_str$`Sinusoidal/Venular ECs`$conserved_signature))
 #print(sort(geneset_list_str$`Arteriolar/Capillary ECs`$conserved_signature))
+```
+
+## Export Table 
+
+Exporting a useful table containing all signature genes, their cell type(s) of
+origin, and whether they were originally sub-clustering genes.
+
+```{r export_table}
+
+for(ct in names(geneset_list_str)){
+  geneset_list_str[[ct]]$ct <- ct
+}
+
+make_export_df <- function(gene_set_list){
+  
+  genes_sub <- gene_set_list$genes_subclustering
+  genes_sign <- gene_set_list$conserved_signature
+  
+  temp_df <- data.frame(
+    "signature_gene" = genes_sign,
+    "celltype" =  base::rep(gene_set_list$ct, length(genes_sign)),
+    "subclustering_gene_for_ct" = vector(length = length(genes_sign))
+  )
+  
+  # add info on whether a gene was a sub-clustering gene for the cell type
+  temp_df$subclustering_gene_for_ct[which(temp_df$signature_gene %in% genes_sub)] <- TRUE
+  return(temp_df)
+}
+
+export_df_list <- lapply(geneset_list_str, make_export_df)
+export_df <- bind_rows(export_df_list)
+export_df <- export_df[order(export_df$signature_gene, decreasing = FALSE),]
+head(export_df)
+
+readr::write_delim(export_df, export_signature_table_path, delim = ";", append = FALSE)
+```
+
+```{r print_ct_bl6specific}
+hsc_cons_df_ct <- geneset_list_str$Osteo$conserved_df
+hsc_mmus_specific <- hsc_cons_df_ct$gene[which(
+  !is.na(hsc_cons_df_ct$mmus) &
+    is.na(hsc_cons_df_ct$mcas) &
+    is.na(hsc_cons_df_ct$mspr) &
+    is.na(hsc_cons_df_ct$mcar))]
+hsc_mmus_specific
+
+hsc_cons_df_ct <- geneset_list_str$`Adipo/CAR`$conserved_df
+hsc_mmus_specific <- hsc_cons_df_ct$gene[which(
+  !is.na(hsc_cons_df_ct$mmus) &
+    is.na(hsc_cons_df_ct$mcas) &
+    is.na(hsc_cons_df_ct$mspr) &
+    is.na(hsc_cons_df_ct$mcar))]
+hsc_mmus_specific
+
+hsc_cons_df_ct <- geneset_list_str$`Fibro/Chondro`$conserved_df
+hsc_mmus_specific <- hsc_cons_df_ct$gene[which(
+  !is.na(hsc_cons_df_ct$mmus) &
+    is.na(hsc_cons_df_ct$mcas) &
+    is.na(hsc_cons_df_ct$mspr) &
+    is.na(hsc_cons_df_ct$mcar))]
+hsc_mmus_specific
+
+hsc_cons_df_ct <- geneset_list_str$Fibroblast$conserved_df
+hsc_mmus_specific <- hsc_cons_df_ct$gene[which(
+  !is.na(hsc_cons_df_ct$mmus) &
+    is.na(hsc_cons_df_ct$mcas) &
+    is.na(hsc_cons_df_ct$mspr) &
+    is.na(hsc_cons_df_ct$mcar))]
+hsc_mmus_specific
+
+
+hsc_cons_df_ct <- geneset_list_str$`Peri/SMC`$conserved_df
+hsc_mmus_specific <- hsc_cons_df_ct$gene[which(
+  !is.na(hsc_cons_df_ct$mmus) &
+    is.na(hsc_cons_df_ct$mcas) &
+    is.na(hsc_cons_df_ct$mspr) &
+    is.na(hsc_cons_df_ct$mcar))]
+hsc_mmus_specific
+
 ```
 
 ## Expression heat map

@@ -988,6 +988,71 @@ g_plot
 dev.off()
 ```
 
+## UMAPs Cell Types
+
+HSPCs (left) and Niche cells (right) clustered in UMAP space, 
+colored by cell type.
+
+#### Plot Components
+
+```{r ct_prep, eval = FALSE, include = FALSE}
+hsc_umap <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_hsc, type = "UMAP"))
+hsc_umap$color_by <- sce_hsc$celltypes
+hsc_umap <- hsc_umap[base::sample(
+  1:nrow(hsc_umap),
+  nrow(hsc_umap),
+  replace = FALSE),]
+
+str_umap <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_str, type = "UMAP"))
+str_umap$color_by <- sce_str$celltypes
+str_umap <- str_umap[base::sample(
+  1:nrow(str_umap),
+  nrow(str_umap),
+  replace = FALSE),]
+```
+
+```{r ct_base_plot_left, eval = FALSE, include = FALSE}
+ct_base_plot_left <- ggplot2::ggplot(
+  hsc_umap, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(hsc_umap$X1)-1, base::max(hsc_umap$X1))+1)+
+  ggplot2::ylim(c(base::min(hsc_umap$X2)-1, base::max(hsc_umap$X2))+1)+
+  ggplot2::scale_color_manual("Cell type", values = col_cts_hsc)
+```
+
+```{r ct_theme_plot_left, eval = FALSE, include = FALSE}
+ct_theme_plot_left <- ct_base_plot_left+
+  cowplot::theme_nothing()
+```
+
+```{r ct_base_plot_right, eval = FALSE, include = FALSE}
+ct_base_plot_right <- ggplot2::ggplot(
+  str_umap, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(str_umap$X1)-1, base::max(str_umap$X1))+1)+
+  ggplot2::ylim(c(base::min(str_umap$X2)-1, base::max(str_umap$X2))+1)+
+  ggplot2::scale_color_manual("Cell type", values = col_cts_str)
+```
+
+```{r ct_theme_plot_right, eval = FALSE, include = FALSE}
+ct_theme_plot_right <- ct_base_plot_right+
+  cowplot::theme_nothing()
+```
+
 ```{r sessioninfo}
 sessionInfo()
 ```

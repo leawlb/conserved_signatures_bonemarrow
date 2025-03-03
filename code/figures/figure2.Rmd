@@ -43,7 +43,7 @@ library(ggpattern, quietly = TRUE)
 ```
 
 ```{r base_path}
-base_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data/"
+base_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/reproducibility3_test_rerun/data/"
 ```
 
 ```{r load_manual}

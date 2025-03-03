@@ -29,7 +29,7 @@ library(ggpubr, quietly = TRUE)
 ```{r data_paths}
 
 # define data paths
-base_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data/"
+base_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/reproducibility3_test_rerun/data"
 brain_path <- "scRNAseq/main_analysis/sce_objects/08_sce_brain/"
 
 colors_path <- base::paste0(
@@ -401,8 +401,8 @@ d_plot <- ggplot(
   labs(x = NULL, 
        y = "Mouse cells", 
        fill = "Accurately\nAssigned") +
-  scale_fill_manual(values = c(max(mycolors_to1_grey), 
-                               min(mycolors_to1_grey)))
+  scale_fill_manual(values = "grey80", 
+                               "grey45")
 d_plot
 ```
 

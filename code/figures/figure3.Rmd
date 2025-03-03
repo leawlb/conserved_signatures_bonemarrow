@@ -26,7 +26,7 @@ library(Seurat, quietly = TRUE)
 ```
 
 ```{r load_manual_basepath}
-base_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data"
+base_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/reproducibility3_test_rerun/data"
 ```
 
 ```{r load_manual}
@@ -1932,7 +1932,7 @@ heatmap_own_legend
 ### Export
 
 ```{r heatmap_own_plot_export}
-pdf(output_pdf_heatmap_own_plot, width = 6, height = 7.8)
+pdf(output_pdf_heatmap_own_plot, width = 4.13, height = 7.8)
 heatmap_own_theme_plot
 dev.off()
 ```
@@ -2124,7 +2124,7 @@ d_theme_plot
 ### Export
 
 ```{r heatmaps_others_plot_export}
-pdf(output_pdf_heatmaps_others_plot, width = 6, height = 7)
+pdf(output_pdf_heatmaps_others_plot, width = 4.13, height = 7)
 d_theme_plot
 dev.off()
 ```

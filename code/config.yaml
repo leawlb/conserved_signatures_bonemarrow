@@ -3,7 +3,7 @@
 
 # all base files generated previously/elsewhere
 # store where required; add full paths here
-table: "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/reproducibility_test_rerun/data/metadata/scRNAseq/00_alignment/metadata.csv"
+table: "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/reproducibility3_test_rerun/data/metadata/scRNAseq/00_alignment/metadata.csv"
 cellranger_output: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/00_cellranger_output" 
 fourgenomes_output: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/fourgenomes/sce_objects/00_cellranger_output" 
 ensembl_mspr: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/01_sce_prep/ensembl_mspr/ensembl_list_mspr"
@@ -18,7 +18,7 @@ ref_dolgalev_sce: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/sc
 
 # the general directory that should contain all output data 
 # all downstream output paths build on "base"
-base: "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/reproducibility2_test_rerun"
+base: "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/reproducibility3_test_rerun"
 base_input: "/omics/odcf/analysis/OE0538_projects/DO-0008" # disable after move to normal shares
 
 

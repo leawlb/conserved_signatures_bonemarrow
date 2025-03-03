@@ -2,9 +2,11 @@
 # add annotation to subclustered 
 # recalculate nicer looking UMAP after finalizing cell type annotation
 
+RNGkind("L'Ecuyer-CMRG") 
+set.seed(37)
+
 library(scran, quietly = TRUE)
 library(scater, quietly = TRUE)
-set.seed(37)
 
 #-------------------------------------------------------------------------------
 # load objects
@@ -152,17 +154,15 @@ print(base::table(rowData(sce)$subclustering_genes))
 # re-calculate UMAP coordinates for better looking plots
 # now that some clusters have been removed and all cell types are annotated
 
+set.seed(seed)
+print(seed)
+
 gene_var <- scran::modelGeneVar(sce)
 hvgs <- scran::getTopHVGs(gene_var, n = nr_hvgs)
-
-RNGkind("L'Ecuyer-CMRG") 
-set.seed(seed)
 
 # use batch-corrected PC coordinates in "PCA"
 sce <- scater::runUMAP(sce, dimred = "PCA", subset_row = hvgs)
 colnames(SingleCellExperiment::reducedDims(sce)$UMAP) <- c("X1", "X2")
-
-set.seed(37)
 
 #-------------------------------------------------------------------------------
 

@@ -1,5 +1,6 @@
 library(Seurat, quietly = TRUE)
 library(ggplot2, quietly = TRUE)
+set.seed(37)
 
 source("../../source/sce_functions_reclustering.R")
 

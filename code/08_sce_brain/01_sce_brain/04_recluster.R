@@ -1,5 +1,6 @@
 library(Seurat, quietly = TRUE)
 library(tidyverse, quietly = TRUE)
+set.seed(37)
 
 #base_path_temp <-"/omics/groups/OE0433/internal_temp/veronica/projects/conserved_genes/"
 #base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/"
@@ -57,6 +58,9 @@ for(sp in c("human", "marmoset", "macaque", "mouse")){
                          dims = 1:50)
   species <- FindClusters(species, 
                           resolution = resolution[which(resolution$species == sp), "resolution"])
+  
+  species@commands <- list()
+  
   saveRDS(species,
           file = paste0(base_path_temp, brain_path, "04_recluster/",
                         sp, "_reclust_sig.rds"))
@@ -72,6 +76,9 @@ for(sp in c("human", "marmoset", "macaque", "mouse")){
                            dims = 1:50)
   species <- FindClusters(species, 
                           resolution = resolution[which(resolution$species == sp), "resolution"])
+  
+  species@commands <- list()
+  
   saveRDS(species,
           file = paste0(base_path_temp, brain_path, "04_recluster/",
                         sp, "_reclust_core.rds"))
@@ -150,6 +157,9 @@ species <- FindClusters(species,
                         resolution = resolution[which(resolution$species == "mouse"), "resolution"])
 #saveRDS(species,
 #        file = paste0(base_path_temp, brain_path, "04_recluster/mouse_reclust_hs.rds"))
+
+species@commands <- list()
+
 saveRDS(species, snakemake@output[["species"]])
 
 plot <- species@meta.data[,c("subclass_label", "seurat_clusters")] %>%

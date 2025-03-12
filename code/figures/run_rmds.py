@@ -1,7 +1,7 @@
 
 # output for htmls
 # doesn't have to be base
-OUTPUT_PATH = "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data/manuscript1/htmls"
+OUTPUT_PATH = "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/reproducibility3_test_rerun/data/manuscript1/htmls"
 
 # input and output paths of data and separate plots are separarely defined
 # in each .Rmd script for better overview within the script

@@ -255,6 +255,18 @@ export_signature_table_path <- base::paste0(
 print(sce_hsc_recl$cluster_signt_genes_used[1])
 print(sce_hsc_recl$cluster_consm_genes_used[1])
 print(sce_hsc_recl$cluster_mmusm_genes_used[1])
+
+BL6_genes <- vector()
+signature_genes <- vector()
+for(ct in names(geneset_list_hsc)){
+  BL6_genes <- unique(
+    c(BL6_genes,
+      geneset_list_hsc[[ct]]$conserved_df$gene[!is.na(geneset_list_hsc[[ct]]$conserved_df$mmus)]))
+  signature_genes <- unique(c(signature_genes, geneset_list_hsc[[ct]]$conserved_signature))
+}
+
+perc <- (length(BL6_genes)-length(signature_genes[signature_genes %in% BL6_genes]))/length(BL6_genes)
+print(perc)
 ```
 
 # Export Table 

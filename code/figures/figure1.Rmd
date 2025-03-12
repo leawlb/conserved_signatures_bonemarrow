@@ -192,6 +192,14 @@ gc()
 
 # nr of subclustering genes, and which genes are subclustering genes
 subclustering_df[subclustering_df$purpose == "subclustering",]
+
+data.frame(table(sce_hsc$Object_ID, sce_hsc$PID)) %>% subset(Freq >0)
+data.frame(table(sce_str$Object_ID, sce_str$PID)) %>% subset(Freq >0)
+table(sce_hsc$Object_ID)
+table(sce_str$Object_ID)
+
+table(sce_hsc$Age_weeks)
+table(sce_str$Age_weeks)
 ```
 
 ## UMAPs Species

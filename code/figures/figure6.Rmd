@@ -29,7 +29,7 @@ library(ggpubr, quietly = TRUE)
 ```{r data_paths}
 
 # define data paths
-base_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/reproducibility3_test_rerun/data"
+base_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data/"
 brain_path <- "scRNAseq/main_analysis/sce_objects/08_sce_brain/"
 
 colors_path <- base::paste0(
@@ -283,7 +283,7 @@ plotted_gg_mouse[["sig"]]
 #### Export
 
 ```{r c_plot_export}
-pdf(output_pdf_c_plot, width = 5, height = 4)
+pdf(output_pdf_c_plot, width = 3.5, height = 4)
 plotted_gg_mouse[["sig"]]
 dev.off()
 ```
@@ -372,6 +372,7 @@ d_plot <- ggplot(all_data,
        fill = "Accurately\nAssigned") +
   scale_fill_manual(values = c(max(mycolors_to1_grey), 
                                min(mycolors_to1_grey)))
+head(all_data)
 ```
 
 ```{r d_construct2, fig.width = 5, fig.height = 5}
@@ -394,6 +395,7 @@ d_plot <- ggplot(
     axis.title.x = element_blank(),
     axis.text.x = element_text(
       angle = 90,
+      hjust = 0,
       color = c(col_cons_long["conserved identity signature"], 
                 col_cons_long["BL6 markers"])),
     strip.text.x.top = element_blank(),
@@ -401,15 +403,15 @@ d_plot <- ggplot(
   labs(x = NULL, 
        y = "Mouse cells", 
        fill = "Accurately\nAssigned") +
-  scale_fill_manual(values = "grey80", 
-                               "grey45")
+  scale_fill_manual(values = c("grey80", 
+                               "grey30"))
 d_plot
 ```
 
 #### Export
 
 ```{r d_plot_export}
-pdf(output_pdf_d_plot, width = 5, height = 5)
+pdf(output_pdf_d_plot, width = 3.5, height = 5)
 d_plot
 dev.off()
 ```
@@ -510,7 +512,7 @@ print(skip_set_size_plot(ups))
 #### Export
 
 ```{r e_plot_export}
-pdf(output_pdf_e_plot, width = 5, height = 4)
+pdf(output_pdf_e_plot, width = 3.5, height = 4)
 skip_set_size_plot(ups)
 dev.off()
 ```

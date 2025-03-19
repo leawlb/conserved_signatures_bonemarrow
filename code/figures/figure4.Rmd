@@ -82,11 +82,11 @@ seu_hsc_recl_list_o1 <- base::readRDS(base::paste0(
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_ts_bone_marrow_list"))
 
 # CALIBRATION list of objects, to make sure that clusterings are identical
-# seu_hsc_recl_list_o1_CAL <- base::readRDS(base::paste0(
-#   base_path,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other_CALIBRATE/03_recl/reclustered_ts_bone_marrow_list"))
-# stopifnot(identical(seu_hsc_recl_list_o1_CAL$seu_sign[[1]]$seurat_clusters,
-#                 seu_hsc_recl_list_o1$seu_sign[[1]]$seurat_clusters))
+seu_hsc_recl_list_o1_CAL <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other_CALIBRATE/03_recl/reclustered_ts_bone_marrow_list"))
+stopifnot(identical(seu_hsc_recl_list_o1_CAL$seu_sign[[1]]$seurat_clusters,
+                seu_hsc_recl_list_o1$seu_sign[[1]]$seurat_clusters))
 
 # list of dataframes of re-clustering scores for each gene set and resolution
 score_df_hsc_list_o1 <- base::readRDS(base::paste0(
@@ -133,12 +133,12 @@ seu_hsc_recl_list_o2 <- base::readRDS(base::paste0(
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_ts_hscs_progenitors_list"))
 
 # CALIBRATION list of objects, to make sure that clusterings are identical
-# seu_hsc_recl_list_o2_CAL <- base::readRDS(base::paste0(
-#   base_path,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other_CALIBRATE/03_recl/reclustered_ts_hscs_progenitors_list"))
-# stopifnot(identical(seu_hsc_recl_list_o2_CAL$seu_sign[[1]]$seurat_clusters,
-#                 seu_hsc_recl_list_o2$seu_sign[[1]]$seurat_clusters))
-# 
+seu_hsc_recl_list_o2_CAL <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other_CALIBRATE/03_recl/reclustered_ts_hscs_progenitors_list"))
+stopifnot(identical(seu_hsc_recl_list_o2_CAL$seu_sign[[1]]$seurat_clusters,
+                seu_hsc_recl_list_o2$seu_sign[[1]]$seurat_clusters))
+
 ```
 
 ```{r selected_seu_o2}

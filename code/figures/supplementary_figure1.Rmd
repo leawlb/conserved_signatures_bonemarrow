@@ -8,9 +8,6 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Generate Figure 1, current title:
-""
-
 #### Load objects
 
 ```{r seed, message = FALSE}
@@ -22,17 +19,10 @@ set.seed(37)
 library(tidyverse, quietly = TRUE)
 library(SingleCellExperiment, quietly = TRUE)
 library(ggpubr, quietly = TRUE)
-library(ggalluvial, quietly = TRUE)
 ```
 
 ```{r base_path}
-base_path_input <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/"
-base_path_output_temp <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp"
-```
-
-```{r base_path_snakemake, eval = FALSE, include = FALSE}
-base_path_input <- snakemake@input[["base_path_input"]]
-base_path_output_temp <- snakemake@params[["base_path_output_temp"]]
+base_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/reproducibility3_test_rerun/data"
 ```
 
 ```{r load_manual_hsc}
@@ -40,25 +30,29 @@ base_path_output_temp <- snakemake@params[["base_path_output_temp"]]
 
 # SCE objects with all cells
 sce_hsc <- base::readRDS(base::paste0(
-  base_path_input, 
+  base_path, 
   "/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/sce_hsc-02"))
 sce_hsc_ann <- base::readRDS(base::paste0(
-  base_path_input, 
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10"))
+sce_hsc_fin <- base::readRDS(base::paste0(
+  base_path, 
   "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10"))
 
+# remove some unneccessary data to save space
 reducedDim(sce_hsc_ann) <- NULL
 assays(sce_hsc_ann) <- list()
+logc <- logcounts(sce_hsc)
 assays(sce_hsc) <- list()
-
+assays(sce_hsc_fin) <- list()
 ```
-
 
 ```{r load_manual}
 sce_str <- base::readRDS(base::paste0(
-  base_path_input, 
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/sce_str-02"))
 sce_str_ann <- base::readRDS(base::paste0(
-  base_path_input, 
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10"))
 
 reducedDim(sce_str_ann) <- NULL
@@ -68,27 +62,49 @@ assays(sce_str) <- list()
 
 ```{r source}
 colors_path <- base::paste0(
-  base_path_input, 
+  base_path, 
   "/metadata/colors/colors.txt")
-
+ 
 source("../source/colors.R")
 source("../source/plotting.R")
-
 ```
 
 ```{r pdf_output}
 # define output paths for pdf export
 output_pdf_e <- base::paste0(
-  base_path_output_temp,
-  "/manuscript1/supplementary/sfigure1_e.pdf")
+  base_path,
+  "/manuscript1/supp_figure1/sfigure1_e.pdf")
 
 output_pdf_f <- base::paste0(
-  base_path_output_temp,
-  "/manuscript1/supplementary/sfigure1_f.pdf")
+  base_path,
+  "/manuscript1/supp_figure1/sfigure1_f.pdf")
 
 output_pdf_g <- base::paste0(
-  base_path_output_temp,
-  "/manuscript1/supplementary/sfigure1_g.pdf")
+  base_path,
+  "/manuscript1/supp_figure1/sfigure1_g.pdf")
+
+output_pdf_x <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure1/sfigure1_e.pdf")
+
+output_pdf_guide0 <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure1/sfigure1_guide0.pdf")
+output_pdf_guide1 <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure1/sfigure1_guide1.pdf")
+output_pdf_guide2 <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure1/sfigure1_guide2.pdf")
+output_pdf_guide2_legend <-  base::paste0(
+  base_path,
+  "/manuscript1/supp_figure1/sfigure1_guide2_legend.pdf")
+output_pdf_guide3 <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure1/sfigure1_guide3.pdf")
+output_pdf_guide4 <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure1/sfigure1_guide4.pdf")
 ```
 
 ```{r params}
@@ -138,7 +154,7 @@ sce_hsc$annotation_all_subcl <- factor(sce_hsc$annotation_all_subcl,
 sce_hsc$species_pub <- vector(length = ncol(sce_hsc))
 sce_hsc$species_pub[sce_hsc$Species_ID == "mmus"] <- "BL6"
 sce_hsc$species_pub[sce_hsc$Species_ID == "mcas"] <- "CAST"
-sce_hsc$species_pub[sce_hsc$Species_ID == "mspr"] <- "SPRETUS"
+sce_hsc$species_pub[sce_hsc$Species_ID == "mspr"] <- "SPRET"
 sce_hsc$species_pub[sce_hsc$Species_ID == "mcar"] <- "CAROLI"
 sce_hsc$species_pub <- factor(sce_hsc$species_pub, 
                               levels = names(col_spc_pub))
@@ -227,7 +243,7 @@ sce_str$annotation_all_subcl <- factor(sce_str$annotation_all_subcl,
 sce_str$species_pub <- vector(length = ncol(sce_str))
 sce_str$species_pub[sce_str$Species_ID == "mmus"] <- "BL6"
 sce_str$species_pub[sce_str$Species_ID == "mcas"] <- "CAST"
-sce_str$species_pub[sce_str$Species_ID == "mspr"] <- "SPRETUS"
+sce_str$species_pub[sce_str$Species_ID == "mspr"] <- "SPRET"
 sce_str$species_pub[sce_str$Species_ID == "mcar"] <- "CAROLI"
 sce_str$species_pub <- factor(sce_str$species_pub, 
                               levels = names(col_spc_pub))
@@ -241,6 +257,15 @@ hsc_umap <- base::as.data.frame(
     sce_hsc, type = "UMAP"))
 hsc_umap$color_by <- sce_hsc$annotation_all 
 hsc_umap$species <- sce_hsc$species_pub 
+
+hsc_umap_fin <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_hsc_fin, type = "UMAP"))
+hsc_umap_fin$color_by <- sce_hsc_fin$celltypes
+
+hsc_umap_mecom <- hsc_umap
+hsc_umap_mecom$expression <- logc[rownames(logc) == "Mecom",]
+
 hsc_umap <- hsc_umap[base::sample(
   1:nrow(hsc_umap),
   nrow(hsc_umap),
@@ -305,6 +330,21 @@ str_umap_subcl$color_by <- factor(
 
 ## Plots
 
+```{r e_base_plot_hsc_spc}
+
+e_base_plot_hsc_spc <- ggplot2::ggplot(
+  hsc_umap, 
+  aes(x = V1,
+      y = V2,
+      color = species))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(hsc_umap$V1)-1, base::max(hsc_umap$V1))+1)+
+  ggplot2::ylim(c(base::min(hsc_umap$V2)-1, base::max(hsc_umap$V2))+1)+
+  ggplot2::scale_color_manual(values = col_spc_pub)
+```
+
 ```{r e_base_plot_hsc_1}
 
 e_base_plot_hsc_1 <- ggplot2::ggplot(
@@ -318,6 +358,54 @@ e_base_plot_hsc_1 <- ggplot2::ggplot(
   ggplot2::xlim(c(base::min(hsc_umap$V1)-1, base::max(hsc_umap$V1))+1)+
   ggplot2::ylim(c(base::min(hsc_umap$V2)-1, base::max(hsc_umap$V2))+1)+
   ggplot2::scale_color_manual(values = col_clust)
+```
+
+```{r e_base_plot_hsc_1_mecom}
+names(mycolors_to_max) <- as.character(
+  as.numeric(names(mycolors_to_max))*max(hsc_umap_mecom$expression))
+
+e_base_plot_hsc_1_mecom <- ggplot2::ggplot(
+  hsc_umap_mecom[hsc_umap_mecom$color_by %in% c("Stem/MPP1", "Stem/MPP2"),], 
+  aes(x = V1,
+      y = V2,
+      color = expression))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(hsc_umap$V1)-1, base::max(hsc_umap$V1))+1)+
+  ggplot2::ylim(c(base::min(hsc_umap$V2)-1, base::max(hsc_umap$V2))+1)+
+  ggplot2::scale_color_gradientn("Mecom expression", colours = mycolors_to_max)
+
+legend_mecom <- cowplot::get_legend(e_base_plot_hsc_1_mecom+theme_all)
+legend_mecom <- ggpubr::ggarrange(legend_mecom)
+```
+
+```{r e_base_plot_hsc_1_subcl}
+e_base_plot_hsc_1_subcl <- ggplot2::ggplot(
+  hsc_umap_subcl[hsc_umap_subcl$color_by %in% c("Early MPP", "HSC"),], 
+  aes(x = V1,
+      y = V2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(hsc_umap$V1)-1, base::max(hsc_umap$V1))+1)+
+  ggplot2::ylim(c(base::min(hsc_umap$V2)-1, base::max(hsc_umap$V2))+1)+
+  ggplot2::scale_color_manual(values = c("HSC" = "grey10", "Early MPP" = "grey70"), na.value = "white")
+```
+
+```{r e_base_plot_hsc_1_final}
+e_base_plot_hsc_1_final <- ggplot2::ggplot(
+  hsc_umap_fin, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(hsc_umap_fin$X1)-1, base::max(hsc_umap_fin$X1))+1)+
+  ggplot2::ylim(c(base::min(hsc_umap_fin$X2)-1, base::max(hsc_umap_fin$X2))+1)+
+  ggplot2::scale_color_manual(values = col_cts_hsc)
 ```
 
 ```{r e_base_plot_hsc_2}
@@ -360,14 +448,41 @@ e_base_plot_str_2 <- ggplot2::ggplot(
   ggplot2::ylim(c(base::min(str_umap_subcl$V2)-1, base::max(str_umap_subcl$V2))+1)+
   ggplot2::scale_color_manual(values = c(col_cts_str, "removed" = "grey50"))
 ```
+
+```{r e_theme_plot_hsc_spc, fig.width = 3, fig.height = 3}
+e_theme_plot_hsc_spc <- e_base_plot_hsc_spc+
+  cowplot::theme_nothing()
+e_theme_plot_hsc_spc
+```
+
 ```{r e_theme_plot_hsc_1, fig.width = 3, fig.height = 3}
 e_theme_plot_hsc_1 <- e_base_plot_hsc_1+
   cowplot::theme_nothing()
+e_theme_plot_hsc_1
+```
+
+```{r e_theme_plot_hsc_1_mecom, fig.width = 3, fig.height = 3}
+e_theme_plot_hsc_1_mecom <- e_base_plot_hsc_1_mecom+
+  cowplot::theme_nothing()
+e_theme_plot_hsc_1_mecom
+```
+
+```{r e_theme_plot_hsc_1_subcl, fig.width = 3, fig.height = 3}
+e_theme_plot_hsc_1_subcl <- e_base_plot_hsc_1_subcl+
+  cowplot::theme_nothing()
+e_theme_plot_hsc_1_subcl
+```
+
+```{r e_theme_plot_hsc_1_final, fig.width = 3, fig.height = 3}
+e_theme_plot_hsc_1_final <- e_base_plot_hsc_1_final+
+  cowplot::theme_nothing()
+e_theme_plot_hsc_1_final
 ```
 
 ```{r e_theme_plot_hsc_2, fig.width = 3, fig.height = 3}
 e_theme_plot_hsc_2 <- e_base_plot_hsc_2+
   cowplot::theme_nothing()
+e_theme_plot_hsc_2
 ```
 
 
@@ -490,6 +605,42 @@ e_plot
 ```{r export_e}
 pdf(output_pdf_e, width = 16, height = 4)
 e_plot
+dev.off()
+```
+
+```{r output_pdf_guide0}
+pdf(output_pdf_guide0, width = 4, height = 4)
+e_theme_plot_hsc_spc
+dev.off()
+```
+
+```{r output_pdf_guide1}
+pdf(output_pdf_guide1, width = 4, height = 4)
+e_theme_plot_hsc_1
+dev.off()
+```
+
+```{r output_pdf_guide2}
+pdf(output_pdf_guide2, width = 4, height = 4)
+e_theme_plot_hsc_1_mecom
+dev.off()
+```
+
+```{r output_pdf_guide2_legend}
+pdf(output_pdf_guide2_legend, width = 3, height = 3)
+legend_mecom
+dev.off()
+```
+
+```{r output_pdf_guide3}
+pdf(output_pdf_guide3, width = 4, height = 4)
+e_theme_plot_hsc_1_subcl
+dev.off()
+```
+
+```{r output_pdf_guide4}
+pdf(output_pdf_guide4, width = 4, height = 4)
+e_theme_plot_hsc_1_final
 dev.off()
 ```
 

@@ -76,11 +76,11 @@ seu_hsc_recl_list_o1 <- base::readRDS(base::paste0(
 # CALIBRATION list of objects, to make sure that clusterings are identical
 # after re-run (testing clusterings instead of whole objects because seurat
 # documents time of running each command, and those will differ)
-# seu_hsc_recl_list_o1_CAL <- base::readRDS(base::paste0(
-#   base_path,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other_CALIBRATE/03_recl/reclustered_mus_tm_bonemarrow_list"))
-# stopifnot(identical(seu_hsc_recl_list_o1_CAL$seu_sign[[1]]$seurat_clusters,
-#                 seu_hsc_recl_list_o1$seu_sign[[1]]$seurat_clusters))
+seu_hsc_recl_list_o1_CAL <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other_CALIBRATE/03_recl/reclustered_mus_tm_bonemarrow_list"))
+stopifnot(identical(seu_hsc_recl_list_o1_CAL$seu_sign[[1]]$seurat_clusters,
+                seu_hsc_recl_list_o1$seu_sign[[1]]$seurat_clusters))
 
 # list of dataframes of re-clustering scores for each gene set and resolution
 score_df_hsc_list_o1 <- base::readRDS(base::paste0(

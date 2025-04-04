@@ -62,7 +62,9 @@ metadata_paths:
   lrdb_inp: "/data/metadata/scRNAseq/05_cci_prep/lrdb_raw/mouse_lr_pair.rds"
   lrdb_out: "/data/metadata/scRNAseq/05_cci_prep/lrdb_processed/lrdb"
 
-samples_to_remove:
+# some samples to remove in addition to what is removed by Keep_sample = FALSE
+# in the metadata sheet .csv file
+samples_to_remove: 
   - mcar_old_str_3_1
   - mcar_old_str_3_2
   - mcas_old_hsc_2_0
@@ -73,6 +75,7 @@ samples_to_remove:
   - mmus_old_str_1_0
   - mspr_old_hsc_1_0
   - mspr_yng_str_3_1
+  - mcar_yng_str_2_3
   
 values:
   nr_hvgs: 2000 # nr of top hvgs to use, universal

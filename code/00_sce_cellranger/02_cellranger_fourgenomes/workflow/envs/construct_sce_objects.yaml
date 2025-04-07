@@ -3,7 +3,6 @@ name: construct-sce-objects
 channels:
 - conda-forge
 - bioconda
-- defaults
 dependencies:
 - r-dbplyr=2.3.0=r41hc72bb7e_0
 - bioconductor-delayedmatrixstats=1.16.0=r41hdfd78af_0

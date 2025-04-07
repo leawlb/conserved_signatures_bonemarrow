@@ -12,6 +12,9 @@ OUTPUT_BASE_PATH = config["paths"]["output_dir"]
 REFERENCES = config["references"]
 IDENTIFIERS = config["metadata"]["identifiers"]
 
+CELLRANGER_PATH = config['cellranger_path']
+print(CELLRANGER_PATH)
+
 print(samples.metadata)
 
 localrules: link_files, write_samples_spreadsheet, all  # local execution of non-demanding rules
@@ -76,17 +79,16 @@ rule cellranger_count:
     params:
         genome=REFERENCES["input_dir"] + "/{Species_ID}",
         output_root_dir=lambda wildcards, output: Path(output[0]).parents[1],  # remove last 2 levels from output path
-        extra=config["rules"]["cellranger_count"]["extra"]
+        extra=config["rules"]["cellranger_count"]["extra"],
+        CELLRANGER_PATH = CELLRANGER_PATH
     log:
         f"{OUTPUT_BASE_PATH}/cellranger/logs/{{Species_ID}}/cellranger_count_{{individual}}.log"
     threads: 16
-    envmodules:
-        "cellranger/6.1.1",
     shell:
         "cd {params.output_root_dir}; "
         "pwd; "
-        "cellranger count "
-        "--id {wildcards.individual} "  # letters, numbers, hyphens, and underscores
+        "{CELLRANGER_PATH} count "
+        "--id {wildcards.individual} " 
         "--transcriptome {params.genome} "
         "--fastqs {input} "
         "--localcores={threads} "
@@ -97,8 +99,6 @@ rule cellranger_count:
 
 rule construct_sce_objects:
     """construct SCE objects from counts matrices
-    
-    Initially, building the environment might take some time.
     
     Note: output must match target_templates in configuration YAML.
     """

@@ -10,12 +10,13 @@ paths:
   # define specific target files
   target_files:
     samples_sheet: "metadata.csv"
+cellranger_path: /omics/groups/OE0538/internal/users/l012t/storage/cellranger/6.1.1/cellranger
 references:
-  input_dir: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/00_alignment/fourgenomes"
+  input_dir: "/omics/odcf/analysis/OE0538_projects/DO-0008/data_freeze/02_species_genomes/fourgenomes"
 metadata:
   table:
   # should have same format as or be based on OTP export sheet
-   - "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/00_alignment/metadata.csv"
+  - "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/00_alignment/metadata.csv"
   identifiers: 
   # define one or multiple column name(s) that uniquely define a sample/object 
     - Species_ID 

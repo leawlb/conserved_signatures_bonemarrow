@@ -12,10 +12,11 @@ a [pull request](https://docs.github.com/en/pull-requests/collaborating-with-pul
 
 ## Features
 
- - Read OTP-exported metadata to gather sample information.
+ - Read OTP-exported metadata to gather sample information (OTP/DKFZ format).
  - Link FASTQ files as CellRanger compatible filenames
  - Run CellRanger count for Gene Expression datasets.   
  - Store (subsetted) metadata CSV for downstream use. 
+ - generate SingleCellExperiment objects per sample
 
 ## Feature ideas
 
@@ -49,16 +50,11 @@ Minimal changes needed are:
 
 ## How to run 
 
-Use snakemake_cellranger.yaml to create an environment with all required packages.
+Use snakemake_cellranger.yaml to create an environment with required packages
+for running snakemake.
 
 ```bash
 micromamba create -f snakemake_cellranger.yaml
-```
-
-or
-
-```bash
-conda env create -f snakemake_cellranger.yaml
 ```
 
 Set channel priority to strict.
@@ -70,7 +66,7 @@ conda config --set channel_priority strict
 You may call the pipeline as follows in the directory where you cloned it. 
 
 ```bash
-snakemake --cluster "bsub -n16 -q verylong -R rusage[mem=200GB]" -p -j4 -c42 --configfile config/config-cluster.yaml --use-conda --use-envmodules --conda-frontend conda
+snakemake --cluster "bsub -n16 -q long-debian -R rusage[mem=200GB]" -p -j4 -c42 --configfile config/config-cluster.yaml --use-conda --conda-frontend conda
 ```
 
  - `--cluster` may change depending on the computational footprint of your analyses

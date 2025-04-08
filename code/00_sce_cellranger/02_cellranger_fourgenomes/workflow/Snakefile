@@ -84,6 +84,9 @@ rule cellranger_count:
     log:
         f"{OUTPUT_BASE_PATH}/cellranger/logs/{{Species_ID}}/cellranger_count_{{individual}}.log"
     threads: 16
+    resources:
+        mem_mb=200000,
+        queue="long-debian"
     shell:
         "cd {params.output_root_dir}; "
         "pwd; "
@@ -111,6 +114,9 @@ rule construct_sce_objects:
         metadata = METADATA_PATH,
         single_cell_object_metadata_fields = config["metadata"]["single_cell_object_metadata_fields"]
     threads: 2
+    resources:
+        mem_mb=30000,
+        queue="medium-debian"    
     conda: 
         "envs/construct_sce_objects.yaml" 
     script:

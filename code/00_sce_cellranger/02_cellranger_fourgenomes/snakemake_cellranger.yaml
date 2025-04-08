@@ -1,9 +1,7 @@
-# this env is required, please install and activate for running snakemake
 name: snakemake-cellranger
 channels:
 - conda-forge
 - bioconda
-- defaults
 dependencies:
 - libsqlite=3.39.4=h753d276_0
 - toposort=1.7=pyhd8ed1ab_0

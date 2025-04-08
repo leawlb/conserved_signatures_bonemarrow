@@ -1,1 +1,1 @@
-snakemake --cluster "bsub -n16 -q long-debian -R rusage[mem=200GB]" -p -j66 -c42 --configfile ../config/config-interspecies-bonemarrow.yaml --use-conda --use-envmodules --conda-frontend conda -R cellranger_count  -n
+snakemake --cluster "bsub -n{threads} -q {resources.queue} -R rusage[mem={resources.mem_mb}]" -p -j66 -c42 --configfile ../config/config-interspecies-bonemarrow.yaml --latency-wait 60 --use-conda --conda-frontend conda -n

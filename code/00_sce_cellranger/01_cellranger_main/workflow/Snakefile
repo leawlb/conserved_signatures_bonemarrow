@@ -19,7 +19,7 @@ print(samples.metadata)
 
 localrules: link_files, write_samples_spreadsheet, all  # local execution of non-demanding rules
 
-wildcard_constraints: #should not contain ".", see rule cellranger_count
+wildcard_constraints: #should not contain "."
     individual="[A-z0-9_-]+",
     Species_ID="[A-z0-9_-]+"
 
@@ -89,6 +89,9 @@ rule cellranger_count:
     log:
         f"{OUTPUT_BASE_PATH}/cellranger/logs/{{Species_ID}}/cellranger_count_{{individual}}.log"
     threads: 16
+    resources:
+        mem_mb=200000,
+        queue="long-debian"
     shell:
         "cd {params.output_root_dir}; "
         "pwd; "
@@ -116,6 +119,9 @@ rule construct_sce_objects:
         metadata = METADATA_PATH,
         single_cell_object_metadata_fields = config["metadata"]["single_cell_object_metadata_fields"]
     threads: 2
+    resources:
+        mem_mb=30000,
+        queue="medium-debian"    
     conda: 
         "envs/construct_sce_objects.yaml" 
     script:

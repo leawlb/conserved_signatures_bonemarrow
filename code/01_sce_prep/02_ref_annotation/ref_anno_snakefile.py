@@ -21,7 +21,7 @@ def get_list(metadata, column):
 species = get_list(metadata = METADATA, column = "Species_ID")
 individuals = get_list(metadata = METADATA, column = "Object_ID")
 
-COLORS_REF = config["base_input"] + config["metadata_paths"]["colors_ref"]
+COLORS_REF = config["base"] + config["metadata_paths"]["colors_ref"]
 print(COLORS_REF)
 
 #-------------------------------------------------------------------------------

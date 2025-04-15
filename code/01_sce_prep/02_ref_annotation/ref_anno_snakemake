@@ -1,1 +1,1 @@
-snakemake --cluster "bsub -n2 -q medium -R rusage[mem={resources.mem_mb}]" -p -j66 -c2 -s ref_anno_snakefile.py --configfile ../../config.yaml --latency-wait 60 -n
+snakemake --cluster "bsub -n2 -q medium-debian -R rusage[mem={resources.mem_mb}]" -p -j66 -c2 -s ref_anno_snakefile.py --configfile ../../config.yaml --latency-wait 60 -n

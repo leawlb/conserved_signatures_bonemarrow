@@ -83,7 +83,7 @@ rule aggregate_convert:
         deseq_output = OUTPUT_DAT + "/05_desq/deseq_{fraction}-05"
     resources:
         mem_mb=25000,
-        queue = "medium"
+        queue = "medium-debian"
     threads: 4
     script:
         "scripts/05_aggregate_convert.R"
@@ -98,7 +98,7 @@ rule qc_deseq:
         sva = OUTPUT_DAT + "/06_dsqc/sva_{fraction}"
     resources:
         mem_mb=5000,
-        queue = "medium"
+        queue = "medium-debian"
     threads: 4
     script:
         "scripts/06_prep_qc_deseq.R"  
@@ -113,7 +113,7 @@ rule preprocessing_deseq:
         sv_path = SV_PATH
     resources:
         mem_mb=5000,
-        queue = "medium"
+        queue = "medium-debian"
     threads: 4
     output:
         deseq_output = OUTPUT_DAT + "/07_tdsq/deseq_{fraction}-07"
@@ -132,7 +132,7 @@ rule export_results_ndge:
         clusters_str = clusters_str
     resources:
         mem_mb=5000,
-        queue = "medium"
+        queue = "medium-debian"
     threads: 4
     output:
         # lists sorted by cluster 
@@ -156,7 +156,7 @@ rule ndge_bulk_report:
         OUTPUT_REP + "/bulk/bulk_quality_report_cluster_{cluster}_{fraction}.html"
     resources:
         mem_mb=25000,
-        queue = "medium"
+        queue = "medium-debian"
     threads: 4
     params:
         colors_path = COLORS,
@@ -177,7 +177,7 @@ rule ndge_sv_report:
         OUTPUT_REP + "/ndge/ndge_report_sv_{cluster}_{fraction}.html"
     resources:
         mem_mb=25000,
-        queue = "medium"
+        queue = "medium-debian"
     threads: 4
     params:
         plotting = "../../source/plotting.R"
@@ -199,7 +199,7 @@ rule ndge_cluster_report:
         OUTPUT_REP + "/ndge/ndge_report_cluster_{cluster}_{fraction}.html"
     resources:
         mem_mb=15000,
-        queue = "medium"
+        queue = "medium-debian"
     threads: 4
     params:
         padj_cutoff = PADJ_CUTOFF,

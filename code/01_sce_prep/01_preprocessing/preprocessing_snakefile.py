@@ -76,7 +76,7 @@ rule remove_droplets:
         sce_output = OUTPUT_DAT + "/01_drop/{species}/sce_{individual}-01"
     resources:
         mem_mb=10000,
-        queue="medium"
+        queue="medium-debian"
     threads: 2
     params:
         cutoff_umis = VALUES["cutoff_umis"],
@@ -101,7 +101,7 @@ rule get_sample_dmgs:
         dmgs = OUTPUT_DAT + "/02_mapp/{species}/dmgs_{individual}"
     resources:
         mem_mb=15000,
-        queue="medium"
+        queue="medium-debian"
     threads: 2
     params:
         nr_hvgs = config["values"]["nr_hvgs"],
@@ -122,7 +122,7 @@ rule merge_dmgs:
         dmgs = merge_dmgs_input
     resources:
         mem_mb=1000,
-        queue="short"
+        queue="short-debian"
     threads: 1
     output:
         dmg_list = OUTPUT_DAT + "/03_dmgs/dmgs_list_all"
@@ -138,7 +138,7 @@ rule remove_outliers_dmgs:
         sce_output = OUTPUT_DAT + "/04_outl/{species}/sce_{individual}-04"
     resources:
         mem_mb=2000,
-        queue="medium"
+        queue="medium-debian"
     threads: 2
     params:
         cutoff_sum = VALUES["cutoff_sum"],
@@ -155,7 +155,7 @@ rule normalize_expr:
         sce_output = OUTPUT_DAT + "/05_norm/{species}/sce_{individual}-05"
     resources:
         mem_mb=3000,
-        queue="short"
+        queue="short-debian"
     threads: 2
     script:
         "scripts/05_normalize_expr.R"
@@ -169,7 +169,7 @@ rule reduce_dims:
         sce_output = OUTPUT_DAT + "/06_dimr/{species}/sce_{individual}-06" 
     resources:
         mem_mb=2000,
-        queue="short"
+        queue="short-debian"
     threads: 2
     params:
         nr_hvgs = config["values"]["nr_hvgs"],
@@ -192,7 +192,7 @@ rule make_dmg_reports:
         OUTPUT_REP + "/dmgs/{species}/preprocessing_dmg_report_{individual}.html"
     resources:
         mem_mb=20000,
-        queue="medium"
+        queue="medium-debian"
     threads: 6
     params:
         nr_hvgs = config["values"]["nr_hvgs"],
@@ -216,7 +216,7 @@ rule make_qc_reports:
         OUTPUT_REP + "/qc/{species}/preprocessing_qc_report_{individual}.html"
     resources:
         mem_mb=20000,
-        queue="medium"
+        queue="medium-debian"
     threads: 2
     params:
         cutoff_umis = VALUES["cutoff_umis"],
@@ -244,7 +244,7 @@ if config["run_preprocessing_summary"]:
           OUTPUT_REP + "/qc/preprocessing_qc_summary.html"
       resources:
           mem_mb=20000,
-          queue="long"
+          queue="long-debian"
       threads: 2
       params:
           cutoff_sum = VALUES["cutoff_sum"],

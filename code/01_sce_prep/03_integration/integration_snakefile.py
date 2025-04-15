@@ -21,7 +21,7 @@ individuals = get_list(metadata = METADATA, column = "Object_ID")
 fractions = get_list(metadata = METADATA, column = "Fraction_ID")
 ages = get_list(metadata = METADATA, column = "Age_ID")
 
-COLORS_REF = config["base_input"] + config["metadata_paths"]["colors_ref"]
+COLORS_REF = config["base"] + config["metadata_paths"]["colors_ref"]
 
 #-------------------------------------------------------------------------------
 

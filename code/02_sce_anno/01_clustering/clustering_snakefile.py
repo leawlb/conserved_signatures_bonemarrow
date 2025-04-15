@@ -15,7 +15,7 @@ OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/02_sce_anno"
 ANNO_CLUSTERS = config["base"] + config["metadata_paths"]["annotation_clusters"]
 GENES_CLUSTERS = config["base"] + config["metadata_paths"]["gene_list_clusters"]
 
-COLORS_REF = config["base_input"] + config["metadata_paths"]["colors_ref"]
+COLORS_REF = config["base"] + config["metadata_paths"]["colors_ref"]
 COLORS = config["base"] + config["metadata_paths"]["colors"]
 
 VALUES =  config["values"]["02_sce_anno"]
@@ -100,7 +100,7 @@ rule run_mnncorrect:
         sce_output = OUTPUT_DAT + "/01_mnnc/sce_{fraction}_" + BATCH_USE + "-01"
     resources:
         mem_mb=30000,
-        queue = "medium"
+        queue = "medium-debian"
     params:
         batch_use = BATCH_USE,
         nr_hvgs_BC = VALUES["nr_hvgs_batch_correction"], 
@@ -120,7 +120,7 @@ rule make_batchcorrection_reports:
         sce_input_corrected = rules.run_mnncorrect.output
     resources:
         mem_mb = 65000,
-        queue = "medium"
+        queue = "medium-debian"
     output:
         OUTPUT_REP + "/01_batch_correction/batch_correction_report_{fraction}_" + BATCH_USE + ".html"
     params:
@@ -146,7 +146,7 @@ rule louvain_clustering:
         sce_output = OUTPUT_DAT + "/02_clst/sce_{fraction}-02"
     resources:
         mem_mb = 50000,
-        queue = "medium"
+        queue = "medium-debian"
     params:
         k_graph_list = VALUES["k_graph_list"],
         resolution_louvain_list = VALUES["resolution_louvain_list"]
@@ -163,7 +163,7 @@ rule make_clustering_report:
         sce_l = rules.louvain_clustering.output
     resources:
         mem_mb = 50000,
-        queue = "medium"
+        queue = "medium-debian"
     params:
         colors_ref_path = COLORS_REF,
         colors_path = COLORS,
@@ -189,7 +189,7 @@ rule separate_sce:
         sce_input = expand(OUTPUT_DAT + "/02_clst/sce_{fraction}-02", fraction = fractions)
     resources:
         mem_mb = 40000,
-        queue = "medium"
+        queue = "medium-debian"
     output:
         output = output
     threads: 1,
@@ -210,7 +210,7 @@ rule find_markers:
         markers = OUTPUT_DAT + "/04_annc/01_markers/markers_{fraction}"
     resources:
         mem_mb = 50000,
-        queue = "medium"
+        queue = "medium-debian"
     params:
         nr_hvgs = config["values"]["nr_hvgs"]
     threads: 5
@@ -223,7 +223,7 @@ rule go_analysis:
         markers = rules.find_markers.output
     resources:
         mem_mb = 5000,
-        queue = "medium"
+        queue = "medium-debian"
     output:
         go = OUTPUT_DAT + "/04_annc/02_goan/go_{fraction}"
     threads: 5
@@ -243,7 +243,7 @@ if RUN_ANNO_REPORTS:
           OUTPUT_REP + "/03_anno_clusters/annotation_{fraction}_cluster_{cluster}.html"
       resources:
         mem_mb = 80000,
-        queue = "long"
+        queue = "long-debian"
       params:
           colors_ref_path = COLORS_REF,
           colors_path = COLORS,
@@ -261,7 +261,7 @@ rule assign_annotation:
         anno_clusters = ANNO_CLUSTERS
     resources:
         mem_mb = 80000,
-        queue = "medium"
+        queue = "medium-debian"
     output:      
         sce_output = OUTPUT_DAT + "/04_annc/03_sce/sce_{fraction}-04"
     threads: 4
@@ -282,7 +282,7 @@ rule run_mnncorrect_species:
         sce_output = OUTPUT_DAT + "/01_mnnc/comparison/sce_{species}_{fraction}_" + BATCH_USE + "-01"
     resources:
         mem_mb = 20000,
-        queue = "medium"
+        queue = "medium-debian"
     params:
         batch_use = BATCH_USE,
         nr_hvgs_BC = VALUES["nr_hvgs_batch_correction"], 
@@ -300,7 +300,7 @@ rule louvain_clustering_species:
         sce_output = OUTPUT_DAT + "/02_clst/comparison/sce_{species}_{fraction}-02"
     resources:
         mem_mb = 10000,
-        queue = "medium"
+        queue = "medium-debian"
     params:
         k_graph_list = VALUES["k_graph_list"],
         resolution_louvain_list = VALUES["resolution_louvain_list"]
@@ -319,7 +319,7 @@ rule make_clustering_comparison_report:
         sce_l_celltypes = rules.assign_annotation.output
     resources:
         mem_mb = 80000,
-        queue = "medium"
+        queue = "medium-debian"
     params:
         colors_path = COLORS,
         plotting = "../../source/plotting.R",

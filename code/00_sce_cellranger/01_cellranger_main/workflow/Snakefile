@@ -95,7 +95,7 @@ rule cellranger_count:
     shell:
         "cd {params.output_root_dir}; "
         "pwd; "
-        "{CELLRANGER_PATH} count "
+        "{params.CELLRANGER_PATH} count "
         "--id {wildcards.individual} " 
         "--transcriptome {params.genome} "
         "--fastqs {input} "

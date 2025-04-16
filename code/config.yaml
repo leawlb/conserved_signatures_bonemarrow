@@ -101,7 +101,7 @@ values:
       str: 10 
     resolution_louvain_list:   
       hsc: 0.65 # for louvain clustering SCE
-      str: 0.3
+      str: 0.35 # was 0.3!
     ndge_padj_cutoff: 0.05 # below which nDGEs are significant
     ndge_fc_cutoff: 1.5 # above which genes are excluded from nDGEs
   03_sce_analysis:

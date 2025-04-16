@@ -40,7 +40,7 @@ ages = get_list(metadata = METADATA, column = "Age_ID")
 clusters_hsc = list(range(1,15))
 clusters_hsc = list(map(str, clusters_hsc))
 
-clusters_str = list(range(1,21))
+clusters_str = list(range(1,22))
 clusters_str = list(map(str, clusters_str))
 
 print(clusters_hsc)

@@ -100,7 +100,7 @@ rule subclustering:
         genes_list_shared = OUTPUT_DAT + "/08_nres/PC_0.05_FC_1.5/res_{fraction}_cluster_shared"
     resources:
         mem_mb = 25000,
-        queue = "medium"
+        queue = "medium-debian"
     threads: 20
     output:
         sce_output = OUTPUT_DAT + "/09_sbcl/sce_{fraction}_cluster_{cluster}-09"
@@ -117,7 +117,7 @@ rule subclustering_mclust_report:
         OUTPUT_REP + "/mclust/mclust_report_{fraction}_cluster_{cluster}.html"
     resources:
         mem_mb=10000,
-        queue = "medium"
+        queue = "medium-debian"
     threads: 4
     params:
         colors_path = COLORS,
@@ -149,7 +149,7 @@ rule add_subclusters:
         seeds_umap = VALUES["seeds_umap_after"]
     resources:
         mem_mb=35000,
-        queue = "medium"
+        queue = "medium-debian"
     threads: 10
     output:
         sce_output = OUTPUT_DAT + "/10_anns/sce_{fraction}-10"
@@ -168,7 +168,7 @@ rule make_subclustering_results_report_dotplot:
         colors = "../../source/colors.R"
     resources:
         mem_mb=30000,
-        queue = "medium"
+        queue = "medium-debian"
     threads: 4
     output:
         OUTPUT_REP + "/results/results_report_{fraction}_dotplots.html"
@@ -184,7 +184,7 @@ rule make_subclustering_results_report_umaps:
         colors = "../../source/colors.R"
     resources:
         mem_mb=45000,
-        queue = "medium"
+        queue = "medium-debian"
     threads: 4
     output:
         OUTPUT_REP + "/results/results_report_{fraction}_umaps.html"
@@ -204,7 +204,7 @@ rule separate_sce:
         sce_input = expand(OUTPUT_DAT + "/10_anns/sce_{fraction}-10", fraction = fractions)
     resources:
         mem_mb=25000,
-        queue = "medium"
+        queue = "medium-debian"
     threads: 1
     output:
         output = output
@@ -222,7 +222,7 @@ rule find_markers:
         markers = OUTPUT_DAT + "/12_anqc/01_markers/markers_{fraction}"
     resources:
         mem_mb=45000,
-        queue = "medium"
+        queue = "medium-debian"
     threads: 10
     params:
         nr_hvgs = config["values"]["nr_hvgs"]
@@ -235,7 +235,7 @@ rule go_analysis:
         markers = rules.find_markers.output
     resources:
         mem_mb=10000,
-        queue = "medium"
+        queue = "medium-debian"
     threads: 10
     output:
         go = OUTPUT_DAT + "/12_anqc/02_go/go_{fraction}"
@@ -254,7 +254,7 @@ rule make_subclustering_markers_report:
         OUTPUT_REP + "/markergenes/markergenes_report_{fraction}_subcluster_{subcluster}.html"
     resources:
         mem_mb=25000,
-        queue = "medium"
+        queue = "medium-debian"
     threads: 4
     params:
         colors_path = COLORS,

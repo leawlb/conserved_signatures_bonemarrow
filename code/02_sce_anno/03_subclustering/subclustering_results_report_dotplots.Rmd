@@ -25,6 +25,8 @@ set.seed(37)
 
 ```{r load, message = FALSE}
 library(scuttle, quietly = TRUE) 
+library(tidyverse, quietly = TRUE) 
+library(tibble, quietly = TRUE) 
 ```
 
 ```{r load_objects, message = FALSE}
@@ -47,10 +49,11 @@ gene_list_dtplt_main <- utils::read.csv(dtplt_path,
   stringsAsFactors=FALSE, 
   as.is=TRUE, 
   colClasses = "character")
+
 gene_list_dtplt_main <- gene_list_dtplt_main[
   gene_list_dtplt_main$fraction == fraction_curr,]
 gene_list_dtplt_main <- gene_list_dtplt_main[
-  "Visualisation" %in% gene_list_dtplt_main$use,]
+  grep("Visualisation", gene_list_dtplt_main$use),]
 ```
 
 ```{r colors, message = FALSE}
@@ -93,7 +96,6 @@ vis_df_all <- base::as.data.frame(
   t(SummarizedExperiment::assays(agg)$logcounts[
     rownames(SummarizedExperiment::assays(agg)$logcounts) %in% all_genes,]))
 vis_df_all
-knitr::knit_exit()
 ```
 
 ```{r vis_df_all_prep}

@@ -1,0 +1,23 @@
+
+# PREPARE
+
+snakemake --cluster "bsub -q medium -n5 -R rusage[mem={resources.mem_mb}]" -p -j10 -c5 -s 00_prepare_datasets_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda -n
+
+# for running prepare_li
+snakemake --cluster "bsub -q medium -n4 -R rusage[mem={resources.mem_mb}]" -p -j10 -c4 -s 00_prepare_datasets_snakefile.py --latency-wait 40 --configfile ../../config.yaml --config ran_li_ipynb=True --use-conda -n
+
+
+# 01 OWN DATASETS
+
+snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resources.mem_mb}]" -p -j20 -c20 -s 01_reclustering_own_snakefile.py --latency-wait 40 --configfile ../../config.yaml --use-conda --config run_sign_rand_own_permutation=True run_mark_rand_own_permutation=True run_mmms_rand_own_permutation=True run_genesets_sign_own_permutation=True -n
+
+
+
+# 02 OTHER DATASETS
+
+
+snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resources.mem_mb}]" -p -j30 -c20 -s 02_reclustering_other_snakefile.py --latency-wait 40 --configfile ../../config.yaml --use-conda --config run_sign_rand_other_permutation=True run_mark_rand_other_permutation=True run_mmms_rand_other_permutation=True run_genesets_sign_rand_other_permutation=True -n 
+
+snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resources.mem_mb}]" -p -j20 -c20 -s 02_reclustering_other_snakefile.py --latency-wait 40 --configfile ../../config.yaml --use-conda --config run_sign_rand_other_permutation=True run_mark_rand_other_permutation=True run_mmms_rand_other_permutation=True run_genesets_sign_rand_other_permutation=True run_pval_correction=True -n 
+
+

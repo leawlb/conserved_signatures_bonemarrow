@@ -1,5 +1,6 @@
 #-------------------------------------------------------------------------------
 # basic GO analysis only
+# just for report visualisation, not used for downstream analysis
 
 library(GOfuncR)
 set.seed(37)

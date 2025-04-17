@@ -1,5 +1,6 @@
 #-------------------------------------------------------------------------------
 # Use seurats wilcoxon test-based method to find markers
+# just for report visualisation, not used for downstream analysis
 # see https://www.biorxiv.org/content/10.1101/2022.05.09.490241v1
 
 library(Seurat)

@@ -105,7 +105,7 @@ rule aggregate_convert:
       sce_input = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10"
   resources:
       mem_mb=30000,
-      queue="medium"
+      queue="medium-debian"
   threads: 4
   output:
       deseq_output = OUTPUT_DAT + "/01_desq/deseq_{fraction}"
@@ -122,7 +122,7 @@ rule qc_deseq:
         deseq_input = rules.aggregate_convert.output
     resources:
         mem_mb=5000,
-        queue="medium"
+        queue="medium-debian"
     threads: 4
     output:
         rlog = OUTPUT_DAT + "/02_dsqc/rlog_{fraction}",
@@ -138,7 +138,7 @@ rule separate_sce:
         sce_input = expand(OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10", fraction = fractions)
     resources:
         mem_mb=50000,
-        queue="medium"
+        queue="medium-debian"
     threads: 1
     output:
         output = output
@@ -155,7 +155,7 @@ rule celltype_sva_report:
         sva_list = rules.qc_deseq.output.sva
     resources:
         mem_mb=5000,
-        queue="medium"
+        queue="medium-debian"
     threads: 4
     output:
         OUTPUT_REP + "/sva/sva_report_{fraction}_{celltype}.html"
@@ -172,7 +172,7 @@ rule celltype_bulk_report:
         rlog = rules.qc_deseq.output.rlog
     resources:
         mem_mb=25000,
-        queue="medium"
+        queue="medium-debian"
     threads: 4
     output:
         OUTPUT_REP + "/bulk/bulk_quality_report_{fraction}_{celltype}.html"
@@ -205,7 +205,7 @@ rule preprocessing_deseq:
         sv_path = SV_PATH
     resources:
         mem_mb=5000,
-        queue="medium"
+        queue="medium-debian"
     threads: 4
     output:
         deseq_output = OUTPUT_DAT + "/04_tdsq/deseq_{fraction}"
@@ -228,7 +228,7 @@ rule export_results_ndge:
         cts_exclude = CELL_TYPES_EXCLUDE
     resources:
         mem_mb=5000,
-        queue="medium"
+        queue="medium-debian"
     threads: 4
     output:
         celltype_res = OUTPUT_DAT + "/06_nres/" + tf + "/res_{fraction}_celltype",
@@ -255,7 +255,7 @@ rule celltype_ndge_report:
         OUTPUT_REP + "/ndge/ndge_report_{fraction}_{celltype}.html"
     resources:
         mem_mb=25000,
-        queue="medium"
+        queue="medium-debian"
     threads: 4
     params:
         padj_cutoff = PADJ_CUTOFF,

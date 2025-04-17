@@ -51,9 +51,9 @@ The longest sample takes around 1h for total 6 annotations.
 rule ref_anno: 
     input: 
         sce_input = OUTPUT_DAT + "/06_dimr/{species}/sce_{individual}-06",
-        ref_baccin_sce = config["ref_baccin_sce"],
-        ref_dahlin_sce = config["ref_dahlin_sce"],
-        ref_dolgalev_sce = config["ref_dolgalev_sce"]
+        ref_baccin_sce = config["base"] + config["metadata_paths"]["ref_baccin_sce"],
+        ref_dahlin_sce = config["base"] + config["metadata_paths"]["ref_dahlin_sce"],
+        ref_dolgalev_sce = config["base"] + config["metadata_paths"]["ref_dolgalev_sce"]
     resources:
         mem_mb=50000
     output:

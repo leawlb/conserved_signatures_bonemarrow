@@ -9,6 +9,7 @@ import pandas as pd
 # base path
 OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 print(OUTPUT_BASE)
+print(OUTPUT_BASE + config["metadata_paths"]["ensembl_mspr"])
 
 # directory for storing data
 OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/01_sce_prep"
@@ -96,7 +97,7 @@ rule get_sample_dmgs:
     input:
         sce_input = rules.remove_droplets.output,
         sce_fg = FOURGENOMES_OUT +  "/{species}/sce_{individual}-01",
-        ensembl_list_mspr = config["ensembl_mspr"]
+        ensembl_list_mspr = config["base"] + config["metadata_paths"]["ensembl_mspr"]
     output:
         dmgs = OUTPUT_DAT + "/02_mapp/{species}/dmgs_{individual}"
     resources:
@@ -187,7 +188,7 @@ rule make_dmg_reports:
         sce_fg = FOURGENOMES_OUT + "/{species}/sce_{individual}-01",
         dmgs = rules.get_sample_dmgs.output,
         dmg_list = rules.merge_dmgs.output,
-        ensembl_list_mspr = config["ensembl_mspr"]
+        ensembl_list_mspr = config["base"] + config["metadata_paths"]["ensembl_mspr"]
     output:
         OUTPUT_REP + "/dmgs/{species}/preprocessing_dmg_report_{individual}.html"
     resources:

@@ -34,7 +34,7 @@ rule marker_per_sp_per_celltype:
         data_hsc = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_hsc-10"
     resources:
         mem_mb=50000,
-          queue = "long"
+          queue = "long-debian"
     threads: 6
     output:
         output_str = OUTPUT_BASE + "/sce_objects/03_sce_analysis/03_marker_conservation/cons_markers_str.RData",
@@ -55,7 +55,7 @@ if RUN_AGE_COMP:
           markers_cons_str = OUTPUT_BASE + "/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_str"
       resources:
           mem_mb=50000,
-          queue = "long"
+          queue = "long-debian"
       threads: 30
       output:
           output_str = OUTPUT_BASE + "/sce_objects/03_sce_analysis/03_marker_conservation/02_age/cons_markers_str.RData",

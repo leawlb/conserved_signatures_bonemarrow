@@ -25,7 +25,7 @@ cell_types <- unique(metadata$celltypes) %>% as.vector()
 
 markers_list <- list()
 markers_expression <- list()
-# log2FC threshold changed from 0.1 to 0.25, check which one it is
+
 for (s in species) {
   species_subset <- subset(cleaner_data,
                            subset = Species_ID == s)
@@ -39,6 +39,7 @@ for (s in species) {
     markers <- FindMarkers(object = species_subset,
                            ident.1 = cells,
                            only.pos = TRUE,
+                           #logfc.threshold = 0.25, # default is 0.25
                            min.pct = 0.1) # Require genes to be expressed in at least 10% of cells in each group
     # Add these markers to the list of markers for this cell type
     markers_list[[paste(s, ct, sep = "_")]] <- markers
@@ -130,7 +131,7 @@ for (s in species) {
     markers <- FindMarkers(object = species_subset,
                            ident.1 = cells,
                            only.pos = TRUE,
-                           logfc.threshold = 0.25, # CHECK IF TRUE
+                           #logfc.threshold = 0.25, # default is 0.25
                            min.pct = 0.1) # Require genes to be expressed in at least 10% of cells in each group
     # Add these markers to the list of markers for this cell type
     markers_list[[paste(s, ct, sep = "_")]] <- markers

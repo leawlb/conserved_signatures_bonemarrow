@@ -24,10 +24,10 @@ RUN_MMMS_RAND_OWN_PERM = config["run_mmms_rand_own_permutation"]
 # permutation: marker sets vs signature + random
 RUN_GNST_SIGN_OWN_PERM = config["run_genesets_sign_own_permutation"]
 
-ENSEMBL_MUS = config["base_input"] + config["metadata_paths"]["ensembl_mus"]
-ENSEMBL_HUM = config["base_input"] + config["metadata_paths"]["ensembl_hum"]
-ENSEMBL_ZEB = config["base_input"] + config["metadata_paths"]["ensembl_zeb"]
-ENSEMBL_NMR = config["base_input"] + config["metadata_paths"]["ensembl_nmr"]
+ENSEMBL_MUS = config["base"] + config["metadata_paths"]["ensembl_mus"]
+ENSEMBL_HUM = config["base"] + config["metadata_paths"]["ensembl_hum"]
+ENSEMBL_ZEB = config["base"] + config["metadata_paths"]["ensembl_zeb"]
+ENSEMBL_NMR = config["base"] + config["metadata_paths"]["ensembl_nmr"]
 
 #-------------------------------------------------------------------------------
 
@@ -115,7 +115,7 @@ rule export_genesets:
         geneset_list = OUTPUT_DAT + "/01_gens/geneset_list_{fraction}"
     resources:
           mem_mb=20000,
-          queue = "medium"
+          queue = "medium-debian"
     threads: 4
     params:
         cts_exclude = CELL_TYPES_EXCLUDE
@@ -133,7 +133,7 @@ rule genesets_summary:
         OUTPUT_REP + "/genesets_summary.html"
     resources:
           mem_mb=35000,
-          queue = "medium"
+          queue = "medium-debian"
     threads: 4
     params:
         cts_exclude = CELL_TYPES_EXCLUDE,
@@ -163,7 +163,7 @@ rule prepare_ensembl:
         ensembl_mmms = OUTPUT_DAT + "/02_endf/ensembl_mmms_{fraction}"
     resources:
           mem_mb=20000,
-          queue = "medium"
+          queue = "medium-debian"
     threads: 4
     script:
         "01_scripts_own/02_prepare_ensembl.R"
@@ -257,7 +257,7 @@ rule reclustering_own:
         # HSC sub-sampled to 25,000 cells
     resources:
           mem_mb=48000,
-          queue = "medium"
+          queue = "medium-debian"
     threads: 4
     script:
         "01_scripts_own/03_reclustering_own.R"
@@ -275,7 +275,7 @@ rule reclustering_own_scores:
         "../../envs/reclust_scores_perm.yml"
     resources:
           mem_mb=8000,
-          queue = "medium"
+          queue = "medium-debian"
     threads: 4
     output:
         score_df = OUTPUT_DAT + "/04_rcls/score_df_{fraction}"
@@ -291,7 +291,7 @@ rule reclustering_own_report:
         OUTPUT_REP + "/reclustering_own_report_{fraction}.html"
     resources:
           mem_mb=10000,
-          queue = "medium"
+          queue = "medium-debian"
     threads: 4
     params:
         colors_path = COLORS,
@@ -357,7 +357,7 @@ if RUN_SIGN_RAND_OWN_PERM:
           perm_score_df = OUTPUT_DAT + "/05_psig/perm_score_df_{fraction}"
       resources:
           mem_mb=180000,
-          queue = "long"
+          queue = "long-debian"
       threads: config["values"]["03_sce_analysis"]["nr_cores"]
       script: 
           "01_scripts_own/05_permutation_rand.R"
@@ -373,7 +373,7 @@ if RUN_SIGN_RAND_OWN_PERM:
           OUTPUT_REP + "/perm_signature_{fraction}.html"
       resources:
           mem_mb=1000,
-          queue = "medium"
+          queue = "medium-debian"
       threads:4
       script: 
           "01_permutation_own_background_report.Rmd"
@@ -415,7 +415,7 @@ if RUN_MARK_RAND_OWN_PERM:
           perm_score_df = OUTPUT_DAT + "/05_pmrk/perm_score_df_{fraction}" ##### OUTPUT TEMP
       resources:
           mem_mb=180000,
-          queue = "long"
+          queue = "long-debian"
       threads: config["values"]["03_sce_analysis"]["nr_cores"] 
       script: 
           "01_scripts_own/05_permutation_rand.R"
@@ -457,7 +457,7 @@ if RUN_MMMS_RAND_OWN_PERM:
           perm_score_df = OUTPUT_DAT + "/05_pmmm/perm_score_df_{fraction}" ##### OUTPUT TEMP
       resources:
           mem_mb=180000,
-          queue = "long"
+          queue = "long-debian"
       threads: config["values"]["03_sce_analysis"]["nr_cores"]  
       script: 
           "01_scripts_own/05_permutation_rand.R"
@@ -506,7 +506,7 @@ if RUN_GNST_SIGN_OWN_PERM:
           perm_score_df_mmms_mark = OUTPUT_DAT + "/06_perg/perm_score_df_mmms_mark_{fraction}"
       resources:
           mem_mb=180000,
-          queue = "long"
+          queue = "long-debian"
       threads: config["values"]["03_sce_analysis"]["nr_cores"]  
       script: 
           "01_scripts_own/06_permutation_genesets_signrand.R"
@@ -523,7 +523,7 @@ if RUN_GNST_SIGN_OWN_PERM:
           OUTPUT_REP + "/perm_genesets_{fraction}.html"
       resources:
           mem_mb=1000,
-          queue = "medium"
+          queue = "medium-debian"
       threads: 4
       script: 
           "01_permutation_own_genesets_report.Rmd"

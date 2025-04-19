@@ -28,6 +28,7 @@ How to use this snakefile?
   BASE + "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/Li/download"
   BASE + "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/Li/data"
   BASE + "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/raw_mus/tabula_muris/FACS/"
+  BASE + "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/raw_mus/weinreb/"
 
 
 2. Some data must be downloaded and prepared manually (Li et al.):
@@ -85,7 +86,7 @@ print (ofile)
   Download FACS.zip manually from:
   https://figshare.com/articles/dataset/Single-cell_RNA-seq_data_from_Smart-seq2_sequencing_of_FACS_sorted_cells_v2_/5829687
 
-  --> put all contents into "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/raw_mus/tabula_muris/FACS/"
+  --> put all contents into "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/raw_mus/tabula_muris/FACS/" and unzip
 
 
 5. Some more data must be downloaded manually (Tikhonova et al.)
@@ -98,7 +99,10 @@ print (ofile)
   from prior publicatons will be separately reclustered.
   
   "/data/metadata/scRNAseq/01_sce_prep/references_raw/bone-marrow-seurat.rds"
-  
+
+6. Also clone mcclust (https://github.com/cran/mcclust) and put in code/source/
+
+  see 01_reclustering_own_snakefile.py
   
 """
 
@@ -409,7 +413,7 @@ rule prepare_mouse_datasets_hspc:
 # use the merged dataset from dolgalev reference dataset as input
 rule prepare_mouse_datasets_stromal:
     input:
-        seu_mus_str_ref = config["base_input"] + "/data/metadata/scRNAseq/01_sce_prep/references_raw/bone-marrow-seurat.rds" # manually downloaded
+        seu_mus_str_ref = config["base"] + "/data/metadata/scRNAseq/01_sce_prep/references_raw/bone-marrow-seurat.rds" # manually downloaded
     output:
         mus_tik_stromal = DIR_RECLUSTERING + "/prepared/mus_tik_stromal",
         mus_bar_stromal = DIR_RECLUSTERING + "/prepared/mus_bar_stromal"

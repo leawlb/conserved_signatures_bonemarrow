@@ -9,8 +9,8 @@ OUTPUT_DAT_OWN = OUTPUT_BASE + "/sce_objects/03_sce_analysis/04_signatures/01_re
 OUTPUT_DAT_OTHER = OUTPUT_BASE + "/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other"
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/04_signatures/02_reclustering_other"
 
-RESOLUTION_OTHER = config["base_input"] + config["metadata_paths"]["resolution_other"]
-FRAME_OTHER = config["base_input"] + config["metadata_paths"]["frame_other"]
+RESOLUTION_OTHER = config["base"] + config["metadata_paths"]["resolution_other"]
+FRAME_OTHER = config["base"] + config["metadata_paths"]["frame_other"]
 
 # permutation: each gene set individually vs random 
 RUN_SIGN_RAND_OTHER_PERM = config["run_sign_rand_other_permutation"]
@@ -142,7 +142,7 @@ rule reclustering_other:
         seu_output = OUTPUT_DAT_OTHER + "/03_recl/reclustered_{dataset}_list"
     resources:
           mem_mb=50000,
-          queue="long"
+          queue="long-debian"
     threads: 4
     script: 
         "02_scripts_other/03_reclustering_other.R"
@@ -179,7 +179,7 @@ rule test_reclustering_scores:
         "../../envs/reclust_scores_perm_others.yml"
     resources:
           mem_mb=50000,
-          queue="long"
+          queue="long-debian"
     threads: 4
     script:
         "02_test_reclustering_scores.Rmd"
@@ -203,7 +203,7 @@ rule reclustering_other_scores:
         score_df_list = OUTPUT_DAT_OTHER + "/04_rcls/score_df_{dataset}_list"
     resources:
           mem_mb=50000,
-          queue="medium"
+          queue="medium-debian"
     threads: 4
     script:
         "02_scripts_other/04_reclustering_other_scores.R"
@@ -217,7 +217,7 @@ rule reclustering_other_report:
         OUTPUT_REP + "/all/reclustering_other_report_{dataset}.html"
     resources:
           mem_mb=50000,
-          queue="medium"
+          queue="medium-debian"
     threads: 4
     script: 
         "02_reclustering_other_report.Rmd"
@@ -276,7 +276,7 @@ if RUN_SIGN_RAND_OTHER_PERM:
           perm_score_df = OUTPUT_DAT_OTHER + "/05_psig/perm_score_df_{dataset}"
       resources:
           mem_mb=80000,
-          queue="verylong"
+          queue="verylong-debian"
       threads: config["values"]["03_sce_analysis"]["nr_cores"]
       script: 
           "02_scripts_other/05_permutation_other_rand.R"
@@ -295,7 +295,7 @@ if RUN_SIGN_RAND_OTHER_PERM:
           pval_score_df_output = OUTPUT_DAT_OTHER + "/08_expp/sign-vs-rand_{dataset}"
       resources:
           mem_mb=20000,
-          queue="medium"
+          queue="medium-debian"
       threads: 4
       script:
           "02_scripts_other/08_export_pval.R"
@@ -313,7 +313,7 @@ if RUN_SIGN_RAND_OTHER_PERM:
           OUTPUT_REP + "/signature/perm_sign_rand_{dataset}.html"
       resources:
           mem_mb=50000,
-          queue="medium"
+          queue="medium-debian"
       threads: 4
       script: 
           "02_permutation_other_rand_report.Rmd"
@@ -341,7 +341,7 @@ if RUN_MARK_RAND_OTHER_PERM:
           perm_score_df = OUTPUT_DAT_OTHER + "/06_pmrk/perm_score_df_{dataset}"
       resources:
           mem_mb=100000,
-          queue = "long"
+          queue = "long-debian"
       threads: config["values"]["03_sce_analysis"]["nr_cores"]
       script: 
           "02_scripts_other/05_permutation_other_rand.R"
@@ -372,7 +372,7 @@ if RUN_MARK_RAND_OTHER_PERM:
           cons_level_use = "conserved_markers"
       resources:
           mem_mb=50000,
-          queue = "medium"
+          queue = "medium-debian"
       output:
           OUTPUT_REP + "/conserved_markers/perm_cons_rand_{dataset}.html"
       script: 
@@ -399,7 +399,7 @@ if RUN_MMMS_RAND_OTHER_PERM:
           perm_score_df = OUTPUT_DAT_OTHER + "/07_pmms/perm_score_df_{dataset}"
       resources:
           mem_mb=100000,
-          queue="long"
+          queue="long-debian"
       threads: config["values"]["03_sce_analysis"]["nr_cores"]
       script: 
           "02_scripts_other/05_permutation_other_rand.R"
@@ -418,7 +418,7 @@ if RUN_MMMS_RAND_OTHER_PERM:
           pval_score_df_output = OUTPUT_DAT_OTHER + "/08_expp/mmms-vs-rand_{dataset}"
       resources:
           mem_mb=5000,
-          queue="medium"
+          queue="medium-debian"
       threads: 4
       script:
           "02_scripts_other/08_export_pval.R"
@@ -450,7 +450,7 @@ if RUN_GNST_SIGN_RAND_OTHER_PERM:
           perm_score_df_mmms_mark = OUTPUT_DAT_OTHER + "/07_perg/perm_score_df_mmms_mark_{dataset}"
       resources:
           mem_mb=100000,
-          queue="long"
+          queue="long-debian"
       threads: config["values"]["03_sce_analysis"]["nr_cores"]
       script: 
           "02_scripts_other/07_permutation_other_signrand.R"
@@ -472,7 +472,7 @@ if RUN_GNST_SIGN_RAND_OTHER_PERM:
           datasets_other_str = datasets_other_str
       resources:
           mem_mb=5000,
-          queue="medium"
+          queue="medium-debian"
       output:
           OUTPUT_REP + "/genesets/perm_genesets_{dataset}.html"
       script: 
@@ -492,7 +492,7 @@ if RUN_GNST_SIGN_RAND_OTHER_PERM:
           comparison = "mark-vs-signrand" # record comparison
       resources:
           mem_mb=5000,
-          queue="medium"
+          queue="medium-debian"
       output:
           pval_score_df_output = OUTPUT_DAT_OTHER + "/08_expp/mark-vs-signrand_{dataset}"
       script:
@@ -512,7 +512,7 @@ if RUN_GNST_SIGN_RAND_OTHER_PERM:
           pval_score_df_output = OUTPUT_DAT_OTHER + "/08_expp/mmms-vs-signrand_{dataset}"
       resources:
           mem_mb=5000,
-          queue="medium"
+          queue="medium-debian"
       script:
           "02_scripts_other/08_export_pval.R" 
 
@@ -559,7 +559,7 @@ if RUN_PVAL_CORRECTION:
           pval_corrected_df = OUTPUT_DAT_OTHER + "/09_crpv/all_corrected_pval"
       resources:
           mem_mb=5000,
-          queue="medium"
+          queue="medium-debian"
       script:
           "02_scripts_other/09_correct_all_pvals.R"
 
@@ -588,7 +588,7 @@ rule reclustering_other_report_final:
         OUTPUT_REP + "/final/reclustering_other_final_report_{dataset}.html"
     resources:
         mem_mb=50000,
-        queue="medium"
+        queue="medium-debian"
     threads: 4
     script: 
       "02_reclustering_other_report_final.Rmd"

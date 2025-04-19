@@ -46,7 +46,7 @@ rule export_to_adata:
         "../../envs/zellkonverter_export.yml"
     resources:
         mem_mb=30000,
-        queue="medium"
+        queue="medium-debian"
     threads: 4
     script:
         "scripts/01_export_to_adata.R"
@@ -63,7 +63,7 @@ rule scanpy_preprocessing:
         "../../envs/cellrank.yml"
     resources:
         mem_mb=10000,
-        queue="medium"
+        queue="medium-debian"
     threads: 10
     script:
         "scripts/02_scanpy_preprocessing.py"
@@ -83,7 +83,7 @@ rule cellrank:
         "../../envs/cellrank.yml"
     resources:
         mem_mb=20000,
-        queue="medium"
+        queue="medium-debian"
     threads: 10
     script:
         "scripts/03_cellrank.py"
@@ -99,7 +99,7 @@ rule import_to_sce:
         "../../envs/zellkonverter_import.yml"
     resources:
         mem_mb=30000,
-        queue="medium"
+        queue="medium-debian"
     threads: 4
     script:
         "scripts/04_import_to_sce.R"
@@ -117,7 +117,7 @@ rule cellrank_report:
         plotting = "../../source/plotting.R"
     resources:
         mem_mb=100000,
-        queue="medium"
+        queue="medium-debian"
     threads: 4
     script:
         "cellrank_report.Rmd"
@@ -136,7 +136,7 @@ rule separate_by_branch:
         sce_neu = OUTPUT_DAT + "/05_bsce/sce_neu"
     resources:
         mem_mb=100000,
-        queue="medium"
+        queue="medium-debian"
     threads: 4
     script:
         "scripts/05_separate_by_branch.R"

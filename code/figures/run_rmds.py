@@ -1,7 +1,7 @@
 
 # output for htmls
 # doesn't have to be base
-OUTPUT_PATH = "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/reproducibility3_test_rerun/data/manuscript1/htmls"
+OUTPUT_PATH = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/manuscript1/htmls"
 
 # input and output paths of data and separate plots are separarely defined
 # in each .Rmd script for better overview within the script
@@ -15,7 +15,7 @@ targets = targets + [OUTPUT_PATH + "/figure2.html"]
 targets = targets + [OUTPUT_PATH + "/figure3.html"]
 targets = targets + [OUTPUT_PATH + "/figure4.html"]
 targets = targets + [OUTPUT_PATH + "/figure5.html"]
-targets = targets + [OUTPUT_PATH + "/figure6.html"]
+#targets = targets + [OUTPUT_PATH + "/figure6.html"]
 
 #-------------------------------------------------------------------------------
 
@@ -28,7 +28,7 @@ rule all:
 rule run_fig1:
     resources:
         mem_mb=80000,
-        queues = "medium"
+        queues = "medium-debian"
     output:
         OUTPUT_PATH + "/figure1.html",
     threads: 4
@@ -38,7 +38,7 @@ rule run_fig1:
 rule run_fig2:
     resources:
         mem_mb=80000,
-        queues = "medium"
+        queues = "medium-debian"
     output:
         OUTPUT_PATH + "/figure2.html",
     threads: 4
@@ -50,7 +50,7 @@ rule run_fig2:
 rule run_fig3:
     resources:
         mem_mb=80000,
-        queues = "medium"
+        queues = "medium-debian"
     output:
         OUTPUT_PATH + "/figure3.html",
     threads: 4
@@ -62,7 +62,7 @@ rule run_fig3:
 rule run_fig4:
     resources:
         mem_mb=80000,
-        queues = "medium"
+        queues = "medium-debian"
     output:
         OUTPUT_PATH + "/figure4.html",
     threads: 4
@@ -73,7 +73,7 @@ rule run_fig4:
 rule run_fig5:
     resources:
         mem_mb=80000,
-        queues = "medium"
+        queues = "medium-debian"
     output:
         OUTPUT_PATH + "/figure5.html",
     threads: 4
@@ -84,7 +84,7 @@ rule run_fig5:
 rule run_fig6:
     resources:
         mem_mb=80000,
-        queues="medium"
+        queues="medium-debian"
     output:
         OUTPUT_PATH + "/figure6.html"
     threads: 4

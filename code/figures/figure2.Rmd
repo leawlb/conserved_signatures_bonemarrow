@@ -43,24 +43,24 @@ library(ggpattern, quietly = TRUE)
 ```
 
 ```{r base_path}
-base_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/reproducibility3_test_rerun/data/"
+base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
 ```
 
 ```{r load_manual}
 # fully annotated SCE objects
 sce_hsc <- base::readRDS(base::paste0(
   base_path, 
-  "scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10"))
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10"))
 
 # list of gene sets for HSPCs (signature genes, conserved markers, etc.)
 geneset_list_hsc <- base::readRDS(base::paste0(
   base_path, 
-  "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"))
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"))
 
 #conserved markers per cell type per age (markers_conservation_hsc)
 base::load(base::paste0(
   base_path,
-  "scRNAseq/main_analysis/sce_objects/03_sce_analysis/03_marker_conservation/02_age/cons_markers_hsc.RData"))
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/03_marker_conservation/02_age/cons_markers_hsc.RData"))
 
 colors_path <- base::paste0(
   base_path, 

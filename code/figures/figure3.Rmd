@@ -26,7 +26,7 @@ library(Seurat, quietly = TRUE)
 ```
 
 ```{r load_manual_basepath}
-base_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/reproducibility3_test_rerun/data"
+base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
 ```
 
 ```{r load_manual}
@@ -197,15 +197,15 @@ make_pattern_density_plot <- function(
   p_return <- ggplot2::ggplot(
     perm_score_df,
     aes(x = value))+
-    geom_density_pattern(
-      fill = color_cons,
-      color = color_cons,
-      pattern = "stripe",
-      pattern_angle = 110,
-      pattern_fill = pattern_fill_color,
-      pattern_colour = pattern_line_colour,
-      pattern_density =pattern_density_val,
-      pattern_spacing = pattern_spacing_val)+
+    # geom_density_pattern(
+    #   fill = color_cons,
+    #   color = color_cons,
+    #   pattern = "stripe",
+    #   pattern_angle = 110,
+    #   pattern_fill = pattern_fill_color,
+    #   pattern_colour = pattern_line_colour,
+    #   pattern_density =pattern_density_val,
+    #   pattern_spacing = pattern_spacing_val)+
     geom_vline(
       color = "grey70",
       xintercept = score_df$value,

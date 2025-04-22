@@ -1,9 +1,6 @@
 library(Seurat, quietly = TRUE)
 library(dplyr, quietly = TRUE)
 
-sessionInfo()
-
-#data <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/08_sce_brain/sample.combined_exc_4_species_integration.RDS")
 data <- readRDS(snakemake@input[["data_input"]])
 
 data.updated <- UpdateSeuratObject(object = data)  # available data is v3 Seurat
@@ -82,24 +79,22 @@ for(ct in cell_types){
   markers_conservation[[ct]] <- genes
 }
 
-#saveRDS(markers_conservation,
-#        file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/08_sce_brain/02_marker_expression_primates.rds")
 saveRDS(markers_conservation, file = snakemake@output[["markers_conservation"]])
+
 
 
 # since macaque is missing L2/3 IT cell type, first filter for non-all-NA columns
 # then for non-NA rows to grab markers
 
-core_markers <- list()
+cons_markers <- list()
 for(m in names(markers_conservation)){
   m_df <- markers_conservation[[m]]
   m_df <- m_df[, colSums(is.na(m_df)) < nrow(m_df)]
   m_df <- m_df[complete.cases(m_df),]
   
-  core_markers[[m]] <- rownames(m_df)
+  cons_markers[[m]] <- rownames(m_df)
 }
 
-#saveRDS(core_markers,
-#        file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/08_sce_brain/02_marker_conserved_primates.rds")
-saveRDS(core_markers, file = snakemake@output[["core_markers"]])
+
+saveRDS(cons_markers, file = snakemake@output[["cons_markers"]])
 

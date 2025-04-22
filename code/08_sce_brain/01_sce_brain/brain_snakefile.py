@@ -5,6 +5,9 @@
 OUTPUT_BASE = config["base"] + "/data"
 print(OUTPUT_BASE)
 
+INPUT_DATASET = config["base"] + config["metadata_paths"]["dataset_brain_path"]
+print(INPUT_DATASET)
+
 #-------------------------------------------------------------------------------
 
 targets = []
@@ -29,10 +32,10 @@ rule all:
 
 rule nDEGs:
     input:
-        data_input = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/08_sce_brain/sample.combined_exc_4_species_integration.RDS"
+        data_input = INPUT_DATASET
     resources:
         mem_mb = 20000,
-        queue = "medium"
+        queue = "medium-debian"
     threads: 15
     output:
         data_output = OUTPUT_BASE + "/scRNAseq/main_analysis/sce_objects/08_sce_brain/01_list_nDEGs_all.rds"
@@ -41,27 +44,28 @@ rule nDEGs:
 
 rule markers:
     input:
-        data_input = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/08_sce_brain/sample.combined_exc_4_species_integration.RDS"
+        data_input = INPUT_DATASET
     resources:
         mem_mb = 20000,
-        queue = "medium"
+        queue = "medium-debian"
     threads: 15
     output:
         markers_conservation = OUTPUT_BASE + "/scRNAseq/main_analysis/sce_objects/08_sce_brain/02_marker_expression_primates.rds",
-        core_markers = OUTPUT_BASE + "/scRNAseq/main_analysis/sce_objects/08_sce_brain/02_marker_conserved_primates.rds"
+        cons_markers = OUTPUT_BASE + "/scRNAseq/main_analysis/sce_objects/08_sce_brain/02_marker_conserved_primates.rds"
     script:
         "02_markers.R"
 
 rule resolution:
     input:
         data_input = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/08_sce_brain/sample.combined_exc_4_species_integration.RDS",
-        core_markers = rules.markers.output.core_markers
+        cons_markers = rules.markers.output.cons_markers
     resources:
         mem_mb = 40000,
-        queue = "medium"
+        queue = "medium-debian"
     threads: 15
     output:
-        all_scores = OUTPUT_BASE + "/scRNAseq/main_analysis/sce_objects/08_sce_brain/03_resolution_scores.rds",
+        all_scores_markers = OUTPUT_BASE + "/scRNAseq/main_analysis/sce_objects/08_sce_brain/03_resolution_scores_markers.rds",
+        all_scores_signatures = OUTPUT_BASE + "/scRNAseq/main_analysis/sce_objects/08_sce_brain/03_resolution_scores_signature.rds",
     script:
         "03_resolution.R"
  
@@ -73,7 +77,7 @@ rule recluster:
         brain_path = "/scRNAseq/main_analysis/sce_objects/08_sce_brain/"
     resources:
         mem_mb = 40000,
-        queue = "medium"
+        queue = "medium-debian"
     threads: 15
     output:
         species = OUTPUT_BASE + "/scRNAseq/main_analysis/sce_objects/08_sce_brain/04_recluster/mouse_reclust_hs.rds",
@@ -88,7 +92,7 @@ aside from a pdf.
 Just run in terminal from snakemake_isbm env as before,
 using currently correct base path
 
-somehow, I couldn't aler 05_quantify_reclust.R so I saved chanegs to the
+somehow, I couldn't aler 05_quantify_reclust.R so I saved changes to the
 basepath in 05_quantify_recluster-copy.R
 """
       

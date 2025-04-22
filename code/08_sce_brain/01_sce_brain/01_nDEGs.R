@@ -5,8 +5,11 @@ library(scuttle, quietly = TRUE)
 library(BiocGenerics, quietly = TRUE)
 set.seed(37)
 
+# Set cutoff values as before 
+fc_cutoff <- 1.5
+padj_cutoff <- 0.05
+
 # Load and update Seurat object
-#data <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/08_sce_brain/sample.combined_exc_4_species_integration.RDS")
 data <- readRDS(snakemake@input[["data_input"]])
 
 data.updated <- UpdateSeuratObject(object = data)  # available data is v3 Seurat
@@ -60,7 +63,12 @@ for (subclass in names(agg_list)) {
       contrast <- c("orig.ident", comb[1], comb[2])
       
       # Extract results
-      res <- results(dds, contrast = contrast)
+      res <- results(dds, 
+                     contrast = contrast,
+                     altHypothesis="lessAbs", # changing hypothesis 
+                     lfcThreshold=fc_cutoff,
+                     alpha = padj_cutoff
+                     )
       res_filtered <- res[!is.na(res$padj) & !is.na(res$log2FoldChange), ]
       
       # Store results for this combination
@@ -74,10 +82,6 @@ for (subclass in names(agg_list)) {
   # Store results for this subclass label
   results_list[[subclass]] <- pairwise_results
 }
-
-# Set cutoff values
-fc_cutoff <- 1.5
-padj_cutoff <- 0.05
 
 # make a list of genes shared between each pairwise comp, for each cell type
 res_list_shared_comp <- lapply(results_list, function(pairwise_results){
@@ -94,7 +98,7 @@ res_list_shared_comp <- lapply(results_list, function(pairwise_results){
       # Get genes with absolute log2 FC < cutoff and padj > cutoff
       shared_genes <- rownames(res_df)[
         abs(res_df$log2FoldChange) < fc_cutoff & 
-          res_df$padj > padj_cutoff]
+          res_df$padj < padj_cutoff]
       
       # Export unique shared genes
       shared_genes <- unique(shared_genes)
@@ -115,8 +119,5 @@ res_list_shared_all <- lapply(res_list_shared_comp, function(shared){
   
   return(shared_all)
 })
-
-#saveRDS(res_list_shared_all, 
-#        file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/08_sce_brain/01_list_nDEGs_all.rds")
 
 saveRDS(res_list_shared_all, snakemake@output[["data_output"]])

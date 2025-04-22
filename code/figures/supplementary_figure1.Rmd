@@ -22,7 +22,7 @@ library(ggpubr, quietly = TRUE)
 ```
 
 ```{r base_path}
-base_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/reproducibility3_test_rerun/data"
+base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
 ```
 
 ```{r load_manual_hsc}
@@ -35,15 +35,15 @@ sce_hsc <- base::readRDS(base::paste0(
 sce_hsc_ann <- base::readRDS(base::paste0(
   base_path, 
   "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10"))
-sce_hsc_fin <- base::readRDS(base::paste0(
-  base_path, 
-  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10"))
-
 # remove some unneccessary data to save space
 reducedDim(sce_hsc_ann) <- NULL
 assays(sce_hsc_ann) <- list()
 logc <- logcounts(sce_hsc)
 assays(sce_hsc) <- list()
+
+sce_hsc_fin <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10"))
 assays(sce_hsc_fin) <- list()
 ```
 
@@ -71,9 +71,38 @@ source("../source/plotting.R")
 
 ```{r pdf_output}
 # define output paths for pdf export
-output_pdf_e <- base::paste0(
+
+# little packages for Figure a schematic
+output_pdf_a_1 <- base::paste0(
   base_path,
-  "/manuscript1/supp_figure1/sfigure1_e.pdf")
+  "/manuscript1/supp_figure1/sfigure1_a1.pdf")
+output_pdf_a_2 <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure1/sfigure1_a2.pdf")
+output_pdf_a_3 <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure1/sfigure1_a3.pdf")
+output_pdf_a_4 <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure1/sfigure1_a4.pdf")
+output_pdf_a_5 <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure1/sfigure1_a5.pdf")
+output_pdf_a_6 <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure1/sfigure1_a6.pdf")
+output_pdf_a_7 <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure1/sfigure1_a7.pdf")
+output_pdf_a_8 <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure1/sfigure1_a8.pdf")
+
+output_pdf_b <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure1/sfigure1_b.pdf")
+
+
 
 output_pdf_f <- base::paste0(
   base_path,
@@ -175,7 +204,7 @@ sce_str$annotation_all_subcl <- sce_str_ann$annotation_subcluster[
 unique(sce_str$cluster_louvain[is.na(sce_str$annotation_all_subcl)])
 
 # 1  2  3  5  8  11 14 15 16 17 19
-
+# REANNOTATE!
 sce_str$annotation_all[sce_str$cluster_louvain == "1"] <- "erythrocytic 1"
 sce_str$annotation_all_subcl[sce_str$cluster_louvain == "1"] <- "erythrocytic 1"
 
@@ -209,6 +238,9 @@ sce_str$annotation_all_subcl[sce_str$cluster_louvain == "17"] <- "antigen presen
 sce_str$annotation_all[sce_str$cluster_louvain == "19"] <- "skeletal muscle"
 sce_str$annotation_all_subcl[sce_str$cluster_louvain == "19"] <- "skeletal muscle"
 
+sce_str$annotation_all[sce_str$cluster_louvain == "20"] <- "unknown blorb"
+sce_str$annotation_all_subcl[sce_str$cluster_louvain == "20"] <- "unknown blorb"
+
 sce_str$annotation_all <- factor(sce_str$annotation_all,
   levels = c(levels(sce_str_ann$annotation_cluster), 
              "erythrocytic 1",
@@ -221,7 +253,8 @@ sce_str$annotation_all <- factor(sce_str$annotation_all,
              "activated lymphocyte",
              "antigen presenting cell",
              "low quality",
-             "skeletal muscle"))
+             "skeletal muscle",
+             "unknown blorb"))
 
 sce_str$annotation_all_subcl <- factor(sce_str$annotation_all_subcl,
   levels = c(names(col_cts_str), 
@@ -235,7 +268,8 @@ sce_str$annotation_all_subcl <- factor(sce_str$annotation_all_subcl,
              "activated lymphocyte",
              "antigen presenting cell",
              "low quality",
-             "skeletal muscle"))
+             "skeletal muscle",
+             "unknown blorb"))
 ```
 
 ```{r prep_str}
@@ -328,11 +362,10 @@ str_umap_subcl$color_by <- factor(
 )
 ```
 
-## Plots
+## Plots for overview schematic (A)
 
-```{r e_base_plot_hsc_spc}
-
-e_base_plot_hsc_spc <- ggplot2::ggplot(
+```{r a_base_plot_hsc_spc}
+a_base_plot_hsc_spc <- ggplot2::ggplot(
   hsc_umap, 
   aes(x = V1,
       y = V2,
@@ -340,14 +373,15 @@ e_base_plot_hsc_spc <- ggplot2::ggplot(
   ggplot2::geom_point(
     size = umap_point_size,
     alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(hsc_umap$V1)-1, base::max(hsc_umap$V1))+1)+
-  ggplot2::ylim(c(base::min(hsc_umap$V2)-1, base::max(hsc_umap$V2))+1)+
+  ggplot2::xlim(c(base::min(hsc_umap$V1)-1, base::max(hsc_umap$V1)+1))+
+  ggplot2::ylim(c(base::min(hsc_umap$V2)-1, base::max(hsc_umap$V2)+1))+
   ggplot2::scale_color_manual(values = col_spc_pub)
+a_base_plot_hsc_spc
 ```
 
-```{r e_base_plot_hsc_1}
+```{r a_base_plot_hsc_1}
 
-e_base_plot_hsc_1 <- ggplot2::ggplot(
+a_base_plot_hsc_1 <- ggplot2::ggplot(
   hsc_umap, 
   aes(x = V1,
       y = V2,
@@ -355,16 +389,17 @@ e_base_plot_hsc_1 <- ggplot2::ggplot(
   ggplot2::geom_point(
     size = umap_point_size,
     alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(hsc_umap$V1)-1, base::max(hsc_umap$V1))+1)+
-  ggplot2::ylim(c(base::min(hsc_umap$V2)-1, base::max(hsc_umap$V2))+1)+
+  ggplot2::xlim(c(base::min(hsc_umap$V1)-1, base::max(hsc_umap$V1)+1))+
+  ggplot2::ylim(c(base::min(hsc_umap$V2)-1, base::max(hsc_umap$V2)+1))+
   ggplot2::scale_color_manual(values = col_clust)
+a_base_plot_hsc_1
 ```
 
-```{r e_base_plot_hsc_1_mecom}
+```{r a_base_plot_hsc_1_mecom}
 names(mycolors_to_max) <- as.character(
   as.numeric(names(mycolors_to_max))*max(hsc_umap_mecom$expression))
 
-e_base_plot_hsc_1_mecom <- ggplot2::ggplot(
+a_base_plot_hsc_1_mecom <- ggplot2::ggplot(
   hsc_umap_mecom[hsc_umap_mecom$color_by %in% c("Stem/MPP1", "Stem/MPP2"),], 
   aes(x = V1,
       y = V2,
@@ -372,16 +407,18 @@ e_base_plot_hsc_1_mecom <- ggplot2::ggplot(
   ggplot2::geom_point(
     size = umap_point_size,
     alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(hsc_umap$V1)-1, base::max(hsc_umap$V1))+1)+
-  ggplot2::ylim(c(base::min(hsc_umap$V2)-1, base::max(hsc_umap$V2))+1)+
+  ggplot2::xlim(c(base::min(hsc_umap$V1)-1, base::max(hsc_umap$V1)+1))+
+  ggplot2::ylim(c(base::min(hsc_umap$V2)-1, base::max(hsc_umap$V2)+1))+
   ggplot2::scale_color_gradientn("Mecom expression", colours = mycolors_to_max)
+a_base_plot_hsc_1_mecom
 
-legend_mecom <- cowplot::get_legend(e_base_plot_hsc_1_mecom+theme_all)
+legend_mecom <- cowplot::get_legend(a_base_plot_hsc_1_mecom+theme_all)
 legend_mecom <- ggpubr::ggarrange(legend_mecom)
+legend_mecom
 ```
 
-```{r e_base_plot_hsc_1_subcl}
-e_base_plot_hsc_1_subcl <- ggplot2::ggplot(
+```{r a_base_plot_hsc_1_subcl}
+a_base_plot_hsc_1_subcl <- ggplot2::ggplot(
   hsc_umap_subcl[hsc_umap_subcl$color_by %in% c("Early MPP", "HSC"),], 
   aes(x = V1,
       y = V2,
@@ -389,13 +426,16 @@ e_base_plot_hsc_1_subcl <- ggplot2::ggplot(
   ggplot2::geom_point(
     size = umap_point_size,
     alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(hsc_umap$V1)-1, base::max(hsc_umap$V1))+1)+
-  ggplot2::ylim(c(base::min(hsc_umap$V2)-1, base::max(hsc_umap$V2))+1)+
-  ggplot2::scale_color_manual(values = c("HSC" = "grey10", "Early MPP" = "grey70"), na.value = "white")
+  ggplot2::xlim(c(base::min(hsc_umap$V1)-1, base::max(hsc_umap$V1)+1))+
+  ggplot2::ylim(c(base::min(hsc_umap$V2)-1, base::max(hsc_umap$V2)+1))+
+  ggplot2::scale_color_manual(
+    values = col_cts_hsc[names(col_cts_hsc) %in%  c("HSC", "Early MPP")], 
+    na.value = "white")
+a_base_plot_hsc_1_subcl
 ```
 
-```{r e_base_plot_hsc_1_final}
-e_base_plot_hsc_1_final <- ggplot2::ggplot(
+```{r a_base_plot_hsc_1_final}
+a_base_plot_hsc_1_final <- ggplot2::ggplot(
   hsc_umap_fin, 
   aes(x = X1,
       y = X2,
@@ -403,27 +443,14 @@ e_base_plot_hsc_1_final <- ggplot2::ggplot(
   ggplot2::geom_point(
     size = umap_point_size,
     alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(hsc_umap_fin$X1)-1, base::max(hsc_umap_fin$X1))+1)+
-  ggplot2::ylim(c(base::min(hsc_umap_fin$X2)-1, base::max(hsc_umap_fin$X2))+1)+
+  ggplot2::xlim(c(base::min(hsc_umap_fin$X1)-1, base::max(hsc_umap_fin$X1)+1))+
+  ggplot2::ylim(c(base::min(hsc_umap_fin$X2)-1, base::max(hsc_umap_fin$X2)+1))+
   ggplot2::scale_color_manual(values = col_cts_hsc)
+a_base_plot_hsc_1_final
 ```
 
-```{r e_base_plot_hsc_2}
-e_base_plot_hsc_2 <- ggplot2::ggplot(
-  hsc_umap_subcl, 
-  aes(x = V1,
-      y = V2,
-      color = color_by))+
-  ggplot2::geom_point(
-    size = umap_point_size,
-    alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(hsc_umap_subcl$V1)-1, base::max(hsc_umap_subcl$V2))+1)+
-  ggplot2::ylim(c(base::min(hsc_umap_subcl$V2)-1, base::max(hsc_umap_subcl$V2))+1)+
-  ggplot2::scale_color_manual(values = c(col_cts_hsc, "removed" = "grey50"))
-```
-
-```{r e_base_plot_str_1}
-e_base_plot_str_1 <- ggplot2::ggplot(
+```{r b_base_plot_str_1}
+b_base_plot_str_1 <- ggplot2::ggplot(
   str_umap, 
   aes(x = V1,
       y = V2,
@@ -431,12 +458,13 @@ e_base_plot_str_1 <- ggplot2::ggplot(
   ggplot2::geom_point(
     size = umap_point_size,
     alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(str_umap$V1)-1, base::max(str_umap$V1))+1)+
-  ggplot2::ylim(c(base::min(str_umap$V2)-1, base::max(str_umap$V2))+1)
+  ggplot2::xlim(c(base::min(str_umap$V1)-1, base::max(str_umap$V1)+1))+
+  ggplot2::ylim(c(base::min(str_umap$V2)-1, base::max(str_umap$V2)+1))
+b_base_plot_str_1
 ```
 
-```{r e_base_plot_str_2}
-e_base_plot_str_2 <- ggplot2::ggplot(
+```{r b_base_plot_str_2}
+b_base_plot_str_2 <- ggplot2::ggplot(
   str_umap_subcl, 
   aes(x = V1,
       y = V2,
@@ -444,56 +472,52 @@ e_base_plot_str_2 <- ggplot2::ggplot(
   ggplot2::geom_point(
     size = umap_point_size,
     alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(str_umap_subcl$V1)-1, base::max(str_umap_subcl$V2))+1)+
-  ggplot2::ylim(c(base::min(str_umap_subcl$V2)-1, base::max(str_umap_subcl$V2))+1)+
+  ggplot2::xlim(c(base::min(str_umap$V1)-1, base::max(str_umap$V1)+1))+
+  ggplot2::ylim(c(base::min(str_umap$V2)-1, base::max(str_umap$V2)+1))+
   ggplot2::scale_color_manual(values = c(col_cts_str, "removed" = "grey50"))
+b_base_plot_str_2
 ```
 
-```{r e_theme_plot_hsc_spc, fig.width = 3, fig.height = 3}
-e_theme_plot_hsc_spc <- e_base_plot_hsc_spc+
+```{r a_theme_plot_hsc_spc, fig.width = 3, fig.height = 3}
+a_theme_plot_hsc_spc <- a_base_plot_hsc_spc+
   cowplot::theme_nothing()
-e_theme_plot_hsc_spc
+a_theme_plot_hsc_spc
 ```
 
-```{r e_theme_plot_hsc_1, fig.width = 3, fig.height = 3}
-e_theme_plot_hsc_1 <- e_base_plot_hsc_1+
+```{r a_theme_plot_hsc_1, fig.width = 3, fig.height = 3}
+a_theme_plot_hsc_1 <- a_base_plot_hsc_1+
   cowplot::theme_nothing()
-e_theme_plot_hsc_1
+a_theme_plot_hsc_1
 ```
 
-```{r e_theme_plot_hsc_1_mecom, fig.width = 3, fig.height = 3}
-e_theme_plot_hsc_1_mecom <- e_base_plot_hsc_1_mecom+
+```{r a_theme_plot_hsc_1_mecom, fig.width = 3, fig.height = 3}
+a_theme_plot_hsc_1_mecom <- a_base_plot_hsc_1_mecom+
   cowplot::theme_nothing()
-e_theme_plot_hsc_1_mecom
+a_theme_plot_hsc_1_mecom
 ```
 
-```{r e_theme_plot_hsc_1_subcl, fig.width = 3, fig.height = 3}
-e_theme_plot_hsc_1_subcl <- e_base_plot_hsc_1_subcl+
+```{r a_theme_plot_hsc_1_subcl, fig.width = 3, fig.height = 3}
+a_theme_plot_hsc_1_subcl <- a_base_plot_hsc_1_subcl+
   cowplot::theme_nothing()
-e_theme_plot_hsc_1_subcl
+a_theme_plot_hsc_1_subcl
 ```
 
-```{r e_theme_plot_hsc_1_final, fig.width = 3, fig.height = 3}
-e_theme_plot_hsc_1_final <- e_base_plot_hsc_1_final+
+```{r a_theme_plot_hsc_1_final, fig.width = 3, fig.height = 3}
+a_theme_plot_hsc_1_final <- a_base_plot_hsc_1_final+
   cowplot::theme_nothing()
-e_theme_plot_hsc_1_final
+a_theme_plot_hsc_1_final
 ```
 
-```{r e_theme_plot_hsc_2, fig.width = 3, fig.height = 3}
-e_theme_plot_hsc_2 <- e_base_plot_hsc_2+
+```{r b_theme_plot_str_1, fig.width = 3, fig.height = 3}
+b_theme_plot_str_1 <- b_base_plot_str_1+
   cowplot::theme_nothing()
-e_theme_plot_hsc_2
+b_theme_plot_str_1
 ```
 
-
-```{r e_theme_plot_str_1, fig.width = 3, fig.height = 3}
-e_theme_plot_str_1 <- e_base_plot_str_1+
+```{r b_theme_plot_str_2, fig.width = 3, fig.height = 3}
+b_theme_plot_str_2 <- b_base_plot_str_2+
   cowplot::theme_nothing()
-```
-
-```{r e_theme_plot_str_2, fig.width = 3, fig.height = 3}
-e_theme_plot_str_2 <- e_base_plot_str_2+
-  cowplot::theme_nothing()
+b_theme_plot_str_2
 ```
 
 ## Legends
@@ -503,7 +527,7 @@ e_theme_plot_str_2 <- e_base_plot_str_2+
 col_clust <- col_num[1:length(levels(hsc_umap$color_by))]
 names(col_clust) <- levels(hsc_umap$color_by)
 
-e_legend_plot_hsc_1 <- ggplot2::ggplot(
+umap_legend_plot_hsc_1 <- ggplot2::ggplot(
   hsc_umap, 
   aes(x = V1,
       y = V2,
@@ -513,17 +537,17 @@ e_legend_plot_hsc_1 <- ggplot2::ggplot(
     alpha = umap_legend_point_alpha)+
   ggplot2::scale_color_manual("", values = col_clust)
 
-e_legend_theme_plot_hsc_1 <- e_legend_plot_hsc_1+
+umap_legend_theme_plot_hsc_1 <- umap_legend_plot_hsc_1+
   theme_all+
   ggplot2::theme(legend.key.height = unit(0.3, "lines"))
-e_legend_hsc_1 <- ggpubr::get_legend(e_legend_theme_plot_hsc_1)
-e_legend_hsc_1 <- ggpubr::ggarrange(e_legend_hsc_1)
+umap_legend_hsc_1 <- ggpubr::get_legend(umap_legend_theme_plot_hsc_1)
+umap_legend_hsc_1 <- ggpubr::ggarrange(umap_legend_hsc_1)
 
-e_legend_hsc_1
+umap_legend_hsc_1
 
 
 
-e_legend_plot_hsc_2 <- ggplot2::ggplot(
+umap_legend_plot_hsc_2 <- ggplot2::ggplot(
   hsc_umap_subcl, 
   aes(x = V1,
       y = V2,
@@ -533,19 +557,19 @@ e_legend_plot_hsc_2 <- ggplot2::ggplot(
     alpha = umap_legend_point_alpha)+
   ggplot2::scale_color_manual("", values = c(col_cts_hsc, "removed" = "grey50"))
 
-e_legend_theme_plot_hsc_2 <- e_legend_plot_hsc_2+
+umap_legend_theme_plot_hsc_2 <- umap_legend_plot_hsc_2+
   theme_all+
   ggplot2::theme(legend.key.height = unit(0.3, "lines"))
-e_legend_hsc_2 <- ggpubr::get_legend(e_legend_theme_plot_hsc_2)
-e_legend_hsc_2 <- ggpubr::ggarrange(e_legend_hsc_2)
+umap_legend_hsc_2 <- ggpubr::get_legend(umap_legend_theme_plot_hsc_2)
+umap_legend_hsc_2 <- ggpubr::ggarrange(umap_legend_hsc_2)
 
-e_legend_hsc_2
+umap_legend_hsc_2
 
 ```
 
 ```{r str_legends}
 
-e_legend_plot_str_1 <- ggplot2::ggplot(
+umap_legend_plot_str_1 <- ggplot2::ggplot(
   str_umap, 
   aes(x = V1,
       y = V2,
@@ -553,17 +577,22 @@ e_legend_plot_str_1 <- ggplot2::ggplot(
   ggplot2::geom_point(
     size = umap_legend_point_size,
     alpha = umap_legend_point_alpha)+
-  ggplot2::scale_color_discrete("")
+  theme_all+
+  #ggplot2::scale_color_discrete("")+
+  ggplot2::scale_color_discrete(
+    "",
+    labels = c(levels(str_umap$color_by)[1:9],
+               levels(str_umap$color_by)[10:20]))
 
-e_legend_theme_plot_str_1 <- e_legend_plot_str_1+
+umap_legend_theme_plot_str_1 <- umap_legend_plot_str_1+
   theme_all+
   ggplot2::theme(legend.key.height = unit(0.3, "lines"))
-e_legend_str_1 <- ggpubr::get_legend(e_legend_theme_plot_str_1)
-e_legend_str_1 <- ggpubr::ggarrange(e_legend_str_1)
+umap_legend_str_1 <- ggpubr::get_legend(umap_legend_theme_plot_str_1)
+umap_legend_str_1 <- ggpubr::ggarrange(umap_legend_str_1)
 
-e_legend_str_1
+umap_legend_str_1
 
-e_legend_plot_str_2 <- ggplot2::ggplot(
+umap_legend_plot_str_2 <- ggplot2::ggplot(
   str_umap_subcl, 
   aes(x = V1,
       y = V2,
@@ -573,74 +602,81 @@ e_legend_plot_str_2 <- ggplot2::ggplot(
     alpha = umap_legend_point_alpha)+
   ggplot2::scale_color_manual("", values = c(col_cts_str, "removed" = "grey50"))
 
-e_legend_theme_plot_str_2 <- e_legend_plot_str_2+
+umap_legend_theme_plot_str_2 <- umap_legend_plot_str_2+
   theme_all+
   ggplot2::theme(legend.key.height = unit(0.3, "lines"))
-e_legend_str_2 <- ggpubr::get_legend(e_legend_theme_plot_str_2)
-e_legend_str_2 <- ggpubr::ggarrange(e_legend_str_2)
+umap_legend_str_2 <- ggpubr::get_legend(umap_legend_theme_plot_str_2)
+umap_legend_str_2 <- ggpubr::ggarrange(umap_legend_str_2)
 
-e_legend_str_2
+umap_legend_str_2
 ```
 
-```{r assemble_e, fig.width = 16, fig.height = 4}
+```{r assemble_a, fig.width = 16, fig.height = 4}
 
-e_plot <- ggpubr::ggarrange(
-  e_theme_plot_hsc_1,
-  e_theme_plot_hsc_2,
-  e_theme_plot_str_1,
-  e_theme_plot_str_2,
-  e_legend_hsc_1,
-  e_legend_hsc_2,
-  e_legend_str_1,
-  e_legend_str_2,
+# export b together
+b_plot <- ggpubr::ggarrange(
+  b_theme_plot_str_1,
+  umap_legend_str_1,
+  b_theme_plot_str_2,
+  umap_legend_str_2,
   ncol = 4,
-  widths = c(1,1,1,1),
-  heights = c(1,1)
+  widths = c(1,1.8,1,1)
 )
 
-e_plot
-
+b_plot
 ```
 
-```{r export_e}
-pdf(output_pdf_e, width = 16, height = 4)
-e_plot
+```{r export_b}
+pdf(output_pdf_b, width = 16, height = 4)
+b_plot
 dev.off()
 ```
 
-```{r output_pdf_guide0}
-pdf(output_pdf_guide0, width = 4, height = 4)
-e_theme_plot_hsc_spc
+```{r output_pdf_a_1}
+pdf(output_pdf_a_1, width = 4, height = 4)
+a_theme_plot_hsc_spc
 dev.off()
 ```
 
-```{r output_pdf_guide1}
-pdf(output_pdf_guide1, width = 4, height = 4)
-e_theme_plot_hsc_1
+```{r output_pdf_a_2}
+pdf(output_pdf_a_2, width = 4, height = 4)
+a_theme_plot_hsc_1
 dev.off()
 ```
 
-```{r output_pdf_guide2}
-pdf(output_pdf_guide2, width = 4, height = 4)
-e_theme_plot_hsc_1_mecom
+```{r output_pdf_a_3}
+pdf(output_pdf_a_3, width = 4, height = 4)
+a_theme_plot_hsc_1_mecom
 dev.off()
 ```
 
-```{r output_pdf_guide2_legend}
-pdf(output_pdf_guide2_legend, width = 3, height = 3)
+```{r output_pdf_a_4}
+pdf(output_pdf_a_4, width = 3, height = 3)
 legend_mecom
 dev.off()
 ```
 
-```{r output_pdf_guide3}
-pdf(output_pdf_guide3, width = 4, height = 4)
-e_theme_plot_hsc_1_subcl
+```{r output_pdf_a_5}
+pdf(output_pdf_a_5, width = 4, height = 4)
+a_theme_plot_hsc_1_subcl
 dev.off()
 ```
 
-```{r output_pdf_guide4}
-pdf(output_pdf_guide4, width = 4, height = 4)
-e_theme_plot_hsc_1_final
+```{r output_pdf_a_6}
+pdf(output_pdf_a_6, width = 4, height = 4)
+a_theme_plot_hsc_1_final
+dev.off()
+```
+
+```{r output_pdf_a_7}
+pdf(output_pdf_a_7, width = 6, height = 5)
+umap_legend_hsc_1
+dev.off()
+```
+
+```{r output_pdf_a_8}
+pdf(output_pdf_a_8, width = 3, height = 4)
+umap_legend_hsc_2
 dev.off()
 ```
 

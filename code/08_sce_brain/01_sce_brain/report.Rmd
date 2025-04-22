@@ -1,0 +1,113 @@
+---
+title: "report"
+output: html_document
+---
+
+Generate plots here analogous to other directories.
+
+```{r}
+library(ggplot2, quietly = TRUE)
+```
+
+# 
+
+# Choose resolutions
+
+```{r}
+all_scores <- readRDS(file = snakemake@output[["all_scores"]])
+```
+
+```{r}
+ggplot(all_scores[["human"]],
+       aes(x = resolution,
+           y = value,
+           group = type)) +
+  facet_wrap(~type,
+                      scale = "free_y",
+                      ncol = 1) +
+  geom_line() +
+  theme_classic()
+## human is 0.5
+```
+
+```{r}
+ggplot(all_scores[["macaque"]],
+                aes(x = resolution,
+                             y = value,
+                             group = type)) +
+  facet_wrap(~type,
+                      scale = "free_y",
+                      ncol = 1) +
+  geom_line() +
+  theme_classic()
+# # macaque is 0.7
+```
+
+```{r}
+ggplot(all_scores[["marmoset"]],
+                aes(x = resolution,
+                             y = value,
+                             group = type)) +
+  facet_wrap(~type,
+                      scale = "free_y",
+                      ncol = 1) +
+  geom_line() +
+  theme_classic()
+# # marmoset is 0.6
+```
+
+```{r}
+ggplot(all_scores[["mouse"]],
+                aes(x = resolution,
+                             y = value,
+                             group = type)) +
+  facet_wrap(~type,
+                      scale = "free_y",
+                      ncol = 1) +
+  geom_line() +
+  theme_classic()
+# mouse is 0.7
+```
+
+# Plot Species
+
+```{r}
+species <- readRDS(snakemake@output[["species"]])
+```
+
+```{r}
+plot <- species@meta.data[,c("subclass_label", "seurat_clusters")] %>%
+  table() %>% as.matrix()
+```
+
+```{r}
+plot_gg <- plot %>%
+  as.data.frame() %>%
+  group_by(seurat_clusters) %>%
+  mutate(clust_prop = Freq/sum(Freq)) %>%
+  ungroup %>%
+  group_by(subclass_label) %>%
+  mutate(subclass_prop = Freq/sum(Freq))
+```
+
+```{r}
+print(
+  ggplot(plot_gg,
+         aes(x = factor(subclass_label,
+                        levels = c("L2/3 IT", "L5 IT", "L6 IT", "L6 IT Car3",
+                                   "L5 ET", "L5/6 NP", "L6 CT", "L6b")),
+             y = seurat_clusters,
+             fill = clust_prop*100)) +
+    geom_tile() +
+    scale_fill_continuous("% cells/cluster",
+                          limits=c(0, 100),
+                          breaks=seq(0,100,by=20),
+                          low = "white", high = "blue") +
+    theme_classic()+
+    theme(axis.ticks = element_blank(),
+          axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1)) +
+    labs(y  = "new clusters", x = "original cell types", title = "Mouse Human markers")
+)
+# order = 2, 11, 10, 4, 6, 7, 3, 5, 8, 9, 0, 12, 1
+# 5626 human markers
+```

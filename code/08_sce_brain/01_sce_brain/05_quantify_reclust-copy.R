@@ -1,13 +1,12 @@
 library(Seurat, quietly = TRUE)
 library(tidyverse, quietly = TRUE)
 
-#base_path_temp <-"/omics/groups/OE0433/internal_temp/veronica/projects/conserved_genes/"
-base_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data"
-brain_path <- "/scRNAseq/main_analysis/sce_objects/08_sce_brain/"
+#base_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data"
+#brain_path <- "/scRNAseq/main_analysis/sce_objects/08_sce_brain/"
 
 #base_path_temp <- snakemake@params[["base_path"]] # try and see what happens if base_path is used --- I don't have access to OE0433
-#base_path <- snakemake@params[["base_path"]]
-#brain_path <- snakemake@params[["brain_path"]]
+base_path <- snakemake@params[["base_path"]]
+brain_path <- snakemake@params[["brain_path"]]
 
 mouse_hs <- readRDS(paste0(base_path, brain_path, "04_recluster/mouse_reclust_hs.rds"))
 mouse_sig <- readRDS(paste0(base_path, brain_path, "04_recluster/mouse_reclust_sig.rds"))

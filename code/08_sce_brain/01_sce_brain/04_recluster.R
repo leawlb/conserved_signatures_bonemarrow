@@ -2,25 +2,20 @@ library(Seurat, quietly = TRUE)
 library(tidyverse, quietly = TRUE)
 set.seed(37)
 
-#base_path_temp <-"/omics/groups/OE0433/internal_temp/veronica/projects/conserved_genes/"
-#base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/"
-#brain_path <- "scRNAseq/main_analysis/sce_objects/08_sce_brain/"
-
-base_path_temp <- snakemake@params[["base_path"]] # try and see what happens if base_path is used --- I don't have access to OE0433
+#base_path_temp <- snakemake@params[["base_path"]] # try and see what happens if base_path is used --- I don't have access to OE0433
 base_path <- snakemake@params[["base_path"]]
 brain_path <- snakemake@params[["brain_path"]]
 
-#data <- readRDS(paste0(base_path, "metadata/scRNAseq/08_sce_brain/sample.combined_exc_4_species_integration.RDS"))
 data <- readRDS(snakemake@input[["data_input"]])
 
 data.updated <- UpdateSeuratObject(object = data)  # available data is v3 Seurat
 
 nDEGs <- readRDS(paste0(base_path, brain_path, "01_list_nDEGs_all.rds"))
-core_markers <- readRDS(paste0(base_path, brain_path, "02_marker_conserved_primates.rds"))
+cons_markers <- readRDS(paste0(base_path, brain_path, "02_marker_conserved_primates.rds"))
 
 # clustering resolutions are based on values optimized using conserved markers
 resolution <- data.frame(species = c("human", "marmoset", "macaque", "mouse"),
-                         resolution = c(0.5, 0.6, 0.7, 0.7))
+                         resolution = c(0.5, 0.6, 0.7, 0.7)) # chosen in report
 
 # table(data.updated$subclass_label, data.updated$orig.ident)
 #            human macaque marmoset mouse
@@ -34,12 +29,12 @@ resolution <- data.frame(species = c("human", "marmoset", "macaque", "mouse"),
 # L6b          635     242      817  1053
 
 
-conserved_signature <- lapply(names(core_markers), function(x){
-  markers <- core_markers[[x]]
+conserved_signature <- lapply(names(cons_markers), function(x){
+  markers <- cons_markers[[x]]
   ndeg <- nDEGs[[x]]
   return(markers[markers %in% ndeg])
 })
-names(conserved_signature) <- names(core_markers)
+names(conserved_signature) <- names(cons_markers)
 
 
 for(sp in c("human", "marmoset", "macaque", "mouse")){
@@ -62,11 +57,11 @@ for(sp in c("human", "marmoset", "macaque", "mouse")){
   species@commands <- list()
   
   saveRDS(species,
-          file = paste0(base_path_temp, brain_path, "04_recluster/",
+          file = paste0(base_path, brain_path, "04_recluster/",
                         sp, "_reclust_sig.rds"))
   
   species <- RunPCA(species,
-                    features = unique(unlist(core_markers)))
+                    features = unique(unlist(cons_markers)))
   species <- RunUMAP(species,
                      reduction = "pca",
                      dims = 1:50,
@@ -80,7 +75,7 @@ for(sp in c("human", "marmoset", "macaque", "mouse")){
   species@commands <- list()
   
   saveRDS(species,
-          file = paste0(base_path_temp, brain_path, "04_recluster/",
+          file = paste0(base_path, brain_path, "04_recluster/",
                         sp, "_reclust_core.rds"))
 }
 
@@ -155,40 +150,7 @@ species <- FindNeighbors(species,
                          dims = 1:50)
 species <- FindClusters(species, 
                         resolution = resolution[which(resolution$species == "mouse"), "resolution"])
-#saveRDS(species,
-#        file = paste0(base_path_temp, brain_path, "04_recluster/mouse_reclust_hs.rds"))
 
 species@commands <- list()
 
 saveRDS(species, snakemake@output[["species"]])
-
-plot <- species@meta.data[,c("subclass_label", "seurat_clusters")] %>%
-  table() %>% as.matrix()
-
-plot_gg <- plot %>%
-  as.data.frame() %>%
-  group_by(seurat_clusters) %>%
-  mutate(clust_prop = Freq/sum(Freq)) %>%
-  ungroup %>%
-  group_by(subclass_label) %>%
-  mutate(subclass_prop = Freq/sum(Freq))
-
-print(
-  ggplot(plot_gg, 
-         aes(x = factor(subclass_label, 
-                        levels = c("L2/3 IT", "L5 IT", "L6 IT", "L6 IT Car3", 
-                                   "L5 ET", "L5/6 NP", "L6 CT", "L6b")), 
-             y = seurat_clusters, 
-             fill = clust_prop*100)) + 
-    geom_tile() +
-    scale_fill_continuous("% cells/cluster", 
-                          limits=c(0, 100), 
-                          breaks=seq(0,100,by=20),
-                          low = "white", high = "blue") +
-    theme_classic()+
-    theme(axis.ticks = element_blank(),
-          axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1)) +
-    labs(y  = "new clusters", x = "original cell types", title = "Mouse Human markers")
-)
-# order = 2, 11, 10, 4, 6, 7, 3, 5, 8, 9, 0, 12, 1
-# 5626 human markers

@@ -5,7 +5,7 @@ library(scuttle, quietly = TRUE)
 library(BiocGenerics, quietly = TRUE)
 set.seed(37)
 
-# Set cutoff values as before 
+# Set cutoff values as previously 
 fc_cutoff <- 1.5
 padj_cutoff <- 0.05
 

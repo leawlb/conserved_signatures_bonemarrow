@@ -30,6 +30,7 @@ for (s in species) {
     # Identify markers that are specific to this cell type in this species
     markers <- FindMarkers(object = species_subset,
                            ident.1 = cells,
+                           #logfc.threshold = 0.25, # default is 0.25
                            only.pos = TRUE,
                            min.pct = 0.1) # Require genes to be expressed in at least 10% of cells in each group
     # Add these markers to the list of markers for this cell type

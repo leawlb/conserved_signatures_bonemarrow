@@ -9,12 +9,12 @@ Generate plots here analogous to other directories.
 library(ggplot2, quietly = TRUE)
 ```
 
-# 
-
 # Choose resolutions
 
+## Markers
+
 ```{r}
-all_scores <- readRDS(file = snakemake@output[["all_scores"]])
+all_scores <- readRDS(file = snakemake@input[["all_scores_markers"]])
 ```
 
 ```{r}
@@ -69,10 +69,70 @@ ggplot(all_scores[["mouse"]],
 # mouse is 0.7
 ```
 
+## Signature
+
+```{r}
+all_scores <- readRDS(file = snakemake@input[["all_scores_signature"]])
+```
+
+```{r}
+ggplot(all_scores[["human"]],
+       aes(x = resolution,
+           y = value,
+           group = type)) +
+  facet_wrap(~type,
+                      scale = "free_y",
+                      ncol = 1) +
+  geom_line() +
+  theme_classic()
+## human is 0.6
+```
+
+```{r}
+ggplot(all_scores[["macaque"]],
+                aes(x = resolution,
+                             y = value,
+                             group = type)) +
+  facet_wrap(~type,
+                      scale = "free_y",
+                      ncol = 1) +
+  geom_line() +
+  theme_classic()
+# # macaque is 0.5
+```
+
+```{r}
+ggplot(all_scores[["marmoset"]],
+                aes(x = resolution,
+                             y = value,
+                             group = type)) +
+  facet_wrap(~type,
+                      scale = "free_y",
+                      ncol = 1) +
+  geom_line() +
+  theme_classic()
+# # marmoset is 0.5
+```
+
+```{r}
+ggplot(all_scores[["mouse"]],
+                aes(x = resolution,
+                             y = value,
+                             group = type)) +
+  facet_wrap(~type,
+                      scale = "free_y",
+                      ncol = 1) +
+  geom_line() +
+  theme_classic()
+# mouse is 0.6
+
+knitr::knit_exit()
+```
+
 # Plot Species
 
 ```{r}
-species <- readRDS(snakemake@output[["species"]])
+species <- readRDS(snakemake@input[["species"]])
 ```
 
 ```{r}

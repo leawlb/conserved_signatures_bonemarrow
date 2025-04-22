@@ -15,8 +15,11 @@ targets = []
 targets = targets + [OUTPUT_BASE + "/scRNAseq/main_analysis/sce_objects/08_sce_brain/01_list_nDEGs_all.rds"]
 targets = targets + [OUTPUT_BASE + "/scRNAseq/main_analysis/sce_objects/08_sce_brain/02_marker_expression_primates.rds"]
 targets = targets + [OUTPUT_BASE + "/scRNAseq/main_analysis/sce_objects/08_sce_brain/02_marker_conserved_primates.rds"]
-targets = targets + [OUTPUT_BASE + "/scRNAseq/main_analysis/sce_objects/08_sce_brain/03_resolution_scores.rds"]
+targets = targets + [OUTPUT_BASE + "/scRNAseq/main_analysis/sce_objects/08_sce_brain/03_resolution_scores_markers.rds"]
+targets = targets + [OUTPUT_BASE + "/scRNAseq/main_analysis/sce_objects/08_sce_brain/03_resolution_scores_signature.rds"]
 targets = targets + [OUTPUT_BASE + "/scRNAseq/main_analysis/sce_objects/08_sce_brain/04_recluster/mouse_reclust_hs.rds"]
+
+targets = targets + [OUTPUT_BASE + "/scRNAseq/main_analysis/sce_objects/reports/08_sce_brain/report.html"]
 
 print(targets)
 
@@ -60,12 +63,15 @@ rule resolution:
         data_input = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/08_sce_brain/sample.combined_exc_4_species_integration.RDS",
         cons_markers = rules.markers.output.cons_markers
     resources:
-        mem_mb = 40000,
+        mem_mb = 90000,
         queue = "medium-debian"
     threads: 15
+    params:
+        base_path = OUTPUT_BASE,
+        brain_path = "/scRNAseq/main_analysis/sce_objects/08_sce_brain/"
     output:
         all_scores_markers = OUTPUT_BASE + "/scRNAseq/main_analysis/sce_objects/08_sce_brain/03_resolution_scores_markers.rds",
-        all_scores_signatures = OUTPUT_BASE + "/scRNAseq/main_analysis/sce_objects/08_sce_brain/03_resolution_scores_signature.rds",
+        all_scores_signature = OUTPUT_BASE + "/scRNAseq/main_analysis/sce_objects/08_sce_brain/03_resolution_scores_signature.rds",
     script:
         "03_resolution.R"
  
@@ -95,4 +101,20 @@ using currently correct base path
 somehow, I couldn't aler 05_quantify_reclust.R so I saved changes to the
 basepath in 05_quantify_recluster-copy.R
 """
-      
+
+rule report:
+    input:
+        all_scores_markers = rules.resolution.output.all_scores_markers,
+        all_scores_signature = rules.resolution.output.all_scores_signature
+    params:
+        base_path = OUTPUT_BASE,
+        brain_path = "/scRNAseq/main_analysis/sce_objects/08_sce_brain/"
+    resources:
+        mem_mb = 20000,
+        queue = "medium-debian"
+    threads: 2
+    output:
+        OUTPUT_BASE + "/scRNAseq/main_analysis/sce_objects/reports/08_sce_brain/report.html"
+    script:
+        "report.Rmd"
+        

@@ -61,6 +61,9 @@ metadata_paths:
   resolution_other: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt"
   frame_other: "/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_frame.txt"
   
+  # reclustering primate brain dataset
+  dataset_brain_path: "/data/metadata/scRNAseq/08_sce_brain/sample.combined_exc_4_species_integration.RDS"
+  
   #TODO: for CCI analysis, remove for manusript 1 publication
   #assignment: "/data/metadata/scRNAseq/05_cci_prep/assignment.txt"
   #assignment_reverse: "/data/metadata/scRNAseq/05_cci_prep/assignment_reverse.txt"

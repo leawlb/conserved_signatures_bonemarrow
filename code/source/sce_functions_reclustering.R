@@ -220,9 +220,7 @@ calculate_scores <- function(
   # score_1: mean proportion of cells of a given cell type per new cluster
   # it's just the mean of all prop values per clusters
   
-  # remove cells that have an extremely low proportion of cells
-  # if it's only ~ 1 - 10 cells per cluster that is not a major re-clustering 
-  # issue but it deflates the mean proportions of cells per cluster a lot
+  # remove all proportions that are 0 from the calculation
   mat_per_cluster[mat_per_cluster <= 0] <- NA
   per_cluster_mean <- base::mean(mat_per_cluster, na.rm = TRUE)
   

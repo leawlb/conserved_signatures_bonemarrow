@@ -76,7 +76,7 @@ seu_orig_o1 <-  base::readRDS(base::paste0(
   base_path,
   "/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_bone_marrow"))
 
-# list of seurat objects with reclustering vectors for each gene set and resolution
+# list of seurat objects with reclustering vectors for each gene set+ resolution
 seu_hsc_recl_list_o1 <- base::readRDS(base::paste0(
   base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_ts_bone_marrow_list"))
@@ -102,7 +102,8 @@ selected_seu_list_o1 <- lapply(seu_hsc_recl_list_o1, function(seu_list){
 
   conslev_curr <- seu_list[[1]]@misc$used_genes
 
-  resdf_temp <- resolution_df_o1[resolution_df_o1$conservation_level == conslev_curr,]
+  resdf_temp <- resolution_df_o1[
+    resolution_df_o1$conservation_level == conslev_curr,]
   res_curr <- resdf_temp$resolution
 
   seu_return <- seu_list[[res_curr]]
@@ -127,7 +128,7 @@ seu_orig_o2 <- base::readRDS(base::paste0(
   base_path,
   "/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_hscs_progenitors"))
 
-# list of seurat objects with reclustering vectors for each gene set and resolution
+# list of seurat objects with reclustering vectors for each gene set+ resolution
 seu_hsc_recl_list_o2 <- base::readRDS(base::paste0(
   base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_ts_hscs_progenitors_list"))
@@ -149,7 +150,8 @@ selected_seu_list_o2 <- lapply(seu_hsc_recl_list_o2, function(seu_list){
   
   conslev_curr <- seu_list[[1]]@misc$used_genes
   
-  resdf_temp <- resolution_df_o2[resolution_df_o2$conservation_level == conslev_curr,]
+  resdf_temp <- resolution_df_o2[
+    resolution_df_o2$conservation_level == conslev_curr,]
   res_curr <- resdf_temp$resolution
   
   seu_return <- seu_list[[res_curr]]
@@ -282,8 +284,6 @@ seu_sign_o1$annotated_reclustered <- vector(length = ncol(seu_sign_o1))
 # cluster 1 is smart-seq batch
 ```
 
-6, 4, 2, 8, 1, 3, 7, 0, 5
-
 ```{r others1_cluster6}
 nr <- "6"
 markers <- ct_markers_o1[[nr]]$genes[
@@ -303,13 +303,13 @@ seu_sign_o1$annotated_reclustered[seu_sign_o1$seurat_clusters == nr] <- "Mk"
 ```
 
 ```{r others1_cluster4}
-nr <- "4"
+nr <- "5"
 markers <- ct_markers_o1[[nr]]$genes[
   !is.na(ct_markers_o1[[nr]]$symbol) &
     ct_markers_o1[[nr]]$avg_log2FC > 0 &
     ct_markers_o1[[nr]]$p_val_adj < 0.05]
 
-# ITGA2B, KLF1, GATA1, LMO2, ZFPM1, TXNIP, EPOR, GATA2, 
+# TRIB2, ITGA2B, KLF1, GATA1, LMO2, ZFPM1, TXNIP, EPOR, GATA2, 
 ct_markers_o1[[nr]][
   !is.na(ct_markers_o1[[nr]]$symbol) & 
     ct_markers_o1[[nr]]$avg_log2FC > 0 &
@@ -317,11 +317,11 @@ ct_markers_o1[[nr]][
 
 FeaturePlot(seu_sign_o1, markers[1:6])
 
-seu_sign_o1$annotated_reclustered[seu_sign_o1$seurat_clusters == nr] <- "Mk/Ery"
+seu_sign_o1$annotated_reclustered[seu_sign_o1$seurat_clusters == nr] <- "Mk/Ery" 
 ```
 
 ```{r others1_cluster2}
-nr <- "2"
+nr <- "1"
 markers <- ct_markers_o1[[nr]]$genes[
   !is.na(ct_markers_o1[[nr]]$symbol) &
     ct_markers_o1[[nr]]$avg_log2FC > 0 &
@@ -336,7 +336,7 @@ ct_markers_o1[[nr]][
 FeaturePlot(seu_sign_o1, markers[1:6])
 
 seu_sign_o1$annotated_reclustered[
-  seu_sign_o1$seurat_clusters == nr] <- "Ery"
+  seu_sign_o1$seurat_clusters == nr] <- "Ery" 
 ```
 
 ```{r others1_cluster8}
@@ -359,13 +359,13 @@ seu_sign_o1$annotated_reclustered[
 ```
 
 ```{r others1_cluster1}
-nr <- "1"
+nr <- "0"
 markers <- ct_markers_o1[[nr]]$genes[
   !is.na(ct_markers_o1[[nr]]$symbol) &
     ct_markers_o1[[nr]]$avg_log2FC > 0 &
     ct_markers_o1[[nr]]$p_val_adj < 0.05]
 
-# MPL, MS4A2, ARHGDIB, ANXA3, MPO, CTSG, FUT8, TCF4, CD63, MYB, BLVRB, 
+# MS4A2, MPL, ARHGDIB, 
 ct_markers_o1[[nr]][
   !is.na(ct_markers_o1[[nr]]$symbol) & 
     ct_markers_o1[[nr]]$avg_log2FC > 0 &
@@ -374,17 +374,17 @@ ct_markers_o1[[nr]][
 FeaturePlot(seu_sign_o1, markers[1:6])
 
 seu_sign_o1$annotated_reclustered[
-  seu_sign_o1$seurat_clusters == nr] <- "batch, Smart-Seq2"
+  seu_sign_o1$seurat_clusters == nr] <- "batch, Smart-Seq2" 
 ```
 
 ```{r others1_cluster3}
-nr <- "3"
+nr <- "4"
 markers <- ct_markers_o1[[nr]]$genes[
   !is.na(ct_markers_o1[[nr]]$symbol) &
     ct_markers_o1[[nr]]$avg_log2FC > 0 &
     ct_markers_o1[[nr]]$p_val_adj < 0.05]
 
-# NKX2-3, HLF, C17orf50, CD34, MECOM, MSI2, ANGPT1, RAMP1, MEIS1, MPL
+# HLF, C17orf50, CD34, MECOM, MSI2, ANGPT1, RAMP1, MEIS1, MPL
 ct_markers_o1[[nr]][
   !is.na(ct_markers_o1[[nr]]$symbol) & 
     ct_markers_o1[[nr]]$avg_log2FC > 0 &
@@ -393,7 +393,7 @@ ct_markers_o1[[nr]][
 FeaturePlot(seu_sign_o1, markers[1:6])
 
 seu_sign_o1$annotated_reclustered[
-  seu_sign_o1$seurat_clusters == nr] <- "HSC"
+  seu_sign_o1$seurat_clusters == nr] <- "HSC" 
 ```
 
 ```{r others1_cluster7}
@@ -416,7 +416,7 @@ seu_sign_o1$annotated_reclustered[
 ```
 
 ```{r others1_cluster0}
-nr <- "0"
+nr <- "3"
 markers <- ct_markers_o1[[nr]]$genes[
   !is.na(ct_markers_o1[[nr]]$symbol) &
     ct_markers_o1[[nr]]$avg_log2FC > 0 &
@@ -431,11 +431,11 @@ ct_markers_o1[[nr]][
 FeaturePlot(seu_sign_o1, markers[1:6])
 
 seu_sign_o1$annotated_reclustered[
-  seu_sign_o1$seurat_clusters == nr] <- "Myeloid"
+  seu_sign_o1$seurat_clusters == nr] <- "Myeloid" 
 ```
 
 ```{r others1_cluster5}
-nr <- "5"
+nr <- "2"
 markers <- ct_markers_o1[[nr]]$genes[
   !is.na(ct_markers_o1[[nr]]$symbol) &
     ct_markers_o1[[nr]]$avg_log2FC > 0 &
@@ -449,8 +449,8 @@ ct_markers_o1[[nr]][
 
 FeaturePlot(seu_sign_o1, markers[1:6])
 
-seu_sign_o1$annotated_reclustered[seu_sign_o1$seurat_clusters == nr] <- "Cycling Myeloid"
-unique(seu_sign_o1$annotated_reclustered)
+seu_sign_o1$annotated_reclustered[
+  seu_sign_o1$seurat_clusters == nr] <- "Cycling Myeloid"
 ```
 
 Factorize for nicer plots.
@@ -510,11 +510,9 @@ DimPlot(seu_sign_o2, dims = c(1,2), group.by = "development_stage")
 DimPlot(seu_sign_o2, dims = c(1,2), group.by = "tissue")
 
 seu_sign_o2$annotated_reclustered <- vector(length = ncol(seu_sign_o2))
-# clusters 3, 9 and 5 are batch V1
-# clusters 2, 8 and 7 are batch V2
+# clusters 3, 9 and 7 are batch V1
+# clusters 1, 8 and 6 are batch V2
 ```
-
-order: 0, 1, 6, 10, 4, 3, 5, 2, 9, 8, 7, 11
 
 ```{r others2_cluster0}
 nr <- "0"
@@ -537,13 +535,13 @@ seu_sign_o2$annotated_reclustered[
 ```
 
 ```{r others2_cluster1}
-nr <- "1"
+nr <- "2"
 markers <- ct_markers_o2[[nr]]$gene[
   !is.na(ct_markers_o2[[nr]]$symbol) &
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05]
 
-# PRTN3, TIGAB, MPO, MS4A3, CTSG, CEBPE, MS4A2, MS4A2, CALR, CLEC12A
+# PRTN3, TIFAB, MPO, MS4A3, CTSG, CEBPE, MS4A2, MS4A2, CALR, CLEC12A
 ct_markers_o2[[nr]][
   !is.na(ct_markers_o2[[nr]]$symbol) & 
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
@@ -556,13 +554,13 @@ seu_sign_o2$annotated_reclustered[
 ```
 
 ```{r others2_cluster6}
-nr <- "6"
+nr <- "4"
 markers <- ct_markers_o2[[nr]]$genes[
   !is.na(ct_markers_o2[[nr]]$symbol) &
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05]
 
-# CTSG, PRTN4, MPO, SRBN, CEPBE, MS4A2, CLEC12A
+# CTSG, PRTN3, MPO, SRGN, CEPBE, MS4A2, CLEC12A
 ct_markers_o2[[nr]][
   !is.na(ct_markers_o2[[nr]]$symbol) & 
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
@@ -570,7 +568,8 @@ ct_markers_o2[[nr]][
 
 FeaturePlot(seu_sign_o2, markers[1:6])
 
-seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Myeloid"
+seu_sign_o2$annotated_reclustered[
+  seu_sign_o2$seurat_clusters == nr] <- "Myeloid"
 ```
 
 ```{r others2_cluster10}
@@ -596,7 +595,7 @@ seu_sign_o2$annotated_reclustered[
 
 
 ```{r others2_cluster4}
-nr <- "4"
+nr <- "5"
 markers <- ct_markers_o2[[nr]]$genes[
   !is.na(ct_markers_o2[[nr]]$symbol) &
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
@@ -622,7 +621,7 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05]
 
-# NKX2-3, MPL, HLF, MECOM, CD34, ANGPT1, RAMP1, MEIS1
+# MPL, HLF, MECOM, CD34, ANGPT1, RAMP1, MEIS1
 ct_markers_o2[[nr]][
   !is.na(ct_markers_o2[[nr]]$symbol) & 
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
@@ -635,7 +634,7 @@ seu_sign_o2$annotated_reclustered[
 ```
 
 ```{r others2_cluster5}
-nr <- "5"
+nr <- "7"
 markers <- ct_markers_o2[[nr]]$genes[
   !is.na(ct_markers_o2[[nr]]$symbol) &
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
@@ -655,7 +654,7 @@ seu_sign_o2$annotated_reclustered[
 ```
 
 ```{r others2_cluster2}
-nr <- "2"
+nr <- "1"
 markers <- ct_markers_o2[[nr]]$genes[
   !is.na(ct_markers_o2[[nr]]$symbol) &
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
@@ -714,7 +713,7 @@ seu_sign_o2$annotated_reclustered[
 ```
 
 ```{r others2_cluster7}
-nr <- "7"
+nr <- "6"
 markers <- ct_markers_o2[[nr]]$gene[
   !is.na(ct_markers_o2[[nr]]$symbol) &
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
@@ -739,7 +738,7 @@ markers <- ct_markers_o2[[nr]]$gene[
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05]
 
-# C17orf50, NKX2-3, RAMP1, HLF, CD34, MPL, ANPGT1, MECOM
+# C17orf50, RAMP1, HLF, CD34, MPL, ANPGT1, MECOM
 ct_markers_o2[[nr]][
   !is.na(ct_markers_o2[[nr]]$symbol) & 
     ct_markers_o2[[nr]]$avg_log2FC > 0 &

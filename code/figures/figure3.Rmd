@@ -197,17 +197,12 @@ make_pattern_density_plot <- function(
   p_return <- ggplot2::ggplot(
     perm_score_df,
     aes(x = value))+
-    # geom_density_pattern(
-    #   fill = color_cons,
-    #   color = color_cons,
-    #   pattern = "stripe",
-    #   pattern_angle = 110,
-    #   pattern_fill = pattern_fill_color,
-    #   pattern_colour = pattern_line_colour,
-    #   pattern_density =pattern_density_val,
-    #   pattern_spacing = pattern_spacing_val)+
+    geom_density(
+       fill = color_cons,
+       color = color_cons
+    )+
     geom_vline(
-      color = "grey70",
+      color = "grey60",
       xintercept = score_df$value,
       linetype = "dashed"
     )+
@@ -217,7 +212,7 @@ make_pattern_density_plot <- function(
       fill = color_cons,
       data = score_df,
       aes(x = value, y = y_value),
-      size = point_plot_size,
+      size = 7,
       color = color_cons)+
     scale_y_continuous(
       limits = c(y_lim_low, y_lim_high),
@@ -868,14 +863,7 @@ base_plot_bp1_own <- ggplot2::ggplot(
       color = type_fill,
       pattern = type_fill,
       pattern_alpha = type_fill))+
-  ggpattern::geom_col_pattern(
-    #color = NA, 
-    pattern_angle = 110,
-    pattern_fill = pattern_fill_color,
-    pattern_colour = pattern_line_colour,
-    pattern_density = pattern_density_val,
-    pattern_spacing = pattern_spacing_val
-  )+
+  geom_col()+
   ggplot2::scale_fill_manual(values = col_cons_long)+
   ggplot2::scale_color_manual(values = col_cons_long)+
   ggpattern::scale_pattern_alpha_manual(
@@ -898,8 +886,6 @@ theme_plot_bp1_own<- base_plot_bp1_own+
     plot.title = element_text(
       hjust = 0.5,
       size = axis_title_size),
-    #axis.ticks.x = element_blank(),
-    #axis.line.x = element_blank(),
     axis.title.y = element_blank(),
     axis.text.y = element_blank())+
   xlab(nr_genes_title)
@@ -914,14 +900,7 @@ base_plot_bp2_own <- ggplot2::ggplot(
       color = type_fill,
       pattern = type_fill,
       pattern_alpha = type_fill))+
-  ggpattern::geom_col_pattern(
-    #color = NA, 
-    pattern_angle = 110,
-    pattern_fill = pattern_fill_color,
-    pattern_colour = pattern_line_colour,
-    pattern_density = pattern_density_val,
-    pattern_spacing = pattern_spacing_val
-  )+
+  geom_col()+
   ggplot2::scale_fill_manual(values = col_cons_long)+
   ggplot2::scale_color_manual(values = col_cons_long)+
   ggpattern::scale_pattern_alpha_manual(
@@ -957,13 +936,7 @@ base_plot_bp3_own <- ggplot2::ggplot(
       color = type_fill,
       pattern = type_fill,
       pattern_alpha = type_fill))+
-  ggpattern::geom_col_pattern(
-    #color = NA, 
-    pattern_angle = 110,
-    pattern_fill = pattern_fill_color,
-    pattern_colour = pattern_line_colour,
-    pattern_density = pattern_density_val,
-    pattern_spacing = pattern_spacing_val)+
+  geom_col()+
   ggplot2::scale_fill_manual(values = col_cons_long)+
   ggplot2::scale_color_manual(values = col_cons_long)+
   ggpattern::scale_pattern_alpha_manual(
@@ -1171,9 +1144,7 @@ theme_plot_mp1_own <- base_plot_mp1_own+
   ggplot2::theme(
     legend.position = "none",
     axis.text.y = element_blank(),
-    axis.title.y = element_blank(),
-    #axis.ticks.x = element_blank(),
-    #axis.line.x = element_blank()
+    axis.title.y = element_blank()
     )+
   ggplot2::scale_x_continuous(
     breaks=c(0, 0.2, 0.4),
@@ -1210,6 +1181,11 @@ theme_plot_mp2_own <- base_plot_mp2_own+
 ```
 
 ```{r base_plot_mp3_own}
+head(psdf_sign_rand_score_3)
+min(psdf_sign_rand_score_3$value)
+max(psdf_sign_rand_score_3$value)
+summary(psdf_sign_rand_score_3$value)
+
 base_plot_mp3_own <- make_pattern_density_plot(
   score_df = score_df_sign_score_3,
   perm_score_df = psdf_sign_rand_score_3,
@@ -1314,14 +1290,7 @@ base_plot_bp1_o1 <- ggplot2::ggplot(
       color = type_fill,
       pattern = type_fill,
       pattern_alpha = type_fill))+
-  ggpattern::geom_col_pattern(
-    #color = NA, 
-    pattern_angle = 110,
-    pattern_fill = pattern_fill_color,
-    pattern_colour = pattern_line_colour,
-    pattern_density = pattern_density_val,
-    pattern_spacing = pattern_spacing_val
-  )+
+  geom_col()+
   ggplot2::scale_fill_manual(values = col_cons_long)+
   ggplot2::scale_color_manual(values = col_cons_long)+
   ggpattern::scale_pattern_alpha_manual(
@@ -1356,14 +1325,7 @@ base_plot_bp3_o1 <- ggplot2::ggplot(
       color = type_fill,
       pattern = type_fill,
       pattern_alpha = type_fill))+
-  ggpattern::geom_col_pattern(
-    #color = NA, 
-    pattern_angle = 110,
-    pattern_fill = pattern_fill_color,
-    pattern_colour = pattern_line_colour,
-    pattern_density = pattern_density_val,
-    pattern_spacing = pattern_spacing_val
-  )+
+  geom_col()+
   ggplot2::scale_fill_manual(values = col_cons_long)+
   ggplot2::scale_color_manual(values = col_cons_long)+
   ggpattern::scale_pattern_alpha_manual(
@@ -1625,14 +1587,15 @@ base_plot_bp1_o1_signrand <- ggplot2::ggplot(
       color = type_fill,
       pattern = type_fill,
       pattern_alpha = type_fill))+
-  ggpattern::geom_col_pattern(
-    #color = NA, 
-    pattern_angle = 110,
-    pattern_fill = pattern_fill_color,
-    pattern_colour = pattern_line_colour,
-    pattern_density = pattern_density_val,
-    pattern_spacing = pattern_spacing_val
-  )+
+  geom_col()+
+  # ggpattern::geom_col_pattern(
+  #   #color = NA, 
+  #   pattern_angle = 110,
+  #   pattern_fill = pattern_fill_color,
+  #   pattern_colour = pattern_line_colour,
+  #   pattern_density = pattern_density_val,
+  #   pattern_spacing = pattern_spacing_val
+  # )+
   ggplot2::scale_fill_manual(values = col_cons_long)+
   ggplot2::scale_color_manual(values = col_cons_long)+
   ggpattern::scale_pattern_alpha_manual(
@@ -1674,7 +1637,6 @@ theme_plot_ai1_o1_signrand <- base_plot_ai1_o1_signrand+
   theme_all+
   ggplot2::theme(
     legend.position = "none",
-    #axis.text.x = element_text(hjust = 0.5),
     axis.text.y = element_blank(),
     axis.title = element_blank(),
     plot.title = element_blank())+
@@ -1870,7 +1832,6 @@ heatmap_own_mark_theme_plot <- heatmap_own_mark_base_plot+
     axis.text = element_blank(),
     axis.ticks.y = element_blank(),
     plot.title = element_blank())+
- # ggplot2::ylab("New clusters")+
   ggplot2::scale_fill_gradientn(
     colors = mycolors_to1,
     limits = c(0, 1),

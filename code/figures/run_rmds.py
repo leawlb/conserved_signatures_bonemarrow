@@ -15,7 +15,10 @@ targets = targets + [OUTPUT_PATH + "/figure2.html"]
 targets = targets + [OUTPUT_PATH + "/figure3.html"]
 targets = targets + [OUTPUT_PATH + "/figure4.html"]
 targets = targets + [OUTPUT_PATH + "/figure5.html"]
-#targets = targets + [OUTPUT_PATH + "/figure6.html"]
+targets = targets + [OUTPUT_PATH + "/figure6.html"]
+
+targets = targets + [OUTPUT_PATH + "/figures1.html"]
+
 
 #-------------------------------------------------------------------------------
 
@@ -80,7 +83,6 @@ rule run_fig5:
     script:
         "figure5.Rmd"
 
-
 rule run_fig6:
     resources:
         mem_mb=80000,
@@ -92,3 +94,16 @@ rule run_fig6:
         "../envs/upsetplot.yml"
     script:
         "figure6.Rmd"
+        
+        
+rule run_figs1:
+    resources:
+        mem_mb=80000,
+        queues="medium-debian"
+    output:
+        OUTPUT_PATH + "/figures1.html"
+    threads: 4
+    conda:
+        "../envs/ggalluvial.yml"
+    script:
+        "supplementary_figure1.Rmd"

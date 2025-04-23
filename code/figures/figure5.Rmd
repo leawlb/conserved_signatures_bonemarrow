@@ -10,13 +10,13 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Generate Figure 5
 
-Also contains supplementary figure parts XYZ. 
+Also contains supplementary figure parts. 
 This is because the re-annotated cluster labels are not exported.
 
 #### Load objects
 
 ```{r seed, message = FALSE}
-base::RNGkind(kind = "Mersenne-Twister")
+base::RNGkind("L'Ecuyer-CMRG")
 set.seed(37)
 ```
 
@@ -207,13 +207,17 @@ export_signature_table_path <- base::paste0(
 BL6_genes <- vector()
 signature_genes <- vector()
 for(ct in names(geneset_list_str)){
-  BL6_genes <- unique(
+  BL6_genes <- base:unique(
     c(BL6_genes,
-      geneset_list_str[[ct]]$conserved_df$gene[!is.na(geneset_list_str[[ct]]$conserved_df$mmus)]))
-  signature_genes <- unique(c(signature_genes, geneset_list_str[[ct]]$conserved_signature))
+      geneset_list_str[[ct]]$conserved_df$gene[
+        !is.na(geneset_list_str[[ct]]$conserved_df$mmus)]))
+  signature_genes <- base::unique(
+    c(signature_genes, 
+      geneset_list_str[[ct]]$conserved_signature))
 }
 
-perc <- (length(BL6_genes)-length(signature_genes[signature_genes %in% BL6_genes]))/length(BL6_genes)
+perc <- (length(BL6_genes)-length(signature_genes[
+  signature_genes %in% BL6_genes]))/length(BL6_genes)
 print(perc)
 ```
 
@@ -240,16 +244,20 @@ make_export_df <- function(gene_set_list){
   )
   
   # add info on whether a gene was a sub-clustering gene for the cell type
-  temp_df$subclustering_gene_for_ct[which(temp_df$signature_gene %in% genes_sub)] <- TRUE
+  temp_df$subclustering_gene_for_ct[
+    which(temp_df$signature_gene %in% genes_sub)] <- TRUE
   return(temp_df)
 }
 
 export_df_list <- lapply(geneset_list_str, make_export_df)
-export_df <- bind_rows(export_df_list)
+export_df <- dplyr::bind_rows(export_df_list)
 export_df <- export_df[order(export_df$signature_gene, decreasing = FALSE),]
 head(export_df)
 
-readr::write_delim(export_df, export_signature_table_path, delim = ";", append = FALSE)
+readr::write_delim(export_df, 
+                   export_signature_table_path, 
+                   delim = ";",
+                   append = FALSE)
 ```
 
 ```{r print_ct_bl6specific}
@@ -284,7 +292,6 @@ hsc_mmus_specific <- hsc_cons_df_ct$gene[which(
     is.na(hsc_cons_df_ct$mspr) &
     is.na(hsc_cons_df_ct$mcar))]
 hsc_mmus_specific
-
 
 hsc_cons_df_ct <- geneset_list_str$`Peri/SMC`$conserved_df
 hsc_mmus_specific <- hsc_cons_df_ct$gene[which(
@@ -586,7 +593,8 @@ head(ct_markers_df_o3)
 
 signature_df <- data.frame(
   genes = unique(ensembl_sign$MMUS_SYMBOL),
-  celltype = vector(length = length(unique(ensembl_sign$MMUS_SYMBOL)), mode = "character")
+  celltype = vector(length = length(unique(ensembl_sign$MMUS_SYMBOL)), 
+                    mode = "character")
 )
 
 # ugly solution but works for this purpose
@@ -645,15 +653,11 @@ SOI <- ensembl_sign$MMUS_SYMBOL[ensembl_sign$HSAPIENS_SYMBOL %in% GOI]
 # cell types of origin for signature genes
 signature_df[signature_df$genes %in% SOI,]
 
-# CXCL12: CAR cell
-# CXCL14: fibro, stromal, MSC
-# ABCA8: cancer fibro, normal fibro, lipo
-# EDIL3: osteo, EMT, CAR/Osteo
-# ABI3BP: MSC, quiescence, osteogenic and adipogenic differentiation, cartilage
-# SOD3: Chondro + osteogenesis, MSC, cartilage
-# COL6A3: osteoadipo diff, chondro
+# CXCL12, CXCL14
+# ABCA8, EDIL3, ABI3BP, SOD3, COL6A3 fibro-like from list of signature genes
 
-seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "Fibro/Chondro-like CAR"
+seu_sign_o3$annotated_reclustered[
+  seu_sign_o3$seurat_clusters == nr] <- "Fibro-like CAR2"
 ```
 
 ```{r others3_cluster1}
@@ -663,13 +667,14 @@ markers <- ct_markers_o3[[nr]]$gene[
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
     ct_markers_o3[[nr]]$p_val_adj < 0.05]
 
-# check "CXCL12", "FSTL1", "MME", "HP", "TJP1", "SPARCL1", "FBN1", "RSPO3", "FBLN5" rerun
+# check "CXCL12", "FSTL1", "MME", "HP", "TJP1", "SPARCL1", "FBN1", "RSPO3",
+# "FBLN5" 
 ct_markers_o3[[nr]][
   !is.na(ct_markers_o3[[nr]]$symbol) & 
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
     ct_markers_o3[[nr]]$p_val_adj < 0.05,][1:50, c(1, 3, 6, 8)]
 
-FeaturePlot(seu_sign_o3, markers[1:6])
+FeaturePlot(seu_sign_o3, markers[1:6]) # a lot of these are lowly expressed
 FeaturePlot(seu_sign_o3, markers[7:12])
 FeaturePlot(seu_sign_o3, markers[13:18])
 
@@ -689,15 +694,9 @@ SOI <- ensembl_sign$MMUS_SYMBOL[ensembl_sign$HSAPIENS_SYMBOL %in% GOI]
 signature_df[signature_df$genes %in% SOI,]
 
 # CXCL12: CAR cell
-# FSTL1: MSC protection, differentiation, to chondrocytes, adipogenesis 
-# HP: adipogenesis
-# MME: osteo and adipo genesis, enriched in osteoblasts, preadipocytes
-# TJP1: tight junction protein, MSC migration 
-# SPARCL1: MSCs/Progs, skeletal stem cell, chondro/fibro, negative for adipog.
-# FBN1: related to TGFβ, MSC diff, MSC niche/decisions, MSC activitiy
-# RSPO3: osteoblast, niche, bone density
+# FSTL1, HP, MME, FBN1, RSPO3 all from "Adipo/CAR"
 
-seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "multi-lineage CAR"
+seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "CAR"
 ```
 
 ```{r others3_cluster2}
@@ -707,7 +706,8 @@ markers <- ct_markers_o3[[nr]]$gene[
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
     ct_markers_o3[[nr]]$p_val_adj < 0.05]
 
-# check "CXCL12", "KITL", "PDGFRB", "FBN1", "COL3A1", "C1S", "SPARCL1", "ABCA8" rerun
+# check "CXCL12", "KITL", "PDGFRB", "FBN1", "COL3A1", "C1S", "SPARCL1", 
+# "ABCA8" 
 ct_markers_o3[[nr]][
   !is.na(ct_markers_o3[[nr]]$symbol) & 
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
@@ -731,15 +731,12 @@ GOI <- c("CXCL12", "KITL", "PDGFRB", "FBN1", "COL3A1", "C1S", "SPARCL1",
 SOI <- ensembl_sign$MMUS_SYMBOL[ensembl_sign$HSAPIENS_SYMBOL %in% GOI]
 signature_df[signature_df$genes %in% SOI,]
 
-# CXCL12: CAR cell
-# PDGFRB: fibroblast activation, MSC
-# FBN1: related to TGFβ, MSC diff, MSC niche/decisions, MSC activitiy
-# COL3A1: Fibro
-# C1S; chondrocytes, ossification, cartilage remodelling 
-# SPARCL1: MSCs/Progs, skeletal stem cell, chondro/fibro, negative for adipog.
-# ABCA8: cancer fibro, normal fibro, lipo
+# CXCL14, CXCL12
+# PDGFRB, FBN1, COL3A1, C1S, ABCA8 = fibro-like
+# SPARCL1
 
-seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "Fibro-like CAR"
+seu_sign_o3$annotated_reclustered[
+  seu_sign_o3$seurat_clusters == nr] <- "Fibro-like CAR1"
 ```
 
 ```{r others3_cluster0}
@@ -749,7 +746,7 @@ markers <- ct_markers_o3[[nr]]$gene[
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
     ct_markers_o3[[nr]]$p_val_adj < 0.05]
 
-# check "CXCL12", "EMP1", "ID1", "DEPP1", "LMNA", "FABP4", "OSR2", "PPP1R15A" rerun
+# check "CXCL12", "EMP1", "ID1", "DEPP1", "LMNA", "FABP4", "OSR2", "PPP1R15A" 
 ct_markers_o3[[nr]][
   !is.na(ct_markers_o3[[nr]]$symbol) & 
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
@@ -762,27 +759,21 @@ FeaturePlot(seu_sign_o3, markers[13:18])
 FeaturePlot(seu_sign_o3, "ENSG00000107562") #CXCL12
 FeaturePlot(seu_sign_o3, "ENSG00000134531") #EMP1
 FeaturePlot(seu_sign_o3, "ENSG00000166147") #ID1
-FeaturePlot(seu_sign_o3, "ENSG00000165507") #DEPP1
 FeaturePlot(seu_sign_o3, "ENSG00000160789") #LMNA  
 FeaturePlot(seu_sign_o3, "ENSG00000170323") #FABP4
 FeaturePlot(seu_sign_o3, "ENSG00000164920") #OSR2
 FeaturePlot(seu_sign_o3, "ENSG00000087074") #PPP1R15A
 
-GOI <- c("CXCL12", "EMP1", "ID1", "DEPP1", "LMNA", "FABP4", "OSR2",
-         "PPP1R15A")
+GOI <- c("CXCL12", "EMP1", "ID1", "LMNA", "FABP4", "OSR2", "PPP1R15A")
 SOI <- ensembl_sign$MMUS_SYMBOL[ensembl_sign$HSAPIENS_SYMBOL %in% GOI]
 signature_df[signature_df$genes %in% SOI,]
 
 # CXCL12: CAR cell
-# EMP1: fibro, growth
-# ID1: required for HSC niche, osteogenic
-# DEPP1: committed pre-adipocytes, cancer fibroblasts, autoophagy
-# LMNA:  osteoporosis, migration and osteogenesis, anti-chondro diff 
-# FABP4: adipogenic, MSC, fatty acid metabolic, marrow adipocytes, adipogenesis 
-# OSR2:  uncommited adipose progenitors 
-# PPP1R15A: adipocytic signalling, autophagy and stress
+# ID1, LMNA, OSR2, 
+# FABP4, PPP1R15A, FABP4-> adipocytic 
 
-seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "Adipo-like CAR"
+seu_sign_o3$annotated_reclustered[
+  seu_sign_o3$seurat_clusters == nr] <- "Adipo-like CAR"
 ```
 
 ```{r}
@@ -796,7 +787,7 @@ markers <- ct_markers_o3[[nr]]$gene[
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
     ct_markers_o3[[nr]]$p_val_adj < 0.05]
 
-# check "CPE", "SP7", "PTPRD", "RUNX2", "PALS2", "OMD", "MMP13", "PTH1R", "CD9" rerun
+# check "CPE", "SP7", "PTPRD", "RUNX2", "PALS2", "OMD", "MMP13", "PTH1R", "CD9" 
 ct_markers_o3[[nr]][
   !is.na(ct_markers_o3[[nr]]$symbol) & 
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
@@ -814,7 +805,8 @@ SOI <- ensembl_sign$MMUS_SYMBOL[ensembl_sign$HSAPIENS_SYMBOL %in% GOI]
 signature_df[signature_df$genes %in% SOI,]
 
 # CPE, SP7, PTPRD, RUNX2, PALS2, OMD, MMP13, PTH1R, CD9
-seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "Osteo-Chondro"
+seu_sign_o3$annotated_reclustered[
+  seu_sign_o3$seurat_clusters == nr] <- "Osteo-Chondro"
 ```
 
 ```{r}
@@ -828,7 +820,8 @@ markers <- ct_markers_o3[[nr]]$gene[
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
     ct_markers_o3[[nr]]$p_val_adj < 0.05]
 
-# check "CD34", "RGCC", "TSPAN13", "CAPG", "MGST1", "GPX1", "PPP1R14B", "TXN", "CD36", "NOTCH1"
+# check "CD34", "RGCC", "TSPAN13", "CAPG", "MGST1", "GPX1",
+# "PPP1R14B", "TXN", "CD36", "NOTCH1"
 ct_markers_o3[[nr]][
   !is.na(ct_markers_o3[[nr]]$symbol) & 
     ct_markers_o3[[nr]]$avg_log2FC > 0 &
@@ -851,17 +844,6 @@ GOI <- c("CD34", "RGCC", "TSPAN13", "CAPG", "MGST1", "GPX1",
          "PPP1R14B", "TXN", "CD36", "NOTCH1")
 SOI <- ensembl_sign$MMUS_SYMBOL[ensembl_sign$HSAPIENS_SYMBOL %in% GOI]
 signature_df[signature_df$genes %in% SOI,]
-
-# CD36: related to FA uptake, angiogenesis, response to injury
-# TSPAN13: dysfunctional endothelium 
-# CAPG: motility and shear stress in ECs 
-# MGST1: antioxidant, oxidative stress
-# GPX1: oxidative stress, endothelial dysfunction
-# PPP1R14B: endo migration
-# CD34: arteriolar
-# TXN: antioxidant (thioredoxin), redox sensor 
-# RGCC capillary
-# CD34 a little bit
 
 seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "EC1"
 ```
@@ -895,8 +877,6 @@ FeaturePlot(seu_sign_o3, "ENSG00000095370") #SH2D3C
 GOI <- c("PECAM1", "FLI1", "ICAM2", "CRIP1", "FCER1G", "SH2D3C")
 SOI <- ensembl_sign$MMUS_SYMBOL[ensembl_sign$HSAPIENS_SYMBOL %in% GOI]
 signature_df[signature_df$genes %in% SOI,]
-
-# SH2D3C: capillary signalling
 
 seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "EC3"
 ```
@@ -936,17 +916,15 @@ seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "EC2"
 ```{r umap_others_2}
 DimPlot(seu_sign_o2, dims = c(1,2), group.by = "seurat_clusters")
 DimPlot(seu_sign_o2, dims = c(1,2), group.by = "batch")
-# 1 = non-pbs
-# 2 = pbs
-# 3 = non-pbs
-
 # 4 = non-pbs
 # 0 = pbs
+# 7 = pbs
+
+# 2 = non-pbs
+# 3 = pbs
 
 seu_sign_o2$annotated_reclustered <- vector(length = ncol(seu_sign_o2))
 ```
-
-Order: 0, 5, 4, 7, 10, 9, 11, 8, 12, 13, 6, 1, 2, 3
 
 ```{r others2_cluster0}
 nr <- "0"
@@ -955,7 +933,8 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
-# check "Mgp", "Cxcl12", "Hp", "Notch3", "Ebf3", "Dpep1", "Cxcl14", "Cyp1b1", "Esm1"
+# check "Mgp", "Cxcl12", "Hp", "Notch3", "Ebf3", "Dpep1", "Cxcl14",
+# "Cyp1b1", "Esm1"
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
@@ -971,11 +950,6 @@ SOI <-  c("Mgp", "Cxcl12", "Hp", "Notch3", "Ebf3", "Dpep1", "Cxcl14", "Cyp1b1",
           "Esm1")
 signature_df[signature_df$genes %in% SOI,]
 
-# Mgp: adipogenesis
-# Hp: adipocytes
-# Notch3: osteoblastic - lymphoid niche
-# Dpep1: adipogenic
-
 seu_sign_o2$annotated_reclustered[
   seu_sign_o2$seurat_clusters == nr] <- "Adipo/CAR1, pbs"
 ```
@@ -987,7 +961,8 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
-# check "Alpl", "Limch1", "Lrp4", "Dlx5", "Olfml3", "Sp7", "Pth1r", "Satb2", "Cxcl12"
+# check "Alpl", "Limch1", "Lrp4", "Dlx5", "Olfml3", "Sp7", "Pth1r", 
+# "Satb2", "Cxcl12"
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
@@ -1003,9 +978,7 @@ SOI <-  c("Alpl", "Limch1", "Lrp4", "Dlx5", "Olfml3", "Sp7", "Pth1r", "Satb2",
           "Cxcl12")
 signature_df[signature_df$genes %in% SOI,]
 
-# Alpl: Osteo
-# Sp7: Osteo
-# Pth1r: Osteo-Chondro
+# Alpl, Sp7, Pth1r osteo
 
 seu_sign_o2$annotated_reclustered[
   seu_sign_o2$seurat_clusters == nr] <- "Osteo/CAR"
@@ -1018,7 +991,8 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
-# check "Angptl1", "Kitl", "Esm1", "Igfbp5", "Mme", "C1s1", "Dpep1", "Vegfc", "Cxcl12"
+# check "Angptl1", "Kitl", "Esm1", "Igfbp5", "Mme", "C1s1", "Dpep1", 
+# "Vegfc", "Cxcl12"
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
@@ -1030,12 +1004,12 @@ FeaturePlot(seu_sign_o2, markers[13:18])
 
 FeaturePlot(seu_sign_o2, "Cxcl12")
 
-SOI <-  c("Angptl1", "Kitl", "Esm1", "Igfbp5", "Mme", "C1s1", "Dpep1", "Vegfc",
+SOI <-  c("Angpt1", "Kitl", "Esm1", "Igfbp5", "Mme", "C1s1", "Dpep1", "Vegfc",
           "Cxcl12")
 signature_df[signature_df$genes %in% SOI,]
 
-# Kitl: CAR
-# Dpep: adipo
+# Kitl, Cxcl12: CAR
+# Dpep1, Esm1, Mme: adipo
 
 seu_sign_o2$annotated_reclustered[
   seu_sign_o2$seurat_clusters == nr] <- "Adipo/CAR3, non-pbs"
@@ -1048,7 +1022,8 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
-# check "Mmp13", "Slit2", "Lrp4", "Ptgis", "Gpc1", "Mrc2", "S100a6", "Satb2", "Pth1r", "Cfh"
+# check "Mmp13", "Slit2", "Lrp4", "Ptgis", "Gpc1", "Mrc2", "S100a6", "Satb2", 
+# "Pth1r", "Cfh"
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
@@ -1062,14 +1037,15 @@ SOI <-  c("Mmp13", "Slit2", "Lrp4", "Ptgis", "Gpc1", "Mrc2", "S100a6", "Satb2",
           "Pth1r", "Cfh")
 signature_df[signature_df$genes %in% SOI,]
 
-# Sp7, Runx2, Alpl, Satb2, Ptgis, S100a6 are strongly osteogenic
-# Mmp13, Pth1r, Tpm1 are also kind of chondro
+# Sp7, Runx2, Alpl, Satb2, Ptgis, S100a6  strongly osteogenic
+# Mmp13, Pth1r, Tpm1 also a bit chondro
 
-seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Osteo-Chondro"
+seu_sign_o2$annotated_reclustered[
+  seu_sign_o2$seurat_clusters == nr] <- "Osteo-Chondro"
 ```
 
 ```{r others2_cluster10}
-nr <- "10"
+nr <- "9"
 markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
@@ -1088,17 +1064,12 @@ FeaturePlot(seu_sign_o2, markers[13:18])
 SOI <-  c("Aspn", "Edil3", "Fmod", "Lum", "Mmp2", "Prrx2", "Sema3c")
 signature_df[signature_df$genes %in% SOI,]
 
-# Fmod: Chondro/fibro
-# Lum: fibro/chondro
-# Prrx2: chondro, osteogenic
-# Sema3c: Chondro, related to Itgbl1, cartilage
-
 seu_sign_o2$annotated_reclustered[
   seu_sign_o2$seurat_clusters == nr] <- "Fibro-Chondro"
 ```
 
 ```{r others2_cluster9}
-nr <- "9"
+nr <- "10"
 markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
@@ -1113,14 +1084,6 @@ ct_markers_o2[[nr]][
 FeaturePlot(seu_sign_o2, markers[1:6])
 FeaturePlot(seu_sign_o2, markers[7:12])
 FeaturePlot(seu_sign_o2, markers[13:18])
-
-# Thbs4: articular cartilage, articular stem and progenitor cells, 
-# Clec3b osteoblasts, mineralization
-# Crispld2: osteogenic potential, cartilage, osteparthritis, cartilage
-# Tnxb articular cartilage
-# Itgbl1, developing chondrocytes 
-# Sema3c related to Itgbl1, cartilage
-# Prrx2 osteogenic
 
 SOI <-  c("Thbs4", "Clec3b", "Crispld2", "Tnxb", "Itgbl1", "Sema3c", "Prrx2")
 signature_df[signature_df$genes %in% SOI,]
@@ -1150,14 +1113,8 @@ FeaturePlot(seu_sign_o2, markers[13:16])
 SOI <-  c("Scara5", "Pdgfrb", "Snrk", "Ebf3", "Ltbp3", "Mgp", "Hp", "Foxc1")
 signature_df[signature_df$genes %in% SOI,]
 
-# Scara5: adipogenesis
-# Pdgfrb: fibro
-# Ltbp3: early MSC diff, downregulated during osteo, required for adipo
-# Foxc1: highly adipo
-# Snrk:  adipo
-
 seu_sign_o2$annotated_reclustered[
-  seu_sign_o2$seurat_clusters == nr] <- "Adipo/CAR2, pbs"
+  seu_sign_o2$seurat_clusters == nr] <- "Adipo/CAR2"
 ```
 
 ```{r others2_cluster8}
@@ -1167,7 +1124,8 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
-# check "Serpinf1", "Sgms2", "Col5a2", "Cpe", "Dcn", "Satb2", "Sp7", "Serpinh1", "Lum", "Ptgis"
+# check "Serpinf1", "Sgms2", "Col5a2", "Cpe", "Dcn", "Satb2", "Sp7", 
+# "Serpinh1", "Lum", "Ptgis"
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
@@ -1180,13 +1138,6 @@ FeaturePlot(seu_sign_o2, markers[13:18])
 SOI <-  c("Serpinf1", "Sgms2", "Col5a2", "Cpe", "Dcn", "Satb2", "Sp7",
           "Serpinh1", "Lum", "Ptgis")
 signature_df[signature_df$genes %in% SOI,]
-
-# Serpins; related to osteogenesis
-# Sgms2: osteogenesis and osteo blasts
-# Col5a2: osteo progenitors, 
-# Satb2: osteogenesis
-# Sp7: osteo
-# Ptgis higher in osteo diff
 
 seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Osteo1"
 ```
@@ -1211,12 +1162,6 @@ FeaturePlot(seu_sign_o2, markers[13:18])
 SOI <-  c("Ackr3", "Jam2", "Mustn1", "Cryab", "Sgms2", "Ptgis")
 signature_df[signature_df$genes %in% SOI,]
 
-# Ackr3: osteogenic differentiation
-# Mustn1: pan osteo muscle, muscle
-# Cryab: increased during osteogebic diff in human, osteogenesis 
-# Sgms2: osteogenesis and osteo blasts
-# Ptgis: osteo
-
 seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Osteo2"
 ```
 
@@ -1228,7 +1173,8 @@ markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
     ct_markers_o2[[nr]]$genes %in% ensembl_sign$MMUS_SYMBOL]
 
-# check "Serpinf1", "Cpe", "Col5a2", "Sgms2", "Mmp2", "Thbs1", "Lum", "Col5a1", "Omd", "Ptgis", "Satb2", "Sp7"
+# check "Serpinf1", "Cpe", "Col5a2", "Sgms2", "Mmp2", "Thbs1", "Lum", "Col5a1", 
+# "Omd", "Ptgis", "Satb2", "Sp7"
 ct_markers_o2[[nr]][
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
@@ -1283,14 +1229,8 @@ FeaturePlot(seu_sign_o2, "Rgcc")
 SOI <-  c("Mcf2l", "Cd34", "Lims2", "Mecom", "Cav1", "Sparcl1")
 signature_df[signature_df$genes %in% SOI,]
 
-# Mcf2l capillary 
-# Cd34 capillary, EC prolif, progenitor
-# Lims2 shear stress, capillary and post capillary venule
-# Cav1 not specific to one EC subtype, differentiation 30% of capillary surface
-# Sparcl1 quiescence, stability, capillary morphogenesis, capillary inflammation
-# Mecom EC differentiation, arterial identity, artery 
-
-seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Art/Cap-EC"
+seu_sign_o2$annotated_reclustered[
+  seu_sign_o2$seurat_clusters == nr] <- "Art/Cap-EC"
 ```
 
 ```{r others2_cluster1}
@@ -1338,16 +1278,13 @@ FeaturePlot(seu_sign_o2, "Cd34")
 SOI <-  c("Axl", "Lpar6", "Clec14a", "Ephb4")
 signature_df[signature_df$genes %in% SOI,]
 
-# Axl: flow-dependent modelling, remodelling
-# Lpar6: EC barrier, angiogenesis
-# Aebp1: tumor ECs, proliferation, migration, angiogenesis, microvessel
-
-seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Ven EC1, non-pbs"
+seu_sign_o2$annotated_reclustered[
+  seu_sign_o2$seurat_clusters == nr] <- "Ven EC1, non-pbs"
 ```
 
 ```{r others2_cluster2}
 
-nr <- "3"
+nr <- "2"
 markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
     ct_markers_o2[[nr]]$p_val_adj < 0.05 &
@@ -1379,19 +1316,13 @@ FeaturePlot(seu_sign_o2, "Vcam1")
 SOI <-  c("Tmcc3", "Dll4", "Klf4", "Itga6", "Nr2f2", "Vcam1", "Nfkbia", "Spry2")
 signature_df[signature_df$genes %in% SOI,]
 
-# Tmcc3  
-# Spry2: related to Dll4, negatively regulate angiogenesis 
-# Klf4: integrity, pro inflammation and prolif, homeostatic, angiogenesis
-# Dll4: arterial diff, sprouting angiogenesis and artery formation, capillary  tip cells, capillarization of liver sinusoids 
-# Itga6; angiogenesis, tumor ECs, related to sprouting, 
-# Sdc4: wound healing and angiogenesis EC dysfunction or inflammation 
-
-seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Ven EC3, non-pbs"
+seu_sign_o2$annotated_reclustered[
+  seu_sign_o2$seurat_clusters == nr] <- "Ven EC3, non-pbs"
 ```
 
 ```{r others2_cluster3}
 
-nr <- "2"
+nr <- "3"
 
 markers <- ct_markers_o2[[nr]]$genes[
     ct_markers_o2[[nr]]$avg_log2FC > 0 &
@@ -1423,14 +1354,6 @@ FeaturePlot(seu_sign_o2, "Lrg1")
 SOI <-  c("Fabp4", "Ier3", "Cd36", "Lrg1", "Srgn", "Cldn5", "Fam167b", "Vcam1")
 signature_df[signature_df$genes %in% SOI,]
 
-# Fabp4 in ECs related to VEGFA and DLL4, pro-angiogenic
-# Ier3: immediate early response
-# Cd36: also related to fatty acid, FA uptake, angiogenesis, response to injury
-# Lrg1: angiogenesis, mitogenic, neovascularization, 
-# Srgn: shear-stress response
-# Cldn5 - sinusoidal in human, tight junction protein in ECs
-# Fam167b, aorta-specific EC, pancreas ECs, kidney capillary cells
-
 seu_sign_o2$annotated_reclustered[
   seu_sign_o2$seurat_clusters == nr] <- "Ven EC2, pbs"
 ```
@@ -1455,7 +1378,7 @@ sign_df <- base::as.data.frame(mat_sign)
 #manually factorise clusters for nice order
 sign_df$Var2 <- factor(
   sign_df$Var2,
-  levels = base::rev(c(4, 8, 1, 3, 5, 2, 6, 7)))
+  levels = base::rev(c(1, 8, 2, 4, 5, 3, 6, 7)))
 ```
 
 ```{r sign_base_plot}
@@ -1507,7 +1430,7 @@ sign_df_o2$Var2 <- factor(
   sign_df_o2$Var2,
   levels = base::rev(c(
     "Adipo/CAR1, pbs",
-    "Adipo/CAR2, pbs",
+    "Adipo/CAR2",
     "Adipo/CAR3, non-pbs",
     "Osteo/CAR",
     "Osteo-Chondro",
@@ -1626,9 +1549,9 @@ sign_df_o3 <- base::as.data.frame(mat_sign_o3)
 sign_df_o3$Var2 <- factor(
   sign_df_o3$Var2,
   levels = base::rev(c(
-    "Fibro-like CAR",
-    "Fibro/Chondro-like CAR",
-    "multi-lineage CAR",
+    "Fibro-like CAR1",
+    "Fibro-like CAR2",
+    "CAR",
     "Adipo-like CAR",
     "Osteo-Chondro",
     "EC1",
@@ -1637,11 +1560,16 @@ sign_df_o3$Var2 <- factor(
     )))
 
 sign_df_o3$Var1 <- unfactor(sign_df_o3$Var1)
-sign_df_o3$Var1[sign_df_o3$Var1 == "multipotent stromal stem cells"] <- "stromal stem cell"
-sign_df_o3$Var1[sign_df_o3$Var1 == "balanced prog."] <- "balanced prog"
-sign_df_o3$Var1[sign_df_o3$Var1 == "highly adipocytic gene-expressing progenitors"] <- "adipo-prog"
-sign_df_o3$Var1[sign_df_o3$Var1 == "osteochondrogenic progenitors 1"] <- "osteo-chondro prog 1"
-sign_df_o3$Var1[sign_df_o3$Var1 == "osteochondrogenic progenitors 2"] <- "osteo-chondro prog 2"
+sign_df_o3$Var1[
+  sign_df_o3$Var1 == "multipotent stromal stem cells"] <- "stromal stem cell"
+sign_df_o3$Var1[
+  sign_df_o3$Var1 == "balanced prog."] <- "balanced prog"
+sign_df_o3$Var1[
+  sign_df_o3$Var1 == "highly adipocytic gene-expressing progenitors"] <- "adipo-prog"
+sign_df_o3$Var1[
+  sign_df_o3$Var1 == "osteochondrogenic progenitors 1"] <- "osteo-chondro prog 1"
+sign_df_o3$Var1[
+  sign_df_o3$Var1 == "osteochondrogenic progenitors 2"] <- "osteo-chondro prog 2"
 
 sign_df_o3$Var1 <- factor(
   sign_df_o3$Var1,

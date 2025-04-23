@@ -22,6 +22,7 @@ set.seed(37)
 ```{r load_packages, message = FALSE}
 library(tidyverse, quietly = TRUE)
 library(Seurat, quietly = TRUE)
+library(dplyr, quietly = TRUE)
 library(UpSetR, quietly = TRUE)
 library(ggpubr, quietly = TRUE)
 ```
@@ -30,7 +31,7 @@ library(ggpubr, quietly = TRUE)
 
 # define data paths
 base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
-brain_path <- "scRNAseq/main_analysis/sce_objects/08_sce_brain"
+brain_path <- "/scRNAseq/main_analysis/sce_objects/08_sce_brain"
 
 colors_path <- base::paste0(
   base_path, 
@@ -60,6 +61,42 @@ output_pdf_s_a_plot <- base::paste0(
   base_path, "/manuscript1/supp_figure6/supp_figure6_allhs_heatmap.pdf")
 ```
 
+# Print data
+
+```{r}
+
+# conserved marker info
+cons_markers <- readRDS(
+  paste0(base_path, brain_path, "/02_marker_conserved_primates.rds"))
+markers_conservation <- readRDS(
+  paste0(base_path, brain_path, "/02_marker_expression_primates.rds"))
+
+# nDEG info
+nDEGs <- readRDS(paste0(base_path, brain_path, "/01_list_nDEGs_all.rds"))
+
+# get the signature
+conserved_signature <- lapply(names(cons_markers), function(x){
+  markers <- cons_markers[[x]]
+  ndeg <- nDEGs[[x]]
+  return(markers[markers %in% ndeg])
+})
+names(conserved_signature) <- names(cons_markers)
+
+seu_sign <- unique(unlist(conserved_signature))
+seu_sign
+length(seu_sign)
+
+# human-only markers info
+human_markers <- do.call(rbind, markers_conservation) %>%
+  as.data.frame() %>%
+  filter(!is.na(human)) %>% 
+  rownames() %>%
+  sub("\\..*", "", .) %>%
+  unique()
+
+length(human_markers)
+```
+
 ## Primate "own" reclustering heatmaps
 
 Primate cell type identification using only primate-derived conserved identity
@@ -71,9 +108,9 @@ For figure 6b.
 ```{r b_prep1}
 # establish order of clusters for plotting based on 04_recluster.R
 # sig = conserved identity signature genes
-factorize <- list(human = c(9,6,8,13,5,0,10,12,3,14,7,2,11,1,4),
-                  marmoset = c(0,3,11,8,1,10,5,14,9,13,4,6,2,7,12),
-                  macaque = c(6,2,1,3,5,10,4,7,11,0,9,8))
+factorize <- list(human = rev(c(7,8,9,13,11,12,3,0,4,14,6,2,10,1,5)),
+                  marmoset = rev(c(0,2,14,4,1,7,10,13,8,12,5,9,3,11,6)),
+                  macaque = rev(c(0,1,6,8,9,2,11,3,5,4,7,10)))
 ```
 
 ```{r b_prep2}
@@ -84,7 +121,7 @@ for(sp in c("human", "marmoset", "macaque")){
   
   data <- readRDS(paste0(base_path, # reclustered primate datasets
                          brain_path,
-                         "04_recluster/", sp, "_reclust_sig.rds"))
+                         "/04_recluster/", sp, "_reclust_sig.rds"))
 
   plot <- data@meta.data[,c("subclass_label", "seurat_clusters")] %>%
     table() %>% as.matrix()
@@ -168,8 +205,8 @@ Figure 6c.
 ```{r c_prep1}
 # establish order of clusters for plotting based on 04_recluster.R
 # hs = human only markers; sig = conserved identity signature genes
-factorize_mouse <- list(hs = c(2,11,10,4,6,7,3,5,8,9,0,12,1),
-                        sig = c(0,11,6,10,2,7,8,4,5,9,3,1,12))
+factorize_mouse <- list(hs = c(0, 10, 4, 6, 7, 3, 5, 8, 9, 1, 11, 2),
+                        sig = c(4, 9, 3, 1, 8, 6, 5, 7, 10, 0, 2))
 ```
 
 ```{r c_prep2}
@@ -179,7 +216,7 @@ plot_gg_mouse <- list()
 for(genes in c("hs", "sig")){
   data <- readRDS(paste0(base_path, # reclustered mouse datasets, depending on geneset used for reclustering
                          brain_path, 
-                         "04_recluster/mouse_reclust_", genes, ".rds"))
+                         "/04_recluster/mouse_reclust_", genes, ".rds"))
   
   plot <- data@meta.data[,c("subclass_label", "seurat_clusters")] %>%
     table() %>% as.matrix()
@@ -308,9 +345,9 @@ Figure 6d.
 
 ```{r d_prep1}
 mouse_hs <- readRDS(paste0(base_path, brain_path, 
-                           "04_recluster/mouse_reclust_hs.rds")) # mouse cells reclustered with human marker genes
+                           "/04_recluster/mouse_reclust_hs.rds")) # mouse cells reclustered with human marker genes
 mouse_sig <- readRDS(paste0(base_path, brain_path, 
-                            "04_recluster/mouse_reclust_sig.rds")) # mouse cells reclustered with signature genes
+                            "/04_recluster/mouse_reclust_sig.rds")) # mouse cells reclustered with signature genes
 ```
 
 ```{r d_prep2}

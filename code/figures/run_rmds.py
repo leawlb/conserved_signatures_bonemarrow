@@ -17,7 +17,7 @@ targets = targets + [OUTPUT_PATH + "/figure4.html"]
 targets = targets + [OUTPUT_PATH + "/figure5.html"]
 targets = targets + [OUTPUT_PATH + "/figure6.html"]
 
-targets = targets + [OUTPUT_PATH + "/figures2.html"]
+targets = targets + [OUTPUT_PATH + "/figure_s2.html"]
 
 
 #-------------------------------------------------------------------------------
@@ -96,14 +96,14 @@ rule run_fig6:
         "figure6.Rmd"
         
         
-rule run_figs2:
+rule run_fig_s2:
     resources:
         mem_mb=80000,
         queues="medium-debian"
     output:
-        OUTPUT_PATH + "/figures2.html"
+        OUTPUT_PATH + "/figure_s2.html"
     threads: 4
     conda:
         "../envs/ggalluvial.yml"
     script:
-        "figures1.Rmd"
+        "figure_s2.Rmd"

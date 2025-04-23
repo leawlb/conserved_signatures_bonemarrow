@@ -217,7 +217,7 @@ rule prepare_ensembl:
 # Author: Arno Fritsch
 # the exact download link is download_zip_url
 
-# last downloaded 2025-01-22
+# last downloaded 2025-04-17
 # will not be downloaded again as long as mcclust-master.zip exists
 rule download_mcclust_vidist_code:
     output:

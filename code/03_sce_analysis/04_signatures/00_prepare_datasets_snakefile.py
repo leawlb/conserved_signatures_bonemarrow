@@ -100,9 +100,9 @@ print (ofile)
   
   "/data/metadata/scRNAseq/01_sce_prep/references_raw/bone-marrow-seurat.rds"
 
-6. Also clone mcclust (https://github.com/cran/mcclust) and put in code/source/
+6. Also get mcclust (https://github.com/cran/mcclust) and put in code/source/
 
-  see 01_reclustering_own_snakefile.py
+  see 01_reclustering_own_snakefile.py, automatically downloaded from there
   
 """
 

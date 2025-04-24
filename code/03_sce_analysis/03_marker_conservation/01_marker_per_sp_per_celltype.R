@@ -5,7 +5,6 @@ library(dplyr)
 ## identify stromal markers per species per cell type ##
 ########################################################
 
-#data <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10")
 data_str <- readRDS(snakemake@input[["data_str"]])
 data <- data_str
 
@@ -41,6 +40,7 @@ for (s in species) {
                            only.pos = TRUE,
                            #logfc.threshold = 0.25, # default is 0.25
                            min.pct = 0.1) # Require genes to be expressed in at least 10% of cells in each group
+    
     # Add these markers to the list of markers for this cell type
     markers_list[[paste(s, ct, sep = "_")]] <- markers
     # identify what percentage of each animals' cells per type express identified markers
@@ -89,8 +89,6 @@ for(ct in cell_types){
   markers_conservation_str[[ct]] <- genes
 }
 
-#save(markers_conservation_str,
-#     file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/03_marker_conservation/cons_markers_str.RData")
 save(markers_conservation_str,
      file = snakemake@output[["output_str"]])
 
@@ -98,7 +96,8 @@ save(markers_conservation_str,
 ## same analysis, HSCs ##
 #########################
 
-#data <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10")
+print("starting HSCs")
+
 data_hsc <- readRDS(snakemake@input[["data_hsc"]])
 data <- data_hsc
 
@@ -134,6 +133,7 @@ for (s in species) {
                            #logfc.threshold = 0.25, # default is 0.25
                            min.pct = 0.1) # Require genes to be expressed in at least 10% of cells in each group
     # Add these markers to the list of markers for this cell type
+    
     markers_list[[paste(s, ct, sep = "_")]] <- markers
     # identify what percentage of each animals' cells per type express identified markers
     animals <- grep(s, 
@@ -181,7 +181,5 @@ for(ct in cell_types){
   markers_conservation_hsc[[ct]] <- genes
 }
 
-#save(markers_conservation_hsc,
-#     file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/03_marker_conservation/cons_markers_hsc.RData")
 save(markers_conservation_hsc,
      file = snakemake@output[["output_hsc"]])

@@ -20,6 +20,7 @@ targets = targets + [OUTPUT_PATH + "/figure6.html"]
 targets = targets + [OUTPUT_PATH + "/figure_s2.html"]
 targets = targets + [OUTPUT_PATH + "/figure_s3.html"]
 targets = targets + [OUTPUT_PATH + "/figure_s4.html"]
+targets = targets + [OUTPUT_PATH + "/figure_s5.html"]
 #targets = targets + [OUTPUT_PATH + "/figure_s3_silhouette.html"]
 #targets = targets + [OUTPUT_PATH + "/figure_s3_genes_v_pseudotime.html"]
 
@@ -151,3 +152,13 @@ rule run_fig_s4:
     threads: 4
     script:
         "figure_s4.Rmd"
+
+rule run_fig_s5:
+    resources:
+        mem_mb=200000,
+        queues="medium-debian"
+    output:
+        OUTPUT_PATH + "/figure_s5.html"
+    threads: 4
+    script:
+        "figure_s5.Rmd"

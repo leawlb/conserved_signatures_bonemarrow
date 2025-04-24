@@ -9,7 +9,7 @@ snakemake --cluster "bsub -q medium -n4 -R rusage[mem={resources.mem_mb}]" -p -j
 
 # 01 OWN DATASETS
 
-snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resources.mem_mb}]" -p -j20 -c20 -s 01_reclustering_own_snakefile.py --latency-wait 40 --configfile ../../config.yaml --use-conda --config run_sign_rand_own_permutation=False run_mark_rand_own_permutation=False run_mmms_rand_own_permutation=False run_genesets_sign_own_permutation=False -n
+snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resources.mem_mb}]" -p -j20 -c20 -s 01_reclustering_own_snakefile.py --latency-wait 40 --configfile ../../config.yaml --use-conda --config run_sign_rand_own_permutation=True run_mark_rand_own_permutation=True run_mmms_rand_own_permutation=True run_genesets_sign_own_permutation=True -n
 
 
 

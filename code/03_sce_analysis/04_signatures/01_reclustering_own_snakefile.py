@@ -343,18 +343,18 @@ rule reclustering_own_report:
 """
 # PERMUTATION TESTS
 
-# 1. Do the three gene sets  perform significantly better than random?
+# 1. Do the three gene sets perform significantly better than random?
 # Permutation tests to compare:
 # - signature genes
 # - conserved markers
-# - BL6 markers (species-specific)
+# - BL6-only markers 
 # to gene sets comprised of x random genes 
 
 # 2. Do other gene sets perform better than signature genes?
 #    Or is it just the larger number of genes?
 # Permutation tests to compare:
 # - conserved marker genes
-# - all BL6 marker genes (species-specific)
+# - BL6-only markers  
 # to gene sets comprised of signature genes + x random genes 
 # or conserved markers genes + x random genes
 
@@ -415,7 +415,7 @@ if RUN_SIGN_RAND_OWN_PERM:
       script: 
           "01_permutation_own_background_report.Rmd"
 
-  # compare signature to random background
+  # compare signature to random background (get p values)
   rule sign_vs_rand:
       input:
           orig_score_df_input = rules.reclustering_own_scores.output.score_df,
@@ -426,8 +426,6 @@ if RUN_SIGN_RAND_OWN_PERM:
           comparison = "sign-vs-rand"
       output:
           pval_score_df_output = OUTPUT_DAT + "/08_expp/sign-vs-rand_{fraction}"
-      #resources:
-      #    mem_mb=50000  
       script:
           "01_scripts_own/08_export_pval.R"
 
@@ -457,7 +455,6 @@ if RUN_MARK_RAND_OWN_PERM:
       script: 
           "01_scripts_own/05_permutation_rand.R"
 
-  # compare conserved markers to random background
   rule mark_vs_rand:
       input:
           orig_score_df_input = rules.reclustering_own_scores.output.score_df,
@@ -468,8 +465,6 @@ if RUN_MARK_RAND_OWN_PERM:
           comparison = "mark-vs-rand"
       output:
           pval_score_df_output = OUTPUT_DAT + "/08_expp/mark-vs-rand_{fraction}"
-      #resources:
-      #    mem_mb=50000  
       script:
           "01_scripts_own/08_export_pval.R"
 
@@ -499,7 +494,6 @@ if RUN_MMMS_RAND_OWN_PERM:
       script: 
           "01_scripts_own/05_permutation_rand.R"
 
-  # compare BL6 markers to random background
   rule mmms_vs_rand:
       input:
           orig_score_df_input = rules.reclustering_own_scores.output.score_df,
@@ -510,8 +504,6 @@ if RUN_MMMS_RAND_OWN_PERM:
           comparison = "mmms-vs-rand"
       output:
           pval_score_df_output = OUTPUT_DAT + "/08_expp/mmms-vs-rand_{fraction}"
-      #resources:
-      #    mem_mb=50000  
       script:
           "01_scripts_own/08_export_pval.R"
 
@@ -519,9 +511,10 @@ if RUN_MMMS_RAND_OWN_PERM:
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
-# permutation: marker genes vs. signature + random (same number)
+# permutation: gene set vs. signature + random (same number)
 if RUN_GNST_SIGN_OWN_PERM:
 
+  # this rule runs permutations for both MARK and MMMS vs SIGNRAND
   rule perm_genesets_signature_rand_own:
       input:
           sce_input = rules.reclustering_own.output,
@@ -576,8 +569,6 @@ if RUN_GNST_SIGN_OWN_PERM:
           comparison = "mark-vs-signrand"
       output:
           pval_score_df_output = OUTPUT_DAT + "/08_expp/mark-vs-signrand_{fraction}"
-      #resources:
-      #    mem_mb=50000  
       script:
           "01_scripts_own/08_export_pval.R"
           
@@ -592,25 +583,28 @@ if RUN_GNST_SIGN_OWN_PERM:
           comparison = "mmms-vs-signrand"
       output:
           pval_score_df_output = OUTPUT_DAT + "/08_expp/mmms-vs-signrand_{fraction}"
-      #resources:
-      #    mem_mb=50000  
       script:
           "01_scripts_own/08_export_pval.R"
           
-  """
-  # At the moment, this step is not necessary.  
-  # Remove from 01_permutation_own_genesets_report once decision is final.
-  # compare mmusall_markers (all BL6 markers) to conserved markers + random
-  rule mmms_vs_markrand:
-      input:
-          orig_score_df_input = rules.reclustering_own_scores.output.score_df,
-          perm_score_df_input = rules.permutation_genesets.output.perm_score_df_mmms_mark
-      params:
-          cons_level_use = "mmusall_markers",
-          comparison = "mmms-vs-markrand"
-      output:
-          pval_score_df_output = OUTPUT_DAT + "/08_expp/mmms-vs-markrand_{fraction}"
-      script:
-          "01_scripts_own/08_export_pval.R"
-  """
-  
+"""
+# permutation tests currently confirmed in manuscript/figures:
+
+- HSC sign vs rand
+- HSC mark vs rand
+- HSC mmms vs rand
+
+- HSC mark vs signrand 
+
+# permutation tests planned to be in manuscript/figures: 
+
+- HSC mmms vs signrand (pval plot)
+
+
+- Niche sign vs rand (pval plot)
+- Niche mark vs rand (pval plot)
+- Niche mmms vs rand (pval plot)
+
+- Niche mark vs signrand (pval plot)
+- Niche mmms vs signrand (pval plot)
+
+"""

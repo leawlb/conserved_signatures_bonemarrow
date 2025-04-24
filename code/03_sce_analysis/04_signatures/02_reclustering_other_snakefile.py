@@ -35,7 +35,6 @@ def get_list(metadata, column):
 fractions = get_list(metadata = METADATA, column = "Fraction_ID")
 
 # define datasets to be tested
-# nmr_sorted_hspc, zeb_all_hspc
 datasets_other_hsc = ["ts_hscs_progenitors", "ts_bone_marrow", "mus_weinreb_hspc", "mus_tm_bonemarrow"]
 datasets_other_str = ["ts_all_stromal", "li_all_stromal", "mus_tik_stromal", "mus_bar_stromal"]
 datasets_other = datasets_other_hsc + datasets_other_str
@@ -50,10 +49,8 @@ for d in datasets_other:
   targets = targets + [OUTPUT_DAT_OTHER + "/04_rcls/score_df_" + d + "_list"]
   targets = targets + [OUTPUT_REP + "/all/reclustering_other_report_" + d + ".html"]
   targets = targets + [OUTPUT_REP + "/final/reclustering_other_final_report_" + d + ".html"]
- 
-  #testing reclustering scores
-  #targets = targets + [OUTPUT_REP + "/test_scores/test_reclustering_scores_" + d + ".html"]
 
+  # permutations
   if RUN_SIGN_RAND_OTHER_PERM:
     targets = targets + [OUTPUT_DAT_OTHER + "/05_psig/perm_score_df_" + d]
     targets = targets + [OUTPUT_REP + "/signature/perm_sign_rand_" + d + ".html"]
@@ -68,8 +65,6 @@ for d in datasets_other:
     targets = targets + [OUTPUT_DAT_OTHER + "/07_pmms/perm_score_df_" + d]
     targets = targets + [OUTPUT_DAT_OTHER + "/08_expp/mmms-vs-rand_" + d]
 
-
-  # permutation
   if RUN_GNST_SIGN_RAND_OTHER_PERM:
     targets = targets + [OUTPUT_DAT_OTHER + "/07_perg/perm_score_df_mark_" + d]
     targets = targets + [OUTPUT_DAT_OTHER + "/07_perg/perm_score_df_mmms_" + d]
@@ -77,7 +72,6 @@ for d in datasets_other:
     targets = targets + [OUTPUT_REP + "/genesets/perm_genesets_" + d + ".html"]
     targets = targets + [OUTPUT_DAT_OTHER + "/08_expp/mark-vs-signrand_" + d]
     targets = targets + [OUTPUT_DAT_OTHER + "/08_expp/mmms-vs-signrand_" + d]
-    #targets = targets + [OUTPUT_DAT_OTHER + "/08_expp/mmms-vs-markrand_" + d]
 
 if RUN_PVAL_CORRECTION:
   targets = targets + [OUTPUT_DAT_OTHER + "/09_crpv/all_corrected_pval"]
@@ -114,7 +108,6 @@ rule all:
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
-print(config["base"] + config["metadata_paths"]["datasets_other_path"])
 
 """
 # RE-CLUSTERING OTHER DATA
@@ -161,28 +154,28 @@ rule reclustering_other:
 #
 # - adjusted rand index
 # - variation of information
-# - mean proportion of cells of a cell type per cluster (top 10% ranked)
+# - mean proportion of cells of a cell type per cluster 
 #
 # We use different scores because some of these scores increase or
 # decrease with a higher clustering resolution/nr of clusters and we aim to 
 # reduce this bias by using several different kinds of scores.
 """
 
-rule test_reclustering_scores:
-    input: 
-        seu_list = rules.reclustering_other.output
-    output:
-        OUTPUT_REP + "/test_scores/test_reclustering_scores_{dataset}.html"
-    params:
-        reclustering_functions = "../../source/sce_functions_reclustering.R",
-    conda:
-        "../../envs/reclust_scores_perm_others.yml"
-    resources:
-          mem_mb=50000,
-          queue="long-debian"
-    threads: 4
-    script:
-        "02_test_reclustering_scores.Rmd"
+# rule test_reclustering_scores:
+#     input: 
+#         seu_list = rules.reclustering_other.output
+#     output:
+#         OUTPUT_REP + "/test_scores/test_reclustering_scores_{dataset}.html"
+#     params:
+#         reclustering_functions = "../../source/sce_functions_reclustering.R",
+#     conda:
+#         "../../envs/reclust_scores_perm_others.yml"
+#     resources:
+#           mem_mb=50000,
+#           queue="long-debian"
+#     threads: 4
+#     script:
+#         "02_test_reclustering_scores.Rmd"
 
 
 #-------------------------------------------------------------------------------  
@@ -516,29 +509,11 @@ if RUN_GNST_SIGN_RAND_OTHER_PERM:
       script:
           "02_scripts_other/08_export_pval.R" 
 
-  """
-  # export pvals: compare mmusall_markers (all BL6 markers) to conserved markers + random
-  rule mmms_vs_markrand:
-      input:
-          orig_score_df_list_input = rules.reclustering_other_scores.output.score_df_list,
-          perm_score_df_input = rules.permutation_genesets.output.perm_score_df_mmms_mark
-      params:
-          resolution_df = RESOLUTION_OTHER,
-          cons_level_use = "mmusall_markers",
-          cons_level_use_alt = "seu_mmms",
-          comparison = "mmms-vs-markrand"
-      output:
-          pval_score_df_output = OUTPUT_DAT_OTHER + "/08_expp/mmms-vs-markrand_{dataset}"
-      script:
-          "02_scripts_other/08_export_pval.R" 
-  """        
-
-
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 # correct all pvalues (to be used)
 
-# only use and correct the pvals that WILL be used for the publication
+# only use and correct the pvals that WILL be used for the manuscript
 # other tests will eventually be removed once decision is final
 if RUN_PVAL_CORRECTION:
   
@@ -551,9 +526,9 @@ if RUN_PVAL_CORRECTION:
           own_mark_signrand = expand(OUTPUT_DAT_OWN + "/08_expp/mark-vs-signrand_{fraction}", fraction = fractions),
           own_mmms_signrand = expand(OUTPUT_DAT_OWN + "/08_expp/mmms-vs-signrand_{fraction}", fraction = fractions),
           other_sign_rand = expand(OUTPUT_DAT_OTHER + "/08_expp/sign-vs-rand_{dataset}", dataset = datasets_other),
-          #other_mark_rand = expand(OUTPUT_DAT_OTHER + "/08_expp/mark-vs-rand_{dataset}", dataset = datasets_other),
+          other_mark_rand = expand(OUTPUT_DAT_OTHER + "/08_expp/mark-vs-rand_{dataset}", dataset = datasets_other),
           other_mmms_rand = expand(OUTPUT_DAT_OTHER + "/08_expp/mmms-vs-rand_{dataset}", dataset = datasets_other),
-          #other_mark_signrand = expand(OUTPUT_DAT_OTHER  + "/08_expp/mark-vs-signrand_{dataset}", dataset = datasets_other),
+          other_mark_signrand = expand(OUTPUT_DAT_OTHER + "/08_expp/mark-vs-signrand_{dataset}", dataset = datasets_other),
           other_mmms_signrand = expand(OUTPUT_DAT_OTHER + "/08_expp/mmms-vs-signrand_{dataset}", dataset = datasets_other)
       output:
           pval_corrected_df = OUTPUT_DAT_OTHER + "/09_crpv/all_corrected_pval"
@@ -576,7 +551,6 @@ FINAL REPORTS
 # ferent optimal resolution. So choosing the same as the signature
 # is the easiest option
 """
-
 
 rule reclustering_other_report_final:
     input:

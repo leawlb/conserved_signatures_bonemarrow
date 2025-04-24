@@ -15,7 +15,7 @@ Also includes one plot for Supplementary Figure 6
 #### Load objects
 
 ```{r seed, message = FALSE}
-base::RNGkind(kind = "Mersenne-Twister")
+RNGkind("L'Ecuyer-CMRG") 
 set.seed(37)
 ```
 

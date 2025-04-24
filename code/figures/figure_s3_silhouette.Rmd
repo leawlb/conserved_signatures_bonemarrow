@@ -1,0 +1,129 @@
+---
+title: "Supp_for_Fig3c"
+author: "Veronica Busa"
+date: "2024-11-20"
+output: html_document
+---
+
+#### Load objects
+
+```{r seed, message = FALSE}
+RNGkind("L'Ecuyer-CMRG") 
+set.seed(37)
+```
+
+```{r load_packages, message = FALSE}
+library(tidyverse, quietly = TRUE)
+library(cluster, quietly = TRUE)
+library(SingleCellExperiment, quietly = TRUE)
+library(Seurat, quietly = TRUE)
+```
+
+```{r load_manual}
+# load data for manual use here
+base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+
+output_pdf <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure3/sfigure3_c_supp_silhouette.pdf")
+```
+
+
+```{r load_large}
+# list of gene sets for HSPCs (conserved signature, conserved markers, etc.)
+geneset_list_hsc <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"))
+
+data_sce <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10"))
+```
+
+```{r params}
+# global params
+source("determine_params.R")
+```
+
+```{r prep, message = FALSE, warning= FALSE}
+data <- CreateSeuratObject(counts = data_sce@assays@data@listData[["logcounts"]],
+                           meta.data = data_sce@colData@listData)
+
+data <- FindVariableFeatures(data,
+                             nfeatures = 5000)
+data <- ScaleData(data)
+data <- RunPCA(data,
+               features = VariableFeatures(object = data),
+               npcs = 50)
+
+nreps = 10
+sil_scores <- matrix(NA,
+                     ncol = nreps,
+                     nrow = length(levels(data@meta.data[["celltypes"]]))-1,
+                     dimnames = list(levels(data@meta.data[["celltypes"]])[1:(length(levels(data@meta.data[["celltypes"]]))-1)],
+                                     1:nreps))
+
+for(i in 1:nreps){
+  #subset 2000 cells of each cell type
+  keep <- c()
+  for(c in levels(data@meta.data[["celltypes"]])[1:(length(levels(data@meta.data[["celltypes"]]))-1)]){ # Cycling is just subset of other types
+    hold_c <- subset(data, celltypes == c)
+    cellnames <- Cells(hold_c)
+    set.seed(i)
+    keepcells <- sample(cellnames, 2000)
+    keep <- c(keep, keepcells)
+  }
+  subset_data <- subset(data, cells = keep)
+  sil_hsc <- silhouette(as.numeric(subset_data@meta.data[["celltypes"]]),
+                        dist = dist(Embeddings(subset_data, reduction = "pca")[, 1:50]))
+
+  sil_scores[,i] <- summary(sil_hsc)[["clus.avg.widths"]]
+}
+
+mean <- rowMeans(sil_scores[,1:nreps])
+sd <- MatrixGenerics::rowSds(sil_scores[,1:nreps], useNames = F)
+sil_scores <- as.data.frame(sil_scores)
+sil_scores$mean <- mean
+sil_scores$sd <- sd
+
+plot_markers <- data.frame(celltype = rownames(sil_scores),
+                           mean = sil_scores$mean,
+                           sd = sil_scores$sd,
+                           n_core_mark = 0,
+                           n_cons_mark = 0)
+for(c in plot_markers$celltype){
+  n_core <- length(geneset_list_hsc[[c]][["conserved_signature"]])
+  n_cons <- length(geneset_list_hsc[[c]][["conserved_markers"]])
+  plot_markers[which(plot_markers$celltype == c),
+               c("n_core_mark", "n_cons_mark")] <- c(n_core, n_cons)
+}
+
+
+summary(lm(log10(n_core_mark) ~ mean, data = plot_markers))
+```
+
+```{r plot, message = FALSE, warning= FALSE}
+pdf(output_pdf, width = 5, height = 4)
+
+ggplot(plot_markers,
+       aes(x = mean,
+           y = n_core_mark,
+           label = celltype)) +
+  geom_smooth(method = 'lm',
+              fill = "grey90",
+              color = "skyblue4") +
+  geom_errorbar(aes(xmin = mean - sd,
+                    xmax = mean + sd),
+                width = 0) +
+  geom_point() +
+  ggrepel::geom_text_repel(size = 3,
+                           color = "skyblue4") +
+  theme_all +
+  scale_y_log10() +
+  labs(x = "Mean Silhouette Score",
+       y = "Number Signture Genes")
+
+dev.off()
+```
+
+

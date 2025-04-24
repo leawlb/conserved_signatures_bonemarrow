@@ -1,0 +1,217 @@
+---
+title: "Supp_for_Fig3"
+author: "Veronica Busa"
+date: "2024-11-20"
+output: html_document
+---
+
+#### Load objects
+
+```{r seed, message = FALSE}
+RNGkind("L'Ecuyer-CMRG") 
+set.seed(37)
+```
+
+```{r load_packages, message = FALSE}
+library(tidyverse, quietly = TRUE)
+library(SingleCellExperiment, quietly = TRUE)
+library(ggpubr, quietly = TRUE)
+library(Seurat, quietly = TRUE)
+library(SeuratObject, quietly = TRUE) 
+```
+
+```{r load_manual}
+# load data for manual use here
+base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+
+output_pdf <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure3/figures3_genes_v_pseudotime.pdf")
+
+colors_path <- base::paste0(
+  base_path, 
+  "/metadata/colors/colors.txt")
+
+source("../source/colors.R")
+
+# global params
+source("determine_params.R")
+```
+
+
+```{r load_large}
+# list of gene sets for HSPCs (conserved signature, conserved markers, etc.)
+geneset_list_hsc <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"))
+
+# fully annotated SCE object (HSPCs), erythroid branch cells only, with 
+# pseudotime and erythroid differentiation probability
+ery_pseudo <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/05_bsce/sce_ery"))
+
+lym_pseudo <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/05_bsce/sce_lym"))
+
+neu_pseudo <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/05_bsce/sce_neu"))
+```
+
+
+```{r prep1, message = FALSE, warning= FALSE}
+ery_pseudo_seurat <- CreateSeuratObject(counts = ery_pseudo@assays@data@listData[["logcounts"]],
+                                        meta.data = ery_pseudo@colData@listData)
+
+rm(ery_pseudo)
+gc()
+
+plot_data_ery <- ery_pseudo_seurat@meta.data %>%
+  select("pseudotime", "celltypes", "Mouse_ID", 
+         "Species_ID", "Age_weeks", "Age_ID")
+for(n in 1:length(geneset_list_hsc)){
+  cell_sp_markers <- geneset_list_hsc[[n]][["conserved_signature"]]
+  for(g in cell_sp_markers){
+    plot_data_ery[,g] <-unlist(SeuratObject::FetchData(ery_pseudo_seurat, g))
+  }
+}
+plot_data_ery[,7:ncol(plot_data_ery)] <- scale(plot_data_ery[,7:ncol(plot_data_ery)])
+
+
+
+lym_pseudo_seurat <- CreateSeuratObject(counts = lym_pseudo@assays@data@listData[["logcounts"]],
+                                        meta.data = lym_pseudo@colData@listData)
+
+rm(lym_pseudo)
+gc()
+
+plot_data_lym <- lym_pseudo_seurat@meta.data %>%
+  select("pseudotime", "celltypes", "Mouse_ID", 
+         "Species_ID", "Age_weeks", "Age_ID")
+for(n in 1:length(geneset_list_hsc)){
+  cell_sp_markers <- geneset_list_hsc[[n]][["conserved_signature"]]
+  for(g in cell_sp_markers){
+    plot_data_lym[,g] <-unlist(SeuratObject::FetchData(lym_pseudo_seurat, g))
+  }
+}
+plot_data_lym[,7:ncol(plot_data_lym)] <- scale(plot_data_lym[,7:ncol(plot_data_lym)])
+
+
+
+neu_pseudo_seurat <- CreateSeuratObject(counts = neu_pseudo@assays@data@listData[["logcounts"]],
+                                        meta.data = neu_pseudo@colData@listData)
+
+rm(neu_pseudo)
+gc()
+
+plot_data_neu <- neu_pseudo_seurat@meta.data %>%
+  select("pseudotime", "celltypes", "Mouse_ID", 
+         "Species_ID", "Age_weeks", "Age_ID")
+for(n in 1:length(geneset_list_hsc)){
+  cell_sp_markers <- geneset_list_hsc[[n]][["conserved_signature"]]
+  for(g in cell_sp_markers){
+    plot_data_neu[,g] <-unlist(SeuratObject::FetchData(neu_pseudo_seurat, g))
+  }
+}
+plot_data_neu[,7:ncol(plot_data_neu)] <- scale(plot_data_neu[,7:ncol(plot_data_neu)])
+```
+
+```{r plot, message = FALSE, warning= FALSE}
+col_genes <- grDevices::colorRampPalette(c("grey90", "grey5"))
+
+pdf(output_pdf, width = 5, height = 3)
+
+for(n in 1:length(geneset_list_hsc)){
+  cell_sp <- geneset_list_hsc[[n]][["conserved_signature"]]
+  plot_genes <- plot_data_ery[,c(colnames(plot_data_ery)[1:6], cell_sp)]
+  plot_genes <- gather(plot_genes, gene, expression, 
+                       -pseudotime, -celltypes, -Mouse_ID, 
+                       -Species_ID, -Age_weeks, -Age_ID)
+  
+  palette <- col_genes(length(cell_sp))
+  
+  print(
+    ggplot(plot_genes,
+    aes(x = rank(pseudotime),
+           y = expression,
+           color = gene)) +
+  geom_smooth(se = F) +
+  guides(color = "none") +
+  scale_color_manual(values = rev(palette)) +
+  theme_classic() +
+  theme_all+
+  ggplot2::theme(   
+    axis.ticks.y = element_blank(),
+    axis.text = element_blank(),
+    plot.title = element_text(
+      hjust = 0.5))+
+  ggplot2::ggtitle(names(geneset_list_hsc)[n])+
+  ggplot2::ylab("Scaled expression")+
+  ggplot2::xlab("Pseudotime ranks erythroid branch cells")
+  )
+}
+
+for(n in 1:length(geneset_list_hsc)){
+  cell_sp <- geneset_list_hsc[[n]][["conserved_signature"]]
+  plot_genes <- plot_data_lym[,c(colnames(plot_data_lym)[1:6], cell_sp)]
+  plot_genes <- gather(plot_genes, gene, expression, 
+                       -pseudotime, -celltypes, -Mouse_ID, 
+                       -Species_ID, -Age_weeks, -Age_ID)
+  
+  palette <- col_genes(length(cell_sp))
+  
+  print(
+    ggplot(plot_genes,
+    aes(x = rank(pseudotime),
+           y = expression,
+           color = gene)) +
+  geom_smooth(se = F) +
+  guides(color = "none") +
+  scale_color_manual(values = rev(palette)) +
+  theme_classic() +
+  theme_all+
+  ggplot2::theme(   
+    axis.ticks.y = element_blank(),
+    axis.text = element_blank(),
+    plot.title = element_text(
+      hjust = 0.5))+
+  ggplot2::ggtitle(names(geneset_list_hsc)[n])+
+  ggplot2::ylab("Scaled expression")+
+  ggplot2::xlab("Pseudotime ranks lymphoid branch cells")
+  )
+}
+
+for(n in 1:length(geneset_list_hsc)){
+  cell_sp <- geneset_list_hsc[[n]][["conserved_signature"]]
+  plot_genes <- plot_data_neu[,c(colnames(plot_data_neu)[1:6], cell_sp)]
+  plot_genes <- gather(plot_genes, gene, expression, 
+                       -pseudotime, -celltypes, -Mouse_ID, 
+                       -Species_ID, -Age_weeks, -Age_ID)
+  
+  palette <- col_genes(length(cell_sp))
+  
+  print(
+    ggplot(plot_genes,
+    aes(x = rank(pseudotime),
+           y = expression,
+           color = gene)) +
+  geom_smooth(se = F) +
+  guides(color = "none") +
+  scale_color_manual(values = rev(palette)) +
+  theme_classic() +
+  theme_all+
+  ggplot2::theme(   
+    axis.ticks.y = element_blank(),
+    axis.text = element_blank(),
+    plot.title = element_text(
+      hjust = 0.5))+
+  ggplot2::ggtitle(names(geneset_list_hsc)[n])+
+  ggplot2::ylab("Scaled expression")+
+  ggplot2::xlab("Pseudotime ranks neutrophil branch cells")
+  )
+}
+
+dev.off()
+```

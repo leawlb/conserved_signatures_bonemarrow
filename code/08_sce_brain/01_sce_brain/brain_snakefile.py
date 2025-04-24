@@ -60,15 +60,13 @@ rule markers:
 
 rule resolution:
     input:
-        data_input = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/08_sce_brain/sample.combined_exc_4_species_integration.RDS",
-        cons_markers = rules.markers.output.cons_markers
+        data_input = INPUT_DATASET,
+        cons_markers = rules.markers.output.cons_markers,
+        nDEGS = rules.nDEGs.output.data_output
     resources:
         mem_mb = 90000,
         queue = "medium-debian"
     threads: 15
-    params:
-        base_path = OUTPUT_BASE,
-        brain_path = "/scRNAseq/main_analysis/sce_objects/08_sce_brain/"
     output:
         all_scores_markers = OUTPUT_BASE + "/scRNAseq/main_analysis/sce_objects/08_sce_brain/03_resolution_scores_markers.rds",
         all_scores_signature = OUTPUT_BASE + "/scRNAseq/main_analysis/sce_objects/08_sce_brain/03_resolution_scores_signature.rds",
@@ -78,6 +76,9 @@ rule resolution:
 rule recluster:
     input:
         data_input = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/08_sce_brain/sample.combined_exc_4_species_integration.RDS",
+        cons_markers = rules.markers.output.cons_markers,
+        nDEGS = rules.nDEGs.output.data_output,
+        markers_conservation = rules.markers.output.markers_conservation,
     params:
         base_path = OUTPUT_BASE,
         brain_path = "/scRNAseq/main_analysis/sce_objects/08_sce_brain/"
@@ -86,26 +87,31 @@ rule recluster:
         queue = "medium-debian"
     threads: 15
     output:
-        species = OUTPUT_BASE + "/scRNAseq/main_analysis/sce_objects/08_sce_brain/04_recluster/mouse_reclust_hs.rds",
+        species_human_only = OUTPUT_BASE + "/scRNAseq/main_analysis/sce_objects/08_sce_brain/04_recluster/mouse_reclust_hs.rds"
     script:
         "04_recluster.R"
+
 
 """
 rule quantify_reclust
 
 # 05_quantify_reclust is mostly loading and plotting, so no output 
 aside from a pdf.
-Just run in terminal from snakemake_isbm env as before,
-using currently correct base path
 
-somehow, I couldn't aler 05_quantify_reclust.R so I saved changes to the
+I couldn't alter 05_quantify_reclust.R so I saved changes to the
 basepath in 05_quantify_recluster-copy.R
+
+Copied in its entirety into the report for visualisation w/ snakemake.
+
 """
 
 rule report:
     input:
         all_scores_markers = rules.resolution.output.all_scores_markers,
-        all_scores_signature = rules.resolution.output.all_scores_signature
+        all_scores_signature = rules.resolution.output.all_scores_signature,
+        species = rules.recluster.output.species_human_only,
+        cons_markers = rules.markers.output.cons_markers,
+        nDEGS = rules.nDEGs.output.data_output
     params:
         base_path = OUTPUT_BASE,
         brain_path = "/scRNAseq/main_analysis/sce_objects/08_sce_brain/"

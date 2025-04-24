@@ -5,19 +5,44 @@ output: html_document
 
 Generate plots here analogous to other directories.
 
-```{r}
-library(ggplot2, quietly = TRUE)
+```{r library}
+library(tidyverse, quietly = TRUE)
 ```
+
+# Print sign
+
+```{r}
+
+nDEGs <- readRDS(snakemake@input[["nDEGS"]])
+cons_markers <- readRDS(snakemake@input[["cons_markers"]])
+
+#nDEGs <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/08_sce_brain/01_list_nDEGs_all.rds")
+#cons_markers <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/08_sce_brain/02_marker_conserved_primates.rds")
+
+conserved_signature <- lapply(names(cons_markers), function(x){
+  markers <- cons_markers[[x]]
+  ndeg <- nDEGs[[x]]
+  return(markers[markers %in% ndeg])
+})
+names(conserved_signature) <- names(cons_markers)
+sign <- unique(unlist(conserved_signature))
+
+sign
+length(sign)
+```
+
 
 # Choose resolutions
 
 ## Markers
 
-```{r}
+not currently required
+
+```{r load_scores_mark, include = FALSE, eval = FALSE}
 all_scores <- readRDS(file = snakemake@input[["all_scores_markers"]])
 ```
 
-```{r}
+```{r scores_mark_human, include = FALSE, eval = FALSE}
 ggplot(all_scores[["human"]],
        aes(x = resolution,
            y = value,
@@ -30,7 +55,7 @@ ggplot(all_scores[["human"]],
 ## human is 0.5
 ```
 
-```{r}
+```{r scores_mark_mac, include = FALSE, eval = FALSE}
 ggplot(all_scores[["macaque"]],
                 aes(x = resolution,
                              y = value,
@@ -43,7 +68,7 @@ ggplot(all_scores[["macaque"]],
 # # macaque is 0.7
 ```
 
-```{r}
+```{r scores_mark_marm, include = FALSE, eval = FALSE}
 ggplot(all_scores[["marmoset"]],
                 aes(x = resolution,
                              y = value,
@@ -56,7 +81,7 @@ ggplot(all_scores[["marmoset"]],
 # # marmoset is 0.6
 ```
 
-```{r}
+```{r scores_mark_mus, include = FALSE, eval = FALSE}
 ggplot(all_scores[["mouse"]],
                 aes(x = resolution,
                              y = value,
@@ -71,11 +96,11 @@ ggplot(all_scores[["mouse"]],
 
 ## Signature
 
-```{r}
+```{r load_scores_sign}
 all_scores <- readRDS(file = snakemake@input[["all_scores_signature"]])
 ```
 
-```{r}
+```{r scores_sign_human}
 ggplot(all_scores[["human"]],
        aes(x = resolution,
            y = value,
@@ -85,10 +110,10 @@ ggplot(all_scores[["human"]],
                       ncol = 1) +
   geom_line() +
   theme_classic()
-## human is 0.6
+## human is 1
 ```
 
-```{r}
+```{r scores_sign_mac}
 ggplot(all_scores[["macaque"]],
                 aes(x = resolution,
                              y = value,
@@ -98,10 +123,10 @@ ggplot(all_scores[["macaque"]],
                       ncol = 1) +
   geom_line() +
   theme_classic()
-# # macaque is 0.5
+# # macaque is 0.8
 ```
 
-```{r}
+```{r scores_sign_marm}
 ggplot(all_scores[["marmoset"]],
                 aes(x = resolution,
                              y = value,
@@ -111,10 +136,10 @@ ggplot(all_scores[["marmoset"]],
                       ncol = 1) +
   geom_line() +
   theme_classic()
-# # marmoset is 0.5
+# # marmoset is 1.1
 ```
 
-```{r}
+```{r scores_sign_mus}
 ggplot(all_scores[["mouse"]],
                 aes(x = resolution,
                              y = value,
@@ -124,23 +149,79 @@ ggplot(all_scores[["mouse"]],
                       ncol = 1) +
   geom_line() +
   theme_classic()
-# mouse is 0.6
-
-knitr::knit_exit()
+# mouse is 1
 ```
 
 # Plot Species
 
-```{r}
+## Signature genes
+
+```{r load_reclustering}
+base_path <- snakemake@params[["base_path"]]
+brain_path <- snakemake@params[["brain_path"]]
+
+print(base_path)
+print(brain_path)
+
+```
+
+
+```{r plot_reclustering}
+# identify proper order of patterns for final visualization
+for(sp in c("human", "marmoset", "macaque", "mouse")){
+  for(genes in c("sig")){
+    data <- readRDS(paste0(base_path, brain_path, "/04_recluster/",
+                           sp, "_reclust_", genes, ".rds"))
+
+    plot <- data@meta.data[,c("subclass_label", "seurat_clusters")] %>%
+      table() %>% as.matrix()
+
+    plot_gg <- plot %>%
+      as.data.frame() %>%
+      group_by(seurat_clusters) %>%
+      mutate(clust_prop = Freq/sum(Freq)) %>%
+      ungroup %>%
+      group_by(subclass_label) %>%
+      mutate(subclass_prop = Freq/sum(Freq))
+
+    print(
+      ggplot(plot_gg,
+             aes(x = factor(subclass_label,
+                            levels = c("L2/3 IT", "L5 IT", "L6 IT", "L6 IT Car3",
+                                       "L5 ET", "L5/6 NP", "L6 CT", "L6b")),
+                 y = seurat_clusters,
+                 fill= clust_prop*100)) +
+        geom_tile() +
+        scale_fill_continuous("% cells/cluster",
+                              limits=c(0, 100),
+                              breaks=seq(0,100,by=20),
+                              low = "white", high = "blue") +
+        theme_classic()+
+        theme(axis.ticks = element_blank(),
+              axis.text.x = element_text(angle = 60, vjust = 1, hjust = 1)) +
+        labs(y  = "new clusters", x = "original cell types", title = paste(sp, genes))
+    )
+  }
+}
+
+# human sig: 7, 8, 9, 13, 11, 12, 3, 0, 4, 14, 6, 2, 10, 1, 5
+# marmoset sig: 0, 2, 4, 1, 7, 14, 10, 13, 8, 12, 5, 9, 3, 11, 6
+# macaque sig: 0, 1, 6, 8, 9, 2, 11, 3, 5, 4, 7, 10
+# mouse sig: 4, 9, 3, 1, 8, 6, 5, 7, 10, 0, 2
+```
+
+## Human Markers
+
+```{r load_reclustering_human}
 species <- readRDS(snakemake@input[["species"]])
 ```
 
-```{r}
+```{r plot_reclustering_human}
 plot <- species@meta.data[,c("subclass_label", "seurat_clusters")] %>%
   table() %>% as.matrix()
 ```
 
-```{r}
+```{r plot_reclustering_human2}
 plot_gg <- plot %>%
   as.data.frame() %>%
   group_by(seurat_clusters) %>%
@@ -150,7 +231,7 @@ plot_gg <- plot %>%
   mutate(subclass_prop = Freq/sum(Freq))
 ```
 
-```{r}
+```{r plot_reclustering_human3}
 print(
   ggplot(plot_gg,
          aes(x = factor(subclass_label,
@@ -170,4 +251,119 @@ print(
 )
 # order = 2, 11, 10, 4, 6, 7, 3, 5, 8, 9, 0, 12, 1
 # 5626 human markers
+```
+
+# Quantify Reclustering
+
+Simply copying 05_quantify-reclust here
+
+```{r quant_recl}
+library(Seurat, quietly = TRUE)
+
+base_path <- snakemake@params[["base_path"]]
+brain_path <- snakemake@params[["brain_path"]]
+
+mouse_hs <- readRDS(paste0(base_path, brain_path, "04_recluster/mouse_reclust_hs.rds"))
+mouse_sig <- readRDS(paste0(base_path, brain_path, "04_recluster/mouse_reclust_sig.rds"))
+
+plot_hs <- mouse_hs@meta.data[,c("subclass_label", "seurat_clusters")] %>%
+  table() %>% as.matrix()
+plot_hs_quant <- plot_hs %>%
+  as.data.frame() %>%
+  group_by(seurat_clusters) %>%
+  mutate(clust_prop = Freq/sum(Freq),
+         clust_assigned = (max(clust_prop)==clust_prop)) %>%
+  filter(subclass_label != "L6 IT Car3") %>%
+  group_by(clust_assigned, subclass_label) %>%
+  mutate(Count = sum(Freq)) %>%
+  select(-seurat_clusters, -clust_prop, -Freq) %>%
+  unique()
+sum(filter(plot_hs_quant, clust_assigned == T)$Count)/sum(plot_hs_quant$Count)
+# [1] 0.9060639
+
+plot_sig <- mouse_sig@meta.data[,c("subclass_label", "seurat_clusters")] %>%
+  table() %>% as.matrix()
+plot_sig_quant <- plot_sig %>%
+  as.data.frame() %>%
+  group_by(seurat_clusters) %>%
+  mutate(clust_prop = Freq/sum(Freq),
+         clust_assigned = (max(clust_prop)==clust_prop)) %>%
+  filter(subclass_label != "L6 IT Car3") %>%
+  group_by(clust_assigned, subclass_label) %>%
+  mutate(Count = sum(Freq)) %>%
+  select(-seurat_clusters, -clust_prop, -Freq) %>%
+  unique()
+sum(filter(plot_sig_quant, clust_assigned == T)$Count)/sum(plot_sig_quant$Count)
+# [1] 0.9172439
+
+all_data <- rbind(
+  mutate(plot_hs_quant, genes = "human markers"),
+  mutate(plot_sig_quant, genes = "signature")
+)
+
+ggplot(all_data,
+       aes(y = factor(genes, 
+                      levels = c("signature", "human markers")),
+           x = Count,
+           fill = clust_assigned)) +
+  facet_wrap(~factor(subclass_label, 
+                     levels = c("L2/3 IT", "L5 IT", "L6 IT", 
+                                "L5 ET", "L5/6 NP", "L6 CT", "L6b")), 
+             ncol = 1,
+             strip.position = "right") +
+  geom_col(position = "stack") +
+  theme_classic() +
+  theme(strip.text.y = element_text(angle = 0),
+    strip.background = element_rect(color = "white")) +
+  labs(y = NULL, 
+       x = "Mouse cells", 
+       fill = "Accurately\nAssigned") +
+  scale_fill_manual(values = c("grey90", "blue"))
+
+########################
+## unused UMAP visual ##
+########################
+
+plot_hs_clust <- plot_hs %>%
+  as.data.frame() %>%
+  group_by(seurat_clusters) %>%
+  mutate(clust_assigned = (max(Freq)==Freq)) %>%
+  filter(clust_assigned == T) %>%
+  select(-clust_assigned, -Freq)
+test <- lapply(mouse_hs@meta.data$seurat_clusters, 
+               function(x){
+                 plot_hs_clust[which(plot_hs_clust$seurat_clusters == x), "subclass_label"]}) %>% 
+  unlist()
+mouse_hs@meta.data$correct <- mouse_hs@meta.data$subclass_label == test
+
+plot_sig_clust <- plot_sig %>%
+  as.data.frame() %>%
+  filter(subclass_label != "L6 IT Car3") %>%
+  group_by(seurat_clusters) %>%
+  mutate(clust_assigned = (max(Freq)==Freq)) %>%
+  filter(clust_assigned == T) %>%
+  select(-clust_assigned, -Freq)
+test <- lapply(mouse_sig@meta.data$seurat_clusters, 
+               function(x){
+                 plot_sig_clust[which(plot_sig_clust$seurat_clusters == x), "subclass_label"]}) %>% 
+  unlist()
+mouse_sig@meta.data$correct <- mouse_sig@meta.data$subclass_label == test
+
+rownames <- rownames(mouse_sig@meta.data)
+mouse_sig@meta.data <- merge(mouse_sig@meta.data, # correct.x is signature markers
+                             mouse_hs@meta.data[,c("nCount_RNA", "nFeature_RNA", "sample_id", "correct")], # correct.y is human markers
+                             by = c("nCount_RNA", "nFeature_RNA", "sample_id")) %>%
+  mutate(correct = paste(correct.x, correct.y))
+rownames(mouse_sig@meta.data) <- rownames
+
+table(mouse_sig@meta.data$correct)
+# 
+# FALSE FALSE  FALSE TRUE  TRUE FALSE   TRUE TRUE 
+# 388         306         398        7150 
+
+DimPlot(mouse_sig,
+        group.by = "correct") +
+  theme_void() +
+  labs(title = NULL)
+
 ```

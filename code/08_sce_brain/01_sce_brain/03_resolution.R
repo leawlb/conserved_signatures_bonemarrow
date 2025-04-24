@@ -44,10 +44,7 @@ saveRDS(all_scores_markers, file = snakemake@output[["all_scores_markers"]])
 
 # choosing resolution for reclustering with signature genes
 
-base_path <- snakemake@params[["base_path"]]
-brain_path <- snakemake@params[["brain_path"]]
-
-nDEGs <- readRDS(paste0(base_path, brain_path, "01_list_nDEGs_all.rds"))
+nDEGs <- readRDS(snakemake@input[["nDEGS"]])
 
 # finding signature
 conserved_signature <- lapply(names(cons_markers), function(x){

@@ -69,3 +69,31 @@ theme_all <- ggplot2::theme_classic()+
       color = legend_title_color),
     axis.ticks = element_line(
       color = axis_ticks_color))
+
+theme_all_supp <- ggplot2::theme_classic()+
+  ggplot2::theme(
+    plot.background = element_blank(),
+    legend.background = element_blank(),
+    panel.background = element_blank(),
+    axis.text = element_text(
+      size = 16,
+      face = axis_text_face,
+      color = axis_text_color),
+    axis.title = element_text(
+      size = 16,
+      face = axis_title_face,
+      color = axis_title_color),
+    plot.title = element_text(
+      size = 16,
+      face = plot_title_face,
+      color = plot_title_color),
+    legend.text = element_text(
+      size = 16,
+      face = legend_text_face,
+      color = legend_text_color),
+    legend.title = element_text(
+      size = 16,
+      face = legend_title_face,
+      color = legend_title_color),
+    axis.ticks = element_line(
+      color = axis_ticks_color))

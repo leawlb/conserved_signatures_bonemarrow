@@ -6,6 +6,9 @@ OUTPUT_PATH = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/manuscript1/htm
 # input and output paths of data and separate plots are separarely defined
 # in each .Rmd script for better overview within the script
 
+# all plots geneated using this script are just parts of figures and details
+# (but not data) are manually adjusted using Affinity.
+
 #-------------------------------------------------------------------------------
 
 targets = []

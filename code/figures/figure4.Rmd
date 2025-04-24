@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Generate Figure 4
 
-Also contains supplementary figure parts XYZ. 
+Also contains figure parts for the corresponding Supplemental Figure 6.
 This is because the re-annotated cluster labels are not exported.
 
 #### Load objects
@@ -177,9 +177,9 @@ output_pdf_legend_plot <-  base::paste0(
 
 # two suppl plots with annotations added in this script
 output_pdf_suppl_umaps_o1 <- base::paste0(
-  base_path, "/manuscript1/supp_figure4/supp_figure4_umaps_o1.pdf")
+  base_path, "/manuscript1/supp_figure6/supp_figure6_umaps_o1.pdf")
 output_pdf_suppl_umaps_o2 <- base::paste0(
-  base_path, "/manuscript1/supp_figure4/supp_figure4_umaps_o2.pdf")
+  base_path, "/manuscript1/supp_figure6/supp_figure6_umaps_o2.pdf")
 ```
 
 # Reclustering heatmaps 

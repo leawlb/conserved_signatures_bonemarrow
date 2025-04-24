@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 #### Load objects
 
 ```{r seed, message = FALSE}
-base::RNGkind(kind = "Mersenne-Twister")
+RNGkind("L'Ecuyer-CMRG") 
 set.seed(37)
 ```
 
@@ -19,6 +19,8 @@ set.seed(37)
 library(tidyverse, quietly = TRUE)
 library(SingleCellExperiment, quietly = TRUE)
 library(ggpubr, quietly = TRUE)
+library(Seurat)
+library(SeuratObject)
 ```
 
 ```{r base_path}
@@ -61,11 +63,28 @@ output_pdf_b <- base::paste0(
   base_path,
   "/manuscript1/supp_figure3/sfigure3_b.pdf")
 
+output_pdf_umap_neu <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure3/sfigure3_umap_n.pdf")
+
+output_pdf_umap_lym <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure3/sfigure3_umap_l.pdf")
+
+output_pdf_condplot <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure3/sfigure3_cond_plot.pdf")
+  
+output_pdf_condlegend <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure3/sfigure3_cond_legend.pdf")
 ```
 
 ```{r params}
 # global params
 source("determine_params.R")
+
+colors_z_score_cond <- c("purple2", "white", "orange")
 
 celltypes_exclude <- c("Chondrocyte", "Lymphatic EC")
 ```
@@ -79,15 +98,11 @@ hsc_nrcells_df <- base::as.data.frame(
 hsc_nrcells_df$nr_signature_genes <- vector(length =nrow(hsc_nrcells_df))
 
 for(i in 1:nrow(hsc_nrcells_df)){
-  print(i)
   ct <- hsc_nrcells_df$Var1[i]
-  print(ct)
   nr_genes <- length(geneset_list_hsc[[
     which(names(geneset_list_hsc) == ct)]]$conserved_signature)
   hsc_nrcells_df$nr_signature_genes[i] <- as.numeric(nr_genes)
 }
-
-hsc_nrcells_df
 ```
 
 ```{r prep_str_nrcell}
@@ -99,15 +114,11 @@ str_nrcells_df <- base::as.data.frame(
 str_nrcells_df$nr_signature_genes <- vector(length =nrow(str_nrcells_df))
 
 for(i in 1:nrow(str_nrcells_df)){
-  print(i)
   ct <- str_nrcells_df$Var1[i]
-  print(ct)
   nr_genes <- length(geneset_list_str[[
     which(names(geneset_list_str) == ct)]]$conserved_signature)
   str_nrcells_df$nr_signature_genes[i] <- nr_genes
 }
-
-str_nrcells_df
 ```
 
 ```{r fig.width = 8, fig.height = 6}
@@ -140,14 +151,13 @@ b_theme_plot <- b_base_plot+
   xlab("# cells per cell type")+
   scale_y_continuous(limits = c(0, 230), breaks = c(0, 100, 200))+
   scale_x_continuous(limits = c(0, 12000), breaks = c(0, 5000, 10000))+
-  theme_all+
-  theme(strip.background = element_blank(),
-        strip.text = element_text(
-          size = axis_text_size,
-          face = axis_text_face,
-          color = axis_text_color
-        ),
-        )
+  theme_all_supp+
+  theme(
+    strip.background = element_blank(),
+    strip.text = element_text(
+      size = 16,
+      face = axis_text_face,
+      color = axis_text_color))
 
 b_theme_plot
 ```
@@ -156,10 +166,6 @@ b_theme_plot
 pdf(output_pdf_b, width = 8, height = 7)
 b_theme_plot
 dev.off()
-```
-
-```{r}
-knitr::knit_exit()
 ```
 
 # UMAPs of branches
@@ -179,7 +185,7 @@ lym_pseudo <- base::readRDS(base::paste0(
 assays(lym_pseudo) <- list()
 
 # fully annotated SCE object (HSPCs), neu branch cells only, with 
-# pseudotime and mei differentiation probability
+# pseudotime and neu differentiation probability
 neu_pseudo <- base::readRDS(base::paste0(
   base_path, 
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/05_bsce/sce_neu"))
@@ -312,7 +318,7 @@ pt_umaps_theme_plot_neu <- pt_umaps_base_plot_neu+
 pt_umaps_theme_plot_neu
 ```
 
-#### PT and then all branches
+#### PT just to be safe
 
 ```{r}
 hsc_umap_pt <- base::as.data.frame(
@@ -323,34 +329,6 @@ hsc_umap_pt <- hsc_umap_pt[base::sample(
   1:nrow(hsc_umap_pt),
   nrow(hsc_umap_pt),
   replace = FALSE),]
-
-hsc_umap_ery <- base::as.data.frame(
-  SingleCellExperiment::reducedDim(
-    sce_hsc, type = "UMAP"))
-hsc_umap_ery$color_by <- sce_hsc$ery 
-hsc_umap_ery <- hsc_umap_ery[base::sample(
-  1:nrow(hsc_umap_ery),
-  nrow(hsc_umap_ery),
-  replace = FALSE),]
-
-hsc_umap_lym <- base::as.data.frame(
-  SingleCellExperiment::reducedDim(
-    sce_hsc, type = "UMAP"))
-hsc_umap_lym$color_by <- sce_hsc$lymph 
-hsc_umap_lym <- hsc_umap_lym[base::sample(
-  1:nrow(hsc_umap_lym),
-  nrow(hsc_umap_lym),
-  replace = FALSE),]
-
-hsc_umap_neu <- base::as.data.frame(
-  SingleCellExperiment::reducedDim(
-    sce_hsc, type = "UMAP"))
-hsc_umap_neu$color_by <- sce_hsc$neu
-hsc_umap_neu <- hsc_umap_neu[base::sample(
-  1:nrow(hsc_umap_neu),
-  nrow(hsc_umap_neu),
-  replace = FALSE),]
-
 ```
 
 ```{r pt_umaps_base_plot_1}
@@ -367,89 +345,50 @@ pt_umaps_base_plot_1 <- ggplot2::ggplot(
   ggplot2::scale_color_gradientn(
     "Diffusion pseudotime",
     colours = c("#061F42", "#8FBEFF"))
-pt_umaps_base_plot_1
 ```
 
-```{r pt_umaps_base_lym_p}
-pt_umaps_base_lym_p <- ggplot2::ggplot(
-  hsc_umap_lym, 
-  aes(x = X1,
-      y = X2,
-      color = color_by))+
-  ggplot2::geom_point(
-    size = umap_point_size,
-    alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(hsc_umap_lym$X1)-1, base::max(hsc_umap_lym$X1))+1)+
-  ggplot2::ylim(c(base::min(hsc_umap_lym$X2)-1, base::max(hsc_umap_lym$X2))+1)+
-  ggplot2::scale_color_gradientn(
-    limits = c(0, 1),
-    breaks = c(0, 0.5, 1),
-    na.value = "grey90",
-    "Lymphoid differentiation probability",
-    colours = c("grey80",  "#061F42"))
-
-pt_umaps_base_lym_p   
+```{r export_umap_neu}
+pdf(output_pdf_umap_neu, width = 3, height = 3)
+pt_umaps_theme_plot_neu
+dev.off()
 ```
 
-```{r pt_umaps_base_neu_p}
-pt_umaps_base_neu_p <- ggplot2::ggplot(
-  hsc_umap_neu, 
-  aes(x = X1,
-      y = X2,
-      color = color_by))+
-  ggplot2::geom_point(
-    size = umap_point_size,
-    alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(hsc_umap_neu$X1)-1, base::max(hsc_umap_neu$X1))+1)+
-  ggplot2::ylim(c(base::min(hsc_umap_neu$X2)-1, base::max(hsc_umap_neu$X2))+1)+
-  ggplot2::scale_color_gradientn(
-    limits = c(0, 1),
-    breaks = c(0, 0.5, 1),
-    na.value = "grey90",
-    "Neutrophil differentiation probability",
-    colours = c("grey80", "#061F42"))
-pt_umaps_base_neu_p
-```
-
-```{r pt_umaps_base_ery_p}
-pt_umaps_base_ery_p <- ggplot2::ggplot(
-  hsc_umap_ery, 
-  aes(x = X1,
-      y = X2,
-      color = color_by))+
-  ggplot2::geom_point(
-    size = umap_point_size,
-    alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(hsc_umap_ery$X1)-1, base::max(hsc_umap_ery$X1))+1)+
-  ggplot2::ylim(c(base::min(hsc_umap_ery$X2)-1, base::max(hsc_umap_ery$X2))+1)+
-  ggplot2::scale_color_gradientn(
-    limits = c(0, 1),
-    breaks = c(0, 0.5, 1),
-    na.value = "grey90",
-    "Erythroid differentiation probability",
-    colours = c("grey80", "#061F42"))
-pt_umaps_base_ery_p
+```{r export_plot_lym}
+pdf(output_pdf_umap_lym, width = 3, height = 3)
+pt_umaps_theme_plot_lym
+dev.off()
 ```
 
 #### Age- and Species-separated expression of Ly6a, Cited2 and Pbx1
 
-```{r heatmap_conds1}
+```{r heatmap_conds, eval = FALSE, include = FALSE}
+# converting to Seurat doesn't really work for some reason, but it's also
+# not really required in this case
 metadata <- sce_hsc@colData@listData
-sce_hsc_seurat <- SeuratObject::CreateSeuratObject(counts = sce_hsc@assays@data@listData[["logcounts"]],
-                           meta.data = metadata)
 
-# assign gene list!!
+sce_hsc_seurat <- SeuratObject::CreateSeuratObject(
+  counts = sce_hsc@assays@data@listData[["logcounts"]],
+  meta.data = metadata)
+```
+
+```{r heatmap_conds1}
 g <- c(
   "Ly6a",
+  "Procr",
   "Pbx1",
   "Cited2"
 )
 
-metadata$expression <- SeuratObject::FetchData(sce_hsc_seurat, 
-                        vars = g)
+metadata <- sce_hsc@colData@listData
+
+expression <- as.data.frame(t(as.matrix(logcounts(sce_hsc)[
+  rownames(logcounts(sce_hsc)) %in% g,])))
+metadata$expression <- expression
+
 metadata$celltypes <- as.character(metadata$celltypes)
 gene_expression <- metadata$expression %>%
   cbind(do.call(cbind, metadata[c("Species_ID", "Age_ID", "celltypes")]))
+
 ```
 
 ```{r heatmap_conds2}
@@ -481,6 +420,15 @@ plot_3 <- plot_3 %>%
 plot_3$signature <- lapply(plot_3$celltypes, function(x){
   g[3] %in% geneset_list_hsc[[x]][["conserved_signature"]]
 }) %>% unlist()
+
+plot_4 <- gene_expression[,c(g[4], "Species_ID", "Age_ID", "celltypes")] 
+colnames(plot_4)[1] <- "gene"
+plot_4 <- plot_4 %>%
+  group_by(Species_ID, Age_ID, celltypes) %>%
+  summarize(mean = mean(gene))
+plot_4$signature <- lapply(plot_4$celltypes, function(x){
+  g[4] %in% geneset_list_hsc[[x]][["conserved_signature"]]
+}) %>% unlist()
 ```
 
 ```{r heatmap_conds3}
@@ -508,13 +456,44 @@ plot_3$condition <- base::paste(plot_3$Species_ID, plot_3$Age_ID)
 plot_3$condition_rev <- plot_3$condition
 plot_3$condition <- factor(plot_3$condition, levels = order_condition)
 plot_3$conditionrev <- factor(plot_3$condition, levels = rev(order_condition))
+
+plot_4$condition <- base::paste(plot_4$Species_ID, plot_4$Age_ID)
+plot_4$condition_rev <- plot_4$condition
+plot_4$condition <- factor(plot_4$condition, levels = order_condition)
+plot_4$conditionrev <- factor(plot_4$condition, levels = rev(order_condition))
+```
+
+```{r heatmap_conds3_5}
+# scale the expression levels now for better comparability/only one legend
+
+plot_1$z_score <- (plot_1$mean - base::mean(plot_1$mean))/
+    stats::sd(plot_1$mean)
+
+plot_2$z_score <- (plot_2$mean - base::mean(plot_2$mean))/
+    stats::sd(plot_2$mean)
+
+plot_3$z_score <- (plot_3$mean - base::mean(plot_3$mean))/
+    stats::sd(plot_3$mean)
+
+plot_4$z_score <- (plot_4$mean - base::mean(plot_4$mean))/
+    stats::sd(plot_4$mean)
+
+max_zs <- base::max(plot_1$z_score,
+                    plot_2$z_score,
+                    plot_3$z_score,
+                    plot_4$z_score)
+min_zs <- base::min(plot_1$z_score,
+                    plot_2$z_score, 
+                    plot_3$z_score,
+                    plot_4$z_score)
+midpoint <- (max_zs+min_zs)/2
 ```
 
 ```{r heatmap_conds4}
 marker_1_wide <- ggplot(plot_1,
        aes(x = factor(celltypes, levels = names(geneset_list_hsc)),
            y = conditionrev,
-           fill = mean,
+           fill = z_score,
            color = signature,
            size = signature)) +
   geom_tile(width = 0.95, 
@@ -524,8 +503,14 @@ marker_1_wide <- ggplot(plot_1,
   scale_color_manual(guide = "none", values = c(alpha("black", 0), "grey50")) +
   scale_size_manual(guide = "none", values = c(0, 0.4)) +
   labs(x = NULL, y = NULL, title = g[1]) +
-  scale_fill_gradient2(low = "blue3", mid = "white", high = "red3",
-                       midpoint = mean(plot_1$mean)) +
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene", 
+    colours = colors_z_score_cond,
+    breaks = c(-8, -4, 0, 4, 8),
+    limits = c(-8,8)
+    # breaks = c(-6, -3, 0, 3, 6),
+    # limits = c(-6,6)
+    )+
   theme(legend.position = "none")
 ```
 
@@ -533,7 +518,7 @@ marker_1_wide <- ggplot(plot_1,
 marker_2_wide <- ggplot(plot_2,
        aes(x = factor(celltypes, levels = names(geneset_list_hsc)),
            y = conditionrev,
-           fill = mean,
+           fill = z_score,
            color = signature,
            size = signature)) +
   geom_tile(width = 0.95, 
@@ -543,17 +528,20 @@ marker_2_wide <- ggplot(plot_2,
   scale_color_manual(guide = "none", values = c(alpha("black", 0), "grey50")) +
   scale_size_manual(guide = "none", values = c(0, 0.4)) +
   labs(x = NULL, y = NULL, title = g[2]) +
-  scale_fill_gradient2(low = "blue3", mid = "white", high = "red3",
-                       midpoint = mean(plot_2$mean)) +
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene", 
+    colours = colors_z_score_cond,
+    breaks = c(-8, -4, 0, 4, 8),
+    limits = c(-8,8)
+    )+
   theme(legend.position = "none")
 ```
-
 
 ```{r heatmap_conds6}
 marker_3_wide <- ggplot(plot_3,
        aes(x = factor(celltypes, levels = names(geneset_list_hsc)),
            y = conditionrev,
-           fill = mean,
+           fill = z_score,
            color = signature,
            size = signature)) +
   geom_tile(width = 0.95, 
@@ -563,8 +551,41 @@ marker_3_wide <- ggplot(plot_3,
   scale_color_manual(guide = "none", values = c(alpha("black", 0), "grey50")) +
   scale_size_manual(guide = "none", values = c(0, 0.4)) +
   labs(x = NULL, y = NULL, title = g[3]) +
-  scale_fill_gradient2(low = "blue3", mid = "white", high = "red3",
-                       midpoint = mean(plot_3$mean)) +
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene", 
+    colours = colors_z_score_cond,
+    breaks = c(-8, -4, 0, 4, 8),
+    limits = c(-8,8)
+    # breaks = c(-5, -2.5, 0, 2.5, 5), 
+    # limits = c(-5.5,5.5)
+    )+
+  theme(legend.position = "none")
+
+# still need to get colors, legend, etc all correct
+```
+
+```{r heatmap_conds7}
+marker_4_wide <- ggplot(plot_4,
+       aes(x = factor(celltypes, levels = names(geneset_list_hsc)),
+           y = conditionrev,
+           fill = z_score,
+           color = signature,
+           size = signature)) +
+  geom_tile(width = 0.95, 
+            height = 0.95) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, h = 1)) +
+  scale_color_manual(guide = "none", values = c(alpha("black", 0), "grey50")) +
+  scale_size_manual(guide = "none", values = c(0, 0.4)) +
+  labs(x = NULL, y = NULL, title = g[4]) +
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene", 
+    colours = colors_z_score_cond,
+    breaks = c(-8, -4, 0, 4, 8),
+    limits = c(-8,8)
+    # breaks = c(-3, -1.5, 0, 1.5, 3),
+    # limits = c(-3,3)
+    )+
   theme(legend.position = "none")
 
 # still need to get colors, legend, etc all correct
@@ -572,7 +593,7 @@ marker_3_wide <- ggplot(plot_3,
 
 ```{r marker_1_theme}
 marker_1_theme_stacked <- marker_1_wide+
-  #theme_all+
+  theme_all_supp+
   ggplot2::theme(
     axis.title.y = element_blank(),
     axis.title.x = element_blank(),
@@ -584,14 +605,14 @@ marker_1_theme_stacked <- marker_1_wide+
       face = "italic",
       hjust = 0.5),
     legend.title = element_blank(),
-    legend.position = "right")+
+    legend.position = "none")+
   ggplot2::scale_y_discrete(expand = c(0, 0))+
   ggplot2::scale_x_discrete(expand = c(0, 0))
 ```
 
 ```{r marker_2_theme}
 marker_2_theme_stacked <- marker_2_wide+
-  #theme_all+
+  theme_all_supp+
   ggplot2::theme(
     axis.title.y = element_blank(),
     axis.title.x = element_blank(),
@@ -603,19 +624,38 @@ marker_2_theme_stacked <- marker_2_wide+
       face = "italic",
       hjust = 0.5),
     legend.title = element_blank(),
-    legend.position = "right")+
+    legend.position = "none")+
   ggplot2::scale_y_discrete(expand = c(0, 0))+
   ggplot2::scale_x_discrete(expand = c(0, 0))
 ```
 
 ```{r marker_3_theme}
 marker_3_theme_stacked <- marker_3_wide+
-  #theme_all+
+  theme_all_supp+
+  ggplot2::theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_text(
+      vjust = 0.5,
+      hjust = 0),
+    plot.title = element_text(
+      face = "italic",
+      hjust = 0.5),
+    legend.title = element_blank(),
+    legend.position = "none")+
+  ggplot2::scale_y_discrete(expand = c(0, 0))+
+  ggplot2::scale_x_discrete(expand = c(0, 0))
+```
+
+```{r marker_4_theme}
+marker_4_theme_stacked <- marker_4_wide+
+  theme_all_supp+
   ggplot2::theme(
     axis.title.y = element_blank(),
     axis.title.x = element_blank(),
     axis.text.x = element_text(
-      hjust = 0,
+      hjust = 1,
       vjust = 0.5,
       angle = 90),
     axis.text.y = element_text(
@@ -625,18 +665,42 @@ marker_3_theme_stacked <- marker_3_wide+
       face = "italic",
       hjust = 0.5),
     legend.title = element_blank(),
-    legend.position = "right")+
+    legend.position = "none")+
   ggplot2::scale_y_discrete(expand = c(0, 0))+
   ggplot2::scale_x_discrete(expand = c(0, 0))
 ```
 
-```{r heatmap_conds_assemble_stacked, fig.width = 4.5, fig.height = 9}
+```{r heatmap_conds_assemble_stacked, fig.width = 5, fig.height = 11}
 heatmap_conds_stacked_plot <- ggpubr::ggarrange(
     marker_1_theme_stacked,
     marker_2_theme_stacked,
     marker_3_theme_stacked,
+    marker_4_theme_stacked,
     ncol = 1,
-    heights = c(1, 1, 1.7)
+    heights = c(1, 1, 1, 1.8)
   )
 heatmap_conds_stacked_plot
 ```
+
+```{r legend, fig.width = 4, fig.height = 1}
+legend_plot <- marker_4_wide+
+  theme_all_supp+
+  theme(legend.position = "bottom")
+
+legend <- ggpubr::get_legend(legend_plot)
+legend <- ggpubr::ggarrange(legend)
+legend
+```
+
+```{r output_pdf_condplot}
+pdf(output_pdf_condplot, width = 5, height = 11)
+heatmap_conds_stacked_plot
+dev.off()
+```
+
+```{r output_pdf_condlegend}
+pdf(output_pdf_condlegend, width = 4, height = 1)
+legend
+dev.off()
+```
+

@@ -256,14 +256,26 @@ agg_hsc_df$species <- factor(agg_hsc_df$species,
 ```
 
 ```{r sign_heatmap6}
-interest_genes <- c("Msi2",
-                    "Angpt1",
+interest_genes <- c("Lmo2",
+                    "Txnip",
+                    "Pnrc1",
+                    "Msi2",
+                    "Mecom", 
+                    "Meis1",
+                    "Mpl",
+                    "Nkx2-3",
                     "Cd34",
+                    "Hlf",
                     "Mpo",
-                    "Tcf4", 
-                    "Itga2b",
+                    "Anxa2",
+                    "Cebpe",
+                    "Tcf4",
+                    "Lmo4",
+                    "Zfpm1",
+                    "Trib2",
                     "Klf1",
-                    "Ccnb2")
+                    "Blvrb",
+                    "Aurkb")
 
 agg_hsc_df$is_gene <- vector(length = nrow(agg_hsc_df))
 agg_hsc_df$is_gene[agg_hsc_df$gene %in% interest_genes] <- "TRUE"
@@ -518,7 +530,6 @@ interest_genes2 <- c(
   "Ly6a",
   "Cited2",
   "Cd74",
-  "Krt18",
   "Socs2",
   "Cd34",
   "Cd63",

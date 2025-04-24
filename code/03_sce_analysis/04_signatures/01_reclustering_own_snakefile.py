@@ -53,7 +53,9 @@ for f in fractions:
   targets = targets + [OUTPUT_DAT + "/02_endf/ensembl_mmms_" + f]
   
   targets = targets + [OUTPUT_DAT + "/03_recl/sce_" + f]
+  targets = targets + [OUTPUT_DAT + "/03_recl/reso_reclustered_list_" + f]
   targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_" + f]
+  targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_reso_" + f]
   targets = targets + [OUTPUT_REP + "/reclustering_own_report_" + f + ".html"]
 
   if RUN_SIGN_RAND_OWN_PERM:
@@ -262,6 +264,24 @@ rule reclustering_own:
     script:
         "01_scripts_own/03_reclustering_own.R"
 
+# just for testing resolutions
+rule reclustering_own_reso:
+    input:
+        sce_input = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10",
+        geneset_list = rules.export_genesets.output
+    params:
+        k_graph_list = config["values"]["02_sce_anno"]["k_graph_list"],
+        nr_cores = 8, # 4 genesets total for reclustering
+        cts_exclude = CELL_TYPES_EXCLUDE,
+        functions_reclustering = "../../source/sce_functions_reclustering.R"
+    output:
+        reso_reclustered_list = OUTPUT_DAT + "/03_recl/reso_reclustered_list_{fraction}"
+    resources:
+          mem_mb=200000,
+          queue = "verylong-debian"
+    threads: 8
+    script:
+        "01_scripts_own/03_reclustering_own_resolution.R"
 # get the reclustering scores for our own re-clustered datasets
 # the conda environment can be used to calculate many more types of scores
 # than are currently required - but were only used for testing
@@ -281,6 +301,23 @@ rule reclustering_own_scores:
         score_df = OUTPUT_DAT + "/04_rcls/score_df_{fraction}"
     script:
         "01_scripts_own/04_reclustering_own_scores.R"
+        
+# now for different resolutions
+rule reclustering_own_scores_reso:
+    input:
+        sce_list_reso = rules.reclustering_own_reso.output,
+    params:
+        functions_reclustering = "../../source/sce_functions_reclustering.R"
+    conda:
+        "../../envs/reclust_scores_perm.yml"
+    resources:
+          mem_mb=100000,
+          queue = "medium-debian"
+    threads: 4
+    output:
+        score_df_list = OUTPUT_DAT + "/04_rcls/score_df_reso_{fraction}"
+    script:
+        "01_scripts_own/04_reclustering_own_scores_resolution.R"
         
 # visualise re-clustering of own datasets, including scores
 rule reclustering_own_report:

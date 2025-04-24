@@ -1,0 +1,642 @@
+---
+title: "Supplementary Figure 3"
+date: '2024-11-27'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load objects
+
+```{r seed, message = FALSE}
+base::RNGkind(kind = "Mersenne-Twister")
+set.seed(37)
+```
+
+```{r load, message = FALSE}
+library(tidyverse, quietly = TRUE)
+library(SingleCellExperiment, quietly = TRUE)
+library(ggpubr, quietly = TRUE)
+```
+
+```{r base_path}
+base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+```
+
+```{r load_manual}
+# fully annotated SCE object (HSPCs)
+sce_hsc <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10"))
+sce_str <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10"))
+
+# list of gene sets for HSPCs (conserved signature, conserved markers, etc.)
+geneset_list_hsc <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"))
+
+# list of gene sets for Niche (conserved signature, conserved markers, etc.)
+geneset_list_str <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_str"))
+
+```
+
+```{r source}
+colors_path <- base::paste0(
+  base_path, 
+  "/metadata/colors/colors.txt")
+
+source("../source/colors.R")
+source("../source/plotting.R")
+```
+
+```{r pdf_output}
+# define output paths for pdf export
+output_pdf_b <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure3/sfigure3_b.pdf")
+
+```
+
+```{r params}
+# global params
+source("determine_params.R")
+
+celltypes_exclude <- c("Chondrocyte", "Lymphatic EC")
+```
+
+# Dotplot Nr of cells
+
+```{r prep_hsc_nrcell}
+
+hsc_nrcells_df <- base::as.data.frame(
+  base::table(sce_hsc$celltypes, sce_hsc$Species_ID))
+hsc_nrcells_df$nr_signature_genes <- vector(length =nrow(hsc_nrcells_df))
+
+for(i in 1:nrow(hsc_nrcells_df)){
+  print(i)
+  ct <- hsc_nrcells_df$Var1[i]
+  print(ct)
+  nr_genes <- length(geneset_list_hsc[[
+    which(names(geneset_list_hsc) == ct)]]$conserved_signature)
+  hsc_nrcells_df$nr_signature_genes[i] <- as.numeric(nr_genes)
+}
+
+hsc_nrcells_df
+```
+
+```{r prep_str_nrcell}
+
+# remove unwanted cell types first
+sce_str <- sce_str[,!sce_str$celltypes %in% celltypes_exclude]
+str_nrcells_df <- base::as.data.frame(
+  base::table(unfactor(sce_str$celltypes), sce_str$Species_ID))
+str_nrcells_df$nr_signature_genes <- vector(length =nrow(str_nrcells_df))
+
+for(i in 1:nrow(str_nrcells_df)){
+  print(i)
+  ct <- str_nrcells_df$Var1[i]
+  print(ct)
+  nr_genes <- length(geneset_list_str[[
+    which(names(geneset_list_str) == ct)]]$conserved_signature)
+  str_nrcells_df$nr_signature_genes[i] <- nr_genes
+}
+
+str_nrcells_df
+```
+
+```{r fig.width = 8, fig.height = 6}
+hsc_nrcells_df$fraction <- "HSPCs"
+str_nrcells_df$fraction <- "Niche"
+
+nr_cells_df <- rbind(hsc_nrcells_df ,str_nrcells_df)
+nr_cells_df$Var2 <- factor(nr_cells_df$Var2, levels = names(col_spc))
+```
+
+```{r b_base_plot}
+# using spearman because pearson tests for LINEAR vs spearman testing for MONOTONIC?
+# also less influenced by extreme values
+
+b_base_plot <- ggpubr::ggscatter(
+  nr_cells_df,
+  color = "Var1",
+  x = "Freq",
+  y = "nr_signature_genes")+
+  ggpubr::stat_cor(method = "spearman")+
+  ggplot2::facet_grid(rows = vars(nr_cells_df$Var2),
+                      cols= vars(nr_cells_df$fraction))+
+  ggplot2::scale_color_manual("Cell types", 
+                              values = c(col_cts_hsc, col_cts_str))
+```
+
+```{r, b_theme_plot, fig.width = 8, fig.height = 7}
+b_theme_plot <- b_base_plot+
+  ylab("# signature genes per cell type")+
+  xlab("# cells per cell type")+
+  scale_y_continuous(limits = c(0, 230), breaks = c(0, 100, 200))+
+  scale_x_continuous(limits = c(0, 12000), breaks = c(0, 5000, 10000))+
+  theme_all+
+  theme(strip.background = element_blank(),
+        strip.text = element_text(
+          size = axis_text_size,
+          face = axis_text_face,
+          color = axis_text_color
+        ),
+        )
+
+b_theme_plot
+```
+
+```{r export_b}
+pdf(output_pdf_b, width = 8, height = 7)
+b_theme_plot
+dev.off()
+```
+
+```{r}
+knitr::knit_exit()
+```
+
+# UMAPs of branches
+
+```{r load_large}
+# fully annotated SCE object (HSPCs) with diffusion pseudotime
+sce_hsc_all_pseudotime <- base::readRDS(base::paste0(
+ base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/04_psce/sce_hsc_pseudotime"))
+assays(sce_hsc_all_pseudotime) <- list()
+
+# fully annotated SCE object (HSPCs), lym branch cells only, with 
+# pseudotime and lym differentiation probability
+lym_pseudo <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/05_bsce/sce_lym"))
+assays(lym_pseudo) <- list()
+
+# fully annotated SCE object (HSPCs), neu branch cells only, with 
+# pseudotime and mei differentiation probability
+neu_pseudo <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/05_bsce/sce_neu"))
+assays(neu_pseudo) <- list()
+
+# fully annotated SCE object (HSPCs), lymphoid branch cells only, with 
+# pseudotime and lymphoid differentiation probability
+ery_pseudo <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/05_bsce/sce_ery"))
+assays(ery_pseudo) <- list()
+```
+
+```{r pt_umaps1}
+# transfer pseudotime info, then remove pseudotime SCE object
+sce_hsc$pseudotime <- sce_hsc_all_pseudotime$dpt_pseudotime
+rm(sce_hsc_all_pseudotime)
+gc()
+
+# add lym and neu info
+sce_hsc$lymph <- vector(length = ncol(sce_hsc))
+sce_hsc$lymph[base::match(colnames(lym_pseudo),
+                          colnames(sce_hsc))] <- lym_pseudo$Lymphoid
+
+sce_hsc$neu <- vector(length = ncol(sce_hsc))
+sce_hsc$neu[base::match(colnames(neu_pseudo),
+                          colnames(sce_hsc))] <- neu_pseudo$Neutrophil
+
+# add ery info
+# ery object is still needed later
+sce_hsc$ery <- vector(length = ncol(sce_hsc))
+sce_hsc$ery[base::match(colnames(ery_pseudo),
+                        colnames(sce_hsc))] <- ery_pseudo$Erythroid
+
+```
+
+#### Branch and PT
+
+But I think it doesn't look good
+
+```{r cutoff}
+# make it so that pseudotime values are only kept for cells that are in the
+# lymph and neutro branch
+
+lymph_cut_off <- min(lym_pseudo$Lymphoid)
+neu_cut_off <- min(neu_pseudo$Neutrophil)
+
+sce_hsc$pt_lym <- sce_hsc$pseudotime
+sce_hsc$pt_lym[sce_hsc$lymph < lymph_cut_off] <- NA
+
+sce_hsc$pt_neu <- sce_hsc$pseudotime
+sce_hsc$pt_neu[sce_hsc$neu < neu_cut_off] <- NA
+```
+
+
+```{r pt_umaps3}
+hsc_umap_comb_lym <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_hsc, type = "UMAP"))
+hsc_umap_comb_lym$color_by <- sce_hsc$pt_lym 
+hsc_umap_comb_lym <- hsc_umap_comb_lym[base::sample(
+  1:nrow(hsc_umap_comb_lym),
+  nrow(hsc_umap_comb_lym),
+  replace = FALSE),]
+
+hsc_umap_comb_neu <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_hsc, type = "UMAP"))
+hsc_umap_comb_neu$color_by <- sce_hsc$pt_neu
+hsc_umap_comb_neu <- hsc_umap_comb_neu[base::sample(
+  1:nrow(hsc_umap_comb_neu),
+  nrow(hsc_umap_comb_neu),
+  replace = FALSE),]
+
+```
+
+```{r pt_umaps_base_plot_lym}
+pt_umaps_base_plot_lym <- ggplot2::ggplot(
+  hsc_umap_comb_lym, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(hsc_umap_comb_lym$X1)-1,
+                  base::max(hsc_umap_comb_lym$X1))+1)+
+  ggplot2::ylim(c(base::min(hsc_umap_comb_lym$X2)-1, 
+                  base::max(hsc_umap_comb_lym$X2))+1)+
+  ggplot2::scale_color_gradientn(
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1),
+    na.value = "grey90",
+    "Pseudotime within\nLymhpoid branch",
+    colours = c("#061F42", "#8FBEFF"))
+
+```
+
+```{r pt_umaps_base_plot_neu}
+pt_umaps_base_plot_neu <- ggplot2::ggplot(
+  hsc_umap_comb_neu,
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(hsc_umap_comb_neu$X1)-1,
+                  base::max(hsc_umap_comb_neu$X1))+1)+
+  ggplot2::ylim(c(base::min(hsc_umap_comb_neu$X2)-1, 
+                  base::max(hsc_umap_comb_neu$X2))+1)+
+  ggplot2::scale_color_gradientn(
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1),
+    na.value = "grey90",
+    "Pseudotime within\nNeutrophil branch",
+    colours = c("#061F42", "#8FBEFF"))
+
+```
+
+```{r pt_umaps_theme_plot_lym, fig.width = 3, fig.height = 3}
+pt_umaps_theme_plot_lym <- pt_umaps_base_plot_lym+
+  cowplot::theme_nothing()
+pt_umaps_theme_plot_lym
+```
+
+```{r pt_umaps_theme_plot_neu, fig.width = 3, fig.height = 3}
+pt_umaps_theme_plot_neu <- pt_umaps_base_plot_neu+
+  cowplot::theme_nothing()
+pt_umaps_theme_plot_neu
+```
+
+#### PT and then all branches
+
+```{r}
+hsc_umap_pt <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_hsc, type = "UMAP"))
+hsc_umap_pt$color_by <- sce_hsc$pseudotime 
+hsc_umap_pt <- hsc_umap_pt[base::sample(
+  1:nrow(hsc_umap_pt),
+  nrow(hsc_umap_pt),
+  replace = FALSE),]
+
+hsc_umap_ery <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_hsc, type = "UMAP"))
+hsc_umap_ery$color_by <- sce_hsc$ery 
+hsc_umap_ery <- hsc_umap_ery[base::sample(
+  1:nrow(hsc_umap_ery),
+  nrow(hsc_umap_ery),
+  replace = FALSE),]
+
+hsc_umap_lym <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_hsc, type = "UMAP"))
+hsc_umap_lym$color_by <- sce_hsc$lymph 
+hsc_umap_lym <- hsc_umap_lym[base::sample(
+  1:nrow(hsc_umap_lym),
+  nrow(hsc_umap_lym),
+  replace = FALSE),]
+
+hsc_umap_neu <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_hsc, type = "UMAP"))
+hsc_umap_neu$color_by <- sce_hsc$neu
+hsc_umap_neu <- hsc_umap_neu[base::sample(
+  1:nrow(hsc_umap_neu),
+  nrow(hsc_umap_neu),
+  replace = FALSE),]
+
+```
+
+```{r pt_umaps_base_plot_1}
+pt_umaps_base_plot_1 <- ggplot2::ggplot(
+  hsc_umap_pt, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(hsc_umap_pt$X1)-1, base::max(hsc_umap_pt$X1))+1)+
+  ggplot2::ylim(c(base::min(hsc_umap_pt$X2)-1, base::max(hsc_umap_pt$X2))+1)+
+  ggplot2::scale_color_gradientn(
+    "Diffusion pseudotime",
+    colours = c("#061F42", "#8FBEFF"))
+pt_umaps_base_plot_1
+```
+
+```{r pt_umaps_base_lym_p}
+pt_umaps_base_lym_p <- ggplot2::ggplot(
+  hsc_umap_lym, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(hsc_umap_lym$X1)-1, base::max(hsc_umap_lym$X1))+1)+
+  ggplot2::ylim(c(base::min(hsc_umap_lym$X2)-1, base::max(hsc_umap_lym$X2))+1)+
+  ggplot2::scale_color_gradientn(
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1),
+    na.value = "grey90",
+    "Lymphoid differentiation probability",
+    colours = c("grey80",  "#061F42"))
+
+pt_umaps_base_lym_p   
+```
+
+```{r pt_umaps_base_neu_p}
+pt_umaps_base_neu_p <- ggplot2::ggplot(
+  hsc_umap_neu, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(hsc_umap_neu$X1)-1, base::max(hsc_umap_neu$X1))+1)+
+  ggplot2::ylim(c(base::min(hsc_umap_neu$X2)-1, base::max(hsc_umap_neu$X2))+1)+
+  ggplot2::scale_color_gradientn(
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1),
+    na.value = "grey90",
+    "Neutrophil differentiation probability",
+    colours = c("grey80", "#061F42"))
+pt_umaps_base_neu_p
+```
+
+```{r pt_umaps_base_ery_p}
+pt_umaps_base_ery_p <- ggplot2::ggplot(
+  hsc_umap_ery, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(hsc_umap_ery$X1)-1, base::max(hsc_umap_ery$X1))+1)+
+  ggplot2::ylim(c(base::min(hsc_umap_ery$X2)-1, base::max(hsc_umap_ery$X2))+1)+
+  ggplot2::scale_color_gradientn(
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1),
+    na.value = "grey90",
+    "Erythroid differentiation probability",
+    colours = c("grey80", "#061F42"))
+pt_umaps_base_ery_p
+```
+
+#### Age- and Species-separated expression of Ly6a, Cited2 and Pbx1
+
+```{r heatmap_conds1}
+metadata <- sce_hsc@colData@listData
+sce_hsc_seurat <- SeuratObject::CreateSeuratObject(counts = sce_hsc@assays@data@listData[["logcounts"]],
+                           meta.data = metadata)
+
+# assign gene list!!
+g <- c(
+  "Ly6a",
+  "Pbx1",
+  "Cited2"
+)
+
+metadata$expression <- SeuratObject::FetchData(sce_hsc_seurat, 
+                        vars = g)
+metadata$celltypes <- as.character(metadata$celltypes)
+gene_expression <- metadata$expression %>%
+  cbind(do.call(cbind, metadata[c("Species_ID", "Age_ID", "celltypes")]))
+```
+
+```{r heatmap_conds2}
+plot_1 <- gene_expression[,c(g[1], "Species_ID", "Age_ID", "celltypes")] 
+colnames(plot_1)[1] <- "gene"
+plot_1 <- plot_1 %>%
+  group_by(Species_ID, Age_ID, celltypes) %>%
+  summarize(mean = mean(gene))
+plot_1$signature <- lapply(plot_1$celltypes, function(x){
+  g[1] %in% geneset_list_hsc[[x]][["conserved_signature"]]
+}) %>% unlist()
+
+
+plot_2 <- gene_expression[,c(g[2], "Species_ID", "Age_ID", "celltypes")] 
+colnames(plot_2)[1] <- "gene"
+plot_2 <- plot_2 %>%
+  group_by(Species_ID, Age_ID, celltypes) %>%
+  summarize(mean = mean(gene))
+plot_2$signature <- lapply(plot_2$celltypes, function(x){
+  g[2] %in% geneset_list_hsc[[x]][["conserved_signature"]]
+}) %>% unlist()
+
+
+plot_3 <- gene_expression[,c(g[3], "Species_ID", "Age_ID", "celltypes")] 
+colnames(plot_3)[1] <- "gene"
+plot_3 <- plot_3 %>%
+  group_by(Species_ID, Age_ID, celltypes) %>%
+  summarize(mean = mean(gene))
+plot_3$signature <- lapply(plot_3$celltypes, function(x){
+  g[3] %in% geneset_list_hsc[[x]][["conserved_signature"]]
+}) %>% unlist()
+```
+
+```{r heatmap_conds3}
+order_condition <- c(
+ "mmus yng",
+ "mmus old",
+ "mcas yng",
+ "mcas old",
+ "mspr yng",
+ "mspr old",
+ "mcar yng",
+ "mcar old"
+)
+plot_1$condition <- base::paste(plot_1$Species_ID, plot_1$Age_ID)
+plot_1$condition_rev <- plot_1$condition
+plot_1$condition <- factor(plot_1$condition, levels = order_condition)
+plot_1$conditionrev <- factor(plot_1$condition, levels = rev(order_condition))
+
+plot_2$condition <- base::paste(plot_2$Species_ID, plot_2$Age_ID)
+plot_2$condition_rev <- plot_2$condition
+plot_2$condition <- factor(plot_2$condition, levels = order_condition)
+plot_2$conditionrev <- factor(plot_2$condition, levels = rev(order_condition))
+
+plot_3$condition <- base::paste(plot_3$Species_ID, plot_3$Age_ID)
+plot_3$condition_rev <- plot_3$condition
+plot_3$condition <- factor(plot_3$condition, levels = order_condition)
+plot_3$conditionrev <- factor(plot_3$condition, levels = rev(order_condition))
+```
+
+```{r heatmap_conds4}
+marker_1_wide <- ggplot(plot_1,
+       aes(x = factor(celltypes, levels = names(geneset_list_hsc)),
+           y = conditionrev,
+           fill = mean,
+           color = signature,
+           size = signature)) +
+  geom_tile(width = 0.95, 
+            height = 0.95) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, h = 1)) +
+  scale_color_manual(guide = "none", values = c(alpha("black", 0), "grey50")) +
+  scale_size_manual(guide = "none", values = c(0, 0.4)) +
+  labs(x = NULL, y = NULL, title = g[1]) +
+  scale_fill_gradient2(low = "blue3", mid = "white", high = "red3",
+                       midpoint = mean(plot_1$mean)) +
+  theme(legend.position = "none")
+```
+
+```{r heatmap_conds5}
+marker_2_wide <- ggplot(plot_2,
+       aes(x = factor(celltypes, levels = names(geneset_list_hsc)),
+           y = conditionrev,
+           fill = mean,
+           color = signature,
+           size = signature)) +
+  geom_tile(width = 0.95, 
+            height = 0.95) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, h = 1)) +
+  scale_color_manual(guide = "none", values = c(alpha("black", 0), "grey50")) +
+  scale_size_manual(guide = "none", values = c(0, 0.4)) +
+  labs(x = NULL, y = NULL, title = g[2]) +
+  scale_fill_gradient2(low = "blue3", mid = "white", high = "red3",
+                       midpoint = mean(plot_2$mean)) +
+  theme(legend.position = "none")
+```
+
+
+```{r heatmap_conds6}
+marker_3_wide <- ggplot(plot_3,
+       aes(x = factor(celltypes, levels = names(geneset_list_hsc)),
+           y = conditionrev,
+           fill = mean,
+           color = signature,
+           size = signature)) +
+  geom_tile(width = 0.95, 
+            height = 0.95) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, h = 1)) +
+  scale_color_manual(guide = "none", values = c(alpha("black", 0), "grey50")) +
+  scale_size_manual(guide = "none", values = c(0, 0.4)) +
+  labs(x = NULL, y = NULL, title = g[3]) +
+  scale_fill_gradient2(low = "blue3", mid = "white", high = "red3",
+                       midpoint = mean(plot_3$mean)) +
+  theme(legend.position = "none")
+
+# still need to get colors, legend, etc all correct
+```
+
+```{r marker_1_theme}
+marker_1_theme_stacked <- marker_1_wide+
+  #theme_all+
+  ggplot2::theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_text(
+      vjust = 0.5,
+      hjust = 0),
+    plot.title = element_text(
+      face = "italic",
+      hjust = 0.5),
+    legend.title = element_blank(),
+    legend.position = "right")+
+  ggplot2::scale_y_discrete(expand = c(0, 0))+
+  ggplot2::scale_x_discrete(expand = c(0, 0))
+```
+
+```{r marker_2_theme}
+marker_2_theme_stacked <- marker_2_wide+
+  #theme_all+
+  ggplot2::theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_text(
+      vjust = 0.5,
+      hjust = 0),
+    plot.title = element_text(
+      face = "italic",
+      hjust = 0.5),
+    legend.title = element_blank(),
+    legend.position = "right")+
+  ggplot2::scale_y_discrete(expand = c(0, 0))+
+  ggplot2::scale_x_discrete(expand = c(0, 0))
+```
+
+```{r marker_3_theme}
+marker_3_theme_stacked <- marker_3_wide+
+  #theme_all+
+  ggplot2::theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(
+      hjust = 0,
+      vjust = 0.5,
+      angle = 90),
+    axis.text.y = element_text(
+      vjust = 0.5,
+      hjust = 0),
+    plot.title = element_text(
+      face = "italic",
+      hjust = 0.5),
+    legend.title = element_blank(),
+    legend.position = "right")+
+  ggplot2::scale_y_discrete(expand = c(0, 0))+
+  ggplot2::scale_x_discrete(expand = c(0, 0))
+```
+
+```{r heatmap_conds_assemble_stacked, fig.width = 4.5, fig.height = 9}
+heatmap_conds_stacked_plot <- ggpubr::ggarrange(
+    marker_1_theme_stacked,
+    marker_2_theme_stacked,
+    marker_3_theme_stacked,
+    ncol = 1,
+    heights = c(1, 1, 1.7)
+  )
+heatmap_conds_stacked_plot
+```

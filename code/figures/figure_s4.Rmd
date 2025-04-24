@@ -1,0 +1,643 @@
+---
+title: "Supplementary Figure 4"
+date: '2024-11-28'
+output: html_document
+---
+
+For Figure 3.
+Figure S4 = reclustering score selection, optimization, heatmaps
+Figure S5 = reclustering permutation tests
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load objects
+
+```{r seed, message = FALSE}
+RNGkind("L'Ecuyer-CMRG") 
+set.seed(37)
+```
+
+```{r load, message = FALSE}
+library(tidyverse, quietly = TRUE)
+library(SingleCellExperiment, quietly = TRUE)
+library(ggpubr, quietly = TRUE)
+```
+
+```{r base_path}
+base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+```
+
+```{r load_manual}
+# list of score dfs from hscs
+score_df_list_hsc <-  base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/04_rcls/score_df_reso_hsc"))
+
+score_df_list_hsc_new <- list()
+for(res in names(score_df_list_hsc)){
+  for(cons_level in names(score_df_list_hsc[[res]])){
+    score_df_list_hsc_new[[cons_level]][[res]] <- score_df_list_hsc[[res]][[cons_level]]
+  }
+}
+
+score_df_list_str <-  base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/04_rcls/score_df_reso_str"))
+
+score_df_list_str_new <- list()
+for(res in names(score_df_list_str)){
+  for(cons_level in names(score_df_list_str[[res]])){
+    score_df_list_str_new[[cons_level]][[res]] <- score_df_list_str[[res]][[cons_level]]
+  }
+}
+
+```
+
+```{r load_manual_res}
+# data frame containing the correct resolutions for other datasets as visually determined
+resolution_df_path <- base::paste0(
+  base_path,
+  "/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt")
+
+resolution_df <- utils::read.csv(file = resolution_df_path, 
+                               header = TRUE, 
+                               sep = ";", 
+                               check.names=FALSE, 
+                               stringsAsFactors=FALSE, 
+                               as.is=TRUE, 
+                               colClasses = "character")
+```
+
+```{r load_manual_other1}
+#### OTHER MOUSE DATASET 1 (HSPC)
+
+dataset_o1 <- "mus_tm_bonemarrow"
+
+score_df_list_o1 <-base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_mus_tm_bonemarrow_list"))
+
+```
+
+```{r load_manual_other2}
+#### OTHER MOUSE DATASET 2 (HSPC)
+
+dataset_o2 <- "mus_weinreb_hspc"
+
+score_df_list_o2 <-base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_mus_weinreb_hspc_list"))
+
+```
+
+```{r load_manual_other3}
+#### OTHER MOUSE DATASET 3 (Niche)
+
+dataset_o3 <- "mus_tik_stromal"
+
+score_df_list_o3 <-base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_mus_tik_stromal_list"))
+
+```
+
+```{r load_manual_other4}
+#### OTHER MOUSE DATASET 4 (Niche)
+
+dataset_o4 <- "mus_bar_stromal"
+
+score_df_list_o4 <-base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_mus_bar_stromal_list"))
+
+```
+
+```{r load_manual_other5}
+#### OTHER HUMAN DATASET 5 (HSPC)
+
+dataset_o5 <- "ts_hscs_progenitors"
+
+score_df_list_o5 <-base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_ts_hscs_progenitors_list"))
+
+```
+
+```{r load_manual_other6}
+#### OTHER HUMAN DATASET 6 (HSPC)
+
+dataset_o6 <- "ts_bone_marrow"
+
+score_df_list_o6 <-base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_ts_bone_marrow_list"))
+
+```
+
+```{r load_manual_other7}
+#### OTHER HUMAN DATASET 7 (Niche)
+
+dataset_o7 <- "li_all_stromal"
+
+score_df_list_o7 <-base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_li_all_stromal_list"))
+
+```
+
+```{r load_manual_other8}
+#### OTHER HUMAN DATASET 8 (Niche)
+
+dataset_o8 <- "ts_all_stromal"
+
+score_df_list_o8 <-base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_ts_all_stromal_list"))
+
+```
+
+```{r source}
+colors_path <- base::paste0(
+  base_path, 
+  "/metadata/colors/colors.txt")
+
+source("../source/colors.R")
+source("../source/plotting.R")
+```
+
+```{r pdf_output}
+# define output paths for pdf export
+output_pdf_plot_all <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure4/sfigure4.pdf")
+
+output_pdf_legend <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure4/sfigure4_legend.pdf")
+```
+
+```{r params}
+# global params
+source("determine_params.R")
+
+col_vec1 <- c("mean_prop_cells_cluster" = "#121252",
+              "mean_cluster_purity" = "#FFBBEF")
+
+col_vec2 <-  c("adjusted_rand_index" = "#319F94",
+               "variation_information" = "#1DC3FF")
+
+point_plot_size <- 4
+```
+
+Functions
+
+```{r score_vis_function}
+vis_clustering_scores <- function(score_df_list, max){
+  
+  max <- max
+  score_df <- dplyr::bind_rows(score_df_list)
+
+  vis_df_1 <- score_df[score_df$type %in% c("mean_prop_cells_cluster",
+                                            "mean_cluster_purity",
+                                            "adjusted_rand_index",
+                                            "variation_information"),]
+  
+  name1 <- "NULL"
+  if(score_df$conservation_level[1] == "conserved_signature"){
+    name1 <- "signature genes"
+  }else if(score_df$conservation_level[1] == "conserved_markers"){
+    name1 <- "conserved markers"
+  }else if(score_df$conservation_level[1] == "mmusall_markers"){
+    name1 <- "BL6-only markers"
+  }else if(score_df$conservation_level[1] == "random_features"){
+    name1 <- "random genes"
+  }
+  
+  title <- paste(score_df$nr_genes_used, name1)
+  
+  vis_df_1$resolution <- as.numeric(vis_df_1$resolution)
+  
+  plot1 <- ggplot2::ggplot(vis_df_1, 
+                           aes(x = resolution, y = value, color = type))+
+    ggplot2::geom_hline(yintercept = 0.5,
+                        color = "grey85")+
+    ggplot2::geom_hline(yintercept = 1,
+                        color = "grey85")+
+    ggplot2::geom_hline(yintercept = 2,
+                        color = "grey85")+
+    ggplot2::geom_vline(xintercept = 0.25,
+                        color = "grey85")+
+    ggplot2::geom_vline(xintercept = 0.5,
+                        color = "grey85")+
+    ggplot2::geom_vline(xintercept = 0.75,
+                        color = "grey85")+
+    ggplot2::geom_vline(xintercept = 1,
+                        color = "grey85")+
+    ggplot2::geom_vline(xintercept = 1.25,
+                        color = "grey85")+
+    ggplot2::geom_point()+
+    theme_all+
+    ggplot2::ylim(c(0, max))+
+    ggplot2::scale_color_manual("score", values = c(col_vec1, col_vec2))+
+    ggplot2::ggtitle(title)
+
+  return(plot1)
+  
+}
+
+```
+
+# Dotplot different scores and nr of clusters
+
+```{r hscs, fig.width = 16, fig.height = 3}
+max_hsc <- 5
+
+plot_list_hsc <- lapply(score_df_list_hsc_new, vis_clustering_scores, max = max_hsc)
+
+plot_hsc <- ggpubr::ggarrange(
+  plot_list_hsc[[1]]+theme(legend.position = "none")+geom_vline(xintercept = 0.65, color = "orangered"),
+  plot_list_hsc[[2]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.45, color = "orangered"),
+  plot_list_hsc[[3]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.65, color = "orangered"),
+  NULL,
+  nrow = 1,
+  align = "h",
+  widths = c(1, 1, 1, 1)
+)
+
+plot_hsc
+```
+
+```{r str, fig.width = 16, fig.height = 3}
+max_str <- 3
+
+plot_list_str <- lapply(score_df_list_str_new, vis_clustering_scores, max = max_str)
+
+plot_str <- ggpubr::ggarrange(
+  plot_list_str[[1]]+theme(legend.position = "none")+geom_vline(xintercept = 0.25, color = "orangered"),
+  plot_list_str[[2]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.25, color = "orangered"),
+  plot_list_str[[3]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.5, color = "orangered"),
+  NULL,
+  nrow = 1,
+  align = "h",
+  widths = c(1, 1, 1, 1)
+)
+
+plot_str
+```
+
+```{r other1, fig.width = 16, fig.height = 3}
+# run the function, get max
+max_o1 <- 3
+plot_list_o1 <- lapply(score_df_list_o1, vis_clustering_scores, max = max_o1)
+resolution_df[resolution_df$dataset == dataset_o1,]
+
+plot_o1 <- ggpubr::ggarrange(
+  plot_list_o1[[1]]+theme(legend.position = "none")+geom_vline(xintercept = 0.65, color = "orangered"),
+  plot_list_o1[[2]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.5, color = "orangered"),
+  plot_list_o1[[3]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.4, color = "orangered"),
+  plot_list_o1[[4]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.65, color = "orangered"),
+  nrow = 1,
+  align = "h",
+  widths = c(1, 1, 1, 1)
+)
+
+dataset_o1
+plot_o1
+```
+
+```{r other2, fig.width = 16, fig.height = 3}
+# run the function, get max
+max_o2 <- 5
+plot_list_o2 <- lapply(score_df_list_o2, vis_clustering_scores, max = max_o2)
+resolution_df[resolution_df$dataset == dataset_o2,]
+
+plot_o2 <- ggpubr::ggarrange(
+  plot_list_o2[[1]]+theme(legend.position = "none")+geom_vline(xintercept = 0.55, color = "orangered"),
+  plot_list_o2[[2]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.5, color = "orangered"),
+  plot_list_o2[[3]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.6, color = "orangered"),
+  plot_list_o2[[4]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.55, color = "orangered"),
+  nrow = 1,
+  align = "h",
+  widths = c(1, 1, 1, 1)
+)
+
+dataset_o2
+plot_o2
+```
+
+```{r other3, fig.width = 16, fig.height = 3}
+# run the function, get max
+max_o3 <- 3
+plot_list_o3 <- lapply(score_df_list_o3, vis_clustering_scores, max = max_o3)
+resolution_df[resolution_df$dataset == dataset_o3,]
+
+plot_o3 <- ggpubr::ggarrange(
+  plot_list_o3[[1]]+theme(legend.position = "none")+geom_vline(xintercept = 1, color = "orangered"),
+  plot_list_o3[[2]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.8, color = "orangered"),
+  plot_list_o3[[3]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.9, color = "orangered"),
+  plot_list_o3[[4]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 1, color = "orangered"),
+  nrow = 1,
+  align = "h",
+  widths = c(1, 1, 1, 1)
+)
+
+dataset_o3
+plot_o3
+```
+
+```{r other4, fig.width = 16, fig.height = 3}
+# run the function, get max
+max_o4 <- 3
+plot_list_o4 <- lapply(score_df_list_o4, vis_clustering_scores, max = max_o4)
+resolution_df[resolution_df$dataset == dataset_o4,]
+
+plot_o4 <- ggpubr::ggarrange(
+  plot_list_o4[[1]]+theme(legend.position = "none")+geom_vline(xintercept = 0.55, color = "orangered"),
+  plot_list_o4[[2]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.5, color = "orangered"),
+  plot_list_o4[[3]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.4, color = "orangered"),
+  plot_list_o4[[4]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.55, color = "orangered"),
+  nrow = 1,
+  align = "h",
+  widths = c(1, 1, 1, 1)
+)
+
+dataset_o4
+plot_o4
+```
+
+```{r other5, fig.width = 16, fig.height = 3}
+# run the function, get max
+max_o5 <- 5
+plot_list_o5 <- lapply(score_df_list_o5, vis_clustering_scores, max = max_o5)
+resolution_df[resolution_df$dataset == dataset_o5,]
+
+plot_o5 <- ggpubr::ggarrange(
+  plot_list_o5[[1]]+theme(legend.position = "none")+geom_vline(xintercept = 0.6, color = "orangered"),
+  plot_list_o5[[2]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.55, color = "orangered"),
+  plot_list_o5[[3]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.45, color = "orangered"),
+  plot_list_o5[[4]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.6, color = "orangered"),
+  nrow = 1,
+  align = "h",
+  widths = c(1, 1, 1, 1)
+)
+
+dataset_o5
+plot_o5
+```
+
+```{r other6, fig.width = 16, fig.height = 3}
+# run the function, get max
+max_o6 <- 5
+plot_list_o6 <- lapply(score_df_list_o6, vis_clustering_scores, max = max_o6)
+resolution_df[resolution_df$dataset == dataset_o6,]
+
+plot_o6 <- ggpubr::ggarrange(
+  plot_list_o6[[1]]+theme(legend.position = "none")+geom_vline(xintercept = 0.5, color = "orangered"),
+  plot_list_o6[[2]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.65, color = "orangered"),
+  plot_list_o6[[3]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.65, color = "orangered"),
+  plot_list_o6[[4]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.5, color = "orangered"),
+  nrow = 1,
+  align = "h",
+  widths = c(1, 1, 1, 1)
+)
+
+dataset_o6
+plot_o6
+```
+
+```{r other7, fig.width = 16, fig.height = 3}
+# run the function, get max
+max_o7 <- 5
+plot_list_o7 <- lapply(score_df_list_o7, vis_clustering_scores, max = max_o7)
+resolution_df[resolution_df$dataset == dataset_o7,]
+
+plot_o7 <- ggpubr::ggarrange(
+  plot_list_o7[[1]]+theme(legend.position = "none")+geom_vline(xintercept = 0.6, color = "orangered"),
+  plot_list_o7[[2]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.55, color = "orangered"),
+  plot_list_o7[[3]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.5, color = "orangered"),
+  plot_list_o7[[4]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.6, color = "orangered"),
+  nrow = 1,
+  align = "h",
+  widths = c(1, 1, 1, 1)
+)
+
+dataset_o7
+plot_o7
+```
+
+```{r other8, fig.width = 16, fig.height = 3}
+# run the function, get max
+max_o8 <- 3
+plot_list_o8 <- lapply(score_df_list_o8, vis_clustering_scores, max = max_o8)
+resolution_df[resolution_df$dataset == dataset_o8,]
+
+plot_o8 <- ggpubr::ggarrange(
+  plot_list_o8[[1]]+theme(legend.position = "none")+geom_vline(xintercept = 0.6, color = "orangered"),
+  plot_list_o8[[2]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.5, color = "orangered"),
+  plot_list_o8[[3]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.65, color = "orangered"),
+  plot_list_o8[[4]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.6, color = "orangered"),
+  nrow = 1,
+  align = "h",
+  widths = c(1, 1, 1, 1)
+)
+
+dataset_o8
+plot_o8
+```
+
+#### Combine
+
+```{r plot_all,fig.width = 16, fig.height = 24}
+plot_all <- ggpubr::ggarrange(
+  plot_hsc,
+  plot_str,
+  plot_o1,
+  plot_o2,
+  plot_o3,
+  plot_o4,
+  plot_o5,
+  plot_o6,
+  plot_o7,
+  plot_o8,
+  ncol = 1
+)
+plot_all
+```
+
+```{r export_plot_all}
+pdf(output_pdf_plot_all, width = 16, height = 24)
+plot_all
+dev.off()
+```
+
+#### Legend
+
+```{r, fig.width = 4, fig.height = 2}
+legend_plot <- plot_list_o8[[1]]
+legend <- ggpubr::get_legend(legend_plot)
+legend <- ggpubr::ggarrange(legend)
+legend # change in affinity
+```
+
+```{r export_legend}
+pdf(output_pdf_legend, width = 4, height = 2)
+legend
+dev.off()
+```
+
+```{r}
+knitr::knit_exit()
+```
+
+
+
+### STR Signature
+
+```{r mat_sign_tr}
+
+sce_sign <- sce_list_str$`0.3`$sce_signt
+
+mat_sign <- base::table(
+  sce_sign$celltypes, 
+  sce_sign$reclustered)
+
+# normalise per column = new clusters and turn into DF
+for(i in 1:ncol(mat_sign)){
+  mat_sign[,i] <- mat_sign[,i]/base::sum(mat_sign[,i])
+}
+sign_df <- base::as.data.frame(mat_sign)
+
+# manually factorise clusters for nice order
+# sign_df$Var2 <- factor(
+#   sign_df$Var2,
+#   levels = base::rev(c(5, 4, 3, 2, 6, 8, 7, 1)))
+```
+
+```{r heatmap_own_sign_base_plot_str}
+heatmap_own_sign_base_plot <- ggplot2::ggplot(
+  sign_df, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+```
+
+```{r heatmap_own_sign_theme_plot_str}
+heatmap_own_sign_theme_plot <- heatmap_own_sign_base_plot+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.title = element_blank(),
+    axis.ticks.y = element_blank(),
+    axis.text = element_blank(),
+    plot.title = element_blank())+
+  ggplot2::xlab("Reference cell types")+
+  ggplot2::scale_fill_gradientn(
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))
+heatmap_own_sign_theme_plot
+```
+
+### HSC Conserved Markers
+
+```{r mat_mark_str}
+
+sce_mark <- sce_list_str$`0.25`$sce_consm
+
+mat_mark <- base::table(
+  sce_mark$celltypes, 
+  sce_mark$reclustered)
+
+# normalise per column = new clusters and turn into DF
+for(i in 1:ncol(mat_mark)){
+  mat_mark[,i] <- mat_mark[,i]/base::sum(mat_mark[,i])
+}
+mark_df <- base::as.data.frame(mat_mark)
+
+# manually factorise clusters for nice order
+# mark_df$Var2 <- factor(
+#   mark_df$Var2,
+#   levels = base::rev(c(4, 6, 3, 2, 5, 8, 7, 1)))
+```
+
+```{r heatmap_own_mark_base_plot_str}
+heatmap_own_mark_base_plot <- ggplot2::ggplot(
+  mark_df, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+```
+
+```{r heatmap_own_mark_theme_plot_str}
+heatmap_own_mark_theme_plot <- heatmap_own_mark_base_plot+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks.y = element_blank(),
+    plot.title = element_blank())+
+  ggplot2::scale_fill_gradientn(
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  ggplot2::ggtitle("Conserved markers")
+heatmap_own_mark_theme_plot
+```
+
+### HSC Conserved Markers
+
+```{r mat_mmms_str}
+
+sce_mmms <- sce_list_str$`0.5`$sce_mmusm
+
+mat_mmms <- base::table(
+  sce_mmms$celltypes, 
+  sce_mmms$reclustered)
+
+# normalise per column = new clusters and turn into DF
+for(i in 1:ncol(mat_mmms)){
+  mat_mmms[,i] <- mat_mmms[,i]/base::sum(mat_mmms[,i])
+}
+mmms_df <- base::as.data.frame(mat_mmms)
+
+# manually factorise clusters for nice order
+# mmms_df$Var2 <- factor(
+#   mmms_df$Var2,
+#   levels = base::rev(c(14, 12, 10, 9, 5, 4, 6, 3, 2, 8, 7, 13, 16, 15, 11, 1)))
+```
+
+```{r heatmap_own_mmms_base_plot_Str}
+heatmap_own_mmms_base_plot <- ggplot2::ggplot(
+  mmms_df, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+```
+
+```{r heatmap_own_mmms_theme_plot_str}
+heatmap_own_mmms_theme_plot <- heatmap_own_mmms_base_plot+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    plot.title = element_blank(),
+    axis.ticks.y = element_blank())+
+  ggplot2::scale_fill_gradientn(
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  ggplot2::ggtitle("BL6 markers")
+heatmap_own_mmms_theme_plot
+```
+
+```{r}
+utils::sessionInfo()
+```
+

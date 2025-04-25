@@ -2,6 +2,7 @@
 # calculate scores for reclustered own datasets
 
 #-------------------------------------------------------------------------------
+RNGkind("L'Ecuyer-CMRG")
 
 set.seed(37)
 

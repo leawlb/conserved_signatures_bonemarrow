@@ -127,9 +127,9 @@ resolution_df <- utils::read.csv(file = resolution_df_path,
                                colClasses = "character")
 
 # corrected p values (can only load after all p values have been calculated and corrected)
-# corr_pval_df <-  readRDS(base::paste0(
-#   base_path,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/09_crpv/all_corrected_pval"))
+corr_pval_df <-  readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/09_crpv/all_corrected_pval"))
 
 colors_path <- base::paste0(
   base_path,
@@ -143,15 +143,7 @@ source("../source/plotting.R")
 # global params
 source("determine_params.R")
 
-point_plot_size <- 4
-
-pattern_fill_color <- "black"
-pattern_line_colour <- "black"
-pattern_density_val <- 0.09
-pattern_spacing_val <- 0.09
-
-
-color_hline_background <- "grey95"
+point_plot_size <- 7
 
 score2 <- "variation_information"
 score1 <- "adjusted_rand_index"
@@ -198,8 +190,8 @@ make_pattern_density_plot <- function(
     perm_score_df,
     aes(x = value))+
     geom_density(
-       fill = color_cons,
-       color = color_cons
+       fill = col_cons_long[["random genes"]],
+       color = col_cons_long[["random genes"]]
     )+
     geom_vline(
       color = "grey60",
@@ -212,7 +204,7 @@ make_pattern_density_plot <- function(
       fill = color_cons,
       data = score_df,
       aes(x = value, y = y_value),
-      size = 7,
+      size = point_plot_size,
       color = color_cons)+
     scale_y_continuous(
       limits = c(y_lim_low, y_lim_high),
@@ -969,7 +961,7 @@ base_plot_ai1_own <- make_pattern_density_plot(
   score_df = score_df_mmms_score_1,
   perm_score_df = psdf_mmms_rand_score_1,
   color_cons = col_cons_long["BL6 markers"],
-  ylabel = "BL6 markers"
+  ylabel = "BL6-only markers"
 )
 base_plot_ai1_own
 ```
@@ -1051,7 +1043,7 @@ base_plot_vi1_own <- make_pattern_density_plot(
   score_df = score_df_mmms_score_2,
   perm_score_df = psdf_mmms_rand_score_2,
   color_cons = col_cons_long["BL6 markers"],
-  ylabel = "BL6 markers"
+  ylabel = "BL6-only markers"
 )
 base_plot_vi1_own
 ```
@@ -1133,7 +1125,7 @@ base_plot_mp1_own <- make_pattern_density_plot(
   score_df = score_df_mmms_score_3,
   perm_score_df = psdf_mmms_rand_score_3,
   color_cons = col_cons_long["BL6 markers"],
-  ylabel = "BL6 markers"
+  ylabel = "BL6-only markers"
 )
 base_plot_mp1_own
 ```
@@ -1358,7 +1350,7 @@ base_plot_ai1_o1 <- make_pattern_density_plot(
   score_df = score_df_mmms_score_1_o1,
   perm_score_df = psdf_mmms_rand_score_1_o1,
   color_cons = col_cons_long["BL6 markers"],
-  ylabel = "BL6 markers"
+  ylabel = "BL6-only markers"
 )
 base_plot_ai1_o1
 ```
@@ -1412,7 +1404,7 @@ base_plot_vi1_o1 <- make_pattern_density_plot(
   score_df = score_df_mmms_score_2_o1,
   perm_score_df = psdf_mmms_rand_score_2_o1,
   color_cons = col_cons_long["BL6 markers"],
-  ylabel = "BL6 markers"
+  ylabel = "BL6-only markers"
 )
 base_plot_vi1_o1
 ```
@@ -1466,7 +1458,7 @@ base_plot_mp1_o1 <- make_pattern_density_plot(
   score_df = score_df_mmms_score_3_o1,
   perm_score_df = psdf_mmms_rand_score_3_o1,
   color_cons = col_cons_long["BL6 markers"],
-  ylabel = "BL6 markers"
+  ylabel = "BL6-only markers"
 )
 base_plot_mp1_o1
 ```
@@ -1627,7 +1619,7 @@ base_plot_ai1_o1_signrand <- make_pattern_density_plot(
   score_df = score_df_mmms_score_1_o1, # the actual score is the same as before
   perm_score_df = psdf_mmms_signrand_score_1_o1,
   color_cons = col_cons_long["BL6 markers"],
-  ylabel = "BL6 markers"
+  ylabel = "BL6-only markers"
 )
 base_plot_ai1_o1_signrand
 ```
@@ -1653,7 +1645,7 @@ base_plot_vi1_o1_signrand <- make_pattern_density_plot(
   score_df = score_df_mmms_score_2_o1,
   perm_score_df = psdf_mmms_signrand_score_2_o1,
   color_cons = col_cons_long["BL6 markers"],
-  ylabel = "BL6 markers"
+  ylabel = "BL6-only markers"
 )
 base_plot_vi1_o1_signrand
 ```
@@ -1680,7 +1672,7 @@ base_plot_mp1_o1_signrand <- make_pattern_density_plot(
   score_df = score_df_mmms_score_3_o1,
   perm_score_df = psdf_mmms_signrand_score_3_o1,
   color_cons = col_cons_long["BL6 markers"],
-  ylabel = "BL6 markers"
+  ylabel = "BL6-only markers"
 )
 base_plot_mp1_o1_signrand
 ```
@@ -1820,7 +1812,7 @@ heatmap_own_mmms_theme_plot <- heatmap_own_mmms_base_plot+
     colors = mycolors_to1,
     limits = c(0, 1),
     breaks = c(0, 0.5, 1))+
-  ggplot2::ggtitle("BL6 markers")
+  ggplot2::ggtitle("BL6-only markers")
 ```
 
 ```{r heatmap_own_mark_theme_plot}
@@ -2101,6 +2093,13 @@ pdf(output_pdf_heatmaps_others_plot, width = 4.13, height = 7)
 d_theme_plot
 dev.off()
 ```
+
+```{r}
+# pval print
+colnames(corr_pval_df)
+corr_pval_df[corr_pval_df$condition %in% c("hsc", "mus_tm_bonemarrow"),c(1, 6, 7, 14)]
+```
+
 
 # UTILS
 

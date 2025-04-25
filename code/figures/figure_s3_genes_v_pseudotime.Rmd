@@ -5,6 +5,10 @@ date: "2024-11-20"
 output: html_document
 ---
 
+Figure_S3: nr of genes vs nr of cells, condition plot, pseudotime UMAPs 
+Figure_S3_silhouette: silhouette score calculation
+Figure_S3_genes_v_pseudotime: genes along pseudotime trajectory 
+
 #### Load objects
 
 ```{r seed, message = FALSE}
@@ -140,8 +144,7 @@ for(n in 1:length(geneset_list_hsc)){
   geom_smooth(se = F) +
   guides(color = "none") +
   scale_color_manual(values = rev(palette)) +
-  theme_classic() +
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(   
     axis.ticks.y = element_blank(),
     axis.text = element_blank(),
@@ -170,8 +173,7 @@ for(n in 1:length(geneset_list_hsc)){
   geom_smooth(se = F) +
   guides(color = "none") +
   scale_color_manual(values = rev(palette)) +
-  theme_classic() +
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(   
     axis.ticks.y = element_blank(),
     axis.text = element_blank(),
@@ -200,8 +202,7 @@ for(n in 1:length(geneset_list_hsc)){
   geom_smooth(se = F) +
   guides(color = "none") +
   scale_color_manual(values = rev(palette)) +
-  theme_classic() +
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(   
     axis.ticks.y = element_blank(),
     axis.text = element_blank(),

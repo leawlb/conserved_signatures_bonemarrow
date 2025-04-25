@@ -4,6 +4,10 @@ date: '2024-11-27'
 output: html_document
 ---
 
+Figure_S3: nr of genes vs nr of cells, condition plot, pseudotime UMAPs 
+Figure_S3_silhouette: silhouette score calculation
+Figure_S3_genes_v_pseudotime: genes along pseudotime trajectory 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -70,6 +74,10 @@ output_pdf_umap_neu <- base::paste0(
 output_pdf_umap_lym <- base::paste0(
   base_path,
   "/manuscript1/supp_figure3/sfigure3_umap_l.pdf")
+
+output_pdf_umap_legend <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure3/sfigure3_umap_legend.pdf")
 
 output_pdf_condplot <- base::paste0(
   base_path,
@@ -304,6 +312,7 @@ pt_umaps_base_plot_neu <- ggplot2::ggplot(
     "Pseudotime within\nNeutrophil branch",
     colours = c("#061F42", "#8FBEFF"))
 
+
 ```
 
 ```{r pt_umaps_theme_plot_lym, fig.width = 3, fig.height = 3}
@@ -318,7 +327,7 @@ pt_umaps_theme_plot_neu <- pt_umaps_base_plot_neu+
 pt_umaps_theme_plot_neu
 ```
 
-#### PT just to be safe
+#### PT for legend
 
 ```{r}
 hsc_umap_pt <- base::as.data.frame(
@@ -345,6 +354,10 @@ pt_umaps_base_plot_1 <- ggplot2::ggplot(
   ggplot2::scale_color_gradientn(
     "Diffusion pseudotime",
     colours = c("#061F42", "#8FBEFF"))
+
+legend <- ggpubr::get_legend(pt_umaps_base_plot_1 + theme_all_supp)
+legend <- ggpubr::ggarrange(legend)
+legend
 ```
 
 ```{r export_umap_neu}
@@ -356,6 +369,12 @@ dev.off()
 ```{r export_plot_lym}
 pdf(output_pdf_umap_lym, width = 3, height = 3)
 pt_umaps_theme_plot_lym
+dev.off()
+```
+
+```{r export_legend}
+pdf(output_pdf_umap_legend, width = 3, height = 3)
+legend
 dev.off()
 ```
 

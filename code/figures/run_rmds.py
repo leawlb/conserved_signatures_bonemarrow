@@ -24,8 +24,8 @@ targets = targets + [OUTPUT_PATH + "/figure_s2.html"]
 targets = targets + [OUTPUT_PATH + "/figure_s3.html"]
 targets = targets + [OUTPUT_PATH + "/figure_s4.html"]
 targets = targets + [OUTPUT_PATH + "/figure_s5.html"]
-#targets = targets + [OUTPUT_PATH + "/figure_s3_silhouette.html"]
-#targets = targets + [OUTPUT_PATH + "/figure_s3_genes_v_pseudotime.html"]
+targets = targets + [OUTPUT_PATH + "/figure_s3_silhouette.html"]
+targets = targets + [OUTPUT_PATH + "/figure_s3_genes_v_pseudotime.html"]
 
 
 #-------------------------------------------------------------------------------
@@ -133,6 +133,8 @@ rule run_fig_s3_silhouette:
     output:
         OUTPUT_PATH + "/figure_s3_silhouette.html"
     threads: 4
+    conda:
+        "../envs/ggpattern.yml" # with this env seurat conversion works
     script:
         "figure_s3_silhouette.Rmd"
         
@@ -143,6 +145,8 @@ rule run_fig_s3_genes_v_pseudotime:
     output:
         OUTPUT_PATH + "/figure_s3_genes_v_pseudotime.html"
     threads: 4
+    conda:
+        "../envs/ggpattern.yml" # with this env seurat conversion works
     script:
         "figure_s3_genes_v_pseudotime.Rmd"
 

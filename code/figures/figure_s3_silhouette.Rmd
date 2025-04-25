@@ -5,6 +5,10 @@ date: "2024-11-20"
 output: html_document
 ---
 
+Figure_S3: nr of genes vs nr of cells, condition plot, pseudotime UMAPs 
+Figure_S3_silhouette: silhouette score calculation
+Figure_S3_genes_v_pseudotime: genes along pseudotime trajectory 
+
 #### Load objects
 
 ```{r seed, message = FALSE}
@@ -47,6 +51,7 @@ source("determine_params.R")
 
 ```{r prep, message = FALSE, warning= FALSE}
 data <- CreateSeuratObject(counts = data_sce@assays@data@listData[["logcounts"]],
+                           data = data_sce@assays@data@listData[["logcounts"]],
                            meta.data = data_sce@colData@listData)
 
 data <- FindVariableFeatures(data,
@@ -118,7 +123,7 @@ ggplot(plot_markers,
   geom_point() +
   ggrepel::geom_text_repel(size = 3,
                            color = "skyblue4") +
-  theme_all +
+  theme_all_supp +
   scale_y_log10() +
   labs(x = "Mean Silhouette Score",
        y = "Number Signture Genes")
@@ -126,4 +131,6 @@ ggplot(plot_markers,
 dev.off()
 ```
 
-
+```{r}
+sessionInfo()
+```

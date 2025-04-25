@@ -121,6 +121,7 @@ output_pdf_aging_theme_legend <- base::paste0(
 sce_hsc_met <- sce_hsc
 rowData(sce_hsc_met) <- rowData(sce_hsc_met)[,c(2, 3, 4)]
 
+print(nrow(rowData(sce_hsc)))
 print(length(which(rowSums(assays(sce_hsc)$counts_before_BC) > 0)))
 
 rm(sce_hsc_met)
@@ -260,7 +261,8 @@ interest_genes <- c("Lmo2",
                     "Txnip",
                     "Pnrc1",
                     "Msi2",
-                    "Mecom", 
+                    "Mecom",
+                    "Gcnt2",
                     "Meis1",
                     "Mpl",
                     "Nkx2-3",
@@ -291,6 +293,13 @@ sign_heatmap_base_plot <- ggplot2::ggplot(
   ggplot2::geom_tile()+
   ggplot2::facet_grid(rows = vars(agg_hsc_df$cell_type))
 ```
+
+```{r print_plot, fig.width = 30, fig.height = 5, include = FALSE, eval = FALSE}
+sign_heatmap_base_plot+ # print to confirm the order of genes depicted
+  ggplot2::theme(axis.text.x = element_text(
+    angle = 90, size = 14, hjust = 1, vjust = 0.5))
+```
+
 
 ```{r sign_heatmap_theme_plot}
 sign_heatmap_theme_plot <- sign_heatmap_base_plot+
@@ -540,7 +549,6 @@ interest_genes2 <- c(
 vis_df_hsc$is_gene <- vector(length = nrow(vis_df_hsc))
 vis_df_hsc$is_gene[vis_df_hsc$gene %in% interest_genes2] <- "TRUE"
 vis_df_hsc$is_gene <- as.logical(vis_df_hsc$is_gene)
-print(levels(vis_df_hsc$gene))
 ```
 
 #### PLOT
@@ -611,8 +619,9 @@ For Figure 2f.
 
 ```{r heatmap_conds1}
 metadata <- sce_hsc@colData@listData
-sce_hsc_seurat <- SeuratObject::CreateSeuratObject(counts = sce_hsc@assays@data@listData[["logcounts"]],
-                           meta.data = metadata)
+# seurat throws Warnings
+# sce_hsc_seurat <- SeuratObject::CreateSeuratObject(counts = sce_hsc@assays@data@listData[["logcounts"]],
+#                            meta.data = metadata)
 
 # assign gene list!!
 g <- c(
@@ -621,11 +630,20 @@ g <- c(
   "Blvrb"
 )
 
-metadata$expression <- SeuratObject::FetchData(sce_hsc_seurat, 
-                        vars = g)
+# metadata$expression <- SeuratObject::FetchData(sce_hsc_seurat, 
+#                         vars = g)
+# metadata$celltypes <- as.character(metadata$celltypes)
+# gene_expression <- metadata$expression %>%
+#   cbind(do.call(cbind, metadata[c("Species_ID", "Age_ID", "celltypes")]))
+
+expression <- as.data.frame(t(as.matrix(logcounts(sce_hsc)[
+  rownames(logcounts(sce_hsc)) %in% g,])))
+metadata$expression <- expression
+
 metadata$celltypes <- as.character(metadata$celltypes)
 gene_expression <- metadata$expression %>%
   cbind(do.call(cbind, metadata[c("Species_ID", "Age_ID", "celltypes")]))
+
 ```
 
 ```{r heatmap_conds2}

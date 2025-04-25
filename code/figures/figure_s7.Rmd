@@ -1,5 +1,5 @@
 ---
-title: "Supplementary Figure 5"
+title: "Supplementary Figure 7"
 date: '2024-12-04'
 output: html_document
 ---
@@ -8,12 +8,12 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Generate Figure S5
+Generate Figure S7 (for Figure 5)
 
 #### Load objects
 
 ```{r seed, message = FALSE}
-base::RNGkind(kind = "Mersenne-Twister")
+RNGkind("L'Ecuyer-CMRG") 
 set.seed(37)
 ```
 
@@ -24,7 +24,7 @@ library(tidyverse, quietly = TRUE)
 ```
 
 ```{r load_basepath}
-base_path <- "/omics/odcf/analysis/OE0538_projects_temp/DO-0008/data_temp/micromamba_test_rerun/data/"
+base_path <- "/omics/odcf/analysis/OE0538_projectsp/DO-0008/data"
 ```
 
 

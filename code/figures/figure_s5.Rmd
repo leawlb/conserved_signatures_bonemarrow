@@ -84,7 +84,7 @@ psdf_hsc_mmms_signrand_o2 <- base::readRDS(base::paste0(
 
 Load the rest later to save some space
 
-```{r load_rest}
+```{r load_important}
 
 # df containing the resolutions for other datasets as visually determined
 resolution_df_path <- base::paste0(

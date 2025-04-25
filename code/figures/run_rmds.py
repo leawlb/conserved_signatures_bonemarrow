@@ -22,11 +22,11 @@ targets = targets + [OUTPUT_PATH + "/figure6.html"]
 
 targets = targets + [OUTPUT_PATH + "/figure_s2.html"]
 targets = targets + [OUTPUT_PATH + "/figure_s3.html"]
-targets = targets + [OUTPUT_PATH + "/figure_s4.html"]
-targets = targets + [OUTPUT_PATH + "/figure_s5.html"]
 targets = targets + [OUTPUT_PATH + "/figure_s3_silhouette.html"]
 targets = targets + [OUTPUT_PATH + "/figure_s3_genes_v_pseudotime.html"]
-
+targets = targets + [OUTPUT_PATH + "/figure_s4.html"]
+targets = targets + [OUTPUT_PATH + "/figure_s5.html"]
+targets = targets + [OUTPUT_PATH + "/figure_s6.html"]
 
 #-------------------------------------------------------------------------------
 
@@ -80,7 +80,6 @@ rule run_fig4:
     script:
         "figure4.Rmd"
 
-    
 rule run_fig5:
     resources:
         mem_mb=80000,
@@ -102,7 +101,6 @@ rule run_fig6:
         "../envs/upsetplot.yml"
     script:
         "figure6.Rmd"
-        
         
 rule run_fig_s2:
     resources:
@@ -169,3 +167,13 @@ rule run_fig_s5:
     threads: 4
     script:
         "figure_s5.Rmd"
+
+rule run_fig_s6:
+    resources:
+        mem_mb=5000,
+        queues="medium-debian"
+    output:
+        OUTPUT_PATH + "/figure_s6.html"
+    threads: 1
+    script:
+        "figure_s6.Rmd"

@@ -207,7 +207,7 @@ export_signature_table_path <- base::paste0(
 BL6_genes <- vector()
 signature_genes <- vector()
 for(ct in names(geneset_list_str)){
-  BL6_genes <- base:unique(
+  BL6_genes <- base::unique(
     c(BL6_genes,
       geneset_list_str[[ct]]$conserved_df$gene[
         !is.na(geneset_list_str[[ct]]$conserved_df$mmus)]))

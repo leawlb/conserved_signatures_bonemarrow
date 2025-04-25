@@ -1,0 +1,188 @@
+---
+title: "Supplemental Figure 6"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Generate Supplemental Figure 6, corresponding for Figure 4
+
+#### Load objects
+
+```{r seed, message = FALSE}
+RNGkind("L'Ecuyer-CMRG") 
+set.seed(37)
+```
+
+```{r load_packages, message = FALSE}
+library(SingleCellExperiment, quietly = TRUE)
+library(ggpubr, quietly = TRUE)
+library(tidyverse, quietly = TRUE)
+```
+
+```{r base_path}
+base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+```
+
+```{r load}
+
+# data frame containing the correct resolutions for other datasets as visually determined
+resolution_df_path <- base::paste0(
+  base_path,
+  "/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt")
+
+resolution_df <- utils::read.csv(file = resolution_df_path, 
+                               header = TRUE, 
+                               sep = ";", 
+                               check.names=FALSE, 
+                               stringsAsFactors=FALSE, 
+                               as.is=TRUE, 
+                               colClasses = "character")
+
+# corrected p values (can only load after all p values have been calculated and corrected)
+corr_pval_df <-  readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/09_crpv/all_corrected_pval"))
+
+colors_path <- base::paste0(
+  base_path,
+  "/metadata/colors/colors.txt")
+
+source("../source/colors.R")
+source("../source/plotting.R")
+source("determine_params.R")
+
+color_significance <- c("pval adj. >= 0.05" = "grey70",
+                        "pval adj. < 0.05" = "black",
+                        "pval adj. = 0" = "blue")
+```
+
+```{r export_path}
+output_pdf_pval <- base::paste0(
+   base_path, "/manuscript1/supp_figure6/supp_figure6_pvals.pdf")
+
+```
+
+# Prep
+
+construct a data frame containing p values
+
+```{r pval_df}
+# subset to required datasets
+corr_pval_df_hsc <- corr_pval_df[corr_pval_df$condition %in% c(
+  "hsc",
+  "mus_weinreb_hspc",
+  "mus_tm_bonemarrow",
+  "ts_hscs_progenitors",
+  "ts_bone_marrow"
+),]
+
+# make it pretty
+corr_pval_df_hsc$condition_long <- vector(length = nrow(corr_pval_df_hsc))
+corr_pval_df_hsc$condition_long[
+  corr_pval_df_hsc$condition == "hsc"] <- "our HSPCs"
+corr_pval_df_hsc$condition_long[
+  corr_pval_df_hsc$condition == "mus_weinreb_hspc"] <- "Weinreb et al."
+corr_pval_df_hsc$condition_long[
+  corr_pval_df_hsc$condition == "mus_tm_bonemarrow"] <- "tabula muris"
+corr_pval_df_hsc$condition_long[
+  corr_pval_df_hsc$condition == "ts_hscs_progenitors"] <- "tabula sapiens fetal"
+corr_pval_df_hsc$condition_long[
+  corr_pval_df_hsc$condition == "ts_bone_marrow"] <- "tabula sapiens adult"
+
+corr_pval_df_hsc$condition_long <- factor(
+  corr_pval_df_hsc$condition_long, levels = rev(c(
+    "our HSPCs",
+    "tabula muris",
+    "Weinreb et al.",
+    "tabula sapiens fetal",
+    "tabula sapiens adult")))
+
+corr_pval_df_hsc$score_long <- vector(length = nrow(corr_pval_df_hsc))
+corr_pval_df_hsc$score_long[
+  corr_pval_df_hsc$type == "adjusted_rand_index"] <- "Adjusted\nRand index"
+corr_pval_df_hsc$score_long[
+  corr_pval_df_hsc$type == "variation_information"] <- "Variation\nof Information"
+corr_pval_df_hsc$score_long[
+  corr_pval_df_hsc$type == "mean_prop_cells_cluster"] <- "Mean\nProportion"
+
+corr_pval_df_hsc$score_long <- factor(
+  corr_pval_df_hsc$score_long, levels = c(
+    "Adjusted\nRand index",
+    "Variation\nof Information",
+    "Mean\nProportion"))
+
+corr_pval_df_hsc$color_id <- vector(length = nrow(corr_pval_df_hsc))
+corr_pval_df_hsc$color_id[corr_pval_df_hsc$pval_corrected < 0.05] <- "pval adj. < 0.05"
+corr_pval_df_hsc$color_id[corr_pval_df_hsc$pval_corrected == 0] <- "pval adj. = 0"
+corr_pval_df_hsc$color_id[corr_pval_df_hsc$pval_corrected >= 0.05] <- "pval adj. >= 0.05"
+
+corr_pval_df_hsc$comparison_long <- vector(length = nrow(corr_pval_df_hsc))
+corr_pval_df_hsc$comparison_long[
+  corr_pval_df_hsc$comparison == "sign-vs-rand"] <- "signature vs.\nrandom genes"
+corr_pval_df_hsc$comparison_long[
+  corr_pval_df_hsc$comparison == "mark-vs-rand"] <- "conserved markers vs.\nrandom genes"
+corr_pval_df_hsc$comparison_long[
+  corr_pval_df_hsc$comparison == "mmms-vs-rand"] <- "BL6-only markers vs.\nrandom genes"
+corr_pval_df_hsc$comparison_long[
+  corr_pval_df_hsc$comparison == "mark-vs-signrand"] <- "conserved markers vs.\nsignature + random genes"
+corr_pval_df_hsc$comparison_long[
+  corr_pval_df_hsc$comparison == "mmms-vs-signrand"] <- "BL6-only markers vs.\nsignature + random genes"
+
+corr_pval_df_hsc$comparison_long <- factor(
+  corr_pval_df_hsc$comparison_long, levels = c(
+    "signature vs.\nrandom genes",
+    "conserved markers vs.\nrandom genes",
+    "BL6-only markers vs.\nrandom genes",
+    "conserved markers vs.\nsignature + random genes",
+    "BL6-only markers vs.\nsignature + random genes"))
+
+corr_pval_df_hsc$color_id <- factor(
+  corr_pval_df_hsc$color_id, levels = rev(c(
+    "pval adj. >= 0.05",
+    "pval adj. < 0.05",
+    "pval adj. = 0")))
+
+corr_pval_df_hsc
+```
+
+```{r pval_plot, fig.width = 12, fig.height = 10}
+pval_plot <- ggplot2::ggplot(
+  corr_pval_df_hsc,
+  ggplot2::aes(y = condition_long,
+               x = score_long,
+               color = color_id,
+               size = 10^-pval_corrected))+
+  ggplot2::geom_point(alpha = 1)+
+  ggplot2::facet_grid(
+    rows = vars(corr_pval_df_hsc$comparison_long), switch = "y")+
+  theme_all_supp+
+  ggplot2::theme(
+    strip.placement = "outside",
+    strip.background.y = element_blank(),
+    panel.spacing = unit(2, "cm"),
+    strip.text.y.left = element_text(
+      angle = 0,
+      face= "bold",
+      color = "black",
+      size = 16,
+      hjust = 0,
+      vjust = 0.5
+    ),
+    axis.title = element_blank()
+  )+
+  ggplot2::scale_x_discrete(position = "top")+
+  scale_color_manual("Significance", values = color_significance)
+pval_plot
+```
+
+
+```{r pval_plot_export}
+pdf(output_pdf_pval, width = 12, height = 10)
+pval_plot
+dev.off()
+```
+
+

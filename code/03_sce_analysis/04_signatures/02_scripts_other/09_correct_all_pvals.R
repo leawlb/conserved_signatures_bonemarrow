@@ -3,9 +3,7 @@
 
 # import ALL computed pvals and correct them
 
-# determine random number generator for sample
-# "Mersenne-Twister" is default
-RNGkind("Mersenne-Twister") 
+RNGkind("L'Ecuyer-CMRG")
 set.seed(37)
 
 library(dplyr)
@@ -16,15 +14,19 @@ library(dplyr)
 list_own <- unlist(list(
   snakemake@input[["own_sign_rand"]], 
   snakemake@input[["own_mark_rand"]], 
-  snakemake@input[["own_mmms_rand"]] 
+  snakemake@input[["own_mmms_rand"]], 
+  snakemake@input[["own_mark_signrand"]],
+  snakemake@input[["own_mmms_signrand"]] 
 ))
 
 print(list_own)
 
 list_other <- unlist(list(
   snakemake@input[["other_sign_rand"]], 
+  snakemake@input[["other_mark_rand"]], 
   snakemake@input[["other_mmms_rand"]], 
-  snakemake@input[["other_mmms_signrand"]] 
+  snakemake@input[["other_mmms_signrand"]],
+  snakemake@input[["other_mark_signrand"]] 
 ))
 
 print(list_other)

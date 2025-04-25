@@ -13,9 +13,7 @@
 
 #-------------------------------------------------------------------------------
 
-# determine random number generator for sample
-# "Mersenne-Twister" is default
-RNGkind("Mersenne-Twister") 
+RNGkind("L'Ecuyer-CMRG")
 set.seed(37)
 
 library(tidyr)

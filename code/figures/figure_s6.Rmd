@@ -145,7 +145,7 @@ corr_pval_df_hsc$color_id <- factor(
     "pval adj. < 0.05",
     "pval adj. = 0")))
 
-corr_pval_df_hsc
+head(corr_pval_df_hsc)
 ```
 
 ```{r pval_plot, fig.width = 12, fig.height = 10}
@@ -153,9 +153,9 @@ pval_plot <- ggplot2::ggplot(
   corr_pval_df_hsc,
   ggplot2::aes(y = condition_long,
                x = score_long,
-               color = color_id,
+               fill = color_id,
                size = 10^-pval_corrected))+
-  ggplot2::geom_point(alpha = 1)+
+  ggplot2::geom_point(alpha = 1, colour="black", pch=21)+
   ggplot2::facet_grid(
     rows = vars(corr_pval_df_hsc$comparison_long), switch = "y")+
   theme_all_supp+
@@ -174,7 +174,7 @@ pval_plot <- ggplot2::ggplot(
     axis.title = element_blank()
   )+
   ggplot2::scale_x_discrete(position = "top")+
-  scale_color_manual("Significance", values = color_significance)
+  scale_fill_manual("Significance", values = color_significance)
 pval_plot
 ```
 

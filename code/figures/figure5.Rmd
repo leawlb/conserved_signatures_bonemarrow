@@ -193,9 +193,9 @@ output_pdf_e_legend <- base::paste0(
 
 # two suppl plots with annotations added in this script
 output_pdf_suppl_umaps_o2 <- base::paste0(
-  base_path, "/manuscript1/supp_figure5/supp_figure5_umaps_o2.pdf")
+  base_path, "/manuscript1/supp_figure7/supp_figure7_umaps_o2.pdf")
 output_pdf_suppl_umaps_o3 <- base::paste0(
-  base_path, "/manuscript1/supp_figure5/supp_figure5_umaps_o3.pdf")
+  base_path, "/manuscript1/supp_figure7/supp_figure7_umaps_o3.pdf")
 
 export_signature_table_path <- base::paste0(
    base_path, "/manuscript1/str_signature_table.csv")
@@ -204,6 +204,7 @@ export_signature_table_path <- base::paste0(
 ## Obtain data
 
 ```{r obtain_data}
+# percentage of BL6-only markers that are not signature genes
 BL6_genes <- vector()
 signature_genes <- vector()
 for(ct in names(geneset_list_str)){
@@ -219,6 +220,39 @@ for(ct in names(geneset_list_str)){
 perc <- (length(BL6_genes)-length(signature_genes[
   signature_genes %in% BL6_genes]))/length(BL6_genes)
 print(perc)
+
+# number of transcribed genes in total
+print(length(which(rowSums(assays(sce_str)$counts_before_BC) > 0)))
+
+# get all signature genes
+conserved_signature_list <- lapply(geneset_list_str, function(geneset){
+  conserved_signature <- geneset$conserved_signature
+  return(conserved_signature)
+})
+signt <- base::unique(unlist(conserved_signature_list))
+print(length(signt))
+
+# get all conserved markers
+conserved_markers_list <- lapply(geneset_list_str, function(geneset){
+  conserved_markers <- geneset$conserved_markers
+  return(conserved_markers)
+})
+consm <- base::unique(unlist(conserved_markers_list))
+print(length(consm))
+
+# get all BL6-only markers
+mmus_marker_list <- lapply(geneset_list_str, function(geneset){
+  mmus_markers <- geneset$conserved_df$gene[
+    which(!is.na(geneset$conserved_df$mmus))]
+  return(mmus_markers)
+})
+mmusm <- base::unique(unlist(mmus_marker_list))
+print(length(mmusm))
+
+# the number of each gene set without subclustering genes
+sce_str_recl$cluster_signt_genes_used[1]
+sce_str_recl$cluster_consm_genes_used[1]
+sce_str_recl$cluster_mmusm_genes_used[1]
 ```
 
 ## Export Table 

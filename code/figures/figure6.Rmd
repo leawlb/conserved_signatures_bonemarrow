@@ -58,7 +58,7 @@ output_pdf_e_plot <- base::paste0(
   base_path, "/manuscript1/figure6/figure6_e.pdf")
 
 output_pdf_s_a_plot <- base::paste0(
-  base_path, "/manuscript1/supp_figure6/supp_figure6_allhs_heatmap.pdf")
+  base_path, "/manuscript1/supp_figure8/supp_figure8_allhs_heatmap.pdf")
 ```
 
 # Print data
@@ -108,9 +108,9 @@ For figure 6b.
 ```{r b_prep1}
 # establish order of clusters for plotting based on 04_recluster.R
 # sig = conserved identity signature genes
-factorize <- list(human = rev(c(7,8,9,13,11,12,3,0,4,14,6,2,10,1,5)),
-                  marmoset = rev(c(0,2,14,4,1,7,10,13,8,12,5,9,3,11,6)),
-                  macaque = rev(c(0,1,6,8,9,2,11,3,5,4,7,10)))
+factorize <- list(human = rev(c(9, 6, 4, 15, 2, 12, 10, 0, 5, 13, 8, 16, 1, 14, 3, 11, 7)),
+                  marmoset = rev(c(0, 3, 12, 1, 5, 13, 4, 15, 16, 7, 9, 10, 8, 2, 6, 14)),
+                  macaque = rev(c(3, 0, 2, 7, 4, 10, 5, 6, 8, 1, 9)))
 ```
 
 ```{r b_prep2}
@@ -160,6 +160,7 @@ b_plot_theme <- b_plot +
       theme_all+
       ggplot2::theme(
         strip.background = element_blank(),
+        strip.text.y.left = element_blank(),
         legend.position = "none",
         #axis.title.x = element_blank(),
         axis.text = element_blank(),
@@ -205,8 +206,8 @@ Figure 6c.
 ```{r c_prep1}
 # establish order of clusters for plotting based on 04_recluster.R
 # hs = human only markers; sig = conserved identity signature genes
-factorize_mouse <- list(hs = c(0, 10, 4, 6, 7, 3, 5, 8, 9, 1, 11, 2),
-                        sig = c(4, 9, 3, 1, 8, 6, 5, 7, 10, 0, 2))
+factorize_mouse <- list(hs = c(11, 12, 9, 5, 8, 1, 3, 4, 2, 14, 6, 10, 7, 15, 17, 16,0),
+                        sig = c(0, 9, 6, 3, 7, 10, 8, 2, 4, 5, 11, 1))
 ```
 
 ```{r c_prep2}

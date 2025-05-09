@@ -92,7 +92,7 @@ output_pdf_condlegend <- base::paste0(
 # global params
 source("determine_params.R")
 
-colors_z_score_cond <- c("purple2", "white", "orange")
+colors_z_score <- c("steelblue3", "white", "red3")
 
 celltypes_exclude <- c("Chondrocyte", "Lymphatic EC")
 ```
@@ -524,7 +524,7 @@ marker_1_wide <- ggplot(plot_1,
   labs(x = NULL, y = NULL, title = g[1]) +
   ggplot2::scale_fill_gradientn(
     "z-score per gene", 
-    colours = colors_z_score_cond,
+    colours = colors_z_score,
     breaks = c(-8, -4, 0, 4, 8),
     limits = c(-8,8)
     # breaks = c(-6, -3, 0, 3, 6),
@@ -549,7 +549,7 @@ marker_2_wide <- ggplot(plot_2,
   labs(x = NULL, y = NULL, title = g[2]) +
   ggplot2::scale_fill_gradientn(
     "z-score per gene", 
-    colours = colors_z_score_cond,
+    colours = colors_z_score,
     breaks = c(-8, -4, 0, 4, 8),
     limits = c(-8,8)
     )+
@@ -572,7 +572,7 @@ marker_3_wide <- ggplot(plot_3,
   labs(x = NULL, y = NULL, title = g[3]) +
   ggplot2::scale_fill_gradientn(
     "z-score per gene", 
-    colours = colors_z_score_cond,
+    colours = colors_z_score,
     breaks = c(-8, -4, 0, 4, 8),
     limits = c(-8,8)
     # breaks = c(-5, -2.5, 0, 2.5, 5), 
@@ -599,7 +599,7 @@ marker_4_wide <- ggplot(plot_4,
   labs(x = NULL, y = NULL, title = g[4]) +
   ggplot2::scale_fill_gradientn(
     "z-score per gene", 
-    colours = colors_z_score_cond,
+    colours = colors_z_score,
     breaks = c(-8, -4, 0, 4, 8),
     limits = c(-8,8)
     # breaks = c(-3, -1.5, 0, 1.5, 3),

@@ -397,7 +397,7 @@ a_base_plot_hsc_1_mecom <- ggplot2::ggplot(
   ggplot2::scale_color_gradientn("Mecom expression", colours = mycolors_to_max)
 a_base_plot_hsc_1_mecom
 
-legend_mecom <- cowplot::get_legend(a_base_plot_hsc_1_mecom+theme_all)
+legend_mecom <- cowplot::get_legend(a_base_plot_hsc_1_mecom+theme_all_supp)
 legend_mecom <- ggpubr::ggarrange(legend_mecom)
 legend_mecom
 ```
@@ -519,7 +519,7 @@ umap_legend_plot_hsc_1 <- ggplot2::ggplot(
   ggplot2::scale_color_manual("", values = col_clust)
 
 umap_legend_theme_plot_hsc_1 <- umap_legend_plot_hsc_1+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(legend.key.height = unit(0.3, "lines"))
 umap_legend_hsc_1 <- ggpubr::get_legend(umap_legend_theme_plot_hsc_1)
 umap_legend_hsc_1 <- ggpubr::ggarrange(umap_legend_hsc_1)
@@ -539,7 +539,7 @@ umap_legend_plot_hsc_2 <- ggplot2::ggplot(
   ggplot2::scale_color_manual("", values = c(col_cts_hsc, "removed" = "grey50"))
 
 umap_legend_theme_plot_hsc_2 <- umap_legend_plot_hsc_2+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(legend.key.height = unit(0.3, "lines"))
 umap_legend_hsc_2 <- ggpubr::get_legend(umap_legend_theme_plot_hsc_2)
 umap_legend_hsc_2 <- ggpubr::ggarrange(umap_legend_hsc_2)
@@ -558,7 +558,7 @@ umap_legend_plot_str_1 <- ggplot2::ggplot(
   ggplot2::geom_point(
     size = umap_legend_point_size,
     alpha = umap_legend_point_alpha)+
-  theme_all+
+  theme_all_supp+
   ggplot2::scale_color_discrete("")
   # ggplot2::scale_color_discrete(
   #   "",
@@ -566,7 +566,7 @@ umap_legend_plot_str_1 <- ggplot2::ggplot(
   #              levels(str_umap$color_by)[10:21]))
 
 umap_legend_theme_plot_str_1 <- umap_legend_plot_str_1+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(legend.key.height = unit(0.3, "lines"))
 umap_legend_str_1 <- ggpubr::get_legend(umap_legend_theme_plot_str_1)
 umap_legend_str_1 <- ggpubr::ggarrange(umap_legend_str_1)
@@ -584,7 +584,7 @@ umap_legend_plot_str_2 <- ggplot2::ggplot(
   ggplot2::scale_color_manual("", values = c(col_cts_str, "removed" = "grey50"))
 
 umap_legend_theme_plot_str_2 <- umap_legend_plot_str_2+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(legend.key.height = unit(0.3, "lines"))
 umap_legend_str_2 <- ggpubr::get_legend(umap_legend_theme_plot_str_2)
 umap_legend_str_2 <- ggpubr::ggarrange(umap_legend_str_2)
@@ -1081,7 +1081,7 @@ Except for mcar lymph, there are at least 97 cells per specues and cell types.
 
 ```{r d_hsc_theme_plot}
 d_hsc_theme_plot <- d_hsc_base_plot+
-  theme_all+
+  theme_all_supp+
   ggplot2::xlab("Age and cell types")+
   ggplot2::ylab("# cells")+
   ggplot2::scale_fill_manual("Species", values = col_spc)+
@@ -1120,7 +1120,7 @@ d_str_base_plot <- ggplot2::ggplot(
 
 ```{r d_str_theme_plot}
 d_str_theme_plot <- d_str_base_plot+
-  theme_all+
+  theme_all_supp+
   ggplot2::xlab("Age and cell types")+
   ggplot2::ylab("# cells")+
   ggplot2::scale_fill_manual("Species", values = col_spc)+

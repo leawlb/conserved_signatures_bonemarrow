@@ -267,7 +267,7 @@ heatmap_own_sign_base_plot <- ggplot2::ggplot(
 
 ```{r heatmap_own_sign_theme_plot}
 heatmap_own_sign_theme_plot <- heatmap_own_sign_base_plot+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.title.y = element_blank(),
@@ -319,7 +319,7 @@ heatmap_own_mark_base_plot <- ggplot2::ggplot(
 
 ```{r heatmap_own_mark_theme_plot}
 heatmap_own_mark_theme_plot <- heatmap_own_mark_base_plot+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.title = element_blank(),
@@ -366,7 +366,7 @@ heatmap_own_mmms_base_plot <- ggplot2::ggplot(
 
 ```{r heatmap_own_mmms_theme_plot}
 heatmap_own_mmms_theme_plot <- heatmap_own_mmms_base_plot+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -436,7 +436,7 @@ sign_base_plot_o2 <- ggplot2::ggplot(
 
 ```{r sign_theme_plot}
 sign_theme_plot_o2 <- sign_base_plot_o2+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_text(
@@ -483,7 +483,7 @@ mark_base_plot_o2 <- ggplot2::ggplot(
 
 ```{r mark_theme_plot_o2}
 mark_theme_plot_o2 <- mark_base_plot_o2+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.title = element_blank(),
@@ -495,7 +495,6 @@ mark_theme_plot_o2 <- mark_base_plot_o2+
     breaks = c(0, 0.5, 1))
 mark_theme_plot_o2
 ```
-
 
 #### BL6-only
 
@@ -525,7 +524,7 @@ mmms_base_plot_o2 <- ggplot2::ggplot(
 
 ```{r mmms_theme_plot_o2}
 mmms_theme_plot_o2 <- mmms_base_plot_o2+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.title = element_blank(),
@@ -1318,7 +1317,7 @@ base_plot_bp1_o2
 
 ```{r theme_plot_bp1_o2}
 theme_plot_bp1_o2<- base_plot_bp1_o2+
-  theme_all+
+  theme_all_supp+
   ggplot2::scale_x_continuous(
     breaks=c(0,  400, 800),
     position = "top", 
@@ -1348,7 +1347,7 @@ base_plot_bp2_o2
 
 ```{r theme_plot_bp2_o2}
 theme_plot_bp2_o2<- base_plot_bp2_o2+
-  theme_all+
+  theme_all_supp+
   ggplot2::scale_x_continuous(
     breaks=c(0,  400, 800),
     position = "top", 
@@ -1380,7 +1379,7 @@ base_plot_bp3_o2
 
 ```{r theme_plot_bp3_o2}
 theme_plot_bp3_o2 <- base_plot_bp3_o2+
-  theme_all+
+  theme_all_supp+
   ggplot2::scale_x_continuous(
     breaks=c(0,  400, 800),
     position = "top", 
@@ -1415,7 +1414,7 @@ base_plot_bp1_o2_signrand
 
 ```{r theme_plot_bp1_o2_signrand}
 theme_plot_bp1_o2_signrand <- base_plot_bp1_o2_signrand+
-  theme_all+
+  theme_all_supp+
   ggplot2::scale_x_continuous(
     breaks=c(0,  400, 800),
     position = "top", 
@@ -1446,7 +1445,7 @@ base_plot_ai1_o2
 
 ```{r theme_plot_ai1_o2}
 theme_plot_ai1_o2 <- base_plot_ai1_o2+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_text(hjust = 0.5),
@@ -1474,7 +1473,7 @@ base_plot_ai2_o2
 
 ```{r theme_plot_ai2_o2}
 theme_plot_ai2_o2 <- base_plot_ai2_o2+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -1501,7 +1500,7 @@ base_plot_ai3_o2
 
 ```{r theme_plot_ai3_o2}
 theme_plot_ai3_o2 <- base_plot_ai3_o2+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -1530,7 +1529,7 @@ base_plot_ai3_o2_signrand
 
 ```{r theme_plot_ai1_o2_signrand}
 theme_plot_ai1_o2_signrand <- base_plot_ai3_o2_signrand+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -1561,7 +1560,7 @@ base_plot_vi1_o2
 
 ```{r theme_plot_vi1_o2}
 theme_plot_vi1_o2 <- base_plot_vi1_o2+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_text(hjust = 0.5),
@@ -1589,7 +1588,7 @@ base_plot_vi2_o2
 
 ```{r theme_plot_vi2_o2}
 theme_plot_vi2_o2 <- base_plot_vi2_o2+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -1616,7 +1615,7 @@ base_plot_vi3_o2
 
 ```{r theme_plot_vi3_o2}
 theme_plot_vi3_o2 <- base_plot_vi3_o2+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -1645,7 +1644,7 @@ base_plot_vi1_o2_signrand
 
 ```{r theme_plot_vi1_o2_signrand}
 theme_plot_vi1_o2_signrand <- base_plot_vi1_o2_signrand+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -1676,7 +1675,7 @@ base_plot_mp1_o2
 
 ```{r theme_plot_mp1_o2}
 theme_plot_mp1_o2 <- base_plot_mp1_o2+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_text(hjust = 0.5),
@@ -1704,7 +1703,7 @@ base_plot_mp2_o2
 
 ```{r theme_plot_mp2_o2}
 theme_plot_mp2_o2 <- base_plot_mp2_o2+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -1731,7 +1730,7 @@ base_plot_mp3_o2
 
 ```{r theme_plot_mp3_o2}
 theme_plot_mp3_o2 <- base_plot_mp3_o2+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -1760,7 +1759,7 @@ base_plot_mp1_o2_signrand
 
 ```{r theme_plot_mp1_o2_signrand}
 theme_plot_mp1_o2_signrand <- base_plot_mp1_o2_signrand+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -1863,7 +1862,7 @@ base_plot_bp1_own_marksignrand
 
 ```{r theme_plot_bp1_own_marksignrand}
 theme_plot_bp1_own_marksignrand <- base_plot_bp1_own_marksignrand+
-  theme_all+
+  theme_all_supp+
   ggplot2::scale_x_continuous(
     breaks=c(0,  400, 800),
     position = "top", 
@@ -1895,7 +1894,7 @@ base_plot_bp1_o1_marksignrand
 
 ```{r theme_plot_bp1_o1_marksignrand}
 theme_plot_bp1_o1_marksignrand <- base_plot_bp1_o1_marksignrand+
-  theme_all+
+  theme_all_supp+
   ggplot2::scale_x_continuous(
     breaks=c(0,  400, 800),
     position = "top", 
@@ -1927,7 +1926,7 @@ base_plot_bp1_o2_marksignrand
 
 ```{r theme_plot_bp1_o2_marksignrand, fig.width = 4, fig.height = 2}
 theme_plot_bp1_o2_marksignrand <- base_plot_bp1_o2_marksignrand+
-  theme_all+
+  theme_all_supp+
   ggplot2::scale_x_continuous(
     breaks=c(0,  400, 800),
     position = "top", 
@@ -1956,7 +1955,7 @@ base_plot_ai1_own_marksignrand
 
 ```{r theme_plot_ai1_own_marksignrand}
 theme_plot_ai1_own_marksignrand <- base_plot_ai1_own_marksignrand+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_text(hjust = 0.5),
@@ -1984,7 +1983,7 @@ base_plot_ai1_o1_marksignrand
 
 ```{r theme_plot_ai1_o1_marksignrand}
 theme_plot_ai1_o1_marksignrand <- base_plot_ai1_o1_marksignrand+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -2011,7 +2010,7 @@ base_plot_ai1_o2_marksignrand
 
 ```{r theme_plot_ai1_o2_marksignrand}
 theme_plot_ai1_o2_marksignrand <- base_plot_ai1_o2_marksignrand+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -2040,7 +2039,7 @@ base_plot_vi1_own_marksignrand
 
 ```{r theme_plot_vi1_own_marksignrand}
 theme_plot_vi1_own_marksignrand <- base_plot_vi1_own_marksignrand+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_text(hjust = 0.5),
@@ -2068,7 +2067,7 @@ base_plot_vi1_o1_marksignrand
 
 ```{r theme_plot_vi1_o1_marksignrand}
 theme_plot_vi1_o1_marksignrand <- base_plot_vi1_o1_marksignrand+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -2095,7 +2094,7 @@ base_plot_vi1_o2_marksignrand
 
 ```{r theme_plot_vi1_o2_marksignrand}
 theme_plot_vi1_o2_marksignrand <- base_plot_vi1_o2_marksignrand+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -2124,7 +2123,7 @@ base_plot_mp1_own_marksignrand
 
 ```{r theme_plot_mp1_own_marksignrand}
 theme_plot_mp1_own_marksignrand <- base_plot_mp1_own_marksignrand+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.text.x = element_text(hjust = 0.5),
@@ -2152,7 +2151,7 @@ base_plot_mp1_o1_marksignrand
 
 ```{r theme_plot_mp1_o1_marksignrand}
 theme_plot_mp1_o1_marksignrand <- base_plot_mp1_o1_marksignrand+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),
@@ -2179,7 +2178,7 @@ base_plot_mp1_o2_marksignrand
 
 ```{r theme_plot_mp1_o2_marksignrand}
 theme_plot_mp1_o2_marksignrand <- base_plot_mp1_o2_marksignrand+
-  theme_all+
+  theme_all_supp+
   ggplot2::theme(
     legend.position = "none",
     axis.text = element_blank(),

@@ -21,21 +21,14 @@ set.seed(37)
 library(SingleCellExperiment, quietly = TRUE)
 library(ggpubr, quietly = TRUE)
 library(tidyverse, quietly = TRUE)
+library(Seurat, quietly = TRUE)
 ```
 
-```{r load_basepath}
-base_path <- "/omics/odcf/analysis/OE0538_projectsp/DO-0008/data"
+```{r base}
+base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
 ```
 
-
-```{r load_manual_remaining}
-#-------------------------------------------------------------------------------
-#### REMAINING
-
-# list of gene sets for HSPCs (conserved signature, conserved markers, etc.)
-geneset_list_str <-base::readRDS(base::paste0(
-  base_path,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_str"))
+```{r load_manual}
 
 # data frame containing the correct resolutions for other datasets as visually determined
 resolution_df_path <- base::paste0(
@@ -57,49 +50,29 @@ corr_pval_df <-  readRDS(base::paste0(
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/09_crpv/all_corrected_pval"))
 
 colors_path <- base::paste0(
-  scRNAseq,
+  base_path,
   "/metadata/colors/colors.txt")
-
-ensembl_sign <- readRDS(base::paste0(
-  scRNAseq,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/02_endf/ensembl_sign_str"))
 
 source("../source/colors.R")
 source("../source/plotting.R")
+source("determine_params.R")
+
+color_significance <- c("pval adj. >= 0.05" = "grey70",
+                        "pval adj. < 0.05" = "black",
+                        "pval adj. = 0" = "blue")
 ```
 
-```{r load_manual_other2}
-#-------------------------------------------------------------------------------
-#### OTHER MOUSE DATASET 2 (Niche)
-#### MUS_TIK_STROMAL
+```{r load_mus_o2}
 
+# the other mouse dataset
+# Baryawno (Niche)
 dataset_o2 <- "mus_bar_stromal"
 
 # list of seurat objects with reclustering vectors for each gene set and resolution
 seu_str_recl_list_o2 <- base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_mus_bar_stromal_list"))
 
-# list of dataframes of re-clustering scores for each gene set and resolution
-score_df_str_list_o2 <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_mus_bar_stromal_list"))
-
-# dataframes of re-clustering scores after permutation comparing gene sets
-psdf_str_mark_signrand_o2 <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mark_mus_bar_stromal"))
-psdf_str_mmms_signrand_o2 <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_mus_bar_stromal"))
-psdf_str_mmms_markrand_o2 <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_mark_mus_bar_stromal"))
-
-# perm score DF from background permutation (SIGN)
-psdf_str_sign_rand_o2 <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/06_psig/perm_score_df_mus_bar_stromal"))
 ```
 
 ```{r selected_seu_o2}
@@ -123,43 +96,18 @@ rm(seu_str_recl_list_o2)
 gc()
 ```
 
-```{r load_manual_other3}
-#-------------------------------------------------------------------------------
-#### OTHER MOUSE DATASET 3 (Niche)
-#### li_all_stromal
+```{r load_human_o3}
+
+# the other human dataset
+#### ts_all_stromal NICHE
 
 dataset_o3 <- "ts_all_stromal"
 
 # list of seurat objects with reclustering vectors for each gene set and resolution
 seu_str_recl_list_o3 <- base::readRDS(base::paste0(
-  base_path_input,
+  base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_ts_all_stromal_list"))
 
-# list of dataframes of re-clustering scores for each gene set and resolution
-score_df_str_list_o3 <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_li_all_stromal_list"))
-
-# dataframes of re-clustering scores after permutation comparing gene sets
-psdf_str_mark_signrand_o3 <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mark_li_all_stromal"))
-psdf_str_mmms_signrand_o3 <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_li_all_stromal"))
-psdf_str_mmms_markrand_o3 <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_perg/perm_score_df_mmms_mark_li_all_stromal"))
-
-# perm score DF from background permutation (SIGN)
-psdf_str_sign_rand_o3 <- base::readRDS(base::paste0(
-  base_path_input,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/06_psig/perm_score_df_li_all_stromal"))
-
-# perm score DF from background permutation (MARK)
-# psdf_str_mark_rand_o1 <- base::readRDS(base::paste0(
-#   base_path_input,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_pmrk/perm_score_df_li_all_stromal"))
 ```
 
 ```{r selected_seu_o3}
@@ -181,311 +129,354 @@ selected_seu_list_o3 <- lapply(seu_str_recl_list_o3, function(seu_list){
 
 rm(seu_str_recl_list_o3)
 gc()
-```
-
-```{r load_other2}
-#-------------------------------------------------------------------------------
-#### OTHER MOUSE DATASET 2 (Niche)
-#### MUS_TIK_STROMAL
-
-dataset_o2 <- "mus_tik_stromal"
-
-# list of seurat objects with reclustering vectors for each gene set and resolution
-seu_str_recl_list_o2 <- base::readRDS(base::paste0(
-  base_path,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_mus_tik_stromal_list"))
-
-# # list of dataframes of re-clustering scores for each gene set and resolution
-# score_df_str_list_o2 <- base::readRDS(base::paste0(
-#   base_path,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_mus_tik_stromal_list"))
-# 
-# # dataframes of re-clustering scores after permutation comparing gene sets
-# psdf_str_mark_signrand_o2 <- base::readRDS(base::paste0(
-#   base_path,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mark_mus_tik_stromal"))
-# psdf_str_mmms_signrand_o2 <- base::readRDS(base::paste0(
-#   base_path,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_mus_tik_stromal"))
-# psdf_str_mmms_markrand_o2 <- base::readRDS(base::paste0(
-#   base_path,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_mark_mus_tik_stromal"))
-# 
-# # perm score DF from background permutation (SIGN)
-# psdf_str_sign_rand_o2 <- base::readRDS(base::paste0(
-#   base_path,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_psig/perm_score_df_mus_tik_stromal"))
-```
-
-```{r selected_seu_o2}
-
-resolution_df_o2 <- resolution_df[resolution_df$dataset == dataset_o2,]
-
-selected_seu_list_o2 <- lapply(seu_str_recl_list_o2, function(seu_list){
-  
-  conslev_curr <- seu_list[[1]]@misc$used_genes
-  
-  resdf_temp <- resolution_df_o2[
-    resolution_df_o2$conservation_level == conslev_curr,]
-  res_curr <- resdf_temp$resolution
-  
-  seu_return <- seu_list[[res_curr]]
-  return(seu_return)
-  
-})
-
-rm(seu_str_recl_list_o2)
-gc()
-```
-
-```{r load_other3}
-#-------------------------------------------------------------------------------
-#### OTHER MOUSE DATASET 3 (Niche)
-#### li_all_stromal
-
-dataset_o3 <- "li_all_stromal"
-
-# list of seurat objects with reclustering vectors for each gene set and resolution
-seu_str_recl_list_o3 <- base::readRDS(base::paste0(
-  base_path,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_li_all_stromal_list"))
-
-# list of dataframes of re-clustering scores for each gene set and resolution
-# score_df_str_list_o3 <- base::readRDS(base::paste0(
-#   base_path,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_li_all_stromal_list"))
-# 
-# # dataframes of re-clustering scores after permutation comparing gene sets
-# psdf_str_mark_signrand_o3 <- base::readRDS(base::paste0(
-#   base_path,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mark_li_all_stromal"))
-# psdf_str_mmms_signrand_o3 <- base::readRDS(base::paste0(
-#   base_path,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_li_all_stromal"))
-# psdf_str_mmms_markrand_o3 <- base::readRDS(base::paste0(
-#   base_path,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_perg/perm_score_df_mmms_mark_li_all_stromal"))
-# 
-# # perm score DF from background permutation (SIGN)
-# psdf_str_sign_rand_o3 <- base::readRDS(base::paste0(
-#   base_path,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/05_psig/perm_score_df_li_all_stromal"))
-
-# perm score DF from background permutation (MARK)
-# psdf_str_mark_rand_o1 <- base::readRDS(base::paste0(
-#   base_path,
-#   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/07_pmrk/perm_score_df_li_all_stromal"))
-```
-
-```{r selected_seu_o3}
-
-resolution_df_o3 <- resolution_df[resolution_df$dataset == dataset_o3,]
-
-selected_seu_list_o3 <- lapply(seu_str_recl_list_o3, function(seu_list){
-  
-  conslev_curr <- seu_list[[1]]@misc$used_genes
-  
-  resdf_temp <- resolution_df_o3[
-    resolution_df_o3$conservation_level == conslev_curr,]
-  res_curr <- resdf_temp$resolution
-  
-  seu_return <- seu_list[[res_curr]]
-  return(seu_return)
-  
-})
-
-rm(seu_str_recl_list_o3)
-gc()
-```
-
-```{r params}
-# global params
-source("determine_params.R")
 ```
 
 ```{r export_paths}
-output_pdf_a_plot <- base::paste0(
-  base_path_output_temp, "/manuscript1/figures5/figures5_a.pdf")
+output_baryawno_heatmap <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure7/sfigure7_baryawno.pdf")
+
+output_tsbm_heatmap <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure7/sfigure7_tsbonemarrow.pdf")
+
+output_pval_plot <- base::paste0(
+  base_path,
+  "/manuscript1/supp_figure7/sfigure7_pval.pdf")
 ```
 
-## E PVal plot
+# Reclustering Heatmaps
 
-#### Prep
+## O2 Signature
 
-```{r e_prep1}
+```{r mat_sign_o2}
+mat_sign_o2 <- base::table(selected_seu_list_o2$seu_sign$cell_type, 
+                           selected_seu_list_o2$seu_sign$seurat_clusters)
 
-corr_pval_df <- corr_pval_df[corr_pval_df$conservation_level != "conserved_markers",]
+# normalise per column = new clusters and turn into DF
+for(i in 1:ncol(mat_sign_o2)){
+  mat_sign_o2[,i] <- mat_sign_o2[,i]/base::sum(mat_sign_o2[,i])
+}
+sign_df_o2 <- base::as.data.frame(mat_sign_o2)
 
-# add more columns for nicer visualisation
-corr_pval_df$color_id <- vector(length = nrow(corr_pval_df))
-corr_pval_df$color_id[corr_pval_df$pval_corrected < 0.05] <- "significant"
-corr_pval_df$color_id[corr_pval_df$pval_corrected == 0] <- "is_null"
-corr_pval_df$color_id[corr_pval_df$pval_corrected >= 0.05] <- "non_significant"
-
-corr_pval_df$cons_level_long <- vector(length = nrow(corr_pval_df))
-corr_pval_df$cons_level_long[
-  corr_pval_df$conservation_level == "conserved_signature"] <- "conserved identity signature"
-corr_pval_df$cons_level_long[
-  corr_pval_df$conservation_level == "mmusall_markers"] <- "BL6 markers"
-
-corr_pval_df$score_long <- vector(length = nrow(corr_pval_df))
-corr_pval_df$score_long[
-  corr_pval_df$type == "adjusted_rand_index"] <- "Adjusted Rand Index"
-corr_pval_df$score_long[
-  corr_pval_df$type == "variation_information"] <- "Variation of Information"
-corr_pval_df$score_long[
-  corr_pval_df$type == "mean_prop_cells_cluster"] <- "Mean prop."
-
-corr_pval_df$cons_level_long <- factor(
-  corr_pval_df$cons_level_long, levels = c(
-    "BL6 markers",
-    "conserved identity signature"))
-
-corr_pval_df$score_long <- factor(
-  corr_pval_df$score_long, levels = c(
-    "Adjusted Rand Index",
-    "Variation of Information",
-    "Mean prop."
-    ))
-
-corr_pval_df$color_id <- factor(
-  corr_pval_df$color_id, levels = rev(c(
-    "non_significant",
-    "significant",
-    "is_null")))
-
-color_significance <- c("non_significant" = "grey90",
-                        "significant" = "grey40", 
-                        "is_null" = "blue")
+# manually factorise clusters
+sign_df_o2$Var2 <- factor(
+  sign_df_o2$Var2,
+  levels = base::rev(c(2, 11, 7, 6, 4, 3, 8, 0, 9, 5, 1, 10)))
 ```
 
-```{r e_prep2_subset}
+```{r sign_base_plot_o2}
+sign_base_plot_o2 <- ggplot2::ggplot(
+  sign_df_o2, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+```
 
-corr_pval_df_sub <- corr_pval_df[corr_pval_df$condition %in% c(
+```{r sign_theme_plot, fig.height = 10, fig.width = 6}
+sign_theme_plot_o2 <- sign_base_plot_o2+
+  theme_all_supp+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.text.x = element_text(
+      angle = 90,
+      hjust = 1,
+      vjust = 0.5),
+    axis.title.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    axis.text.y = element_blank())+
+  ggplot2::scale_fill_gradientn(
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  ggplot2::xlab("Reference cell types")
+sign_theme_plot_o2
+```
+
+## BL6-only
+
+```{r mat_mmms_o2}
+mat_mmms_o2 <- base::table(selected_seu_list_o2$seu_mmms$cell_type, 
+                           selected_seu_list_o2$seu_mmms$seurat_clusters)
+
+for(i in 1:ncol(mat_mmms_o2)){
+  mat_mmms_o2[,i] <- mat_mmms_o2[,i]/base::sum(mat_mmms_o2[,i])
+}
+mmms_df_o2 <- base::as.data.frame(mat_mmms_o2)
+
+mmms_df_o2$Var2 <- factor(
+  mmms_df_o2$Var2,
+  levels = base::rev(
+    c(2, 13, 7, 8, 4, 1, 9, 12, 0, 10, 5, 6, 3, 11)))
+```
+
+```{r mmms_base_plot_o2}
+mmms_base_plot_o2 <- ggplot2::ggplot(
+  mmms_df_o2, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+```
+
+```{r mmms_theme_plot_o2}
+mmms_theme_plot_o2 <- mmms_base_plot_o2+
+  theme_all_supp+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks.y = element_blank())+
+  ggplot2::scale_fill_gradientn(
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))
+mmms_theme_plot_o2
+```
+
+## Assemble O2
+
+```{r baryawno_assemble, fig.width = 5, fig.height = 9}
+
+baryawno_heatmap_theme_plot <- ggpubr::ggarrange(
+  ncol = 1,
+  mmms_theme_plot_o2,
+  sign_theme_plot_o2,
+  align = "v",
+  heights = c(1, 2.5)
+)
+
+baryawno_heatmap_theme_plot
+```
+
+```{r export_heatmap_barywano}
+pdf(output_baryawno_heatmap, width = 5, height = 9)
+baryawno_heatmap_theme_plot
+dev.off()
+```
+
+## Signature O3 (Human)
+
+```{r mat_sign_o3}
+mat_sign_o3 <- base::table(selected_seu_list_o3$seu_sign$cell_type, 
+                           selected_seu_list_o3$seu_sign$seurat_clusters)
+
+# normalise per column = new clusters and turn into DF
+for(i in 1:ncol(mat_sign_o3)){
+  mat_sign_o3[,i] <- mat_sign_o3[,i]/base::sum(mat_sign_o3[,i])
+}
+sign_df_o3 <- base::as.data.frame(mat_sign_o3)
+
+sign_df_o3$Var2 <- factor(
+  sign_df_o3$Var2,
+  levels = base::rev(c(10, 8, 6, 3, 2, 0, 7, 11, 9, 12, 5, 4, 1)))
+```
+
+```{r sign_base_plot_o3}
+sign_base_plot_o3 <- ggplot2::ggplot(
+  sign_df_o3, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+```
+
+```{r sign_theme_plot_o3, fig.height = 10, fig.width = 6}
+sign_theme_plot_o3 <- sign_base_plot_o3+
+  theme_all_supp+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.text.x = element_text(
+      angle = 90,
+      hjust = 1,
+      vjust = 0.5),
+    axis.title.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    axis.text.y = element_blank())+
+  ggplot2::scale_fill_gradientn(
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  ggplot2::xlab("Reference cell types")
+sign_theme_plot_o3
+```
+
+## BL6-only O3 (Human)
+
+```{r mat_mmms_o3}
+mat_mmms_o3 <- base::table(selected_seu_list_o3$seu_mmms$cell_type, 
+                           selected_seu_list_o3$seu_mmms$seurat_clusters)
+
+for(i in 1:ncol(mat_mmms_o3)){
+  mat_mmms_o3[,i] <- mat_mmms_o3[,i]/base::sum(mat_mmms_o3[,i])
+}
+mmms_df_o3 <- base::as.data.frame(mat_mmms_o3)
+
+mmms_df_o3$Var2 <- factor(
+  mmms_df_o3$Var2,
+  levels = base::rev(
+    c(0, 2, 3, 4, 7, 8, 9, 10, 12, 11, 13, 6 ,5, 1)))
+```
+
+```{r mmms_base_plot_o3}
+mmms_base_plot_o3 <- ggplot2::ggplot(
+  mmms_df_o3, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+```
+
+```{r mmms_theme_plot_o3}
+mmms_theme_plot_o3 <- mmms_base_plot_o3+
+  theme_all_supp+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks.y = element_blank())+
+  ggplot2::scale_fill_gradientn(
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))
+mmms_theme_plot_o3
+```
+
+```{r tsbm_assemble, fig.width = 3, fig.height = 9}
+
+tsbm_heatmap_theme_plot <- ggpubr::ggarrange(
+  ncol = 1,
+  mmms_theme_plot_o3,
+  sign_theme_plot_o3,
+  align = "v",
+  heights = c(1, 2.6)
+)
+
+tsbm_heatmap_theme_plot
+```
+
+```{r output_tsbm_heatmap}
+pdf(output_tsbm_heatmap, width = 3, height = 9)
+tsbm_heatmap_theme_plot
+dev.off()
+```
+
+# PVal plot
+
+construct a data frame containing p values
+
+```{r pval_df}
+# subset to required datasets
+corr_pval_df_str <- corr_pval_df[corr_pval_df$condition %in% c(
   "str",
   "mus_tik_stromal",
   "mus_bar_stromal",
   "li_all_stromal",
-  "ts_all_stromal"),]
+  "ts_all_stromal"
+),]
 
-corr_pval_df_sub <- corr_pval_df_sub[corr_pval_df_sub$comparison != "mmms-vs-rand",]
+# make it pretty
+corr_pval_df_str$condition_long <- vector(length = nrow(corr_pval_df_str))
+corr_pval_df_str$condition_long[
+  corr_pval_df_str$condition == "str"] <- "our Niche cells"
+corr_pval_df_str$condition_long[
+  corr_pval_df_str$condition == "mus_tik_stromal"] <- "Tikhonova et al."
+corr_pval_df_str$condition_long[
+  corr_pval_df_str$condition == "mus_bar_stromal"] <- "Baryawno et al."
+corr_pval_df_str$condition_long[
+  corr_pval_df_str$condition == "li_all_stromal"] <- "Li et al."
+corr_pval_df_str$condition_long[
+  corr_pval_df_str$condition == "ts_all_stromal"] <- "tabula sapiens stromal"
 
-
-corr_pval_df_sub$condition_long <- vector(length = nrow(corr_pval_df_sub))
-corr_pval_df_sub$condition_long[
-  corr_pval_df_sub$condition == "mus_bar_stromal"] <- "Baryawno et al."
-corr_pval_df_sub$condition_long[
-  corr_pval_df_sub$condition == "mus_tik_stromal"] <- "Tikhonova et al."
-corr_pval_df_sub$condition_long[
-  corr_pval_df_sub$condition == "li_all_stromal"] <- "Li et al."
-corr_pval_df_sub$condition_long[
-  corr_pval_df_sub$condition == "ts_all_stromal"] <- "Stromal tabula sapiens"
-corr_pval_df_sub$condition_long[
-  corr_pval_df_sub$condition == "str"] <- "Niche"
-
-
-corr_pval_df_sub$condition_long <- factor(
-  corr_pval_df_sub$condition_long, levels = rev(c(
-    "Niche",
+corr_pval_df_str$condition_long <- factor(
+  corr_pval_df_str$condition_long, levels = rev(c(
+    "our Niche cells",
     "Tikhonova et al.",
     "Baryawno et al.",
     "Li et al.",
-    "Stromal tabula sapiens")))
+    "tabula sapiens stromal")))
 
+corr_pval_df_str$score_long <- vector(length = nrow(corr_pval_df_str))
+corr_pval_df_str$score_long[
+  corr_pval_df_str$type == "adjusted_rand_index"] <- "Adjusted\nRand index"
+corr_pval_df_str$score_long[
+  corr_pval_df_str$type == "variation_information"] <- "Variation\nof Information"
+corr_pval_df_str$score_long[
+  corr_pval_df_str$type == "mean_prop_cells_cluster"] <- "Mean\nProportion"
 
-corr_pval_df_sub$comparison <- factor(
-  corr_pval_df_sub$comparison, levels = c(
-    #"mmms-vs-rand",
-    "sign-vs-rand",
-    "mmms-vs-signrand"))
+corr_pval_df_str$score_long <- factor(
+  corr_pval_df_str$score_long, levels = c(
+    "Adjusted\nRand index",
+    "Variation\nof Information",
+    "Mean\nProportion"))
 
-corr_pval_df_sub$x_axis <- rep("1", nrow(corr_pval_df_sub))
+corr_pval_df_str$color_id <- vector(length = nrow(corr_pval_df_str))
+corr_pval_df_str$color_id[corr_pval_df_str$pval_corrected < 0.05] <- "pval adj. < 0.05"
+corr_pval_df_str$color_id[corr_pval_df_str$pval_corrected == 0] <- "pval adj. = 0"
+corr_pval_df_str$color_id[corr_pval_df_str$pval_corrected >= 0.05] <- "pval adj. >= 0.05"
 
+corr_pval_df_str$comparison_long <- vector(length = nrow(corr_pval_df_str))
+corr_pval_df_str$comparison_long[
+  corr_pval_df_str$comparison == "sign-vs-rand"] <- "signature vs.\nrandom genes"
+corr_pval_df_str$comparison_long[
+  corr_pval_df_str$comparison == "mark-vs-rand"] <- "conserved markers vs.\nrandom genes"
+corr_pval_df_str$comparison_long[
+  corr_pval_df_str$comparison == "mmms-vs-rand"] <- "BL6-only markers vs.\nrandom genes"
+corr_pval_df_str$comparison_long[
+  corr_pval_df_str$comparison == "mark-vs-signrand"] <- "conserved markers vs.\nsignature + random genes"
+corr_pval_df_str$comparison_long[
+  corr_pval_df_str$comparison == "mmms-vs-signrand"] <- "BL6-only markers vs.\nsignature + random genes"
+
+corr_pval_df_str$comparison_long <- factor(
+  corr_pval_df_str$comparison_long, levels = c(
+    "signature vs.\nrandom genes",
+    "conserved markers vs.\nrandom genes",
+    "BL6-only markers vs.\nrandom genes",
+    "conserved markers vs.\nsignature + random genes",
+    "BL6-only markers vs.\nsignature + random genes"))
+
+corr_pval_df_str$color_id <- factor(
+  corr_pval_df_str$color_id, levels = rev(c(
+    "pval adj. >= 0.05",
+    "pval adj. < 0.05",
+    "pval adj. = 0")))
+
+head(corr_pval_df_str)
 ```
 
-```{r e_print_for_control}
-print(corr_pval_df_sub)
-```
-
-```{r e_base_plot, fig.width = 10, fig.height= 3} 
-e_base_plot <- ggplot2::ggplot(
-  corr_pval_df_sub,
-  aes(y = condition_long, 
-      x = x_axis,
-      color = color_id, 
-      size = 10^-pval_corrected))+
-  ggplot2::geom_point(alpha = 1)+
-  ggplot2::facet_grid(cols = vars(corr_pval_df_sub$score_long),
-                      switch = "y",
-                      rows = vars(corr_pval_df_sub$comparison))
-```
-
-```{r e_theme_plot, fig.width = 9, fig.height = 3.5} 
-e_theme_plot <- e_base_plot+
-  ggplot2::theme_classic()+
-  theme_all+
-  # ggplot2::scale_x_continuous(
-  #   position = "bottom",
-  #   limits = c(0, base::max(corr_pval_df_sub$nr_genes_used)))+
-  ggplot2::scale_color_manual(values = color_significance)+
+```{r pval_plot, fig.width = 12, fig.height = 10}
+pval_plot <- ggplot2::ggplot(
+  corr_pval_df_str,
+  ggplot2::aes(y = condition_long,
+               x = score_long,
+               fill = color_id,
+               size = 10^-pval_corrected))+
+  ggplot2::geom_point(alpha = 1, colour="black", pch=21)+
+  ggplot2::facet_grid(
+    rows = vars(corr_pval_df_str$comparison_long), switch = "y")+
+  theme_all_supp+
   ggplot2::theme(
-    strip.text.x = element_text(
-      size = axis_title_size,
-      color = axis_title_color,
-      face = axis_title_face),
-    strip.background = element_blank(),
-    strip.text.y.left = element_text(
-      size = axis_text_size,
-      color = axis_text_color,
-      face = axis_text_face,
-      angle = 0,
-      hjust = 0),
-    axis.title = element_blank(),
-    axis.text.x = element_blank(),
-    axis.text.y = element_text(
-      hjust = 0),
-    axis.ticks.x = element_blank(),
     strip.placement = "outside",
-    legend.position = "none")
-e_theme_plot
+    strip.background.y = element_blank(),
+    panel.spacing = unit(2, "cm"),
+    strip.text.y.left = element_text(
+      angle = 0,
+      face= "bold",
+      color = "black",
+      size = 16,
+      hjust = 0,
+      vjust = 0.5
+    ),
+    axis.title = element_blank()
+  )+
+  ggplot2::scale_x_discrete(position = "top")+
+  scale_fill_manual("Significance", values = color_significance)
+pval_plot
 ```
 
-```{r e_legend_base_plot}
-e_legend_base_plot <- ggplot2::ggplot(
-  corr_pval_df,
-  aes(y = condition, 
-      x = nr_genes_used,
-      color = color_id, 
-      size = 10^-pval_corrected))+
-  ggplot2::geom_point(alpha = 1)+
-  ggplot2::facet_grid(cols = vars(corr_pval_df$score_long),
-                      switch = "y",
-                      rows = vars(corr_pval_df$cons_level_long))
-```
-
-```{r e_legend_theme_plot, fig.width = 3, fig.height= 3}
-e_legend_theme_plot <- e_legend_base_plot+
-  ggplot2::theme_classic()+
-  theme_all+
-  ggplot2::scale_x_continuous(
-    limits = c(0, base::max(corr_pval_df_sub$nr_genes_used)))+
-  ggplot2::scale_color_manual("", values = color_significance)+
-  ggplot2::scale_size_continuous("10 adjusted p val")
-
-e_legend_theme <- ggpubr::get_legend(e_legend_theme_plot)
-
-e_legend <- ggpubr::ggarrange(e_legend_theme)
-e_legend
-```
-
-```{r e_plot_export}
-pdf(output_pdf_e_plot, width = 9, height = 3.5)
-e_theme_plot
-dev.off()
-```
-
-```{r e_legend_export}
-pdf(output_pdf_e_legend, width = 3, height = 3)
-e_legend
+```{r output_pval_plot}
+pdf(output_pval_plot, width = 12, height = 10)
+pval_plot
 dev.off()
 ```

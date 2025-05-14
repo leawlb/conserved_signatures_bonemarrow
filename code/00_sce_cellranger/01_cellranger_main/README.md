@@ -39,14 +39,16 @@ Shell.
 
 ## How to configure
 
-There is an example configuration in `config/config-test.yaml`.
+An example configuration is in `config/config-interspecies_bonemarrow.yaml`.
 
 To adapt the workflow, make a copy of this file and adapt it to your needs.
 
 Minimal changes needed are: 
 
- * Metadata: Path to a OTP-exported metadata in `["metadata"]["raw"]`. Multiple files can be listed. 
+ * Metadata: Path to a OTP-exported metadata in `["metadata"]["table"]`. Multiple files can be listed. 
  * Output directory: `["paths"]["output_dir"]` - where the results should be stored
+ * references: Choose directory where the N-merged reference genome is stored
+ * cellranger_path path: install Cellranger 6.1.1 and store path
 
 ## How to run 
 
@@ -64,10 +66,17 @@ conda config --set channel_priority strict
 ```
 
 You may call the pipeline as follows in the directory where you cloned it. 
+Adjusted to the DKFZ cluster architecture, may need to adjust as required.
 
 ```bash
-snakemake --cluster "bsub -n16 -q long-debian -R rusage[mem=200GB]" -p -j4 -c42 --configfile config/config-cluster.yaml --use-conda --conda-frontend conda
+snakemake --cluster "bsub -n16 -q long-debian -R rusage[mem=200GB]" -p -j4 -c42 --configfile config/config-interspecies-bonwmarrow.yaml --use-conda --conda-frontend conda
 ```
 
  - `--cluster` may change depending on the computational footprint of your analyses
  - `--configfile` should point to your personal configuration
+ 
+Or directly adjusted to the data and DKFZ cluster architecture, may need to alter `workflow/Snakefile` as required:
+
+```bash
+snakemake --cluster "bsub -n{threads} -q {resources.queue} -R rusage[mem={resources.mem_mb}]" -p -j66 -c42 --configfile ../config/config-interspecies-bonemarrow.yaml --latency-wait 60 --use-conda --conda-frontend conda -n
+```

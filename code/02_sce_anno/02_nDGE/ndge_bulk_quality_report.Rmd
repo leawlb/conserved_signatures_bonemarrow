@@ -28,17 +28,6 @@ library(RColorBrewer, quietly = TRUE)
 source(file =  snakemake@params[["plotting"]])
 ```
 
-```{r load_manual, include = FALSE, eval = FALSE}
-
-sce <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/04_annc/03_sce/sce_str-04")
-
-rlog_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/06_dsqc/rlog_str")
-
-sce_clust <- sce[,sce$cluster_louvain == 6]
-table(sce_clust$annotation_cluster)
-rld <- rlog_list[["Mesenchymal cells"]]
-```
-
 ```{r load_objects, message = FALSE}
 cluster_curr <- snakemake@wildcards[["cluster"]]
 

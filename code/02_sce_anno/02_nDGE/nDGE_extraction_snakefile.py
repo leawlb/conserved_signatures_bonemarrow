@@ -38,12 +38,12 @@ print(tf)
 
 targets = []
 for c in clusters_hsc:
-  #targets = targets + [OUTPUT_REP + "/ndge/ndge_report_cluster_" + c + "_hsc.html"] 
+  targets = targets + [OUTPUT_REP + "/ndge/ndge_report_cluster_" + c + "_hsc.html"] 
   targets = targets + [OUTPUT_REP + "/ndge/ndge_report_sv_" + c + "_hsc.html"] 
   targets = targets + [OUTPUT_REP + "/bulk/bulk_quality_report_cluster_" + c + "_hsc.html"] 
 
 for c in clusters_str:
-  #targets = targets + [OUTPUT_REP + "/ndge/ndge_report_cluster_" + c + "_str.html"] 
+  targets = targets + [OUTPUT_REP + "/ndge/ndge_report_cluster_" + c + "_str.html"] 
   targets = targets + [OUTPUT_REP + "/ndge/ndge_report_sv_" + c + "_str.html"] 
   targets = targets + [OUTPUT_REP + "/bulk/bulk_quality_report_cluster_" + c + "_str.html"] 
 
@@ -198,7 +198,7 @@ rule ndge_cluster_report:
     output:
         OUTPUT_REP + "/ndge/ndge_report_cluster_{cluster}_{fraction}.html"
     resources:
-        mem_mb=15000,
+        mem_mb=35000,
         queue = "medium-debian"
     threads: 4
     params:

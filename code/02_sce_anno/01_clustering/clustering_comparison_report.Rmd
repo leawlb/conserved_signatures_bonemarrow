@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Report for clustering of all species separately, to compare to the original 
 clustering obtained from all species merged.
-To make sure, that the merged clustering is not too different from species-
+To make sure that the merged clustering is not too different from species-
 specific clustering.
 
 #### Load libraries, source code 
@@ -29,17 +29,6 @@ library(BiocSingular, quietly = TRUE)
 
 ```{r source, message = FALSE}
 source(file =  snakemake@params[["plotting"]])
-```
-
-```{r load_manual, include = FALSE, eval = FALSE}
-
-sce_l <- base::readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/sce_str-02")
-sce_ls <- base::readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/comparison/sce_mspr_str-02")
-sce_ct <- base::readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/04_annc/03_sce/sce_str-04")
-
-source("/omics/groups/OE0538/internal/users/l012t/repositories/Interspecies_BM_phd/code/source/plotting.R")
-colors_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt"
-source("/omics/groups/OE0538/internal/users/l012t/repositories/Interspecies_BM_phd/code/source/colors.R")
 ```
 
 ```{r load_objects}

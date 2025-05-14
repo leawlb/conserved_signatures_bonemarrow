@@ -167,5 +167,6 @@ colnames(SingleCellExperiment::reducedDims(sce)$UMAP) <- c("X1", "X2")
 #-------------------------------------------------------------------------------
 
 base::saveRDS(sce, snakemake@output[["sce_output"]])
+base::saveRDS(sce, snakemake@output[["sce_output_pretty"]])
 
 utils::sessionInfo()

@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Report on nDGEs per cell type, and possible nDGE candidates fpr subclustering.
+Report on nDGEs per cell type, and possible nDGE candidates for subclustering.
 
 #### Load objects
 
@@ -147,7 +147,7 @@ see_pvals(cluster_res = res_df_comb_mspr_mcar, comparison = "mspr-mcar")
 # Subclustering genes
 
 Candidate genes are potential subclustering genes that were picked from
-literature or from computationally identified marker genes.
+literature.
 These genes are here tested for their potential to separate certain cell types 
 into subpopulations.
 Only candidate genes that are nDGE in at least three of four species

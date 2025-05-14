@@ -1,5 +1,5 @@
 
 snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resources.mem_mb}]" -p -j8 -c20 -s clustering_snakefile.py --configfile ../../config.yaml --latency-wait 60 --use-conda -n
 
-
+# for anno reports which take VERY long due to the large number of plots
 snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resources.mem_mb}]" -p -j8 -c20 -s clustering_snakefile.py --configfile ../../config.yaml --latency-wait 60 --use-conda --config run_anno_reports=True -n

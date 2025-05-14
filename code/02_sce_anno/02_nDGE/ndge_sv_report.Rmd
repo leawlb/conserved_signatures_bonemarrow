@@ -23,12 +23,6 @@ library(DESeq2, quietly = TRUE)
 source(file =  snakemake@params[["plotting"]])
 ```
 
-```{r manual, eval = FALSE, include = FALSE}
-dsq_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/05_desq/deseq_hsc-05")
-
-sva_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/06_dsqc/sva_hsc")
-```
-
 ```{r load_objects, message = FALSE}
 
 cluster_curr <- snakemake@wildcards[["cluster"]]

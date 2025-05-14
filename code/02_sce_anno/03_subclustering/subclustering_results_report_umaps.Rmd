@@ -9,35 +9,14 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Report on the results of the final annotation.
-This report is used to make many plots for presentations, etc., so it is 
-very chaotic and frequently adjusted.
-Only for generating pretty umaps.
-
-Since I use a lot of plots from this report, there are many different
-more or less good-looking versions of the same plot in this script.
+Report on the results of the final annotation (pretty UMAPs).
+This report is a bit chaotic and frequently adjusted for exporting plots
+for different purposes.
 
 #### Load libraries, source code 
 
 ```{r seed, message = FALSE}
 set.seed(37)
-```
-
-```{r eval = FALSE, include = FALSE}
-source("../../source/plotting.R")
-colors_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt"
-source("../../source/colors.R")
-
-dtplt_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/02_sce_anno/gene_list_dotplot.txt"
-dtplt_short_path<- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/02_sce_anno/gene_list_dotplot_short.txt"
-
-source("../../source/colors.R")
-
-#genelist_shared <- base::readRDS(file = snakemake@input[["genes_list_shared"]])
-sce <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10")
-umap_base_l(sce_anno, color_by = "celltypes")+
-  scale_color_manual(values = col_cts_str)
-
 ```
 
 ```{r load, message = FALSE}

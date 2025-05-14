@@ -42,7 +42,7 @@ fractions = get_list(metadata = METADATA, column = "Fraction_ID")
 species = get_list(metadata = METADATA, column = "Species_ID")
 
 # clusters to be subclustered 
-# hsc clusters 2 and 4 are be merged and then subclustered again
+# hsc clusters 2 and 4 are merged and then subclustered again
 clusters_hsc = ["2", "6"]
 clusters_str = ["6"]
 
@@ -66,6 +66,7 @@ for c in clusters_str:
 
 for f in fractions:
   targets = targets + [OUTPUT_DAT + "/10_anns/sce_" + f + "-10"]
+  targets = targets + [OUTPUT_DAT + "/10_anns/sce_" + f + ".rds"]
   targets = targets + [OUTPUT_REP + "/results/results_report_" + f + "_dotplots.html"]
   targets = targets + [OUTPUT_REP + "/results/results_report_" + f + "_umaps.html"]
   targets = targets + [OUTPUT_DAT + "/12_anqc/01_markers/markers_" + f]
@@ -135,6 +136,8 @@ rule subclustering_mclust_report:
 
 # add subclusters to SCE object and annotate
 # re-calculate UMAP coordinates for nicer looking plots
+
+# have one prettier output file to put in data freeze and for upload. 
 """
 sce_subcl_input = expand(rules.subclustering.output, cluster = clusters_hsc, fraction = ["hsc"]) 
 sce_subcl_input = sce_subcl_input + expand(rules.subclustering.output, cluster = clusters_str, fraction = ["str"])
@@ -152,7 +155,8 @@ rule add_subclusters:
         queue = "medium-debian"
     threads: 10
     output:
-        sce_output = OUTPUT_DAT + "/10_anns/sce_{fraction}-10"
+        sce_output = OUTPUT_DAT + "/10_anns/sce_{fraction}-10",
+        sce_output_pretty = OUTPUT_DAT + "/10_anns/sce_{fraction}.rds"
     script:
         "scripts/10_add_subclusters_anno.R" 
 
@@ -161,7 +165,7 @@ rule add_subclusters:
 """
 rule make_subclustering_results_report_dotplot:
     input:
-        sce_input = rules.add_subclusters.output,
+        sce_input = rules.add_subclusters.output.sce_output,
         gene_list_dtplt = GENE_LIST_DOTPLOT
     params:
         colors_path = COLORS,
@@ -177,7 +181,7 @@ rule make_subclustering_results_report_dotplot:
         
 rule make_subclustering_results_report_umaps:
     input:
-        sce_input = rules.add_subclusters.output
+        sce_input = rules.add_subclusters.output.sce_output
     params:
         colors_path = COLORS,
         plotting = "../../source/plotting.R",
@@ -217,7 +221,7 @@ rule separate_sce:
 # get marker genes for each cluster 
 rule find_markers:
     input: 
-        sce_input = rules.add_subclusters.output
+        sce_input = rules.add_subclusters.output.sce_output
     output:
         markers = OUTPUT_DAT + "/12_anqc/01_markers/markers_{fraction}"
     resources:
@@ -248,7 +252,7 @@ rule make_subclustering_markers_report:
         markers = rules.find_markers.output,
         go = rules.go_analysis.output,
         sep = OUTPUT_DAT + "/11_sepc/{fraction}_subcluster_{subcluster}-sep",
-        sce_input = rules.add_subclusters.output,
+        sce_input = rules.add_subclusters.output.sce_output,
         gene_list_subcl = GENE_LIST_CLUSTERS
     output:
         OUTPUT_REP + "/markergenes/markergenes_report_{fraction}_subcluster_{subcluster}.html"

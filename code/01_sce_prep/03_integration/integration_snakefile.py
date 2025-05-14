@@ -86,7 +86,7 @@ rule merge_datasets_species:
     script:
         "scripts/08_merge_datasets_species.R" 
         
-# Merge ages (same as above but for each age separately) (for CCI)
+# Merge ages (same as above but for each age separately) 
 rule merge_datasets_ages:
     input: 
         sce_input_path = OUTPUT_DAT + "/07_rfan/{species}/",

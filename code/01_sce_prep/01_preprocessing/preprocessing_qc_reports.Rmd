@@ -10,8 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 QC report for all samples separately (Object_ID).
-Some operations from the scripts must be repeated to generate relevant plots,
-but any new objects cannot be saved from an .Rmd script using snakemake.
+Some operations from the scripts must be repeated to generate relevant plots.
 Repeat various steps for visualisation.
 
 #### Load libraries, source code 

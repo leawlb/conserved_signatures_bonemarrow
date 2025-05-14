@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# This is a long script for one step: Finding diffrentially mapped genes (dmgs)
+# This is a long script for one step: Finding differentially mapped genes (dmgs)
 # between individual SCE objects aligned with different reference genomes.
 # Prepare for direct comparison between both SCEs, then find marker genes.
 

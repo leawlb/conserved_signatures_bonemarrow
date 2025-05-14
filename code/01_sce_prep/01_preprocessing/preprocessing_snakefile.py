@@ -76,7 +76,7 @@ rule remove_droplets:
     output:
         sce_output = OUTPUT_DAT + "/01_drop/{species}/sce_{individual}-01"
     resources:
-        mem_mb=10000,
+        mem_mb=11000,
         queue="medium-debian"
     threads: 2
     params:
@@ -101,7 +101,7 @@ rule get_sample_dmgs:
     output:
         dmgs = OUTPUT_DAT + "/02_mapp/{species}/dmgs_{individual}"
     resources:
-        mem_mb=15000,
+        mem_mb=17000,
         queue="medium-debian"
     threads: 2
     params:
@@ -122,7 +122,7 @@ rule merge_dmgs:
     input:
         dmgs = merge_dmgs_input
     resources:
-        mem_mb=1000,
+        mem_mb=1500,
         queue="short-debian"
     threads: 1
     output:
@@ -138,7 +138,7 @@ rule remove_outliers_dmgs:
     output:
         sce_output = OUTPUT_DAT + "/04_outl/{species}/sce_{individual}-04"
     resources:
-        mem_mb=2000,
+        mem_mb=4000,
         queue="medium-debian"
     threads: 2
     params:
@@ -155,7 +155,7 @@ rule normalize_expr:
     output:
         sce_output = OUTPUT_DAT + "/05_norm/{species}/sce_{individual}-05"
     resources:
-        mem_mb=3000,
+        mem_mb=5000,
         queue="short-debian"
     threads: 2
     script:
@@ -169,7 +169,7 @@ rule reduce_dims:
     output:
         sce_output = OUTPUT_DAT + "/06_dimr/{species}/sce_{individual}-06" 
     resources:
-        mem_mb=2000,
+        mem_mb=4000,
         queue="short-debian"
     threads: 2
     params:
@@ -192,7 +192,7 @@ rule make_dmg_reports:
     output:
         OUTPUT_REP + "/dmgs/{species}/preprocessing_dmg_report_{individual}.html"
     resources:
-        mem_mb=20000,
+        mem_mb=24000,
         queue="medium-debian"
     threads: 6
     params:
@@ -216,7 +216,7 @@ rule make_qc_reports:
     output:
         OUTPUT_REP + "/qc/{species}/preprocessing_qc_report_{individual}.html"
     resources:
-        mem_mb=20000,
+        mem_mb=24000,
         queue="medium-debian"
     threads: 2
     params:
@@ -233,8 +233,6 @@ rule make_qc_reports:
         
 """
 Make one summary report on all files
-Because this rule is dependent on previous outputs but this is not reflected
-in input, it's generally turned off in config to avoid premature job submission
 """
 print(config["run_preprocessing_summary"])
 if config["run_preprocessing_summary"]:
@@ -244,7 +242,7 @@ if config["run_preprocessing_summary"]:
       output:
           OUTPUT_REP + "/qc/preprocessing_qc_summary.html"
       resources:
-          mem_mb=20000,
+          mem_mb=24000,
           queue="long-debian"
       threads: 2
       params:

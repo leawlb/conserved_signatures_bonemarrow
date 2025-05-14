@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 # authors: Amy Danson, Lea Wölbert
-# remove empty dropletsm add doublet score for doublet removal, remove doublets
+# remove empty droplets, add doublet score for doublet removal, remove doublets
 # remove duplicated genes
 
 library(DropletUtils, quietly = TRUE) 

@@ -1,7 +1,5 @@
 # convert HSC adata back to SCE object
 
-# use ../../envs/zellkonverter_import.yml
-
 #-------------------------------------------------------------------------------
 library(zellkonverter, quietly = TRUE)
 library(basilisk, quietly = TRUE)

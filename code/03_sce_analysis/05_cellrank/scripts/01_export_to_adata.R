@@ -1,7 +1,6 @@
 #-------------------------------------------------------------------------------
 
 # export SCE as adata.h5ad object using zellkonverter and basilisk
-# use ../../envs/zellkonverter_export.yml
 
 library(zellkonverter, quietly = TRUE)
 library(basilisk, quietly = TRUE)
@@ -10,7 +9,6 @@ library(SingleCellExperiment, quietly = TRUE)
 set.seed(37)
 
 sce <- base::readRDS(snakemake@input[["sce_input"]])
-#sce <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10")
 
 #-------------------------------------------------------------------------------
 

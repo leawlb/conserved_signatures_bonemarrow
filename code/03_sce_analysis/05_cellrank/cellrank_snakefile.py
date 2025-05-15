@@ -20,6 +20,7 @@ targets = targets + [OUTPUT_DAT + "/03_cllr/adata_hsc_03.h5ad"]
 targets = targets + [OUTPUT_REP + "/python_plots.pdf"]
 targets = targets + [OUTPUT_DAT + "/04_psce/sce_hsc_pseudotime"]
 targets = targets + [OUTPUT_REP + "/cellrank_report.html"]
+targets = targets + [OUTPUT_REP + "/cellrank_report_aftersep.html"]
 targets = targets + [OUTPUT_DAT + "/05_bsce/sce_ery"]
 targets = targets + [OUTPUT_DAT + "/05_bsce/sce_lym"]
 targets = targets + [OUTPUT_DAT + "/05_bsce/sce_neu"]
@@ -75,7 +76,7 @@ rule cellrank:
         adata_input = rules.scanpy_preprocessing.output.adata_output
     output:
         adata_output = OUTPUT_DAT + "/03_cllr/adata_hsc_03.h5ad",
-        pdf_output = OUTPUT_REP + "/python_plots.pdf"
+        pdf_output = OUTPUT_REP + "/python_plots.pdf" # not pretty but ok enough
     params:
         n_states_total = 6,
         n_states_terminal = 3
@@ -141,4 +142,28 @@ rule separate_by_branch:
     script:
         "scripts/05_separate_by_branch.R"
 
+#-------------------------------------------------------------------------------
 
+"""
+contents of 06_visualize_expression_pseudotime has been transferred into
+report_after_sep for consistency reasons.
+Without the pdf output.
+(And is also part of Supplementary Figure 3)
+"""
+
+rule cellrank_report_aftersep:
+    input: 
+        ery_pseudo = rules.separate_by_branch.output.sce_ery,
+        lym_pseudo = rules.separate_by_branch.output.sce_lym,
+        neu_pseudo = rules.separate_by_branch.output.sce_neu,
+        markers = OUTPUT_BASE + "/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"
+    output:
+        OUTPUT_REP + "/cellrank_report_aftersep.html"
+    resources:
+        mem_mb=100000,
+        queue="medium-debian"
+    threads: 4
+    conda:
+        "../../envs/ggpattern.yml" # with this env seurat conversion works
+    script:
+        "cellrank_report_sep.Rmd"

@@ -1,8 +1,6 @@
 # using cellrank to obtain probabilities and branches from pseudotime
 # https://cellrank.readthedocs.io/en/latest/notebooks/tutorials/general/100_getting_started.html
 
-# use ../../envs/cellrank.yml
-
 #-------------------------------------------------------------------------------
 
 import sys
@@ -54,9 +52,6 @@ g.compute_fate_probabilities(n_jobs=1) # trying to avoid weird bug
 # add info from adata.obsm into coldata for nicer conversion to SCE later
 
 print(adata.obsm['lineages_fwd'])
-#adata.obs['Erythroid'] = adata.obsm['lineages_fwd']['Erythroid progs.']
-#adata.obs['Lymphoid'] = adata.obsm['lineages_fwd']['Lymphoid progs._2']
-#adata.obs['Neutro'] = adata.obsm['lineages_fwd']['Neutrophil progs.']
 
 #-------------------------------------------------------------------------------
 print(adata)
@@ -65,7 +60,6 @@ adata.write_h5ad(snakemake.output['adata_output'])
 #-------------------------------------------------------------------------------
 # export plots on loaded variables/objects
 
-# https://www.geeksforgeeks.org/save-multiple-matplotlib-figures-in-single-pdf-file-using-python/
 import matplotlib 
 from matplotlib import pyplot as plt 
 from matplotlib.backends.backend_pdf import PdfPages 
@@ -99,8 +93,6 @@ g.plot_macrostates(which = 'terminal', basis = "X_umap")
 fig6 = plt.figure() #
 cr.pl.circular_projection(adata, keys="celltypes", legend_loc="right")
 
-
-#
 def save_image(filename): 
     
     p = PdfPages(filename) 

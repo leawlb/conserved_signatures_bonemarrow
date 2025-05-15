@@ -5,9 +5,8 @@
 # type from the early compartment
 # The cut-off will be set to the first quartile of cell fate probabilities for
 # each lineage -1.5 * IQR 
-# this will only remove few outliers from HSCs and MPPs from each branch
-
-# use standard environment
+# this will only remove few outliers from Early MPPs from each branch (and)
+# cell with values below the cut-off
 
 set.seed(37)
 library(SingleCellExperiment)

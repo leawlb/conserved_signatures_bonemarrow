@@ -1,9 +1,10 @@
 # visualize expression of conserved signature genes along pseudotime
+# the content is now in cellrank_report_sep for automatic visualisation with snakemake
 
 library(Seurat)
 library(tidyverse)
 
-markers <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_sign/signature_list_hsc")
+markers <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc")
 
 # load all three trajectories
 ery_pseudo <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/05_bsce/sce_ery")
@@ -44,7 +45,7 @@ for(n in 1:length(markers)){
 }
 plot_data[,7:ncol(plot_data)] <- scale(plot_data[,7:ncol(plot_data)])
 
-pdf("06_pseudotime_figs/marker_genes_pseudo_ery.pdf",
+pdf("/omics/odcf/analysis/OE0538_projects/DO-0008/data/test_reproducibility4/main_analysis/sce_objects/03_sce_analysis/05_cellrank/06_pseudotime_figs/marker_genes_pseudo_ery.pdf",
     width = 5, height = 4)
 for(n in 1:length(markers)){
   cell_sp <- markers[[n]][["conserved_signature"]]
@@ -80,7 +81,7 @@ for(n in 1:length(markers)){
 }
 plot_data[,7:ncol(plot_data)] <- scale(plot_data[,7:ncol(plot_data)])
 
-pdf("06_pseudotime_figs/marker_genes_pseudo_lym.pdf",
+pdf("/omics/odcf/analysis/OE0538_projects/DO-0008/data/test_reproducibility4/main_analysis/sce_objects/03_sce_analysis/05_cellrank/06_pseudotime_figs/marker_genes_pseudo_lym.pdf",
     width = 5, height = 4)
 for(n in 1:length(markers)){
   cell_sp <- markers[[n]][["conserved_signature"]]
@@ -116,7 +117,7 @@ for(n in 1:length(markers)){
 }
 plot_data[,7:ncol(plot_data)] <- scale(plot_data[,7:ncol(plot_data)])
 
-pdf("06_pseudotime_figs/marker_genes_pseudo_neu.pdf",
+pdf("/omics/odcf/analysis/OE0538_projects/DO-0008/data/test_reproducibility4/main_analysis/sce_objects/03_sce_analysis/05_cellrank/06_pseudotime_figs/marker_genes_pseudo_neu.pdf",
     width = 5, height = 4)
 for(n in 1:length(markers)){
   cell_sp <- markers[[n]][["conserved_signature"]]
@@ -140,7 +141,7 @@ for(n in 1:length(markers)){
 dev.off()
 
 
-pdf("06_pseudotime_figs/marker_genes_ery_species_pseudotime.pdf",
+pdf("/omics/odcf/analysis/OE0538_projects/DO-0008/data/test_reproducibility4/main_analysis/sce_objects/03_sce_analysis/05_cellrank/06_pseudotime_figs/marker_genes_ery_species_pseudotime.pdf",
     width = 7, height = 4)
 for(g in sort(unique(unlist(lapply(markers, 
                                     function(x){x["conserved_signature"]}))))) {
@@ -163,7 +164,7 @@ for(g in sort(unique(unlist(lapply(markers,
 dev.off()
 
 
-pdf("06_pseudotime_figs/marker_genes_lym_species_pseudotime.pdf",
+pdf("/omics/odcf/analysis/OE0538_projects/DO-0008/data/test_reproducibility4/main_analysis/sce_objects/03_sce_analysis/05_cellrank/06_pseudotime_figs/marker_genes_lym_species_pseudotime.pdf",
     width = 7, height = 4)
 for(g in sort(unique(unlist(lapply(markers, 
                                    function(x){x["conserved_signature"]}))))) {
@@ -186,7 +187,7 @@ for(g in sort(unique(unlist(lapply(markers,
 dev.off()
 
 
-pdf("06_pseudotime_figs/marker_genes_neu_species_pseudotime.pdf",
+pdf("/omics/odcf/analysis/OE0538_projects/DO-0008/data/test_reproducibility4/main_analysis/sce_objects/03_sce_analysis/05_cellrank/06_pseudotime_figs/marker_genes_neu_species_pseudotime.pdf",
     width = 7, height = 4)
 for(g in sort(unique(unlist(lapply(markers, 
                                    function(x){x["conserved_signature"]}))))) {

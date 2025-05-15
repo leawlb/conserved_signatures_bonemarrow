@@ -15,9 +15,6 @@ print(sys.path)
 
 import scanpy as sc
 import numpy as np
-# import random
-# 
-# random.seed(37)
 
 #-------------------------------------------------------------------------------
 

@@ -16,9 +16,6 @@ library(tidyverse, quietly = TRUE)
 nDEGs <- readRDS(snakemake@input[["nDEGS"]])
 cons_markers <- readRDS(snakemake@input[["cons_markers"]])
 
-#nDEGs <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/08_sce_brain/01_list_nDEGs_all.rds")
-#cons_markers <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/08_sce_brain/02_marker_conserved_primates.rds")
-
 conserved_signature <- lapply(names(cons_markers), function(x){
   markers <- cons_markers[[x]]
   ndeg <- nDEGs[[x]]
@@ -250,7 +247,6 @@ print(
     labs(y  = "new clusters", x = "original cell types", title = "Mouse Human markers")
 )
 # order = 2, 11, 10, 4, 6, 7, 3, 5, 8, 9, 0, 12, 1
-# 5626 human markers
 ```
 
 # Quantify Reclustering
@@ -279,7 +275,6 @@ plot_hs_quant <- plot_hs %>%
   select(-seurat_clusters, -clust_prop, -Freq) %>%
   unique()
 sum(filter(plot_hs_quant, clust_assigned == T)$Count)/sum(plot_hs_quant$Count)
-# [1] 0.9060639
 
 plot_sig <- mouse_sig@meta.data[,c("subclass_label", "seurat_clusters")] %>%
   table() %>% as.matrix()
@@ -294,7 +289,6 @@ plot_sig_quant <- plot_sig %>%
   select(-seurat_clusters, -clust_prop, -Freq) %>%
   unique()
 sum(filter(plot_sig_quant, clust_assigned == T)$Count)/sum(plot_sig_quant$Count)
-# [1] 0.9172439
 
 all_data <- rbind(
   mutate(plot_hs_quant, genes = "human markers"),
@@ -357,9 +351,6 @@ mouse_sig@meta.data <- merge(mouse_sig@meta.data, # correct.x is signature marke
 rownames(mouse_sig@meta.data) <- rownames
 
 table(mouse_sig@meta.data$correct)
-# 
-# FALSE FALSE  FALSE TRUE  TRUE FALSE   TRUE TRUE 
-# 388         306         398        7150 
 
 DimPlot(mouse_sig,
         group.by = "correct") +

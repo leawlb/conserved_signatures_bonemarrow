@@ -9,43 +9,43 @@ library(scater, quietly = TRUE)
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
-hsc_cts_all <- c(
-  "B cell",
-  "Dendritic cells",
-  "Eo/Baso prog.",
-  "Ery prog.",
-  "Ery/Mk prog.",
-  "Erythroblasts",
-  "Gran/Mono prog.",
-  "LMPPs",
-  "Mk prog.",
-  "Mono prog.",
-  "Monocytes",
-  "NK cells",
-  "Neutro prog.",
-  "Neutrophils",
-  "T cells",
-  "large pre-B.",
-  "pro-B",
-  "small pre-B."
-)
-
-str_cts_all <- c(
-  "Adipo-CAR",
-  "Arteriolar ECs",
-  "Arteriolar fibro.",
-  "Chondrocytes",
-  "Endosteal fibro.",
-  "Fibro/Chondro p.",
-  "Myofibroblasts",
-  "Ng2+ MSCs",
-  "Osteo-CAR",
-  "Osteoblasts",
-  "Schwann cells",
-  "Sinusoidal ECs",
-  "Smooth muscle",
-  "Stromal fibro."
-)
+# hsc_cts_all <- c(
+#   "B cell",
+#   "Dendritic cells",
+#   "Eo/Baso prog.",
+#   "Ery prog.",
+#   "Ery/Mk prog.",
+#   "Erythroblasts",
+#   "Gran/Mono prog.",
+#   "LMPPs",
+#   "Mk prog.",
+#   "Mono prog.",
+#   "Monocytes",
+#   "NK cells",
+#   "Neutro prog.",
+#   "Neutrophils",
+#   "T cells",
+#   "large pre-B.",
+#   "pro-B",
+#   "small pre-B."
+# )
+# 
+# str_cts_all <- c(
+#   "Adipo-CAR",
+#   "Arteriolar ECs",
+#   "Arteriolar fibro.",
+#   "Chondrocytes",
+#   "Endosteal fibro.",
+#   "Fibro/Chondro p.",
+#   "Myofibroblasts",
+#   "Ng2+ MSCs",
+#   "Osteo-CAR",
+#   "Osteoblasts",
+#   "Schwann cells",
+#   "Sinusoidal ECs",
+#   "Smooth muscle",
+#   "Stromal fibro."
+# )
 
 #-------------------------------------------------------------------------------
 

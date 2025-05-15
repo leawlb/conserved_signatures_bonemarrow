@@ -167,7 +167,7 @@ clustering_orig <- function(sce, k_graph, resolution_louvain){
 # https://github.com/cran/mcclust
 # Author: Arno Fritsch
 
-print(getwd()) # working directory is 03_04 
+print(getwd()) 
 source("../../source/mcclust/mcclust-master/R/vi.dist.R")
 
 #-------------------------------------------------------------------------------

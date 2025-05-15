@@ -1,3 +1,7 @@
+# defining some color schemes here
+# some of it based on metadata csv especially for specific cell types
+# or similar
+
 #-------------------------------------------------------------------------------
 
 library(dittoSeq, quietly = TRUE)
@@ -7,11 +11,6 @@ library(dittoSeq, quietly = TRUE)
 # MARKERS
 marker1 <- "dodgerblue3"
 marker2 <- "darkgreen"
-
-# used for ggplot
-#scale_fill_continuous("% cells/cell type", 
-#                      limits=c(0, 100), breaks=seq(0,100,by=20),
-#                      low = "white", high = "blue")
 
 # used for pheatmap (looks different!)
 mycolors_to1 <- grDevices::colorRampPalette(c("grey98", "blue"))(100)
@@ -53,6 +52,7 @@ col_cons_long <- c(
   "random genes" = "#C3C3C3",
   "species-specific marker genes" = "grey50")
 
+colors_z_score <- c("steelblue3", "white", "red3")
 
 #-------------------------------------------------------------------------------
 

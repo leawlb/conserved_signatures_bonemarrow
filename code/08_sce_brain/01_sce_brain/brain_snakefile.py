@@ -98,9 +98,6 @@ rule quantify_reclust
 # 05_quantify_reclust is mostly loading and plotting, so no output 
 aside from a pdf.
 
-I couldn't alter 05_quantify_reclust.R so I saved changes to the
-basepath in 05_quantify_recluster-copy.R
-
 Copied in its entirety into the report.
 
 """

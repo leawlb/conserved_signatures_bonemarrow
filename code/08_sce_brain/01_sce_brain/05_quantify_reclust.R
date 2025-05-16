@@ -1,7 +1,8 @@
+# Copied in its entirety into the report
+
 library(Seurat, quietly = TRUE)
 library(tidyverse, quietly = TRUE)
 
-#base_path_temp <-"/omics/groups/OE0433/internal_temp/veronica/projects/conserved_genes/"
 base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/"
 brain_path <- "scRNAseq/main_analysis/sce_objects/08_sce_brain/"
 
@@ -21,7 +22,6 @@ plot_hs_quant <- plot_hs %>%
   select(-seurat_clusters, -clust_prop, -Freq) %>%
   unique()
 sum(filter(plot_hs_quant, clust_assigned == T)$Count)/sum(plot_hs_quant$Count)
-# [1] 0.9060639
 
 plot_sig <- mouse_sig@meta.data[,c("subclass_label", "seurat_clusters")] %>%
   table() %>% as.matrix()
@@ -36,7 +36,6 @@ plot_sig_quant <- plot_sig %>%
   select(-seurat_clusters, -clust_prop, -Freq) %>%
   unique()
 sum(filter(plot_sig_quant, clust_assigned == T)$Count)/sum(plot_sig_quant$Count)
-# [1] 0.9172439
 
 all_data <- rbind(
   mutate(plot_hs_quant, genes = "human markers"),
@@ -98,14 +97,7 @@ mouse_sig@meta.data <- merge(mouse_sig@meta.data, # correct.x is signature marke
   mutate(correct = paste(correct.x, correct.y))
 rownames(mouse_sig@meta.data) <- rownames
 
-# > table(mouse_sig@meta.data$correct)
-# 
-# FALSE FALSE  FALSE TRUE  TRUE FALSE   TRUE TRUE 
-# 388         306         398        7150 
-
 DimPlot(mouse_sig,
         group.by = "correct") +
   theme_void() +
   labs(title = NULL)
-
-

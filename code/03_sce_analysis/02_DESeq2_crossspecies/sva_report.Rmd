@@ -25,17 +25,6 @@ library(DESeq2, quietly = TRUE)
 source(file =  snakemake@params[["plotting"]])
 ```
 
-```{r manual, eval = FALSE, include = FALSE}
-dsq_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/02_DESeq2_crossspecies/01_desq/deseq_str")
-
-sva_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/02_DESeq2_crossspecies/02_dsqc/sva_str")
-
-sep <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/02_DESeq2_crossspecies/03_sepd/hsc_Mk_progs-sep")
-
-sce <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10")
-
-```
-
 ```{r load_objects, message = FALSE}
 
 # get current celltype - wildcard

@@ -128,7 +128,7 @@ res_list_shared_comp <- lapply(res_df_list, function(res_df){
     # subset by comparison
     res_df_comp <- res_df[res_df$comparison == c,]
     
-    # get genes with absolute log2 FC < and padj > thresholds
+    # get genes with absolute log2 FC < and padj < thresholds
     shared_genes <- res_df_comp$gene[
       which(
         base::abs(res_df_comp$log2FoldChange) < fc_cutoff & 

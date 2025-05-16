@@ -26,18 +26,6 @@ library(SingleCellExperiment)
 source(file = snakemake@params[["plotting"]])
 ```
 
-```{r manual, include = FALSE, eval = FALSE}
-
-shared_gene_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/02_DESeq2_crossspecies/06_nres/PC_0.05_FC_1.5/shared_genes_str_celltypes")
-
-sce <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10")
-
-celltype_res_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/02_DESeq2_crossspecies/06_nres/PC_0.05_FC_1.5/res_str_celltype")
-names(celltype_res_list)
-shared_gene_list$HSCs
-```
-
-
 ```{r load_objects}
 
 fc_cutoff <- snakemake@params[["fc_cutoff"]]

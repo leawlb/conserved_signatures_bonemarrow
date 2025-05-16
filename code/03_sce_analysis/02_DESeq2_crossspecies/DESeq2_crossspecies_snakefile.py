@@ -63,9 +63,9 @@ for f in fractions:
   targets = targets + [OUTPUT_DAT + "/02_dsqc/rlog_" + f]
   targets = targets + [OUTPUT_DAT + "/02_dsqc/sva_" + f]
   targets = targets + [OUTPUT_DAT + "/04_tdsq/deseq_" + f]
-  targets = targets + [OUTPUT_DAT + "/06_nres/" + tf + "/res_" + f + "_celltype"]
-  targets = targets + [OUTPUT_DAT + "/06_nres/" + tf + "/res_" + f + "_celltype_dfs"]
-  targets = targets + [OUTPUT_DAT + "/06_nres/" + tf + "/shared_genes_" + f + "_celltypes"]
+  targets = targets + [OUTPUT_DAT + "/05_nres/" + tf + "/res_" + f + "_celltype"]
+  targets = targets + [OUTPUT_DAT + "/05_nres/" + tf + "/res_" + f + "_celltype_dfs"]
+  targets = targets + [OUTPUT_DAT + "/05_nres/" + tf + "/shared_genes_" + f + "_celltypes"]
 
 for c in celltypes_hsc:
   targets = targets + [OUTPUT_DAT + "/03_sepd/hsc_" + c + "-sep"]
@@ -231,9 +231,9 @@ rule export_results_ndge:
         queue="medium-debian"
     threads: 4
     output:
-        celltype_res = OUTPUT_DAT + "/06_nres/" + tf + "/res_{fraction}_celltype",
-        celltype_resdf_list = OUTPUT_DAT + "/06_nres/" + tf + "/res_{fraction}_celltype_dfs",
-        celltype_shared_genes_list = OUTPUT_DAT + "/06_nres/" + tf + "/shared_genes_{fraction}_celltypes"
+        celltype_res = OUTPUT_DAT + "/05_nres/" + tf + "/res_{fraction}_celltype",
+        celltype_resdf_list = OUTPUT_DAT + "/05_nres/" + tf + "/res_{fraction}_celltype_dfs",
+        celltype_shared_genes_list = OUTPUT_DAT + "/05_nres/" + tf + "/shared_genes_{fraction}_celltypes"
     script:
         "scripts/05_export_ndge_results.R"    
 

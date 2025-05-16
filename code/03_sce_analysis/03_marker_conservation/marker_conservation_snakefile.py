@@ -75,7 +75,7 @@ if RUN_AGE_COMP:
           OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/03_markers/plot_marker_age_comparison.html"
       resources:
           mem_mb=30000,
-          queue = "medium-debian"
+          queue = "short-debian"
       threads: 2
       script:
           "plot_marker_age_comparison.Rmd"

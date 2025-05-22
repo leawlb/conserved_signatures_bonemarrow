@@ -1,6 +1,6 @@
 snakemake --cluster "bsub -q {resources.queue} -n10 -R rusage[mem={resources.mem_mb}]" -p -j8 -c10 -s cellrank_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda -n
 
-# for doing only conda env creation
+# for only conda env creation
 snakemake --cluster "bsub -q {resources.queue} -n20 -R rusage[mem={resources.mem_mb}]" -p -j8 -c20 -s cellrank_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda --conda-create-envs-only
 
 

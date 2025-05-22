@@ -1,5 +1,5 @@
 
-snakemake --cluster "bsub -n{threads} -q {resources.queue} -R rusage[mem={resources.mem_mb}]" -p -j66 -c6 -s preprocessing_snakefile.py --configfile ../../config.yaml --latency-wait 120 -n
+snakemake --cluster "bsub -n{threads} -q {resources.queue} -R rusage[mem={resources.mem_mb}]" -p -j70 -c6 -s preprocessing_snakefile.py --configfile ../../config.yaml --latency-wait 120 -n
 
 # for running the report
 snakemake --cluster "bsub -n{threads} -q {resources.queue} -R rusage[mem={resources.mem_mb}]" -p -j66 -c2 -s preprocessing_snakefile.py --configfile ../../config.yaml --config run_preprocessing_summary=True --latency-wait 120 -n 

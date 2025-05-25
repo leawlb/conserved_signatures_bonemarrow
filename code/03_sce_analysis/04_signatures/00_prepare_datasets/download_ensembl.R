@@ -18,22 +18,24 @@ options(timeout=10000)
 mart_m <- biomaRt::useEnsembl(
   "ensembl",
   dataset="mmusculus_gene_ensembl",
-  host="https://www.ensembl.org")
+  host="http://oct2024.archive.ensembl.org")
 
 mart_h <- biomaRt::useEnsembl(
   "ensembl",
   dataset="hsapiens_gene_ensembl",
-  host="https://www.ensembl.org")
+  host="http://oct2024.archive.ensembl.org")
 
 mart_z <- biomaRt::useEnsembl(
   "ensembl",
   dataset="drerio_gene_ensembl",
-  host="https://www.ensembl.org")
+  host="http://oct2024.archive.ensembl.org")
+
+# keep NMR just for the sake of retaining the same ENSEMBL tables
 
 mart_n <- biomaRt::useEnsembl(
   "ensembl",
   dataset="hgfemale_gene_ensembl",
-  host="https://www.ensembl.org")
+  host="http://oct2024.archive.ensembl.org")
 
 
 # get ensembl dfs with required attributes

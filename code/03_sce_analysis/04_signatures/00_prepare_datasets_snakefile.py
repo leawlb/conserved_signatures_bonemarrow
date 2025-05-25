@@ -1,9 +1,8 @@
 #!/bin/python 
 
-# last run completely 2025-01-15
-# including all downloads on that same date
-# EXCLUDING ENSEMBL DATASETS which were downloaded 2025-01-22 due to prior 
-# connectivity issues
+# last run completely 2025-04-17
+# including downloads on that same date (except for NMR and zebrafish)
+
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -16,7 +15,10 @@ The purpose of this snakefile is to:
  - prepare publically available scRNAseq datasets for re-clustering
 
 All of the data generated from this snakefile will be saved as METADATA in 
-DIR_RECLUSTERING (see below)
+DIR_RECLUSTERING (see below).
+
+NMR has been excluded from this analysis.
+
 
 
 
@@ -118,12 +120,12 @@ OUTPUT_REP = config["base"] + config["scRNAseq_data_paths"]["main"] + "/sce_obje
 
 RAN_LI_IPYNB = config["ran_li_ipynb"]
 
-ENSEMBL_MUS = config["base"] + config["metadata_paths"]["ensembl_mus"]
-ENSEMBL_HUM = config["base"] + config["metadata_paths"]["ensembl_hum"]
+ENSEMBL_MUS = config["base"] + config["metadata_paths"]["ensembl_mus"] 
+ENSEMBL_HUM = config["base"] + config["metadata_paths"]["ensembl_hum"] 
 # although not currently in use, download and add to ensembl table as well
 # for the sake of keeping the original ensembl table
-ENSEMBL_ZEB = config["base"] + config["metadata_paths"]["ensembl_zeb"]
-ENSEMBL_NMR = config["base"] + config["metadata_paths"]["ensembl_nmr"]
+ENSEMBL_ZEB = config["base"] + config["metadata_paths"]["ensembl_zeb"] 
+ENSEMBL_NMR = config["base"] + config["metadata_paths"]["ensembl_nmr"] 
 
 
 print(DIR_RECLUSTERING)
@@ -221,6 +223,8 @@ targets = targets + [DIR_RECLUSTERING + "/prepared/mus_bar_stromal"]
 #-------------------------------------------------------------------------------
 
 # exotic species
+# zebrafish is currently needed
+# nmr is not --> but they are simply downloaded together
 
 # zebrafish files retain the names of the assays given by authors upon unzipping
 # so need to use given file names as wildcards
@@ -255,7 +259,7 @@ if RAN_LI_IPYNB:
 wildcard_constraints: 
     fraction="[a-z]+"
 
-localrules: all, untar_weinreb , unzip_zebrafish, download_ensembl#download_ts_datasets, download_mouse_datasets, download_exotic_datasets
+localrules: all, untar_weinreb, download_ensembl#download_ts_datasets, download_mouse_datasets, download_exotic_datasets, unzip_zebrafish,
 
 rule all: 
     input:
@@ -428,6 +432,12 @@ rule prepare_mouse_datasets_stromal:
 
 """
 # Exotic species
+
+# Zebrafish is needed
+# NMR is not needed
+
+# both are still downloaded together
+
 """
 
 rule download_exotic_datasets:
@@ -472,7 +482,8 @@ rule prepare_exotic_datasets:
         mem_mb=10000
     script:
         "00_prepare_datasets/prepare_exotic_datasets.R"
-        
+
+
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -493,7 +504,7 @@ if RAN_LI_IPYNB:
           mus_tik_stromal = rules.prepare_mouse_datasets_stromal.output.mus_tik_stromal,
           mus_bar_stromal = rules.prepare_mouse_datasets_stromal.output.mus_bar_stromal,
           zeb_all_hspc = rules.prepare_exotic_datasets.output.zeb_all_hspc,
-          nmr_sorted_hspc = rules.prepare_exotic_datasets.output.nmr_sorted_hspc
+          #nmr_sorted_hspc = rules.prepare_exotic_datasets.output.nmr_sorted_hspc
       params:
           reclustering_functions = "../../source/sce_functions_reclustering.R",
       resources:

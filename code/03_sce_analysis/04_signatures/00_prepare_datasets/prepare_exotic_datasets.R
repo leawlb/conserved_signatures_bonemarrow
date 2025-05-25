@@ -245,8 +245,6 @@ seu_nmr_srt@reductions$pca_orig <- seu_nmr_srt_pca@reductions$pca
 print("after removal")
 print(seu_nmr_srt@reductions)
 
-
-
 #-------------------------------------------------------------------------------
 
 base::saveRDS(seu_nmr_srt, snakemake@output[["nmr_sorted_hspc"]])

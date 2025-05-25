@@ -47,6 +47,9 @@ sce$Batch_type_used <- base::rep(batch_use, ncol(sce))
 # fastMNN recommends use of MultiBatchNorm
 # output in "logcounts" for downstream use and
 # "logcounts_batchnorm" for reference
+
+# "This function will adjust the size factors so that counts in high-coverage
+# batches are scaled downwards to match the coverage of the most shallow batch"
 set.seed(37)
 renorm_sce <- batchelor::multiBatchNorm(sce, 
                                         batch = colData(sce)[,batch_pos])

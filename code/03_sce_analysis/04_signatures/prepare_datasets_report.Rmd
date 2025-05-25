@@ -22,25 +22,18 @@ library(tidyverse, quietly = TRUE)
 library(Seurat, quietly = TRUE)
 ```
 
-```{r manual, eval = FALSE, include = FALSE}
-
-mus_weinreb_hspc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/mus_weinreb_hspc")
-
-```
-
-
 ```{r load_objects}
 
 li_all_stromal <- snakemake@input[["li_all_stromal"]] # human stromal
 ts_all_stromal <- snakemake@input[["ts_all_stromal"]] # human stromal
-ts_bone_marrow <- snakemake@input[["ts_bone_marrow"]] # human HSPC fraction
-ts_hscs_progenitors <- snakemake@input[["ts_hscs_progenitors"]] # human HSPC fraction
+ts_bone_marrow <- snakemake@input[["ts_bone_marrow"]] # human HSPC 
+ts_hscs_progenitors <- snakemake@input[["ts_hscs_progenitors"]] # human HSPC 
 
-mus_weinreb_hspc <- snakemake@input[["mus_weinreb_hspc"]] # mouse HSPC fraction
-mus_tm_bonemarrow <- snakemake@input[["mus_tm_bonemarrow"]] # mouse HSPC fraction
+mus_weinreb_hspc <- snakemake@input[["mus_weinreb_hspc"]] # mouse HSPC 
+mus_tm_bonemarrow <- snakemake@input[["mus_tm_bonemarrow"]] # mouse HSPC 
 
-zeb_all_hspc <- snakemake@input[["zeb_all_hspc"]] # zebrafish HSPC fraction
-nmr_sorted_hspc <- snakemake@input[["nmr_sorted_hspc"]] # naked mole rat HSPC fraction
+#zeb_all_hspc <- snakemake@input[["zeb_all_hspc"]] # zebrafish HSPC 
+#nmr_sorted_hspc <- snakemake@input[["nmr_sorted_hspc"]] # naked mole rat HSPC 
 
 ```
 
@@ -133,7 +126,7 @@ mus_weinreb_hspc@reductions # NO REDUCED DIMS
 
 ## zeb_all_hspc
 
-```{r zeb_all_hspc}
+```{r zeb_all_hspc, eval = FALSE, include = FALSE}
 zeb_all_hspc
 zeb_all_hspc@assays
 zeb_all_hspc@assays$RNA
@@ -149,7 +142,7 @@ zeb_all_hspc@reductions # NO REDUCED DIMS
 
 ## nmr_sorted_hspc
 
-```{r nmr_sorted_hspc}
+```{r nmr_sorted_hspc, eval = FALSE, include = FALSE}
 nmr_sorted_hspc
 nmr_sorted_hspc@assays
 nmr_sorted_hspc@assays$RNA

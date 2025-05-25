@@ -3,12 +3,17 @@
 # vs. conserved signature + random genes (same nr) to see if they contain
 # important genes in addition to containing conserved signature genes.
 
+# mmms_mark = BL6-only markers vs conserved markers + random
+# these steps have been # commented because the comparison is not needed
+# but the code is still kept.
+# the respective lines from the snakefile have been deleted, though
+
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
 # determine random number generator for sample
 library(parallel, quietly = TRUE)
-RNGkind("L'Ecuyer-CMRG") # using this for usages of parallel is necessary
+RNGkind("L'Ecuyer-CMRG") # using this for parallel is necessary
 set.seed(37)
 
 #-------------------------------------------------------------------------------
@@ -285,29 +290,29 @@ iteration_df_mmms <- base::rbind(add_df_sign, iteration_df_mmms)
 
 #-------------------------------------------------------------------------------
 
-print("all BL6 markers vs. conserved markers + random")
-
-# conserved marker IDs have already been extracted
-nr_mark <- length(mark_IDs) 
-
-# get position of conserved markers genes 
-# POSITIONS FROM ORIGINAL SCE
-MARK_POSITIONS <- which(rownames(sce_input) %in% mark_IDs)
-print("MARK_POSITIONS")
-print(length(MARK_POSITIONS))
-print(base::table(!is.na(base::match(MARK_POSITIONS, SIGN_POSITIONS))))
+# print("all BL6 markers vs. conserved markers + random")
+# 
+# # conserved marker IDs have already been extracted
+# nr_mark <- length(mark_IDs) 
+# 
+# # get position of conserved markers genes 
+# # POSITIONS FROM ORIGINAL SCE
+# MARK_POSITIONS <- which(rownames(sce_input) %in% mark_IDs)
+# print("MARK_POSITIONS")
+# print(length(MARK_POSITIONS))
+# print(base::table(!is.na(base::match(MARK_POSITIONS, SIGN_POSITIONS))))
 
 #-------------------------------------------------------------------------------
 # generate a fitting data frame to add conserved marker gene positions to the 
 # random positions downstream
 
-add_df_mark <- base::data.frame(row.names = c(1:nr_mark))
-
-for(i in 1:iterations){
-  # POSITIONS FROM ORIGINAL SCE
-  add_df_mark[,i] <- MARK_POSITIONS
-  colnames(add_df_mark)[i] <- i
-}
+# add_df_mark <- base::data.frame(row.names = c(1:nr_mark))
+# 
+# for(i in 1:iterations){
+#   # POSITIONS FROM ORIGINAL SCE
+#   add_df_mark[,i] <- MARK_POSITIONS
+#   colnames(add_df_mark)[i] <- i
+# }
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -320,84 +325,84 @@ for(i in 1:iterations){
 # - genes expressed expressed in >= cut_off_prop % of cells
 
 # remove conserved marker genes
-non_mark_sce <- rownames(sce_input)[-MARK_POSITIONS]
-
-sce_pool_mark <- sce_input[which(rownames(sce_input) %in% non_mark_sce),]
-gene_pool_mark <- rownames(sce_pool_mark)
-print("subset")
-print(nrow(sce_input))
-print(length(gene_pool_mark))
-
-# remove genes expressed in < cut_off_prop % of cells
-prop_df_mark <- prop_expressed_total_sce(
-  sce = sce_pool_mark, 
-  geneset = gene_pool_mark)
-
-# subset by cut-off proportion
-prop_df_sub_mark <- prop_df_mark[prop_df_mark$prop_cells >= cut_off_prop,]
-print("after cut-off")
-print(nrow(prop_df_sub_mark))
-
-gene_pool_mark <- gene_pool_mark[which(gene_pool_mark %in%
-                                         prop_df_sub_mark$gene)]
-
-# subset seurat object to these genes 
-sce_pool_mark <- sce_pool_mark[which(rownames(sce_pool_mark) %in% 
-                                       gene_pool_mark),]
-
-print(dim(sce_pool_mark))
-
-#-------------------------------------------------------------------------------
-
-# the positions of genes in SEU that are allowed as pool for random genes
-# POSITIONS FROM ORIGINAL SEU_PREPROCESSED
-POOL_POSITIONS_MARK <- which(rownames(sce_input) %in% 
-                               rownames(sce_pool_mark))
-
-print(length(POOL_POSITIONS_MARK))
+# non_mark_sce <- rownames(sce_input)[-MARK_POSITIONS]
+# 
+# sce_pool_mark <- sce_input[which(rownames(sce_input) %in% non_mark_sce),]
+# gene_pool_mark <- rownames(sce_pool_mark)
+# print("subset")
+# print(nrow(sce_input))
+# print(length(gene_pool_mark))
+# 
+# # remove genes expressed in < cut_off_prop % of cells
+# prop_df_mark <- prop_expressed_total_sce(
+#   sce = sce_pool_mark, 
+#   geneset = gene_pool_mark)
+# 
+# # subset by cut-off proportion
+# prop_df_sub_mark <- prop_df_mark[prop_df_mark$prop_cells >= cut_off_prop,]
+# print("after cut-off")
+# print(nrow(prop_df_sub_mark))
+# 
+# gene_pool_mark <- gene_pool_mark[which(gene_pool_mark %in%
+#                                          prop_df_sub_mark$gene)]
+# 
+# # subset seurat object to these genes 
+# sce_pool_mark <- sce_pool_mark[which(rownames(sce_pool_mark) %in% 
+#                                        gene_pool_mark),]
+# 
+# print(dim(sce_pool_mark))
 
 #-------------------------------------------------------------------------------
 
-# get the number of random genes that need to be added to 
-# all BL6 IDs for each gene set to be permuted for comparison with cons markers
-nr_random_mmms_mark <- length(mmms_IDs) - nr_mark
+# # the positions of genes in SEU that are allowed as pool for random genes
+# # POSITIONS FROM ORIGINAL SEU_PREPROCESSED
+# POOL_POSITIONS_MARK <- which(rownames(sce_input) %in% 
+#                                rownames(sce_pool_mark))
+# 
+# print(length(POOL_POSITIONS_MARK))
 
-print("nr_random_mmms_mark")
-print(length(mmms_IDs))
-print(nr_mark)
-print(nr_random_mmms_mark)
+#-------------------------------------------------------------------------------
+
+# # get the number of random genes that need to be added to 
+# # all BL6 IDs for each gene set to be permuted for comparison with cons markers
+# # nr_random_mmms_mark <- length(mmms_IDs) - nr_mark
+# 
+# print("nr_random_mmms_mark")
+# print(length(mmms_IDs))
+# print(nr_mark)
+# print(nr_random_mmms_mark)
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
 
-# generate i = iterations random sets of genes at the required number
-# from the allowed pool of random genes (original positions in SEU)
-# always generate the same random numbers
-
-# mmms_mark = comparison mmms with mark
-iteration_df_mmms_mark <- base::data.frame(row.names = c(1:nr_random_mmms_mark))
-
-set.seed(seed3)
-for(i in 1:iterations){
-  iteration_df_mmms_mark[,i] <- POOL_POSITIONS_MARK[
-    base::sample(1:length(gene_pool_mark), 
-                 nr_random_mmms_mark, 
-                 replace = FALSE)]
-  stopifnot(iteration_df_mmms_mark[,i] %in% POOL_POSITIONS_MARK)
-  stopifnot(!iteration_df_mmms_mark[,i] %in% MARK_POSITIONS)
-
-  colnames(iteration_df_mmms_mark)[i] <- i
-}
-set.seed(37) 
-
-print(iteration_df_mmms_mark[1:10, 1:2])
-
-print("iteration_df_mmms_mark before addition of SIGN_POS")
-print(dim(iteration_df_mmms_mark))
-# add the signature gene positions IN THE ORIGINAL SEU DATASET
-iteration_df_mmms_mark <- base::rbind(add_df_mark, iteration_df_mmms_mark)
-print("iteration_df_mmms_mark after addition of SIGN_POS")
-print(dim(iteration_df_mmms_mark))
+# # generate i = iterations random sets of genes at the required number
+# # from the allowed pool of random genes (original positions in SEU)
+# # always generate the same random numbers
+# 
+# # mmms_mark = comparison mmms with mark
+# iteration_df_mmms_mark <- base::data.frame(row.names = c(1:nr_random_mmms_mark))
+# 
+# set.seed(seed3)
+# for(i in 1:iterations){
+#   iteration_df_mmms_mark[,i] <- POOL_POSITIONS_MARK[
+#     base::sample(1:length(gene_pool_mark),
+#                  nr_random_mmms_mark,
+#                  replace = FALSE)]
+#   stopifnot(iteration_df_mmms_mark[,i] %in% POOL_POSITIONS_MARK)
+#   stopifnot(!iteration_df_mmms_mark[,i] %in% MARK_POSITIONS)
+# 
+#   colnames(iteration_df_mmms_mark)[i] <- i
+# }
+# set.seed(37)
+# 
+# print(iteration_df_mmms_mark[1:10, 1:2])
+# 
+# print("iteration_df_mmms_mark before addition of SIGN_POS")
+# print(dim(iteration_df_mmms_mark))
+# # add the signature gene positions IN THE ORIGINAL SEU DATASET
+# iteration_df_mmms_mark <- base::rbind(add_df_mark, iteration_df_mmms_mark)
+# print("iteration_df_mmms_mark after addition of SIGN_POS")
+# print(dim(iteration_df_mmms_mark))
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -410,7 +415,7 @@ print(dim(iteration_df_mmms_mark))
 for(i in 1:iterations){
   stopifnot(!duplicated(iteration_df_mark[,i]))
   stopifnot(!duplicated(iteration_df_mmms[,i]))
-  stopifnot(!duplicated(iteration_df_mmms_mark[,i]))
+  #stopifnot(!duplicated(iteration_df_mmms_mark[,i]))
 }
 
 # stichproben
@@ -426,10 +431,10 @@ print(base::paste("should be at least", nr_sign, "TRUE"))
 print(base::table(!is.na(base::match(iteration_df_mark[,1],
                                      iteration_df_mmms[,2]))))
 
-# conserved markers should be in two columsn of the same iteration DF
-print(base::paste("should be at least", nr_mark, "TRUE"))
-print(base::table(!is.na(base::match(iteration_df_mmms_mark[,1],
-                                     iteration_df_mmms_mark[,2]))))
+# # conserved markers should be in two columsn of the same iteration DF
+# print(base::paste("should be at least", nr_mark, "TRUE"))
+# print(base::table(!is.na(base::match(iteration_df_mmms_mark[,1],
+#                                      iteration_df_mmms_mark[,2]))))
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
@@ -485,24 +490,24 @@ score_df_mmms <- dplyr::bind_rows(res_df_list_mmms)
 score_df_mmms$cut_off_prop <- base::rep(cut_off_prop, nrow(score_df_mmms))
 print(head(score_df_mmms))
 
-print("starting iteration mmms vs. conserved markers + random")
-
-res_df_list_mmms_mark <- parallel::mclapply(
-  X = as.list(c(1:iterations)),
-  FUN = permuting_reclustering_scores_sce,
-  sce = sce_input,
-  resolution_louvain = resolution_louvain,
-  k_graph = k_graph,
-  iteration_df = iteration_df_mmms_mark,
-  mc.preschedule = TRUE,
-  mc.cores = nr_cores,
-  mc.silent = TRUE,
-  mc.set.seed = TRUE)
-
-score_df_mmms_mark <- dplyr::bind_rows(res_df_list_mmms_mark)
-score_df_mmms_mark$cut_off_prop <- base::rep(cut_off_prop, 
-                                             nrow(score_df_mmms_mark))
-print(head(score_df_mmms_mark))
+# print("starting iteration mmms vs. conserved markers + random")
+# 
+# res_df_list_mmms_mark <- parallel::mclapply(
+#   X = as.list(c(1:iterations)),
+#   FUN = permuting_reclustering_scores_sce,
+#   sce = sce_input,
+#   resolution_louvain = resolution_louvain,
+#   k_graph = k_graph,
+#   iteration_df = iteration_df_mmms_mark,
+#   mc.preschedule = TRUE,
+#   mc.cores = nr_cores,
+#   mc.silent = TRUE,
+#   mc.set.seed = TRUE)
+# 
+# score_df_mmms_mark <- dplyr::bind_rows(res_df_list_mmms_mark)
+# score_df_mmms_mark$cut_off_prop <- base::rep(cut_off_prop, 
+#                                              nrow(score_df_mmms_mark))
+# print(head(score_df_mmms_mark))
 
 #-------------------------------------------------------------------------------
 
@@ -523,6 +528,8 @@ print(head(score_df_mmms_mark))
 
 base::saveRDS(score_df_mark, snakemake@output[["perm_score_df_mark"]])
 base::saveRDS(score_df_mmms, snakemake@output[["perm_score_df_mmms"]])
-base::saveRDS(score_df_mmms_mark, snakemake@output[["perm_score_df_mmms_mark"]])
+
+# this object is not exported, because it is not needed
+#base::saveRDS(score_df_mmms_mark, snakemake@output[["perm_score_df_mmms_mark"]])
 
 utils::sessionInfo()

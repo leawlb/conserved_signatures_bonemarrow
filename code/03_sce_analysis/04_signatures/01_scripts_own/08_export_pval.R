@@ -1,15 +1,21 @@
 #-------------------------------------------------------------------------------
 
-# export pvals from permutations and correct them
+# export pvals from permutations
+# p values of all tests (human, mouse) are corrected in 
+# 02_scripts_other/09_correct_all_pvals together (a bit conservative)
 
-# this script will be run for multiple comparisons:
+# this script is run for multiple comparisons:
+
 # background:
 # - conserved signature vs random ("sign-vs-rand")
+# - conserved markers vs random ("mark-vs-rand") 
+# - BL6-only vs random ("mmms-vs-rand") 
 
 # geneset comparison:
 # - conserved markers vs signature + random ("mark-vs-signrand")
 # - all BL6 markers vs conserved signature + random ("mmms-vs-signrand")
-# - all BL6 markers vs conserved markers + random ("mmms-vs-markrand")
+
+# - all BL6 markers vs conserved markers + random ("mmms-vs-markrand") is disabled
 
 #-------------------------------------------------------------------------------
 

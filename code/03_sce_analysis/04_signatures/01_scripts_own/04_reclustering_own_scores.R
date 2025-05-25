@@ -112,7 +112,7 @@ res_df_mmsm$nr_genes_used <- base::rep(
 
 #-------------------------------------------------------------------------------
 
-# ndges
+# ndges # not needed much thereafter
 cluster_vector2 <- sce$cluster_ndges
 
 res_df_ndge <- calculate_scores(

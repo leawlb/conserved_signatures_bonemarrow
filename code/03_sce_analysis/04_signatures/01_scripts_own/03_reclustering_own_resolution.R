@@ -5,7 +5,7 @@
 # - all BL6 genes,
 # - nDGEs
 
-# subclustering genes are removed in cell-type specific manner
+# subclustering genes are removed IN TOTAL
 
 #-------------------------------------------------------------------------------
 
@@ -45,8 +45,7 @@ print(k_graph)
 print(nr_cores)
 
 #-------------------------------------------------------------------------------
-# cell types that were not used to extract signature are excluded because
-# they cannot be separated after excluding them
+# cell types that were not used to extract signature are excluded
 cts_exclude <- snakemake@params[["cts_exclude"]]
 print(cts_exclude)
 
@@ -131,7 +130,9 @@ print(length(subclustering_genes))
 sce <- sce[which(!rownames(sce) %in% subclustering_genes)]
 print(dim(sce))
 
-# subset to gene sets
+# remove subclustering genes from the object
+# this will also ensure that all downstream re-clusterings based on this 
+# exported objects will have sub-clustering genes removed
 sce_signt <- sce[rownames(sce) %in% signt,]
 sce_consm <- sce[rownames(sce) %in% consm,]
 sce_mmusm <- sce[rownames(sce) %in% mmusm,]

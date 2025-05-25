@@ -12,6 +12,7 @@ print(fraction_curr)
 geneset_list <- base::readRDS(snakemake@input[["geneset_list"]])
 sce <- base::readRDS(snakemake@input[["sce_inp"]])
 
+# keep all species, even if NMR is currently not used
 ensembl_mus <- base::readRDS(snakemake@input[["ensembl_mus"]])
 ensembl_hum <- base::readRDS(snakemake@input[["ensembl_hum"]])
 ensembl_zeb <- base::readRDS(snakemake@input[["ensembl_zeb"]])
@@ -53,24 +54,17 @@ for(i in 1:length(geneset_list)){
 }
 mmms <- base::unique(mmms)
 
-# subclustering_genes <- vector()
-# for(i in 1:length(geneset_list)){
-#   subclustering_genes <- c(subclustering_genes,
-#                            geneset_list[[i]]$genes_subclustering)
-# }
-# subclustering_genes <- base::unique(subclustering_genes)
+# !!!!
+# sub-clustering genes are removed from our own datasets later but
+# the ensembl gene lists are not needed for our own datasets anyway, just the
+# downloaded ones
 
-# remove subclustering genes from gene lists because they were manually picked
-# sign <- sign[!sign %in% subclustering_genes]
-# mark <- mark[!mark %in% subclustering_genes]
-# ndge <- ndge[!ndge %in% subclustering_genes]
-# mmms <- mmms[!mmms %in% subclustering_genes]
-# for other species it is alright to keep the genes even if they were used for
-# subclustering of our dataset - they were still identified as part of a set
+# sub-clustering genes are not removed from published datasets
+# --> they are kept as part of the exported ensembl lists 
 
 #-------------------------------------------------------------------------------
-# get the IDs from the SCE object rowData, this is where
-# the gene symbol came from originally
+# get the IDs from the SCE object rowData
+# this is where the gene symbol came from originally
 sign_ids <- rowData(sce)$ID[rowData(sce)$Symbol %in% sign]
 mark_ids <- rowData(sce)$ID[rowData(sce)$Symbol %in% mark]
 ndge_ids <- rowData(sce)$ID[rowData(sce)$Symbol %in% ndge]
@@ -102,6 +96,7 @@ ensembl_zeb <- ensembl_zeb[ensembl_zeb$ENSMUS_ID %in% mouse_ids,]
 ensembl_nmr <- ensembl_nmr[ensembl_nmr$ENSMUS_ID %in% mouse_ids,]
 
 # join all dataframes based on mouse IDs
+# allow many to many orthologs
 ensembl_df <- ensembl_df %>%  
   dplyr::left_join(ensembl_hum,
                    join_by(ENSMUS_ID),
@@ -117,7 +112,7 @@ ensembl_df <- ensembl_df %>%
 print(base::table(base::duplicated(ensembl_df$ENSMUS_ID)))
 print(head(ensembl_df))
 
-# get duplicated mouse ensembl IDs and show all
+# get duplicated mouse ensembl IDs 
 # these are genes with multiple species homologue IDs
 dup_mouse_ids <- ensembl_df %>% 
   dplyr::filter(base::duplicated(ENSMUS_ID)) %>%
@@ -127,7 +122,7 @@ dup_mouse_ids <- ensembl_df %>%
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
-# subset ensembl_df to required gene sets
+# subset ensembl_df to required gene sets, including sub-clustering genes
 
 ensembl_df_sign <- ensembl_df %>%
   dplyr::filter(ENSMUS_ID %in% sign_ids)

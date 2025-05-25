@@ -22,8 +22,10 @@ RUN_MARK_RAND_OWN_PERM = config["run_mark_rand_own_permutation"]
 RUN_MMMS_RAND_OWN_PERM = config["run_mmms_rand_own_permutation"]
 
 # permutation: marker sets vs signature + random
+# this includes mark_vs_signrand and mmms_vs_signrand
 RUN_GNST_SIGN_OWN_PERM = config["run_genesets_sign_own_permutation"]
 
+# ensembl for all four species (even though nmr currently not needed)
 ENSEMBL_MUS = config["base"] + config["metadata_paths"]["ensembl_mus"]
 ENSEMBL_HUM = config["base"] + config["metadata_paths"]["ensembl_hum"]
 ENSEMBL_ZEB = config["base"] + config["metadata_paths"]["ensembl_zeb"]
@@ -75,13 +77,11 @@ for f in fractions:
   if RUN_GNST_SIGN_OWN_PERM:
     targets = targets + [OUTPUT_DAT + "/06_perg/perm_score_df_mark_" + f]
     targets = targets + [OUTPUT_DAT + "/06_perg/perm_score_df_mmms_" + f]
-    targets = targets + [OUTPUT_DAT + "/06_perg/perm_score_df_mmms_mark_" + f]
     targets = targets + [OUTPUT_DAT + "/08_expp/mark-vs-signrand_" + f]
     targets = targets + [OUTPUT_DAT + "/08_expp/mmms-vs-signrand_" + f]
-    #targets = targets + [OUTPUT_DAT + "/08_expp/mmms-vs-markrand_" + f] # not required atm, remove once decision is final
     targets = targets + [OUTPUT_REP + "/perm_genesets_" + f + ".html"]
 
-#targets = targets + [OUTPUT_REP + "/genesets_summary.html"]
+targets = targets + [OUTPUT_REP + "/genesets_summary.html"]
 
 # downloaded code from mcclust, explanation below
 targets = targets + ["../../source/mcclust/mcclust-master/R/vi.dist.R"]
@@ -103,14 +103,14 @@ rule all:
 # Get different gene sets:
 # - signature genes = conserved marker genes + nDGEs=stable genes (SIGN)
 # - conserved marker genes (MARK)
-# - all BL6 marker genes (MMMS)
-# (- nDGEs=stable genes)
+# - all BL6 marker genes/ BL6-only marker genes (MMMS)
+# (- nDGEs=stable genes) # still re-clustered but not really further needed
 """
 
 # export list of gene sets
 rule export_genesets:
     input:
-        celltype_ndge_list = OUTPUT_BASE + "/sce_objects/03_sce_analysis/02_DESeq2_crossspecies/06_nres/PC_0.05_FC_1.5/shared_genes_{fraction}_celltypes",
+        celltype_ndge_list = OUTPUT_BASE + "/sce_objects/03_sce_analysis/02_DESeq2_crossspecies/05_nres/PC_0.05_FC_1.5/shared_genes_{fraction}_celltypes",
         marker_cons = OUTPUT_BASE + "/sce_objects/03_sce_analysis/03_marker_conservation/cons_markers_{fraction}.RData",
         sce_input = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10",
     output:
@@ -150,6 +150,8 @@ rule genesets_summary:
 # prepare ensembl conversion tables for each gene set to be tested
 # ensembl datasets are downloaded in 00_prepare_datasets_snakefile.py
 # includes species for other datasets in 02_signatures_reclustering_other
+# includes naked mole rat although currently not needed
+# ensembl not needed for own datasets actually
 rule prepare_ensembl:
     input:
         geneset_list = rules.export_genesets.output,
@@ -188,9 +190,10 @@ rule prepare_ensembl:
 # Important: subclustering genes are removed completely
 
 # Additionally, permutation tests are performed using: 
-# the same number of random genes for each gene set
+# the same number of random genes for each gene set (rand)
 # OR
-# signature + required remaining amount of random genes for each marker set
+# signature + required remaining amount of random genes for each marker set 
+# (sign_rand)
 """
 
 #-------------------------------------------------------------------------------
@@ -241,7 +244,6 @@ rule download_mcclust_vidist_code:
           unzip -o mcclust-master.zip -d {params.output_directory}
         """
 
-
 rule reclustering_own:
     input:
         sce_input = OUTPUT_BASE + "/sce_objects/02_sce_anno/10_anns/sce_{fraction}-10",
@@ -282,6 +284,7 @@ rule reclustering_own_reso:
     threads: 8
     script:
         "01_scripts_own/03_reclustering_own_resolution.R"
+        
 # get the reclustering scores for our own re-clustered datasets
 # the conda environment can be used to calculate many more types of scores
 # than are currently required - but were only used for testing
@@ -405,7 +408,9 @@ if RUN_SIGN_RAND_OWN_PERM:
           score_df = rules.reclustering_own_scores.output,
           perm_score_df = rules.perm_sign_rand_own.output
       params:
-          cons_level_use = "conserved_signature"
+          cons_level_use = "conserved_signature",
+          colors_path = COLORS,
+          colors = "../../source/colors.R"
       output:
           OUTPUT_REP + "/perm_signature_{fraction}.html"
       resources:
@@ -532,8 +537,7 @@ if RUN_GNST_SIGN_OWN_PERM:
           "../../envs/reclust_scores_perm.yml"
       output:
           perm_score_df_mark = OUTPUT_DAT + "/06_perg/perm_score_df_mark_{fraction}",
-          perm_score_df_mmms = OUTPUT_DAT + "/06_perg/perm_score_df_mmms_{fraction}",
-          perm_score_df_mmms_mark = OUTPUT_DAT + "/06_perg/perm_score_df_mmms_mark_{fraction}"
+          perm_score_df_mmms = OUTPUT_DAT + "/06_perg/perm_score_df_mmms_{fraction}"
       resources:
           mem_mb=180000,
           queue = "long-debian"
@@ -547,14 +551,16 @@ if RUN_GNST_SIGN_OWN_PERM:
           score_df = rules.reclustering_own_scores.output,
           geneset_list = rules.export_genesets.output,
           perm_score_df_mark = rules.perm_genesets_signature_rand_own.output.perm_score_df_mark,
-          perm_score_df_mmms = rules.perm_genesets_signature_rand_own.output.perm_score_df_mmms,
-          perm_score_df_mmms_mark = rules.perm_genesets_signature_rand_own.output.perm_score_df_mmms_mark
+          perm_score_df_mmms = rules.perm_genesets_signature_rand_own.output.perm_score_df_mmms
       output:
           OUTPUT_REP + "/perm_genesets_{fraction}.html"
       resources:
           mem_mb=1000,
           queue = "medium-debian"
       threads: 4
+      params:
+          colors_path = COLORS,
+          colors = "../../source/colors.R"
       script: 
           "01_permutation_own_genesets_report.Rmd"
     
@@ -587,24 +593,21 @@ if RUN_GNST_SIGN_OWN_PERM:
           "01_scripts_own/08_export_pval.R"
           
 """
-# permutation tests currently confirmed in manuscript/figures:
+# permutation tests confirmed in manuscript/figures:
 
 - HSC sign vs rand
 - HSC mark vs rand
 - HSC mmms vs rand
-
 - HSC mark vs signrand 
-
-# permutation tests planned to be in manuscript/figures: 
-
 - HSC mmms vs signrand (pval plot)
-
-
 - Niche sign vs rand (pval plot)
 - Niche mark vs rand (pval plot)
 - Niche mmms vs rand (pval plot)
-
 - Niche mark vs signrand (pval plot)
 - Niche mmms vs signrand (pval plot)
+
+# tests NOT needed:
+
+- any mmms vs markrand
 
 """

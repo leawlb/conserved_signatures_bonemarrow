@@ -5,7 +5,7 @@
 
 # determine random number generator for sample
 library(parallel, quietly = TRUE)
-RNGkind("L'Ecuyer-CMRG") # using this for usages of parallel is necessary
+RNGkind("L'Ecuyer-CMRG") # using this for parallel is necessary
 set.seed(37)
 
 #-------------------------------------------------------------------------------
@@ -94,7 +94,9 @@ if(cons_level_use != "mmusall_markers"){
     test_ids <- geneset[[which(names(geneset) == cons_level_use)]]
     return(test_ids)
   })
-}else if(cons_level_use == "mmusall_markers"){
+}else if(cons_level_use == "mmusall_markers"){ 
+  # mmusall_markers are not separately stored as a list item, so must be 
+  # extracted from the conserved_df
   test_IDs_list <- lapply(geneset_list, function(geneset){
     mmus_markers <- geneset$conserved_df$gene[
       which(!is.na(geneset$conserved_df$mmus))]

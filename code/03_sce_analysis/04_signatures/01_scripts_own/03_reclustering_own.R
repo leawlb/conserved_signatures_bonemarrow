@@ -3,9 +3,9 @@
 # - conserved signature,
 # - conserved markers,
 # - all BL6 genes,
-# - nDGEs
+# - nDGEs # not really used further down the line
 
-# subclustering genes are removed in cell-type specific manner
+# sub-clustering genes are removed IN TOTAL 
 
 #-------------------------------------------------------------------------------
 
@@ -48,8 +48,7 @@ print(resolution_louvain)
 print(nr_cores)
 
 #-------------------------------------------------------------------------------
-# cell types that were not used to extract signature are excluded because
-# they cannot be separated after excluding them
+# cell types that were not used to extract signature are excluded 
 cts_exclude <- snakemake@params[["cts_exclude"]]
 print(cts_exclude)
 
@@ -131,6 +130,10 @@ if(fraction_curr == "hsc"){
 # SUBCLUSTERING GENES REMOVED IN TOTAL
 print(subclustering_genes)
 print(length(subclustering_genes))
+
+# remove subclustering genes from the object
+# this will also ensure that all downstream re-clusterings based on this 
+# exported objects will have sub-clustering genes removed
 sce <- sce[which(!rownames(sce) %in% subclustering_genes)]
 print(dim(sce))
 
@@ -184,7 +187,8 @@ sce$cluster_consm <- clustered_list$sce_consm$reclustered
 sce$cluster_ndges <- clustered_list$sce_ndges$reclustered
 sce$cluster_mmusm <- clustered_list$sce_mmusm$reclustered
 
-sce$cluster_signt_genes_used <- nrow(sce_signt) # after subclustering gene rem
+# add number of genes after subclustering gene removal
+sce$cluster_signt_genes_used <- nrow(sce_signt) 
 sce$cluster_consm_genes_used <- nrow(sce_consm) 
 sce$cluster_ndges_genes_used <- nrow(sce_ndges)
 sce$cluster_mmusm_genes_used <- nrow(sce_mmusm)

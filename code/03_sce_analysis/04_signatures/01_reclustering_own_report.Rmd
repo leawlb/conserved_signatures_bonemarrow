@@ -27,20 +27,6 @@ library(SingleCellExperiment, quietly = TRUE)
 source(file = snakemake@params[["plotting"]])
 ```
 
-```{r eval = FALSE, include = FALSE}
-sce <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/03_recl/sce_str")
-score_df <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/04_rcls/score_df_str")
-
-fraction_curr <- "str"
-
-colors_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt"
-source("../../source/colors.R")
-source("../../source/plotting.R")
-source("../../source/sce_functions_reclustering.R")
-
-col_cts <- col_cts_str
-```
-
 ```{r load_objects}
 sce <- base::readRDS(snakemake@input[["sce_input"]])
 fraction_curr <- snakemake@wildcards[["fraction"]]
@@ -73,12 +59,6 @@ if(fraction_curr == "hsc"){
 }
 
 col_cts <- col_cts[!names(col_cts) %in% cts_exclude]
-
-# put into colors.txt once more established
-col_cons <- c("conserved_signature" = "yellowgreen",
-              "conserved_markers" = "darkgreen",
-              "mmusall_markers" = "blue2",
-              "ndges" = "orangered1")
 ```
 
 # UMAPs

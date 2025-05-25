@@ -29,8 +29,7 @@ if(fraction_curr == "hsc"){
 # non-differentially expressed genes
 ct_ndge_list <- base::readRDS(snakemake@input[["celltype_ndge_list"]])
 
-# cell types that were not used to extract signature are excluded because
-# they cannot be separated after excluding them
+# cell types that were not used to extract signature are excluded 
 cts_exclude <- snakemake@params[["cts_exclude"]]
 print(cts_exclude)
 

@@ -20,9 +20,10 @@ Adjust paths in:
 
 ## 2. Alignment
 
-For alignment of raw data with the N-masked reference genome (00_01) or 
-species-specific genomes (00_02) navigate into the appropriate directories 
-and see README.txt files there. 
+For alignment of raw data with the N-masked reference genome or 
+species-specific genomes navigate into
+`/metadata/scRNAseq/00_alignment`, then into the appropriate subdirectories and 
+see `README.txt` files there. 
 These directories were adjusted from and added by Fritjof Lammers.
 
 
@@ -45,8 +46,8 @@ If no similar cluster LSF structure to the DKFZ cluster is available,
 snakemake commands in the `..._snakemake` files must be adjusted to the 
 local conditions. 
 
-Generally, follow the steps as indicated by numbers, even if some  
-are missing (e.g. 05, 06 and 07 folders).
+Generally, follow the steps as indicated by numbers, even if some are missing 
+(e.g. 05, 06 and 07 folders).
 
 
 
@@ -65,7 +66,7 @@ Data can be downloaded from ArrayExpression or BioStudies:
  
 Metadata used for running the code is in folder `metadata`:
 
- - `metadata.csv` contains at least the same required information as the metadata table from E-MTAB-15073 but is formatted correctly for alignment and downstream analysis (see “/metadata/scRNAseq/00_alignment”)
+ - `metadata.csv` contains at least the same required information as the metadata table from E-MTAB-15073 but is formatted correctly for alignment and downstream analysis (see `/metadata/scRNAseq/00_alignment`)
  - cell type assignment lists
  - gene lists
  - color schemes, etc.
@@ -78,7 +79,7 @@ the related folders.
 Other (meta)data must be downloaded manually or can be made available upon 
 request to l.woelbert[at]dkfz-heidelberg.de:
  
- - Four Cell Ranger reference genomes for species-specific alignment, 
+- Four Cell Ranger reference genomes for species-specific alignment, 
 generated from downloaded fasta and gtf files 
 (http://ftp.ensembl.org/pub/release-94/) using Cell Ranger v3.1.0 mkref function
   - GRCm38 (Ensembl release 94)
@@ -87,7 +88,7 @@ generated from downloaded fasta and gtf files
   - CAROLI_EIJ_v1.1  (Ensembl release 94)
  
 - Published datasets for reference annotation 
-(see “/metadata/scRNAseq/01_sce_prep/references_raw/”)
+(see `/metadata/scRNAseq/01_sce_prep/references_raw/`)
   - Dahlin et al. (2018) 10X Genomics dataset was downloaded from the ABC portal (http://abc.sklehabc.com/)
   - Baccin et al. (2020): https://nicheview.shiny.embl.de
   - Dolgalev et al. (2021): https://osf.io/ne9vj/files/osfstorage 

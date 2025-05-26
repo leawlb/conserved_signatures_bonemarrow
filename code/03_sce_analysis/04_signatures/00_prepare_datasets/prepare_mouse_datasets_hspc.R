@@ -23,7 +23,6 @@ print("TABULA MURIS DATASETS")
 #-------------------------------------------------------------------------------
 
 # load raw counts
-#path_counts_marrow <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/raw_mus/tabula_muris/FACS/Marrow-counts.csv"
 path_counts_marrow <- snakemake@input[["path_counts_marrow"]]
 print("counts_marrow")
 print(path_counts_marrow)
@@ -62,7 +61,6 @@ print(counts_marrow[1:10, 1:10])
 #-------------------------------------------------------------------------------
 
 # load annotation with cell type annotations
-#path_annotation_all <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/raw_mus/tabula_muris/annotations_facs.csv"
 path_annotation_all <- snakemake@input[["path_annotation_all"]]
 print("annotation_all")
 print(path_annotation_all)
@@ -97,7 +95,6 @@ rownames(annotation_marrow) <- annotation_marrow$cell
 
 #-------------------------------------------------------------------------------
 # load sample-wise metadata
-#path_metadata_all <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/raw_mus/tabula_muris/metadata_FACS.csv"
 path_metadata_all <- snakemake@input[["path_metadata_all"]]
 print("metadata_all")
 print(path_metadata_all)
@@ -196,7 +193,6 @@ seu_tmu@misc$data_use <- "raw_counts"
 
 #-------------------------------------------------------------------------------
 
-#base::saveRDS(seu_tmu, "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/tm_bone_marrow")
 base::saveRDS(seu_tmu, snakemake@output[["mus_tm_bonemarrow"]])
 
 
@@ -211,7 +207,6 @@ print("WEINREB")
 #-------------------------------------------------------------------------------
 # load metadata file with annotations
 
-#path_weinreb_base <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/raw_mus/weinreb/"
 path_weinreb_base <- snakemake@input[["path_weinreb_base"]]
 print(path_weinreb_base)
 
@@ -362,7 +357,6 @@ print(dim(seu_wrb))
 
 #-------------------------------------------------------------------------------
 
-#base::saveRDS(seu_wrb, "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/weinreb_hspc")
 base::saveRDS(seu_wrb, snakemake@output[["mus_weinreb_hspc"]])
 
 utils::sessionInfo()

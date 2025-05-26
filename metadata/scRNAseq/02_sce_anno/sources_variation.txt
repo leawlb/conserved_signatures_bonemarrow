@@ -1,0 +1,6 @@
+cell_type;fraction;SV_to_remove
+Stem/MPP1;hsc;1
+Stem/MPP1;hsc;2
+Stem/MPP2;hsc;1
+Late Myeloid;hsc;1
+Mesenchymal cells;str;1

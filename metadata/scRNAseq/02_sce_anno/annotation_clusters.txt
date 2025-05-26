@@ -1,0 +1,36 @@
+Fraction;Cluster;Annotation
+hsc;2;Stem/MPP1
+hsc;4;Stem/MPP2
+hsc;1;Activated MPP
+hsc;5;Early Myeloid
+hsc;6;Late Myeloid
+hsc;14;Lymphoid
+hsc;9;BM prog
+hsc;7;Mk/Ery prog
+hsc;10;Mk prog
+hsc;3;Erythroid
+hsc;8;Cycling
+hsc;11;remove
+hsc;12;remove
+hsc;13;remove
+str;6;Mesenchymal cells
+str;4;Adipo/CAR
+str;21;Chondrocyte
+str;9;Fibroblast
+str;10;Art/Cap EC
+str;7;Sinusoid/Ven EC
+str;12;Sinusoid EC
+str;19;Lymphatic EC
+str;13;Peri/SMC
+str;1;remove
+str;2;remove
+str;3;remove
+str;5;remove
+str;8;remove
+str;11;remove
+str;14;remove
+str;15;remove
+str;16;remove
+str;17;remove
+str;18;remove
+str;20;remove

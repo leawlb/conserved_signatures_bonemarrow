@@ -1,0 +1,46 @@
+level;color;purpose;fraction
+HSC;#6D0300;celltypes;hsc
+Early MPP;#FF2923;celltypes;hsc
+Activated MPP;#FF847E;celltypes;hsc
+Early Myeloid;#CA6100;celltypes;hsc
+Mono prog;#FF7A00;celltypes;hsc
+Neutro prog;#FFB673;celltypes;hsc
+Lymphoid;#FFC040;celltypes;hsc
+BM prog;"#C02F84";celltypes;hsc
+Mk prog;#66003C;celltypes;hsc
+Mk/Ery prog;#EC63B3;celltypes;hsc
+Erythroid;#FDA1C3;celltypes;hsc
+Cycling;mistyrose3;celltypes;hsc
+Adipo/CAR;#007061;celltypes;str
+Osteo;#00BEA4;celltypes;str
+Chondrocyte;#669101;celltypes;str
+Fibro/Chondro;#B2FA00;celltypes;str
+Fibroblast;#7DB200;celltypes;str
+Art/Cap EC;#9EB3FF;celltypes;str
+Sinusoid/Ven EC;#522AF6;celltypes;str
+Sinusoid EC;#1A0961;celltypes;str
+Lymphatic EC;#1C9BF4;celltypes;str
+Peri/SMC;#AD60F8;celltypes;str
+Stem;#A60400;category;hsc
+MPP;#FF7370;category;hsc
+Lymphoid;#FFC040;category;hsc
+Myeloid;#BF7530;category;hsc
+Mk/Ery;#CC599C;category;hsc
+Cycling;mistyrose3;category;hsc
+Mesenchymal;#8BB42D;category;str
+Endothelial;#34C6CD;category;str
+Peri/SMC;#2E50B7;category;str
+yng;grey20;Age_ID;
+old;grey70;Age_ID;
+str;#1D7073;Fraction_ID;
+hsc;#BD2F32;Fraction_ID;
+emitter;#1D7073;Assignment;
+receiver;#BD2F32;Assignment;
+mmus;black;Species_ID;
+mcas;grey60;Species_ID;
+mspr;#B35100;Species_ID;
+mcar;#FCC961;Species_ID;
+cKit;#ff8124ff;Antibody_combination;hsc
+CD45/cKit/CD71;#a6000cff;Antibody_combination;hsc
+CD45/CD71;#006059ff;Antibody_combination;str
+CD45;#6792e4ff;Antibody_combination;str

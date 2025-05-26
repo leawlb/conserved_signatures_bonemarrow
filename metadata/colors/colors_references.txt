@@ -1,0 +1,126 @@
+celltype;color
+Arteriolar ECs;deepskyblue2
+Arteriolar fibro.;seagreen3
+Chondrocytes;aquamarine
+Dendritic cells;lightsalmon
+Endosteal fibro.;palegreen2
+Eo/Baso prog.;gold
+Ery prog.;violet
+Ery/Mk prog.;deeppink4
+Erythroblasts;#FF99CC
+Fibro/Chondro p.;aquamarine4
+Gran/Mono prog.;sienna3
+LMPPs;wheat4
+Mk prog.;violetred1
+Mono prog.;red3
+Monocytes;firebrick1
+Myofibroblasts;palegreen1
+NK cells;snow3
+Neutro prog.;darkorange2
+Neutrophils;orange
+Ng2+ MSCs;darkslategray
+Osteo-CAR;darkorchid1
+Osteoblasts;turquoise1
+Schwann cells;lightcyan
+Sinusoidal ECs;blue3
+Smooth muscle;lightblue1
+Stromal fibro.;darkolivegreen1
+T cells;snow3
+large pre-B.;navajowhite2
+pro-B;antiquewhite1
+small pre-B.;navajowhite3
+HSC LT;grey10
+MPP1;grey50
+MEP;deeppink4
+HSC ST;grey30
+LMPP;wheat4
+Mkp;violetred1
+MPP2;grey60
+GMP;sienna3
+Infection related myeloid;red
+Erythroblast;lightpink3
+CLP;wheat2
+Mast;gold
+unassigned;thistle
+proB;antiquewhite1
+pDC;coral3
+Monocyte Progenitor;red3
+cDC;lightsalmon
+Ery;pink
+NK;snow3
+preB;navajowhite3
+Basophil;yellow
+T;snow3
+Neu;orange
+preNeu;darkorange2
+Monocyte;firebrick1
+Plasma;lightyellow1
+proNeu;darkorange3
+ImmatureB;lightyellow2
+Eosinophil;khaki1
+ST-HSCs;grey30
+Neutrophil progenitor;darkorange2
+Mature B-cell;lightyellow1
+Mono/DC prog. (more Mono);red3
+Neutrophil;orange
+Mono/DC prog. (more DC);coral3
+Multipotent prog. (cycling);grey50
+Erythroid Progenitor;lightpink3
+Small pre B-cell;navajowhite3
+Common myeloid progenitor;sienna4
+Erythroid;pink
+LT-HSCs;grey10
+Immature B-cell;lightyellow2
+Unclear / dying cells;thistle
+Megakaryocyte/erythroid prog.;deeppink4
+Megakaryocyte progenitor;violetred1
+Megakaryocyte/erythroid MPP;violetred4
+T-cells / NK Cells;snow3
+Baso/Eos/Mast prog. (+Basos);gold
+Large pre B-cell;navajowhite2
+Pro B-cell;lightyellow1
+Adipo-CAR;plum2
+Arteriolar-ECs;deepskyblue2
+Arteriolar-fibro;seagreen3
+C;thistle
+Chondrocytes-13;aquamarine1
+Chondrocytes-hypertrophic-02;paleturquoise3
+Chondrocytes-prehypertrophic-17;paleturquoise1
+Chondrocytes-progenitors-04;paleturquoise4
+Chondrocytes-proliferating-resting-10;paleturquoise2
+EC-arterial-11;#0066FF
+EC-arteriolar-06;deepskyblue
+EC-sinusoidal-00;blue3
+Endosteal-fibro;palegreen2
+Fibro-Chondro-p;aquamarine4
+Fibroblasts-1-09;palegreen3
+Fibroblasts-2-15;darkolivegreen2
+Fibroblasts-3-16;seagreen1
+Fibroblasts-4-03;seagreen2
+Fibroblasts-5-05;olivedrab3
+Lepr-MSC-01;plum3
+Ng2-MSCs;darkslategray
+O1;turquoise4
+O2;turquoise2
+O3;turquoise3
+OLC-1-07;darkorchid3
+OLC-2-08;darkorchid2
+P1;darkolivegreen3
+P2;darkolivegreen4
+P3;yellowgreen
+P4;chartreuse4
+Pericytes-12;slateblue4
+Schwann-cells;lightcyan
+Sinusoidal-ECs;blue3
+Smooth-muscle;lightblue1
+Stromal-fibro;darkolivegreen1
+V1;blue2
+V2;blue3
+EC-Arteriar;dodgerblue3
+EC-Arteriolar;deepskyblue2
+EC-Sinusoidal;blue3
+Fibroblasts;seagreen3
+MSPC-Adipo;plum3
+MSPC-Osteo;darkorchid2
+Osteo;turquoise3
+Pericytes;royalblue2

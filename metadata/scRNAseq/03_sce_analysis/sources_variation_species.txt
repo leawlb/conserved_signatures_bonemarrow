@@ -1,0 +1,25 @@
+cell_type;fraction;SV_to_remove
+Activated MPP;hsc;1
+BM prog;hsc;1
+BM prog;hsc;2
+Cycling;hsc;1
+Early MPP;hsc;2
+Early Myeloid;hsc;1
+Erythroid;hsc;1
+Erythroid;hsc;2
+Erythroid;hsc;3
+HSC;hsc;1
+HSC;hsc;2
+Lymphoid;hsc;1
+Lymphoid;hsc;2
+Mk/Ery prog;hsc;1
+Mk/Ery prog;hsc;2
+Mk prog;hsc;1
+Mk prog;hsc;2
+Mono prog;hsc;1
+Neutro prog;hsc;1
+Neutro prog;hsc;2
+Chondrocyte;str;1
+Fibro/Chondro;str;1
+Osteo;str;1
+Sinusoid/Ven EC;str;1

@@ -1,0 +1,23 @@
+fraction;celltypes;category
+hsc;HSC;Stem
+hsc;Early MPP;MPP
+hsc;Activated MPP;MPP
+hsc;Early Myeloid;Myeloid
+hsc;Mono prog;Myeloid
+hsc;Neutro prog;Myeloid
+hsc;Lymphoid;Lymphoid
+hsc;BM prog;Myeloid
+hsc;Mk prog;Mk/Ery
+hsc;Mk/Ery prog;Mk/Ery
+hsc;Erythroid;Mk/Ery
+hsc;Cycling;Cycling
+str;Adipo/CAR;Mesenchymal
+str;Osteo;Mesenchymal
+str;Chondrocyte;Mesenchymal
+str;Fibro/Chondro;Mesenchymal
+str;Fibroblast;Mesenchymal
+str;Art/Cap EC;Endothelial
+str;Sinusoid/Ven EC;Endothelial
+str;Sinusoid EC;Endothelial
+str;Lymphatic EC;Endothelial
+str;Peri/SMC;Peri/SMC

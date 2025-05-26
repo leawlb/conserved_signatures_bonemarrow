@@ -1,0 +1,7 @@
+cluster;fraction;subcluster;annotation_subcluster
+2_4;hsc;2;HSC
+2_4;hsc;1;Early MPP
+6;hsc;2;Mono prog
+6;hsc;1;Neutro prog
+6;str;2;Osteo
+6;str;1;Fibro/Chondro

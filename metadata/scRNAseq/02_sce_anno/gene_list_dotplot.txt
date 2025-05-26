@@ -1,0 +1,140 @@
+gene;fraction;marker_for;use
+Adipoq;str;Adipo/CAR;Validation
+Cxcl12;str;Adipo/CAR;Validation + Visualisation
+Kitl;str;Adipo/CAR;Validation + Visualisation
+Lepr;str;Adipo/CAR;Validation + Visualisation
+Hey1;str;Arteriolar/Artery;Validation
+Sox17;str;Arteriolar/Artery;Validation
+Cxcl12;str;Arteriolar/Artery;Validation
+Efnb2;str;Arteriolar/Artery;Validation + Visualisation
+Ly6a;str;Arteriolar/Artery;Validation + Visualisation
+Lmo4;hsc;Basophil;Validation
+Mcpt8;hsc;Basophil;Validation
+Prss34;hsc;Basophil;Validation + Visualisation
+Car4;str;Capillary;Validation + Visualisation
+Rgcc;str;Capillary;Validation + Visualisation
+Timp4;str;Capillary;Validation + Visualisation
+Cenpa;hsc;Cell cycle;Validation + Visualisation
+Lockd;hsc;Cell cycle;Validation + Visualisation
+Mki67;hsc;Cell cycle;Validation + Visualisation
+Dctpp1;hsc;Cell cycle entry;Validation + Visualisation
+Hells;hsc;Cell cycle entry;Validation + Visualisation
+Lig1;hsc;Cell cycle entry;Validation + Visualisation
+Mcm6;hsc;Cell cycle entry;Validation + Visualisation
+Mgp;str;Chondro;Subclustering
+Prelp;str;Chondro;Subclustering
+Acan;str;Chondro;Subclustering + Visualisation
+Fmod;str;Chondro;Subclustering + Visualisation
+S100a10;str;Chondro;Subclustering + Visualisation
+Adamts5;str;Chondro;Validation
+Chad;str;Chondro;Validation
+Mef2c;str;Chondro;Validation
+Prg4;str;Chondro;Validation
+Comp;str;Chondro;Validation + Visualisation
+Sox9;str;Chondro;Validation + Visualisation
+Gfi1b;hsc;Ery;Validation
+Epor;hsc;Ery;Validation + Visualisation
+Hba-a1;hsc;Ery;Validation + Visualisation
+Klf1;hsc;Ery;Validation + Visualisation
+Dcn;str;Fibro;Subclustering
+Col3a1;str;Fibro;Validation
+Fn1;str;Fibro ;Validation
+Lum;str;Fibro ;Validation
+Cd34;str;Fibro ;Validation + Visualisation
+Pdgfra;str;Fibro ;Validation + Visualisation
+Thy1;str;Fibro ;Validation + Visualisation
+Cited2;hsc;HSCs;Subclustering
+Mllt3;hsc;HSCs;Subclustering
+Mpl;hsc;HSCs;Subclustering
+Gata2;hsc;HSCs;Subclustering
+Mecom;hsc;HSCs;Subclustering + Visualisation
+Meis1;hsc;HSCs;Subclustering + Visualisation
+Pbx1;hsc;HSCs;Subclustering + Visualisation
+Alcam;hsc;HSCs;Validation
+Aldh1a1;hsc;HSCs;Validation + Visualisation
+Cdkn1c;hsc;HSCs;Validation
+Lmo2;hsc;HSCs;Validation
+Mmrn1;hsc;HSCs;Validation
+Msi2;hsc;HSCs;Validation
+Slamf1;hsc;HSCs;Validation
+Socs2;hsc;HSCs;Validation
+Txnip;hsc;HSCs;Validation
+Gng11;hsc;HSCs;Validation
+Hlf;hsc;HSCs;Validation + Visualisation
+Procr;hsc;HSCs;Validation + Visualisation
+Ccl21a;str;Lymphatic;Validation + Visualisation
+Lyve1;str;Lymphatic;Validation + Visualisation
+Pdpn;str;Lymphatic;Validation
+Prox1;str;Lymphatic;Validation
+Cd79b;hsc;Lymphoid;Validation
+Il7r;hsc;Lymphoid;Validation + Visualisation
+Rag1;hsc;Lymphoid;Validation
+Dntt;hsc;Lymphoid;Validation + Visualisation
+Satb1;hsc;Lymphoid;Validation + Visualisation
+Ms4a2;hsc;Mast cell;Validation
+Cpa3;hsc;Mast cell;Validation + Visualisation
+Hdc;hsc;Mast cell;Validation + Visualisation
+Itga2b;hsc;Mk;Validation + Visualisation
+Pf4;hsc;Mk;Validation + Visualisation
+Zfpm1;hsc;Mk/Ery;Validation
+Blvrb;hsc;Mk/Ery;Validation
+Car2;hsc;Mk/Ery;Validation + Visualisation
+Gata1;hsc;Mk/Ery;Validation + Visualisation
+Gata2;hsc;Mk/Ery;Validation + Visualisation
+Fcer1g;hsc;Mono/Macro/DC;Subclustering
+Ly86;hsc;Mono/Macro/DC;Subclustering
+Irf8;hsc;Mono/Macro/DC;Subclustering + Visualisation
+F13a1;hsc;Mono/Macro/DC;Validation
+Ms4a6c;hsc;Mono/Macro/DC;Validation
+Ccr2;hsc;Mono/Macro/DC;Validation + Visualisation
+Spi1;hsc;MPP;Subclustering
+Cd34;hsc;MPP;Subclustering + Visualisation
+Cdk4;hsc;MPP;Validation
+Sox4;hsc;MPP;Validation
+Adgrl4;hsc;MPP;Validation + Visualisation
+Flt3;hsc;MPP;Validation + Visualisation
+Ctsg;hsc;Myeloid;Validation
+Mpo;hsc;Myeloid;Validation
+Prtn3;hsc;Myeloid;Validation
+Cebpa;hsc;Myeloid;Validation + Visualisation
+Cd63;hsc;Neutro;Subclustering
+Gfi1;hsc;Neutro;Subclustering
+Elane;hsc;Neutro;Validation
+S100a9;hsc;Neutro;Validation
+Cebpe;hsc;Neutro;Validation + Visualisation
+S100a8;hsc;Neutro;Validation + Visualisation
+Wfdc21;hsc;Neutro;Validation + Visualisation
+Mmp13;str;Osteo;Subclustering
+Postn;str;Osteo;Subclustering
+Pth1r;str;Osteo;Subclustering
+Runx2;str;Osteo;Subclustering
+Sp7;str;Osteo;Subclustering
+Tnc;str;Osteo;Subclustering
+Alpl;str;Osteo;Subclustering + Visualisation
+Anxa1;str;Osteo;Validation
+Anxa2;str;Osteo;Validation
+Bglap2;str;Osteo;Validation
+Cd200;str;Osteo;Validation
+Ibsp;str;Osteo;Validation
+Ptgis;str;Osteo;Validation
+Bglap;str;Osteo;Validation + Visualisation
+Spp1;str;Osteo;Validation + Visualisation
+Cdh5;str;Pan-Endothelial;Validation + Visualisation
+Pecam1;str;Pan-Endothelial;Validation + Visualisation
+Rgs4;str;Pericyte;Validation + Visualisation
+Rgs5;str;Pericyte;Validation + Visualisation
+Steap4;str;Pericyte;Validation
+Flt4;str;Sinusoidal;Validation + Visualisation
+Stab2;str;Sinusoidal;Validation + Visualisation
+Tfpi;str;Sinusoidal;Validation + Visualisation
+Myh11;str;Smooth muscle cell;Validation
+Acta2;str;Smooth muscle cell;Validation + Visualisation
+Tagln;str;Smooth muscle cell;Validation + Visualisation
+Emcn;str;Venous/Venular;Validation
+Ephb4;str;Venous/Venular;Validation
+Ackr1;str;Venous/Venular;Validation + Visualisation
+Nr2f2;str;Venous/Venular;Validation + Visualisation
+Vcam1;str;Venous/Venular/Sinusoidal;Validation
+Icam1;str;Venous/Venular/Sinusoidal;Validation + Visualisation
+Lrg1;str;Venous/Venular/Sinusoidal;Validation + Visualisation
+Selp;str;Venous/Venular/Sinusoidal;Validation + Visualisation

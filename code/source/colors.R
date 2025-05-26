@@ -52,6 +52,18 @@ col_cons_long <- c(
   "random genes" = "#C3C3C3",
   "species-specific marker genes" = "grey50")
 
+col_cl_per_ct <- c("mean_ct_per_cluster" = "pink4",
+                   "median_ct_per_cluster" = "pink1", 
+                   "mean_cluster_per_ct" = "green1",
+                   "median_cluster_per_ct" = "green4",
+                   "nr_clusters" = "black")
+
+col_score1 <- c("mean_prop_cells_cluster" = "#121252",
+                "mean_cluster_purity" = "#FFBBEF")
+
+col_score2 <-  c("adjusted_rand_index" = "#319F94",
+                 "variation_information" = "#1DC3FF")
+
 colors_z_score <- c("steelblue3", "white", "red3")
 
 #-------------------------------------------------------------------------------

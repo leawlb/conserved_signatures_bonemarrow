@@ -44,7 +44,6 @@ iterations <- nrow(perm_score_df)
 colors_path <- snakemake@params[["colors_path"]]
 source(snakemake@params[["colors"]])
 
-
 col_types <- col_cons[names(col_cons) == cons_level_use]
 print(col_types)
 ```

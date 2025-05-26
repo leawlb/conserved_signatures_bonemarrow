@@ -1,9 +1,10 @@
 
 # recluster datasets from other species using different gene sets
+# using different resolutions
 
 # determine random number generator for sample
 library(parallel)
-RNGkind("L'Ecuyer-CMRG") # using this for usages of parallel is necessary
+RNGkind("L'Ecuyer-CMRG") # using this for parallel is necessary
 
 set.seed(37)
 

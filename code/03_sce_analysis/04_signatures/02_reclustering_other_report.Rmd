@@ -44,24 +44,6 @@ library(Seurat, quietly = TRUE)
 library(tidyverse, quietly = TRUE)
 ```
 
-```{r eval = FALSE, include = FALSE}
-
-base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other"
-
-seu_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_li_all_stromal_list")
-
-score_df_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_mus_bar_stromal_list")
-
-colors_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt"
-source("../../source/colors.R")
-source("../../source/plotting.R")
-source("../../source/sce_functions_reclustering.R")
-
-wildcard_curr <- "zeb_all_hspc"
-
-score_df_list_all$seu_sign[[1]]$nr_genes_used
-```
-
 ```{r load_objects}
 seu_list_all <- base::readRDS(snakemake@input[["seu_list"]])
 score_df_list_all <- base::readRDS(snakemake@input[["score_df_list"]])
@@ -70,18 +52,12 @@ dataset_curr <- snakemake@wildcards[["dataset"]]
 ```
 
 ```{r colors}
-# will put into colors.txt once color choice if more finalized
-cols_per <- c("mean_ct_per_cluster" = "pink4",
-              "median_ct_per_cluster" = "pink1", 
-              "mean_cluster_per_ct" = "green1",
-              "median_cluster_per_ct" = "green4",
-              "nr_clusters" = "black")
+colors_path <- snakemake@params[["colors_path"]]
+source(snakemake@params[["colors"]])
 
-col_vec1 <- c("mean_prop_cells_cluster" = "steelblue2",
-              "mean_cluster_purity" = "olivedrab4")
-
-col_vec2 <-  c("adjusted_rand_index" = "orchid",
-               "variation_information" = "orange")
+cols_per <- col_cl_per_ct
+col_vec1 <- col_score1
+col_vec2 <-  col_score2
 ```
 
 ## Functions

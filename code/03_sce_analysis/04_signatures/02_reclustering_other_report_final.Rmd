@@ -29,34 +29,6 @@ library(Seurat, quietly = TRUE)
 library(tidyverse, quietly = TRUE)
 ```
 
-```{r eval = FALSE, include = FALSE}
-
-base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/04_rcls/"
-
-seu_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_mus_tik_stromal_list")
-
-
-colors_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/colors/colors.txt"
-source("../../source/colors.R")
-source("../../source/plotting.R")
-source("../../source/sce_functions_reclustering.R")
-
-
-resolution_df_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt"
-
-frame_df_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_frame.txt"
-
-dataset_curr <- "mus_tik_stromal"
-
-score_df_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_mus_tik_stromal_list")
-
-for(i in 1:length(seu_list_all$seu_sign)){
-  seu_list_all$seu_sign[[i]]@meta.data$cell_type <- seu_list_all$seu_sign[[i]]@meta.data$manually_annotated_ct
-}
-
-col_cts <- col_cts_hsc
-```
-
 ```{r load_objects}
 seu_list_all <- base::readRDS(snakemake@input[["seu_list"]])
 score_df_list_all <- base::readRDS(snakemake@input[["score_df_list"]])
@@ -123,27 +95,15 @@ selected_score_df_list
 
 ```{r colors}
 
-# put in colors.txt once color scheme a little more finalized
-col_vec_cons <- c(
-    "conserved_signature" = "yellowgreen",
-    "conserved_markers" = "darkgreen",
-    "mmusall_markers" = "blue2",
-    "random_features" = "purple2")
+colors_path <- snakemake@params[["colors_path"]]
+source(snakemake@params[["colors"]])
 
-col_vec1 <- c("mean_prop_cells_cluster" = "steelblue2",
-              "mean_cluster_purity" = "olivedrab4")
-col_vec2 <-  c("adjusted_rand_index" = "orchid",
-               "variation_information" = "orange")
+col_vec_cons <- col_cons
 
-# will put into colors.txt once color choice if more finalized
-cols_per <- c("mean_ct_per_cluster" = "pink4",
-              "median_ct_per_cluster" = "pink1", 
-              "mean_cluster_per_ct" = "green1",
-              "median_cluster_per_ct" = "green4",
-              "nr_clusters" = "black")
-
+col_vec1 <- col_score1
+col_vec2 <- col_score2
+cols_per <- col_cl_per_ct
 ```
-
 
 ## Functions
 
@@ -467,105 +427,6 @@ plot_list_wide
 plot_list_long <- lapply(selected_seu_list, 
                          vis_perc_long_gg,
                          title_add = dataset_curr)
-plot_list_long
-knitr::knit_exit()
-```
-
-```{r correction_vec}
-nr_clusters_random <- length(base::unique(selected_seu_list$seu_rand$seurat_clusters))
-
-if(dataset_curr == "zeb_all_hspc"){
-  correction_vec_list <- list(
-    "conserved_signature" = c(4, 2, 7, 6, 1, 5, 3, 8),
-    "conserved_markers" = c(3, 5, 7, 2, 4, 6, 1, 8, 9),
-    "mmusall_markers" = c(2, 6, 4, 1, 3, 7, 5, 9, 8),
-    "random_features" = c(1:nr_clusters_random)
-  )  
-}else if(dataset_curr == "ts_hscs_progenitors"){
-  correction_vec_list <- list(
-    "conserved_signature" = c(2, 5, 11, 4, 7, 3, 1, 10, 6, 8, 9),
-    "conserved_markers" = c(2, 3, 9, 11, 5, 8, 1, 4, 6, 7, 10),
-    "mmusall_markers" = c(2, 4, 11, 9, 8, 5, 10, 1, 3, 7, 6),
-    "random_features" = c(1:nr_clusters_random)
-  )
-}else if(dataset_curr == "nmr_sorted_hspc"){
-  correction_vec_list <- list(
-    "conserved_signature" = c(
-      2, 4, 6, 9, 13, 14, 9, 10, 16, 18, 20, 3, 5, 1, 7, 8, 5, 17, 15, 12, 19, 
-      11, 22, 21, 23, 25, 26, 27, 24),
-    "conserved_markers" = c(
-      4, 5, 16, 17, 18, 19, 20, 22, 24, 15, 1, 9, 7, 3, 6, 13, 28, 8, 10, 11, 
-      12, 14, 25, 26, 2, 29, 21, 23, 27, 28),
-    "mmusall_markers" = c(
-      1, 12, 15, 18, 19, 22, 27, 23, 2, 7, 13, 17, 16, 20, 3, 6, 8, 14, 4, 21,
-      24, 25, 26, 5),
-    "random_features" = c(1:nr_clusters_random)
-  )   
-}else if(dataset_curr == "li_all_stromal"){
-  correction_vec_list <- list(
-    "conserved_signature" = c(3, 7, 2, 1, 8, 6, 4, 5),
-    "conserved_markers" = c(2, 7, 3, 1, 8, 5, 4, 6),
-    "mmusall_markers" = c(8, 2, 3, 7, 1, 10, 9, 6, 4, 5),
-    "random_features" = c(1:nr_clusters_random)
-  )   
-}else if(dataset_curr == "ts_bone_marrow"){
-  correction_vec_list <- list(
-    "conserved_signature" = c(4, 2, 5, 7, 3, 1, 6),
-    "conserved_markers" = c(3, 5, 7, 8, 1, 6, 2, 4),
-    "mmusall_markers" = c(6, 12, 2, 4, 7, 9, 5, 10, 11, 1, 3, 8),
-    "random_features" = c(1:nr_clusters_random)
-  )   
-}else if(dataset_curr == "ts_all_stromal"){
-  correction_vec_list <- list(
-    "conserved_signature" = c(1, 4, 6, 11, 9, 10, 12, 2, 5, 7, 13, 3, 8),
-    "conserved_markers" = c(1, 4, 10, 8, 9, 11, 2, 5, 6, 12, 3, 7),
-    "mmusall_markers" = c(1, 3, 4, 10, 11, 12, 2, 6, 8, 12, 5, 7, 9),
-    "random_features" = c(1:nr_clusters_random)
-  )   
-}else if(dataset_curr == "mus_weinreb_hspc"){
-  correction_vec_list <- list(
-    "conserved_signature" = c(4, 15, 8, 9, 10, 11, 7, 6, 5, 3, 13, 1, 2, 12, 14),
-    "conserved_markers" = c(3, 15, 16, 6, 11, 8, 9, 10, 5, 4, 7, 12, 14, 1, 2, 13),
-    "mmusall_markers" = c(3, 16, 17, 5, 11, 9, 10, 12, 6, 7, 4, 13, 15, 1, 2, 8, 14),
-    "random_features" = c(1:nr_clusters_random)
-  )   
-}else if(dataset_curr == "mus_tm_bonemarrow"){
-  correction_vec_list <- list(
-    "conserved_signature" = c(2, 1, 5, 10, 6, 7, 9, 8, 4, 3),
-    "conserved_markers" = c(4, 2, 1, 6, 9, 7, 8, 5, 3, 10),
-    "mmusall_markers" = c(7, 1, 4, 2, 6, 11, 8, 10, 9, 5, 3, 12),
-    "random_features" = c(1:nr_clusters_random)
-  )   
-}else if(dataset_curr == "mus_bar_stromal"){
-  correction_vec_list <- list(
-    "conserved_signature" = c(3, 7, 8, 5, 13, 4, 9, 12, 1, 10, 6, 2, 11),
-    "conserved_markers" = c(3, 8, 7, 5, 14, 13, 4, 13, 9, 12, 1, 10, 6, 2, 15, 11),
-    "mmusall_markers" = c(4, 7, 8, 5, 13, 3, 9, 12, 1, 10, 6, 2, 14, 11),
-    "random_features" = c(1:nr_clusters_random)
-  )   
-}else if(dataset_curr == "mus_tik_stromal"){
-  correction_vec_list <- list(
-    "conserved_signature" = c(9, 2, 4, 3, 5, 8, 7, 10, 11, 6, 1),
-    "conserved_markers" = c(12, 1, 5, 8, 6, 11, 10, 9, 13, 7, 2, 3, 4),
-    "mmusall_markers" = c(10, 2, 3, 5, 7, 9, 8, 11, 6, 1, 4),
-    "random_features" = c(2, 3, 5, 4, 7, 6, 1)
-  )   
-}
-```
-
-```{r wide2, fig.width = 8, fig.height = 4}
-plot_list_wide <- lapply(selected_seu_list, 
-                         vis_perc_wide_gg,
-                         title_add = dataset_curr,
-                         correction_vec_list = correction_vec_list)
-plot_list_wide
-```
-
-```{r long2, fig.width = 6, fig.height = 5}
-plot_list_long <- lapply(selected_seu_list, 
-                         vis_perc_long_gg,
-                         title_add = dataset_curr,
-                         correction_vec_list = correction_vec_list)
 plot_list_long
 ```
 

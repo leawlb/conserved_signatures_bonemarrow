@@ -1,5 +1,5 @@
 
-# get reclustering stores for reclustered datasets from other species
+# get reclustering scores for reclustered datasets from other species
 
 # determine random number generator for sample
 library(parallel)

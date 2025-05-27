@@ -100,3 +100,9 @@ generated from downloaded fasta and gtf files
 
 
 Other (meta)data may be downloaded automatically by running the code.
+
+Finally, the entire github repository `mcclust` by Fritsch (2022) is 
+downloaded as part of running the code so that its vi.dist function can be used.
+See: https://github.com/cran/mcclust and 
+`code/03_sce_analysis/04_signatures/01_reclustering_ow_snakefile.py`
+

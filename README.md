@@ -7,7 +7,7 @@ DOI
 
 ## 1. Configuration
 
-The configuration is stored in config.yaml.
+The configuration is stored in `config.yaml`.
 Base paths MUST be adjusted before re-running code. 
 Adjust paths in: 
 
@@ -32,28 +32,31 @@ These directories were adjusted from and added by Fritjof Lammers.
 
 For all steps starting from 01 install `snakemake_isbm.yml` micromamba:
 
-`micromamba env create -n snakemake_isbm -f snakemake_isbm.yml`
+```bash
+micromamba env create -n snakemake_isbm -f snakemake_isbm.yml
+```
 
 Activate the environment: 
 
-`micromamba activate snakemake_isbm`
+```bash
+micromamba activate snakemake_isbm
+```
 
 Navigate to the appropriate folder (starting in 01_01) and run the snakemake
 pipeline from that folder using the snakemake command specified 
 in the `..._snakemake` txt files. 
 
-If no similar cluster LSF structure to the DKFZ cluster is available,
-snakemake commands in the `..._snakemake` files must be adjusted to the 
-local conditions. 
+Snakemake commands in the `..._snakemake` files are suited for the DKFZ cluster 
+structure and must be adjusted to the local conditions before running.
 
 Generally, follow the steps as indicated by numbers, even if some are missing 
-(e.g. 05, 06 and 07 folders).
+(e.g. 04, 05, 06 and 07 folders).
 
 
 
 ## 4. Data
 
-Data can be downloaded from ArrayExpression or BioStudies:
+Once published, data can be downloaded from ArrayExpress or BioStudies:
 
  - Raw data: fastq files (E-MTAB-15073)
  - Processed data: matrix.mtx, barcodes.tsv, features.tsv after alignment (E-MTAB-15073)
@@ -76,7 +79,7 @@ Some .R scripts used strictly to deal with metadata are also located there in
 the related folders.
  
 
-Other (meta)data must be downloaded manually or can be made available upon 
+Other (meta)data must be downloaded manually or may be made available upon 
 request to l.woelbert[at]dkfz-heidelberg.de:
  
 - Four Cell Ranger reference genomes for species-specific alignment, 

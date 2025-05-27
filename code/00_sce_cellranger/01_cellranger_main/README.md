@@ -1,9 +1,8 @@
 # snakemake-cellranger
 
+This directory was added directly from: https://github.com/odomlab2/snakemake-cellranger.git
 
 This is the Cellranger workflow for the Odomlab. 
-
-![rule graph](docs/rulegraph.png)
 
 
 The pipeline and this documentation is work in progress and incomplete. Feel free to improve it by 

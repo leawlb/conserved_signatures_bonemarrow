@@ -56,18 +56,13 @@ df_other <- dplyr::bind_rows(df_other_list)
 print(colnames(df_own))
 print(colnames(df_other))
 
-# colnames(df_own)[colnames(df_own) == "fraction"] <- "condition"
-# colnames(df_own)[colnames(df_own) == "value"] <- "value_orig"
-# df_own$resolution <- base::rep("NA", nrow(df_own))
-# 
-# colnames(df_other)[colnames(df_other) == "dataset"] <- "condition"
-# df_other$resolution <- base::as.character(df_other$resolution)
-
 # match colnames to fit
 df_own <- df_own[,match(colnames(df_other), colnames(df_own))]
 
 #-------------------------------------------------------------------------------
-# bind both dfs into one df, then correct pvals
+# bind both dfs into one df, then correct pvals using BH = benjamini hochberg
+# zebrafish p vals are excluded
+
 df_all_pval <- dplyr::bind_rows(df_own, df_other)
 
 df_all_pval$pval_corrected <- stats::p.adjust(df_all_pval$pval, method = "BH")

@@ -3,7 +3,7 @@
 
 snakemake --cluster "bsub -q medium -n5 -R rusage[mem={resources.mem_mb}]" -p -j10 -c5 -s 00_prepare_datasets_snakefile.py --latency-wait 20 --configfile ../../config.yaml --use-conda -n
 
-# for running prepare_li
+# for after running prepare_li
 snakemake --cluster "bsub -q medium -n4 -R rusage[mem={resources.mem_mb}]" -p -j10 -c4 -s 00_prepare_datasets_snakefile.py --latency-wait 40 --configfile ../../config.yaml --config ran_li_ipynb=True --use-conda -n
 
 

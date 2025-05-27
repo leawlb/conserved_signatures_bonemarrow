@@ -5,11 +5,13 @@
 # this script will be run for multiple comparisons:
 # background:
 # - conserved signature vs random ("sign-vs-rand")
+# - conserved markers vs random ("mark-vs-rand")
+# - BL6-only markers vs random ("mmms-vs-rand")
 
 # geneset comparison:
 # - conserved markers vs signature + random ("mark-vs-signrand")
 # - all BL6 markers vs conserved signature + random ("mmms-vs-signrand")
-# - all BL6 markers vs conserved markers + random ("mmms-vs-markrand")
+
 
 #-------------------------------------------------------------------------------
 
@@ -146,14 +148,7 @@ for(score in scores_v){
 
 print(head(orig_score_df_sub))
 
-#-------------------------------------------------------------------------------
-# correct pvals
-# using bonferroni hochberg for now
-# possibility of merging all pval_score_df_output and correcting pvals together
-
-# orig_score_df_sub$pval_corrected <- stats::p.adjust(
-#   orig_score_df_sub$pval, 
-#   method = "BH")
+# pvals are corrected together later
 
 #-------------------------------------------------------------------------------
 

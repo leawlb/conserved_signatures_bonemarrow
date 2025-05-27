@@ -172,11 +172,11 @@ source("../source/plotting.R")
 # define output paths for pdf export
 output_pdf_plot_all <- base::paste0(
   base_path,
-  "/manuscript1_TEST_REPRO/supp_figure4/sfigure4.pdf")
+  "/manuscript1/supp_figure4/sfigure4.pdf")
 
 output_pdf_legend <- base::paste0(
   base_path,
-  "/manuscript1_TEST_REPRO/supp_figure4/sfigure4_legend.pdf")
+  "/manuscript1/supp_figure4/sfigure4_legend.pdf")
 ```
 
 ```{r params}

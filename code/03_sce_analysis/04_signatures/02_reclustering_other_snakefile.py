@@ -318,7 +318,7 @@ if RUN_MARK_RAND_OTHER_PERM:
           reclustering_functions = "../../source/sce_functions_reclustering.R",
           resolution_df = RESOLUTION_OTHER,
           nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
-          iterations = config["values"]["03_sce_analysis"]["nr_cores"],
+          iterations = config["values"]["03_sce_analysis"]["iterations"],
           cut_off_prop = config["values"]["03_sce_analysis"]["reclustering_cutoff_prop"],
           cons_level_use = "conserved_markers",
           datasets_other_hsc = datasets_other_hsc_withzeb,
@@ -357,7 +357,9 @@ if RUN_MARK_RAND_OTHER_PERM:
           perm_score_df = rules.perm_mark_rand_other.output
       params:
           resolution_df = RESOLUTION_OTHER,
-          cons_level_use = "conserved_markers"
+          cons_level_use = "conserved_markers",
+          colors_path = COLORS,
+          colors = "../../source/colors.R"
       resources:
           mem_mb=50000,
           queue = "medium-debian"
@@ -376,7 +378,7 @@ if RUN_MMMS_RAND_OTHER_PERM:
           reclustering_functions = "../../source/sce_functions_reclustering.R",
           resolution_df = RESOLUTION_OTHER,
           nr_cores = config["values"]["03_sce_analysis"]["nr_cores"],
-          iterations = config["values"]["03_sce_analysis"]["nr_cores"],
+          iterations = config["values"]["03_sce_analysis"]["iterations"],
           cut_off_prop = config["values"]["03_sce_analysis"]["reclustering_cutoff_prop"],
           cons_level_use = "mmusall_markers",
           datasets_other_hsc = datasets_other_hsc_withzeb,
@@ -419,7 +421,9 @@ if RUN_MMMS_RAND_OTHER_PERM:
           perm_score_df = rules.perm_mark_rand_other.output
       params:
           resolution_df = RESOLUTION_OTHER,
-          cons_level_use = "mmusall_markers"
+          cons_level_use = "mmusall_markers",
+          colors_path = COLORS,
+          colors = "../../source/colors.R"
       resources:
           mem_mb=50000,
           queue = "medium-debian"
@@ -473,7 +477,9 @@ if RUN_GNST_SIGN_RAND_OTHER_PERM:
       params:
           resolution_df = RESOLUTION_OTHER,
           datasets_other_hsc = datasets_other_hsc_withzeb,
-          datasets_other_str = datasets_other_str
+          datasets_other_str = datasets_other_str,
+          colors_path = COLORS,
+          colors = "../../source/colors.R"
       resources:
           mem_mb=5000,
           queue="medium-debian"

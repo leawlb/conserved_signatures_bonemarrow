@@ -68,6 +68,7 @@ resolution_df <- utils::read.csv(file = resolution_df_path,
                                stringsAsFactors=FALSE, 
                                as.is=TRUE, 
                                colClasses = "character")
+print(resolution_df)
 ```
 
 ```{r load_manual_other1}
@@ -171,22 +172,19 @@ source("../source/plotting.R")
 # define output paths for pdf export
 output_pdf_plot_all <- base::paste0(
   base_path,
-  "/manuscript1/supp_figure4/sfigure4.pdf")
+  "/manuscript1_TEST_REPRO/supp_figure4/sfigure4.pdf")
 
 output_pdf_legend <- base::paste0(
   base_path,
-  "/manuscript1/supp_figure4/sfigure4_legend.pdf")
+  "/manuscript1_TEST_REPRO/supp_figure4/sfigure4_legend.pdf")
 ```
 
 ```{r params}
 # global params
 source("determine_params.R")
 
-col_vec1 <- c("mean_prop_cells_cluster" = "#121252",
-              "mean_cluster_purity" = "#FFBBEF")
-
-col_vec2 <-  c("adjusted_rand_index" = "#319F94",
-               "variation_information" = "#1DC3FF")
+col_vec1 <- col_score1
+col_vec2 <- col_score2
 
 point_plot_size <- 4
 ```
@@ -374,10 +372,10 @@ plot_list_o5 <- lapply(score_df_list_o5, vis_clustering_scores, max = max_o5)
 resolution_df[resolution_df$dataset == dataset_o5,]
 
 plot_o5 <- ggpubr::ggarrange(
-  plot_list_o5[[1]]+theme(legend.position = "none")+geom_vline(xintercept = 0.6, color = "orangered"),
+  plot_list_o5[[1]]+theme(legend.position = "none")+geom_vline(xintercept = 0.55, color = "orangered"),
   plot_list_o5[[2]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.55, color = "orangered"),
   plot_list_o5[[3]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.45, color = "orangered"),
-  plot_list_o5[[4]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.6, color = "orangered"),
+  plot_list_o5[[4]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.55, color = "orangered"),
   nrow = 1,
   align = "h",
   widths = c(1, 1, 1, 1)
@@ -396,7 +394,7 @@ resolution_df[resolution_df$dataset == dataset_o6,]
 plot_o6 <- ggpubr::ggarrange(
   plot_list_o6[[1]]+theme(legend.position = "none")+geom_vline(xintercept = 0.5, color = "orangered"),
   plot_list_o6[[2]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.65, color = "orangered"),
-  plot_list_o6[[3]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.65, color = "orangered"),
+  plot_list_o6[[3]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.6, color = "orangered"),
   plot_list_o6[[4]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.5, color = "orangered"),
   nrow = 1,
   align = "h",

@@ -1140,7 +1140,7 @@ sce_hsc$ery[base::match(colnames(ery_pseudo),
 
 # make it so that pseudotime values are only kept for cells that are in the
 # ery branch
-ery_cut_off <- min(ery_pseudo$Erythroid)
+ery_cut_off <- base::min(ery_pseudo$Erythroid)
 
 sce_hsc$pt_ery <- sce_hsc$pseudotime
 sce_hsc$pt_ery[sce_hsc$ery < ery_cut_off] <- NA

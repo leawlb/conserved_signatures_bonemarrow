@@ -31,7 +31,7 @@ targets = targets + [OUTPUT_PATH + "/figure_s7.html"]
 
 #-------------------------------------------------------------------------------
 
-localrules: all  
+localrules: all
 
 rule all: 
   input:

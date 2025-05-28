@@ -2,6 +2,8 @@
 # authors: Amy Danson, Lea Wölbert
 # normalize and log-transform expression on the level of individual samples 
 
+RNGkind("L'Ecuyer-CMRG") 
+
 library(scran, quietly = TRUE) 
 set.seed(37)
 

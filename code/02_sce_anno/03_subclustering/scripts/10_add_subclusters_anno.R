@@ -168,6 +168,35 @@ colnames(SingleCellExperiment::reducedDims(sce)$UMAP) <- c("X1", "X2")
 
 base::saveRDS(sce, snakemake@output[["sce_output"]])
 
+#-------------------------------------------------------------------------------
+# remove unnecessary data from "pretty" SCE for upload --> to make it smaller
+
+colData(sce) <- colData(sce)[,which(!colnames(colData(sce)) %in% c(
+  "baccin_celltype_scmapcell_sim",
+  "baccin_celltype_scmapclust_sim",
+  "dahlin_celltype_scmapcell_sim",
+  "dahlin_celltype_scmapclust_sim",
+  "dolgalev_celltype_scmapcell_sim",
+  "dolgalev_celltype_scmapclust_sim",
+  "baccin_celltype_scmapcell", # scmapclust performed better than scmapcell
+  "dahlin_celltype_scmapcell",
+  "dolgalev_celltype_scmapcell"
+  ))]
+
+# this will keep only:
+  # raw counts (counts)
+  # logcounts after batch-normalization (logcounts)
+  # logcounts before batch-normalization (logcounts_before_BC)
+# and remove some identical assays (e.g. logcounts = logcounts_batchnorm)
+# "logcounts" (after batch-normalization) is the assay used for most analyses
+assays(sce) <- assays(sce)[c(2, 3, 5)]
+print(names(assays(sce)))
+
+# removing PCA and UMAP coordinates from uncorrected values
+# keeping batch-corrected PCA and UMAP only to save space
+reducedDims(sce) <- reducedDims(sce)[c(1, 4)]
+print(names(reducedDims(sce)))
+
 base::saveRDS(sce, snakemake@output[["sce_output_pretty"]])
 
 utils::sessionInfo()

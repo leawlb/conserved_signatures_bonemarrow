@@ -62,7 +62,7 @@ Once published, data can be downloaded from ArrayExpress or BioStudies:
  - Raw data: fastq files (E-MTAB-15073)
  - Processed data: matrix.mtx, barcodes.tsv, features.tsv after alignment (E-MTAB-15073)
  - N-masked reference genome, generated using this repository: LINK () #TODO: INSERT LINKS 
- - Fully annotated data in .Rds format containing cell type labels, normalised log-counts, and batch-corrected PC and UMAP coordinates (LINK) #TODO: INSERT LINK 
+ - Fully annotated data in .Rds format containing cell type labels, normalised log-counts, and batch-corrected PC and UMAP coordinates (S-BSST2071)
  
  
  

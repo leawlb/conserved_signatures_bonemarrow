@@ -15,6 +15,7 @@ Adjust paths in:
  - `config.yaml`
  - all .Rmd files in the `figures` folder 
  - any .R scripts in `metadata` used strictly to deal with metadata
+ - also check `/code/08_sce_brain/01_sce_brain/brain_snakefile.py`
  
  
 

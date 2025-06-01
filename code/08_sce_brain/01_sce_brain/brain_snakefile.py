@@ -2,7 +2,7 @@
 
 #-------------------------------------------------------------------------------
 
-OUTPUT_BASE = config["base"] + "/data/test_reproducibility4"
+OUTPUT_BASE = config["base"] + "/data/scRNAseq"
 print(OUTPUT_BASE)
 
 INPUT_DATASET = config["base"] + config["metadata_paths"]["dataset_brain_path"]

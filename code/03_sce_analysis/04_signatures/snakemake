@@ -18,6 +18,6 @@ snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resour
 
 snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resources.mem_mb}]" -p -j30 -c20 -s 02_reclustering_other_snakefile.py --latency-wait 40 --configfile ../../config.yaml --use-conda --config run_sign_rand_other_permutation=True run_mark_rand_other_permutation=True run_mmms_rand_other_permutation=True run_genesets_sign_rand_other_permutation=True -n 
 
-snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resources.mem_mb}]" -p -j20 -c20 -s 02_reclustering_other_snakefile.py --latency-wait 40 --configfile ../../config.yaml --use-conda --config run_sign_rand_other_permutation=True run_mark_rand_other_permutation=True run_mmms_rand_other_permutation=True run_genesets_sign_rand_other_permutation=True run_pval_correction=True -n 
+snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resources.mem_mb}]" -p -j20 -c20 -s 02_reclustering_other_snakefile.py --latency-wait 40 --configfile ../../config.yaml --use-conda --config run_sign_rand_other_permutation=True run_mark_rand_other_permutation=True run_mmms_rand_other_permutation=True run_genesets_sign_rand_other_permutation=True run_pval_correction=True -n
 
 

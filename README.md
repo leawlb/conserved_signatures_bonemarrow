@@ -1,9 +1,7 @@
 
-This repository contains all scripts related to scRNAseq analysis starting from 
-alignment with Cell Ranger up to figure creation for this publication: 
-
-DOI
-
+This repository contains all scripts related to scRNAseq analysis of HSPCs
+and niche cells from four distinct mouse species, starting from 
+alignment with Cell Ranger up to figure creation.
 
 ## 1. Configuration
 
@@ -61,8 +59,8 @@ Once published, data can be downloaded from ArrayExpress or BioStudies:
 
  - Raw data: fastq files (E-MTAB-15073)
  - Processed data: matrix.mtx, barcodes.tsv, features.tsv after alignment (E-MTAB-15073)
- - N-masked reference genome, generated using this repository: LINK () #TODO: INSERT LINKS 
- - Fully annotated data in .Rds format containing cell type labels, normalised log-counts, and batch-corrected PC and UMAP coordinates (S-BSST2071)
+ - N-masked reference genome, generated using this repository: https://github.com/fritjoflammers/snakemake-snpmasked-refgenome.git (https://doi.org/10.5281/zenodo.15516917) (S-BSST2074) 
+ - Fully annotated data in .rds format containing cell type labels, normalised log-counts, and batch-corrected PC and UMAP coordinates (S-BSST2079)
  
  
  

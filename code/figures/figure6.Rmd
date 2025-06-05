@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 Generate Figure 6
 
 Also includes one plot for Supplementary Figure 6
+Also includes Supplementary Table for Zebrafish Pvalues
 
 #### Load objects
 
@@ -59,6 +60,9 @@ output_pdf_e_plot <- base::paste0(
 
 output_pdf_s_a_plot <- base::paste0(
   base_path, "/manuscript1/supp_figure8/supp_figure8_allhs_heatmap.pdf")
+
+output_table_zebrafish <- base::paste0(
+  base_path, "/manuscript1/supplementary_table_zebrafish.csv")
 ```
 
 # Print data
@@ -553,6 +557,50 @@ print(skip_set_size_plot(ups))
 pdf(output_pdf_e_plot, width = 3.5, height = 4)
 skip_set_size_plot(ups)
 dev.off()
+```
+
+# Zebrafish
+
+```{r zebrafish}
+
+pval_df_zeb_sign_vs_rand <-  readRDS(
+  paste0(base_path, "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/08_expp/sign-vs-rand_zeb_all_hspc"))
+pval_df_zeb_mark_vs_rand <-  readRDS(
+  paste0(base_path, "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/08_expp/mark-vs-rand_zeb_all_hspc"))
+pval_df_zeb_mmms_vs_rand <-  readRDS(
+  paste0(base_path, "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/08_expp/mmms-vs-rand_zeb_all_hspc"))
+
+pval_df_zeb_mark_vs_signrand <-  readRDS(
+  paste0(base_path, "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/08_expp/mark-vs-signrand_zeb_all_hspc"))
+pval_df_zeb_mmms_vs_signrand <-  readRDS(
+  paste0(base_path, "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/08_expp/mmms-vs-signrand_zeb_all_hspc"))
+
+zeb_df <- rbind(
+  pval_df_zeb_sign_vs_rand,
+  pval_df_zeb_mark_vs_rand,
+  pval_df_zeb_mmms_vs_rand,
+  pval_df_zeb_mark_vs_signrand,
+  pval_df_zeb_mmms_vs_signrand
+)
+
+zeb_df_narrow <- zeb_df[,c(1, 7, 13)]
+zeb_df_narrow$pval
+zeb_df_narrow$pval_corrected <- stats::p.adjust(zeb_df_narrow$pval, method = "BH")
+
+zeb_df_narrow$type[zeb_df_narrow$type == "mean_prop_cells_cluster"] <- "Mean Proportion"
+zeb_df_narrow$type[zeb_df_narrow$type == "adjusted_rand_index"] <- "Adjusted Rand Index"
+zeb_df_narrow$type[zeb_df_narrow$type == "variation_information"] <- "Variation of Information"
+
+zeb_df_narrow$comparison[zeb_df_narrow$comparison == "sign-vs-rand"] <- "Signature vs. random"
+zeb_df_narrow$comparison[zeb_df_narrow$comparison == "mark-vs-rand"] <- "Conserved markers vs. random"
+zeb_df_narrow$comparison[zeb_df_narrow$comparison == "mmms-vs-rand"] <- "BL6-only markers vs. random"
+zeb_df_narrow$comparison[zeb_df_narrow$comparison == "mark-vs-signrand"] <- "Conserved markers vs signature + random"
+zeb_df_narrow$comparison[zeb_df_narrow$comparison == "mmms-vs-signrand"] <- "BL6-only markers vs signature + random"
+
+zeb_df_narrow <- zeb_df_narrow[,c(1, 2, 4)]
+print(zeb_df_narrow)
+
+readr::write_delim(zeb_df_narrow, output_table_zebrafish, delim = ";", append = FALSE)
 ```
 
 # Utils

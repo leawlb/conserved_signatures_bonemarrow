@@ -105,7 +105,6 @@ selected_seu_list_o1 <- lapply(seu_hsc_recl_list_o1, function(seu_list){
 })
 
 rm(seu_hsc_recl_list_o1)
-rm(seu_hsc_recl_list_o1_CAL)
 gc()
 ```
 
@@ -145,7 +144,6 @@ selected_seu_list_o2 <- lapply(seu_hsc_recl_list_o2, function(seu_list){
 })
 
 rm(seu_hsc_recl_list_o2)
-rm(seu_hsc_recl_list_o2_CAL)
 gc()
 ```
 

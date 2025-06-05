@@ -208,7 +208,7 @@ mmms_df_o2 <- base::as.data.frame(mat_mmms_o2)
 mmms_df_o2$Var2 <- factor(
   mmms_df_o2$Var2,
   levels = base::rev(
-    c(2, 13, 7, 8, 4, 1, 9, 12, 0, 10, 5, 6, 3, 11)))
+    c(3, 12, 6, 7, 4, 2, 8, 11, 0, 9, 5, 1, 13, 10)))
 ```
 
 ```{r mmms_base_plot_o2}

@@ -81,6 +81,9 @@ table(integrated@meta.data$orig.ident == "mouse")
 integrated_mouse_metadata <- integrated@meta.data[integrated@meta.data$orig.ident == "mouse",]
 nrow(integrated_mouse_metadata)
 
+table(integrated@meta.data[integrated@meta.data$orig.ident == "macaque",]$subclass_label)
+table(integrated@meta.data[integrated@meta.data$orig.ident == "human",]$subclass_label)
+
 table(integrated_mouse_metadata$subclass_label != "L6 IT Car3")
 ```
 
@@ -600,6 +603,8 @@ zeb_df <- rbind(
   pval_df_zeb_mark_vs_signrand,
   pval_df_zeb_mmms_vs_signrand
 )
+
+print(zeb_df)
 
 zeb_df_narrow <- zeb_df[,c(1, 7, 13)]
 zeb_df_narrow$pval

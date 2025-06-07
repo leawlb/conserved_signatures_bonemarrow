@@ -6,7 +6,6 @@ alignment with Cell Ranger up to figure creation.
 ## 1. Configuration and Requirements
 
 The general configuration is stored in `code/config.yaml`.
-
 !!! Base paths MUST be adjusted before re-running code !!!
 
 Minimum required base paths that need to be adjusted:
@@ -49,28 +48,26 @@ and removal of genes differentially mapped between data aligned with the
 N-masked genome vs. data aligned with the species-specific genomes. 
 See `code/01_sce_prep/01_preprocessing/preprocessing_snakefile.py` for more info.
 
-These steps additionally require either (more info in below):
+These steps additionally require either (more info below):
 
  - four species-specific genomes to generate the required processed data via alignment
  - or the list of dmgs in `/metadata/scRNAseq/01_sce_prep/dmgs_list_all` that allows skipping the identification step. Copy this file into the appropriate folder designated in `code/01_sce_prep/01_preprocessing/preprocessing_snakefile.py` and adjust the snakefile to skip rules "get_sample_dmgs" and "make_dmg_reports".
 
 Additionally adjust base paths in:
  - `code/00_sce_cellranger/01_cellranger_main/config/config-interspecies-bonemarrow.yaml`
+ - in `code/00_sce_cellranger/01_cellranger_main/config/config-interspecies-bonemarrow.yaml` also adjust the cellranger_count path to appropriate path after download
  - `code/00_sce_cellranger/02_cellranger_fourgenomes/config/config-interspecies-bonemarrow.yaml` 
-
-Additionally adjust cellranger_count paths in:
- - `code/00_sce_cellranger/01_cellranger_main/config/config-interspecies-bonemarrow.yaml` to appropriate paths after download
 
 ### Starting from annotated files
 
-For starting from fully annotated objects (S-BSST2079), transfer the downloaded
+For starting from fully annotated objects (S-BSST2079) (more info below),
+transfer the downloaded
 objects into the approriate folder analogous to 
 `base` + `data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns` as 
-determined in `code/config.yaml`.and save them once using saveRDS without 
-".rds"" file extension for downstream compatibility or adjust all affected
+determined in `code/config.yaml` and save them once using saveRDS but without 
+".rds" file extension for downstream compatibility or adjust all affected
 downstream paths as required.
-
-All downstream analysis start in folder 03.
+Downstream analysis starts in folder 03.
 
 ## 2. Snakemake set-up and execution
 
@@ -88,14 +85,13 @@ micromamba activate snakemake_isbm
 
 Navigate to the appropriate folder (starting in 01_01) and run the snakemake
 pipeline from that folder using the snakemake command specified 
-in the `..._snakemake` txt files. 
-
-Snakemake commands in the `..._snakemake` files are suited for the DKFZ cluster 
+in the `..._snakemake` txt files. Snakemake commands in the `..._snakemake` 
+files are suited for the DKFZ cluster 
 structure and must be adjusted to the local conditions before running.
 
 Generally, follow the steps as indicated by numbers, even if some are missing 
-(e.g. 04, 05, 06 and 07 folders).
-Rerun all analysis folders before running figure scripts.
+(e.g. 04, 05, 06, and 07 folders).
+Run all analysis folders before running figure scripts.
 
 
 ## 2. Data

@@ -3,31 +3,78 @@ This repository contains all scripts related to scRNAseq analysis of HSPCs
 and niche cells from four distinct mouse species, starting from 
 alignment with Cell Ranger up to figure creation.
 
-## 1. Configuration
+## 1. Configuration and Requirements
 
-The configuration is stored in `config.yaml`.
+The general configuration is stored in `code/config.yaml`.
+
+!!!
 Base paths MUST be adjusted before re-running code. 
-Adjust paths in: 
+!!!
 
- - `config-interspecies-bonemarrow.yaml` (2x)
- - `config.yaml`
- - all .Rmd files in the `figures` folder 
+#### Starting from raw files
+
+For repeating alignment, required data are (more info in "3. Data"):
+
+ - the raw files from BioStudies aligned with the N-masked reference (E-MTAB-15073) 
+ - the N-masked reference genome from BioStudies (S-BSST2074) 
+ - four species-specific reference genomes 
+ - `metadata/scRNAseq/00_alignment/metadata.csv` 
+
+Adjust base paths in:
+ - `code/00_sce_cellranger/01_cellranger_main/config/config-interspecies-bonemarrow.yaml` 
+ - `code/00_sce_cellranger/02_cellranger_fourgenomes/config/config-interspecies-bonemarrow.yaml` 
+ - All paths in column "FastQ Path" in the `metadata/scRNAseq/00_alignment/metadata.csv` table must be adjusted to the appropriate paths after downloading the raw files.
+ - `code/config.yaml`
+ - in `code/figures`, base_paths in all .Rmd files + OUTPUT_PATH in the run_rmds.py file
  - any .R scripts in `metadata` used strictly to deal with metadata
- - also check `/code/08_sce_brain/01_sce_brain/brain_snakefile.py`
- 
- 
-
-## 2. Alignment
+ - also check `code/08_sce_brain/01_sce_brain/brain_snakefile.py`
 
 For alignment of raw data with the N-masked reference genome or 
 species-specific genomes navigate into
-`/metadata/scRNAseq/00_alignment`, then into the appropriate subdirectories and 
-see `README.txt` files there. 
+`code/00_sce_cellranger`, then into the appropriate subdirectories and 
+see `README.txt` files there for set-up. 
 These directories were adjusted from and added by Fritjof Lammers.
 
+#### Starting from processed files
+
+The required data are (more info in "3. Data"):
+
+ - the processed data from BioStudies (E-MTAB-15073) 
+ 
+For starting from processed files, navigate into
+`code/00_sce_cellranger/01_cellranger_main` in order to create 
+SingleCellExperiment objects from the downloaded Cell Ranger output files.
+See the `README.txt` file there for set-up.
+
+The following steps in `code/01_sce_prep/01_preprocessing` include detection
+and removal of genes differentially mapped between data aligned with the 
+N-masked genome vs. with the species-specific genomes. 
+See `code/01_sce_prep/01_preprocessing/preprocessing_snakefile.py` for more info.
+
+These steps require either:
+
+ - the four species-specific genomes to generate the processed files via alignment
+ - OR the list of dmgs in `/metadata/scRNAseq/01_sce_prep/dmgs_list_all` that allows skipping the identification step. Copy this file into the appropriate folder designated in the snakefile. Then adjust the snakefile so that the identification step can be skipped.
+
+Adjust base paths in:
+ - `code/00_sce_cellranger/01_cellranger_main/config/config-interspecies-bonemarrow.yaml`, ALSO ADJUST cellranger_count to appropriate paths after download
+ - `code/00_sce_cellranger/02_cellranger_fourgenomes/config/config-interspecies-bonemarrow.yaml` 
+ - `code/config.yaml`
+ - in `code/figures`, base_paths in all .Rmd files + OUTPUT_PATH in the run_rmds.py file
+ - any .R scripts in `metadata` used strictly to deal with metadata
+ - also check `code/08_sce_brain/01_sce_brain/brain_snakefile.py`
+
+#### Starting from annotated files
+
+For starting from fully annotated objects (S-BSST2079), adjust paths in: 
+
+ - `code/config.yaml`
+ - in `code/figures`, base_paths in all .Rmd files + OUTPUT_PATH in the run_rmds.py file
+ - any .R scripts in `metadata` used strictly to deal with metadata
+ - also check `code/08_sce_brain/01_sce_brain/brain_snakefile.py`
 
 
-## 3. Snakemake set-up and execution
+## 2. Snakemake set-up and execution
 
 For all steps starting from 01 install `snakemake_isbm.yml` micromamba:
 
@@ -50,47 +97,49 @@ structure and must be adjusted to the local conditions before running.
 
 Generally, follow the steps as indicated by numbers, even if some are missing 
 (e.g. 04, 05, 06 and 07 folders).
+Rerun all analysis folders before running figure scripts.
 
 
+## 2. Data
 
-## 4. Data
+Data can be downloaded from BioStudies:
 
-Once published, data can be downloaded from ArrayExpress or BioStudies:
+ - the N-masked reference genome, generated using this repository: https://github.com/fritjoflammers/snakemake-snpmasked-refgenome.git (https://doi.org/10.5281/zenodo.15516917) (S-BSST2074) 
+ - raw data: fastq files (E-MTAB-15073)
+ - processed data: Cell Ranger output files matrix.mtx, barcodes.tsv, features.tsv after alignment with the N-masked reference (E-MTAB-15073)
+ - fully annotated data in .rds format containing cell type labels, normalised log-counts, and batch-corrected PC and UMAP coordinates (S-BSST2079)
 
- - Raw data: fastq files (E-MTAB-15073)
- - Processed data: matrix.mtx, barcodes.tsv, features.tsv after alignment (E-MTAB-15073)
- - N-masked reference genome, generated using this repository: https://github.com/fritjoflammers/snakemake-snpmasked-refgenome.git (https://doi.org/10.5281/zenodo.15516917) (S-BSST2074) 
- - Fully annotated data in .rds format containing cell type labels, normalised log-counts, and batch-corrected PC and UMAP coordinates (S-BSST2079)
+Currently, this data is not yet published and therefore not available.
  
  
+## 3. Metadata
  
-## 5. Metadata
- 
-Metadata used for running the code is in folder `metadata`:
+Metadata required for running the code is in folder `metadata` or can be 
+generated there:
 
- - `metadata.csv` contains at least the same required information as the metadata table from E-MTAB-15073 but is formatted correctly for alignment and downstream analysis (see `/metadata/scRNAseq/00_alignment`)
+ - `metadata/scRNAseq/00_alignment/metadata.csv` contains at least the same required information as the metadata table from E-MTAB-15073 but is formatted correctly for alignment and downstream analysis
  - cell type assignment lists
+ - ensembl lists
  - gene lists
  - color schemes, etc.
 
-The `metadata` folder should be copied in its entirety into the directory used to store data as determined in `config.yaml` for smooth running. 
+The `metadata` folder should be copied in its entirety into the directory used 
+to store data as determined in `code/config.yaml`. 
 Some .R scripts used strictly to deal with metadata are also located there in
 the related folders.
+These scripts must be run in order to generate metadata that are required for
+running the code.
  
 
-Other (meta)data must be downloaded manually or may be made available upon 
-request to l.woelbert[at]dkfz-heidelberg.de:
+Some metadata must be downloaded or generated manually.
  
-- Four Cell Ranger reference genomes for species-specific alignment, 
-generated from downloaded fasta and gtf files 
-(http://ftp.ensembl.org/pub/release-94/) using Cell Ranger v3.1.0 mkref function
+- Four Cell Ranger reference genomes for species-specific alignment, generated from downloaded fasta and gtf files (http://ftp.ensembl.org/pub/release-94/) using Cell Ranger v3.1.0 mkref function. These can be made available upon request to l.woelbert[at]dkfz-heidelberg.de:
   - GRCm38 (Ensembl release 94)
   - CAST_EiJ_v1 (Ensembl release 94)
   - SPRET_EiJ_v1 (Ensembl release 94)
   - CAROLI_EIJ_v1.1  (Ensembl release 94)
  
-- Published datasets for reference annotation 
-(see `/metadata/scRNAseq/01_sce_prep/references_raw/`)
+- Published datasets for reference annotation (see `/metadata/scRNAseq/01_sce_prep/references_raw/`)
   - Dahlin et al. (2018) 10X Genomics dataset was downloaded from the ABC portal (http://abc.sklehabc.com/)
   - Baccin et al. (2020): https://nicheview.shiny.embl.de
   - Dolgalev et al. (2021): https://osf.io/ne9vj/files/osfstorage 
@@ -100,11 +149,9 @@ generated from downloaded fasta and gtf files
 - The Bakken et al (2021) and Yao et al (2021) motor cortex datasets (`sample.combined_exc_4_species_integration.RDS`) must also be downloaded manually from https://data.nemoarchive.org/publication_release/Lein_2020_M1_study_analysis/Transcriptomics/sncell/10X/human/processed/analysis/analysis/M1/cross_species_integration/
 
 
-
 Other (meta)data may be downloaded automatically by running the code.
 
 Finally, the entire github repository `mcclust` by Fritsch (2022) is 
 downloaded as part of running the code so that its vi.dist function can be used.
 See: https://github.com/cran/mcclust and 
 `code/03_sce_analysis/04_signatures/01_reclustering_ow_snakefile.py`
-

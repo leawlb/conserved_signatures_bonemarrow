@@ -1,3 +1,15 @@
+# TO ADJUST THIS FILE TO YOUR LOCAL CONFIGURATION, CHANGE:
+# - output_dir
+# - cellranger_path
+# - references/all_masked
+# - metadata/table
+# TO APPROPRIATE PATHS
+
+# FOR STARTING FROM PROCESSED FILES, ADJUST 
+# - cellranger_count
+# TO THE APPROPRIATE PATH AFTER DOWNLOAD
+
+
 paths:
   # directory to store output data = cellranger files and SingleCellExperiment objects
   # paths to input data = fastq files are stored in metadata sheet 

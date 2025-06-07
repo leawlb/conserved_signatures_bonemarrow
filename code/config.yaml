@@ -1,3 +1,9 @@
+# TO ADJUST THIS FILE TO YOUR LOCAL CONFIGURATION, CHANGE:
+# - table
+# - cellranger_output
+# - fourgenomes_output
+# - base
+# TO APPROPRIATE PATHS
 
 # INPUT # 
 

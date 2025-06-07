@@ -67,7 +67,25 @@ output_table_zebrafish <- base::paste0(
 
 # Print data
 
-```{r}
+```{r print_integrated}
+# nr of cells per dataset
+
+integrated <- readRDS(
+  paste0(base_path, "/metadata/scRNAseq/08_sce_brain/sample.combined_exc_4_species_integration.RDS"))
+
+table(integrated@meta.data$orig.ident == "human")
+table(integrated@meta.data$orig.ident == "macaque")
+table(integrated@meta.data$orig.ident == "marmoset")
+table(integrated@meta.data$orig.ident == "mouse")
+
+integrated_mouse_metadata <- integrated@meta.data[integrated@meta.data$orig.ident == "mouse",]
+nrow(integrated_mouse_metadata)
+
+table(integrated_mouse_metadata$subclass_label != "L6 IT Car3")
+```
+
+
+```{r print_info}
 
 # conserved marker info
 cons_markers <- readRDS(

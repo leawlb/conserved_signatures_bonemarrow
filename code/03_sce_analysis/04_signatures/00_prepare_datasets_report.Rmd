@@ -198,6 +198,42 @@ rm(ts_hscs_progenitors)
 rm(ts_hscs_progenitors_reclustered)
 ```
 
+## mus_tm_bonemarrow
+
+```{r mus_tm_bonemarrow}
+mus_tm_bonemarrow
+ncol(mus_tm_bonemarrow)
+mus_tm_bonemarrow@assays
+mus_tm_bonemarrow@assays$RNA
+mus_tm_bonemarrow@assays$RNA@counts[1:10,1:10] 
+mus_tm_bonemarrow@assays$RNA@data[1:10,1:10] 
+mus_tm_bonemarrow@assays$RNA@scale.data  
+
+mus_tm_bonemarrow@misc
+
+head(mus_tm_bonemarrow@meta.data)
+
+mus_tm_bonemarrow@reductions 
+```
+
+```{r mus_tm_bonemarrow_pca}
+mus_tm_bonemarrow_reclustered <- standard_seu_pipeline(
+  seu = mus_tm_bonemarrow,
+  resolution = 0.5,
+  features = rownames(mus_tm_bonemarrow)[1:300],
+  data_use = mus_tm_bonemarrow@misc$data_use
+)
+
+print(mus_tm_bonemarrow@misc$data_use)
+mus_tm_bonemarrow_reclustered@assays$RNA@counts[1:10,1:10] 
+mus_tm_bonemarrow_reclustered@assays$RNA@data[1:10,1:10] 
+mus_tm_bonemarrow_reclustered@assays$RNA@scale.data[1:10,1:2] 
+mus_tm_bonemarrow_reclustered@reductions 
+
+rm(mus_tm_bonemarrow)
+rm(mus_tm_bonemarrow_reclustered)
+```
+
 ## mus_weinreb_hspc
 
 ```{r mus_weinreb_hspc}

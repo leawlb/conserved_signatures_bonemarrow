@@ -7,27 +7,26 @@ alignment with Cell Ranger up to figure creation.
 
 The general configuration is stored in `code/config.yaml`.
 
-!!!
-Base paths MUST be adjusted before re-running code. 
-!!!
+!!! Base paths MUST be adjusted before re-running code !!!
 
-#### Starting from raw files
+Minimum required base paths that need to be adjusted:
+ - `code/config.yaml`
+ - in `code/figures`, base_paths in all .Rmd files and `OUTPUT_PATH` in the run_rmds.py file
+ - in `metadata`, any .R scripts used strictly to deal with metadata
+ - check `code/08_sce_brain/01_sce_brain/brain_snakefile.py`
 
-For repeating alignment, required data are (more info in "3. Data"):
+### Starting from raw files
 
- - the raw files from BioStudies aligned with the N-masked reference (E-MTAB-15073) 
- - the N-masked reference genome from BioStudies (S-BSST2074) 
+For repeating alignment, required data are (more info below):
+
+ - raw files (E-MTAB-15073) 
+ - the N-masked reference genome (S-BSST2074) 
  - four species-specific reference genomes 
- - `metadata/scRNAseq/00_alignment/metadata.csv` 
 
-Adjust base paths in:
+Additionally adjust base paths in:
  - `code/00_sce_cellranger/01_cellranger_main/config/config-interspecies-bonemarrow.yaml` 
  - `code/00_sce_cellranger/02_cellranger_fourgenomes/config/config-interspecies-bonemarrow.yaml` 
  - All paths in column "FastQ Path" in the `metadata/scRNAseq/00_alignment/metadata.csv` table must be adjusted to the appropriate paths after downloading the raw files.
- - `code/config.yaml`
- - in `code/figures`, base_paths in all .Rmd files + OUTPUT_PATH in the run_rmds.py file
- - any .R scripts in `metadata` used strictly to deal with metadata
- - also check `code/08_sce_brain/01_sce_brain/brain_snakefile.py`
 
 For alignment of raw data with the N-masked reference genome or 
 species-specific genomes navigate into
@@ -35,44 +34,43 @@ species-specific genomes navigate into
 see `README.txt` files there for set-up. 
 These directories were adjusted from and added by Fritjof Lammers.
 
-#### Starting from processed files
+### Starting from processed files
 
-The required data are (more info in "3. Data"):
+The required data are (more info below):
 
- - the processed data from BioStudies (E-MTAB-15073) 
+ - processed files aligned with the N-masked reference genome (E-MTAB-15073) 
  
-For starting from processed files, navigate into
-`code/00_sce_cellranger/01_cellranger_main` in order to create 
+Navigate into `code/00_sce_cellranger/01_cellranger_main` in order to create 
 SingleCellExperiment objects from the downloaded Cell Ranger output files.
 See the `README.txt` file there for set-up.
 
-The following steps in `code/01_sce_prep/01_preprocessing` include detection
+Following steps in `code/01_sce_prep/01_preprocessing` include detection
 and removal of genes differentially mapped between data aligned with the 
-N-masked genome vs. with the species-specific genomes. 
+N-masked genome vs. data aligned with the species-specific genomes. 
 See `code/01_sce_prep/01_preprocessing/preprocessing_snakefile.py` for more info.
 
-These steps require either:
+These steps additionally require either (more info in below):
 
- - the four species-specific genomes to generate the processed files via alignment
- - OR the list of dmgs in `/metadata/scRNAseq/01_sce_prep/dmgs_list_all` that allows skipping the identification step. Copy this file into the appropriate folder designated in the snakefile. Then adjust the snakefile so that the identification step can be skipped.
+ - four species-specific genomes to generate the required processed data via alignment
+ - or the list of dmgs in `/metadata/scRNAseq/01_sce_prep/dmgs_list_all` that allows skipping the identification step. Copy this file into the appropriate folder designated in `code/01_sce_prep/01_preprocessing/preprocessing_snakefile.py` and adjust the snakefile to skip rules "get_sample_dmgs" and "make_dmg_reports".
 
-Adjust base paths in:
- - `code/00_sce_cellranger/01_cellranger_main/config/config-interspecies-bonemarrow.yaml`, ALSO ADJUST cellranger_count to appropriate paths after download
+Additionally adjust base paths in:
+ - `code/00_sce_cellranger/01_cellranger_main/config/config-interspecies-bonemarrow.yaml`
  - `code/00_sce_cellranger/02_cellranger_fourgenomes/config/config-interspecies-bonemarrow.yaml` 
- - `code/config.yaml`
- - in `code/figures`, base_paths in all .Rmd files + OUTPUT_PATH in the run_rmds.py file
- - any .R scripts in `metadata` used strictly to deal with metadata
- - also check `code/08_sce_brain/01_sce_brain/brain_snakefile.py`
 
-#### Starting from annotated files
+Additionally adjust cellranger_count paths in:
+ - `code/00_sce_cellranger/01_cellranger_main/config/config-interspecies-bonemarrow.yaml` to appropriate paths after download
 
-For starting from fully annotated objects (S-BSST2079), adjust paths in: 
+### Starting from annotated files
 
- - `code/config.yaml`
- - in `code/figures`, base_paths in all .Rmd files + OUTPUT_PATH in the run_rmds.py file
- - any .R scripts in `metadata` used strictly to deal with metadata
- - also check `code/08_sce_brain/01_sce_brain/brain_snakefile.py`
+For starting from fully annotated objects (S-BSST2079), transfer the downloaded
+objects into the approriate folder analogous to 
+`base` + `data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns` as 
+determined in `code/config.yaml`.and save them once using saveRDS without 
+".rds"" file extension for downstream compatibility or adjust all affected
+downstream paths as required.
 
+All downstream analysis start in folder 03.
 
 ## 2. Snakemake set-up and execution
 
@@ -123,8 +121,8 @@ generated there:
  - gene lists
  - color schemes, etc.
 
-The `metadata` folder should be copied in its entirety into the directory used 
-to store data as determined in `code/config.yaml`. 
+The `metadata` folder should be copied in its entirety into the directory 
+analogous to `base` + `data/` as determined in `code/config.yaml`. 
 Some .R scripts used strictly to deal with metadata are also located there in
 the related folders.
 These scripts must be run in order to generate metadata that are required for
@@ -133,7 +131,7 @@ running the code.
 
 Some metadata must be downloaded or generated manually.
  
-- Four Cell Ranger reference genomes for species-specific alignment, generated from downloaded fasta and gtf files (http://ftp.ensembl.org/pub/release-94/) using Cell Ranger v3.1.0 mkref function. These can be made available upon request to l.woelbert[at]dkfz-heidelberg.de:
+- Four Cell Ranger reference genomes for species-specific alignment, generated from downloaded fasta and gtf files (http://ftp.ensembl.org/pub/release-94/) using Cell Ranger v3.1.0 mkref function. These can also be made available upon request to l.woelbert[at]dkfz-heidelberg.de:
   - GRCm38 (Ensembl release 94)
   - CAST_EiJ_v1 (Ensembl release 94)
   - SPRET_EiJ_v1 (Ensembl release 94)
@@ -144,7 +142,7 @@ Some metadata must be downloaded or generated manually.
   - Baccin et al. (2020): https://nicheview.shiny.embl.de
   - Dolgalev et al. (2021): https://osf.io/ne9vj/files/osfstorage 
  
-- Published HSPC or Niche datasets for re-clustering, instructions in (`code/03_sce_analysis/04_signatures/00_prepare_datasets_snakefile.py`)
+- Published HSPC or Niche datasets for re-clustering, instructions in `code/03_sce_analysis/04_signatures/00_prepare_datasets_snakefile.py`
 
 - The Bakken et al (2021) and Yao et al (2021) motor cortex datasets (`sample.combined_exc_4_species_integration.RDS`) must also be downloaded manually from https://data.nemoarchive.org/publication_release/Lein_2020_M1_study_analysis/Transcriptomics/sncell/10X/human/processed/analysis/analysis/M1/cross_species_integration/
 

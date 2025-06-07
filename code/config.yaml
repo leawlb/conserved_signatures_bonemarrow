@@ -93,7 +93,6 @@ values:
     cutoff_sum: 700 # below which cells are discarded
     cutoff_detected: 500 # below which cells are discarded
     logFC_sample_dmgs: 0.25 # logFC threshold for excluding DMGs per sample
-    minPC_sample_dmgs: 0.05 # min percent of cells expressing DMGs per sample
   02_sce_anno:  
     nr_hvgs_batch_correction: 10000 # nr of top hvgs to be used for batch correction  
     batch_use: "Object_ID" # which variable to use as "batch"

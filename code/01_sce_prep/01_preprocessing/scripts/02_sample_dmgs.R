@@ -120,7 +120,7 @@ cluster_markers <- lapply(clustlist, function(x){
                                  ident.1 = x, 
                                  features = hvgs, 
                                  logfc.threshold = logFC_sample_dmgs,
-                                 min.pct = logFC_sample_dmgs)
+                                 min.pct = 0.25)
   markers <- markers[base::order(base::abs(markers$avg_log2FC),
                                  decreasing=TRUE),]
   markers$which_cluster <- base::rep(x, nrow(markers))

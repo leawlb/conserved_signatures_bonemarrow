@@ -269,9 +269,12 @@ rule assign_annotation:
         "scripts/04_anno_clusters.R"
         
 #-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+
 """
 Cluster species separately and compare to original clustering
-Re-use the same scripts
+Re-use the same scripts for a very basic, general re-clustering using the same
+parameters
 """
 
 # batch correction
@@ -292,7 +295,7 @@ rule run_mnncorrect_species:
     script:
         "scripts/01_mnncorrect.R"
 
-# clustering
+# general, basic clustering
 rule louvain_clustering_species:
     input: 
         sce_input = rules.run_mnncorrect_species.output
@@ -308,10 +311,8 @@ rule louvain_clustering_species:
     script:
         "scripts/02_louvain_clustering.R"
 
-"""
-Make clustering comparison reports 
-"""    
-        
+
+# general clustering comparison reports     
 rule make_clustering_comparison_report:
     input:
         sce_l = rules.assign_annotation.output,
@@ -331,3 +332,61 @@ rule make_clustering_comparison_report:
     threads: 5
     script:
         "clustering_comparison_report.Rmd"
+
+#-------------------------------------------------------------------------------
+
+"""
+# Cluster species separately and compare to original clustering.
+# This time perform a custom, manual clustering to obtain a good
+# cell type annotation for each species separately.
+# Find the clustering parameters, then re-use the same scripts.
+"""
+
+# find custom clusterings by custom reports
+
+
+
+# manual clustering for each species
+
+"""
+rule louvain_clustering_species_manual:
+    input: 
+        sce_input = rules.run_mnncorrect_species.output
+    output:
+        sce_output = OUTPUT_DAT + "/02_clst/comparison_manual/sce_{species}_{fraction}-02"
+    resources:
+        mem_mb = 10000,
+        queue = "medium-debian"
+    params:
+        k_graph_list = VALUES["k_graph_list_manual"],
+        resolution_louvain_list = VALUES["resolution_louvain_list_manual"]
+    threads: 20
+    script:
+        "scripts/02_louvain_clustering.R"
+
+
+# Make clustering comparison reports 
+
+rule make_clustering_comparison_report:
+    input:
+        sce_l = rules.assign_annotation.output,
+        sce_l_species = rules.louvain_clustering_species.output,
+        sce_l_celltypes = rules.assign_annotation.output
+    resources:
+        mem_mb = 80000,
+        queue = "medium-debian"
+    params:
+        colors_path = COLORS,
+        plotting = "../../source/plotting.R",
+        colors = "../../source/colors.R"
+    conda:
+        "../../envs/ggalluvial.yml"
+    output:
+        OUTPUT_REP + "/02_clustering/comparison/clustering_report_{species}_{fraction}.html"
+    threads: 5
+    script:
+        "clustering_comparison_report.Rmd"
+
+# manual
+
+"""

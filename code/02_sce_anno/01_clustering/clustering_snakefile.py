@@ -73,7 +73,9 @@ for s in species:
     targets = targets + [OUTPUT_DAT + "/01_mnnc/comparison/sce_" + s + "_" + f + "_" + BATCH_USE + "-01"]
     targets = targets + [OUTPUT_DAT + "/02_clst/comparison/sce_" + s + "_" + f + "-02"]
     targets = targets + [OUTPUT_REP + "/02_clustering/comparison/clustering_report_" + s + "_" + f + ".html"]
-  
+
+targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mmus_hsc.html"]
+
 #-------------------------------------------------------------------------------
 
 localrules: all  
@@ -348,22 +350,21 @@ rule make_clustering_comparison_report:
 
 # manual clustering for each species
 
-"""
 rule louvain_clustering_species_manual:
     input: 
-        sce_input = rules.run_mnncorrect_species.output
+        sce_species = OUTPUT_DAT + "/01_mnnc/comparison/sce_mmus_hsc_" + BATCH_USE + "-01"
     output:
-        sce_output = OUTPUT_DAT + "/02_clst/comparison_manual/sce_{species}_{fraction}-02"
+        OUTPUT_REP + "/02_clustering/comparison_custom/report_mmus_hsc.html"
     resources:
-        mem_mb = 10000,
+        mem_mb = 50000,
         queue = "medium-debian"
+    threads: 4
     params:
-        k_graph_list = VALUES["k_graph_list_manual"],
-        resolution_louvain_list = VALUES["resolution_louvain_list_manual"]
-    threads: 20
+        plotting = "../../source/plotting.R"
     script:
-        "scripts/02_louvain_clustering.R"
+        "custom_clustering/custom_mmus_hsc.Rmd"
 
+"""
 
 # Make clustering comparison reports 
 

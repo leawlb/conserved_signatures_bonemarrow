@@ -525,17 +525,29 @@ plot_list_lymph
 ### Ery and Mk
 
 ```{r markers_erymk}
-cluster_markers[[4]][1:20,]
-cluster_markers[[6]][1:20,]
-cluster_markers[[10]][1:20,]
+cluster_markers[[4]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 20)
+cluster_markers[[5]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 20)
+cluster_markers[[10]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 20)
 ```
 
 ### Mast/Baso + Myeloid
 
 ```{r markers_bmm}
-cluster_markers[[5]][1:20,]
-cluster_markers[[12]][1:20,]
-cluster_markers[[14]][1:20,]
+cluster_markers[[5]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 20)
+cluster_markers[[12]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 20)
+cluster_markers[[14]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 20)
 ```
 
 ### Cycling
@@ -732,6 +744,7 @@ ggplot2::ggplot(
 ## Save 
 
 ```{r save}
+print(output_path)
 #saveRDS(sce_species, output_path)
 ```
 

@@ -356,7 +356,8 @@ rule louvain_clustering_species_manual:
         queue = "medium-debian"
     threads: 10
     params:
-        plotting = "../../source/plotting.R"
+        plotting = "../../source/plotting.R",
+        OUTPUT_DAT = OUTPUT_DAT
     script:
         "custom_clustering/custom_mmus_hsc.Rmd"
 

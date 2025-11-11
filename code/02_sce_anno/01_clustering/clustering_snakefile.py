@@ -74,7 +74,9 @@ for s in species:
     targets = targets + [OUTPUT_DAT + "/02_clst/comparison/sce_" + s + "_" + f + "-02"]
     targets = targets + [OUTPUT_REP + "/02_clustering/comparison/clustering_report_" + s + "_" + f + ".html"]
 
+# custom clustering and label assignment per condition
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mmus_hsc.html"]
+targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mcas_hsc.html"]
 
 #-------------------------------------------------------------------------------
 
@@ -346,7 +348,7 @@ rule make_clustering_comparison_report:
 
 # find custom clusterings by custom reports
 
-rule louvain_clustering_species_manual:
+rule louvain_clustering_mmus_hsc:
     input: 
         sce_species = OUTPUT_DAT + "/01_mnnc/comparison/sce_mmus_hsc_" + BATCH_USE + "-01"
     output:
@@ -360,6 +362,21 @@ rule louvain_clustering_species_manual:
         OUTPUT_DAT = OUTPUT_DAT
     script:
         "custom_clustering/custom_mmus_hsc.Rmd"
+
+rule louvain_clustering_mcas_hsc:
+    input: 
+        sce_species = OUTPUT_DAT + "/01_mnnc/comparison/sce_mcas_hsc_" + BATCH_USE + "-01"
+    output:
+        OUTPUT_REP + "/02_clustering/comparison_custom/report_mcas_hsc.html"
+    resources:
+        mem_mb = 50000,
+        queue = "medium-debian"
+    threads: 10
+    params:
+        plotting = "../../source/plotting.R",
+        OUTPUT_DAT = OUTPUT_DAT
+    script:
+        "custom_clustering/custom_mcas_hsc.Rmd"
 
 """
 

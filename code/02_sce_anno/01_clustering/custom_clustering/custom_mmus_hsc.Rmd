@@ -1,5 +1,5 @@
 ---
-title: "Custom clustering TEMPLATE"
+title: "Custom clustering mmus hsc"
 author: "Lea Wölbert"
 date: '2025-11-10'
 output: html_document
@@ -33,6 +33,7 @@ library(scran, quietly = TRUE)
 library(igraph, quietly = TRUE)
 library(tidyverse, quietly = TRUE)
 library(scuttle, quietly = TRUE)
+library(dittoSeq, quietly = TRUE)
 ```
 
 ```{r source, message = FALSE}
@@ -52,10 +53,13 @@ stopifnot(unique(sce_species$Fraction_ID == fraction_curr))
 stopifnot(unique(sce_species$Species_ID == species_curr))
 ```
 
-```{r colors, meassage = FALSE, eval = FALSE, include = FALSE}
+```{r colors, message = FALSE}
 #colors_path <- snakemake@params[["colors_path"]]
 #source(snakemake@params[["colors"]])
 #source("../../source/plotting.R")
+
+col_num <- c(dittoSeq::dittoColors()[1:20])
+names(col_num) <- as.character(c(1:20))
 ```
 
 ## Clustering
@@ -110,16 +114,68 @@ print(sce_species)
 Look at the clusters, check that there are no obvious age or batch-
 dependent clusters.
 
-```{r umaps, fig.height = 3, fig.width = 6}
+```{r umaps, fig.height = 6, fig.width = 6}
 umap_base_l(sce_species, "cluster_louvain_custom")+
   ggplot2::geom_point(size = 2, alpha = 0.5)+
-  ggplot2::facet_grid(cols = vars(sce_species$Age_ID))
+  ggplot2::scale_color_manual("cluster", values = col_num)
+``` 
+
+```{r umaps_age, fig.height = 4, fig.width = 6}  
+umap_base(sce_species, "cluster_louvain_custom")+
+  ggplot2::facet_grid(cols = vars(sce_species$Age_ID))+
+  ggplot2::scale_color_manual("cluster", values = col_num)
 ```
 
 ```{r umaps_batch, fig.height = 8, fig.width = 6}
 umap_base_l(sce_species, "cluster_louvain_custom")+
-  ggplot2::geom_point(size = 2, alpha = 0.5)+
-  ggplot2::facet_wrap(vars(sce_species$Object_ID), ncol = 2)
+  ggplot2::facet_wrap(vars(sce_species$Object_ID), ncol = 2)+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+```
+
+### Silhouette and Purity
+
+```{r silhouette}
+
+# Silhouette
+sil.approx <- bluster::approxSilhouette(
+  reducedDim(sce_species, "PCA"), 
+  clusters = sce_species$cluster_louvain_custom)
+
+sil.data <- base::as.data.frame(sil.approx)
+
+sil.data$closest <- factor(ifelse(sil.data$width > 0, 
+                                  sce_species$cluster_louvain, 
+                                  sil.data$other))
+sil.data$cluster <- sce_species$cluster_louvain
+
+ggplot2::ggplot(sil.data,
+                aes(x=cluster, y=width, colour=closest))+
+  ggbeeswarm::geom_quasirandom(size = 0.1)+
+  ggplot2::theme_classic()+
+  ggplot2::theme(legend.position = "none")+
+  ggplot2::xlab("cluster (louvain)")+
+  ggplot2::ylim(-1, 1)+
+  ggplot2::ylab("Silhouette width")+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+
+
+# Purity
+pure_sce <- bluster::neighborPurity(
+  reducedDim(sce_species, "PCA"),
+  sce_species$cluster_louvain)
+pure_data <- base::as.data.frame(pure_sce)
+pure_data$maximum <- factor(pure_data$maximum)
+pure_data$cluster <- sce_species$cluster_louvain
+
+ggplot2::ggplot(pure_data, 
+                aes(x=cluster, y=purity, colour=maximum))+
+  ggbeeswarm::geom_quasirandom(size = 0.1)+
+  ggplot2::theme_classic()+
+  ggplot2::theme(legend.position = "none")+
+  ggplot2::xlab("cluster (louvain)")+
+  ggplot2::ylim(0, 1)+
+  ggplot2::ylab("Cluster purity")+
+  ggplot2::scale_color_manual("cluster", values = col_num)
 ```
 
 ### Gene expression
@@ -137,62 +193,59 @@ but let's start with this first.
 
 if(fraction_curr == "hsc"){
   marker_genes <- c(
-    "Alcam", # HSC, Stem
-    "Aldh1a1",
+    "Aldh1a1", # HSC, Stem
+    "Procr",
     "Cdkn1c",
-    "Gata2", # also Mk
     "Gng11",
+    "Mllt3",
+    "Mmrn1",
+    "Mpl",
+    "Alcam", 
     "Hlf",
     "Lmo2",
     "Mecom",
     "Meis1",
-    "Mllt3",
-    "Mmrn1",
-    "Mpl",
-    "Msi2",
-    "Pbx1",
-    "Procr",
-    "Slamf1",
     "Socs2",
+    "Pbx1",
+    "Slamf1",
     "Txnip",
+    "Msi2",
     "Adgrl4", # MPP, progenitors, activation
     "Cd34", 
     "Cdk4",
-    "Flt3",
     "Sox4",
     "Spi1", 
     "Cebpa", # Myeloid
     "Ctsg",
     "Mpo",
     "Prtn3",
-    "Cd63", # Neutro
+    "Elane", # Neutro
     "Cebpe", 
-    "Elane",
     "Gfi1", 
     "S100a8",
     "S100a9",
     "Wfdc21",
     "Ccr2", # Mono
     "F13a1",
-    "Fcer1g",
     "Irf8",
     "Ly86",
     "Ms4a6c",
-    "Cd79b", # Lymphoid
+    "Flt3", # Lymphoid
+    "Satb1",
     "Dntt",
+    "Cd79b", 
     "Il7r",
     "Rag1",
-    "Satb1",
     "Cpa3", # Mast
     "Hdc", 
     "Ms4a2",
     "Lmo4", # Baso
     "Mcpt8", 
     "Prss34",
+    "Gata2", # also Mk, Eo Baso and HSC
     "Itga2b", # Mk
     "Pf4",
     "Blvrb", # Mk Ery
-    "Car2",
     "Gata1",
     "Zfpm1",
     "Epor", # Ery
@@ -299,16 +352,15 @@ if(fraction_curr == "hsc"){
   marker_genes_short <- c(
     "Alcam", 
     "Cdkn1c",
-    "Gata2", 
     "Mecom",
-    "Meis1",
     "Mpl",
+    "Meis1",
     "Cd34", 
     "Spi1", 
-    "Cebpa", 
     "Mpo",
-    "Cebpe", 
     "Elane",
+    "Cebpa", 
+    "Cebpe", 
     "S100a9",
     "Wfdc21",
     "Ccr2", 
@@ -402,7 +454,7 @@ if(fraction_curr == "hsc"){
 
 #### Heatmap
 
-```{r heatmap, fig.height = 20, fig.width = 5}
+```{r heatmap, fig.height = 10, fig.width = 5}
 
 # get average logcounts per cluster
 agg_sce_species <- scuttle::aggregateAcrossCells(
@@ -489,7 +541,7 @@ logcounts_df$cluster_louvain_custom <- sce_species_genes$cluster_louvain_custom[
 
 logcounts_df$genes <- factor(logcounts_df$genes, levels = marker_genes_short)
 
-# plot by portion
+# plot 
 logcounts_df %>%
   ggplot2::ggplot(
     aes(
@@ -501,7 +553,8 @@ logcounts_df %>%
     ggplot2::theme_classic()+
     ggplot2::theme(
       strip.text.y = element_text(angle = 0))+
-    ggplot2::facet_grid(rows = vars(genes))
+    ggplot2::facet_grid(rows = vars(genes))+
+    ggplot2::scale_fill_manual("cluster", values = col_num)
 
 ```
 

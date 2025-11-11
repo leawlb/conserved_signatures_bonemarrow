@@ -346,10 +346,6 @@ rule make_clustering_comparison_report:
 
 # find custom clusterings by custom reports
 
-
-
-# manual clustering for each species
-
 rule louvain_clustering_species_manual:
     input: 
         sce_species = OUTPUT_DAT + "/01_mnnc/comparison/sce_mmus_hsc_" + BATCH_USE + "-01"
@@ -358,7 +354,7 @@ rule louvain_clustering_species_manual:
     resources:
         mem_mb = 50000,
         queue = "medium-debian"
-    threads: 4
+    threads: 10
     params:
         plotting = "../../source/plotting.R"
     script:

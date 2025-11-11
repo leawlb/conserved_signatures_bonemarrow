@@ -706,8 +706,7 @@ agg_logcounts_df$genes <- factor(
 
 agg_logcounts_df$custom_label <- factor(
   agg_logcounts_df$custom_label,
-  levels = as.character(
-    c(1:length(unique(agg_logcounts_df$custom_label)))))
+  levels = levels(sce_species$custom_label))
 
 # scale expression per gene using z-scores
 agg_logcounts_df$zscore_gene <- vector(
@@ -738,7 +737,8 @@ ggplot2::ggplot(
     low = "blue3",
     mid = "white", 
     high = "red3", 
-    midpoint = 0)
+    midpoint = 0)+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))
 ```
 
 ## Save 

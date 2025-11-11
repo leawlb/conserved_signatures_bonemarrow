@@ -72,8 +72,8 @@ names(col_num) <- as.character(c(1:20))
 ### Define parameters
 
 ```{r parameters}
-k_graph <- 20
-resolution_louvain <- 1.3
+k_graph <- 10
+resolution_louvain <- 1.05
 ```
 
 ### Louvain clustering
@@ -418,5 +418,291 @@ logcounts_df %>%
       strip.text.y = element_text(angle = 0))+
     ggplot2::facet_grid(rows = vars(genes))+
     ggplot2::scale_fill_manual("cluster", values = col_num)
+```
+
+#### UMAPs
+
+Use the previously defined marker gene list to get a better
+look at the expression patterns.
+
+```{r gene_plots}
+marker_genes_list <- as.list(marker_genes)
+
+plot_list_gene <- lapply(marker_genes_list, function(gene){
+  plot <- umap_gene(sce_species, gene)
+})
+names(plot_list_gene) <- marker_genes
+```
+
+```{r umaps, fig.height = 3, fig.width = 4}
+plot_list_gene
+```
+
+## Markers
+
+Check all clusters for marker genes since for the exotic species,
+there may be genes we didn't anticipate.
+For each probable cell type based on the heatmap.
+
+```{r get_markers, message = FALSE}
+# convert to seurat
+seurat <- Seurat::as.Seurat(
+  sce_species,
+  counts = "counts", 
+  data = "logcounts") 
+SeuratObject::Idents(seurat) <- sce_species$cluster_louvain_custom
+
+# get hvgs for marker genes
+hvgs <- scran::modelGeneVar(sce_species)
+hvgs <- scran::getTopHVGs(hvgs, n=2000)
+
+# find marker genes for each cluster
+clustlist <- as.list(1:length(base::unique(sce_species$cluster_louvain_custom)))
+
+cluster_markers <- lapply(clustlist, function(x){
+  
+  markers <- Seurat::FindMarkers(seurat,
+                                 slot = "data",
+                                 test.use = "wilcox", 
+                                 ident.1 = x, 
+                                 features = hvgs)
+  
+  markers <- markers[base::order(base::abs(markers$avg_log2FC), 
+                                 decreasing=TRUE),]
+  
+  markers$which_cluster <- base::rep(x, nrow(markers))
+  
+  return(markers)
+})
+```
+
+### HSC
+
+```{r markers_hsc}
+cluster_markers[[6]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+```
+
+### MPP
+
+There are many different MPP/early prog-like clusters.
+Checking them out.
+
+```{r markers_mpp}
+# still kind of HSC-looking and not very activated
+cluster_markers[[1]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+# even more HSC-looking but a bit more lympho?
+cluster_markers[[13]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+# a bit more mature looking than 13
+cluster_markers[[12]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+# activated MPP like, much less HSC-like
+cluster_markers[[10]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+# just mostly activated, some MPP, not much else?
+cluster_markers[[4]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+```
+
+### Myeloid
+
+```{r markers_myeloid}
+# looks early myeloid includes mono
+cluster_markers[[2]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+# earlier myeloid +  
+cluster_markers[[8]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+# this cluster looks myeloid early to late
+# also some mk ery expression
+cluster_markers[[14]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+# mono and some antigen presenting?
+cluster_markers[[3]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+```
+
+### Lymphoid
+
+```{r markers_lymph}
+# lymphoid
+cluster_markers[[9]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+```
+
+### Mk ery baso
+
+```{r markers_mkerbm}
+# roughly mk and ery
+cluster_markers[[5]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+# purely ery
+cluster_markers[[15]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+# mk and baso mast
+cluster_markers[[11]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+```
+
+### cycling
+
+```{r markers_cycling}
+cluster_markers[[7]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 20)
+```
+
+# Assign
+
+```{r assign}
+
+# HSC
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "6"] <-  "HSC"
+
+# MPP
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "1"] <-  "MPP, early 1"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "13"] <-  "MPP, early 2"
+
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "12"] <-  "MPPs"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "10"] <-  "MPP, activated 1"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "4"] <-  "MPP, activated 2"  
+
+# myeloid
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "2"] <-  "Myeloid, early"  
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "8"] <-  "Myeloid, later"  
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "3"] <-  "Myeloid, mature mono"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "14"] <-  "Myeloid, mature neutro"
+
+# lymphoid
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "9"] <-  "Lymphoid"
+
+# mk ery baso mast
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "5"] <-  "Mk/Ery"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "11"] <-  "Baso/Mast"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "15"] <-  "Erythroid"
+
+# cycling
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "7"] <-  "Cycling"
+
+sce_species$custom_label <- factor(
+  sce_species$custom_label,
+  levels = c(
+    "HSC",
+    "MPP, early 1",
+    "MPP, early 2",
+    "MPPs",
+    "MPP, activated 1",
+    "MPP, activated 2",
+    "Myeloid, early",
+    "Myeloid, later",
+    "Myeloid, mature neutro",
+    "Myeloid, mature mono",
+    "Lymphoid",
+    "Baso/Mast",
+    "Mk/Ery",
+    "Erythroid",
+    "Cycling"
+  )
+)
+
+stopifnot(!is.na(sce_species$custom_label))
+```
+
+One last plot to confirm in correct order.
+
+```{r heatmap_confirm, fig.height = 10, fig.width = 5}
+
+# get average logcounts per label
+agg_sce_species <- scuttle::aggregateAcrossCells(
+  sce_species,
+  id=colData(sce_species)[,c("custom_label")], 
+  statistics = "mean",
+  use.assay.type = "logcounts")
+
+# turn into df formatted for visualisation
+agg_logcounts_df <- logcounts(agg_sce_species) %>%
+  as.matrix() %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = "genes") %>%
+  tidyr::pivot_longer(
+    cols = unique(agg_sce_species$custom_label),
+    names_to = "custom_label",
+    values_to = "avg_logcounts")
+
+# only keep genes for visualisation
+agg_logcounts_df <- agg_logcounts_df %>%
+  dplyr::filter(genes %in% marker_genes)
+
+# factorise for nicer plot
+agg_logcounts_df$genes <- factor(
+  agg_logcounts_df$genes,
+  levels = rev(marker_genes))
+
+agg_logcounts_df$custom_label <- factor(
+  agg_logcounts_df$custom_label,
+  levels = levels(sce_species$custom_label))
+
+# scale expression per gene using z-scores
+agg_logcounts_df$zscore_gene <- vector(
+  length = nrow(agg_logcounts_df), 
+  mode = "numeric")
+
+for(gene in base::unique(agg_logcounts_df$genes)){
+  
+  expr_vector_g <- agg_logcounts_df[
+    agg_logcounts_df$genes == gene,]$avg_logcounts
+
+  # calculate z score per gene
+  z_score_g <- (expr_vector_g - base::mean(expr_vector_g))/
+    stats::sd(expr_vector_g)
+  agg_logcounts_df$zscore_gene[agg_logcounts_df$genes == gene] <- z_score_g
+}
+
+# plot
+ggplot2::ggplot(
+  agg_logcounts_df,
+  aes(
+    x = custom_label,
+    y = genes,
+    fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_gradient2(
+    low = "blue3",
+    mid = "white", 
+    high = "red3", 
+    midpoint = 0)+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))
 ```
 

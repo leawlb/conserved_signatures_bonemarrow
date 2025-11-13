@@ -59,10 +59,6 @@ print(output_path)
 ```
 
 ```{r colors, message = FALSE}
-#colors_path <- snakemake@params[["colors_path"]]
-#source(snakemake@params[["colors"]])
-#source("../../source/plotting.R")
-
 col_num <- c(dittoSeq::dittoColors()[1:20])
 names(col_num) <- as.character(c(1:20))
 ```
@@ -93,7 +89,6 @@ clust <- igraph::cluster_louvain(
   graph, 
   resolution = resolution_louvain)
 
-#-------------------------------------------------------------------------------
 # add to sce object 
 sce_species$cluster_louvain <- clust$membership
 
@@ -231,7 +226,6 @@ if(fraction_curr == "hsc"){
     "S100a9",
     "Wfdc21",
     "Ccr2", # Mono
-    "F13a1",
     "Irf8",
     "Ly86",
     "Ms4a6c",
@@ -318,6 +312,8 @@ if(fraction_curr == "hsc"){
 
 #### Heatmap
 
+To get an overview of the rough expected populations based on well-known genes.
+
 ```{r heatmap, fig.height = 10, fig.width = 5}
 
 # get average logcounts per cluster
@@ -383,6 +379,8 @@ ggplot2::ggplot(
 
 #### Violin
 
+A bit downsized, but shows more than just the scaled average.
+
 ```{r violin, fig.height = 20, fig.width = 6}
 
 sce_species_genes <- sce_species[rownames(sce_species) %in% marker_genes_short,]
@@ -422,14 +420,33 @@ logcounts_df %>%
 
 ```
 
+#### UMAPs
+
+Use the previously defined marker gene list to get a better
+look at the expression patterns.
+
+```{r gene_plots}
+marker_genes_list <- as.list(marker_genes)
+
+plot_list_gene <- lapply(marker_genes_list, function(gene){
+  plot <- umap_gene(sce_species, gene)
+})
+names(plot_list_gene) <- marker_genes
+```
+
+```{r umaps, fig.height = 3, fig.width = 4}
+plot_list_gene
+```
+
 ## Markers
 
 For some ambiguous clusters, find markers that differentiate them.
 Also, for some clusters it is possible that they contain something
 that is not described by the hand-picked genes so make sure we don't
 miss anything interesting.
+Overall, I don't expect too many surprises in BL6 cells.
 
-```{r get_markers, message = FALSE}
+```{r get_markers, message = FALSE, warnings = FALSE}
 # convert to seurat
 seurat <- Seurat::as.Seurat(
   sce_species,
@@ -469,6 +486,8 @@ cluster_markers[[8]] %>%
   head(n = 20)
 ```
 
+The top 20 contain many well-known HSC specific genes from BL6 literature.
+
 ### MPP
 
 ```{r markers_mpp}
@@ -482,7 +501,7 @@ cluster_markers[[9]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 20)
 
-# some extra genes of interest
+# some extra genes of interest for differentiating the cell type
 mpp_genes <- c(
   "Myl10",
   "Ly6a"
@@ -500,14 +519,24 @@ names(plot_list_mpp) <- mpp_genes
 plot_list_mpp
 ```
 
+Clusters 2 and 11 look roughly similar, classic MPP expression but without
+CC entry gene expression.
+Cluster 9 shows clear signs of CC entry/activation.
+
 ### Lymph
 
 ```{r markers_lymph}
-# define some extra lymph genes
+# define some extra lymph genes, also add some TC and APC genes 
 mature_lymph_genes <- c(
   "Ccl5", # NK cell
   "Vpreb3", # early BC
-  "Ighm" # mature BC
+  "Ighm", # mature BC
+  "Ccl5", # NK
+  "Cd3e", # TC
+  "Cd8a",
+  "Tcf7",
+  "Cd74",
+  "H2-Aa"
 )
 
 mature_lymph_genes_list <- as.list(mature_lymph_genes)
@@ -522,29 +551,36 @@ names(plot_list_lymph) <- mature_lymph_genes
 plot_list_lymph
 ```
 
-### Ery and Mk
+Clusters 3 and 13 both look lymphoid, but 13 looks very mature already,
+as well as mixed in T/C lineage.
+It is also quite small.
+So the latter would be categorized as contamination.
+
+### Ery, Mk, Baso
 
 ```{r markers_erymk}
+# classic ery expression
 cluster_markers[[4]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 20)
+# strong baso mast expression as well as neutro-like expression
 cluster_markers[[5]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 20)
+# classic Mk expression
 cluster_markers[[10]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 20)
 ```
 
-### Mast/Baso + Myeloid
+### Myeloid
 
 ```{r markers_bmm}
-cluster_markers[[5]] %>%
-  dplyr::filter(avg_log2FC > 0) %>%
-  head(n = 20)
+# early granu markers, including mono
 cluster_markers[[12]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 20)
+# classic mid-late ery markers
 cluster_markers[[14]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 20)
@@ -583,24 +619,6 @@ names(plot_list_cycl) <- cycling_genes
 
 ```{r cycl_plots, fig.height = 3, fig.width = 4}
 plot_list_cycl
-```
-
-#### UMAPs
-
-Use the previously defined marker gene list to get a better
-look at the expression patterns.
-
-```{r gene_plots}
-marker_genes_list <- as.list(marker_genes)
-
-plot_list_gene <- lapply(marker_genes_list, function(gene){
-  plot <- umap_gene(sce_species, gene)
-})
-names(plot_list_gene) <- marker_genes
-```
-
-```{r umaps, fig.height = 3, fig.width = 4}
-plot_list_gene
 ```
 
 ## Assign
@@ -643,7 +661,7 @@ sce_species$custom_label[
 
 # myeloid
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "12"] <-  "Myeloid/Granu progenitor"
+  sce_species$cluster_louvain_custom == "12"] <-  "Granu/mono progenitor"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "14"] <-  "Late neutro"
 
@@ -660,7 +678,7 @@ sce_species$custom_label <- factor(
     "Early MPP cells 1",
     "Early MPP cells 2",
     "Activated MPP",
-    "Myeloid/Granu progenitor",
+    "Granu/mono progenitor",
     "Late neutro",
     "Early lymphoid",
     "Baso/Mast progenitor",

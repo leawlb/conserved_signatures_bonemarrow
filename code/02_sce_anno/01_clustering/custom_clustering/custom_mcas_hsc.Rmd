@@ -41,7 +41,6 @@ source(file =  snakemake@params[["plotting"]])
 
 ```{r load_objects}
 sce_species <- base::readRDS(file = snakemake@input[["sce_species"]])
-#sce_species <- base::readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/01_mnnc/comparison/sce_mcas_hsc_Object_ID-01")
 
 fraction_curr <- "hsc"
 species_curr <- "mcas"
@@ -51,18 +50,13 @@ stopifnot(unique(sce_species$Species_ID == species_curr))
 
 # define output path here
 # since in an .Rmd file run by snakemake the only output defined
-# by snakemake is the html, any other output must be
-# defined manually
+# by snakemake is the html, any other output must be defined manually
 base_path_data <- snakemake@params[["OUTPUT_DAT"]]
 output_path <- base::paste0(base_path_data, "/02_clst/custom/sce_mcas_hsc_custom.rds")
 print(output_path)
 ```
 
 ```{r colors, message = FALSE}
-#colors_path <- snakemake@params[["colors_path"]]
-#source(snakemake@params[["colors"]])
-#source("../../source/plotting.R")
-
 col_num <- c(dittoSeq::dittoColors()[1:20])
 names(col_num) <- as.character(c(1:20))
 ```
@@ -93,7 +87,6 @@ clust <- igraph::cluster_louvain(
   graph, 
   resolution = resolution_louvain)
 
-#-------------------------------------------------------------------------------
 # add to sce object 
 sce_species$cluster_louvain <- clust$membership
 
@@ -229,7 +222,6 @@ if(fraction_curr == "hsc"){
     "S100a9",
     "Wfdc21",
     "Ccr2", # Mono
-    "F13a1",
     "Irf8",
     "Ly86",
     "Ms4a6c",
@@ -239,6 +231,14 @@ if(fraction_curr == "hsc"){
     "Cd79b", 
     "Il7r",
     "Rag1",
+    "Ighm",
+    "Vpreb1",
+    "Vpreb3",
+    "Igkc",
+    "Ccl5", # NK
+    "Cd3e", # TC
+    "Cd8a",
+    "Tcf7",    
     "Cpa3", # Mast
     "Hdc", 
     "Ms4a2",
@@ -316,6 +316,9 @@ if(fraction_curr == "hsc"){
 ```
 
 #### Heatmap
+
+Heatmap and Violin plot both to get an overview/idea of the clusters' 
+rough identities.
 
 ```{r heatmap, fig.height = 10, fig.width = 5}
 
@@ -443,8 +446,10 @@ plot_list_gene
 Check all clusters for marker genes since for the exotic species,
 there may be genes we didn't anticipate.
 For each probable cell type based on the heatmap.
+CAST is still quite closely related to BL6 so hopefully marker gene
+expression shouldn't have evolved too much.
 
-```{r get_markers, message = FALSE}
+```{r get_markers, message = FALSE, warnings = FALSE}
 # convert to seurat
 seurat <- Seurat::as.Seurat(
   sce_species,
@@ -484,10 +489,16 @@ cluster_markers[[6]] %>%
   head(n = 40)
 ```
 
+Not as clear-cut as BL6, but obvious expression of important HSC markers like
+Mllt3, Mecom, Cdkn1c.
+Also includes a little Mk expression, like Pf4. 
+
 ### MPP
 
-There are many different MPP/early prog-like clusters.
-Checking them out.
+There are many different MPP/early prog-like clusters, I think some of them
+tend to separate by batch-y/low quality-indicating but highly expressed genes
+like Tsix, mt genes etc. 
+Probably not many strong, meaniningful differences between these clusters.
 
 ```{r markers_mpp}
 # still kind of HSC-looking and not very activated
@@ -495,14 +506,15 @@ cluster_markers[[1]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 40)
 # even more HSC-looking but a bit more lympho?
+# some batch-y gene expression, like Tsix, Mt genes
 cluster_markers[[13]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 40)
-# a bit more mature looking than 13
+# a bit more mature looking than 13, also looking much more batch-y
 cluster_markers[[12]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 40)
-# activated MPP like, much less HSC-like
+# nicely activated MPP like, much less HSC-like
 cluster_markers[[10]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 40)
@@ -515,20 +527,21 @@ cluster_markers[[4]] %>%
 ### Myeloid
 
 ```{r markers_myeloid}
-# looks early myeloid includes mono
+# looks early myeloid and includes mono expression like Irf8
 cluster_markers[[2]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 40)
-# earlier myeloid +  
+# earlier myeloid, more neutro-biased
 cluster_markers[[8]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 40)
 # this cluster looks myeloid early to late
 # also some mk ery expression
+# much more neutro-biased
 cluster_markers[[14]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 40)
-# mono and some antigen presenting?
+# Antigen presenting genes like Cd74, H2s
 cluster_markers[[3]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 40)
@@ -537,7 +550,7 @@ cluster_markers[[3]] %>%
 ### Lymphoid
 
 ```{r markers_lymph}
-# lymphoid
+# lymphoid, including early genes
 cluster_markers[[9]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 40)
@@ -554,7 +567,7 @@ cluster_markers[[5]] %>%
 cluster_markers[[15]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 40)
-# mk and baso mast
+# mk and baso mast, more the latter
 cluster_markers[[11]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 40)
@@ -574,7 +587,7 @@ cluster_markers[[7]] %>%
 
 # HSC
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "6"] <-  "HSC"
+  sce_species$cluster_louvain_custom == "6"] <-  "HSC/Early Mk"
 
 # MPP
 sce_species$custom_label[
@@ -583,7 +596,7 @@ sce_species$custom_label[
   sce_species$cluster_louvain_custom == "13"] <-  "Early MPP cells 2"
 
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "12"] <-  "MPP lymphoid-primed"
+  sce_species$cluster_louvain_custom == "12"] <-  "Late MPP"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "10"] <-  "Activated MPP cells 1"
 sce_species$custom_label[
@@ -591,13 +604,13 @@ sce_species$custom_label[
 
 # myeloid
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "2"] <-  "Early myeloid"  
+  sce_species$cluster_louvain_custom == "2"] <-  "Early granu/mono"  
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "8"] <-  "Later myeloid/granu"  
+  sce_species$cluster_louvain_custom == "8"] <-  "Later granu/neutro"  
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "3"] <-  "Late immune, mixed"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "14"] <-  "Late neutro"
+  sce_species$cluster_louvain_custom == "14"] <-  "Late neutro/ery, mixed"
 
 # lymphoid
 sce_species$custom_label[
@@ -618,22 +631,22 @@ sce_species$custom_label[
 sce_species$custom_label <- factor(
   sce_species$custom_label,
   levels = c(
-    "HSC",
+    "HSC/Early Mk",
     "Early MPP cells 1",
     "Early MPP cells 2",
-    "MPP lymphoid-primed",
+    "Late MPP",
     "Activated MPP cells 1",
     "Activated MPP cells 2",
-    "Early myeloid",
-    "Later myeloid/granu",
-    "Late neutro",
+    "Early granu/mono",
+    "Later granu/neutro",
     "Lymphoid",
     "Baso/Mast progenitor",
     "Mk/Ery",
     "Ery progenitor",
     "Cycling",
     # contamination
-    "Late immune, mixed"
+    "Late immune, mixed",
+    "Late neutro/ery, mixed"
   )
 )
 

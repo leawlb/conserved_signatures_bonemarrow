@@ -78,6 +78,7 @@ for s in species:
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mmus_hsc.html"]
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mcas_hsc.html"]
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mspr_hsc.html"]
+targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mcar_hsc.html"]
 
 #-------------------------------------------------------------------------------
 
@@ -393,6 +394,21 @@ rule louvain_clustering_mspr_hsc:
         OUTPUT_DAT = OUTPUT_DAT
     script:
         "custom_clustering/custom_mspr_hsc.Rmd"
+
+rule louvain_clustering_mcar_hsc:
+    input: 
+        sce_species = OUTPUT_DAT + "/01_mnnc/comparison/sce_mcar_hsc_" + BATCH_USE + "-01"
+    output:
+        OUTPUT_REP + "/02_clustering/comparison_custom/report_mcar_hsc.html"
+    resources:
+        mem_mb = 50000,
+        queue = "medium-debian"
+    threads: 10
+    params:
+        plotting = "../../source/plotting.R",
+        OUTPUT_DAT = OUTPUT_DAT
+    script:
+        "custom_clustering/custom_mcar_hsc.Rmd"
 
 """
 

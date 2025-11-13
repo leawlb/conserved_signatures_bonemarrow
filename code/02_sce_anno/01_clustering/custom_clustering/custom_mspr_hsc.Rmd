@@ -226,7 +226,6 @@ if(fraction_curr == "hsc"){
     "S100a9",
     "Wfdc21",
     "Ccr2", # Mono
-    "F13a1",
     "Irf8",
     "Ly86",
     "Ms4a6c",
@@ -891,7 +890,7 @@ sce_species$custom_label[
 
 # cycling
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "15"] <-  "Activated/Cycling, mostly myeloid"
+  sce_species$cluster_louvain_custom == "15"] <-  "Cycling, mostly myeloid"
 
 sce_species$custom_label <- factor(
   sce_species$custom_label,
@@ -899,10 +898,10 @@ sce_species$custom_label <- factor(
     "HSC",
     "MPP cells 1",
     "MPP cells 2",
-    "Activated/Cycling, mostly myeloid",
     "Early myeloid",
-    "Mono/antigen-presenting",
     "Neutro progenitor",
+    "Cycling, mostly myeloid",
+    "Mono/antigen-presenting",
     "Early lymphoid",
     "Late/Cycling lymphoid",
     "Baso/Mast progenitor",

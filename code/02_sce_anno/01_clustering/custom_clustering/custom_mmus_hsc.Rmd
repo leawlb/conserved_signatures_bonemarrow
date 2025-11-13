@@ -617,9 +617,9 @@ sce_species$custom_label[
 
 # MPP
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "2"] <-  "Early MPP"
+  sce_species$cluster_louvain_custom == "2"] <-  "Early MPP cells 2"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "11"] <-  "MPP"
+  sce_species$cluster_louvain_custom == "11"] <-  "Early MPP cells 1"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "9"] <-  "Activated MPP"
 
@@ -627,49 +627,50 @@ sce_species$custom_label[
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "3"] <-  "Early lymphoid"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "13"] <-  "Late lymphoid"
+  sce_species$cluster_louvain_custom == "13"] <-  "Late immune, mixed"
 
 # ery and mk
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "4"] <-  "Erythroid"
+  sce_species$cluster_louvain_custom == "4"] <-  "Ery progenitor"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "6"] <-  "Early ery"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "10"] <-  "Mk/Ery, more Mk"
+  sce_species$cluster_louvain_custom == "10"] <-  "Mk/Ery (more Mk)"
 
 # mast/baso
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "5"] <-  "Baso/Mast"
+  sce_species$cluster_louvain_custom == "5"] <-  "Baso/Mast progenitor"
 
 # myeloid
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "12"] <-  "Myeloid/Granu progenitor"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "14"] <-  "Late neutrophil"
+  sce_species$cluster_louvain_custom == "14"] <-  "Late neutro"
 
 # cycling cells
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "1"] <-  "Cycling, more S-phase"
+  sce_species$cluster_louvain_custom == "1"] <-  "Cycling (more S-phase)"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "7"] <-  "Cycling, more M-phase"
+  sce_species$cluster_louvain_custom == "7"] <-  "Cycling (more M-phase)"
 
 sce_species$custom_label <- factor(
   sce_species$custom_label,
   levels = c(
     "HSC",
-    "Early MPP",
-    "MPP",
+    "Early MPP cells 1",
+    "Early MPP cells 2",
     "Activated MPP",
     "Myeloid/Granu progenitor",
-    "Late neutrophil",
+    "Late neutro",
     "Early lymphoid",
-    "Late lymphoid",
-    "Baso/Mast",
-    "Mk/Ery, more Mk",
+    "Baso/Mast progenitor",
+    "Mk/Ery (more Mk)",
     "Early ery",
-    "Erythroid",
-    "Cycling, more S-phase",
-    "Cycling, more M-phase"
+    "Ery progenitor",
+    "Cycling (more S-phase)",
+    "Cycling (more M-phase)",
+    # contamination
+    "Late immune, mixed"
     ))
 stopifnot(!is.na(sce_species$custom_label))
 ```
@@ -745,7 +746,7 @@ ggplot2::ggplot(
 
 ```{r save}
 print(output_path)
-#saveRDS(sce_species, output_path)
+saveRDS(sce_species, output_path)
 ```
 
 ```{r session_info}

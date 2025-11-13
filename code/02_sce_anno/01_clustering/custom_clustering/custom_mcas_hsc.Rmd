@@ -54,7 +54,7 @@ stopifnot(unique(sce_species$Species_ID == species_curr))
 # by snakemake is the html, any other output must be
 # defined manually
 base_path_data <- snakemake@params[["OUTPUT_DAT"]]
-output_path <- base::paste0(base_path_data, "/02_clst/custom/sce_mmus_hsc_custom.rds")
+output_path <- base::paste0(base_path_data, "/02_clst/custom/sce_mcas_hsc_custom.rds")
 print(output_path)
 ```
 
@@ -578,26 +578,26 @@ sce_species$custom_label[
 
 # MPP
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "1"] <-  "MPP, early 1"
+  sce_species$cluster_louvain_custom == "1"] <-  "Early MPP cells 1"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "13"] <-  "MPP, early 2"
+  sce_species$cluster_louvain_custom == "13"] <-  "Early MPP cells 2"
 
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "12"] <-  "MPPs"
+  sce_species$cluster_louvain_custom == "12"] <-  "MPP lymphoid-primed"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "10"] <-  "MPP, activated 1"
+  sce_species$cluster_louvain_custom == "10"] <-  "Activated MPP cells 1"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "4"] <-  "MPP, activated 2"  
+  sce_species$cluster_louvain_custom == "4"] <-  "Activated MPP cells 2"  
 
 # myeloid
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "2"] <-  "Myeloid, early"  
+  sce_species$cluster_louvain_custom == "2"] <-  "Early myeloid"  
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "8"] <-  "Myeloid, later"  
+  sce_species$cluster_louvain_custom == "8"] <-  "Later myeloid/granu"  
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "3"] <-  "Myeloid, mature mono"
+  sce_species$cluster_louvain_custom == "3"] <-  "Late immune, mixed"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "14"] <-  "Myeloid, mature neutro"
+  sce_species$cluster_louvain_custom == "14"] <-  "Late neutro"
 
 # lymphoid
 sce_species$custom_label[
@@ -607,9 +607,9 @@ sce_species$custom_label[
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "5"] <-  "Mk/Ery"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "11"] <-  "Baso/Mast"
+  sce_species$cluster_louvain_custom == "11"] <-  "Baso/Mast progenitor"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "15"] <-  "Erythroid"
+  sce_species$cluster_louvain_custom == "15"] <-  "Ery progenitor"
 
 # cycling
 sce_species$custom_label[
@@ -619,20 +619,21 @@ sce_species$custom_label <- factor(
   sce_species$custom_label,
   levels = c(
     "HSC",
-    "MPP, early 1",
-    "MPP, early 2",
-    "MPPs",
-    "MPP, activated 1",
-    "MPP, activated 2",
-    "Myeloid, early",
-    "Myeloid, later",
-    "Myeloid, mature neutro",
-    "Myeloid, mature mono",
+    "Early MPP cells 1",
+    "Early MPP cells 2",
+    "MPP lymphoid-primed",
+    "Activated MPP cells 1",
+    "Activated MPP cells 2",
+    "Early myeloid",
+    "Later myeloid/granu",
+    "Late neutro",
     "Lymphoid",
-    "Baso/Mast",
+    "Baso/Mast progenitor",
     "Mk/Ery",
-    "Erythroid",
-    "Cycling"
+    "Ery progenitor",
+    "Cycling",
+    # contamination
+    "Late immune, mixed"
   )
 )
 
@@ -706,3 +707,13 @@ ggplot2::ggplot(
   ggplot2::theme(axis.text.x = element_text(angle = 90))
 ```
 
+## Save 
+
+```{r save}
+print(output_path)
+saveRDS(sce_species, output_path)
+```
+
+```{r session_info}
+utils::sessionInfo()
+```

@@ -1,5 +1,5 @@
 ---
-title: "Custom clustering TEMPLATE"
+title: "Custom clustering comparison"
 author: "Lea Wölbert"
 date: '2025-11-10'
 output: html_document
@@ -27,9 +27,7 @@ library(igraph, quietly = TRUE)
 library(tidyverse, quietly = TRUE)
 ```
 
-```{r source, message = FALSE}
-source(file =  snakemake@params[["plotting"]])
-```
+#todo input snakemake later
 
 ```{r load_objects}
 sce_mmus_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mmus_hsc_custom.rds")
@@ -42,7 +40,7 @@ sce_mcar_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNA
 
 Compare the expression of marker genes (either from the literature, see 
 supplementary table of the corresponding publication) or picked from the
-marker gene lists of individual species and cell types
+marker gene lists of individual species and cell types.
 
 ```{r marker_genes}
 # this list is a bit longer than the one in the custom assignment .Rmd scripts
@@ -201,11 +199,10 @@ marker gene lists of individual species and cell types
     )
 ```
 
-Make some more specific marker gene lists based on my observations
+Make a shorter marker gene lists based on my observations
 from the annotation .Rmds.
-I don't know all genes, some I just saw in some marker gene lists
 
-```{r best_marker_genes}
+```{r best_marker_genes_list}
 best_marker_genes <- c(
   "Cdkn1c",
   "Procr",
@@ -327,7 +324,7 @@ ggplot2::ggplot(
 }
 ```
 
-```{r heatmap_hsc, fig.height = 30, fig.width = 6}
+```{r heatmap_hsc, fig.height = 7, fig.width = 6}
 
 marker_genes_hsc <- unlist(marker_genes_list[1:2])
 
@@ -337,7 +334,7 @@ make_heatmap(sce_mspr_hsc, marker_genes_hsc)
 make_heatmap(sce_mcar_hsc, marker_genes_hsc)
 ```
 
-```{r heatmap_mkerybm, fig.height = 30, fig.width = 6}
+```{r heatmap_myeloid, fig.height = 6, fig.width = 6}
 
 marker_genes_myeloid <- unlist(marker_genes_list[3:6])
 
@@ -347,7 +344,7 @@ make_heatmap(sce_mspr_hsc, marker_genes_myeloid)
 make_heatmap(sce_mcar_hsc, marker_genes_myeloid)
 ```
 
-```{r heatmap_lymph, fig.height = 30, fig.width = 6}
+```{r heatmap_lymph, fig.height = 5, fig.width = 6}
 
 marker_genes_lymph <- unlist(marker_genes_list[7:9])
 
@@ -357,7 +354,7 @@ make_heatmap(sce_mspr_hsc, marker_genes_lymph)
 make_heatmap(sce_mcar_hsc, marker_genes_lymph)
 ```
 
-```{r heatmap_mkerybm, fig.height = 30, fig.width = 6}
+```{r heatmap_mkerybm, fig.height = 8, fig.width = 6}
 
 marker_genes_mkebm <- unlist(marker_genes_list[10:13])
 
@@ -367,7 +364,7 @@ make_heatmap(sce_mspr_hsc, marker_genes_mkebm)
 make_heatmap(sce_mcar_hsc, marker_genes_mkebm)
 ```
 
-```{r heatmap_cycling, fig.height = 30, fig.width = 6}
+```{r heatmap_cycling, fig.height = 4, fig.width = 6}
 
 marker_genes_cycling <- unlist(marker_genes_list[14:17])
 
@@ -377,7 +374,7 @@ make_heatmap(sce_mspr_hsc, marker_genes_cycling)
 make_heatmap(sce_mcar_hsc, marker_genes_cycling)
 ```
 
-```{r heatmap_all_marker_genes_list, fig.height = 30, fig.width = 6}
+```{r heatmap_all_marker_genes_list, fig.height = 20, fig.width = 6}
 
 marker_genes_all <- unlist(marker_genes_list)
 
@@ -387,7 +384,7 @@ make_heatmap(sce_mspr_hsc, marker_genes_all)
 make_heatmap(sce_mcar_hsc, marker_genes_all)
 ```
 
-```{r best_marker_genes, fig.height = 10, fig.width = 6}
+```{r best_marker_genes, fig.height = 8, fig.width = 6}
 
 make_heatmap(sce_mmus_hsc, best_marker_genes)
 make_heatmap(sce_mcas_hsc, best_marker_genes)

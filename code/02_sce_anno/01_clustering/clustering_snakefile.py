@@ -79,6 +79,8 @@ targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mmus_
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mcas_hsc.html"]
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mspr_hsc.html"]
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mcar_hsc.html"]
+targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mcar_str.html"]
+targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/custom_hsc_comparison_report.html"]
 
 #-------------------------------------------------------------------------------
 
@@ -409,6 +411,32 @@ rule louvain_clustering_mcar_hsc:
         OUTPUT_DAT = OUTPUT_DAT
     script:
         "custom_clustering/custom_mcar_hsc.Rmd"
+
+rule louvain_clustering_mcar_str:
+    input: 
+        sce_species = OUTPUT_DAT + "/01_mnnc/comparison/sce_mcar_str_" + BATCH_USE + "-01"
+    output:
+        OUTPUT_REP + "/02_clustering/comparison_custom/report_mcar_str.html"
+    resources:
+        mem_mb = 50000,
+        queue = "medium-debian"
+    threads: 10
+    params:
+        plotting = "../../source/plotting.R",
+        OUTPUT_DAT = OUTPUT_DAT
+    script:
+        "custom_clustering/custom_mcar_str.Rmd"
+
+# TODO: add input later
+rule custom_hsc_comparison_report:
+    output:
+        OUTPUT_REP + "/02_clustering/comparison_custom/custom_hsc_comparison_report.html"
+    resources:
+        mem_mb = 70000,
+        queue = "medium-debian"
+    threads: 10
+    script:
+        "custom_clustering/custom_hsc_comparison_report.Rmd"
 
 """
 

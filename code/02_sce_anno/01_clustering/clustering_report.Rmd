@@ -22,8 +22,8 @@ library(bluster, quietly = TRUE)
 ```
 
 ```{r source, message = FALSE}
-source(file =  snakemake@params[["functions"]])
-source(file =  snakemake@params[["plotting"]])
+source(file = snakemake@params[["functions"]])
+source(file = snakemake@params[["plotting"]])
 ```
 
 ```{r load_objects}

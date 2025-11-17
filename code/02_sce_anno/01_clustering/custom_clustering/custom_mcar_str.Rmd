@@ -1,0 +1,656 @@
+---
+title: "Custom clustering mcar str"
+author: "Lea Wölbert"
+date: '2025-11-10'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Find custom clusterings for each species and fraction.
+Try out several clustering parameters and pick the most suitable ones. 
+Also add custom labels.
+This will be a rare case where I will save objects from an .Rmd file that are not
+figure pdfs.
+
+Do this individually for each of the eight conditions (4 species X 2 fractions).
+
+#### Load libraries, source code 
+
+```{r seed,  message = FALSE}
+set.seed(37)
+```
+
+```{r, message = FALSE}
+library(SingleCellExperiment, quietly = TRUE)
+library(BiocSingular, quietly = TRUE)
+library(scran, quietly = TRUE)
+library(igraph, quietly = TRUE)
+library(tidyverse, quietly = TRUE)
+library(scuttle, quietly = TRUE)
+library(dittoSeq, quietly = TRUE)
+library(Seurat, quietly = TRUE)
+library(SeuratObject, quietly = TRUE)
+```
+
+```{r source, message = FALSE}
+source(file =  snakemake@params[["plotting"]])
+```
+
+```{r load_objects}
+sce_species <- base::readRDS(file = snakemake@input[["sce_species"]])
+#sce_species <- base::readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/01_mnnc/comparison/sce_mcar_str_Object_ID-01")
+
+fraction_curr <- "str"
+species_curr <- "mcar"
+
+stopifnot(unique(sce_species$Fraction_ID == fraction_curr))
+stopifnot(unique(sce_species$Species_ID == species_curr))
+
+# define output path here
+# since in an .Rmd file run by snakemake the only output defined
+# by snakemake is the html, any other output must be
+# defined manually
+base_path_data <- snakemake@params[["OUTPUT_DAT"]]
+output_path <- base::paste0(base_path_data, "/02_clst/custom/sce_mmus_hsc_custom.rds")
+print(output_path)
+```
+
+```{r colors, message = FALSE}
+col_num <- c(dittoSeq::dittoColors()[1:40])
+names(col_num) <- as.character(c(1:40))
+```
+
+# Clustering
+
+### Define parameters
+
+Caroli and Cast will be tough because they contain many more contaminating
+cells then cells of interest. 
+So I'll do a super fine clustering to try and properly separate even the
+very rare cell types of interest, like sinusoidal ECs.
+I'll try at least.
+
+```{r parameters}
+k_graph <- 5
+resolution_louvain <- 1.2 # 1
+```
+
+### Louvain clustering
+
+Copied from 02_louvain_clustering.R
+
+```{r clustering}
+# get a graph of nearest neighbors
+graph <- scran::buildSNNGraph(
+  sce_species, 
+  k = k_graph, 
+  use.dimred = "PCA", # corrected
+  type = "rank")
+
+# community detection
+clust <- igraph::cluster_louvain(
+  graph, 
+  resolution = resolution_louvain)
+
+#-------------------------------------------------------------------------------
+# add to sce object 
+sce_species$cluster_louvain <- clust$membership
+
+sce_species$cluster_louvain_custom <- base::factor(
+  sce_species$cluster_louvain, 
+  levels = base::sort(base::unique(sce_species$cluster_louvain)))
+  
+print(head(sce_species$cluster_louvain_custom))
+
+sce_species$k_graph_custom <- base::rep(k_graph, ncol(sce_species))
+sce_species$resolution_louvain_custom <- base::rep(
+  resolution_louvain, 
+  ncol(sce_species))
+
+print(sce_species)
+```
+
+# Evaluate
+
+## Clustering separation
+
+Look at the clusters, check that there are no obvious age or batch-
+dependent clusters.
+
+```{r umaps_base, fig.height = 6, fig.width = 6}
+umap_base_l(sce_species, "cluster_louvain_custom")+
+  ggplot2::geom_point(size = 2, alpha = 0.5)+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+``` 
+
+```{r umaps_age, fig.height = 4, fig.width = 6}  
+umap_base(sce_species, "cluster_louvain_custom")+
+  ggplot2::facet_grid(cols = vars(sce_species$Age_ID))+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+```
+
+```{r umaps_batch, fig.height = 8, fig.width = 6}
+umap_base_l(sce_species, "cluster_louvain_custom")+
+  ggplot2::facet_wrap(vars(sce_species$Object_ID), ncol = 2)+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+```
+
+## Silhouette and Purity
+
+```{r silhouette}
+
+# Silhouette
+sil.approx <- bluster::approxSilhouette(
+  reducedDim(sce_species, "PCA"), 
+  clusters = sce_species$cluster_louvain_custom)
+
+sil.data <- base::as.data.frame(sil.approx)
+
+sil.data$closest <- factor(ifelse(sil.data$width > 0, 
+                                  sce_species$cluster_louvain, 
+                                  sil.data$other))
+sil.data$cluster <- sce_species$cluster_louvain
+
+ggplot2::ggplot(sil.data,
+                aes(x=cluster, y=width, colour=closest))+
+  ggbeeswarm::geom_quasirandom(size = 0.1)+
+  ggplot2::theme_classic()+
+  ggplot2::theme(legend.position = "none")+
+  ggplot2::xlab("cluster (louvain)")+
+  ggplot2::ylim(-1, 1)+
+  ggplot2::ylab("Silhouette width")+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+
+
+# Purity
+pure_sce <- bluster::neighborPurity(
+  reducedDim(sce_species, "PCA"),
+  sce_species$cluster_louvain)
+pure_data <- base::as.data.frame(pure_sce)
+pure_data$maximum <- factor(pure_data$maximum)
+pure_data$cluster <- sce_species$cluster_louvain
+
+ggplot2::ggplot(pure_data, 
+                aes(x=cluster, y=purity, colour=maximum))+
+  ggbeeswarm::geom_quasirandom(size = 0.1)+
+  ggplot2::theme_classic()+
+  ggplot2::theme(legend.position = "none")+
+  ggplot2::xlab("cluster (louvain)")+
+  ggplot2::ylim(0, 1)+
+  ggplot2::ylab("Cluster purity")+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+```
+
+## Gene expression
+
+Now check the quality of the clustering based on the expressed genes.
+
+First, I hand-pick a small number of well-known marker genes for the 
+populations that I expect in BL6, based on BL6 literature 
+(Check supplementary table of the corresponding publication).
+
+This may not be enough for the exotic species or some sub-clusters 
+but let's start with this first.
+
+```{r marker_genes}
+
+if(fraction_curr == "str"){
+  marker_genes <- c(
+    "Adipoq", # adipo CAR
+    "Cxcl12", # also arteriolar EC
+    "Kitl", 
+    "Lepr",
+    "Alpl", # Osteo
+    "Anxa1",
+    "Bglap",
+    "Bglap2",
+    "Cd200",
+    "Ibsp",
+    "Mmp13",
+    "Postn",
+    "Ptgis",
+    "Pth1r",
+    "Runx2",
+    "Sp7",
+    "Spp1",
+    "Tnc",
+    "Acan", # Chondro
+    "Adamts5",
+    "Chad",
+    "Fmod",
+    "Mef2c",
+    "Mgp",
+    "Prelp",
+    "Prg4",
+    "Sox9",
+    "Comp", # fibro chondro
+    "S100a10",
+    "Cd34", # fibro
+    "Col3a1",
+    "Dcn",
+    "Fn1",
+    "Lum",
+    "Pdgfra",
+    "Thy1",
+    "Cdh5", # pan endo
+    "Pecam1",
+    "Car4", # capillary
+    "Rgcc",
+    "Timp4",
+    "Efnb2", # Arteriolar
+    "Hey1",
+    "Ly6a",
+    "Sox17",
+    "Ackr1", # Venous/sinusoidal
+    "Emcn",
+    "Ephb4",
+    "Icam1",
+    "Lrg1",
+    "Nr2f2",
+    "Selp",
+    "Vcam1", # sinusoidal
+    "Flt4",
+    "Stab2",
+    "Tfpi",
+    "Ccl21a", # Lymphatic EC
+    "Lyve1", 
+    "Pdpn",
+    "Prox1",
+    "Rgs4", # pericyte
+    "Rgs5",
+    "Steap4",
+    "Acta2", # smooth muscle
+    "Myh11", 
+    "Tagln",
+    "Myod1", # just some skeletal muscle markers for contamination
+    "Myh2",
+    "Des",
+    "Cd3d", # just some mature immune cell markers for contamination
+    "Cd8a",
+    "Cd4",
+    "Il7r",
+    "Cd79a",
+    "Ighm",
+    "Gzmb",
+    "S100a8",
+    "S100a9",
+    "Ccl5",
+    "Cd3e", # TC
+    "Tcf7",
+    "Cpa3", # Mast
+    "Hdc",
+    "Gypa", # Ery
+    "Hba-a1"
+  )
+}
+
+```
+
+```{r genes_short}
+
+if(fraction_curr == "str"){
+  marker_genes_short <- c(
+    "Adipoq", # adipo CAR
+    "Cxcl12", # also arteriolar EC
+    "Kitl", 
+    "Lepr",
+    "Alpl", # Osteo
+    "Bglap",
+    "Ibsp",
+    "Mmp13",
+    "Postn",
+    "Runx2",
+    "Sp7",
+    "Spp1",
+    "Acan", 
+    "Chad",
+    "Fmod",
+    "Mgp",
+    "Prelp",
+    "Prg4",
+    "Sox9",
+    "Comp", 
+    "S100a10",
+    "Cd34", 
+    "Dcn",
+    "Fn1",
+    "Lum",
+    "Pdgfra",
+    "Thy1",
+    "Pecam1",
+    "Car4",
+    "Rgcc",
+    "Efnb2",
+    "Hey1",
+    "Sox17",
+    "Ackr1", 
+    "Emcn",
+    "Ephb4",
+    "Icam1",
+    "Lrg1",
+    "Selp",
+    "Vcam1", 
+    "Flt4",
+    "Stab2",
+    "Tfpi",
+    "Ccl21a", 
+    "Lyve1", 
+    "Rgs4", 
+    "Steap4",
+    "Acta2", 
+    "Myh2",
+    "Des",
+    "Cd3d", 
+    "Cd8a",
+    "Cd4",
+    "Ilr7",
+    "Cd79a",
+    "Ighm",
+    "Gzmb",
+    "S100a8"
+  )
+}
+
+```
+
+#### Heatmap
+
+Just to get an overview of what is found in each cluster
+
+```{r heatmap, fig.height = 10, fig.width = 10}
+
+# get average logcounts per cluster
+agg_sce_species <- scuttle::aggregateAcrossCells(
+  sce_species,
+  id=colData(sce_species)[,c("cluster_louvain_custom")], 
+  statistics = "mean",
+  use.assay.type = "logcounts")
+
+# turn into df formatted for visualisation
+agg_logcounts_df <- logcounts(agg_sce_species) %>%
+  as.matrix() %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = "genes") %>%
+  tidyr::pivot_longer(
+    cols = unique(agg_sce_species$cluster_louvain_custom),
+    names_to = "cluster_louvain_custom",
+    values_to = "avg_logcounts")
+
+# only keep genes for visualisation
+agg_logcounts_df <- agg_logcounts_df %>%
+  dplyr::filter(genes %in% marker_genes)
+
+# factorise for nicer plot
+agg_logcounts_df$genes <- factor(
+  agg_logcounts_df$genes,
+  levels = rev(marker_genes))
+
+agg_logcounts_df$cluster_louvain_custom <- factor(
+  agg_logcounts_df$cluster_louvain_custom,
+  levels = as.character(c(1:length(unique(agg_logcounts_df$cluster_louvain_custom)))))
+
+# scale expression per gene using z-scores
+agg_logcounts_df$zscore_gene <- vector(
+  length = nrow(agg_logcounts_df), 
+  mode = "numeric")
+
+for(gene in base::unique(agg_logcounts_df$genes)){
+  
+  expr_vector_g <- agg_logcounts_df[agg_logcounts_df$genes == gene,]$avg_logcounts
+
+  # calculate z score per gene
+  z_score_g <- (expr_vector_g - base::mean(expr_vector_g))/
+    stats::sd(expr_vector_g)
+  agg_logcounts_df$zscore_gene[agg_logcounts_df$genes == gene] <- z_score_g
+}
+
+# plot
+ggplot2::ggplot(
+  agg_logcounts_df,
+  aes(
+    x = cluster_louvain_custom,
+    y = genes,
+    fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_gradient2(
+    low = "blue3",
+    mid = "white", 
+    high = "red3", 
+    midpoint = 0)
+```
+
+That was less challenging than I expected.
+
+#### Violin
+
+```{r violin, fig.height = 20, fig.width = 10}
+
+sce_species_genes <- sce_species[rownames(sce_species) %in% marker_genes_short,]
+
+# make a df for visualisation
+logcounts_df <- logcounts(sce_species_genes) %>%
+  as.matrix() %>%
+  as.data.frame() %>% 
+  tibble::rownames_to_column(var = "genes") %>%
+  tidyr::pivot_longer(
+    cols = colnames(sce_species_genes),
+    names_to = "cell",
+    values_to = "logcounts")
+
+# add cluster info
+logcounts_df$cluster_louvain_custom <- sce_species_genes$cluster_louvain_custom[
+  match(
+    logcounts_df$cell,
+    rownames(colData(sce_species_genes)))]
+
+logcounts_df$genes <- factor(logcounts_df$genes, levels = marker_genes_short)
+
+# plot 
+logcounts_df %>%
+  ggplot2::ggplot(
+    aes(
+      x = cluster_louvain_custom,
+      y = logcounts,
+      fill = cluster_louvain_custom))+
+    ggplot2::geom_violin(
+      scale = "width")+
+    ggplot2::theme_classic()+
+    ggplot2::theme(
+      strip.text.y = element_text(angle = 0))+
+    ggplot2::facet_grid(rows = vars(genes))+
+    ggplot2::scale_fill_manual("cluster", values = col_num)
+
+```
+
+#### UMAPs
+
+Use the previously defined marker gene list to get a better
+look at the expression patterns.
+
+```{r gene_plots}
+marker_genes_list <- as.list(marker_genes)
+
+plot_list_gene <- lapply(marker_genes_list, function(gene){
+  print(gene)
+  print(gene %in% rownames(sce_species))
+  plot <- umap_gene(sce_species, gene)
+})
+names(plot_list_gene) <- marker_genes
+```
+
+```{r umaps, fig.height = 3, fig.width = 4}
+plot_list_gene
+```
+
+## Markers
+
+Check markers because there are so many different cell types
+including the contamination that I cannot possibly have a complete list.
+
+The number of clusters is ridiculous as expected, so this is taking a while.
+
+```{r get_markers, message = FALSE}
+# convert to seurat
+seurat <- Seurat::as.Seurat(
+  sce_species,
+  counts = "counts", 
+  data = "logcounts") 
+SeuratObject::Idents(seurat) <- sce_species$cluster_louvain_custom
+
+# get hvgs for marker genes
+hvgs <- scran::modelGeneVar(sce_species)
+hvgs <- scran::getTopHVGs(hvgs, n=2000)
+
+# find marker genes for each cluster
+clustlist <- as.list(1:length(base::unique(sce_species$cluster_louvain_custom)))
+
+cluster_markers <- lapply(clustlist, function(x){
+  
+  markers <- Seurat::FindMarkers(seurat,
+                                 slot = "data",
+                                 test.use = "wilcox", 
+                                 ident.1 = x, 
+                                 features = hvgs)
+  
+  markers <- markers[base::order(base::abs(markers$avg_log2FC), 
+                                 decreasing=TRUE),]
+  
+  markers$which_cluster <- base::rep(x, nrow(markers))
+  
+  return(markers)
+})
+```
+
+### Contamination
+
+Get the contamination out of the way first.
+
+To help make it easier print everything for now then delete once I can
+identify each cluster a little.
+
+```{r}
+lapply(
+  as.list(c(1:length(unique(sce_species$cluster_louvain_custom)))), 
+  function(cluster){
+    cluster_markers[[cluster]] %>%
+    dplyr::filter(avg_log2FC > 0) %>%
+    head(n = 20)
+  })
+```
+
+#### Ery
+
+```{r markers_contamination_ery}
+
+cluster_markers[[1]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+cluster_markers[[6]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+cluster_markers[[7]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+cluster_markers[[8]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+cluster_markers[[9]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+cluster_markers[[17]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+cluster_markers[[23]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+cluster_markers[[33]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+```
+
+#### Neutro
+
+```{r markers_contamination_neutro}
+
+cluster_markers[[2]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+cluster_markers[[5]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+cluster_markers[[10]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+cluster_markers[[13]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+cluster_markers[[14]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+cluster_markers[[21]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+cluster_markers[[28>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+cluster_markers[[31]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+cluster_markers[[35]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+```
+
+#### Baso Mast
+
+```{r markers_contamination_bm}
+
+cluster_markers[[3]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+```
+
+#### Weird clusters 
+
+```{r markers_contamination_weird}
+
+# ?
+cluster_markers[[15]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+```
+
+### Expected clusters
+
+```{r markers_expected}
+# adipo
+cluster_markers[[4]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 20)
+
+# osteo-fibro?
+cluster_markers[[11]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 20)
+
+
+
+# EC sinusoidal and lymphatic
+cluster_markers[[11]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 20)
+
+# EC very sinusoidal
+cluster_markers[[18]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 20)
+
+# EC arteriolar and capillary
+cluster_markers[[11]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 20)
+```

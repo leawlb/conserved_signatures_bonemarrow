@@ -73,7 +73,15 @@ for s in species:
     targets = targets + [OUTPUT_DAT + "/01_mnnc/comparison/sce_" + s + "_" + f + "_" + BATCH_USE + "-01"]
     targets = targets + [OUTPUT_DAT + "/02_clst/comparison/sce_" + s + "_" + f + "-02"]
     targets = targets + [OUTPUT_REP + "/02_clustering/comparison/clustering_report_" + s + "_" + f + ".html"]
-  
+
+# custom clustering and label assignment per condition
+targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mmus_hsc.html"]
+targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mcas_hsc.html"]
+targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mspr_hsc.html"]
+targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mcar_hsc.html"]
+targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mcar_str.html"]
+targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/custom_hsc_comparison_report.html"]
+
 #-------------------------------------------------------------------------------
 
 localrules: all  
@@ -269,9 +277,12 @@ rule assign_annotation:
         "scripts/04_anno_clusters.R"
         
 #-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+
 """
 Cluster species separately and compare to original clustering
-Re-use the same scripts
+Re-use the same scripts for a very basic, general re-clustering using the same
+parameters
 """
 
 # batch correction
@@ -292,7 +303,7 @@ rule run_mnncorrect_species:
     script:
         "scripts/01_mnncorrect.R"
 
-# clustering
+# general, basic clustering
 rule louvain_clustering_species:
     input: 
         sce_input = rules.run_mnncorrect_species.output
@@ -308,10 +319,8 @@ rule louvain_clustering_species:
     script:
         "scripts/02_louvain_clustering.R"
 
-"""
-Make clustering comparison reports 
-"""    
-        
+
+# general clustering comparison reports     
 rule make_clustering_comparison_report:
     input:
         sce_l = rules.assign_annotation.output,
@@ -331,3 +340,128 @@ rule make_clustering_comparison_report:
     threads: 5
     script:
         "clustering_comparison_report.Rmd"
+
+#-------------------------------------------------------------------------------
+
+"""
+# Cluster species separately and compare to original clustering.
+# This time perform a custom, manual clustering to obtain a good
+# cell type annotation for each species separately.
+# Find the clustering parameters, then re-use the same scripts.
+"""
+
+# find custom clusterings by custom reports
+
+rule louvain_clustering_mmus_hsc:
+    input: 
+        sce_species = OUTPUT_DAT + "/01_mnnc/comparison/sce_mmus_hsc_" + BATCH_USE + "-01"
+    output:
+        OUTPUT_REP + "/02_clustering/comparison_custom/report_mmus_hsc.html"
+    resources:
+        mem_mb = 50000,
+        queue = "medium-debian"
+    threads: 10
+    params:
+        plotting = "../../source/plotting.R",
+        OUTPUT_DAT = OUTPUT_DAT
+    script:
+        "custom_clustering/custom_mmus_hsc.Rmd"
+
+rule louvain_clustering_mcas_hsc:
+    input: 
+        sce_species = OUTPUT_DAT + "/01_mnnc/comparison/sce_mcas_hsc_" + BATCH_USE + "-01"
+    output:
+        OUTPUT_REP + "/02_clustering/comparison_custom/report_mcas_hsc.html"
+    resources:
+        mem_mb = 50000,
+        queue = "medium-debian"
+    threads: 10
+    params:
+        plotting = "../../source/plotting.R",
+        OUTPUT_DAT = OUTPUT_DAT
+    script:
+        "custom_clustering/custom_mcas_hsc.Rmd"
+
+rule louvain_clustering_mspr_hsc:
+    input: 
+        sce_species = OUTPUT_DAT + "/01_mnnc/comparison/sce_mspr_hsc_" + BATCH_USE + "-01"
+    output:
+        OUTPUT_REP + "/02_clustering/comparison_custom/report_mspr_hsc.html"
+    resources:
+        mem_mb = 50000,
+        queue = "medium-debian"
+    threads: 10
+    params:
+        plotting = "../../source/plotting.R",
+        OUTPUT_DAT = OUTPUT_DAT
+    script:
+        "custom_clustering/custom_mspr_hsc.Rmd"
+
+rule louvain_clustering_mcar_hsc:
+    input: 
+        sce_species = OUTPUT_DAT + "/01_mnnc/comparison/sce_mcar_hsc_" + BATCH_USE + "-01"
+    output:
+        OUTPUT_REP + "/02_clustering/comparison_custom/report_mcar_hsc.html"
+    resources:
+        mem_mb = 50000,
+        queue = "medium-debian"
+    threads: 10
+    params:
+        plotting = "../../source/plotting.R",
+        OUTPUT_DAT = OUTPUT_DAT
+    script:
+        "custom_clustering/custom_mcar_hsc.Rmd"
+
+rule louvain_clustering_mcar_str:
+    input: 
+        sce_species = OUTPUT_DAT + "/01_mnnc/comparison/sce_mcar_str_" + BATCH_USE + "-01"
+    output:
+        OUTPUT_REP + "/02_clustering/comparison_custom/report_mcar_str.html"
+    resources:
+        mem_mb = 50000,
+        queue = "medium-debian"
+    threads: 10
+    params:
+        plotting = "../../source/plotting.R",
+        OUTPUT_DAT = OUTPUT_DAT
+    script:
+        "custom_clustering/custom_mcar_str.Rmd"
+
+# TODO: add input later
+rule custom_hsc_comparison_report:
+    output:
+        OUTPUT_REP + "/02_clustering/comparison_custom/custom_hsc_comparison_report.html"
+    resources:
+        mem_mb = 70000,
+        queue = "medium-debian"
+    threads: 10
+    script:
+        "custom_clustering/custom_hsc_comparison_report.Rmd"
+
+"""
+
+# Make clustering comparison reports 
+
+rule make_clustering_comparison_report:
+    input:
+        sce_l = rules.assign_annotation.output,
+        sce_l_species = rules.louvain_clustering_species.output,
+        sce_l_celltypes = rules.assign_annotation.output
+    resources:
+        mem_mb = 80000,
+        queue = "medium-debian"
+    params:
+        colors_path = COLORS,
+        plotting = "../../source/plotting.R",
+        colors = "../../source/colors.R"
+    conda:
+        "../../envs/ggalluvial.yml"
+    output:
+        OUTPUT_REP + "/02_clustering/comparison/clustering_report_{species}_{fraction}.html"
+    threads: 5
+    script:
+        "clustering_comparison_report.Rmd"
+
+# manual
+
+"""

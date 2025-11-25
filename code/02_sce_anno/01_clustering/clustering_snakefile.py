@@ -81,6 +81,7 @@ targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mspr_
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mcar_hsc.html"]
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mcar_str.html"]
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/custom_hsc_comparison_report.html"]
+targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/custom_hsc_clustering_report.html"]
 
 #-------------------------------------------------------------------------------
 
@@ -437,6 +438,19 @@ rule custom_hsc_comparison_report:
     threads: 10
     script:
         "custom_clustering/custom_hsc_comparison_report.Rmd"
+
+# TODO: add input later
+rule custom_hsc_clustering_report:
+    output:
+        OUTPUT_REP + "/02_clustering/comparison_custom/custom_hsc_clustering_report.html"
+    resources:
+        mem_mb = 70000,
+        queue = "medium-debian"
+    conda:
+        "../../envs/ggalluvial.yml"
+    threads: 10
+    script:
+        "custom_clustering/custom_hsc_clustering_report.Rmd"
 
 """
 

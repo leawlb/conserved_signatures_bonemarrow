@@ -1,0 +1,647 @@
+---
+title: "Custom clustering comparison"
+author: "Lea Wölbert"
+date: '2025-11-10'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This report is to compare the custom clusterings to the original merged
+clustering.
+
+#### Load libraries, source code 
+
+```{r seed,  message = FALSE}
+set.seed(37)
+```
+
+```{r, message = FALSE}
+library(SingleCellExperiment, quietly = TRUE)
+library(tidyverse, quietly = TRUE)
+library(ggalluvial, quietly = TRUE)
+```
+
+```{r load_objects}
+sce_mmus_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mmus_hsc_custom.rds")
+sce_mcas_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcas_hsc_custom.rds")
+sce_mspr_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mspr_hsc_custom.rds")
+sce_mcar_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcar_hsc_custom.rds")
+```
+
+```{r load_merged}
+sce_hsc_all_cells <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/sce_hsc-02")
+
+# remove unnecessary assays because the objects become too large to load
+assays(sce_hsc_all_cells) <- list(
+  counts = assays(sce_hsc_all_cells)$counts,
+  logcounts = assays(sce_hsc_all_cells)$logcounts
+)
+reducedDims(sce_hsc_all_cells) <- list(
+  UMAP = reducedDims(sce_hsc_all_cells)$UMAP
+)
+gc()
+```
+
+```{r cluster_labels}
+# add all labels to the object that contains all cells
+
+sce_hsc_all_cells$custom_label <- vector(length = ncol(sce_hsc_all_cells))
+
+sce_mmus_hsc$custom_label <- unfactor(sce_mmus_hsc$custom_label)
+sce_mcas_hsc$custom_label <- unfactor(sce_mcas_hsc$custom_label)
+sce_mspr_hsc$custom_label <- unfactor(sce_mspr_hsc$custom_label)
+sce_mcar_hsc$custom_label <- unfactor(sce_mcar_hsc$custom_label)
+
+sce_hsc_all_cells$custom_label[match(
+  colnames(sce_mmus_hsc), colnames(sce_hsc_all_cells))] <- sce_mmus_hsc$custom_label
+sce_hsc_all_cells$custom_label[match(
+  colnames(sce_mcas_hsc), colnames(sce_hsc_all_cells))] <- sce_mcas_hsc$custom_label
+sce_hsc_all_cells$custom_label[match(
+  colnames(sce_mspr_hsc), colnames(sce_hsc_all_cells))] <- sce_mspr_hsc$custom_label
+sce_hsc_all_cells$custom_label[match(
+  colnames(sce_mcar_hsc), colnames(sce_hsc_all_cells))] <- sce_mcar_hsc$custom_label
+
+rm(
+  sce_mmus_hsc,
+  sce_mcas_hsc,
+  sce_mspr_hsc,
+  sce_mcar_hsc)
+gc()
+```
+
+```{r load_anno}
+sce_hsc_anno <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data_freeze/05_annotated_objects/sce_hsc.rds")
+
+sce_hsc_all_cells$celltypes <- vector(length = ncol(sce_hsc_all_cells))
+sce_hsc_all_cells$celltypes <- sce_hsc_anno$celltypes[
+  match(colnames(sce_hsc_all_cells), colnames(sce_hsc_anno))]
+
+rm(sce_hsc_anno)
+gc()
+
+# i have removed some cells from the finally annotated object, so those
+# that are missing from that object are not called "removed"
+levels(sce_hsc_all_cells$celltypes) <- c(
+  levels(sce_hsc_all_cells$celltypes), 
+  "removed")
+sce_hsc_all_cells$celltypes[is.na(sce_hsc_all_cells$celltypes)] <- "removed"
+```
+
+## Basics
+
+```{r}
+
+# for nicer handling factor the custom labels, too
+sce_hsc_all_cells$custom_label <- factor(sce_hsc_all_cells$custom_label, levels = c(
+  "HSC",
+  "HSC/Early Mk",
+  "Early MPP cells 1",
+  "Early MPP cells 2",
+  "MPP cells 1",
+  "MPP cells 2",
+  "Activated MPP",
+  "Activated MPP cells 1",
+  "Activated MPP cells 2",
+  "Late MPP",
+  "Early myeloid",
+
+  "Early granu/mono",
+  "Granu/mono progenitor",
+  "Neutro progenitor",
+  "Later granu/neutro",
+
+  "Early lymphoid",
+  "Lymphoid",
+  "Late lymphoid",
+  "Late/Cycling lymphoid",
+
+  "Baso/Mast progenitor",
+  "Mk/E/BM (more Mk and BM)",
+  "Mk/E/BM (more Ery)",
+  "Early Mk progenitor",
+  "Mk/Ery (more Mk)",
+  "Mk/Ery",
+  "Early ery/baso/mast 1",
+  "Early ery/baso/mast 2",
+  "Early ery",
+  "Early erythroid progenitor",
+  "Ery progenitor",
+  "Erythroid 1",
+  "Erythroid 2",
+  "Erythroid 3",
+  "Late erythroid progenitor",
+  "Latest erythroid progenitor",
+  "Cycling",
+  "Cycling (more M-phase)",
+  "Cycling (more S-phase)",
+  "Cycling MPP",
+  "Cycling, mostly myeloid",
+  "Cycling granu/mono",
+  "Cycling ery",
+  # separate cells that would be removed
+  "Antigen-processing",
+  "Mono/antigen-presenting",
+  "Late neutro",
+  "Late immune, mixed",
+  "Late neutro/ery, mixed",
+  "Low quality",
+  "Low quality, early",
+  "Low quality, neutro",
+  "Low quality, ery"
+))
+
+```
+
+```{r tables}
+table(
+  sce_hsc_all_cells$celltypes,
+  sce_hsc_all_cells$custom_label)
+
+table(
+  sce_hsc_all_cells$celltypes[sce_hsc_all_cells$Species_ID == "mmus"],
+  sce_hsc_all_cells$custom_label[sce_hsc_all_cells$Species_ID == "mmus"])
+
+table(
+  sce_hsc_all_cells$celltypes[sce_hsc_all_cells$Species_ID == "mcas"],
+  sce_hsc_all_cells$custom_label[sce_hsc_all_cells$Species_ID == "mcas"])
+
+table(
+  sce_hsc_all_cells$celltypes[sce_hsc_all_cells$Species_ID == "mspr"],
+  sce_hsc_all_cells$custom_label[sce_hsc_all_cells$Species_ID == "mspr"])
+
+table(
+  sce_hsc_all_cells$celltypes[sce_hsc_all_cells$Species_ID == "mcar"],
+  sce_hsc_all_cells$custom_label[sce_hsc_all_cells$Species_ID == "mcar"])
+```
+
+## Comparison
+
+### Tiles
+
+```{r mmus_tiles}
+mat_mmus <- table(
+  sce_hsc_all_cells$celltypes[sce_hsc_all_cells$Species_ID == "mmus"],
+  sce_hsc_all_cells$custom_label[sce_hsc_all_cells$Species_ID == "mmus"])
+
+for(i in 1:ncol(mat_mmus)){
+  mat_mmus[,i] <- mat_mmus[,i]/base::sum(mat_mmus[,i])
+}
+mmus_df <- mat_mmus %>%
+  base::as.data.frame() %>%
+  dplyr::filter(!is.nan(Freq))
+
+mmus_df$Var2 <- factor(
+  mmus_df$Var2, 
+  levels = rev(levels(sce_hsc_all_cells$custom_label)[
+    levels(sce_hsc_all_cells$custom_label) %in% unique(unfactor(mmus_df$Var2))]))
+
+ggplot2::ggplot(
+  mmus_df, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::theme(
+    axis.text.x = element_text(
+      angle = 90,
+      vjust = 0.5, 
+      hjust = 1
+    )
+  )
+```
+
+```{r mcas_tiles}
+mat_mcas <- table(
+  sce_hsc_all_cells$celltypes[sce_hsc_all_cells$Species_ID == "mcas"],
+  sce_hsc_all_cells$custom_label[sce_hsc_all_cells$Species_ID == "mcas"])
+
+for(i in 1:ncol(mat_mcas)){
+  mat_mcas[,i] <- mat_mcas[,i]/base::sum(mat_mcas[,i])
+}
+mcas_df <- mat_mcas %>%
+  base::as.data.frame() %>%
+  dplyr::filter(!is.nan(Freq))
+
+mcas_df$Var2 <- factor(
+  mcas_df$Var2, 
+  levels = rev(levels(sce_hsc_all_cells$custom_label)[
+    levels(sce_hsc_all_cells$custom_label) %in% unique(unfactor(mcas_df$Var2))]))
+
+ggplot2::ggplot(
+  mcas_df, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::theme(
+    axis.text.x = element_text(
+      angle = 90,
+      vjust = 0.5, 
+      hjust = 1
+    )
+  )
+```
+
+```{r mspr_tiles}
+mat_mspr <- table(
+  sce_hsc_all_cells$celltypes[sce_hsc_all_cells$Species_ID == "mspr"],
+  sce_hsc_all_cells$custom_label[sce_hsc_all_cells$Species_ID == "mspr"])
+
+for(i in 1:ncol(mat_mspr)){
+  mat_mspr[,i] <- mat_mspr[,i]/base::sum(mat_mspr[,i])
+}
+mspr_df <- mat_mspr %>%
+  base::as.data.frame() %>%
+  dplyr::filter(!is.nan(Freq))
+
+mspr_df$Var2 <- factor(
+  mspr_df$Var2, 
+  levels = rev(levels(sce_hsc_all_cells$custom_label)[
+    levels(sce_hsc_all_cells$custom_label) %in% unique(unfactor(mspr_df$Var2))]))
+
+ggplot2::ggplot(
+  mspr_df, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::theme(
+    axis.text.x = element_text(
+      angle = 90,
+      vjust = 0.5, 
+      hjust = 1
+    )
+  )
+```
+
+```{r mcar_tiles}
+mat_mcar <- table(
+  sce_hsc_all_cells$celltypes[sce_hsc_all_cells$Species_ID == "mcar"],
+  sce_hsc_all_cells$custom_label[sce_hsc_all_cells$Species_ID == "mcar"])
+
+for(i in 1:ncol(mat_mcar)){
+  mat_mcar[,i] <- mat_mcar[,i]/base::sum(mat_mcar[,i])
+}
+mcar_df <- mat_mcar %>%
+  base::as.data.frame() %>%
+  dplyr::filter(!is.nan(Freq))
+
+mcar_df$Var2 <- factor(
+  mcar_df$Var2, 
+  levels = rev(levels(sce_hsc_all_cells$custom_label)[
+    levels(sce_hsc_all_cells$custom_label) %in% unique(unfactor(mcar_df$Var2))]))
+
+ggplot2::ggplot(
+  mcar_df, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::theme(
+    axis.text.x = element_text(
+      angle = 90,
+      vjust = 0.5, 
+      hjust = 1
+    )
+  )
+```
+
+### Alluvial
+
+```{r mmus_alluv, fig.height = 9, fig.width = 8}
+mat_mmus <- table(
+  sce_hsc_all_cells$celltypes[sce_hsc_all_cells$Species_ID == "mmus"],
+  sce_hsc_all_cells$custom_label[sce_hsc_all_cells$Species_ID == "mmus"])
+
+mmus_df <- mat_mmus %>%
+  base::as.data.frame() %>%
+  dplyr::filter(!is.nan(Freq))
+
+mmus_df$Var2_rev <- mmus_df$Var2
+mmus_df$Var2_rev <- factor(
+  mmus_df$Var2_rev, 
+  levels = rev(levels(mmus_df$Var2)))
+
+mmus_df2 <- mmus_df %>%
+  dplyr::mutate(
+    Var1_u = fct_inorder(paste0("orig ", Var1)),
+    Var2_u = fct_inorder(paste0("custom ", Var2_rev))
+  )
+
+ggplot2::ggplot(data = mmus_df2,
+                aes(axis1 = Var1_u,
+                    axis2 = Var2_u, 
+                    y = Freq))+
+  ggalluvial::geom_alluvium(aes(fill = Var1_u))+
+  ggalluvial::geom_stratum()+
+  ggplot2::geom_text(stat = "stratum",
+                     aes(label = after_stat(stratum)))+
+  ggplot2::scale_x_discrete(expand = c(0.15, 0.05))+
+  theme_void()+
+  ggplot2::theme(legend.position = "none")
+```
+
+```{r mcas_alluv, fig.height = 9, fig.width = 8}
+mat_mcas <- table(
+  sce_hsc_all_cells$celltypes[sce_hsc_all_cells$Species_ID == "mcas"],
+  sce_hsc_all_cells$custom_label[sce_hsc_all_cells$Species_ID == "mcas"])
+
+mcas_df <- mat_mcas %>%
+  base::as.data.frame() %>%
+  dplyr::filter(!is.nan(Freq))
+
+mcas_df$Var2_rev <- mcas_df$Var2
+mcas_df$Var2_rev <- factor(
+  mcas_df$Var2_rev, 
+  levels = rev(levels(mcas_df$Var2)))
+
+mcas_df2 <- mcas_df %>%
+  dplyr::mutate(
+    Var1_u = fct_inorder(paste0("orig ", Var1)),
+    Var2_u = fct_inorder(paste0("custom ", Var2_rev))
+  )
+
+ggplot2::ggplot(data = mcas_df2,
+                aes(axis1 = Var1_u,
+                    axis2 = Var2_u, 
+                    y = Freq))+
+  ggalluvial::geom_alluvium(aes(fill = Var1_u))+
+  ggalluvial::geom_stratum()+
+  ggplot2::geom_text(stat = "stratum",
+                     aes(label = after_stat(stratum)))+
+  ggplot2::scale_x_discrete(expand = c(0.15, 0.05))+
+  theme_void()+
+  ggplot2::theme(legend.position = "none")
+```
+
+```{r mspr_alluv, fig.height = 9, fig.width = 8}
+mat_mspr <- table(
+  sce_hsc_all_cells$celltypes[sce_hsc_all_cells$Species_ID == "mspr"],
+  sce_hsc_all_cells$custom_label[sce_hsc_all_cells$Species_ID == "mspr"])
+
+mspr_df <- mat_mspr %>%
+  base::as.data.frame() %>%
+  dplyr::filter(!is.nan(Freq))
+
+mspr_df$Var2_rev <- mspr_df$Var2
+mspr_df$Var2_rev <- factor(
+  mspr_df$Var2_rev, 
+  levels = rev(levels(mspr_df$Var2)))
+
+mspr_df2 <- mspr_df %>%
+  dplyr::mutate(
+    Var1_u = fct_inorder(paste0("orig ", Var1)),
+    Var2_u = fct_inorder(paste0("custom ", Var2_rev))
+  )
+
+ggplot2::ggplot(data = mspr_df2,
+                aes(axis1 = Var1_u,
+                    axis2 = Var2_u, 
+                    y = Freq))+
+  ggalluvial::geom_alluvium(aes(fill = Var1_u))+
+  ggalluvial::geom_stratum()+
+  ggplot2::geom_text(stat = "stratum",
+                     aes(label = after_stat(stratum)))+
+  ggplot2::scale_x_discrete(expand = c(0.15, 0.05))+
+  theme_void()+
+  ggplot2::theme(legend.position = "none")
+```
+
+```{r mcar_alluv, fig.height = 9, fig.width = 8}
+mat_mcar <- table(
+  sce_hsc_all_cells$celltypes[sce_hsc_all_cells$Species_ID == "mcar"],
+  sce_hsc_all_cells$custom_label[sce_hsc_all_cells$Species_ID == "mcar"])
+
+mcar_df <- mat_mcar %>%
+  base::as.data.frame() %>%
+  dplyr::filter(!is.nan(Freq))
+
+mcar_df$Var2_rev <- mcar_df$Var2
+mcar_df$Var2_rev <- factor(
+  mcar_df$Var2_rev, 
+  levels = rev(levels(mcar_df$Var2)))
+
+mcar_df2 <- mcar_df %>%
+  dplyr::mutate(
+    Var1_u = fct_inorder(paste0("orig ", Var1)),
+    Var2_u = fct_inorder(paste0("custom ", Var2_rev))
+  )
+
+ggplot2::ggplot(data = mcar_df2,
+                aes(axis1 = Var1_u,
+                    axis2 = Var2_u, 
+                    y = Freq))+
+  ggalluvial::geom_alluvium(aes(fill = Var1_u))+
+  ggalluvial::geom_stratum()+
+  ggplot2::geom_text(stat = "stratum",
+                     aes(label = after_stat(stratum)))+
+  ggplot2::scale_x_discrete(expand = c(0.15, 0.05))+
+  theme_void()+
+  ggplot2::theme(legend.position = "none")
+```
+
+```{r all_alluv, fig.height = 18, fig.width = 8}
+mat_all <- table(
+  sce_hsc_all_cells$celltypes,
+  sce_hsc_all_cells$custom_label)
+
+all_df <- mat_all %>%
+  base::as.data.frame() %>%
+  dplyr::filter(!is.nan(Freq))
+
+all_df$Var2_rev <- all_df$Var2
+all_df$Var2_rev <- factor(
+  all_df$Var2_rev, 
+  levels = rev(levels(all_df$Var2)))
+
+all_df2 <- all_df %>%
+  dplyr::mutate(
+    Var1_u = fct_inorder(paste0("orig ", Var1)),
+    Var2_u = fct_inorder(paste0("custom ", Var2_rev))
+  )
+
+ggplot2::ggplot(data = all_df2,
+                aes(axis1 = Var1_u,
+                    axis2 = Var2_u, 
+                    y = Freq))+
+  ggalluvial::geom_alluvium(aes(fill = Var1_u))+
+  ggalluvial::geom_stratum()+
+  ggplot2::geom_text(stat = "stratum",
+                     aes(label = after_stat(stratum)))+
+  ggplot2::scale_x_discrete(expand = c(0.15, 0.05))+
+  theme_void()+
+  ggplot2::theme(legend.position = "none")
+knitr::knit_exit()
+```
+
+## Control gene expression
+
+Compare the expression of marker genes (either from the literature, see 
+supplementary table of the corresponding publication) or picked from the
+marker gene lists of individual species and cell types.
+
+```{r marker_genes}
+# this list is a bit longer than the one in the custom assignment .Rmd scripts
+# so it can cover all species
+# it's also not JUST to get an idea, but to better show cell type seperation. 
+  marker_genes_list <- list(
+    "HSC" = c(
+      "Ly6a", # HSC-specific, spotty
+      "Slamf1",
+      "Aldh1a1", 
+      "Alcam",
+      "Gng11",
+      "Mllt3",
+      "Socs2",
+
+      "Cdkn1c", # HSC-specific, works for all and I known them well
+      "Procr",
+      "Mmrn1",
+      "Mecom",
+      "Mpl",
+
+      "Pdzk1ip1", # HSC-specific, works for all but I don't know it well
+
+      "Ltb", # mostly HSC, works for all, and I know them
+      "Hlf", 
+      "Ldhb",
+
+      "Txnip", # redox functions, likely also expressed in other clusters
+      "Pbx1",
+
+      "Angpt1", # quite broad already, but highest in HSC and well-known mostly
+      "Hoxa9",
+      "Lmo2",
+      "Meis1",
+      "Msi2"
+    ),
+    "MPP" = c(
+      "Adgrl4", 
+      "Cd34", 
+      "Sox4",
+      "Cd48", 
+      "Sell",
+      "Cdk4"
+    ),
+    "Myeloid_general" = c(
+      "Spi1", 
+      "Cebpa",
+      "Ctsg",
+      "Mpo",
+      "Prtn3",
+      "F13a1"),
+
+    "Neutro" = c(
+      "Elane", 
+      "Gfi1",
+      "Cebpe", 
+      "S100a8",
+      "S100a9",
+      "Wfdc21",
+      "Chil1"),
+
+    "Mono" = c(  
+      "Ccr2",
+      "Irf8",
+      "Ly86",
+      "Ms4a6c"),
+
+    "Antigen_processing_contamination" = c(
+      "Cd74",
+      "H2-Aa",
+      "H2-Eb1",
+      "H2-Ab1",
+      "Ctss"),
+
+    "Lymphoid_early" = c(
+      "Tcf4",
+      "Flt3", 
+      "Satb1",
+      "Dntt"),
+
+    "Lymphoid_late" = c(
+      "Ighm",
+      "Il7r",
+      "Rag1",
+      "Vpreb1",
+      "Vpreb3",
+      "Cd79b", 
+      "Igkc"),
+
+    "Lymph_contamination" = c(
+      "Ccl5", # NK
+      "Cd3e", # TC
+      "Cd8a",
+      "Tcf7"),
+
+    "Mast/Baso" = c(
+      "Mcpt8", 
+      "Hdc", 
+      "Lmo4", 
+      "Gzmb",
+      "Egr1",
+      "Cpa3", 
+      "Ms4a2",
+      "Prss34",
+      "Fcer1a",
+      "Gata2"#  also Mk, Eo Baso and HSC
+    ),
+
+    "Mk" = c(
+      "Itga2b", 
+      "Cavin2",
+      "Pf4",
+      "Clec4d",
+      "Plek",
+      "Fli1"),
+
+    "Mk/Ery" = c(
+      "Zfpm1",
+      "Gata1", 
+      "Trib2"),
+
+    "Ery" = c(
+      "Frat2",
+      "Ass1",
+      "Aqp11",
+      "Klf1",
+      "Blvrb",
+      "Tspo2",
+      "Epor", 
+      "Gfi1b",
+      "Gypa",
+      "Hba-a1",
+      "Hbb-bs"),
+
+    "CC entry/activation" = c(
+      "Lig1",
+      "Mcm7",
+      "Hells",
+      "Mcm6"),
+
+    "Cell cycle S phase" = c(
+      "Aurkb",
+      "Cdk1"
+      ),
+
+    "Cell cycle M phase" = c(
+      "Cdc20",
+      "Ccnb2",
+      "Knstrn"),
+
+    "Cell cycle general" = c(
+      "Mki67",
+      "Lockd",
+      "Cenpa" 
+      )
+    )
+```
+
+

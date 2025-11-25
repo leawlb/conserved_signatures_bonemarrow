@@ -275,6 +275,7 @@ if(fraction_curr == "str"){
     "Cd79a",
     "Ighm",
     "Gzmb",
+    "Cd74",
     "S100a8",
     "S100a9",
     "Ccl5",
@@ -341,16 +342,7 @@ if(fraction_curr == "str"){
     "Rgs4", 
     "Steap4",
     "Acta2", 
-    "Myh2",
-    "Des",
-    "Cd3d", 
-    "Cd8a",
-    "Cd4",
-    "Ilr7",
-    "Cd79a",
-    "Ighm",
-    "Gzmb",
-    "S100a8"
+    "Myh2"
   )
 }
 
@@ -475,8 +467,6 @@ look at the expression patterns.
 marker_genes_list <- as.list(marker_genes)
 
 plot_list_gene <- lapply(marker_genes_list, function(gene){
-  print(gene)
-  print(gene %in% rownames(sce_species))
   plot <- umap_gene(sce_species, gene)
 })
 names(plot_list_gene) <- marker_genes
@@ -529,18 +519,8 @@ cluster_markers <- lapply(clustlist, function(x){
 
 Get the contamination out of the way first.
 
-To help make it easier print everything for now then delete once I can
-identify each cluster a little.
-
-```{r}
-lapply(
-  as.list(c(1:length(unique(sce_species$cluster_louvain_custom)))), 
-  function(cluster){
-    cluster_markers[[cluster]] %>%
-    dplyr::filter(avg_log2FC > 0) %>%
-    head(n = 20)
-  })
-```
+I don't care that much about them as long as I can exclude that 
+they are of interest, so I will not annotate them too nicely.
 
 #### Ery
 
@@ -549,28 +529,88 @@ lapply(
 cluster_markers[[1]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
+# Car1, Car2, Hba-a1, Hba-a2, Gypa, Alad
+
 cluster_markers[[6]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
+# Alas, Hba-a2, Gypa, Hba-a1, Hemgn
+
 cluster_markers[[7]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
+# Car, Car2, Gype, Hba-a1, Klf2, Alad
+
 cluster_markers[[8]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
+# Ermap, Rhd, Tfrc, definitely ery-like but check out in more detail
+
 cluster_markers[[9]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
+# Car, Car2, Rhd, Hba-a1, Ermap
+
 cluster_markers[[17]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
+# Alas2, Hbb-bt, Tspo2, Rhd, Hba-a1
+
 cluster_markers[[23]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
+# Car1, Car2, Hba-a1, Hba-a2, Gypa
+
 cluster_markers[[33]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
+# Hba-a2, Gypa, Hbb-bt, Rhd, Car2
 ```
+
+Check out cluster 8.
+
+```{r umaps_8, fig.height = 3, fig.width = 4}
+# find the cluster
+umap_base(sce_species, "cluster_louvain_custom")+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+umap_base(
+  sce_species[,sce_species$cluster_louvain_custom == "8"],
+  "cluster_louvain_custom")+
+  ggplot2::xlim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,1]),
+      max(reducedDims(sce_species)$UMAP[,1])))+
+  ggplot2::ylim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,2]),
+      max(reducedDims(sce_species)$UMAP[,2])))+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+
+marker_genes_list_ery <- as.list(c(
+  "Slc4a1", # in eythroid membrane
+  "Kel", # in erythroid membrane, blood group antigen
+  "Ermap",
+  "Ctse",
+  "Rhd",
+  "Sox6", # erythroid maturation
+  "Tfrc", # iron transporter
+  # also adding some Ery classics
+  "Hba-a1",
+  "Gypa",
+  "Klf1",
+  "Epor"
+))
+
+plot_list_gene <- lapply(marker_genes_list_ery, function(gene){
+  plot <- umap_gene(sce_species, gene)
+})
+names(plot_list_gene) <- marker_genes_list_ery
+plot_list_gene
+```
+
+These are looking like very late RBC/Erys which is why I didn't know some
+these genes from the progenitors I ususally look at.
+But the top genes Slc4a1, Kel, Sox6 are definitely erythroid.
 
 #### Neutro
 
@@ -579,31 +619,138 @@ cluster_markers[[33]] %>%
 cluster_markers[[2]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
+# Rnase2a, S100a8, Elane, S100a9, Wfdc21, F13a1, Prtn3
+
 cluster_markers[[5]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
+# Elane, Prtn3, Rnase2a, S100a8, Wfdc21, Ccr2, Cebpb
+
 cluster_markers[[10]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
+# Thbs1, Trem1, Ccl6, Fn1, Ctss, Ms4a6c, Mmp8, Rgs, Cybb
+# not overtly neutrophilic as far as I can tell, check out in more detail
+
 cluster_markers[[13]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
+# Camp, Ly6a, S100a9, Trem2, Cepbe, Lrg1, Chil1, Wfdc21, Ms4a3, Cd63
+
 cluster_markers[[14]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
+# Fn1, Ccl6, Ctss, Mmp8, Chil1, Ms4a6c, Wfdc21, F13a1, Cybb
+# similar to 10 so check out but much more neutro looking
+
 cluster_markers[[21]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
-cluster_markers[[28>%
+# Fn1, Wfdc21, S100a8, S100a9, Rnase2a, Ms4a6c
+
+cluster_markers[[29]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
-cluster_markers[[31]] %>%
+# Camp, Lrg1, Cd3d, Ngp, Cd52, Mmp9, Chil1, Ly6a
+# looks a bit more mixed? check out
+
+cluster_markers[[32]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
+# Ngp, Camp, S100a8, S100a9, Trem3, Wfdc21, Cebpe, Chil1, Elane
+
 cluster_markers[[35]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
+# Retnlg, Prg2, Ccl6, Prg3, Cebpe, Cd63, Ear1, Ear2
+# maybe eosinophilic? I don't know many eo genes. check out
 ```
+
+Checking out clusters 10, 14, 29, 35
+
+```{r umaps_neutro, fig.height = 3, fig.width = 4}
+# find the clusters
+umap_base(sce_species, "cluster_louvain_custom")+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+umap_base(
+  sce_species[,sce_species$cluster_louvain_custom == "10"],
+  "cluster_louvain_custom")+
+  ggplot2::xlim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,1]),
+      max(reducedDims(sce_species)$UMAP[,1])))+
+  ggplot2::ylim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,2]),
+      max(reducedDims(sce_species)$UMAP[,2])))+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+umap_base(
+  sce_species[,sce_species$cluster_louvain_custom == "14"],
+  "cluster_louvain_custom")+
+  ggplot2::xlim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,1]),
+      max(reducedDims(sce_species)$UMAP[,1])))+
+  ggplot2::ylim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,2]),
+      max(reducedDims(sce_species)$UMAP[,2])))+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+umap_base(
+  sce_species[,sce_species$cluster_louvain_custom == "29"],
+  "cluster_louvain_custom")+
+  ggplot2::xlim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,1]),
+      max(reducedDims(sce_species)$UMAP[,1])))+
+  ggplot2::ylim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,2]),
+      max(reducedDims(sce_species)$UMAP[,2])))+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+umap_base(
+  sce_species[,sce_species$cluster_louvain_custom == "35"],
+  "cluster_louvain_custom")+
+  ggplot2::xlim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,1]),
+      max(reducedDims(sce_species)$UMAP[,1])))+
+  ggplot2::ylim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,2]),
+      max(reducedDims(sce_species)$UMAP[,2])))+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+
+marker_genes_list_neu <- as.list(c(
+  "Thbs1", # related to  neutro serine protease function
+  "Atf3", # neutrophilic responses, mature neutro
+  "Trem1", # neutro migration
+  "Ccl6", # one of the most abundant chemokines in mouse neutros
+  "Ctss", # macrophage mabye, neutro inflammation
+  "Fn1", 
+  "Lrg1", # in neutro granules
+  "Ltf", # lactoferrin, related to NETs?
+  "Mmp9", # a subset of neutrophils
+  "Asprv1", # macrophage-like  neutrophil cells
+  "Cd52", # also expressed on neutrophils
+  "Retnlg", # different subsets of neutrophils
+  "Prg2", # eosinophil
+  "Ear2",
+  "Prg3", # eosinophil granules
+  "Ear6"  # eosinophil granules
+))
+
+plot_list_gene <- lapply(marker_genes_list_neu, function(gene){
+  plot <- umap_gene(sce_species, gene)
+})
+names(plot_list_gene) <- marker_genes_list_neu
+plot_list_gene
+```
+
+So the mystery neutro clusters are actually very overtly neutrophilic
+just much more mature than what I'm used to from the progenitors
+in terms of expression.
+The last cluster are eosinophils which are not in the HSPC dataset.
 
 #### Baso Mast
 
@@ -612,45 +759,312 @@ cluster_markers[[35]] %>%
 cluster_markers[[3]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
+# Prss34, Mcpt8, Gata2, Ms4a2, Fcer1a, Hdc, Cpa3, Prg3
+# Mast/Baso, maybe a little eosiniphilic, too
 ```
+
+#### Lymphoid
+
+```{r markers_contamination_lymph}
+
+cluster_markers[[20]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+# Siglech, Mef2c, Ramp1, Sox4, Runx2, Irgf8, Ms4a6c, Tcf4, Ighm, Rnase6
+# this looks kind of mixed to me? but I don't know much about mature
+# immune cells -> check out
+
+cluster_markers[[26]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+# mt genes, Cd79a, Il7r, Ighm, Igll1, Sox4, Xist
+# low quality late-ish BC
+
+cluster_markers[[28]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+# Igkc, Cd79a, Ighm, Cd79b, Il7r, Sox4, Igll1
+# also some sort of late-ish BC
+
+cluster_markers[[30]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+# Siglech, Rnase6, Iglc3, Tcf4, Irf8, Sirt2, Cd74, Ighm
+# maybe something antigen presenting/DC/macro/mono/BC like?
+# check out
+
+cluster_markers[[31]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+# Igll1, Cd79a, Ighm, Igkc, Vpreb1, Cd79b, Il7r
+```
+
+```{r umaps_lymph, fig.height = 3, fig.width = 4}
+# find the cluster
+umap_base(sce_species, "cluster_louvain_custom")+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+umap_base(
+  sce_species[,sce_species$cluster_louvain_custom == "20"],
+  "cluster_louvain_custom")+
+  ggplot2::xlim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,1]),
+      max(reducedDims(sce_species)$UMAP[,1])))+
+  ggplot2::ylim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,2]),
+      max(reducedDims(sce_species)$UMAP[,2])))+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+umap_base(
+  sce_species[,sce_species$cluster_louvain_custom == "30"],
+  "cluster_louvain_custom")+
+  ggplot2::xlim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,1]),
+      max(reducedDims(sce_species)$UMAP[,1])))+
+  ggplot2::ylim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,2]),
+      max(reducedDims(sce_species)$UMAP[,2])))+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+
+marker_genes_list_lymph <- as.list(c(
+  "Siglech", # pDC precursors
+  "Mef2c", # DC development
+  "Runx2", # also specifically pDC 
+  "Rnase6", # dendritic cells and macrophages, 
+  "Sirt2" # several immune cells, TC, DC
+))
+
+plot_list_gene <- lapply(marker_genes_list_lymph, function(gene){
+  plot <- umap_gene(sce_species, gene)
+})
+names(plot_list_gene) <- marker_genes_list_lymph
+plot_list_gene
+```
+
+So cluster 20 and 30 are DCs that look BC-like = pDCs?
+Or maybe pDC and some B-lineage cells cluster together
+because they look so similar, either way, let's call it DC.
 
 #### Weird clusters 
 
 ```{r markers_contamination_weird}
 
-# ?
 cluster_markers[[15]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
+# Mpo, Elane, PRtn3, Ctsg, Ms4a3, Irf8, Clec12a
+# probably actually mono progenitor, check out
+
+cluster_markers[[24]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+# Mpo, Elane, PRtn3, Ctsg, Ms4a3, Irf8
+# probably actually mono progenitor, too, check out
+
+cluster_markers[[27]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+# Cd74, H2-A2, Ms4a6c, Ccr2 --> antigen presenting/mono
+
+# lymphatic EC?
+cluster_markers[[34]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 15)
+# Prg4, Ccn2, Dcn, Cpe, Creb5, Sparcl1, Cfh, Cd9, Aebp1, Sdc2, Spp1
+# this is just a wild mix, check out?
+# kind of MSC looking but...
+```
+
+```{r umaps_weird, fig.height = 3, fig.width = 4}
+# find the cluster
+umap_base(sce_species, "cluster_louvain_custom")+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+umap_base(
+  sce_species[,sce_species$cluster_louvain_custom == "15"],
+  "cluster_louvain_custom")+
+  ggplot2::xlim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,1]),
+      max(reducedDims(sce_species)$UMAP[,1])))+
+  ggplot2::ylim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,2]),
+      max(reducedDims(sce_species)$UMAP[,2])))+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+
+umap_base(
+  sce_species[,sce_species$cluster_louvain_custom == "24"],
+  "cluster_louvain_custom")+
+  ggplot2::xlim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,1]),
+      max(reducedDims(sce_species)$UMAP[,1])))+
+  ggplot2::ylim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,2]),
+      max(reducedDims(sce_species)$UMAP[,2])))+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+
+umap_base(
+  sce_species[,sce_species$cluster_louvain_custom == "27"],
+  "cluster_louvain_custom")+
+  ggplot2::xlim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,1]),
+      max(reducedDims(sce_species)$UMAP[,1])))+
+  ggplot2::ylim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,2]),
+      max(reducedDims(sce_species)$UMAP[,2])))+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+
+umap_base(
+  sce_species[,sce_species$cluster_louvain_custom == "34"],
+  "cluster_louvain_custom")+
+  ggplot2::xlim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,1]),
+      max(reducedDims(sce_species)$UMAP[,1])))+
+  ggplot2::ylim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,2]),
+      max(reducedDims(sce_species)$UMAP[,2])))+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+
+
+marker_genes_list_weird <- as.list(c(
+  "Mpo", # 15: myeloid 
+  "Elane", # 15: myeloid 
+  "Irf8", # 15: mono  
+  "Cd34", # progenitor
+  "Adgrl4", # progenitor
+  "Cd74", # APC
+  "Prg4", # unknowm MSC-looking cluster
+  "Ccn2",
+  "Dcn",
+  "Sparcl1",
+  "Aebp1",
+  "Spp1"
+))
+
+plot_list_gene <- lapply(marker_genes_list_weird, function(gene){
+  plot <- umap_gene(sce_species, gene)
+})
+names(plot_list_gene) <- marker_genes_list_weird
+plot_list_gene
+
 ```
 
 ### Expected clusters
 
-```{r markers_expected}
+```{r umaps_expected, fig.height = 3, fig.width = 4}
+# find the cluster
+umap_base(sce_species, "cluster_louvain_custom")+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+sce_expected <- sce_species[,sce_species$cluster_louvain_custom %in% c(
+  "4",
+  "11",
+  "19",
+  "16",
+  "12",
+  "22",
+  "18",
+  "25",
+  "34" # adding the mystery cluster
+)]
+
+umap_base(sce_expected, "cluster_louvain_custom")+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+
+marker_genes_list_weird <- as.list(c(
+
+))
+
+plot_list_gene <- lapply(marker_genes_short, function(gene){
+  plot <- umap_gene(sce_expected, gene)
+})
+names(plot_list_gene) <- marker_genes_short
+plot_list_gene
+```
+
+```{r markers_adipo}
 # adipo
 cluster_markers[[4]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 20)
+```
 
+Cxcl12, Apoe, Cxcl14, Gas6, Kitl, Lpl, Vcam1, Hp, Snai1 are clearly adipo CAR like.
+
+```{r markers_osteo_fibro}
 # osteo-fibro?
 cluster_markers[[11]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 20)
+```
 
+Dcn, Lum, Col1a1, Col1a2, Gpx3, Fmod, Mgp, Comp, Cd9
+look more fibro neutro based on main markers but these
+just may be the most strongly expressed so also need to check
+out the patterns of possibly more lowly expressed osteo genes.
 
-
-# EC sinusoidal and lymphatic
-cluster_markers[[11]] %>%
+```{r markers_osteo_chondro}
+# osteo chondro?
+cluster_markers[[19]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 20)
+```
 
-# EC very sinusoidal
+Thbs4, Fmod, Mgp, Dcn, Col1a1, Col1a2, Prelp, Aspn, Ogn, Cd9, Aebp1,
+Chad, Prg4.
+Very chondro-ish (early)?
+
+```{r markers_fibro_chondro}
+# chondro fibro?
+cluster_markers[[16]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 20)
+```
+
+Dcn, Gsn, Clec3b, Col3a1, Lum, Cd9, Pcolce, Tnxb
+also not overtly osteo-lineage.
+
+```{r EC_sinus_venular}
+# EC sinusoidal, venular, lymphatic?
+cluster_markers[[12]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 20)
+```
+
+Plvap, Pecam1, Vwf, Cdh5, Lrg1, Emcn, Eng.
+Definitely venular-ish.
+
+```{r EC_sinus_capillary}
+# EC very sinusoidal and slightly capillary
+cluster_markers[[22]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 20)
+```
+
+Cdh5, Flt1, Pecam1, Cavin2, Esam, Cd36, Kdr, Cav1.
+It does look sinusoidal like.
+
+```{r EC_artcap}
+# EC arteriolar and capillary
 cluster_markers[[18]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 20)
+```
 
-# EC arteriolar and capillary
-cluster_markers[[11]] %>%
+Cdh5, Cd36, Cav1, Cavin2, Flt1, Timp4, Cxcl12, Esam, Kdr, Pecam1.
+Markers look similar but tbh the Cxcl12 makes me really believe it's 
+arteriolar.
+
+```{r peri_smc}
+# peri/smc
+cluster_markers[[25]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 20)
 ```

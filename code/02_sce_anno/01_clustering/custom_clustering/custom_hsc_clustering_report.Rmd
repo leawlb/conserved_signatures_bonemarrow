@@ -142,7 +142,7 @@ sce_hsc_all_cells$custom_label <- factor(sce_hsc_all_cells$custom_label, levels 
   "Cycling granu/mono",
   "Cycling ery",
   # separate cells that would be removed
-  "Antigen-processing",
+  "Antigen-presenting",
   "Mono/antigen-presenting",
   "Late neutro",
   "Late immune, mixed",
@@ -553,7 +553,7 @@ marker gene lists of individual species and cell types.
       "Ly86",
       "Ms4a6c"),
 
-    "Antigen_processing_contamination" = c(
+    "Antigen_presenting_contamination" = c(
       "Cd74",
       "H2-Aa",
       "H2-Eb1",

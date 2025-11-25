@@ -821,7 +821,7 @@ sce_species$custom_label[
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "15"] <-  "Cycling granu/mono" 
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "18"] <-  "Antigen-processing"   
+  sce_species$cluster_louvain_custom == "18"] <-  "Antigen-presenting"   
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "10"] <-  "Neutro progenitor"  
 sce_species$custom_label[
@@ -862,7 +862,7 @@ sce_species$custom_label <- factor(
     "Granu/mono progenitor",
     "Cycling granu/mono",
     "Neutro progenitor",
-    "Antigen-processing",
+    "Antigen-presenting",
     "Late lymphoid",
     "Baso/Mast progenitor",
     "Mk/E/BM (more Mk and BM)",

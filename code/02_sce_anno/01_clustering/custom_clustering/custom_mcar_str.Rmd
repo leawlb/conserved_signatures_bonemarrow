@@ -54,7 +54,7 @@ stopifnot(unique(sce_species$Species_ID == species_curr))
 # by snakemake is the html, any other output must be
 # defined manually
 base_path_data <- snakemake@params[["OUTPUT_DAT"]]
-output_path <- base::paste0(base_path_data, "/02_clst/custom/sce_mmus_hsc_custom.rds")
+output_path <- base::paste0(base_path_data, "/02_clst/custom/sce_mcar_str_custom.rds")
 print(output_path)
 ```
 
@@ -68,7 +68,7 @@ names(col_num) <- as.character(c(1:40))
 ### Define parameters
 
 Caroli and Cast will be tough because they contain many more contaminating
-cells then cells of interest. 
+cells than cells of interest. 
 So I'll do a super fine clustering to try and properly separate even the
 very rare cell types of interest, like sinusoidal ECs.
 I'll try at least.
@@ -750,6 +750,7 @@ plot_list_gene
 So the mystery neutro clusters are actually very overtly neutrophilic
 just much more mature than what I'm used to from the progenitors
 in terms of expression.
+Actually, cluster 29 also contains some Cd3d, so I'd rather call it mixed.
 The last cluster are eosinophils which are not in the HSPC dataset.
 
 #### Baso Mast
@@ -843,7 +844,9 @@ names(plot_list_gene) <- marker_genes_list_lymph
 plot_list_gene
 ```
 
-So cluster 20 and 30 are DCs that look BC-like = pDCs?
+So clusters 20 and 30 are DCs that look BC-like = pDCs?
+But clusters 20 and  30 also express  some Cd8a and Cd4, Cd3e, Ccl5, 
+so I'll rather call them mixed.
 Or maybe pDC and some B-lineage cells cluster together
 because they look so similar, either way, let's call it DC.
 
@@ -868,7 +871,7 @@ cluster_markers[[27]] %>%
   head(n = 15)
 # Cd74, H2-A2, Ms4a6c, Ccr2 --> antigen presenting/mono
 
-# lymphatic EC?
+# mystery
 cluster_markers[[34]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
@@ -932,7 +935,7 @@ umap_base(
       min(reducedDims(sce_species)$UMAP[,2]),
       max(reducedDims(sce_species)$UMAP[,2])))+
   ggplot2::scale_color_manual("cluster", values = col_num)
-
+# it is "closer" to other MSC like clusters
 
 marker_genes_list_weird <- as.list(c(
   "Mpo", # 15: myeloid 
@@ -940,6 +943,9 @@ marker_genes_list_weird <- as.list(c(
   "Irf8", # 15: mono  
   "Cd34", # progenitor
   "Adgrl4", # progenitor
+  "Meis1", # progenitor
+  "Hlf", # progenitor
+  "Flt3", # progenitor
   "Cd74", # APC
   "Prg4", # unknowm MSC-looking cluster
   "Ccn2",
@@ -956,6 +962,9 @@ names(plot_list_gene) <- marker_genes_list_weird
 plot_list_gene
 
 ```
+
+They don't look early enough for "early myeloid prog".
+So keep them early neutro.
 
 ### Expected clusters
 
@@ -981,12 +990,6 @@ umap_base(sce_expected, "cluster_louvain_custom")+
 marker_genes_list_weird <- as.list(c(
 
 ))
-
-plot_list_gene <- lapply(marker_genes_short, function(gene){
-  plot <- umap_gene(sce_expected, gene)
-})
-names(plot_list_gene) <- marker_genes_short
-plot_list_gene
 ```
 
 ```{r markers_adipo}
@@ -1031,6 +1034,86 @@ cluster_markers[[16]] %>%
 Dcn, Gsn, Clec3b, Col3a1, Lum, Cd9, Pcolce, Tnxb
 also not overtly osteo-lineage.
 
+```{r marker_genes_list_msc}
+marker_genes_list_msc <- as.list(c(
+  # add some more expected genes that I know even though we had them before
+  "Cxcl12", # adipo 4
+  "Cxcl14",
+  "Lpl",
+  "Vcam1",
+  "Kitl",
+  "Adipoq",
+  "Lepr",
+  "Dcn", # fibro-osteo 11
+  "Lum",
+  "Col1a1",
+  "Col1a2",
+  "Aspn",
+  "Ogn",
+  "Fmod",
+  "Comp",
+  "Thbs2",
+  "Abi3bp",
+  "Fn1",
+  "Pdgfra",
+  "Pdgfrb",
+  "Cd34",
+  "Thy1",
+  "Thbs4", # osteo chondro/19
+  "Mgp",
+  "Prelp",
+  "Chad",
+  "Prg4",
+  "Alpl",
+  "Bglap",
+  "Ibsp",
+  "Mmp13",
+  "Sp7",
+  "Spp1",
+  "Postn",
+  "Runx2",
+  "Gsn", # chondro fibro/16
+  "Clec3b",
+  "Col3a1",
+  "Pcolce2",
+  "Tnxb",
+  "Ccl11",
+  "Dpt",
+  "Acan"
+))
+
+plot_list_gene <- lapply(marker_genes_list_msc, function(gene){
+  plot <- umap_gene(sce_expected, gene)
+})
+names(plot_list_gene) <- marker_genes_list_msc
+plot_list_gene
+```
+
+Cluster 4 is clearly adipocytic/CAR-like. 
+The only one expressing Adipoq.
+But one part also expresses osteo-lineage genes.
+
+cluster 16 is also weakly adipocytic, with light Cxcl12 and Lpl expression.
+Dcn is very high, Lum a bit lower.
+SPOTTY osteo expression. 
+Highest Pdgfra and Cd34, as well as Thy1.
+These are mostly fibro.
+
+Cluster 11 also has some spotty adipocytic.
+Dcn is mostly high, Lum is higher.
+Highest Aspn, Ogn, Fmod, Alpl, 
+I think a good portion of the more "Osteo" like cells are now with the
+Adipo-CAR cells.
+So these are mostly osteo-chondro.
+Especially since a small speckle contained in this cluster are the most
+mature chondro-cells, interestingly.
+
+Cluster 19 is the strongest Thbs4, Prelp, Chad expressing cluster, 
+also expresses some fibro-stuff.
+But really strong chondro-like.
+
+Cluster 34 (mystery) doesn't express most of these markers but Prg4.
+
 ```{r EC_sinus_venular}
 # EC sinusoidal, venular, lymphatic?
 cluster_markers[[12]] %>%
@@ -1062,9 +1145,343 @@ Cdh5, Cd36, Cav1, Cavin2, Flt1, Timp4, Cxcl12, Esam, Kdr, Pecam1.
 Markers look similar but tbh the Cxcl12 makes me really believe it's 
 arteriolar.
 
+```{r marker_genes_list_ec}
+marker_genes_list_ec <- as.list(c(
+  "Plvap", # EC sinusoidal, venular, lymphatic?
+  "Fabp4",
+  "Cavin2",
+  "Vwf",
+  "Ramp2",
+  "Clec14a",
+  "Cd9", 
+  "Emcn",
+  "Lrg1",
+  "Bcam",
+  "Eng",
+  "Mustn1", 
+  "Stab2", # add some more well-known
+  "Ackr1",
+  "Ephb4",
+  "Selp",
+  "Icam1",
+  "Vcam1",
+  "Sox4",
+  "Flt4",
+  "Tfpi",
+  "Lyve1",
+  "Ccl21a",
+  "Esam",
+  "Tm4sf1",
+  "Rbp7",
+  "Cd36",
+  "Slc9a3r2",
+  "Adgrf5",
+  "Kdr",
+  "Epas1",
+  "Sparcl1", # EC arteriolar and capillary?
+  "Hspb1",
+  "Rgcc", # add more
+  "Car4",
+  "Hey1",
+  "Sox17",
+  "Efnb2"
+))
+
+plot_list_gene <- lapply(marker_genes_list_ec, function(gene){
+  plot <- umap_gene(sce_expected, gene)
+})
+names(plot_list_gene) <- marker_genes_list_ec
+plot_list_gene
+```
+
+Cluster 12 has Plvap, Vwf, highest Emcn, highest Lrg1, Ackr1, Selp, 
+but not Stab2.
+A handful of Lymph EC is mingled in here, too.
+Sinusoidal/venular/fenestrated/H-type coded.
+
+Cluster 22 has spotty Plvap, Vwf, Lrg1, Ackr1 and Selp, 
+but highest and exclusive Stab2, and Tfpi.
+On the one hand sinusoidal, on the other mixed.
+I cannot really tell which one is "more" "classic" sinusoidal
+so I'll call both of them that.
+
+Cluster 18 has highest Rgcc, Car4, some Hey1 and Sox17.
+These are arteriolar/capillary.
+
 ```{r peri_smc}
 # peri/smc
 cluster_markers[[25]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 20)
+```
+
+Try the weird cluster again.
+
+```{r weird_MSC}
+# peri/smc
+cluster_markers[[34]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 20)
+```
+
+```{r marker_genes_list_weird_msc}
+marker_genes_list_weird_msc <- as.list(c(
+  "Prg4",
+  "Clic5",
+  "Ccn2",
+  "Dcn",
+  "Cpe",
+  "Fbln7",
+  "Gpx3",
+  "Creb5",
+  "Sparcl1",
+  "Pcolce",
+  "Cfh",
+  "Cd9",
+  "Serping1",
+  "Aebp1",
+  # add some myofibroblast markers
+  "Acta2",
+  "Vim",
+  "Des",
+  "Vcl"
+))
+
+plot_list_gene <- lapply(marker_genes_list_weird_msc, function(gene){
+  plot <- umap_gene(sce_expected, gene)
+})
+names(plot_list_gene) <- marker_genes_list_weird_msc
+plot_list_gene
+
+```
+
+Prg4, Cpe, Fbln7, are co-expressed with chondro.
+Gpx3, Creb5, Sparcl1, Cfh with fibro.
+Clic5 is co-expressed with Aart/Cap EC.
+Ccn2 is an MSC gene.
+
+Clic5 seems pre-adipocytic?
+Cpe also obesity related.
+
+Prg4 seems to be a marker for some Chondro/fibro subset at a specific
+location but I don't want to give location names (like endosteal) from
+scRNAseq data alone.
+
+I just cannot tell, these express markers from all lineages, and lack
+important others, so I'll just call them "unclear". 
+It's a tiny cluster anyways.
+
+# Assign
+
+In the same order as above
+
+```{r assign}
+
+sce_species$custom_label <- vector(length = ncol(sce_species))
+
+# Ery
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "1"] <-  "Ery 1"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "6"] <-  "Ery 2"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "7"] <-  "Ery 3"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "8"] <-  "Mature ery"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "9"] <-  "Ery 4"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "17"] <-  "Ery 5"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "23"] <-  "Ery 6"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "33"] <-  "Ery 7"
+
+# Neutro
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "2"] <-  "Neutro 1"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "5"] <-  "Neutro 2"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "10"] <-  "Mature neutro 1"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "13"] <-  "Neutro 3"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "14"] <-  "Mature neutro 2"
+  sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "21"] <-  "Neutro 3"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "29"] <-  "Mature immune, mixed 1"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "32"] <-  "Neutro 4"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "35"] <-  "Eosinophil"
+
+# Baso mast 
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "3"] <-  "Baso/Mast"
+
+# Lymphoid
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "20"] <-  "Mature immune, mixed 3"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "26"] <-  "BC lineage 1"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "28"] <-  "BC lineage 2"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "30"] <-  "Mature immune, mixed 2"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "31"] <-  "BC lineage 3"
+  
+# weird clusters 
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "15"] <-  "Early Neutro 1"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "24"] <-  "Early Neutro 2"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "27"] <-  "Antigen-presenting"
+
+# expected clusters + the last weird cluster
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "4"] <-  "Adipo/Osteo CAR"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "16"] <-  "Fibro"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "11"] <-  "Osteo-Chondro"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "19"] <-  "Chondro"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "34"] <-  "Unclear mesenchymal"
+
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "12"] <-  "Sinusoidal EC 2"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "22"] <-  "Sinusoidal EC 1"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "18"] <-  "Arteriolar/capillary EC"
+
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "25"] <-  "Peri/SMC"
+
+sce_species$custom_label <- factor(
+  sce_species$custom_label,
+  levels = c(
+    "Adipo/Osteo CAR",
+    "Osteo-Chondro",
+    "Chondro",
+    "Fibro",
+    "Unclear mesenchymal",
+    "Arteriolar/capillary EC",
+    "Sinusoidal EC 1",
+    "Sinusoidal EC 2",
+    "Peri/SMC",
+    "Ery 1",
+    "Ery 2",
+    "Ery 3",
+    "Ery 4",
+    "Ery 5",
+    "Ery 6",
+    "Ery 7",
+    "Mature ery",
+    "Early Neutro 1",
+    "Early Neutro 2",
+    "Neutro 1",
+    "Neutro 2",
+    "Neutro 3",
+    "Neutro 4",
+    "Mature neutro 1",
+    "Mature neutro 2",
+    "Mature neutro 3",
+    "Eosinophil",
+    "Baso/Mast",
+    "BC lineage 1",
+    "BC lineage 2",
+    "BC lineage 3",
+    "Antigen-presenting",
+    "Mature immune, mixed 1",
+    "Mature immune, mixed 2",
+    "Mature immune, mixed 3"
+
+    ))
+sort(unique(sce_species$custom_label))
+levels(sce_species$custom_label)
+stopifnot(!is.na(sce_species$custom_label))
+```
+
+One last plot to confirm in correct order.
+
+```{r heatmap_confirm, fig.height = 10, fig.width = 7}
+
+# get average logcounts per label
+agg_sce_species <- scuttle::aggregateAcrossCells(
+  sce_species,
+  id=colData(sce_species)[,c("custom_label")], 
+  statistics = "mean",
+  use.assay.type = "logcounts")
+
+# turn into df formatted for visualisation
+agg_logcounts_df <- logcounts(agg_sce_species) %>%
+  as.matrix() %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = "genes") %>%
+  tidyr::pivot_longer(
+    cols = unique(agg_sce_species$custom_label),
+    names_to = "custom_label",
+    values_to = "avg_logcounts")
+
+# only keep genes for visualisation
+agg_logcounts_df <- agg_logcounts_df %>%
+  dplyr::filter(genes %in% marker_genes)
+
+# factorise for nicer plot
+agg_logcounts_df$genes <- factor(
+  agg_logcounts_df$genes,
+  levels = rev(marker_genes))
+
+agg_logcounts_df$custom_label <- factor(
+  agg_logcounts_df$custom_label,
+  levels = levels(sce_species$custom_label))
+
+# scale expression per gene using z-scores
+agg_logcounts_df$zscore_gene <- vector(
+  length = nrow(agg_logcounts_df), 
+  mode = "numeric")
+
+for(gene in base::unique(agg_logcounts_df$genes)){
+  
+  expr_vector_g <- agg_logcounts_df[
+    agg_logcounts_df$genes == gene,]$avg_logcounts
+
+  # calculate z score per gene
+  z_score_g <- (expr_vector_g - base::mean(expr_vector_g))/
+    stats::sd(expr_vector_g)
+  agg_logcounts_df$zscore_gene[agg_logcounts_df$genes == gene] <- z_score_g
+}
+
+# plot
+ggplot2::ggplot(
+  agg_logcounts_df,
+  aes(
+    x = custom_label,
+    y = genes,
+    fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_gradient2(
+    low = "blue3",
+    mid = "white", 
+    high = "red3", 
+    midpoint = 0)+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))
+```
+
+## Save 
+
+```{r save}
+print(output_path)
+saveRDS(sce_species, output_path)
+```
+
+```{r session_info}
+utils::sessionInfo()
 ```

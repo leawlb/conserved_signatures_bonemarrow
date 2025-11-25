@@ -1,8 +1,7 @@
 library(Seurat)
 library(harmony)
 
-setwd("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/04_rare_celltypes/mouse_lemur_Ezran2025")
-mouse_lemur_harmony <- readRDS("01_mouse_lemur_harmony.rds")
+mouse_lemur_harmony <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/04_rare_celltypes/mouse_lemur_Ezran2025/02_mouse_lemur_harmony.rds")
 
 HSC <- subset(mouse_lemur_harmony,
               idents = 21)
@@ -30,8 +29,8 @@ HSC <- HSC |>
     reduction      = "harmony",
     dims           = 1:50,
     reduction.name = "umap_harmony",
-    n.neighbors    = 25,
-    min.dist       = 0.5
+    n.neighbors    = 200,
+    min.dist       = 1
   ) |>
   FindClusters(resolution = 0.5)
 
@@ -76,9 +75,9 @@ stromal <- stromal |>
   FindNeighbors(reduction = "harmony", dims = 1:50) |>
   RunUMAP(
     reduction      = "harmony",
-    dims           = 1:50,
+    dims           = 1:10,
     reduction.name = "umap_harmony",
-    n.neighbors    = 50,
+    n.neighbors    = 200,
     min.dist       = 1
   ) |>
   FindClusters(resolution = 0.5)

@@ -77,10 +77,12 @@ for s in species:
 # custom clustering and label assignment per condition
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mmus_hsc.html"]
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mcas_hsc.html"]
+targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mcas_str.html"]
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mspr_hsc.html"]
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mcar_hsc.html"]
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mcar_str.html"]
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/custom_hsc_comparison_report.html"]
+targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/custom_hsc_clustering_report.html"]
 
 #-------------------------------------------------------------------------------
 
@@ -382,6 +384,21 @@ rule louvain_clustering_mcas_hsc:
     script:
         "custom_clustering/custom_mcas_hsc.Rmd"
 
+rule louvain_clustering_mcas_str:
+    input: 
+        sce_species = OUTPUT_DAT + "/01_mnnc/comparison/sce_mcas_str_" + BATCH_USE + "-01"
+    output:
+        OUTPUT_REP + "/02_clustering/comparison_custom/report_mcas_str.html"
+    resources:
+        mem_mb = 50000,
+        queue = "medium-debian"
+    threads: 10
+    params:
+        plotting = "../../source/plotting.R",
+        OUTPUT_DAT = OUTPUT_DAT
+    script:
+        "custom_clustering/custom_mcas_str.Rmd"
+
 rule louvain_clustering_mspr_hsc:
     input: 
         sce_species = OUTPUT_DAT + "/01_mnnc/comparison/sce_mspr_hsc_" + BATCH_USE + "-01"
@@ -437,6 +454,19 @@ rule custom_hsc_comparison_report:
     threads: 10
     script:
         "custom_clustering/custom_hsc_comparison_report.Rmd"
+
+# TODO: add input later
+rule custom_hsc_clustering_report:
+    output:
+        OUTPUT_REP + "/02_clustering/comparison_custom/custom_hsc_clustering_report.html"
+    resources:
+        mem_mb = 70000,
+        queue = "medium-debian"
+    conda:
+        "../../envs/ggalluvial.yml"
+    threads: 10
+    script:
+        "custom_clustering/custom_hsc_clustering_report.Rmd"
 
 """
 

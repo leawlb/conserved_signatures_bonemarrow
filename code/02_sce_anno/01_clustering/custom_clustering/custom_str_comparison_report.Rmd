@@ -30,10 +30,10 @@ library(tidyverse, quietly = TRUE)
 #todo input snakemake later
 
 ```{r load_objects}
-sce_mmus_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mmus_hsc_custom.rds")
-sce_mcas_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcas_hsc_custom.rds")
-sce_mspr_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mspr_hsc_custom.rds")
-sce_mcar_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcar_hsc_custom.rds")
+#sce_mmus_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mmus_hsc_custom.rds")
+sce_mcas_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcas_str_custom.rds")
+#sce_mspr_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mspr_hsc_custom.rds")
+sce_mcar_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcar_str_custom.rds")
 ```
 
 ## Control gene expression
@@ -47,156 +47,230 @@ marker gene lists of individual species and cell types.
 # so it can cover all species
 # it's also not JUST to get an idea, but to better show cell type seperation. 
   marker_genes_list <- list(
-    "HSC" = c(
-      "Ly6a", # HSC-specific, spotty
-      "Slamf1",
-      "Aldh1a1", 
-      "Alcam",
-      "Gng11",
-      "Mllt3",
-      "Socs2",
-
-      "Cdkn1c", # HSC-specific, works for all and I known them well
-      "Procr",
-      "Mmrn1",
-      "Mecom",
-      "Mpl",
-
-      "Pdzk1ip1", # HSC-specific, works for all but I don't know it well
-
-      "Ltb", # mostly HSC, works for all, and I know them
-      "Hlf", 
-      "Ldhb",
-
-      "Txnip", # redox functions, likely also expressed in other clusters
-      "Pbx1",
-
-      "Angpt1", # quite broad already, but highest in HSC and well-known mostly
-      "Hoxa9",
-      "Lmo2",
-      "Meis1",
-      "Msi2"
+    "CAR" = c(
+      "Cxcl14", 
+      "Cxcl12",
+      "Kitl"
+      ),
+    "Adipo" = c(
+      "Adipoq",
+      "Lepr", 
+      "Lpl", 
+      "Hp"
+      ),
+    "Osteo" = c( # from early/CAR to pure-ish
+      "Limch1",
+      "Mmp13",
+      "Slit2",
+      "Alpl", 
+      "Spp1", 
+      "Car3",
+      "Sp7",
+      "Ibsp",
+      "Bglap",
+      "Bglap2",
+      "Bglap3",
+      "Mepe",
+      "Phex"
+      ),
+    "Chondro/Osteo/early mixed" = c(
+      "Tnc",
+      "Pth1r",
+      "Postn",
+      "Ptn",
+      "Ogn",
+      "Aspn",
+      "Ptgis",
+      "Tnn",
+      "Comp"
+      ),
+    "Chondro early" = c(
+      "Prg4",
+      "Fmod",
+      "Chad", 
+      "Mgp",
+      "Crispld1",
+      "Cytl1"
+      ),
+    "Chondro late" = c(  
+      "Sox9",
+      "Snorc",
+      "Acan"
+      ),
+    "Fibro" = c(
+      "Pdgfra",
+      "Pdgfrb",
+      "Des",
+      "Dcn",      
+      "Gsn",
+      "Lum",
+      "Dpt",
+      "Abi3bp",
+      "Pcolce2",
+      "Clec3b",
+      "Fn1",
+      "Cd34",
+      "Thy1"
+      ),
+    "Pan EC" = c(
+      "Cdh5",
+      "Pecam1"
+      ),
+    "Capillary" = c(
+      "Rgcc",
+      "Car4",
+      "Timp4"
+      ),
+    "Arteriolar" = c(
+      "Efnb2", # NK
+      "Hey1", # TC
+      "Sox17",
+      "Cd36"
+      ),
+    "Venous/other" = c(
+      "Kdr",
+      "Emcn",
+      "Eng",
+      "Esam",
+      "Flt1"
+      ),
+    "Sinusoidal classic 1" = c(
+      "Stab2", 
+      "Tfpi",
+      "Ackr1", 
+      "Lrg1" 
+      ),
+    "Sinusoidal classic 2" = c(
+      "Selp", 
+      "Icam1"
+      ),
+    "EC, other" = c(
+      "Vwf",
+      "Plvap",
+      "Nr2f2"
     ),
-    "MPP" = c(
-      "Adgrl4", 
-      "Cd34", 
-      "Sox4",
-      "Cd48", 
-      "Sell",
-      "Cdk4"
-    ),
-    "Myeloid_general" = c(
-      "Spi1", 
-      "Cebpa",
-      "Ctsg",
-      "Mpo",
-      "Prtn3",
-      "F13a1"),
-
-    "Neutro" = c(
-      "Elane", 
-      "Gfi1",
-      "Cebpe", 
-      "S100a8",
-      "S100a9",
-      "Wfdc21",
-      "Chil1"),
-
-    "Mono" = c(  
-      "Ccr2",
-      "Irf8",
-      "Ly86",
-      "Ms4a6c"),
-
-    "Antigen_presenting_contamination" = c(
-      "Cd74",
-      "H2-Aa",
-      "H2-Eb1",
-      "H2-Ab1",
-      "Ctss"),
-
-    "Lymphoid_early" = c(
-      "Tcf4",
-      "Flt3", 
-      "Satb1",
-      "Dntt"),
-
-    "Lymphoid_late" = c(
-      "Ighm",
-      "Il7r",
-      "Rag1",
-      "Vpreb1",
-      "Vpreb3",
-      "Cd79b", 
-      "Igkc"),
-
-    "Lymph_contamination" = c(
-      "Ccl5", # NK
-      "Cd3e", # TC
-      "Cd8a",
-      "Tcf7"),
-
-    "Mast/Baso" = c(
-      "Mcpt8", 
-      "Hdc", 
-      "Lmo4", 
-      "Gzmb",
-      "Egr1",
-      "Cpa3", 
-      "Ms4a2",
-      "Prss34",
-      "Fcer1a",
-      "Gata2"#  also Mk, Eo Baso and HSC
-    ),
-
-    "Mk" = c(
-      "Itga2b", 
-      "Cavin2",
-      "Pf4",
-      "Clec4d",
-      "Plek",
-      "Fli1"),
-
-    "Mk/Ery" = c(
-      "Zfpm1",
-      "Gata1", 
-      "Trib2"),
-
-    "Ery" = c(
-      "Frat2",
-      "Ass1",
-      "Aqp11",
-      "Klf1",
-      "Blvrb",
-      "Tspo2",
-      "Epor", 
-      "Gfi1b",
-      "Gypa",
-      "Hba-a1",
-      "Hbb-bs"),
-
+    "Lymphatic EC" = c(
+      "Lyve1",
+      "Ccl21a"
+      ),
+    "Peri/SMC" = c(
+      "Rgs5",
+      "Acta2",
+      "Tagln",
+      "Steap4"
+      ),
     "CC entry/activation" = c(
       "Lig1",
       "Mcm7",
       "Hells",
-      "Mcm6"),
-
+      "Mcm6"
+      ),
     "Cell cycle S phase" = c(
       "Aurkb",
       "Cdk1"
       ),
-
     "Cell cycle M phase" = c(
       "Cdc20",
       "Ccnb2",
-      "Knstrn"),
-
+      "Knstrn"
+      ),
     "Cell cycle general" = c(
       "Mki67",
       "Lockd",
       "Cenpa" 
-      )
+      ),
+    "Contamination ery early/middle" = c(
+      "Klf1",
+      "Gypa",
+      "Hba-a1",
+      "Hbb-bs",
+      "Hmbs"
+      ),
+    "Contamination ery late" = c(
+      "Kel",
+      "Ermap",
+      "Ctse",
+      "Sox6"
+      ),
+    "Contamination neutro early" = c(
+      "Mpo",
+      "Elane",
+      "Prtn3",
+      "Cebpe"
+      ),
+    "Contamination neutro middle" = c(
+      "S100a8",
+      "S100a9",
+      "Camp",
+      "Ngp",
+      "Wfdc21",
+      "Retnlg"
+      ),
+    "Contamination neutro late" = c(
+      "Trem1",
+      "Thbs1",
+      "Ccl6",
+      "Mmp9"
+      ),
+    "Contamination baso mast" = c(
+      "Prss34",
+      "Gata2",
+      "Hdc",
+      "Cpa3"
+      ),
+    "Contamination eosinophil" = c(
+      "Prg2",
+      "Prg3",
+      "Ear1",
+      "Ear6"
+    ),
+    "Contamination lymph early" = c(
+      "Sox4",
+      "Flt3",
+      "Dntt",
+      "Il7r",
+      "Satb1" 
+      ),
+    "Contamination BC lineage" = c(
+      "Vpreb1",
+      "Vpreb3",
+      "Cd79a",
+      "Cd79b",
+      "Igha",
+      "Jchain",
+      "Igkc"
+      ), 
+    "Contamination TC lineage" = c(
+      "Cd8a",
+      "Cd4",
+      "Cd3e",
+      "Cd3d",
+      "Trbc1"
+      ),
+    "Contamination NK lineage" = c(
+      "Ccl5",
+      "Nkg7"
+      ), 
+    "Contamination Antigen-presenting" = c(
+      "H2-Aa",
+      "H2-Ab1",
+      "Cd74",
+      "Ctss"
+      ),
+    "Contamination mono/DC/macto" = c(
+      "Irf8",
+      "Ccr2",
+      "Siglech",
+      "F13a1",
+      "Mpeg1"
+      ), 
+    "Contamination skeletal muscle" = c(
+      "Acta1",
+      "Tnnt3",
+      "Tnnc2",
+      "Tpm2"
     )
+  )
 ```
 
 Make a shorter marker gene lists based on my observations
@@ -326,22 +400,22 @@ ggplot2::ggplot(
 
 ```{r heatmap_hsc, fig.height = 7, fig.width = 6}
 
-marker_genes_hsc <- unlist(marker_genes_list[1:2])
+marker_genes_mes <- unlist(marker_genes_list[1:7])
 
 make_heatmap(sce_mmus_hsc, marker_genes_hsc)
-make_heatmap(sce_mcas_hsc, marker_genes_hsc)
+make_heatmap(sce_mcas_str, marker_genes_mes)
 make_heatmap(sce_mspr_hsc, marker_genes_hsc)
-make_heatmap(sce_mcar_hsc, marker_genes_hsc)
+make_heatmap(sce_mcar_str, marker_genes_mes)
 ```
 
 ```{r heatmap_myeloid, fig.height = 6, fig.width = 6}
 
-marker_genes_myeloid <- unlist(marker_genes_list[3:6])
+marker_genes_ec <- unlist(marker_genes_list[8:15])
 
 make_heatmap(sce_mmus_hsc, marker_genes_myeloid)
-make_heatmap(sce_mcas_hsc, marker_genes_myeloid)
+make_heatmap(sce_mcas_str, marker_genes_ec)
 make_heatmap(sce_mspr_hsc, marker_genes_myeloid)
-make_heatmap(sce_mcar_hsc, marker_genes_myeloid)
+make_heatmap(sce_mcar_str, marker_genes_ec)
 ```
 
 ```{r heatmap_lymph, fig.height = 5, fig.width = 6}
@@ -381,7 +455,9 @@ marker_genes_all <- unlist(marker_genes_list)
 make_heatmap(sce_mmus_hsc, marker_genes_all)
 make_heatmap(sce_mcas_hsc, marker_genes_all)
 make_heatmap(sce_mspr_hsc, marker_genes_all)
-make_heatmap(sce_mcar_hsc, marker_genes_all)
+make_heatmap(sce_mcar_str, marker_genes_all)
+
+marker_genes_all[duplicated(marker_genes_all)]
 ```
 
 ```{r best_marker_genes, fig.height = 8, fig.width = 6}

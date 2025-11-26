@@ -79,6 +79,7 @@ targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mmus_
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mcas_hsc.html"]
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mcas_str.html"]
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mspr_hsc.html"]
+targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mspr_str.html"]
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mcar_hsc.html"]
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mcar_str.html"]
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/custom_hsc_comparison_report.html"]
@@ -413,6 +414,21 @@ rule louvain_clustering_mspr_hsc:
         OUTPUT_DAT = OUTPUT_DAT
     script:
         "custom_clustering/custom_mspr_hsc.Rmd"
+
+rule louvain_clustering_mspr_str:
+    input: 
+        sce_species = OUTPUT_DAT + "/01_mnnc/comparison/sce_mspr_str_" + BATCH_USE + "-01"
+    output:
+        OUTPUT_REP + "/02_clustering/comparison_custom/report_mspr_str.html"
+    resources:
+        mem_mb = 50000,
+        queue = "medium-debian"
+    threads: 10
+    params:
+        plotting = "../../source/plotting.R",
+        OUTPUT_DAT = OUTPUT_DAT
+    script:
+        "custom_clustering/custom_mspr_str.Rmd"
 
 rule louvain_clustering_mcar_hsc:
     input: 

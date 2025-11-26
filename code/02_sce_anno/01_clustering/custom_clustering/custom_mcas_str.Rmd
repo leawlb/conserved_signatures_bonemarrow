@@ -1198,26 +1198,26 @@ sce_species$custom_label[
   sce_species$cluster_louvain_custom == "27"] <-  "Neutro 2"
 
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "13"] <-  "Mature immune, mixed"
+  sce_species$cluster_louvain_custom == "13"] <-  "Mature immune, mixed 1"
 
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "16"] <-  "Baso/Mast"
 
 # Lymphoid
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "2"] <-  "Nk"
+  sce_species$cluster_louvain_custom == "2"] <-  "Nk/TC"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "10"] <-  "Antigen-presenting 1"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "12"] <-  "BC lineage 1"
+  sce_species$cluster_louvain_custom == "12"] <-  "BC lineage 3"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "14"] <-  "DC lineage 1"
+  sce_species$cluster_louvain_custom == "14"] <-  "Mature immune, mixed 2"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "18"] <-  "BC lineage 2"
+  sce_species$cluster_louvain_custom == "18"] <-  "BC lineage 7"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "21"] <-  "BC lineage 3"
+  sce_species$cluster_louvain_custom == "21"] <-  "BC lineage 4"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "23"] <-  "BC lineage 4"
+  sce_species$cluster_louvain_custom == "23"] <-  "BC lineage 2"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "25"] <-  "BC lineage 5"
 sce_species$custom_label[
@@ -1225,19 +1225,19 @@ sce_species$custom_label[
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "29"] <-  "BC lineage 6"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "30"] <-  "BC lineage 7"
+  sce_species$cluster_louvain_custom == "30"] <-  "BC lineage 1"
 
 # Other
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "26"] <-  "Skeletal muscle"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "3"] <-  "Mono/Macro lineage 1"
+  sce_species$cluster_louvain_custom == "3"] <-  "Mono/Macro lineage 3"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "5"] <-  "Mono/Macro lineage 2"
+  sce_species$cluster_louvain_custom == "5"] <-  "Mono/Macro lineage 1"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "6"] <-  "Mono/Macro lineage 3"
+  sce_species$cluster_louvain_custom == "6"] <-  "Mono/Macro lineage 4"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "7"] <-  "Mono/Macro lineage 4, cycling"
+  sce_species$cluster_louvain_custom == "7"] <-  "Mono/Macro lineage 2, cycling"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "17"] <-  "Mono/Macro lineage 5"
 
@@ -1272,15 +1272,15 @@ sce_species$custom_label <- factor(
     "Sinusoidal EC",
     "Peri/SMC",
     "Erythroid",
+    "Mono/Macro lineage 1", # they look a bit earlier than the neutros
+    "Mono/Macro lineage 2, cycling",
+    "Mono/Macro lineage 3",
+    "Mono/Macro lineage 4",
+    "Mono/Macro lineage 5",
     "Neutro 1",
     "Neutro 2",
-    "Mono/Macro lineage 1",
-    "Mono/Macro lineage 2",
-    "Mono/Macro lineage 3",
-    "Mono/Macro lineage 4, cycling",
-    "Mono/Macro lineage 5",
-    "DC lineage 1",
     "Baso/Mast",
+    "Nk/TC",
     "BC lineage 1",
     "BC lineage 2",
     "BC lineage 3",
@@ -1288,16 +1288,17 @@ sce_species$custom_label <- factor(
     "BC lineage 5",
     "BC lineage 6",
     "BC lineage 7",
-    "Nk",
     "Antigen-presenting 1",
     "Antigen-presenting 2",
-    "Mature immune, mixed",
+    "Mature immune, mixed 1",
+    "Mature immune, mixed 2",
     "Skeletal muscle"
     ))
 
 sort(unique(sce_species$custom_label))
 levels(sce_species$custom_label)
 stopifnot(!is.na(sce_species$custom_label))
+#knitr::knit_exit()
 ```
 
 One last plot to confirm in correct order.

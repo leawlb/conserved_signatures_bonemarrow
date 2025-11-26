@@ -750,7 +750,8 @@ plot_list_gene
 So the mystery neutro clusters are actually very overtly neutrophilic
 just much more mature than what I'm used to from the progenitors
 in terms of expression.
-Actually, cluster 29 also contains some Cd3d, so I'd rather call it mixed.
+Actually, cluster 29 also contains some Cd3d.
+Now I have accepted Cd3d expression in neutro clusters also in other species.
 The last cluster are eosinophils which are not in the HSPC dataset.
 
 #### Baso Mast
@@ -1283,17 +1284,17 @@ sce_species$custom_label <- vector(length = ncol(sce_species))
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "1"] <-  "Ery 1"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "6"] <-  "Ery 2"
+  sce_species$cluster_louvain_custom == "6"] <-  "Ery 5"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "7"] <-  "Ery 3"
+  sce_species$cluster_louvain_custom == "7"] <-  "Ery 2"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "8"] <-  "Mature ery"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "9"] <-  "Ery 4"
+  sce_species$cluster_louvain_custom == "9"] <-  "Ery 3"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "17"] <-  "Ery 5"
+  sce_species$cluster_louvain_custom == "17"] <-  "Ery 6"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "23"] <-  "Ery 6"
+  sce_species$cluster_louvain_custom == "23"] <-  "Ery 4"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "33"] <-  "Ery 7"
 
@@ -1311,7 +1312,7 @@ sce_species$custom_label[
   sce_species$custom_label[
   sce_species$cluster_louvain_custom == "21"] <-  "Neutro 3"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "29"] <-  "Mature immune, mixed 1"
+  sce_species$cluster_louvain_custom == "29"] <-  "Mature neutro 3"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "32"] <-  "Neutro 4"
 sce_species$custom_label[
@@ -1327,11 +1328,11 @@ sce_species$custom_label[
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "26"] <-  "BC lineage 1"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "28"] <-  "BC lineage 2"
+  sce_species$cluster_louvain_custom == "28"] <-  "BC lineage 3"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "30"] <-  "Mature immune, mixed 2"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "31"] <-  "BC lineage 3"
+  sce_species$cluster_louvain_custom == "31"] <-  "BC lineage 2"
   
 # weird clusters 
 sce_species$custom_label[

@@ -671,7 +671,7 @@ cluster_markers[[14]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 25)
 
-# late mono, antigen processing?
+# late mono, antigen presenting?
 cluster_markers[[13]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 25)

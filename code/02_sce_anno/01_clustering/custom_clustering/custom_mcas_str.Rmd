@@ -54,7 +54,7 @@ stopifnot(unique(sce_species$Species_ID == species_curr))
 # by snakemake is the html, any other output must be
 # defined manually
 base_path_data <- snakemake@params[["OUTPUT_DAT"]]
-output_path <- base::paste0(base_path_data, "/02_clst/custom/sce_mcas_hsc_custom.rds")
+output_path <- base::paste0(base_path_data, "/02_clst/custom/sce_mcas_str_custom.rds")
 print(output_path)
 ```
 
@@ -532,7 +532,7 @@ cluster_markers[[24]] %>%
   head(n = 15)
 ```
 
-The top marker strongly support Hb synthesis.
+The top markers strongly support Hb synthesis.
 
 #### Neutro and other myeloid
 
@@ -542,8 +542,8 @@ The top marker strongly support Hb synthesis.
 cluster_markers[[4]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
-# These are mainly neutros with Camp,
-# Wfdc21, Retnlg, S100a8 and S100a9
+# These are mainly neutros with Camp, Wfdc21, Retnlg, S100a8 and S100a9
+# check all genes
 
 # possibly early neutro?
 cluster_markers[[13]] %>%
@@ -551,7 +551,7 @@ cluster_markers[[13]] %>%
   head(n = 15)
 # co-expression of neutro markers like S100a9 and Ngp, 
 # BC markers like Igs and Baso marker like Prss34, so mixed.
-# check more
+# check 
 
 # looks mixed with some Hdc and Cd3 expressing cells
 cluster_markers[[27]] %>%
@@ -559,6 +559,7 @@ cluster_markers[[27]] %>%
   head(n = 15)
 # the top markers are more Neutro than others I can tell.
 # Retnlg, S100a8 and S100a9, Cxcr2, Il1b all related to neutro
+# check because in the heatmap there was "contamination" with Hdc and Cd3d
 
 # baso mast
 cluster_markers[[16]] %>%
@@ -569,6 +570,97 @@ cluster_markers[[16]] %>%
 # might also call them mixed.
 # check more
 ```
+
+```{r umaps_neu, fig.height = 3, fig.width = 4}
+# find the cluster
+umap_base(sce_species, "cluster_louvain_custom")+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+umap_base(
+  sce_species[,sce_species$cluster_louvain_custom == "4"],
+  "cluster_louvain_custom")+
+  ggplot2::xlim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,1]),
+      max(reducedDims(sce_species)$UMAP[,1])))+
+  ggplot2::ylim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,2]),
+      max(reducedDims(sce_species)$UMAP[,2])))+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+umap_base(
+  sce_species[,sce_species$cluster_louvain_custom == "13"],
+  "cluster_louvain_custom")+
+  ggplot2::xlim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,1]),
+      max(reducedDims(sce_species)$UMAP[,1])))+
+  ggplot2::ylim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,2]),
+      max(reducedDims(sce_species)$UMAP[,2])))+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+umap_base(
+  sce_species[,sce_species$cluster_louvain_custom == "27"],
+  "cluster_louvain_custom")+
+  ggplot2::xlim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,1]),
+      max(reducedDims(sce_species)$UMAP[,1])))+
+  ggplot2::ylim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,2]),
+      max(reducedDims(sce_species)$UMAP[,2])))+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+umap_base(
+  sce_species[,sce_species$cluster_louvain_custom == "16"],
+  "cluster_louvain_custom")+
+  ggplot2::xlim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,1]),
+      max(reducedDims(sce_species)$UMAP[,1])))+
+  ggplot2::ylim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,2]),
+      max(reducedDims(sce_species)$UMAP[,2])))+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+
+marker_genes_list_ery <- as.list(c(
+  "S100a8",
+  "S100a9",
+  "Wfdc21",
+  "Camp",
+  "Trem1",
+  "Hdc",
+  "Cd3d",
+  "Lyve1",
+  "Lrg1",
+  "Anxa1",
+  "Prss34",
+  "Jchain",
+  "Igha",
+  "Vpreb1",
+  "Cd79a",
+  "Mcpt8",
+  "Cd63",
+  "Ier3"
+))
+
+plot_list_gene <- lapply(marker_genes_list_ery, function(gene){
+  plot <- umap_gene(sce_species, gene)
+})
+names(plot_list_gene) <- marker_genes_list_ery
+plot_list_gene
+```
+
+Clusters 4 and 27 look classic neutro.
+They do express Cd3d but no Cd8 or Cd4 so I'd stick with neutro.
+
+Cluster 13 is a bit less clear. 
+One of the few populations that express Jchain.
+I think it's just mixed.
+
+Cluster 16 looks clearly mast baso. 
+Seems Cd63 is actually mast/baso and not neutro here.
 
 #### Lymphoid
 
@@ -652,11 +744,88 @@ cluster_markers[[30]] %>%
 
 ```
 
+```{r umaps_lym, fig.height = 3, fig.width = 4}
+# find the clusters
+umap_base(sce_species, "cluster_louvain_custom")+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+umap_base(
+  sce_species[,sce_species$cluster_louvain_custom == "2"],
+  "cluster_louvain_custom")+
+  ggplot2::xlim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,1]),
+      max(reducedDims(sce_species)$UMAP[,1])))+
+  ggplot2::ylim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,2]),
+      max(reducedDims(sce_species)$UMAP[,2])))+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+umap_base(
+  sce_species[,sce_species$cluster_louvain_custom == "12"],
+  "cluster_louvain_custom")+
+  ggplot2::xlim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,1]),
+      max(reducedDims(sce_species)$UMAP[,1])))+
+  ggplot2::ylim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,2]),
+      max(reducedDims(sce_species)$UMAP[,2])))+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+umap_base(
+  sce_species[,sce_species$cluster_louvain_custom == "14"],
+  "cluster_louvain_custom")+
+  ggplot2::xlim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,1]),
+      max(reducedDims(sce_species)$UMAP[,1])))+
+  ggplot2::ylim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,2]),
+      max(reducedDims(sce_species)$UMAP[,2])))+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+
+marker_genes_list_ery <- as.list(c(
+  "Cd3d",
+  "Cd3e",
+  "Ltb",
+  "Gzmb",
+  "Cd8a", # TC
+  "Cd4", # TC
+  "Cd27", # NK 
+  "Klrg1",
+  "Klrd1",
+  "Nkg7",
+  "Trbc1", # TC
+  "Ccl5",
+  "Mki67",
+  "Aurkb",
+  "Vpreb1",
+  "Igll1",
+  "Siglech",
+  "Irf8",
+  "Cd7",
+  "Runx2",
+  "Ighm",
+  "Cd47"
+))
+
+plot_list_gene <- lapply(marker_genes_list_ery, function(gene){
+  plot <- umap_gene(sce_species, gene)
+})
+names(plot_list_gene) <- marker_genes_list_ery
+plot_list_gene
+```
+
+Cluster 2 is looking more NK than T cell.
+Cluster 12 is indeed cycling B lineage.
+Cluster 14 is indeed mono/macrophage.
+
 #### Other
 
 ```{r markers_contamination_other}
 
-# could be skeletal musclee
+# could be skeletal muscle
 cluster_markers[[26]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
@@ -668,8 +837,7 @@ cluster_markers[[3]] %>%
   head(n = 15)
 # I'd say some sort of mature monocyte-ish cell type? Fn1, F13a1, Ccr2
 # Mpeg1, Itga4 is macrophage, Lyst possibly, too
-# Dleu2 is TC 
-# Zeb2 is mesenchyme?
+# Dleu2 is TC, Zeb2 is mesenchyme?
 # check more
 
 cluster_markers[[5]] %>%
@@ -696,6 +864,122 @@ cluster_markers[[17]] %>%
 # could also be macrophage-ish
 # check more
 ```
+
+```{r umaps_other, fig.height = 3, fig.width = 4}
+# find the clusters
+umap_base(sce_species, "cluster_louvain_custom")+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+umap_base(
+  sce_species[,sce_species$cluster_louvain_custom == "3"],
+  "cluster_louvain_custom")+
+  ggplot2::xlim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,1]),
+      max(reducedDims(sce_species)$UMAP[,1])))+
+  ggplot2::ylim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,2]),
+      max(reducedDims(sce_species)$UMAP[,2])))+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+umap_base(
+  sce_species[,sce_species$cluster_louvain_custom == "5"],
+  "cluster_louvain_custom")+
+  ggplot2::xlim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,1]),
+      max(reducedDims(sce_species)$UMAP[,1])))+
+  ggplot2::ylim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,2]),
+      max(reducedDims(sce_species)$UMAP[,2])))+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+umap_base(
+  sce_species[,sce_species$cluster_louvain_custom == "6"],
+  "cluster_louvain_custom")+
+  ggplot2::xlim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,1]),
+      max(reducedDims(sce_species)$UMAP[,1])))+
+  ggplot2::ylim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,2]),
+      max(reducedDims(sce_species)$UMAP[,2])))+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+umap_base(
+  sce_species[,sce_species$cluster_louvain_custom == "7"],
+  "cluster_louvain_custom")+
+  ggplot2::xlim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,1]),
+      max(reducedDims(sce_species)$UMAP[,1])))+
+  ggplot2::ylim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,2]),
+      max(reducedDims(sce_species)$UMAP[,2])))+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+umap_base(
+  sce_species[,sce_species$cluster_louvain_custom == "17"],
+  "cluster_louvain_custom")+
+  ggplot2::xlim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,1]),
+      max(reducedDims(sce_species)$UMAP[,1])))+
+  ggplot2::ylim(
+    c(
+      min(reducedDims(sce_species)$UMAP[,2]),
+      max(reducedDims(sce_species)$UMAP[,2])))+
+  ggplot2::scale_color_manual("cluster", values = col_num)
+
+marker_genes_list_ery <- as.list(c(
+  "Fn1", # macrophages, NK cells, Tregs
+  "Dleu2", # TC, BC, mono, macro
+  "Mpeg1", # macrophage, phagocytes
+  "Ccr2", # mono, macro, activated TC, DC, neutro
+  "Zeb2", # dendritic cells, macrophages, monocyte
+  "Ahnak", # CD4 TC, monos?
+  "Itga4", # Tregs, CD4 TC
+  "Il6ra", # TC 
+  "Ms4a6c", # microglia, macrophages
+  "Ass1",
+  "Lgals3",
+  "Lgals1",
+  "F13a1", # macrophages, coagulation factor 13
+  "Tspo", # actually this is the only marker gene that is ery
+  "Fcer1g",
+  "Klf1",
+  "Epor",
+  "Mpo",
+  "Hopx",
+  "Atf3",
+  "Cd14",
+  "Thbs1",
+  "Ccl6",
+  "Mki67",
+  "Aurkb",
+  "Lockd",
+  "Cenpa",
+  "Lig1",
+  "Cr2", # Cd21
+  "Cd19"
+))
+
+plot_list_gene <- lapply(marker_genes_list_ery, function(gene){
+  plot <- umap_gene(sce_species, gene)
+})
+names(plot_list_gene) <- marker_genes_list_ery
+plot_list_gene
+```
+
+So the blob of clusters containing clusters 3, 5, 6, 7, and 17
+all look like the belong to the same populations.
+They express lots of markers that are not super exclusive to 
+cell types, like Fcer1g, Il6ra, F13a1.
+Given the lack of Cd8, Cd4, Cd3 these are not activated TCs.
+Given the lack of BC markers like Ig genes, Vprebs, Cd79 these are not BC lin.
+Given the lack of Mpo, Elane, S100a8, Hdc, Hba-a1, they are also not these
+lineages.
+They do express Irf8, Ccr2, Mpeg1, so I decide that they are all
+mono/macrophage lineage of some sort.
 
 ### Expected clusters
 
@@ -770,17 +1054,24 @@ cluster_markers[[22]] %>%
 Acan and Sox9 are basically only expressed here; 
 Chad, Mgp, Prelp, Comp are also found here.
 
-```{r marker_genes_list_msc, eval = FALSE, include = FALSE}
+```{r marker_genes_list_msc}
 marker_genes_list_msc <- as.list(c(
   # add some more expected genes that I know even though we had them before
-  "Cxcl12", # adipo 4
-  "Cxcl14",
+  "Cxcl12", # CAR 8
   "Lpl",
   "Vcam1",
   "Kitl",
   "Adipoq",
   "Lepr",
-  "Dcn", # fibro-osteo 11
+  "Spp1",
+  "Alpl",
+  "Bglap", # Osteo 1
+  "Ibsp",
+  "Car3",
+  "Ptgis",
+  "Cpe",
+  "Runx2",
+  "Dcn", # balanced 9
   "Lum",
   "Col1a1",
   "Col1a2",
@@ -788,34 +1079,22 @@ marker_genes_list_msc <- as.list(c(
   "Ogn",
   "Fmod",
   "Comp",
-  "Thbs2",
   "Abi3bp",
-  "Fn1",
-  "Pdgfra",
+  "Pdgfra", # fibro
   "Pdgfrb",
   "Cd34",
   "Thy1",
-  "Thbs4", # osteo chondro/19
+  "Gsn",
+  "Ly6a",
+  "Clec3b",
+  "Col2a1", # chondro
+  "Snorc",
   "Mgp",
   "Prelp",
   "Chad",
   "Prg4",
-  "Alpl",
-  "Bglap",
-  "Ibsp",
-  "Mmp13",
-  "Sp7",
-  "Spp1",
-  "Postn",
-  "Runx2",
-  "Gsn", # chondro fibro/16
-  "Clec3b",
-  "Col3a1",
-  "Pcolce2",
-  "Tnxb",
-  "Ccl11",
-  "Dpt",
-  "Acan"
+  "Acan",
+  "Sox9"
 ))
 
 plot_list_gene <- lapply(marker_genes_list_msc, function(gene){
@@ -844,43 +1123,39 @@ cluster_markers[[15]] %>%
 
 Cxcl12, Cd36, Cd200 among the main genes.
 
-```{r marker_genes_list_ec, eval = FALSE, include = FALSE}
+```{r marker_genes_list_ec}
 marker_genes_list_ec <- as.list(c(
   "Plvap", # EC sinusoidal, venular, lymphatic?
   "Fabp4",
-  "Cavin2",
+  "Tfpi",
+  "Adamts5",
+  "Ackr1",
+  "Selenop",
+  "Stab2", 
+  "Il6st",
+  "Kdr",
+  "Eng",
   "Vwf",
-  "Ramp2",
-  "Clec14a",
-  "Cd9", 
   "Emcn",
   "Lrg1",
-  "Bcam",
   "Eng",
-  "Mustn1", 
-  "Stab2", # add some more well-known
-  "Ackr1",
   "Ephb4",
   "Selp",
   "Icam1",
   "Vcam1",
-  "Sox4",
+  "Sox4", # other
   "Flt4",
-  "Tfpi",
-  "Lyve1",
-  "Ccl21a",
   "Esam",
-  "Tm4sf1",
-  "Rbp7",
-  "Cd36",
-  "Slc9a3r2",
-  "Adgrf5",
-  "Kdr",
-  "Epas1",
-  "Sparcl1", # EC arteriolar and capillary?
-  "Hspb1",
+  "Lyve1", # lymph
+  "Ccl21a",
+  "Crip2", # EC arteriolar and capillary?
+  "Ctla2a",
+  "Ramp2",
+  "Sparcl1",
+  "Timp3",
   "Rgcc", # add more
   "Car4",
+  "Cd36",
   "Hey1",
   "Sox17",
   "Efnb2"
@@ -898,7 +1173,6 @@ plot_list_gene
 cluster_markers[[20]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 20)
-knitr::knit_exit()
 ```
 
 Rgs5, Acta2, Tagln, Tpm2 are Peri/SMC.
@@ -907,7 +1181,7 @@ correctly.
 
 # Assign
 
-In the same order as above
+In the same order as above.
 
 ```{r assign}
 
@@ -915,16 +1189,112 @@ sce_species$custom_label <- vector(length = ncol(sce_species))
 
 # Ery
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "1"] <-  "Ery 1"
+  sce_species$cluster_louvain_custom == "24"] <-  "Erythroid"
 
+# Neutro and myeloid
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "4"] <-  "Neutro 1"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "27"] <-  "Neutro 2"
+
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "13"] <-  "Mature immune, mixed"
+
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "16"] <-  "Baso/Mast"
+
+# Lymphoid
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "2"] <-  "Nk"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "10"] <-  "Antigen-presenting 1"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "12"] <-  "BC lineage 1"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "14"] <-  "DC lineage 1"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "18"] <-  "BC lineage 2"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "21"] <-  "BC lineage 3"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "23"] <-  "BC lineage 4"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "25"] <-  "BC lineage 5"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "28"] <-  "Antigen-presenting 2"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "29"] <-  "BC lineage 6"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "30"] <-  "BC lineage 7"
+
+# Other
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "26"] <-  "Skeletal muscle"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "3"] <-  "Mono/Macro lineage 1"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "5"] <-  "Mono/Macro lineage 2"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "6"] <-  "Mono/Macro lineage 3"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "7"] <-  "Mono/Macro lineage 4, cycling"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "17"] <-  "Mono/Macro lineage 5"
+
+# Expected
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "8"] <-  "Adipo/Osteo CAR"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "1"] <-  "Osteo"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "9"] <-  "Balanced mesenchymal"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "11"] <-  "Fibro"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "22"] <-  "Chondro"
+
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "19"] <-  "Sinusoidal EC"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "15"] <-  "Artiolar/capillary EC"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "20"] <-  "Peri/SMC"
 
 sce_species$custom_label <- factor(
   sce_species$custom_label,
   levels = c(
     "Adipo/Osteo CAR",
-  
-
+    "Osteo",
+    "Balanced mesenchymal",
+    "Chondro",
+    "Fibro",
+    "Artiolar/capillary EC",
+    "Sinusoidal EC",
+    "Peri/SMC",
+    "Erythroid",
+    "Neutro 1",
+    "Neutro 2",
+    "Mono/Macro lineage 1",
+    "Mono/Macro lineage 2",
+    "Mono/Macro lineage 3",
+    "Mono/Macro lineage 4, cycling",
+    "Mono/Macro lineage 5",
+    "DC lineage 1",
+    "Baso/Mast",
+    "BC lineage 1",
+    "BC lineage 2",
+    "BC lineage 3",
+    "BC lineage 4",
+    "BC lineage 5",
+    "BC lineage 6",
+    "BC lineage 7",
+    "Nk",
+    "Antigen-presenting 1",
+    "Antigen-presenting 2",
+    "Mature immune, mixed",
+    "Skeletal muscle"
     ))
+
 sort(unique(sce_species$custom_label))
 levels(sce_species$custom_label)
 stopifnot(!is.na(sce_species$custom_label))

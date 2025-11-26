@@ -1347,9 +1347,9 @@ sce_species$custom_label[
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "16"] <-  "Fibro"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "11"] <-  "Osteo-Chondro"
+  sce_species$cluster_louvain_custom == "11"] <-  "Osteo and late chondro"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "19"] <-  "Chondro"
+  sce_species$cluster_louvain_custom == "19"] <-  "Early chondro"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "34"] <-  "Unclear mesenchymal"
 
@@ -1367,8 +1367,8 @@ sce_species$custom_label <- factor(
   sce_species$custom_label,
   levels = c(
     "Adipo/Osteo CAR",
-    "Osteo-Chondro",
-    "Chondro",
+    "Osteo and late chondro",
+    "Early chondro",
     "Fibro",
     "Unclear mesenchymal",
     "Arteriolar/capillary EC",

@@ -41,7 +41,7 @@ source(file =  snakemake@params[["plotting"]])
 
 ```{r load_objects}
 sce_species <- base::readRDS(file = snakemake@input[["sce_species"]])
-#sce_species <- base::readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/01_mnnc/comparison/sce_mcas_str_Object_ID-01")
+#sce_species <- base::readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/01_mnnc/comparison/sce_mspr_str_Object_ID-01")
 
 fraction_curr <- "str"
 species_curr <- "mspr"
@@ -472,11 +472,6 @@ plot_list_gene
 
 ## Markers
 
-Check markers because there are so many different cell types
-including the contamination that I cannot possibly have a complete list.
-
-The number of clusters is ridiculous as expected, so this is taking a while.
-
 ```{r get_markers, message = FALSE}
 # convert to seurat
 seurat <- Seurat::as.Seurat(
@@ -539,18 +534,17 @@ cluster_markers[[7]] %>%
 # Lum, Ptn, Aspn, Ogn, Fmod from this mixed population
 # no overt chondro osteo genes like Spp1 or Acan
 
-# Chondro
+# chondro-fibro?
 cluster_markers[[2]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
 # actually looks more fibro
 # check
 
-# chondro-fibro?
+# chondro?
 cluster_markers[[10]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
-# Fmod, Thbs4, Itgbl1, Mgp, Cilp do look kind of fibro?
 # check
 
 # chondro-fibro?
@@ -586,7 +580,9 @@ marker_genes_list_mes <- as.list(c(
   "Gsn",
   "Tnxb",
   "Ecm1",
-  "Ccn3",
+  "Ccn3", 
+  "Cd34", # add two known fibro genes
+  "Thy1",
   "Thbs4",
   "Scx",
   "Tnmd",
@@ -604,6 +600,17 @@ plot_list_gene <- lapply(marker_genes_list_mes, function(gene){
 names(plot_list_gene) <- marker_genes_list_mes
 plot_list_gene
 ```
+
+Cluster 2 looks more fibro-like, but also contains the transition 
+from more chondro-osteo-like cells, so I think it's still mixed.
+Genes like Clec3b, Pcolce2, Tnxb, Dpt are chondro and genes like
+Dcn, Gsn, Thy1, Cd34 are fibro, in the umaps the transition is 
+clearly visible.
+
+Cluster 10 is starting to look VERY chondro. 
+Already loosing some intermediate gene expression like Chad, Comp.
+No Cd34, Thy1, Lum, Pdgfra.
+Cilp, Mgp, Scx, Chodl are all chondro-related. 
 
 ```{r mes_qc}
 qc_df <- scuttle::perCellQCMetrics(sce_species)
@@ -630,6 +637,15 @@ ggplot2::ggplot(
   ggplot2::geom_boxplot()+
   ggplot2::theme_classic()
 ```
+
+Clusters 4 and 11, and a bit 1, have very low quality compared to the others.
+I did remove a "low-quality" CAR-like cluster from the merged dataset, so
+maybe this was mostly from Spret.
+Both of these cluster express many marker genes similar to the "real" high-
+quality corresponding cluster, but weakly, but lack genes that differentiate
+them from them, so I view them as "low quality copies".
+ECs also contain some low-quality cells but these didn't cluster separately
+so I cannot get rid of them easily right now.
 
 ## ECs
 
@@ -710,7 +726,6 @@ marker_genes_list_cont <- as.list(c(
   "Cd52",
   "Cd74",
   "H2-Ab1",
-  "Myod",
   "Myh2",
   "Acta1", 
   "Tnnt3",
@@ -730,8 +745,20 @@ marker_genes_list_cont <- as.list(c(
   "Prg4",
   "Clic5",
   "Htra4",
-  "F13a1",
+  "F13a1", 
   "Ackr3",
+  "Hbegf",
+  "Calcrl",
+  "Htra1",
+  "Cd55",
+  "Anxa8",
+  "Has1",
+  "Ccn2", 
+  "Cpe", # add some markers of this population from mcar
+  "Spp1",
+  "Creb5",
+  "Fbln7",
+  "Ccn2",
   "Ccl3",
   "Ccl4",
   "Ccl6",
@@ -744,8 +771,61 @@ plot_list_gene <- lapply(marker_genes_list_cont, function(gene){
 })
 names(plot_list_gene) <- marker_genes_list_cont
 plot_list_gene
-knitr::knit_exit()
 ```
+
+Cluster 14 really is just a mix of lots of small contaminating populations.
+Including some skeletal muscle cells.
+
+Cluster 16 are mast/eo/baso cells.
+
+Cluster 13 does contain a small amount of contaminating neutro cells. 
+Otherwise it looks like a mesenchymal population close to fibros
+that similar to the mysterious cluster in mcar expresses Prg4 and Clic5.
+Maybe if I work together on both I can figure out what it is now.
+I will do that here and not with mcar because there are more cells here.
+
+#### Clic5: 
+- myoblast diff in skeletal muscle cells https://doi.org/10.1126/sciadv.adq6795
+- fibroblast-like synoviocytes are marked by Clic5 in synovial joints https://doi.org/10.1136/ard-2021-221682
+- expressed on bone-marrow derived macrophages https://doi.org/10.1038/s41467-017-00227-x
+
+#### Prg4:
+- expressed in synovial fibroblast progenitors https://doi.org/10.1136/ard-2021-221682
+- related to accumulation of macrophages in synovium/synovial fibrosis https://doi.org/10.1186/s13075-021-02621-9
+- reduces friction in the synovial fluid https://doi.org/10.1016/j.joca.2021.02.566
+- related to wound healing and scar formation https://doi.org/10.1038/s41536-022-00228-5
+- fibroadipogenic progenitors in muscle https://doi.org/10.1073/pnas.2417806122
+- progenitors that repair articular cartilage wounds https://doi.org/10.1172/jci.insight.167858
+- hallmark of articular cartilage chondrocytes https://doi.org/10.1038/s42003-021-01857-0
+- chondro-progenitor cells in superficial zone articular cartilage https://doi.org/10.3390/ijms25115605
+- lining synovial fibroblasts while Prg4 low, Thy1 high fibros are sublining https://doi.org/10.1016/j.isci.2024.109707
+
+#### Creb5:
+- TF that causes Prg4 expression in articular cartilage chondrocytes https://doi.org/10.1038/s42003-021-01857-0
+- causes Prg4 expression in articular cartilage chondrocyte progenitors https://doi.org/10.3390/ijms25115605
+
+#### Htra4:
+- articular cartilage chondrocyte-specific transcriptome https://doi.org/10.1016/j.joca.2021.03.007 
+- zone-specific in human cartilage superficial zone https://doi.org/10.1002/art.37760
+- in Prg4-high fibroblasts related to synovium in some way https://doi.org/10.1038/s42003-025-08250-1
+
+#### F13a1
+- originating from synovial fibroblasts https://doi.org/10.1186/s41232-022-00252-4
+- in synovial macrophages https://doi.org/10.1016/j.isci.2024.109707
+- not in human cartilage superficial zone https://doi.org/10.1002/art.37760
+
+#### Others
+- Chadl, Chad, Acan, Comp, Fmod, Cilp2, Clec3a, Prg4, Has1, Tnxb, Pcolce2,
+  Crispld1, Dpt, all in articular cartilage chondrocyte-specific transcriptome
+  https://doi.org/10.1016/j.joca.2021.03.007
+
+- Dpt, Clic2, Thbs4, Ogn, Aspn in superficial zone human https://doi.org/10.1002/art.37760
+
+Well, so it seems it's either synovial fibro or articular cartilage, or both,
+or progenitors of one or both.
+They are in similar places, probably they are derived from the same cell type.
+I'll call them Articular/synovial progenitor-like, because now I already did 
+the work.
 
 # Assign
 
@@ -755,17 +835,65 @@ In the same order as above.
 
 sce_species$custom_label <- vector(length = ncol(sce_species))
 
-# Ery
+# Mes
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "24"] <-  "Erythroid"
+  sce_species$cluster_louvain_custom == "3"] <-  "Adipo-CAR"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "4"] <-  "Low quality, adipo-CAR"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "5"] <-  "Osteo"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "7"] <-  "Balanced mesenchymal"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "2"] <-  "Fibro/Chondro (more Fibro)"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "10"] <-  "Chondro"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "11"] <-  "Low quality, osteo-chondro"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "13"] <-  "Articular/synovial progenitor-like"
 
+# EC
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "1"] <-  "Arteriolar EC"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "6"] <-  "Capillary EC"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "8"] <-  "Sinusoidal EC 2"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "9"] <-  "Sinusoidal EC 1"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "15"] <-  "Lymphatic EC"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "12"] <-  "Peri/SMC"
+
+# contamination
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "14"] <-  "Immune/skeletal muscle, mixed"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "16"] <-  "Eo/Baso/Mast"
 
 
 sce_species$custom_label <- factor(
   sce_species$custom_label,
   levels = c(
-    "Adipo/Osteo CAR",
-  
+    "Adipo-CAR",
+    "Osteo",
+    "Balanced mesenchymal",
+    "Chondro",
+    "Articular/synovial progenitor-like",
+    "Fibro/Chondro (more Fibro)",
+    "Capillary EC",
+    "Arteriolar EC",
+    "Sinusoidal EC 1",
+    "Sinusoidal EC 2",
+    "Lymphatic EC",
+    "Peri/SMC",
+    # contamination
+    "Low quality, adipo-CAR",
+     "Low quality, osteo-chondro",
+    "Eo/Baso/Mast",
+    "Immune/skeletal muscle, mixed"
     ))
 
 sort(unique(sce_species$custom_label))
@@ -839,6 +967,10 @@ ggplot2::ggplot(
     midpoint = 0)+
   ggplot2::theme(axis.text.x = element_text(angle = 90))
 ```
+
+Unfortunately, looks like removing the low-quality osteo-chondro
+cells also removes chondrocytes, but I've already made the 
+decision.
 
 ## Save 
 

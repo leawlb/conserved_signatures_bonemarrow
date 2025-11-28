@@ -32,7 +32,9 @@ library(tidyverse, quietly = TRUE)
 ```{r load_objects}
 #sce_mmus_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mmus_hsc_custom.rds")
 sce_mcas_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcas_str_custom.rds")
-#sce_mspr_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mspr_hsc_custom.rds")
+
+sce_mspr_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mspr_str_custom.rds")
+
 sce_mcar_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcar_str_custom.rds")
 ```
 
@@ -85,7 +87,6 @@ marker gene lists of individual species and cell types.
       "Comp"
       ),
     "Chondro early/other" = c(
-      "Prg4", # art ch and syn fibro https://doi.org/10.1016/j.jbc.2024.107158
       "Fmod",
       "Chad", 
       "Mgp",
@@ -97,6 +98,12 @@ marker gene lists of individual species and cell types.
       "Snorc",  # chondro https://doi.org/10.1016/j.jbc.2024.107158
       "Acan"
       ),
+    "Articular cartilage/Synovial fibro" = c(  
+      "Prg4", # art ch and syn fibro https://doi.org/10.1016/j.jbc.2024.107158
+      "Creb5",
+      "Clic5",
+      "Htra4"
+      ),   
     "Fibro" = c(
       "Pdgfra",
       "Pdgfrb",
@@ -168,7 +175,6 @@ marker gene lists of individual species and cell types.
       ),
     "Contamination ery late" = c(
       "Ermap",
-      "Ctse",
       "Kel",
       "Sox6",
       "Slc4a1"
@@ -351,67 +357,71 @@ ggplot2::ggplot(
     mid = "white", 
     high = "red3", 
     midpoint = 0)+
-  ggplot2::theme(axis.text.x = element_text(angle = 90))
+  ggplot2::theme(
+    axis.text.x = element_text(
+      angle = 90,
+      vjust = 0.5,
+      hjust = 1))
 }
 ```
 
 ```{r heatmap_hsc, fig.height = 7, fig.width = 6}
 
-marker_genes_mes <- unlist(marker_genes_list[1:7])
+marker_genes_mes <- unlist(marker_genes_list[1:8])
 
 #make_heatmap(sce_mmus_hsc, marker_genes_hsc)
 make_heatmap(sce_mcas_str, marker_genes_mes)
-#make_heatmap(sce_mspr_hsc, marker_genes_hsc)
+make_heatmap(sce_mspr_str, marker_genes_mes)
 make_heatmap(sce_mcar_str, marker_genes_mes)
 ```
 
 ```{r heatmap_myeloid, fig.height = 6, fig.width = 6}
 # and peri SMC
-marker_genes_ec <- unlist(marker_genes_list[8:16])
+marker_genes_ec <- unlist(marker_genes_list[9:17])
 
 #make_heatmap(sce_mmus_hsc, marker_genes_myeloid)
 make_heatmap(sce_mcas_str, marker_genes_ec)
-#make_heatmap(sce_mspr_hsc, marker_genes_myeloid)
+make_heatmap(sce_mspr_str, marker_genes_ec)
 make_heatmap(sce_mcar_str, marker_genes_ec)
 ```
 
 ```{r heatmap_ery, fig.height = 5, fig.width = 6}
 
-marker_genes_ery <- unlist(marker_genes_list[17:18])
+marker_genes_ery <- unlist(marker_genes_list[18:19])
 
 #make_heatmap(sce_mmus_hsc, marker_genes_lymph)
 make_heatmap(sce_mcas_str, marker_genes_ery)
-#make_heatmap(sce_mspr_hsc, marker_genes_lymph)
+make_heatmap(sce_mspr_str, marker_genes_ery)
 make_heatmap(sce_mcar_str, marker_genes_ery)
 ```
 
 ```{r heatmap_myeloid, fig.height = 8, fig.width = 6}
 
-marker_genes_myeloid <- unlist(marker_genes_list[19:24])
+marker_genes_myeloid <- unlist(marker_genes_list[20:25])
 
 #make_heatmap(sce_mmus_hsc, marker_genes_mkebm)
 make_heatmap(sce_mcas_str, marker_genes_myeloid)
-#make_heatmap(sce_mspr_hsc, marker_genes_mkebm)
+make_heatmap(sce_mspr_str, marker_genes_myeloid)
 make_heatmap(sce_mcar_str, marker_genes_myeloid)
 ```
 
 ```{r heatmap_lym, fig.height = 4, fig.width = 6}
 
-marker_genes_lym <- unlist(marker_genes_list[25:30])
+marker_genes_lym <- unlist(marker_genes_list[26:31])
 
 #make_heatmap(sce_mmus_hsc, marker_genes_cycling)
 make_heatmap(sce_mcas_str, marker_genes_lym)
-#make_heatmap(sce_mspr_hsc, marker_genes_cycling)
+make_heatmap(sce_mspr_str, marker_genes_lym)
 make_heatmap(sce_mcar_str, marker_genes_lym)
 ```
 
 ```{r heatmap_immu, fig.height = 4, fig.width = 6}
 
-marker_genes_immu <- unlist(marker_genes_list[19:30])
+marker_genes_immu <- unlist(marker_genes_list[20:31])
 
 #make_heatmap(sce_mmus_hsc, marker_genes_cycling)
 make_heatmap(sce_mcas_str, marker_genes_immu)
-#make_heatmap(sce_mspr_hsc, marker_genes_cycling)
+make_heatmap(sce_mspr_str, marker_genes_immu)
 make_heatmap(sce_mcar_str, marker_genes_immu)
 ```
 
@@ -421,7 +431,7 @@ marker_genes_all <- unlist(marker_genes_list)
 
 #make_heatmap(sce_mmus_hsc, marker_genes_all)
 make_heatmap(sce_mcas_str, marker_genes_all)
-#make_heatmap(sce_mspr_hsc, marker_genes_all)
+make_heatmap(sce_mspr_str, marker_genes_all)
 make_heatmap(sce_mcar_str, marker_genes_all)
 
 marker_genes_all[duplicated(marker_genes_all)]

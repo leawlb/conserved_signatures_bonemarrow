@@ -953,7 +953,7 @@ marker_genes_list_weird <- as.list(c(
   "Dcn",
   "Sparcl1",
   "Aebp1",
-  "Spp1"
+  "Spp1" 
 ))
 
 plot_list_gene <- lapply(marker_genes_list_weird, function(gene){
@@ -1245,7 +1245,17 @@ marker_genes_list_weird_msc <- as.list(c(
   "Acta2",
   "Vim",
   "Des",
-  "Vcl"
+  "Vcl",
+    "Ackr3", # add some markers from mspr
+  "F13a1",
+  "Htra4",
+  "Hbegf",
+  "Calcrl",
+  "Htra1",
+  "Cd55",
+  "Anxa8",
+  "Has1",
+  "Ccn2"
 ))
 
 plot_list_gene <- lapply(marker_genes_list_weird_msc, function(gene){
@@ -1352,7 +1362,7 @@ sce_species$custom_label[
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "19"] <-  "Early chondro"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "34"] <-  "Unclear mesenchymal"
+  sce_species$cluster_louvain_custom == "34"] <-  "Articular/synovial progenitor-like"
 
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "12"] <-  "Sinusoidal EC 2"
@@ -1370,8 +1380,8 @@ sce_species$custom_label <- factor(
     "Adipo/Osteo CAR",
     "Osteo and late chondro",
     "Early chondro",
+    "Articular/synovial progenitor-like",
     "Fibro",
-    "Unclear mesenchymal",
     "Arteriolar/capillary EC",
     "Sinusoidal EC 1",
     "Sinusoidal EC 2",

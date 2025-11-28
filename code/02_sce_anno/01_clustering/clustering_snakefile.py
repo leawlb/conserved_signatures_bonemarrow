@@ -76,6 +76,7 @@ for s in species:
 
 # custom clustering and label assignment per condition
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mmus_hsc.html"]
+targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mmus_str.html"]
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mcas_hsc.html"]
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mcas_str.html"]
 targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mspr_hsc.html"]
@@ -370,6 +371,21 @@ rule louvain_clustering_mmus_hsc:
     script:
         "custom_clustering/custom_mmus_hsc.Rmd"
 
+rule louvain_clustering_mmus_str:
+    input: 
+        sce_species = OUTPUT_DAT + "/01_mnnc/comparison/sce_mmus_str_" + BATCH_USE + "-01"
+    output:
+        OUTPUT_REP + "/02_clustering/comparison_custom/report_mmus_str.html"
+    resources:
+        mem_mb = 50000,
+        queue = "medium-debian"
+    threads: 10
+    params:
+        plotting = "../../source/plotting.R",
+        OUTPUT_DAT = OUTPUT_DAT
+    script:
+        "custom_clustering/custom_mmus_str.Rmd"
+
 rule louvain_clustering_mcas_hsc:
     input: 
         sce_species = OUTPUT_DAT + "/01_mnnc/comparison/sce_mcas_hsc_" + BATCH_USE + "-01"
@@ -480,6 +496,10 @@ rule custom_hsc_clustering_report:
         queue = "medium-debian"
     conda:
         "../../envs/ggalluvial.yml"
+    params:
+        colors_path = COLORS,
+        plotting = "../../source/plotting.R",
+        colors = "../../source/colors.R"
     threads: 10
     script:
         "custom_clustering/custom_hsc_clustering_report.Rmd"

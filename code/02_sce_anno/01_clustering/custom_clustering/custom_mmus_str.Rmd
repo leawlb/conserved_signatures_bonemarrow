@@ -41,7 +41,6 @@ source(file =  snakemake@params[["plotting"]])
 
 ```{r load_objects}
 sce_species <- base::readRDS(file = snakemake@input[["sce_species"]])
-#sce_species <- base::readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/01_mnnc/comparison/sce_mspr_str_Object_ID-01")
 
 fraction_curr <- "str"
 species_curr <- "mmus"
@@ -51,8 +50,7 @@ stopifnot(unique(sce_species$Species_ID == species_curr))
 
 # define output path here
 # since in an .Rmd file run by snakemake the only output defined
-# by snakemake is the html, any other output must be
-# defined manually
+# by snakemake is the html, any other output must be defined manually
 base_path_data <- snakemake@params[["OUTPUT_DAT"]]
 output_path <- base::paste0(base_path_data, "/02_clst/custom/sce_mmus_str_custom.rds")
 print(output_path)
@@ -157,7 +155,6 @@ ggplot2::ggplot(sil.data,
   ggplot2::ylim(-1, 1)+
   ggplot2::ylab("Silhouette width")+
   ggplot2::scale_color_manual("cluster", values = col_num)
-
 
 # Purity
 pure_sce <- bluster::neighborPurity(
@@ -342,7 +339,7 @@ if(fraction_curr == "str"){
 
 #### Heatmap
 
-Just to get an overview of what is found in each cluster
+Just to get an overview of what is found in each cluster.
 
 ```{r heatmap, fig.height = 10, fig.width = 6}
 
@@ -468,6 +465,9 @@ plot_list_gene
 
 ## Markers
 
+ Check each cluster's top markers to support the already observed patterns
+ and find possible additional genes.
+
 ```{r get_markers, message = FALSE}
 # convert to seurat
 seurat <- Seurat::as.Seurat(
@@ -500,7 +500,7 @@ cluster_markers <- lapply(clustlist, function(x){
 })
 ```
 
-## Mes
+### Mesenchymal fraction
 
 ```{r markers_mes}
 
@@ -512,11 +512,10 @@ cluster_markers[[1]] %>%
 
 cluster_markers[[6]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
-  head(n = 15)
-# looks mesenchymal/adipo, also weaker, also not much
-# check the quality as well
+  head(n = 30)
+# looks mesenchymal/adipo but weaker, check the quality as well
 # looks very similar to the corresponding low quality
-# cluster in mspr, even the top marker genes
+# cluster in mspr, even the top marker genes which makes me a bit suspicious
 
 # osteo
 cluster_markers[[10]] %>%
@@ -528,16 +527,14 @@ cluster_markers[[10]] %>%
 cluster_markers[[14]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
-# looks incead more chondro-is based on the main genes, like
-# Acan, Chad
+# looks instead more chondro-ish based on the main genes, like Acan, Chad
 
 # balanced or mixed? 
 cluster_markers[[9]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
-# the cery classic early chondro (Prg4, Cilp, Chad) and mixed
-# Fmod, Comp, Aspn expression
-# could also be "early chondro"?
+# the very early chondro (Prg4, Cilp, Chad) and mixed
+# Fmod, Comp, Aspn expression. Could also be "early chondro"?
 
 # fibro
 cluster_markers[[4]] %>%
@@ -552,11 +549,45 @@ Check these unclear clusters; ALSO check quality.
 ```{r umaps_mes, fig.height = 3, fig.width = 4}
 
 marker_genes_list_mes <- as.list(c(
-  "Cebpa",
-  "Runx1",
-  "Pappa",
-  "Ebf3",
-  "Zeb2",
+  "Cebpa", # TF for adipogenesis
+  "Runx1", # osteogenic differentation, inhibits adipo , https://doi.org/10.7554/eLife.54695
+  "Pappa", # adipocyte marker in MALP, getting several genes from here: https://doi.org/10.7554/eLife.54695
+  "Pparg", # adipocyte marker in MALP
+  "Plin1", # # lipid droplet coating
+  "Fabp4", # fatty acid bp indicating no lipid droplet
+  "Lep", # white adipose tissue
+  "Ucp1", # brown
+  "Tnfrsf9", # beige
+  "Cidea", # brown
+  "Cited1", # beige
+  "Tbx1", # beige
+  "Hoxc9", # adipose depot
+  "Vegfc", # angiogenic factor expressed by adipo CAR/MAlP
+  "Vegfa", # angiogenic factor expressed by adipo CAR/MAlP
+  "Rspo3", # angiogenic factor expressed by adipo CAR/MAlP
+  "Apoe", # adipocyte marker in MALP
+  "Ebf3", # niche cells https://doi.org/10.1101/gad.314013.118
+  "Zeb2", # niche https://doi.org/10.1182/blood-2016-05-714659
+  "Tnc", # niche https://doi.org/10.1182/blood-2011-11-393645 
+  "Ltbp2", # related to adipocytic gene expession in adipocytes
+  "Gdpd2", # adipocyte marker in MALP
+  "Xist", # always view this as low quality
+  "Ntng1", # now from similar population in mspr, in obese adipose tissue
+  "Tns3", # osteogenic vs adipocytic fate https://doi.org/10.1007/s00018-023-04930-5
+  "Ptprd", # related to adipogenesis in some way https://doi.org/10.2217/epi-2019-0267 https://doi.org/10.1016/j.cmet.2022.02.012
+  "Palld", # related to adipocyte size, in stressed adipocytes https://doi.org/10.1016/j.cmet.2020.12.004
+  "Cp", # related to obesity, expressed in adip tissue https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0080274
+  "Rai14", # related to migration, mechanical sensing? https://doi.org/10.1038/s44319-024-00228-0
+  "Atp13a3", # mechanical role in osteogenic differentiation https://doi.org/10.1016/j.advms.2024.07.003
+  "Mycbp2", # ?
+  "Snorc", # chondro cluster markers
+  "Col9a1",
+  "Mia",
+  "Matn3",
+  "Thbs4",
+  "Cilp2",
+  "Cilp",
+  "Prg4"
 ))
 
 plot_list_gene <- lapply(marker_genes_list_mes, function(gene){
@@ -565,18 +596,6 @@ plot_list_gene <- lapply(marker_genes_list_mes, function(gene){
 names(plot_list_gene) <- marker_genes_list_mes
 plot_list_gene
 ```
-
-So the quality of that additional low-adipo Cluster 6 is indeed very low.
-The EC cluster is also generally quite low, so if I went any
-lower with UMI cutoff I would lose those cells.
-I'm a bit suspicious that these low-quality adipo-like cells
-and the low quality chondro cells (here not as a separate cluster) 
-are found in both mspr and mmus very predominantly.
-I will look into the Adipo cluster but tbh, I did that for the initial
-annotation and back then I couldn't really determine if these could
-correspond to a specific population so I removed them.
-
-Cluster 8 is also low quality but it's contamination anyways.
 
 ```{r mes_qc}
 qc_df <- scuttle::perCellQCMetrics(sce_species)
@@ -603,6 +622,84 @@ ggplot2::ggplot(
   ggplot2::geom_boxplot()+
   ggplot2::theme_classic()
 ```
+
+Cluster 8 is also low quality but it's contamination anyways (see below).
+
+So the quality of that additional adipo Cluster 6 is indeed very low.
+The EC clusters are also generally quite low, so if I went any
+lower with UMI cutoff I would lose those cells.
+I'm a bit suspicious that these low-quality adipo-like cells
+and the low quality chondro cells (here not as a separate cluster) 
+are found in both mspr and mmus very predominantly.
+I will look into the Adipo cluster but tbh, I did that for the initial
+annotation and back then I couldn't really determine if these could
+correspond to a specific population so I removed them.
+
+No Plin1 would indicate no liquid droplet.
+The mystery cluster doesn't express "mature" adipocytic markers more or
+very differently than the adipo-CAR cluster, so it doesn't seem like 
+it is in a different state of differentiation.
+I really think it's just lower quality. 
+The fact that Xist is higher here than in others could indicate some normali-
+sation problem, which is also why other adipose genes looks slightly higher
+here, they probably had dysproportionate size factors similar to Xist.
+
+Still, check violin plots to make a bit more quantitatively sure it's really not 
+more down the adipo-line.
+
+```{r violin_mes, fig.height = 12, fig.width = 3}
+
+# take only the relevant genes and clusters
+genes_of_interest <- marker_genes_list_mes[c(
+  1:4,
+  6,
+  15:24,
+  25:31 )]
+
+sce_species_genes <- sce_species[rownames(sce_species) %in% genes_of_interest,]
+sce_species_genes <- sce_species_genes[,sce_species_genes$cluster_louvain_custom %in% c("1", "6")]
+
+# make a df for visualisation
+logcounts_df <- logcounts(sce_species_genes) %>%
+  as.matrix() %>%
+  as.data.frame() %>% 
+  tibble::rownames_to_column(var = "genes") %>%
+  tidyr::pivot_longer(
+    cols = colnames(sce_species_genes),
+    names_to = "cell",
+    values_to = "logcounts")
+
+# add cluster info
+logcounts_df$cluster_louvain_custom <- sce_species_genes$cluster_louvain_custom[
+  match(
+    logcounts_df$cell,
+    rownames(colData(sce_species_genes)))]
+
+logcounts_df$genes <- factor(logcounts_df$genes, levels = genes_of_interest)
+
+# plot 
+logcounts_df %>%
+  ggplot2::ggplot(
+    aes(
+      x = cluster_louvain_custom,
+      y = logcounts,
+      fill = cluster_louvain_custom))+
+    ggplot2::stat_ydensity(
+      stat = "ydensity",
+      draw_quantiles = c(0.25, 0.5, 0.75),
+      scale = "area")+
+    ggplot2::theme_classic()+
+    ggplot2::theme(
+      strip.text.y = element_text(angle = 0))+
+    ggplot2::facet_grid(rows = vars(genes))+
+    ggplot2::scale_fill_manual("cluster", values = col_num)
+
+```
+
+Some are higher, a few are lower. 
+In the end they are still adipo-primed cells with high Cxcl12 
+expression so by definitions CARs.
+So they are low quality adipo CARs after all that.
 
 ## ECs
 
@@ -631,7 +728,7 @@ cluster_markers[[7]] %>%
 # sinusoidal 1
 cluster_markers[[5]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
-  head(n = 15)
+  head(n = 25)
 # looks sinusoidal with Lrg1,
 # Emcn, Vwf and Plvap could also suggest some other H or L-type stuff
 # check if they really express more sinusoidal genes
@@ -655,6 +752,76 @@ cluster_markers[[11]] %>%
 # Rgs5, Acta2, Tagln, Tpm, classic
 ```
 
+```{r umaps_ec, fig.height = 3, fig.width = 4}
+
+marker_genes_list_ec <- as.list(c(
+  "Gja4", # art cluster
+  "Flt1",
+  "Id1",
+  "Ptprb",
+  "Sema3g", # good
+  "Podxl",
+  "Slc9a3r2",
+  "Stmn2", # good
+  "Bmx", # adding some art genes from literature https://doi.org/10.1038/s41467-018-04726-3
+  "Cd200",
+  "Ace", # good
+  "Fbln2",
+  "Lims2",
+  "Jam2",
+  "Gkn3",
+  "Tspan13", # cap cluster 1
+  "Gpihbp1",
+  "Sparcl1",
+  "Cd36",
+  "Hspb1", # cap cluster 2
+  "Cd300lg",
+  "Vwf", # sinusoidal 1
+  "Plvap",
+  "Ehd4", # good
+  "Abcg2",
+  "Il6st", # both
+  "Ctla2a",
+  "Grrp1",
+  "Fxyd5",
+  "Mrc1", # sinusoidal 2, # good
+  "Mafb", # good
+  "Abcc9", # good
+  "Stab1", # good
+  "Tcn2",
+  "Sele", # adding some more from literature https://doi.org/10.1038/s41467-018-04726-3
+  "Dnase1l3",
+  "C1qtnf1",
+  "Ubd",
+  "Sirpa",
+  "Cd302",
+  "Sox4", # in some H type ECs
+  "Kdr", # some others
+  "Dll4",
+  "Notch1",
+  "Robo4",
+  "Vpreb3", # immune cont 
+  "Ighm"
+))
+
+plot_list_gene <- lapply(marker_genes_list_ec, function(gene){
+  plot <- umap_gene(sce_species, gene)
+})
+names(plot_list_gene) <- marker_genes_list_ec
+plot_list_gene
+```
+
+The BL6 sinusoidal "classics" like Stab2 are only expressed in cluster 12. 
+This also includes some literature markers Cd302, Sirpa, Ubd, etc. 
+But other marker genes like Selp, Icam1, Vcam1 are expressed in both 12 and 5.
+Cluster 5 expresses Cd34 and some Sox17, but also some Lrg1, Nr2f2, Selp.
+It exclusively expresses Tagln (in ECs) Vwf, Ehd4, Grrp1 to some degree. 
+I will go ahead and say these are not sinusoidal after all (and I will recheck
+some of the other species, but it seemed less clearly different there).
+
+Due to this mix of arterial and venous identity genes I'm going to call them
+"Transitory venous".
+
 ## Clear contamination?
 
 ```{r markers_cont}
@@ -670,7 +837,6 @@ cluster_markers[[8]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 30)
 # main markers are clearly skeletal muscle
-knitr::knit_exit()
 ```
 
 # Assign
@@ -683,41 +849,40 @@ sce_species$custom_label <- vector(length = ncol(sce_species))
 
 # Mes
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "3"] <-  "Adipo-CAR"
+  sce_species$cluster_louvain_custom == "1"] <-  "Adipo-CAR"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "4"] <-  "Low quality, adipo-CAR"
+  sce_species$cluster_louvain_custom == "6"] <-  "Low quality adipo-CAR"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "5"] <-  "Osteo"
+  sce_species$cluster_louvain_custom == "10"] <-  "Osteo"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "7"] <-  "Balanced mesenchymal"
+  sce_species$cluster_louvain_custom == "9"] <-  "Balanced mesenchymal"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "2"] <-  "Fibro/Chondro (more Fibro)"
+  sce_species$cluster_louvain_custom == "14"] <-  "Late chondro"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "10"] <-  "Chondro"
-sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "11"] <-  "Low quality, osteo-chondro"
-sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "13"] <-  "Articular/synovial progenitor-like"
+  sce_species$cluster_louvain_custom == "4"] <-  "Fibro"
+
 
 # EC
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "1"] <-  "Arteriolar EC"
+  sce_species$cluster_louvain_custom == "2"] <-  "Arteriolar EC"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "6"] <-  "Capillary EC"
+  sce_species$cluster_louvain_custom == "3"] <-  "Capillary EC 1"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "8"] <-  "Sinusoidal EC 2"
+  sce_species$cluster_louvain_custom == "7"] <-  "Capillary EC 2"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "9"] <-  "Sinusoidal EC 1"
+  sce_species$cluster_louvain_custom == "5"] <-  "Transitory/Venous EC"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "15"] <-  "Lymphatic EC"
+  sce_species$cluster_louvain_custom == "12"] <-  "Sinusoidal EC"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "12"] <-  "Peri/SMC"
+  sce_species$cluster_louvain_custom == "13"] <-  "Mixed lymphatic EC/mature immune"
+sce_species$custom_label[
+  sce_species$cluster_louvain_custom == "11"] <-  "Peri/SMC"
 
 # contamination
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "14"] <-  "Immune/skeletal muscle, mixed"
+  sce_species$cluster_louvain_custom == "15"] <-  "Erythroid"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "16"] <-  "Eo/Baso/Mast"
+  sce_species$cluster_louvain_custom == "8"] <-  "Low quality skeletal muscle"
 
 
 sce_species$custom_label <- factor(
@@ -726,20 +891,19 @@ sce_species$custom_label <- factor(
     "Adipo-CAR",
     "Osteo",
     "Balanced mesenchymal",
-    "Chondro",
-    "Articular/synovial progenitor-like",
-    "Fibro/Chondro (more Fibro)",
-    "Capillary EC",
+    "Fibro",
+    "Late chondro",
+    "Capillary EC 1",
+    "Capillary EC 2",
     "Arteriolar EC",
-    "Sinusoidal EC 1",
-    "Sinusoidal EC 2",
-    "Lymphatic EC",
+    "Transitory/Venous EC",
+    "Sinusoidal EC",
     "Peri/SMC",
     # contamination
-    "Low quality, adipo-CAR",
-     "Low quality, osteo-chondro",
-    "Eo/Baso/Mast",
-    "Immune/skeletal muscle, mixed"
+    "Erythroid",
+    "Low quality adipo-CAR",
+    "Low quality skeletal muscle",
+    "Mixed lymphatic EC/mature immune"
     ))
 
 sort(unique(sce_species$custom_label))

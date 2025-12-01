@@ -1358,16 +1358,16 @@ sce_species$custom_label[
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "16"] <-  "Fibro"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "11"] <-  "Osteo and late chondro"
+  sce_species$cluster_louvain_custom == "11"] <-  "Late chondro"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "19"] <-  "Early chondro"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "34"] <-  "Articular/synovial progenitor-like"
 
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "12"] <-  "Sinusoidal EC 2"
+  sce_species$cluster_louvain_custom == "12"] <-  "Mixed ven/sinus/lymph EC"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "22"] <-  "Sinusoidal EC 1"
+  sce_species$cluster_louvain_custom == "22"] <-  "Mixed arteriolar/sinus EC"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "18"] <-  "Arteriolar/capillary EC"
 
@@ -1378,13 +1378,13 @@ sce_species$custom_label <- factor(
   sce_species$custom_label,
   levels = c(
     "Adipo/Osteo CAR",
-    "Osteo and late chondro",
-    "Early chondro",
-    "Articular/synovial progenitor-like",
     "Fibro",
+    "Early chondro",
+    "Late chondro",
+    "Articular/synovial progenitor-like",
     "Arteriolar/capillary EC",
-    "Sinusoidal EC 1",
-    "Sinusoidal EC 2",
+    "Mixed ven/sinus/lymph EC",
+    "Mixed arteriolar/sinus EC",
     "Peri/SMC",
     "Ery 1",
     "Ery 2",

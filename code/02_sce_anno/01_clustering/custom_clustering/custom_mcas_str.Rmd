@@ -1251,12 +1251,12 @@ sce_species$custom_label[
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "11"] <-  "Fibro"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "22"] <-  "Chondro"
+  sce_species$cluster_louvain_custom == "22"] <-  "Mid/Late chondro"
 
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "19"] <-  "Sinusoidal EC"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "15"] <-  "Artiolar/capillary EC"
+  sce_species$cluster_louvain_custom == "15"] <-  "Arteriolar/capillary EC"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "20"] <-  "Peri/SMC"
 
@@ -1266,9 +1266,9 @@ sce_species$custom_label <- factor(
     "Adipo/Osteo CAR",
     "Osteo",
     "Balanced mesenchymal",
-    "Chondro",
     "Fibro",
-    "Artiolar/capillary EC",
+    "Mid/Late chondro",
+    "Arteriolar/capillary EC",
     "Sinusoidal EC",
     "Peri/SMC",
     "Erythroid",

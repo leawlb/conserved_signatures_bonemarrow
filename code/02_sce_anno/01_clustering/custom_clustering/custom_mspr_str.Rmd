@@ -561,15 +561,37 @@ Check these unclear clusters ALSO check quality.
 
 marker_genes_list_mes <- as.list(c(
   "Ntng1",
-  "Pappa",
-  "Ebf3",
-  "Ptprd",
-  "Zeb2",
   "Palld",
+  "Tns3", # osteogenic vs adipocytic fate https://doi.org/10.1007/s00018-023-04930-5
+  "Ptprd", # related to adipogenesis in some way https://doi.org/10.2217/epi-2019-0267 https://doi.org/10.1016/j.cmet.2022.02.012
+  "Cp", # related to obesity, expressed in adipose tissue https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0080274
+  "Rai14", # related to migration, mechanical sensing? 
   "Grem1", # Zhong
   "Cebpa", # Zhong
   "Cebpe", # Zhong
-  "Pparg",
+  "Runx1", # adding some from mmus and literature. 
+           # osteogenic differentation, inhibits adipo , https://doi.org/10.7554/eLife.54695
+  "Pappa", # adipocyte marker in MALP, getting several genes from here: https://doi.org/10.7554/eLife.54695
+  "Pparg", # adipocyte marker in MALP
+  "Plin1", # # lipid droplet coating
+  "Fabp4", # fatty acid bp indicating no lipid droplet
+  "Lep", # white adipose tissue
+  "Ucp1", # brown
+  "Tnfrsf9", # beige
+  "Cidea", # brown
+  "Cited1", # beige
+  "Tbx1", # beige
+  "Hoxc9", # adipose depot
+  "Vegfc", # angiogenic factor expressed by adipo CAR/MAlP
+  "Vegfa", # angiogenic factor expressed by adipo CAR/MAlP
+  "Rspo3", # angiogenic factor expressed by adipo CAR/MAlP
+  "Apoe", # adipocyte marker in MALP
+  "Ebf3", # niche cells https://doi.org/10.1101/gad.314013.118
+  "Tnc", # niche https://doi.org/10.1182/blood-2011-11-393645 
+  "Ltbp2", # related to adipocytic gene expession in adipocytes
+  "Gdpd2", # adipocyte marker in MALP
+  "Xist", # always view this as low quality
+  "Mycbp2", # ?
   "Omd",
   "Ptn",
   "Gpx3",
@@ -646,6 +668,49 @@ quality corresponding cluster, but weakly, but lack genes that differentiate
 them from them, so I view them as "low quality copies".
 ECs also contain some low-quality cells but these didn't cluster separately
 so I cannot get rid of them easily right now.
+
+```{r violin_mes, fig.height = 15, fig.width = 4}
+
+# take only the genes that are expressed anyways
+genes_of_interest <- marker_genes_list_mes[c(1:31)]
+# and only the relevant two clusters
+sce_species_genes <- sce_species[rownames(sce_species) %in% genes_of_interest,]
+sce_species_genes <- sce_species_genes[,sce_species_genes$cluster_louvain_custom %in% c("3", "4")]
+
+# make a df for visualisation
+logcounts_df <- logcounts(sce_species_genes) %>%
+  as.matrix() %>%
+  as.data.frame() %>% 
+  tibble::rownames_to_column(var = "genes") %>%
+  tidyr::pivot_longer(
+    cols = colnames(sce_species_genes),
+    names_to = "cell",
+    values_to = "logcounts")
+
+# add cluster info
+logcounts_df$cluster_louvain_custom <- sce_species_genes$cluster_louvain_custom[
+  match(
+    logcounts_df$cell,
+    rownames(colData(sce_species_genes)))]
+
+logcounts_df$genes <- factor(logcounts_df$genes, levels = genes_of_interest)
+
+# plot 
+logcounts_df %>%
+  ggplot2::ggplot(
+    aes(
+      x = cluster_louvain_custom,
+      y = logcounts,
+      fill = cluster_louvain_custom))+
+    ggplot2::geom_violin(
+      scale = "area")+
+    ggplot2::theme_classic()+
+    ggplot2::theme(
+      strip.text.y = element_text(angle = 0))+
+    ggplot2::facet_grid(rows = vars(genes))+
+    ggplot2::scale_fill_manual("cluster", values = col_num)
+
+```
 
 ## ECs
 
@@ -839,7 +904,7 @@ sce_species$custom_label <- vector(length = ncol(sce_species))
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "3"] <-  "Adipo-CAR"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "4"] <-  "Low quality, adipo-CAR"
+  sce_species$cluster_louvain_custom == "4"] <-  "Low quality adipo-CAR"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "5"] <-  "Osteo"
 sce_species$custom_label[
@@ -847,7 +912,7 @@ sce_species$custom_label[
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "2"] <-  "Fibro/Chondro (more Fibro)"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "10"] <-  "Chondro"
+  sce_species$cluster_louvain_custom == "10"] <-  "Early chondro"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "11"] <-  "Low quality, osteo-chondro"
 sce_species$custom_label[
@@ -859,9 +924,9 @@ sce_species$custom_label[
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "6"] <-  "Capillary EC"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "8"] <-  "Sinusoidal EC 2"
+  sce_species$cluster_louvain_custom == "8"] <-  "Transitory/Venous EC"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "9"] <-  "Sinusoidal EC 1"
+  sce_species$cluster_louvain_custom == "9"] <-  "Sinusoidal EC"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "15"] <-  "Lymphatic EC"
 sce_species$custom_label[
@@ -880,18 +945,18 @@ sce_species$custom_label <- factor(
     "Adipo-CAR",
     "Osteo",
     "Balanced mesenchymal",
-    "Chondro",
-    "Articular/synovial progenitor-like",
     "Fibro/Chondro (more Fibro)",
+    "Early chondro",
+    "Articular/synovial progenitor-like",
     "Capillary EC",
     "Arteriolar EC",
-    "Sinusoidal EC 1",
-    "Sinusoidal EC 2",
+    "Transitory/Venous EC",
+    "Sinusoidal EC",
     "Lymphatic EC",
     "Peri/SMC",
     # contamination
-    "Low quality, adipo-CAR",
-     "Low quality, osteo-chondro",
+    "Low quality adipo-CAR",
+     "Low quality osteo-chondro",
     "Eo/Baso/Mast",
     "Immune/skeletal muscle, mixed"
     ))

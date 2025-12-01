@@ -11,7 +11,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 This report is to compare the custom clusterings to each other based on 
 the selected marker genes as well as some observed marker genes.
-Just to make sure that a unified manner of annotation was used.
+To make sure that a unified manner of annotation was used and very similar
+populations didn't get different names due to time having passed in-between.
 
 #### Load libraries, source code 
 
@@ -30,7 +31,8 @@ library(tidyverse, quietly = TRUE)
 #todo input snakemake later
 
 ```{r load_objects}
-#sce_mmus_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mmus_hsc_custom.rds")
+sce_mmus_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mmus_str_custom.rds")
+
 sce_mcas_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcas_str_custom.rds")
 
 sce_mspr_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mspr_str_custom.rds")
@@ -51,113 +53,119 @@ marker gene lists of individual species and cell types.
   marker_genes_list <- list(
     "CAR" = c( # classic niche 
       "Cxcl14", 
-      "Cxcl12",
-      "Kitl"
+      "Ebf3", # niche cells https://doi.org/10.1101/gad.314013.118
+      "Cxcl12", # also arteriolar EC
+      "Kitl" # also arteriolar EC
       ),
     "Adipo" = c(
       "Adipoq",
+      "Hp",
       "Lepr", 
-      "Lpl", 
-      "Hp"
+      "Lpl",
+      "Cebpa",
+      "Pappa"  # adipocyte marker in MALP https://doi.org/10.7554/eLife.54695
       ),
-    "Osteo" = c( # from early/CAR to pure-ish
+    "Osteo" = c( # from early/CAR to more osteocyte-ish (approx)
       "Limch1", # Osteo-CAR https://doi.org/10.1016/j.jbc.2024.107158
-      "Alpl", # Osteo-CAR https://doi.org/10.1038/s41556-019-0439-6
-      "Mmp13", # pre-osteoblast https://doi.org/10.1016/j.jbc.2024.107158
-      "Slit2", # pre-osteoblast https://doi.org/10.1016/j.jbc.2024.107158
+      "Angpt4", # Osteo-CAR https://doi.org/10.1016/j.jbc.2024.107158
+      "Wif1", # Osteo-CAR https://doi.org/10.1016/j.jbc.2024.107158
       "Spp1", # pre-osteoblast https://doi.org/10.1016/j.jbc.2024.107158
-      "Car3", # osteo https://doi.org/10.1016/j.jbc.2024.107158
+      "Mmp13", # pre-osteoblast https://doi.org/10.1016/j.jbc.2024.107158
+      "Alpl", # Osteo-CAR https://doi.org/10.1038/s41556-019-0439-6
+      "Slit2", # pre-osteoblast https://doi.org/10.1016/j.jbc.2024.107158
       "Sp7", # Osteo-CAR and osteoblast https://doi.org/10.1038/s41556-019-0439-6
-      "Ibsp", # osteoblasts https://doi.org/10.7554/eLife.54695
+      "Pth1r", # osteo ST1
       "Bglap", # osteo https://doi.org/10.1016/j.jbc.2024.107158
       "Bglap2", # osteoblasts https://doi.org/10.7554/eLife.54695
       "Bglap3", # 
       "Mepe", # osteocyte https://doi.org/10.1016/j.jbc.2024.107158
+      "Ibsp", # osteoblasts https://doi.org/10.7554/eLife.54695
       "Phex" # osteocyte https://doi.org/10.1016/j.jbc.2024.107158
       ),
-    "Chondro/Osteo/early mixed" = c(
+    "Chondro/Osteo/fibro/early mixed" = c(
       "Tnc", # osteo-X https://doi.org/10.1016/j.jbc.2024.107158
-      "Pth1r",
+      "Ptgis", # osteo ST1
       "Postn", # osteo-X https://doi.org/10.1016/j.jbc.2024.107158
       "Ptn", # osteo-X https://doi.org/10.1016/j.jbc.2024.107158
-      "Ogn",
+      "Comp", # fibro-chondro ST1
+      "Ogn", # in branch point cekk type to osteogenic state https://doi.org/10.1186/s13073-023-01224-0
       "Aspn", # osteo-X https://doi.org/10.1016/j.jbc.2024.107158
-      "Ptgis",
-      "Tnn", # osteo-X https://doi.org/10.1016/j.jbc.2024.107158
-      "Comp"
+      "Gsn", # several undefined MSC populations 
+      "Apod", # several undefined MSC populations 
+      "Tnn" # osteo-X https://doi.org/10.1016/j.jbc.2024.107158
       ),
-    "Chondro early/other" = c(
-      "Fmod",
-      "Chad", 
-      "Mgp",
+    "Chondro early/other/mixed" = c(
+      "Fmod", # chondro ST1
+      "Chad", # chondro ST1
+      "Prelp", # chondro ST1
+      "Mgp", # chondro ST1
       "Crispld1",  # art ch https://doi.org/10.1016/j.jbc.2024.107158
       "Cytl1" # art ch https://doi.org/10.1016/j.jbc.2024.107158
       ),
+    "Early Fibro mixed" = c(
+      "Dcn", # fibro ST1
+      "Lum", # fibro ST1
+      "Dpt", # fibro https://doi.org/10.1016/j.jbc.2024.107158
+      "Clec3b", # fibro https://doi.org/10.1016/j.jbc.2024.107158
+      "Cd34", # also arteriolar EC
+      "Thy1", # fibro, msc, related to osteogenesis https://doi.org/10.1096/fj.201701379R
+      "Pdgfra", # fibro ST1
+      "Pdgfrb" # 
+      ),
+    "Articular cartilage/Synovial fibro" = c(  # these genes can be articular chondros or also early chondros or also early synovial fibros.
+      "Htra4", # see mspr
+      "Prg4", # art ch and syn fibro https://doi.org/10.1016/j.jbc.2024.107158
+      "Creb5" # see mspr
+      ),   
     "Chondro late" = c(  
       "Sox9", # chondro https://doi.org/10.1016/j.jbc.2024.107158
       "Snorc",  # chondro https://doi.org/10.1016/j.jbc.2024.107158
       "Acan"
       ),
-    "Articular cartilage/Synovial fibro" = c(  
-      "Prg4", # art ch and syn fibro https://doi.org/10.1016/j.jbc.2024.107158
-      "Creb5",
-      "Clic5",
-      "Htra4"
-      ),   
-    "Fibro" = c(
-      "Pdgfra",
-      "Pdgfrb",
-      "Des",
-      "Dcn",      
-      "Gsn",
-      "Lum",
-      "Dpt",
-      "Abi3bp",
-      "Pcolce2",
-      "Clec3b",
-      "Fn1",
-      "Cd34",
-      "Thy1"
-      ),
     "Pan EC" = c(
       "Cdh5",
       "Pecam1"
       ),
-    "Capillary" = c(
-      "Rgcc",
-      "Car4",
-      "Timp4"
-      ),
-    "Arteriolar" = c(
-      "Efnb2", # NK
-      "Hey1", # TC
-      "Sox17",
+    "EC other" = c( # COULD be interesting but mostly similarly expressed
+      "Emcn",  # higher in H-type vessels
+      "Kdr", # venous/sinusoid/unclear
       "Cd36"
       ),
-    "Venous/other" = c(
-      "Kdr",
-      "Emcn",
-      "Eng",
-      "Esam",
-      "Flt1"
+   "Capillary" = c(
+      "Car4",
+      "Timp4",
+      "Rgcc"
       ),
-    "Sinusoidal classic 1" = c(
-      "Stab2", 
-      "Tfpi",
-      "Ackr1", 
-      "Lrg1" 
+    "Arteriolar" = c(
+      "Efnb2", 
+      "Hey1", # have also seen as H type
+      "Sox17" # have also seen as H type
       ),
-    "Sinusoidal classic 2" = c(
-      "Selp", 
-      "Icam1"
-      ),
-    "EC, other" = c(
-      "Vwf",
-      "Plvap",
-      "Nr2f2"
+    "Transitory/venous/fenestrated/other" = c(
+      "Vwf", # venous or H type?
+      "Ehd4", # angiogenesis or transitory?
+      "Plvap" # fenestration
     ),
+    "Sinusoidal/venous expressed" = c(
+      "Selp",  # expressed in sinusoid
+      "Icam1", # expressed in sinsuoid
+      "Vcam1",# expressed in sinsuoid
+      "Nr2f2", # venous identity
+      "Ackr1", # expressed in sinusoid
+      "Lrg1", # expressed in sinsuoid
+      "Sele"  # expressed in sinusoid
+    ),
+    "Sinusoidal classic" = c(
+      "Stab2", # classic sinusoid
+      "Stab1", # classic sinusoid
+      "Flt4", # classic sinusoid 
+      "Dnase1l3", # sinusoid https://doi.org/10.1038/s41467-018-04726-3
+      "Tfpi", # classic sinusoid
+      "Sirpa", # sinusoid https://doi.org/10.1038/s41467-018-04726-3
+      "C1qtnf1" # sinusoid https://doi.org/10.1038/s41467-018-04726-3
+      ),
     "Lymphatic EC" = c(
-      "Lyve1",
+      "Lyve1", # also sinusoid
       "Ccl21a"
       ),
     "Peri/SMC" = c(
@@ -250,7 +258,7 @@ marker gene lists of individual species and cell types.
     "Contamination DC" = c(
       "Siglech",
       "Cd7",
-      "Runx2"
+      "Runx2" # also osteo
       ), 
     "Contamination skeletal muscle" = c(
       "Acta1",
@@ -369,17 +377,17 @@ ggplot2::ggplot(
 
 marker_genes_mes <- unlist(marker_genes_list[1:8])
 
-#make_heatmap(sce_mmus_hsc, marker_genes_hsc)
+make_heatmap(sce_mmus_str, marker_genes_mes)
 make_heatmap(sce_mcas_str, marker_genes_mes)
 make_heatmap(sce_mspr_str, marker_genes_mes)
 make_heatmap(sce_mcar_str, marker_genes_mes)
 ```
 
-```{r heatmap_myeloid, fig.height = 6, fig.width = 6}
+```{r heatmap_ec, fig.height = 6, fig.width = 6}
 # and peri SMC
 marker_genes_ec <- unlist(marker_genes_list[9:17])
 
-#make_heatmap(sce_mmus_hsc, marker_genes_myeloid)
+make_heatmap(sce_mmus_str, marker_genes_ec)
 make_heatmap(sce_mcas_str, marker_genes_ec)
 make_heatmap(sce_mspr_str, marker_genes_ec)
 make_heatmap(sce_mcar_str, marker_genes_ec)
@@ -429,7 +437,7 @@ make_heatmap(sce_mcar_str, marker_genes_immu)
 
 marker_genes_all <- unlist(marker_genes_list)
 
-#make_heatmap(sce_mmus_hsc, marker_genes_all)
+make_heatmap(sce_mmus_str, marker_genes_all)
 make_heatmap(sce_mcas_str, marker_genes_all)
 make_heatmap(sce_mspr_str, marker_genes_all)
 make_heatmap(sce_mcar_str, marker_genes_all)

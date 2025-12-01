@@ -34,22 +34,22 @@ library(ggalluvial, quietly = TRUE)
 ```
 
 ```{r load_objects}
-sce_mmus_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mmus_hsc_custom.rds")
-sce_mcas_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcas_hsc_custom.rds")
-sce_mspr_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mspr_hsc_custom.rds")
-sce_mcar_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcar_hsc_custom.rds")
+sce_mmus_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mmus_str_custom.rds")
+sce_mcas_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcas_str_custom.rds")
+sce_mspr_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mspr_str_custom.rds")
+sce_mcar_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcar_str_custom.rds")
 ```
 
 ```{r load_merged}
-sce_hsc_all_cells <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/sce_hsc-02")
+sce_str_all_cells <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/sce_str-02")
 
 # remove unnecessary assays because the objects become too large to load
-assays(sce_hsc_all_cells) <- list(
-  counts = assays(sce_hsc_all_cells)$counts,
-  logcounts = assays(sce_hsc_all_cells)$logcounts
+assays(sce_str_all_cells) <- list(
+  counts = assays(sce_str_all_cells)$counts,
+  logcounts = assays(sce_str_all_cells)$logcounts
 )
-reducedDims(sce_hsc_all_cells) <- list(
-  UMAP = reducedDims(sce_hsc_all_cells)$UMAP
+reducedDims(sce_str_all_cells) <- list(
+  UMAP = reducedDims(sce_str_all_cells)$UMAP
 )
 gc()
 ```
@@ -57,52 +57,54 @@ gc()
 ```{r cluster_labels}
 # add all labels to the object that contains all cells
 
-sce_hsc_all_cells$custom_label <- vector(length = ncol(sce_hsc_all_cells))
+sce_str_all_cells$custom_label <- vector(length = ncol(sce_str_all_cells))
 
-sce_mmus_hsc$custom_label <- unfactor(sce_mmus_hsc$custom_label)
-sce_mcas_hsc$custom_label <- unfactor(sce_mcas_hsc$custom_label)
-sce_mspr_hsc$custom_label <- unfactor(sce_mspr_hsc$custom_label)
-sce_mcar_hsc$custom_label <- unfactor(sce_mcar_hsc$custom_label)
+sce_mmus_str$custom_label <- unfactor(sce_mmus_str$custom_label)
+sce_mcas_str$custom_label <- unfactor(sce_mcas_str$custom_label)
+sce_mspr_str$custom_label <- unfactor(sce_mspr_str$custom_label)
+sce_mcar_str$custom_label <- unfactor(sce_mcar_str$custom_label)
 
-sce_hsc_all_cells$custom_label[match(
-  colnames(sce_mmus_hsc), colnames(sce_hsc_all_cells))] <- sce_mmus_hsc$custom_label
-sce_hsc_all_cells$custom_label[match(
-  colnames(sce_mcas_hsc), colnames(sce_hsc_all_cells))] <- sce_mcas_hsc$custom_label
-sce_hsc_all_cells$custom_label[match(
-  colnames(sce_mspr_hsc), colnames(sce_hsc_all_cells))] <- sce_mspr_hsc$custom_label
-sce_hsc_all_cells$custom_label[match(
-  colnames(sce_mcar_hsc), colnames(sce_hsc_all_cells))] <- sce_mcar_hsc$custom_label
+sce_str_all_cells$custom_label[match(
+  colnames(sce_mmus_str), colnames(sce_str_all_cells))] <- sce_mmus_str$custom_label
+sce_str_all_cells$custom_label[match(
+  colnames(sce_mcas_str), colnames(sce_str_all_cells))] <- sce_mcas_str$custom_label
+sce_str_all_cells$custom_label[match(
+  colnames(sce_mspr_str), colnames(sce_str_all_cells))] <- sce_mspr_str$custom_label
+sce_str_all_cells$custom_label[match(
+  colnames(sce_mcar_str), colnames(sce_str_all_cells))] <- sce_mcar_str$custom_label
 
 rm(
-  sce_mmus_hsc,
-  sce_mcas_hsc,
-  sce_mspr_hsc,
-  sce_mcar_hsc)
+  sce_mmus_str,
+  sce_mcas_str,
+  sce_mspr_str,
+  sce_mcar_str)
 gc()
 ```
 
 ```{r load_anno}
-sce_hsc_anno <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data_freeze/05_annotated_objects/sce_hsc.rds")
+sce_str_anno <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data_freeze/05_annotated_objects/sce_str.rds")
 
-sce_hsc_all_cells$celltypes <- vector(length = ncol(sce_hsc_all_cells))
-sce_hsc_all_cells$celltypes <- sce_hsc_anno$celltypes[
-  match(colnames(sce_hsc_all_cells), colnames(sce_hsc_anno))]
+sce_str_all_cells$celltypes <- vector(length = ncol(sce_str_all_cells))
+sce_str_all_cells$celltypes <- sce_str_anno$celltypes[
+  match(colnames(sce_str_all_cells), colnames(sce_str_anno))]
 
-rm(sce_hsc_anno)
+rm(sce_str_anno)
 gc()
 
 # i have removed some cells from the finally annotated object, so those
 # that are missing from that object are not called "removed"
-levels(sce_hsc_all_cells$celltypes) <- c(
-  levels(sce_hsc_all_cells$celltypes), 
+levels(sce_str_all_cells$celltypes) <- c(
+  levels(sce_str_all_cells$celltypes), 
   "removed")
-sce_hsc_all_cells$celltypes[is.na(sce_hsc_all_cells$celltypes)] <- "removed"
+sce_str_all_cells$celltypes[is.na(sce_str_all_cells$celltypes)] <- "removed"
 
 # randomize the barcodes for nicer visualisation
-sce_hsc_all_cells <- sce_hsc_all_cells[,base::sample(
-  x = c(1:ncol(sce_hsc_all_cells)), 
-  size = ncol(sce_hsc_all_cells),
+sce_str_all_cells <- sce_str_all_cells[,base::sample(
+  x = c(1:ncol(sce_str_all_cells)), 
+  size = ncol(sce_str_all_cells),
   replace = FALSE)]
+
+print(sort(unique(sce_str_all_cells$custom_label)))
 ```
 
 ## Basics
@@ -110,146 +112,205 @@ sce_hsc_all_cells <- sce_hsc_all_cells[,base::sample(
 ```{r factor_and_colors}
 
 # for nicer handling factor the custom labels, too
-sce_hsc_all_cells$custom_label <- factor(
-  sce_hsc_all_cells$custom_label, 
+sce_str_all_cells$custom_label <- factor(
+  sce_str_all_cells$custom_label, 
   levels = c(
-    "HSC",
-    "HSC/Early Mk",
-    "Early MPP cells 1",
-    "Early MPP cells 2",
-    "MPP cells 1",
-    "MPP cells 2",
-    "Activated MPP",
-    "Activated MPP cells 1",
-    "Activated MPP cells 2",
-    "Late MPP",
-    "Early myeloid",
+    "Adipo-CAR",
+    "Adipo/Osteo CAR",
+    "Osteo",
+    
+    "Balanced mesenchymal",
 
-    "Early granu/mono",
-    "Granu/mono progenitor",
-    "Neutro progenitor",
-    "Later granu/neutro",
+    "Fibro",
+    "Fibro/Chondro (more Fibro)",
+    "Early chondro",
+    "Late chondro and Osteo",
+    "Late chondro",
 
-    "Early lymphoid",
-    "Lymphoid",
-    "Late lymphoid",
-    "Late/Cycling lymphoid",
+    "Articular/synovial progenitor-like",
 
-    "Baso/Mast progenitor",
-    "Mk/E/BM (more Mk and BM)",
-    "Mk/E/BM (more Ery)",
-    "Early Mk progenitor",
-    "Mk/Ery (more Mk)",
-    "Mk/Ery",
-    "Early ery/baso/mast 1",
-    "Early ery/baso/mast 2",
-    "Early ery",
-    "Early erythroid progenitor",
-    "Ery progenitor",
-    "Erythroid 1",
-    "Erythroid 2",
-    "Erythroid 3",
-    "Late erythroid progenitor",
-    "Latest erythroid progenitor",
-    "Cycling",
-    "Cycling (more M-phase)",
-    "Cycling (more S-phase)",
-    "Cycling MPP",
-    "Cycling, mostly myeloid",
-    "Cycling granu/mono",
-    "Cycling ery",
-    # separate cells that would be removed
+    "Capillary EC",
+    "Capillary EC 1",
+    "Capillary EC 2",
+    "Arteriolar/capillary EC",
+    "Arteriolar EC",
+
+    "Transitory/Venous EC",
+    "Mixed arteriolar/sinus EC",
+    "Mixed ven/sinus/lymph EC",
+    "Sinusoidal EC",
+
+    "Lymphatic EC",
+
+    "Peri/SMC",
+
+    "Erythroid",
+    "Ery 1",
+    "Ery 2",
+    "Ery 3",
+    "Ery 4",
+    "Ery 5",
+    "Ery 6",
+    "Ery 7",
+    "Mature ery",
+
+    "Mono/Macro lineage 1",
+    "Mono/Macro lineage 2, cycling",
+    "Mono/Macro lineage 3",
+    "Mono/Macro lineage 4",
+    "Mono/Macro lineage 5",
+
+    "Early Neutro 1",
+    "Early Neutro 2",
+
+    "Neutro 1",
+    "Neutro 2",
+    "Neutro 3",
+    "Neutro 4",
+
+    "Mature neutro 1",
+    "Mature neutro 2",
+    "Mature neutro 3",
+
+    "Nk/TC",
+    "Eosinophil",
+    "Eo/Baso/Mast",
+    "Baso/Mast",
+
+    "BC lineage 1",
+    "BC lineage 2",
+    "BC lineage 3",
+    "BC lineage 4",
+    "BC lineage 5",
+    "BC lineage 6",
+    "BC lineage 7",
+
+
+    "Low quality adipo-CAR",
+    "Low quality osteo-chondro",
+
+    "Mature immune, mixed 1",
+    "Mature immune, mixed 2",
     "Antigen-presenting",
-    "Mono/antigen-presenting",
-    "Late neutro",
-    "Late immune, mixed",
-    "Late neutro/ery, mixed",
-    "Low quality",
-    "Low quality, early",
-    "Low quality, neutro",
-    "Low quality, ery"
+    "Antigen-presenting 1",
+    "Antigen-presenting 2",
+
+    "Mixed lymphatic EC/mature immune",
+    "Immune/skeletal muscle, mixed",
+    "Skeletal muscle",
+    "Low quality skeletal muscle"
 ))
 
 col_custom <- c(
-  "HSC" = "#4a0805ff", # mmus, mspr, mcar
-  "HSC/Early Mk" = "#49006bff", # mcas
-  "Early MPP cells 1" = "#6f120fff", # mmus, mcas
-  "Early MPP cells 2" = "#b51611ff", # mmus, mcas
-  "MPP cells 1" = "#fa221bff", # mspr
-  "MPP cells 2" = "#ee8581ff", # mspr
-  "Activated MPP" = "#c8605aff", # mmus, mcar 
-  "Activated MPP cells 1" = "#f49792ff", # mcasr
-  "Activated MPP cells 2" = "#e95e57ff", # mcas
-  "Late MPP" = "#e5530fff", # mcas
-  "Early myeloid" = "#9d5c1fff", # mspr
-  "Early granu/mono" = "#c87121ff", # mcas
-  "Granu/mono progenitor" = "#e28c02ff", # mmus, mcar
-  "Neutro progenitor" = "#f1ac3dff", # mspr, mcar
-  "Later granu/neutro" = "#fc8c23ff", # mcas
-  "Early lymphoid" = "#ffd000ff", # mmus, mspr
-  "Lymphoid" = "#ffe28aff", # mcas
-  "Late lymphoid" = "#faf24fff", # mcar
-  "Late/Cycling lymphoid" = "#ffff75ff", # mspr
-  "Baso/Mast progenitor" = "#ab00fbff", # mmus, mcas, mspr, mcar
-  "Mk/E/BM (more Mk and BM)" = "#6e468bff", # mcar
-  "Mk/E/BM (more Ery)" = "#9d81fbff", # mcar
-  "Early Mk progenitor" = "#8d0153ff", # mspr
-  "Mk/Ery (more Mk)" = "#8e3268ff", # mmus 
-  "Mk/Ery" = "#d857a2ff", # mcas
-  "Early ery/baso/mast 1" = "#993a8eff", # mspr
-  "Early ery/baso/mast 2" = "#d857c9ff", # mspr
-  "Early ery" = "#c519bdff", # mmus 
-  "Early erythroid progenitor" = "#f4538eff", # mcar
-  "Ery progenitor" = "#f989b2ff", # mmus, mcas, mspr
-  "Erythroid 1" = "#b32e5fff", # mcar
-  "Erythroid 2" = "#ff9bc0ff", # mcar
-  "Erythroid 3" = "#f4bde6ff", # mcar
-  "Late erythroid progenitor" = "#c26cacff", # mcar
-  "Latest erythroid progenitor" = "#6e468bff", # mcar
-  "Cycling" = "#b5b5b5ff", # mcas
-  "Cycling (more M-phase)" = "#a68482ff", # mmus 
-  "Cycling (more S-phase)" = "#cbb9b9ff", # mmus 
-  "Cycling MPP" = "#c2ac89ff", # mcar
-  "Cycling, mostly myeloid" = "#98877dff", # mspr
-  "Cycling granu/mono" = "#dfdcd6ff", # mcar
-  "Cycling ery" = "#c3a4b0ff", # mspr
-  # separate cells that would be removed
-  "Antigen-presenting" = "#4c64fbff", # mcar
-  "Mono/antigen-presenting" = "#93a0f7ff", # mspr
-  "Late neutro" = "#6cfff5ff", # mmus 
-  "Late immune, mixed" = "#37ded3ff", # mmus, mcas, mspr
-  "Late neutro/ery, mixed" = "#03b0a5ff", # mcas
-  "Low quality" = "#4adf6dff", # mcar
-  "Low quality, early" = "#208c39ff", # mspr
-  "Low quality, neutro" = "#75811bff", # mspr
-  "Low quality, ery" = "#99b835ff" # mspr
+    "Adipo-CAR" = "#1c6c6eff",
+    "Adipo/Osteo CAR" = "#35abadff",
+    "Osteo" = "#13ddc2ff",
+    
+    "Balanced mesenchymal" = "#35ad5bff",
+
+    "Fibro" = "#6b9508ff",
+    "Fibro/Chondro (more Fibro)" = "#bcf537ff",
+    "Early chondro" = "#787a0eff",
+    "Late chondro and Osteo" = "#0e7a3fff",
+    "Late chondro" = "#48490cff",
+
+    "Articular/synovial progenitor-like" = "#6ab98dff",
+
+    "Capillary EC" = "#9eabffff",
+    "Capillary EC 1" = "#5f6cc1ff",
+    "Capillary EC 2" = "#3041b0ff",
+    "Arteriolar/capillary EC" = "#70abfeff",
+    "Arteriolar EC" = "#277dd4ff",
+
+    "Transitory/Venous EC" = "#3e2289ff",
+    "Mixed arteriolar/sinus EC" = "#6b5d92ff",
+    "Mixed ven/sinus/lymph EC" = "#9572f3ff",
+    "Sinusoidal EC" = "#22076eff",
+
+    "Lymphatic EC" = "#4f7389ff",
+
+    "Peri/SMC" = "#aa00ffff",
+
+    "Erythroid" = "#ff005dff",
+    "Ery 1" = "#e2407cff",
+    "Ery 2" = "#ff92baff",
+    "Ery 3" = "#a2003bff",
+    "Ery 4" = "#610024ff",
+    "Ery 5" = "#983056ff",
+    "Ery 6" = "#ad5374ff",
+    "Ery 7" = "#b87f94ff",
+    "Mature ery" = "#b04747ff",
+
+    "Mono/Macro lineage 1" = "#ff5900ff",
+    "Mono/Macro lineage 2, cycling" = "#ff9257ff",
+    "Mono/Macro lineage 3" = "#bd754dff",
+    "Mono/Macro lineage 4" = "#ff5900ff",
+    "Mono/Macro lineage 5" = "#873001ff",
+
+    "Early Neutro 1" = "#ff8c00ff",
+    "Early Neutro 2" = "#cf7f1dff",
+
+    "Neutro 1" = "#faac4dff",
+    "Neutro 2" = "#ffc986ff",
+    "Neutro 3" = "#caa87eff",
+    "Neutro 4" = "#9c784bff",
+
+    "Mature neutro 1" = "#573c1bff",
+    "Mature neutro 2" = "#795c39ff",
+    "Mature neutro 3" = "#4b2f0dff",
+
+    "Nk/TC" = "#b34848ff",
+    "Eosinophil" = "#5f111eff",
+    "Eo/Baso/Mast" = "#ff002bff",
+    "Baso/Mast"  = "#9c001aff",
+
+    "BC lineage 1" = "#ffcc00ff",
+    "BC lineage 2" = "#ffe479ff",
+    "BC lineage 3" = "#c3af62ff",
+    "BC lineage 4" = "#958542ff",
+    "BC lineage 5" = "#eeff00ff",
+    "BC lineage 6" = "#d9e07bff",
+    "BC lineage 7" = "#9ea534ff",
+
+
+    "Low quality adipo-CAR" = "#425555ff",
+    "Low quality osteo-chondro" = "#506459ff",
+
+    "Mature immune, mixed 1" = "#afa683ff",
+    "Mature immune, mixed 2" = "#7b7660ff",
+    "Antigen-presenting" = "#8b7467ff",
+    "Antigen-presenting 1" = "#655348ff",
+    "Antigen-presenting 2" = "#4f4139ff",
+
+    "Mixed lymphatic EC/mature immune" = "#47555eff",
+    "Immune/skeletal muscle, mixed" = "#a8a8a8ff",
+    "Skeletal muscle" = "#606060ff",
+    "Low quality skeletal muscle" =  "#191919ff"
 )
 
-stopifnot(!is.na(sce_hsc_all_cells$custom_label))
-
-print(col_custom)
+stopifnot(!is.na(sce_str_all_cells$custom_label))
 ```
 
 ```{r tables}
 table(
-  sce_hsc_all_cells$celltypes,
-  sce_hsc_all_cells$custom_label)
+  sce_str_all_cells$celltypes,
+  sce_str_all_cells$custom_label)
 
 table(
-  sce_hsc_all_cells$celltypes[sce_hsc_all_cells$Species_ID == "mmus"],
-  sce_hsc_all_cells$custom_label[sce_hsc_all_cells$Species_ID == "mmus"])
+  sce_str_all_cells$celltypes[sce_str_all_cells$Species_ID == "mmus"],
+  sce_str_all_cells$custom_label[sce_str_all_cells$Species_ID == "mmus"])
 
 table(
-  sce_hsc_all_cells$celltypes[sce_hsc_all_cells$Species_ID == "mcas"],
-  sce_hsc_all_cells$custom_label[sce_hsc_all_cells$Species_ID == "mcas"])
+  sce_str_all_cells$celltypes[sce_str_all_cells$Species_ID == "mcas"],
+  sce_str_all_cells$custom_label[sce_str_all_cells$Species_ID == "mcas"])
 
 table(
-  sce_hsc_all_cells$celltypes[sce_hsc_all_cells$Species_ID == "mspr"],
-  sce_hsc_all_cells$custom_label[sce_hsc_all_cells$Species_ID == "mspr"])
+  sce_str_all_cells$celltypes[sce_str_all_cells$Species_ID == "mspr"],
+  sce_str_all_cells$custom_label[sce_str_all_cells$Species_ID == "mspr"])
 
 table(
-  sce_hsc_all_cells$celltypes[sce_hsc_all_cells$Species_ID == "mcar"],
-  sce_hsc_all_cells$custom_label[sce_hsc_all_cells$Species_ID == "mcar"])
+  sce_str_all_cells$celltypes[sce_str_all_cells$Species_ID == "mcar"],
+  sce_str_all_cells$custom_label[sce_str_all_cells$Species_ID == "mcar"])
 ```
 
 ## Comparison
@@ -257,33 +318,33 @@ table(
 ### UMAPs
 
 ```{r umap_all_custom, fig.height = 4, fig.width = 4}
-umap_base(sce_hsc_all_cells, "custom_label")+
+umap_base(sce_str_all_cells, "custom_label")+
   ggplot2::scale_color_manual(values = col_custom)
 ```
 
 ```{r umap_all_orig, fig.height = 4, fig.width = 4}
-umap_base(sce_hsc_all_cells, "celltypes")+
-  ggplot2::scale_color_manual(values = col_cts_hsc)
+umap_base(sce_str_all_cells, "celltypes")+
+  ggplot2::scale_color_manual(values = col_cts_str)
 ```
 
 ```{r umap_spec_custom, fig.height = 8, fig.width = 8}
-umap_base(sce_hsc_all_cells, "custom_label")+
+umap_base(sce_str_all_cells, "custom_label")+
   ggplot2::scale_color_manual(values = col_custom)+
-  ggplot2::facet_wrap(facets = vars(sce_hsc_all_cells$Species_ID))
+  ggplot2::facet_wrap(facets = vars(sce_str_all_cells$Species_ID))
 ```
 
 ```{r umap_spec_orig, fig.height = 8, fig.width = 8}
-umap_base(sce_hsc_all_cells, "celltypes")+
-  ggplot2::scale_color_manual(values = col_cts_hsc)+
-  ggplot2::facet_wrap(facets = vars(sce_hsc_all_cells$Species_ID))
+umap_base(sce_str_all_cells, "celltypes")+
+  ggplot2::scale_color_manual(values = col_cts_str)+
+  ggplot2::facet_wrap(facets = vars(sce_str_all_cells$Species_ID))
 ```
 
 ### Tiles
 
 ```{r mmus_tiles}
 mat_mmus <- table(
-  sce_hsc_all_cells$celltypes[sce_hsc_all_cells$Species_ID == "mmus"],
-  sce_hsc_all_cells$custom_label[sce_hsc_all_cells$Species_ID == "mmus"])
+  sce_str_all_cells$celltypes[sce_str_all_cells$Species_ID == "mmus"],
+  sce_str_all_cells$custom_label[sce_str_all_cells$Species_ID == "mmus"])
 
 for(i in 1:ncol(mat_mmus)){
   mat_mmus[,i] <- mat_mmus[,i]/base::sum(mat_mmus[,i])
@@ -294,8 +355,8 @@ mmus_df <- mat_mmus %>%
 
 mmus_df$Var2 <- factor(
   mmus_df$Var2, 
-  levels = rev(levels(sce_hsc_all_cells$custom_label)[
-    levels(sce_hsc_all_cells$custom_label) %in% unique(unfactor(mmus_df$Var2))]))
+  levels = rev(levels(sce_str_all_cells$custom_label)[
+    levels(sce_str_all_cells$custom_label) %in% unique(unfactor(mmus_df$Var2))]))
 
 ggplot2::ggplot(
   mmus_df, 
@@ -315,8 +376,8 @@ ggplot2::ggplot(
 
 ```{r mcas_tiles}
 mat_mcas <- table(
-  sce_hsc_all_cells$celltypes[sce_hsc_all_cells$Species_ID == "mcas"],
-  sce_hsc_all_cells$custom_label[sce_hsc_all_cells$Species_ID == "mcas"])
+  sce_str_all_cells$celltypes[sce_str_all_cells$Species_ID == "mcas"],
+  sce_str_all_cells$custom_label[sce_str_all_cells$Species_ID == "mcas"])
 
 for(i in 1:ncol(mat_mcas)){
   mat_mcas[,i] <- mat_mcas[,i]/base::sum(mat_mcas[,i])
@@ -327,8 +388,8 @@ mcas_df <- mat_mcas %>%
 
 mcas_df$Var2 <- factor(
   mcas_df$Var2, 
-  levels = rev(levels(sce_hsc_all_cells$custom_label)[
-    levels(sce_hsc_all_cells$custom_label) %in% unique(unfactor(mcas_df$Var2))]))
+  levels = rev(levels(sce_str_all_cells$custom_label)[
+    levels(sce_str_all_cells$custom_label) %in% unique(unfactor(mcas_df$Var2))]))
 
 ggplot2::ggplot(
   mcas_df, 
@@ -348,8 +409,8 @@ ggplot2::ggplot(
 
 ```{r mspr_tiles}
 mat_mspr <- table(
-  sce_hsc_all_cells$celltypes[sce_hsc_all_cells$Species_ID == "mspr"],
-  sce_hsc_all_cells$custom_label[sce_hsc_all_cells$Species_ID == "mspr"])
+  sce_str_all_cells$celltypes[sce_str_all_cells$Species_ID == "mspr"],
+  sce_str_all_cells$custom_label[sce_str_all_cells$Species_ID == "mspr"])
 
 for(i in 1:ncol(mat_mspr)){
   mat_mspr[,i] <- mat_mspr[,i]/base::sum(mat_mspr[,i])
@@ -360,8 +421,8 @@ mspr_df <- mat_mspr %>%
 
 mspr_df$Var2 <- factor(
   mspr_df$Var2, 
-  levels = rev(levels(sce_hsc_all_cells$custom_label)[
-    levels(sce_hsc_all_cells$custom_label) %in% unique(unfactor(mspr_df$Var2))]))
+  levels = rev(levels(sce_str_all_cells$custom_label)[
+    levels(sce_str_all_cells$custom_label) %in% unique(unfactor(mspr_df$Var2))]))
 
 ggplot2::ggplot(
   mspr_df, 
@@ -381,8 +442,8 @@ ggplot2::ggplot(
 
 ```{r mcar_tiles}
 mat_mcar <- table(
-  sce_hsc_all_cells$celltypes[sce_hsc_all_cells$Species_ID == "mcar"],
-  sce_hsc_all_cells$custom_label[sce_hsc_all_cells$Species_ID == "mcar"])
+  sce_str_all_cells$celltypes[sce_str_all_cells$Species_ID == "mcar"],
+  sce_str_all_cells$custom_label[sce_str_all_cells$Species_ID == "mcar"])
 
 for(i in 1:ncol(mat_mcar)){
   mat_mcar[,i] <- mat_mcar[,i]/base::sum(mat_mcar[,i])
@@ -393,8 +454,8 @@ mcar_df <- mat_mcar %>%
 
 mcar_df$Var2 <- factor(
   mcar_df$Var2, 
-  levels = rev(levels(sce_hsc_all_cells$custom_label)[
-    levels(sce_hsc_all_cells$custom_label) %in% unique(unfactor(mcar_df$Var2))]))
+  levels = rev(levels(sce_str_all_cells$custom_label)[
+    levels(sce_str_all_cells$custom_label) %in% unique(unfactor(mcar_df$Var2))]))
 
 ggplot2::ggplot(
   mcar_df, 
@@ -416,8 +477,8 @@ ggplot2::ggplot(
 
 ```{r mmus_alluv, fig.height = 9, fig.width = 8}
 mat_mmus <- table(
-  sce_hsc_all_cells$celltypes[sce_hsc_all_cells$Species_ID == "mmus"],
-  sce_hsc_all_cells$custom_label[sce_hsc_all_cells$Species_ID == "mmus"])
+  sce_str_all_cells$celltypes[sce_str_all_cells$Species_ID == "mmus"],
+  sce_str_all_cells$custom_label[sce_str_all_cells$Species_ID == "mmus"])
 
 mmus_df <- mat_mmus %>%
   base::as.data.frame() %>%
@@ -450,8 +511,8 @@ ggplot2::ggplot(data = mmus_df2,
 
 ```{r mcas_alluv, fig.height = 9, fig.width = 8}
 mat_mcas <- table(
-  sce_hsc_all_cells$celltypes[sce_hsc_all_cells$Species_ID == "mcas"],
-  sce_hsc_all_cells$custom_label[sce_hsc_all_cells$Species_ID == "mcas"])
+  sce_str_all_cells$celltypes[sce_str_all_cells$Species_ID == "mcas"],
+  sce_str_all_cells$custom_label[sce_str_all_cells$Species_ID == "mcas"])
 
 mcas_df <- mat_mcas %>%
   base::as.data.frame() %>%
@@ -484,8 +545,8 @@ ggplot2::ggplot(data = mcas_df2,
 
 ```{r mspr_alluv, fig.height = 9, fig.width = 8}
 mat_mspr <- table(
-  sce_hsc_all_cells$celltypes[sce_hsc_all_cells$Species_ID == "mspr"],
-  sce_hsc_all_cells$custom_label[sce_hsc_all_cells$Species_ID == "mspr"])
+  sce_str_all_cells$celltypes[sce_str_all_cells$Species_ID == "mspr"],
+  sce_str_all_cells$custom_label[sce_str_all_cells$Species_ID == "mspr"])
 
 mspr_df <- mat_mspr %>%
   base::as.data.frame() %>%
@@ -518,8 +579,8 @@ ggplot2::ggplot(data = mspr_df2,
 
 ```{r mcar_alluv, fig.height = 9, fig.width = 8}
 mat_mcar <- table(
-  sce_hsc_all_cells$celltypes[sce_hsc_all_cells$Species_ID == "mcar"],
-  sce_hsc_all_cells$custom_label[sce_hsc_all_cells$Species_ID == "mcar"])
+  sce_str_all_cells$celltypes[sce_str_all_cells$Species_ID == "mcar"],
+  sce_str_all_cells$custom_label[sce_str_all_cells$Species_ID == "mcar"])
 
 mcar_df <- mat_mcar %>%
   base::as.data.frame() %>%
@@ -552,8 +613,8 @@ ggplot2::ggplot(data = mcar_df2,
 
 ```{r all_alluv, fig.height = 18, fig.width = 8}
 mat_all <- table(
-  sce_hsc_all_cells$celltypes,
-  sce_hsc_all_cells$custom_label)
+  sce_str_all_cells$celltypes,
+  sce_str_all_cells$custom_label)
 
 all_df <- mat_all %>%
   base::as.data.frame() %>%

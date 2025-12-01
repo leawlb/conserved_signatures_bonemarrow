@@ -41,7 +41,6 @@ source(file =  snakemake@params[["plotting"]])
 
 ```{r load_objects}
 sce_species <- base::readRDS(file = snakemake@input[["sce_species"]])
-#sce_species <- base::readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/01_mnnc/comparison/sce_mcar_str_Object_ID-01")
 
 fraction_curr <- "str"
 species_curr <- "mcar"
@@ -51,8 +50,7 @@ stopifnot(unique(sce_species$Species_ID == species_curr))
 
 # define output path here
 # since in an .Rmd file run by snakemake the only output defined
-# by snakemake is the html, any other output must be
-# defined manually
+# by snakemake is the html, any other output must be defined manually
 base_path_data <- snakemake@params[["OUTPUT_DAT"]]
 output_path <- base::paste0(base_path_data, "/02_clst/custom/sce_mcar_str_custom.rds")
 print(output_path)
@@ -75,7 +73,7 @@ I'll try at least.
 
 ```{r parameters}
 k_graph <- 5
-resolution_louvain <- 1.2 # 1
+resolution_louvain <- 1.2 
 ```
 
 ### Louvain clustering
@@ -294,11 +292,11 @@ if(fraction_curr == "str"){
 
 if(fraction_curr == "str"){
   marker_genes_short <- c(
-    "Adipoq", # adipo CAR
-    "Cxcl12", # also arteriolar EC
+    "Adipoq", 
+    "Cxcl12", 
     "Kitl", 
     "Lepr",
-    "Alpl", # Osteo
+    "Alpl", 
     "Bglap",
     "Ibsp",
     "Mmp13",
@@ -609,7 +607,7 @@ plot_list_gene
 ```
 
 These are looking like very late RBC/Erys which is why I didn't know some
-these genes from the progenitors I ususally look at.
+these genes from the progenitors I usually look at.
 But the top genes Slc4a1, Kel, Sox6 are definitely erythroid.
 
 #### Neutro
@@ -747,12 +745,13 @@ names(plot_list_gene) <- marker_genes_list_neu
 plot_list_gene
 ```
 
-So the mystery neutro clusters are actually very overtly neutrophilic
+So the mystery neutro clusters 10 and 14 are actually very overtly neutrophilic
 just much more mature than what I'm used to from the progenitors
 in terms of expression.
 Actually, cluster 29 also contains some Cd3d.
-Now I have accepted Cd3d expression in neutro clusters also in other species.
-The last cluster are eosinophils which are not in the HSPC dataset.
+But I have seen Cd3d expression in neutro clusters also in other species and accepted
+that this can still be neutro.
+Cluster 35 are eosinophils which are not in the HSPC dataset.
 
 #### Baso Mast
 
@@ -802,7 +801,7 @@ cluster_markers[[31]] %>%
 ```
 
 ```{r umaps_lymph, fig.height = 3, fig.width = 4}
-# find the cluster
+# find the clusters
 umap_base(sce_species, "cluster_louvain_custom")+
   ggplot2::scale_color_manual("cluster", values = col_num)
 umap_base(
@@ -846,10 +845,8 @@ plot_list_gene
 ```
 
 So clusters 20 and 30 are DCs that look BC-like = pDCs?
-But clusters 20 and  30 also express  some Cd8a and Cd4, Cd3e, Ccl5, 
+But clusters 20 and 30 also express some Cd8a and Cd4, Cd3e, Ccl5, 
 so I'll rather call them mixed.
-Or maybe pDC and some B-lineage cells cluster together
-because they look so similar, either way, let's call it DC.
 
 #### Weird clusters 
 
@@ -882,7 +879,7 @@ cluster_markers[[34]] %>%
 ```
 
 ```{r umaps_weird, fig.height = 3, fig.width = 4}
-# find the cluster
+# find the clusters
 umap_base(sce_species, "cluster_louvain_custom")+
   ggplot2::scale_color_manual("cluster", values = col_num)
 umap_base(
@@ -964,8 +961,12 @@ plot_list_gene
 
 ```
 
-They don't look early enough for "early myeloid prog".
+Clusters 15 and 24 don't look early enough for "early myeloid prog".
 So keep them early neutro.
+
+Cluster 27 is antigen-presenting.
+
+Cluster 34 is still mysterious but looks stromal, so look closer at it below.
 
 ### Expected clusters
 
@@ -1000,7 +1001,8 @@ cluster_markers[[4]] %>%
   head(n = 20)
 ```
 
-Cxcl12, Apoe, Cxcl14, Gas6, Kitl, Lpl, Vcam1, Hp, Snai1 are clearly adipo CAR like.
+Cxcl12, Apoe, Cxcl14, Gas6, Kitl, Lpl, Vcam1, Hp, Snai1 are 
+clearly adipo CAR like.
 
 ```{r markers_osteo_fibro}
 # osteo-fibro?
@@ -1024,6 +1026,7 @@ cluster_markers[[19]] %>%
 Thbs4, Fmod, Mgp, Dcn, Col1a1, Col1a2, Prelp, Aspn, Ogn, Cd9, Aebp1,
 Chad, Prg4.
 Very chondro-ish (early)?
+Or mixed?
 
 ```{r markers_fibro_chondro}
 # chondro fibro?
@@ -1094,7 +1097,7 @@ Cluster 4 is clearly adipocytic/CAR-like.
 The only one expressing Adipoq.
 But one part also expresses osteo-lineage genes.
 
-cluster 16 is also weakly adipocytic, with light Cxcl12 and Lpl expression.
+Cluster 16 is also weakly adipocytic, with light Cxcl12 and Lpl expression.
 Dcn is very high, Lum a bit lower.
 SPOTTY osteo expression. 
 Highest Pdgfra and Cd34, as well as Thy1.
@@ -1106,12 +1109,12 @@ Highest Aspn, Ogn, Fmod, Alpl,
 I think a good portion of the more "Osteo" like cells are now with the
 Adipo-CAR cells.
 So these are mostly osteo-chondro.
-Especially since a small speckle contained in this cluster are the most
-mature chondro-cells, interestingly.
+Especially since a population contained in this cluster are the most
+mature chondro-cells.
 
 Cluster 19 is the strongest Thbs4, Prelp, Chad expressing cluster, 
 also expresses some fibro-stuff.
-But really strong chondro-like.
+But really strong early/pure chondro-like.
 
 Cluster 34 (mystery) doesn't express most of these markers but Prg4.
 
@@ -1246,7 +1249,7 @@ marker_genes_list_weird_msc <- as.list(c(
   "Vim",
   "Des",
   "Vcl",
-    "Ackr3", # add some markers from mspr
+  "Ackr3", # add some markers from mspr
   "F13a1",
   "Htra4",
   "Hbegf",
@@ -1268,7 +1271,7 @@ plot_list_gene
 
 Prg4, Cpe, Fbln7, are co-expressed with chondro.
 Gpx3, Creb5, Sparcl1, Cfh with fibro.
-Clic5 is co-expressed with Aart/Cap EC.
+Clic5 is co-expressed with Art/Cap EC.
 Ccn2 is an MSC gene.
 
 Clic5 seems pre-adipocytic?
@@ -1334,13 +1337,13 @@ sce_species$custom_label[
 
 # Lymphoid
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "20"] <-  "Mature immune, mixed 3"
+  sce_species$cluster_louvain_custom == "20"] <-  "Mature immune, mixed 2"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "26"] <-  "BC lineage 1"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "28"] <-  "BC lineage 3"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "30"] <-  "Mature immune, mixed 2"
+  sce_species$cluster_louvain_custom == "30"] <-  "Mature immune, mixed 1"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "31"] <-  "BC lineage 2"
   
@@ -1358,7 +1361,7 @@ sce_species$custom_label[
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "16"] <-  "Fibro"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "11"] <-  "Late chondro"
+  sce_species$cluster_louvain_custom == "11"] <-  "Late chondro and Osteo"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "19"] <-  "Early chondro"
 sce_species$custom_label[
@@ -1380,7 +1383,7 @@ sce_species$custom_label <- factor(
     "Adipo/Osteo CAR",
     "Fibro",
     "Early chondro",
-    "Late chondro",
+    "Late chondro and Osteo",
     "Articular/synovial progenitor-like",
     "Arteriolar/capillary EC",
     "Mixed ven/sinus/lymph EC",
@@ -1410,9 +1413,7 @@ sce_species$custom_label <- factor(
     "BC lineage 3",
     "Antigen-presenting",
     "Mature immune, mixed 1",
-    "Mature immune, mixed 2",
-    "Mature immune, mixed 3"
-
+    "Mature immune, mixed 2"
     ))
 sort(unique(sce_species$custom_label))
 levels(sce_species$custom_label)

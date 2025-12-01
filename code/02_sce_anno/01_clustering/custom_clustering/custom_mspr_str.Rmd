@@ -914,7 +914,7 @@ sce_species$custom_label[
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "10"] <-  "Early chondro"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "11"] <-  "Low quality, osteo-chondro"
+  sce_species$cluster_louvain_custom == "11"] <-  "Low quality osteo-chondro"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "13"] <-  "Articular/synovial progenitor-like"
 
@@ -956,7 +956,7 @@ sce_species$custom_label <- factor(
     "Peri/SMC",
     # contamination
     "Low quality adipo-CAR",
-     "Low quality osteo-chondro",
+    "Low quality osteo-chondro",
     "Eo/Baso/Mast",
     "Immune/skeletal muscle, mixed"
     ))

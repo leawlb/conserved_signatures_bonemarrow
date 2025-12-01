@@ -74,21 +74,6 @@ for s in species:
     targets = targets + [OUTPUT_DAT + "/02_clst/comparison/sce_" + s + "_" + f + "-02"]
     targets = targets + [OUTPUT_REP + "/02_clustering/comparison/clustering_report_" + s + "_" + f + ".html"]
 
-# custom clustering and label assignment per condition
-targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mmus_hsc.html"]
-targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mmus_str.html"]
-targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mcas_hsc.html"]
-targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mcas_str.html"]
-targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mspr_hsc.html"]
-targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mspr_str.html"]
-targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mcar_hsc.html"]
-targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/report_mcar_str.html"]
-
-targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/custom_hsc_comparison_report.html"]
-targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/custom_hsc_clustering_report.html"]
-targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/custom_str_comparison_report.html"]
-targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/custom_str_clustering_report.html"]
-
 #-------------------------------------------------------------------------------
 
 localrules: all  

@@ -269,6 +269,7 @@ rule custom_str_clustering_report:
     params:
         colors_path = COLORS,
         plotting = "../../source/plotting.R",
+        custom_utils = "../../source/custom_clustering_utils.R",
         colors = "../../source/colors.R"
     threads: 10
     script:

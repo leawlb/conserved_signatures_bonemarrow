@@ -1381,9 +1381,9 @@ sce_species$custom_label <- factor(
   sce_species$custom_label,
   levels = c(
     "Adipo/Osteo CAR",
-    "Fibro",
     "Early chondro",
     "Late chondro and Osteo",
+    "Fibro",
     "Articular/synovial progenitor-like",
     "Arteriolar/capillary EC",
     "Mixed ven/sinus/lymph EC",

@@ -124,14 +124,15 @@ sce_str_all_cells$custom_label <- factor(
     
     "Balanced mesenchymal",
 
-    "Fibro",
-    "Fibro/Chondro (more Fibro)",
     "Early chondro",
     "Late chondro and Osteo",
     "Late chondro",
 
     "Articular/synovial progenitor-like",
 
+    "Fibro/Chondro (more Fibro)",
+    "Fibro",
+    
     "Capillary EC",
     "Capillary EC 1",
     "Capillary EC 2",
@@ -509,7 +510,7 @@ ggplot2::ggplot(data = mmus_df2,
   ggplot2::scale_x_discrete(expand = c(0.15, 0.05))+
   theme_void()+
   ggplot2::theme(legend.position = "none")+
-  ggplot2::scale_fill_manual(values = col_cts_str)
+  ggplot2::scale_fill_manual(values = col_cts_str_orig)
 ```
 
 ```{r mcas_alluv, fig.height = 9, fig.width = 8}
@@ -543,7 +544,7 @@ ggplot2::ggplot(data = mcas_df2,
   ggplot2::scale_x_discrete(expand = c(0.15, 0.05))+
   theme_void()+
   ggplot2::theme(legend.position = "none")+
-  ggplot2::scale_fill_manual(values = col_cts_str)
+  ggplot2::scale_fill_manual(values = col_cts_str_orig)
 ```
 
 ```{r mspr_alluv, fig.height = 9, fig.width = 8}
@@ -577,7 +578,7 @@ ggplot2::ggplot(data = mspr_df2,
   ggplot2::scale_x_discrete(expand = c(0.15, 0.05))+
   theme_void()+
   ggplot2::theme(legend.position = "none")+
-  ggplot2::scale_fill_manual(values = col_cts_str)
+  ggplot2::scale_fill_manual(values = col_cts_str_orig)
 ```
 
 ```{r mcar_alluv, fig.height = 9, fig.width = 8}
@@ -611,7 +612,7 @@ ggplot2::ggplot(data = mcar_df2,
   ggplot2::scale_x_discrete(expand = c(0.15, 0.05))+
   theme_void()+
   ggplot2::theme(legend.position = "none")+
-  ggplot2::scale_fill_manual(values = col_cts_str)
+  ggplot2::scale_fill_manual(values = col_cts_str_orig)
 ```
 
 ```{r all_alluv, fig.height = 18, fig.width = 8}
@@ -644,5 +645,6 @@ ggplot2::ggplot(data = all_df2,
                      aes(label = after_stat(stratum)))+
   ggplot2::scale_x_discrete(expand = c(0.15, 0.05))+
   theme_void()+
-  ggplot2::theme(legend.position = "none")
+  ggplot2::theme(legend.position = "none")+
+  ggplot2::scale_fill_manual(values = col_cts_str_orig)
 ```

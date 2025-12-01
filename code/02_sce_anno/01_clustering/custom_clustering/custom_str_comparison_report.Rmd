@@ -94,16 +94,6 @@ marker gene lists of individual species and cell types.
       "Apod", # several undefined MSC populations 
       "Tnn" # osteo-X https://doi.org/10.1016/j.jbc.2024.107158
       ),
-    "Early Fibro mixed" = c(
-      "Dcn", # fibro ST1
-      "Lum", # fibro ST1
-      "Dpt", # fibro https://doi.org/10.1016/j.jbc.2024.107158
-      "Clec3b", # fibro https://doi.org/10.1016/j.jbc.2024.107158
-      "Cd34", # also arteriolar EC
-      "Thy1", # fibro, msc, related to osteogenesis https://doi.org/10.1096/fj.201701379R
-      "Pdgfra", # fibro ST1
-      "Pdgfrb" # 
-      ),
     "Chondro early/other/mixed" = c(
       "Fmod", # chondro ST1
       "Chad", # chondro ST1
@@ -121,6 +111,16 @@ marker gene lists of individual species and cell types.
       "Sox9", # chondro https://doi.org/10.1016/j.jbc.2024.107158
       "Snorc",  # chondro https://doi.org/10.1016/j.jbc.2024.107158
       "Acan"
+      ),
+    "Early Fibro mixed" = c(
+      "Dcn", # fibro ST1
+      "Lum", # fibro ST1
+      "Dpt", # fibro https://doi.org/10.1016/j.jbc.2024.107158
+      "Clec3b", # fibro https://doi.org/10.1016/j.jbc.2024.107158
+      "Cd34", # also arteriolar EC
+      "Thy1", # fibro, msc, related to osteogenesis https://doi.org/10.1096/fj.201701379R
+      "Pdgfra", # fibro ST1
+      "Pdgfrb" # 
       ),
     "Pan EC" = c(
       "Cdh5",

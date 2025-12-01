@@ -19,8 +19,8 @@ set.seed(37)
 ```
 
 ```{r source, message = FALSE}
-source(file =  snakemake@params[["plotting"]])
-source(file =  snakemake@params[["custom_utils"]])
+source(file = snakemake@params[["plotting"]])
+source(file = snakemake@params[["custom_utils"]])
 ```
 
 ```{r colors, message = FALSE}

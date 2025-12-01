@@ -253,6 +253,8 @@ rule custom_str_comparison_report:
     resources:
         mem_mb = 70000,
         queue = "medium-debian"
+    params:
+        custom_utils = "../../source/custom_clustering_utils.R"
     threads: 10
     script:
         "custom_clustering/custom_str_comparison_report.Rmd"

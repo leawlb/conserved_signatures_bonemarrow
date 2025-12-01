@@ -26,8 +26,10 @@ source(file =  snakemake@params[["plotting"]])
 colors_path <- snakemake@params[["colors_path"]]
 source(snakemake@params[["colors"]])
 
+col_cts_str <- c(col_cts_str, "removed" = "grey70")
 col_cts_str_orig <- col_cts_str
-names(col_cts_str_orig) <- paste0("orig ", col_cts_str_orig)
+names(col_cts_str_orig) <- paste0("orig ", names(col_cts_str_orig))
+col_cts_str_orig
 ```
 
 ```{r libraries, message = FALSE}
@@ -118,178 +120,177 @@ print(sort(unique(sce_str_all_cells$custom_label)))
 sce_str_all_cells$custom_label <- factor(
   sce_str_all_cells$custom_label, 
   levels = c(
-    "Adipo-CAR",
-    "Adipo/Osteo CAR",
-    "Osteo",
+    "Adipo-CAR", 
+    "Adipo/Osteo CAR", 
+    "Osteo", 
     
-    "Balanced mesenchymal",
+    "Balanced mesenchymal", 
 
     "Early chondro",
     "Late chondro and Osteo",
-    "Late chondro",
+    "Late chondro", 
 
     "Articular/synovial progenitor-like",
 
     "Fibro/Chondro (more Fibro)",
-    "Fibro",
+    "Fibro", 
     
-    "Capillary EC",
-    "Capillary EC 1",
-    "Capillary EC 2",
-    "Arteriolar/capillary EC",
+    "Capillary EC", 
+    "Capillary EC 1", 
+    "Capillary EC 2", 
+    "Arteriolar/capillary EC", 
     "Arteriolar EC",
 
-    "Transitory/Venous EC",
-    "Mixed arteriolar/sinus EC",
-    "Mixed ven/sinus/lymph EC",
-    "Sinusoidal EC",
+    "Transitory/Venous EC", 
+    "Mixed arteriolar/sinus EC", 
+    "Mixed ven/sinus/lymph EC", 
+    "Sinusoidal EC", 
 
-    "Lymphatic EC",
+    "Lymphatic EC", 
 
-    "Peri/SMC",
+    "Peri/SMC", 
 
-    "Erythroid",
-    "Ery 1",
-    "Ery 2",
-    "Ery 3",
-    "Ery 4",
-    "Ery 5",
-    "Ery 6",
-    "Ery 7",
+    "Erythroid", 
+    "Ery 1", 
+    "Ery 2", 
+    "Ery 3", 
+    "Ery 4", 
+    "Ery 5", 
+    "Ery 6", 
+    "Ery 7", 
     "Mature ery",
 
-    "Mono/Macro lineage 1",
-    "Mono/Macro lineage 2, cycling",
-    "Mono/Macro lineage 3",
-    "Mono/Macro lineage 4",
-    "Mono/Macro lineage 5",
+    "Mono/Macro lineage 1", 
+    "Mono/Macro lineage 2, cycling", 
+    "Mono/Macro lineage 3", 
+    "Mono/Macro lineage 4", 
+    "Mono/Macro lineage 5", 
+ 
+    "Early Neutro 1", 
+    "Early Neutro 2", 
 
-    "Early Neutro 1",
-    "Early Neutro 2",
-
-    "Neutro 1",
-    "Neutro 2",
+    "Neutro 1", 
+    "Neutro 2", 
     "Neutro 3",
     "Neutro 4",
 
-    "Mature neutro 1",
-    "Mature neutro 2",
-    "Mature neutro 3",
+    "Mature neutro 1", 
+    "Mature neutro 2", 
+    "Mature neutro 3", 
 
-    "Nk/TC",
-    "Eosinophil",
-    "Eo/Baso/Mast",
-    "Baso/Mast",
+    "Nk/TC", 
+    "Eosinophil", 
+    "Eo/Baso/Mast", 
+    "Baso/Mast", 
 
     "BC lineage 1",
-    "BC lineage 2",
-    "BC lineage 3",
-    "BC lineage 4",
-    "BC lineage 5",
-    "BC lineage 6",
-    "BC lineage 7",
+    "BC lineage 2", 
+    "BC lineage 3", 
+    "BC lineage 4", 
+    "BC lineage 5", 
+    "BC lineage 6", 
+    "BC lineage 7", 
 
 
     "Low quality adipo-CAR",
     "Low quality osteo-chondro",
 
-    "Mature immune, mixed 1",
-    "Mature immune, mixed 2",
+    "Mature immune, mixed 1", 
+    "Mature immune, mixed 2", 
     "Antigen-presenting",
-    "Antigen-presenting 1",
-    "Antigen-presenting 2",
+    "Antigen-presenting 1", 
+    "Antigen-presenting 2", 
 
-    "Mixed lymphatic EC/mature immune",
-    "Immune/skeletal muscle, mixed",
+    "Mixed lymphatic EC/mature immune", 
+    "Immune/skeletal muscle, mixed", 
     "Skeletal muscle",
-    "Low quality skeletal muscle"
+    "Low quality skeletal muscle" 
 ))
 
 col_custom <- c(
-    "Adipo-CAR" = "#1c6c6eff",
-    "Adipo/Osteo CAR" = "#35abadff",
-    "Osteo" = "#13ddc2ff",
+    "Adipo-CAR" = "#1c6c6eff", # mmus, mspr 
+    "Adipo/Osteo CAR" = "#35abadff", # mcas, mcar
+    "Osteo" = "#1bfcdeff", # mmus, mcas, mspr
     
-    "Balanced mesenchymal" = "#35ad5bff",
+    "Balanced mesenchymal" = "#64fc71ff", # mmus, mcas, mspr
 
-    "Fibro" = "#6b9508ff",
-    "Fibro/Chondro (more Fibro)" = "#bcf537ff",
-    "Early chondro" = "#787a0eff",
-    "Late chondro and Osteo" = "#0e7a3fff",
-    "Late chondro" = "#48490cff",
+    "Fibro" = "#557113ff",  # mmus, mcas, mcar
+    "Fibro/Chondro (more Fibro)" = "#7bab0aff", # mspr
+    "Early chondro" = "#c1fda3ff",  # mspr, mcar
+    "Late chondro and Osteo" = "#80f000ff",  # mcar
+    "Late chondro" = "#55a646ff", # mmus, mcas
 
-    "Articular/synovial progenitor-like" = "#6ab98dff",
+    "Articular/synovial progenitor-like" = "#344b02ff",  # mspr, mcar
 
-    "Capillary EC" = "#9eabffff",
-    "Capillary EC 1" = "#5f6cc1ff",
-    "Capillary EC 2" = "#3041b0ff",
-    "Arteriolar/capillary EC" = "#70abfeff",
-    "Arteriolar EC" = "#277dd4ff",
+    "Capillary EC" = "#b8c1fbff", # mspr
+    "Capillary EC 1" = "#b4e3fcff", # mmus
+    "Capillary EC 2" = "#43bbfbff", # mmus
+    "Arteriolar/capillary EC" = "#70abfeff", # mcas, mcar
+    "Arteriolar EC" = "#2a66a2ff",  # mmus, mspr
 
-    "Transitory/Venous EC" = "#3e2289ff",
-    "Mixed arteriolar/sinus EC" = "#6b5d92ff",
-    "Mixed ven/sinus/lymph EC" = "#9572f3ff",
-    "Sinusoidal EC" = "#22076eff",
+    "Transitory/Venous EC" = "#6b44d6ff", # mmus, mspr
+    "Mixed arteriolar/sinus EC" = "#4c3f6eff", # mcar
+    "Mixed ven/sinus/lymph EC" = "#906eebff", # mcar
+    "Sinusoidal EC" = "#22076eff", # mmus, mcas, mspr
 
-    "Lymphatic EC" = "#4f7389ff",
+    "Lymphatic EC" = "#4f7389ff", # mspr
 
-    "Peri/SMC" = "#aa00ffff",
+    "Peri/SMC" = "#cc00ffff", # mmus, mcas, mspr, mcar
 
-    "Erythroid" = "#ff005dff",
-    "Ery 1" = "#e2407cff",
-    "Ery 2" = "#ff92baff",
-    "Ery 3" = "#a2003bff",
-    "Ery 4" = "#610024ff",
-    "Ery 5" = "#983056ff",
-    "Ery 6" = "#ad5374ff",
-    "Ery 7" = "#b87f94ff",
-    "Mature ery" = "#b04747ff",
+    "Erythroid" = "#ff005dff", # mmus, mcas
+    "Ery 1" = "#e2407cff", # mcar
+    "Ery 2" = "#ff92baff", # mcar
+    "Ery 3" = "#a2003bff", # mcar
+    "Ery 4" = "#610024ff", # mcar
+    "Ery 5" = "#983056ff", # mcar
+    "Ery 6" = "#ad5374ff", # mcar
+    "Ery 7" = "#b87f94ff", # mcar
+    "Mature ery" = "#b04747ff", # mcar
 
-    "Mono/Macro lineage 1" = "#ff5900ff",
-    "Mono/Macro lineage 2, cycling" = "#ff9257ff",
-    "Mono/Macro lineage 3" = "#bd754dff",
-    "Mono/Macro lineage 4" = "#ff5900ff",
-    "Mono/Macro lineage 5" = "#873001ff",
+    "Mono/Macro lineage 1" = "#ff5900ff", # mcas
+    "Mono/Macro lineage 2, cycling" = "#ffa97aff", # mcas
+    "Mono/Macro lineage 3" = "#bd754dff", # mcas
+    "Mono/Macro lineage 4" = "#c4581fff", # mcas
+    "Mono/Macro lineage 5" = "#8f3606ff", # mcas
 
-    "Early Neutro 1" = "#ff8c00ff",
-    "Early Neutro 2" = "#cf7f1dff",
+    "Early Neutro 1" = "#ff8c00ff", # mcar
+    "Early Neutro 2" = "#cf7f1dff", # mcar
 
-    "Neutro 1" = "#faac4dff",
-    "Neutro 2" = "#ffc986ff",
-    "Neutro 3" = "#caa87eff",
-    "Neutro 4" = "#9c784bff",
+    "Neutro 1" = "#ce8f42ff", # mcas, mcar
+    "Neutro 2" = "#fdc98aff", # mcas, mcar
+    "Neutro 3" = "#ceb493ff", # mcar
+    "Neutro 4" = "#a6865fff", # mcar
 
-    "Mature neutro 1" = "#573c1bff",
-    "Mature neutro 2" = "#795c39ff",
-    "Mature neutro 3" = "#4b2f0dff",
+    "Mature neutro 1" = "#8e775aff", # mcar
+    "Mature neutro 2" = "#94662eff", # mcar
+    "Mature neutro 3" = "#78470bff", # mcar
 
-    "Nk/TC" = "#b34848ff",
-    "Eosinophil" = "#5f111eff",
-    "Eo/Baso/Mast" = "#ff002bff",
-    "Baso/Mast"  = "#9c001aff",
+    "Nk/TC" = "#d0716cff", # mcas
+    "Eosinophil" = "#ae2c42ff", # mcar
+    "Eo/Baso/Mast" = "#aa2e32ff", # mspr
+    "Baso/Mast"  = "#ff0008ff", # mcas, mcar
 
-    "BC lineage 1" = "#ffcc00ff",
-    "BC lineage 2" = "#ffe479ff",
-    "BC lineage 3" = "#c3af62ff",
-    "BC lineage 4" = "#958542ff",
-    "BC lineage 5" = "#eeff00ff",
-    "BC lineage 6" = "#d9e07bff",
-    "BC lineage 7" = "#9ea534ff",
+    "BC lineage 1" = "#e3c036ff", # mcas
+    "BC lineage 2" = "#ffe479ff", # mcas
+    "BC lineage 3" = "#c3af62ff", # mcas
+    "BC lineage 4" = "#958542ff", # mcas
+    "BC lineage 5" = "#deec1cff", # mcas
+    "BC lineage 6" = "#d9e07bff", # mcas
+    "BC lineage 7" = "#9ea534ff", # mcas
 
+    "Low quality adipo-CAR" = "#acdfe0ff",  # mmus, mspr
+    "Low quality osteo-chondro" = "#9ab8a3ff",  # mspr
 
-    "Low quality adipo-CAR" = "#425555ff",
-    "Low quality osteo-chondro" = "#506459ff",
+    "Mature immune, mixed 1" = "#afa683ff", # mcas, mcar
+    "Mature immune, mixed 2" = "#7b7660ff", # mcas, mcar
+    "Antigen-presenting" = "#8b7467ff",  # mcar
+    "Antigen-presenting 1" = "#655348ff", # mcas
+    "Antigen-presenting 2" = "#4f4139ff", # mcas
 
-    "Mature immune, mixed 1" = "#afa683ff",
-    "Mature immune, mixed 2" = "#7b7660ff",
-    "Antigen-presenting" = "#8b7467ff",
-    "Antigen-presenting 1" = "#655348ff",
-    "Antigen-presenting 2" = "#4f4139ff",
-
-    "Mixed lymphatic EC/mature immune" = "#47555eff",
-    "Immune/skeletal muscle, mixed" = "#a8a8a8ff",
-    "Skeletal muscle" = "#606060ff",
-    "Low quality skeletal muscle" =  "#191919ff"
+    "Mixed lymphatic EC/mature immune" = "#716757ff", # mmus
+    "Immune/skeletal muscle, mixed" = "#939393ff", # mspr
+    "Skeletal muscle" = "#636363ff",  # mcas
+    "Low quality skeletal muscle" =  "#acacacff" # mmus
 )
 
 stopifnot(!is.na(sce_str_all_cells$custom_label))
@@ -477,7 +478,7 @@ ggplot2::ggplot(
   )
 ```
 
-### Alluvial
+### Alluvial plots
 
 ```{r mmus_alluv, fig.height = 9, fig.width = 8}
 mat_mmus <- table(
@@ -648,3 +649,4 @@ ggplot2::ggplot(data = all_df2,
   ggplot2::theme(legend.position = "none")+
   ggplot2::scale_fill_manual(values = col_cts_str_orig)
 ```
+

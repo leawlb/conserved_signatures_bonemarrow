@@ -1,0 +1,1 @@
+snakemake --cluster "bsub -n{threads} -q {resources.queues} -R rusage[mem={resources.mem_mb}]" -p -j45 -c20 -s run_rmds.py --latency-wait 60 --use-conda -n

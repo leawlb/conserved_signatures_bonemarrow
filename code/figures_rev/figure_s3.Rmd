@@ -45,7 +45,7 @@ col_cts_str <- c(col_cts_str, "removed" = "grey70")
 
 After the original louvain clustering of the merged dataset.
 
-```{r load_sce_hsc_all_cells}
+```{r load_sce_hsc_all_cells, eval = FALSE, include = FALSE}
 # load data for manual use here
 
 # SCE objects with all cells
@@ -89,7 +89,7 @@ gc()
 
 After species-specific clustering.
 
-```{r load_custom_cluster_labels_hsc}
+```{r load_custom_cluster_labels_hsc, eval = FALSE, include = FALSE}
 # add all labels to the object that contains all cells
 
 # load objects
@@ -170,7 +170,7 @@ gc()
 
 Final annotation after sub-clustering.
 
-```{r load_anno_hsc}
+```{r load_anno_hsc, eval = FALSE, include = FALSE}
 sce_hsc_anno <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data_freeze/05_annotated_objects/sce_str.rds")
 
 sce_hsc_all_cells$celltypes <- vector(length = ncol(sce_hsc_all_cells))
@@ -224,7 +224,7 @@ print(sort(unique(sce_str_all_cells$custom_label)))
 
 ### Add factors
 
-```{r prep_hsc}
+```{r prep_hsc, eval = FALSE, include = FALSE}
 # change species names to currently used abbreviations
 sce_hsc_all_cells$species_pub <- vector(length = ncol(sce_hsc_all_cells))
 sce_hsc_all_cells$species_pub[sce_hsc_all_cells$Species_ID == "mmus"] <- "BL6"
@@ -272,22 +272,12 @@ sce_str_all_cells$custom_label <- factor(
 source("../figures/determine_params.R")
 ```
 
-# Build 
+# Base Plots 
 
 Containing all cells, including contamination.
 Both annotations (original merged and custom species-specific).
 
 ## Make DFs for UMAPs
-
-```{r prep_hsc_df1}
-hsc_umap <- base::as.data.frame(
-  SingleCellExperiment::reducedDim(
-    sce_hsc_all_cells, type = "UMAP"))
-
-hsc_umap$celltypes <- sce_hsc_all_cells$celltypes 
-hsc_umap$custom_label <- sce_hsc_all_cells$custom_label 
-hsc_umap$species <- sce_hsc_all_cells$species_pub 
-```
 
 ```{r prep_str_df1}
 str_umap <- base::as.data.frame(
@@ -353,10 +343,70 @@ mmus_df_str <- mmus_df_str %>%
     Var2_c = fct_inorder(paste0(" ", Var2)))
 ```
 
+### MCAS
+
+```{r mat_mcas_str}
+mat_mcas_str <- table(
+  sce_str_all_cells$celltypes[sce_str_all_cells$Species_ID == "mcas"],
+  sce_str_all_cells$custom_label[sce_str_all_cells$Species_ID == "mcas"])
+
+mcas_df_str <- mat_mcas_str %>%
+  base::as.data.frame() %>%
+  dplyr::filter(!is.nan(Freq))
+
+mcas_df_str$Var2 <- factor(
+  mmus_df_str$Var2, 
+  levels = rev(factors_custom_str))
+
+mcas_df_str <- mcas_df_str %>%
+  dplyr::mutate(
+    Var2_c = fct_inorder(paste0(" ", Var2)))
+```
+
+### MSPR
+
+```{r mat_mspr_str}
+mat_mspr_str <- table(
+  sce_str_all_cells$celltypes[sce_str_all_cells$Species_ID == "mspr"],
+  sce_str_all_cells$custom_label[sce_str_all_cells$Species_ID == "mspr"])
+
+mspr_df_str <- mat_mspr_str %>%
+  base::as.data.frame() %>%
+  dplyr::filter(!is.nan(Freq))
+
+mspr_df_str$Var2 <- factor(
+  mmus_df_str$Var2, 
+  levels = rev(factors_custom_str))
+
+mspr_df_str <- mspr_df_str %>%
+  dplyr::mutate(
+    Var2_c = fct_inorder(paste0(" ", Var2)))
+```
+
+```{r mat_mcar_str}
+mat_mcar_str <- table(
+  sce_str_all_cells$celltypes[sce_str_all_cells$Species_ID == "mcar"],
+  sce_str_all_cells$custom_label[sce_str_all_cells$Species_ID == "mcar"])
+
+mcar_df_str <- mat_mcar_str %>%
+  base::as.data.frame() %>%
+  dplyr::filter(!is.nan(Freq))
+
+mcar_df_str$Var2 <- factor(
+  mmus_df_str$Var2, 
+  levels = rev(factors_custom_str))
+
+mcar_df_str <- mcar_df_str %>%
+  dplyr::mutate(
+    Var2_c = fct_inorder(paste0(" ", Var2)))
+```
+
 ## Make UMAPs
 
-```{r a_base_plot_str_celltypes_mmus, fig.height = 3, fig.width = 3}
-a_base_plot_str_celltypes_mmus <- ggplot2::ggplot(
+### MMUS
+
+```{r base_plot_str_celltypes_mmus_1, fig.height = 3, fig.width = 3}
+base_plot_str_celltypes_mmus_1 <- ggplot2::ggplot(
   str_umap[str_umap$species == "BL6",], 
   aes(x = V1,
       y = V2,
@@ -369,8 +419,8 @@ a_base_plot_str_celltypes_mmus <- ggplot2::ggplot(
   ggplot2::scale_color_manual(values = col_cts_str)
 ```
 
-```{r b_base_plot_str_custom_mmus, fig.height = 3, fig.width = 3}
-b_base_plot_str_custom_mmus <- ggplot2::ggplot(
+```{r base_plot_str_celltypes_mmus_2, fig.height = 3, fig.width = 3}
+base_plot_str_celltypes_mmus_2 <- ggplot2::ggplot(
   str_umap[str_umap$species == "BL6",], 
   aes(x = V1,
       y = V2,
@@ -381,11 +431,10 @@ b_base_plot_str_custom_mmus <- ggplot2::ggplot(
   ggplot2::xlim(c(base::min(str_umap$V1)-1, base::max(str_umap$V1)+1))+
   ggplot2::ylim(c(base::min(str_umap$V2)-1, base::max(str_umap$V2)+1))+
   ggplot2::scale_color_manual(values = col_custom_str)
-b_base_plot_str_custom_mmus
 ```
 
-```{r c_base_plot_str_custom_mmus, fig.height = 3, fig.width = 3}
-c_base_plot_str_custom2_mmus <- ggplot2::ggplot(
+```{r base_plot_str_celltypes_mmus_3, fig.height = 3, fig.width = 3}
+base_plot_str_celltypes_mmus_3 <- ggplot2::ggplot(
   str_umap[str_umap$species == "BL6",], 
   aes(x = UMAP_spec1,
       y = UMAP_spec2,
@@ -400,13 +449,158 @@ c_base_plot_str_custom2_mmus <- ggplot2::ggplot(
     base::min(str_umap$UMAP_spec2)-1, 
     base::max(str_umap$UMAP_spec2)+1))+
   ggplot2::scale_color_manual(values = col_custom_str)
-c_base_plot_str_custom2_mmus
+```
+
+### MCAS
+
+```{r base_plot_str_celltypes_mcas_1, fig.height = 3, fig.width = 3}
+base_plot_str_celltypes_mcas_1 <- ggplot2::ggplot(
+  str_umap[str_umap$species == "CAST",], 
+  aes(x = V1,
+      y = V2,
+      color = celltypes))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(str_umap$V1)-1, base::max(str_umap$V1)+1))+
+  ggplot2::ylim(c(base::min(str_umap$V2)-1, base::max(str_umap$V2)+1))+
+  ggplot2::scale_color_manual(values = col_cts_str)
+```
+
+```{r base_plot_str_celltypes_mcas_2, fig.height = 3, fig.width = 3}
+base_plot_str_celltypes_mcas_2 <- ggplot2::ggplot(
+  str_umap[str_umap$species == "CAST",], 
+  aes(x = V1,
+      y = V2,
+      color = custom_label))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(str_umap$V1)-1, base::max(str_umap$V1)+1))+
+  ggplot2::ylim(c(base::min(str_umap$V2)-1, base::max(str_umap$V2)+1))+
+  ggplot2::scale_color_manual(values = col_custom_str)
+```
+
+```{r base_plot_str_celltypes_mcas_3, fig.height = 3, fig.width = 3}
+base_plot_str_celltypes_mcas_3 <- ggplot2::ggplot(
+  str_umap[str_umap$species == "CAST",], 
+  aes(x = UMAP_spec1,
+      y = UMAP_spec2,
+      color = custom_label))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(
+    base::min(str_umap$UMAP_spec1)-1, 
+    base::max(str_umap$UMAP_spec1)+1))+
+  ggplot2::ylim(c(
+    base::min(str_umap$UMAP_spec2)-1, 
+    base::max(str_umap$UMAP_spec2)+1))+
+  ggplot2::scale_color_manual(values = col_custom_str)
+```
+
+### MSPR
+
+```{r base_plot_str_celltypes_mspr_1, fig.height = 3, fig.width = 3}
+base_plot_str_celltypes_mspr_1 <- ggplot2::ggplot(
+  str_umap[str_umap$species == "SPRET",], 
+  aes(x = V1,
+      y = V2,
+      color = celltypes))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(str_umap$V1)-1, base::max(str_umap$V1)+1))+
+  ggplot2::ylim(c(base::min(str_umap$V2)-1, base::max(str_umap$V2)+1))+
+  ggplot2::scale_color_manual(values = col_cts_str)
+```
+
+```{r base_plot_str_celltypes_mspr_2, fig.height = 3, fig.width = 3}
+base_plot_str_celltypes_mspr_2 <- ggplot2::ggplot(
+  str_umap[str_umap$species == "SPRET",], 
+  aes(x = V1,
+      y = V2,
+      color = custom_label))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(str_umap$V1)-1, base::max(str_umap$V1)+1))+
+  ggplot2::ylim(c(base::min(str_umap$V2)-1, base::max(str_umap$V2)+1))+
+  ggplot2::scale_color_manual(values = col_custom_str)
+```
+
+```{r base_plot_str_celltypes_mspr_3, fig.height = 3, fig.width = 3}
+base_plot_str_celltypes_mspr_3 <- ggplot2::ggplot(
+  str_umap[str_umap$species == "SPRET",], 
+  aes(x = UMAP_spec1,
+      y = UMAP_spec2,
+      color = custom_label))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(
+    base::min(str_umap$UMAP_spec1)-1, 
+    base::max(str_umap$UMAP_spec1)+1))+
+  ggplot2::ylim(c(
+    base::min(str_umap$UMAP_spec2)-1, 
+    base::max(str_umap$UMAP_spec2)+1))+
+  ggplot2::scale_color_manual(values = col_custom_str)
+```
+
+### MCAR
+
+```{r base_plot_str_celltypes_mcar_1, fig.height = 3, fig.width = 3}
+base_plot_str_celltypes_mcar_1 <- ggplot2::ggplot(
+  str_umap[str_umap$species == "CAROLI",], 
+  aes(x = V1,
+      y = V2,
+      color = celltypes))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(str_umap$V1)-1, base::max(str_umap$V1)+1))+
+  ggplot2::ylim(c(base::min(str_umap$V2)-1, base::max(str_umap$V2)+1))+
+  ggplot2::scale_color_manual(values = col_cts_str)
+```
+
+```{r base_plot_str_celltypes_mcar_2, fig.height = 3, fig.width = 3}
+base_plot_str_celltypes_mcar_2 <- ggplot2::ggplot(
+  str_umap[str_umap$species == "CAROLI",], 
+  aes(x = V1,
+      y = V2,
+      color = custom_label))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(str_umap$V1)-1, base::max(str_umap$V1)+1))+
+  ggplot2::ylim(c(base::min(str_umap$V2)-1, base::max(str_umap$V2)+1))+
+  ggplot2::scale_color_manual(values = col_custom_str)
+```
+
+```{r base_plot_str_celltypes_mcar_3, fig.height = 3, fig.width = 3}
+base_plot_str_celltypes_mcar_3 <- ggplot2::ggplot(
+  str_umap[str_umap$species == "CAROLI",], 
+  aes(x = UMAP_spec1,
+      y = UMAP_spec2,
+      color = custom_label))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(
+    base::min(str_umap$UMAP_spec1)-1, 
+    base::max(str_umap$UMAP_spec1)+1))+
+  ggplot2::ylim(c(
+    base::min(str_umap$UMAP_spec2)-1, 
+    base::max(str_umap$UMAP_spec2)+1))+
+  ggplot2::scale_color_manual(values = col_custom_str)
 ```
 
 ## Make Alluvials
 
-```{r c_base_plot_str_celltypes_mmus, fig.height = 3, fig.width = 5}
-c_base_plot_str_celltypes_mmus <- ggplot2::ggplot(
+### MMUS
+
+```{r base_allu_str_mmus, fig.height = 3, fig.width = 5}
+base_allu_str_mmus <- ggplot2::ggplot(
   data = mmus_df_str,
   aes(
     axis1 = Var1,
@@ -441,809 +635,218 @@ c_base_plot_str_celltypes_mmus <- ggplot2::ggplot(
   theme_void()+
   ggplot2::theme(legend.position = "none")+
   ggplot2::scale_fill_manual(values = col_cts_str)
-c_base_plot_str_celltypes_mmus
+base_allu_str_mmus
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-```{r a_base_plot_hsc_1}
-
-a_base_plot_hsc_1 <- ggplot2::ggplot(
-  hsc_umap, 
-  aes(x = V1,
-      y = V2,
-      color = color_by))+
-  ggplot2::geom_point(
-    size = umap_point_size,
-    alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(hsc_umap$V1)-1, base::max(hsc_umap$V1)+1))+
-  ggplot2::ylim(c(base::min(hsc_umap$V2)-1, base::max(hsc_umap$V2)+1))+
-  ggplot2::scale_color_manual(values = col_clust)
-```
-
-```{r a_base_plot_hsc_1_mecom}
-names(mycolors_to_max) <- as.character(
-  as.numeric(names(mycolors_to_max))*max(hsc_umap_mecom$expression))
-
-a_base_plot_hsc_1_mecom <- ggplot2::ggplot(
-  hsc_umap_mecom[hsc_umap_mecom$color_by %in% c("Stem/MPP1", "Stem/MPP2"),], 
-  aes(x = V1,
-      y = V2,
-      color = expression))+
-  ggplot2::geom_point(
-    size = umap_point_size,
-    alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(hsc_umap$V1)-1, base::max(hsc_umap$V1)+1))+
-  ggplot2::ylim(c(base::min(hsc_umap$V2)-1, base::max(hsc_umap$V2)+1))+
-  ggplot2::scale_color_gradientn("Mecom expression", colours = mycolors_to_max)
-a_base_plot_hsc_1_mecom
-
-legend_mecom <- cowplot::get_legend(a_base_plot_hsc_1_mecom+theme_all_supp)
-legend_mecom <- ggpubr::ggarrange(legend_mecom)
-legend_mecom
-```
-
-```{r a_base_plot_hsc_1_subcl}
-a_base_plot_hsc_1_subcl <- ggplot2::ggplot(
-  hsc_umap_subcl[hsc_umap_subcl$color_by %in% c("Early MPP", "HSC"),], 
-  aes(x = V1,
-      y = V2,
-      color = color_by))+
-  ggplot2::geom_point(
-    size = umap_point_size,
-    alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(hsc_umap$V1)-1, base::max(hsc_umap$V1)+1))+
-  ggplot2::ylim(c(base::min(hsc_umap$V2)-1, base::max(hsc_umap$V2)+1))+
-  ggplot2::scale_color_manual(
-    values = col_cts_hsc[names(col_cts_hsc) %in%  c("HSC", "Early MPP")], 
-    na.value = "white")
-```
-
-```{r a_base_plot_hsc_1_final}
-a_base_plot_hsc_1_final <- ggplot2::ggplot(
-  hsc_umap_fin, 
-  aes(x = X1,
-      y = X2,
-      color = color_by))+
-  ggplot2::geom_point(
-    size = umap_point_size,
-    alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(hsc_umap_fin$X1)-1, base::max(hsc_umap_fin$X1)+1))+
-  ggplot2::ylim(c(base::min(hsc_umap_fin$X2)-1, base::max(hsc_umap_fin$X2)+1))+
-  ggplot2::scale_color_manual(values = col_cts_hsc)
-```
-
-```{r b_base_plot_str_1}
-b_base_plot_str_1 <- ggplot2::ggplot(
-  str_umap, 
-  aes(x = V1,
-      y = V2,
-      color = color_by))+
-  ggplot2::geom_point(
-    size = umap_point_size,
-    alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(str_umap$V1)-1, base::max(str_umap$V1)+1))+
-  ggplot2::ylim(c(base::min(str_umap$V2)-1, base::max(str_umap$V2)+1))
-```
-
-```{r b_base_plot_str_2}
-b_base_plot_str_2 <- ggplot2::ggplot(
-  str_umap_subcl, 
-  aes(x = V1,
-      y = V2,
-      color = color_by))+
-  ggplot2::geom_point(
-    size = umap_point_size,
-    alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(str_umap$V1)-1, base::max(str_umap$V1)+1))+
-  ggplot2::ylim(c(base::min(str_umap$V2)-1, base::max(str_umap$V2)+1))+
-  ggplot2::scale_color_manual(values = c(col_cts_str, "removed" = "grey50"))
-```
-
-```{r a_theme_plot_hsc_spc, fig.width = 3, fig.height = 3}
-a_theme_plot_hsc_spc <- a_base_plot_hsc_spc+
-  cowplot::theme_nothing()
-a_theme_plot_hsc_spc
-```
-
-```{r a_theme_plot_hsc_1, fig.width = 3, fig.height = 3}
-a_theme_plot_hsc_1 <- a_base_plot_hsc_1+
-  cowplot::theme_nothing()
-a_theme_plot_hsc_1
-```
-
-```{r a_theme_plot_hsc_1_mecom, fig.width = 3, fig.height = 3}
-a_theme_plot_hsc_1_mecom <- a_base_plot_hsc_1_mecom+
-  cowplot::theme_nothing()
-a_theme_plot_hsc_1_mecom
-```
-
-```{r a_theme_plot_hsc_1_subcl, fig.width = 3, fig.height = 3}
-a_theme_plot_hsc_1_subcl <- a_base_plot_hsc_1_subcl+
-  cowplot::theme_nothing()
-a_theme_plot_hsc_1_subcl
-```
-
-```{r a_theme_plot_hsc_1_final, fig.width = 3, fig.height = 3}
-a_theme_plot_hsc_1_final <- a_base_plot_hsc_1_final+
-  cowplot::theme_nothing()
-a_theme_plot_hsc_1_final
-```
-
-```{r b_theme_plot_str_1, fig.width = 3, fig.height = 3}
-b_theme_plot_str_1 <- b_base_plot_str_1+
-  cowplot::theme_nothing()
-b_theme_plot_str_1
-```
-
-```{r b_theme_plot_str_2, fig.width = 3, fig.height = 3}
-b_theme_plot_str_2 <- b_base_plot_str_2+
-  cowplot::theme_nothing()
-b_theme_plot_str_2
-```
-
-## Legends
-
-```{r hsc_legends}
-
-col_clust <- col_num[1:length(levels(hsc_umap$color_by))]
-names(col_clust) <- levels(hsc_umap$color_by)
-
-umap_legend_plot_hsc_1 <- ggplot2::ggplot(
-  hsc_umap, 
-  aes(x = V1,
-      y = V2,
-      color = color_by))+
-  ggplot2::geom_point(
-    size = umap_legend_point_size,
-    alpha = umap_legend_point_alpha)+
-  ggplot2::scale_color_manual("", values = col_clust)
-
-umap_legend_theme_plot_hsc_1 <- umap_legend_plot_hsc_1+
-  theme_all_supp+
-  ggplot2::theme(legend.key.height = unit(0.3, "lines"))
-umap_legend_hsc_1 <- ggpubr::get_legend(umap_legend_theme_plot_hsc_1)
-umap_legend_hsc_1 <- ggpubr::ggarrange(umap_legend_hsc_1)
-
-umap_legend_hsc_1
-
-
-
-umap_legend_plot_hsc_2 <- ggplot2::ggplot(
-  hsc_umap_subcl, 
-  aes(x = V1,
-      y = V2,
-      color = color_by))+
-  ggplot2::geom_point(
-    size = umap_legend_point_size,
-    alpha = umap_legend_point_alpha)+
-  ggplot2::scale_color_manual("", values = c(col_cts_hsc, "removed" = "grey50"))
-
-umap_legend_theme_plot_hsc_2 <- umap_legend_plot_hsc_2+
-  theme_all_supp+
-  ggplot2::theme(legend.key.height = unit(0.3, "lines"))
-umap_legend_hsc_2 <- ggpubr::get_legend(umap_legend_theme_plot_hsc_2)
-umap_legend_hsc_2 <- ggpubr::ggarrange(umap_legend_hsc_2)
-
-umap_legend_hsc_2
-
-```
-
-```{r str_legends}
-
-umap_legend_plot_str_1 <- ggplot2::ggplot(
-  str_umap, 
-  aes(x = V1,
-      y = V2,
-      color = color_by))+
-  ggplot2::geom_point(
-    size = umap_legend_point_size,
-    alpha = umap_legend_point_alpha)+
-  theme_all_supp+
-  ggplot2::scale_color_discrete("")
-  # ggplot2::scale_color_discrete(
-  #   "",
-  #   labels = c(levels(str_umap$color_by)[1:9],
-  #              levels(str_umap$color_by)[10:21]))
-
-umap_legend_theme_plot_str_1 <- umap_legend_plot_str_1+
-  theme_all_supp+
-  ggplot2::theme(legend.key.height = unit(0.3, "lines"))
-umap_legend_str_1 <- ggpubr::get_legend(umap_legend_theme_plot_str_1)
-umap_legend_str_1 <- ggpubr::ggarrange(umap_legend_str_1)
-
-umap_legend_str_1
-
-umap_legend_plot_str_2 <- ggplot2::ggplot(
-  str_umap_subcl, 
-  aes(x = V1,
-      y = V2,
-      color = color_by))+
-  ggplot2::geom_point(
-    size = umap_legend_point_size,
-    alpha = umap_legend_point_alpha)+
-  ggplot2::scale_color_manual("", values = c(col_cts_str, "removed" = "grey50"))
-
-umap_legend_theme_plot_str_2 <- umap_legend_plot_str_2+
-  theme_all_supp+
-  ggplot2::theme(legend.key.height = unit(0.3, "lines"))
-umap_legend_str_2 <- ggpubr::get_legend(umap_legend_theme_plot_str_2)
-umap_legend_str_2 <- ggpubr::ggarrange(umap_legend_str_2)
-
-umap_legend_str_2
-```
-
-```{r assemble_a, fig.width = 16, fig.height = 4}
-
-# export b together
-b_plot <- ggpubr::ggarrange(
-  b_theme_plot_str_1,
-  umap_legend_str_1,
-  b_theme_plot_str_2,
-  umap_legend_str_2,
-  ncol = 4,
-  widths = c(1,1.8,1,1)
-)
-
-b_plot
-```
-
-```{r export_b}
-pdf(output_pdf_b, width = 16, height = 4)
-b_plot
-dev.off()
-```
-
-```{r output_pdf_a_1}
-pdf(output_pdf_a_1, width = 4, height = 4)
-a_theme_plot_hsc_spc
-dev.off()
-```
-
-```{r output_pdf_a_2}
-pdf(output_pdf_a_2, width = 4, height = 4)
-a_theme_plot_hsc_1
-dev.off()
-```
-
-```{r output_pdf_a_3}
-pdf(output_pdf_a_3, width = 4, height = 4)
-a_theme_plot_hsc_1_mecom
-dev.off()
-```
-
-```{r output_pdf_a_4}
-pdf(output_pdf_a_4, width = 3, height = 3)
-legend_mecom
-dev.off()
-```
-
-```{r output_pdf_a_5}
-pdf(output_pdf_a_5, width = 4, height = 4)
-a_theme_plot_hsc_1_subcl
-dev.off()
-```
-
-```{r output_pdf_a_6}
-pdf(output_pdf_a_6, width = 4, height = 4)
-a_theme_plot_hsc_1_final
-dev.off()
-```
-
-```{r output_pdf_a_7}
-pdf(output_pdf_a_7, width = 6, height = 5)
-umap_legend_hsc_1
-dev.off()
-```
-
-```{r output_pdf_a_8}
-pdf(output_pdf_a_8, width = 3, height = 4)
-umap_legend_hsc_2
-dev.off()
-```
-
-# Sankey plots
-
-## Prep HSC
-
-```{r load_spsp_hsc}
-
-reducedDim(sce_hsc) <- NULL
-reducedDim(sce_str) <- NULL
-
-sce_hsc_spsp_mmus <- base::readRDS(base::paste0(
-  base_path, 
-  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/comparison/sce_mmus_hsc-02"))
-reducedDim(sce_hsc_spsp_mmus) <- NULL
-assays(sce_hsc_spsp_mmus) <- list()
-
-sce_hsc_spsp_mcas <- base::readRDS(base::paste0(
-  base_path, 
-  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/comparison/sce_mcas_hsc-02"))
-reducedDim(sce_hsc_spsp_mcas) <- NULL
-assays(sce_hsc_spsp_mcas) <- list()
-
-sce_hsc_spsp_mspr <- base::readRDS(base::paste0(
-  base_path, 
-  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/comparison/sce_mspr_hsc-02"))
-reducedDim(sce_hsc_spsp_mspr) <- NULL
-assays(sce_hsc_spsp_mspr) <- list()
-
-sce_hsc_spsp_mcar <- base::readRDS(base::paste0(
-  base_path, 
-  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/comparison/sce_mcar_hsc-02"))
-reducedDim(sce_hsc_spsp_mcar) <- NULL
-assays(sce_hsc_spsp_mcar) <- list()
-```
-
-```{r prepare_spsp}
-sce_hsc_spsp_mmus$annotation_all <- unfactor(sce_hsc_ann$annotation_cluster[
-  base::match(colnames(sce_hsc_spsp_mmus), colnames(sce_hsc_ann))])
-sce_hsc_spsp_mcas$annotation_all <- unfactor(sce_hsc_ann$annotation_cluster[
-  base::match(colnames(sce_hsc_spsp_mcas), colnames(sce_hsc_ann))])
-sce_hsc_spsp_mspr$annotation_all <- unfactor(sce_hsc_ann$annotation_cluster[
-  base::match(colnames(sce_hsc_spsp_mspr), colnames(sce_hsc_ann))])
-sce_hsc_spsp_mcar$annotation_all <- unfactor(sce_hsc_ann$annotation_cluster[
-  base::match(colnames(sce_hsc_spsp_mcar), colnames(sce_hsc_ann))])
-```
-
-```{r prepare_spsp_mmus}
-hsc_spsp_mmus_df <- base::as.data.frame(
-  table(sce_hsc_spsp_mmus$annotation_all,
-       unfactor(sce_hsc_spsp_mmus$cluster_louvain)))
-
-hsc_spsp_mmus_df$Var1 <- factor(
-  hsc_spsp_mmus_df$Var1,
-  levels = levels(sce_hsc_ann$annotation_cluster))
-
-hsc_spsp_mmus_df$Var2 <- factor(
-  hsc_spsp_mmus_df$Var2,
-  levels = c("5", "2", "6", "8", "9", "4", "3", "7", "1"))
-stopifnot(!is.na(hsc_spsp_mmus_df$Var2))
-```
-
-```{r prepare_spsp_mcas}
-hsc_spsp_mcas_df <- base::as.data.frame(
-  table(sce_hsc_spsp_mcas$annotation_all,
-       unfactor(sce_hsc_spsp_mcas$cluster_louvain)))
-
-hsc_spsp_mcas_df$Var1 <- factor(
-  hsc_spsp_mcas_df$Var1,
-  levels = levels(sce_hsc_ann$annotation_cluster))
-
-hsc_spsp_mcas_df$Var2 <- factor(
-  hsc_spsp_mcas_df$Var2,
-  levels = c("1", "7", "8", "3", "2", "9", "6", "4", "10", "5"))
-stopifnot(!is.na(hsc_spsp_mcas_df$Var2))
-```
-
-```{r prepare_spsp_mspr}
-hsc_spsp_mspr_df <- base::as.data.frame(
-  table(sce_hsc_spsp_mspr$annotation_all,
-       unfactor(sce_hsc_spsp_mspr$cluster_louvain)))
-
-hsc_spsp_mspr_df$Var1 <- factor(
-  hsc_spsp_mspr_df$Var1,
-  levels = levels(sce_hsc_ann$annotation_cluster))
-
-hsc_spsp_mspr_df$Var2 <- factor(
-  hsc_spsp_mspr_df$Var2,
-  levels = c("3", "2", "5", "10", "11", "6", "7", "1", "8", "4", "9"))
-stopifnot(!is.na(hsc_spsp_mspr_df$Var2))
-```
-
-```{r prepare_spsp_mcar}
-hsc_spsp_mcar_df <- base::as.data.frame(
-  table(sce_hsc_spsp_mcar$annotation_all,
-       unfactor(sce_hsc_spsp_mcar$cluster_louvain)))
-
-hsc_spsp_mcar_df$Var1 <- factor(
-  hsc_spsp_mcar_df$Var1,
-  levels = levels(sce_hsc_ann$annotation_cluster))
-
-hsc_spsp_mcar_df$Var2 <- factor(
-  hsc_spsp_mcar_df$Var2,
-  levels = c("2", "1", "6", "8", "4", "3", "5", "9", "7", "10", "11"))
-stopifnot(!is.na(hsc_spsp_mcar_df$Var2))
-```
-
-```{r mmus_hsc_base_plot, fig.height = 5, fig.width = 4}
-mmus_hsc_base_plot <- ggplot2::ggplot(data = hsc_spsp_mmus_df,
-                aes(axis1 = Var2,
-                    axis2 = Var1, 
-                    y = Freq))+
-  ggalluvial::geom_alluvium(aes(fill = Var1))+
-  ggalluvial::geom_stratum()+
-  ggplot2::geom_text(stat = "stratum",
-                     aes(label = after_stat(stratum)))+
-  ggplot2::scale_x_discrete(limits = c("cluster_louvain", 
-                                       "species_cluster_louvain"),
-                            expand = c(0.15, 0.05))+
+### MCAS
+
+```{r base_allu_str_mcas, fig.height = 3, fig.width = 5}
+base_allu_str_mcas <- ggplot2::ggplot(
+  data = mcas_df_str,
+  aes(
+    axis1 = Var1,
+    axis2 = Var2_c, 
+    y = Freq)
+    )+
+  ggalluvial::geom_alluvium(
+    aes(fill = Var1),
+    width = 0.05
+    )+
+  ggalluvial::geom_stratum(
+    fill = "black",
+    alpha = 0.2,
+    color = "black",
+    size = 0.2,
+    width = 0.05
+    )+
+  ggrepel::geom_text_repel(
+    stat = "stratum",
+    aes(
+      x = after_stat(x),
+      label = after_stat(stratum),
+      hjust = 0),
+    nudge_x = -0.5,      
+    direction = "y",         
+    box.padding = 0.1,
+    alpha = c( # make the y axis text "disappear" due to 0 alpha
+      rep(1, length(levels(mcas_df_str$Var1))),
+      rep(0, length(unique(unfactor(
+        mmus_df_str[mcas_df_str$Freq != 0,]$Var2_c)))))     
+    )+
   theme_void()+
   ggplot2::theme(legend.position = "none")+
-  ggplot2::scale_fill_manual(values = col_clust)
-
+  ggplot2::scale_fill_manual(values = col_cts_str)
+base_allu_str_mcas
 ```
 
-```{r mcas_hsc_base_plot, fig.height = 5, fig.width = 4}
-mcas_hsc_base_plot <- ggplot2::ggplot(data = hsc_spsp_mcas_df,
-                aes(axis1 = Var2,
-                    axis2 = Var1, 
-                    y = Freq))+
-  ggalluvial::geom_alluvium(aes(fill = Var1))+
-  ggalluvial::geom_stratum()+
-  ggplot2::geom_text(stat = "stratum",
-                     aes(label = after_stat(stratum)))+
-  ggplot2::scale_x_discrete(limits = c("cluster_louvain", 
-                                       "species_cluster_louvain"),
-                            expand = c(0.15, 0.05))+
+### MSPR
+
+```{r base_allu_str_mspr, fig.height = 3, fig.width = 5}
+base_allu_str_mspr <- ggplot2::ggplot(
+  data = mspr_df_str,
+  aes(
+    axis1 = Var1,
+    axis2 = Var2_c, 
+    y = Freq)
+    )+
+  ggalluvial::geom_alluvium(
+    aes(fill = Var1),
+    width = 0.05
+    )+
+  ggalluvial::geom_stratum(
+    fill = "black",
+    alpha = 0.2,
+    color = "black",
+    size = 0.2,
+    width = 0.05
+    )+
+  ggrepel::geom_text_repel(
+    stat = "stratum",
+    aes(
+      x = after_stat(x),
+      label = after_stat(stratum),
+      hjust = 0),
+    nudge_x = -0.5,      
+    direction = "y",         
+    box.padding = 0.1,
+    alpha = c( # make the y axis text "disappear" due to 0 alpha
+      rep(1, length(levels(mspr_df_str$Var1))),
+      rep(0, length(unique(unfactor(
+        mmus_df_str[mspr_df_str$Freq != 0,]$Var2_c)))))     
+    )+
   theme_void()+
   ggplot2::theme(legend.position = "none")+
-  ggplot2::scale_fill_manual(values = col_clust)
-
+  ggplot2::scale_fill_manual(values = col_cts_str)
+base_allu_str_mspr
 ```
 
-```{r mspr_hsc_base_plot, fig.height = 5, fig.width = 4}
-mspr_hsc_base_plot <- ggplot2::ggplot(data = hsc_spsp_mspr_df,
-                aes(axis1 = Var2,
-                    axis2 = Var1, 
-                    y = Freq))+
-  ggalluvial::geom_alluvium(aes(fill = Var1))+
-  ggalluvial::geom_stratum()+
-  ggplot2::geom_text(stat = "stratum",
-                     aes(label = after_stat(stratum)))+
-  ggplot2::scale_x_discrete(limits = c("cluster_louvain", 
-                                       "species_cluster_louvain"),
-                            expand = c(0.15, 0.05))+
+### MCAR
+
+```{r base_allu_str_mcar, fig.height = 3, fig.width = 5}
+base_allu_str_mcar <- ggplot2::ggplot(
+  data = mcar_df_str,
+  aes(
+    axis1 = Var1,
+    axis2 = Var2_c, 
+    y = Freq)
+    )+
+  ggalluvial::geom_alluvium(
+    aes(fill = Var1),
+    width = 0.05
+    )+
+  ggalluvial::geom_stratum(
+    fill = "black",
+    alpha = 0.2,
+    color = "black",
+    size = 0.2,
+    width = 0.05
+    )+
+  ggrepel::geom_text_repel(
+    stat = "stratum",
+    aes(
+      x = after_stat(x),
+      label = after_stat(stratum),
+      hjust = 0),
+    nudge_x = -0.5,      
+    direction = "y",         
+    box.padding = 0.1,
+    alpha = c( # make the y axis text "disappear" due to 0 alpha
+      rep(1, length(levels(mcar_df_str$Var1))),
+      rep(0, length(unique(unfactor(
+        mmus_df_str[mcar_df_str$Freq != 0,]$Var2_c)))))     
+    )+
   theme_void()+
   ggplot2::theme(legend.position = "none")+
-  ggplot2::scale_fill_manual(values = col_clust)
-
+  ggplot2::scale_fill_manual(values = col_cts_str)
+base_allu_str_mcar
 ```
 
-```{r mcar_hsc_base_plot, fig.height = 5, fig.width = 4}
-mcar_hsc_base_plot <- ggplot2::ggplot(data = hsc_spsp_mcar_df,
-                aes(axis1 = Var2,
-                    axis2 = Var1, 
-                    y = Freq))+
-  ggalluvial::geom_alluvium(aes(fill = Var1))+
-  ggalluvial::geom_stratum()+
-  ggplot2::geom_text(stat = "stratum",
-                     aes(label = after_stat(stratum)))+
-  ggplot2::scale_x_discrete(limits = c("cluster_louvain", 
-                                       "species_cluster_louvain"),
-                            expand = c(0.15, 0.05))+
-  theme_void()+
-  ggplot2::theme(legend.position = "none")+
-  ggplot2::scale_fill_manual(values = col_clust)
+# Build
+
+## A plot MMUS
+
+```{r a_mmus_plot_1, fig.width = 3, fig.height = 3} 
+
+a_mmus_plot_1 <- base_plot_str_celltypes_mmus_1+
+  ggplot2::theme_void()+
+  ggplot2::theme(legend.position = "none")
+
+a_mmus_plot_1
 ```
 
-```{r assemble_c_hsc, fig.width = 13, fig.height = 4}
+```{r a_mmus_legend_1, fig.width = 1, fig.height = 2} 
 
-c_hsc_plot <- ggpubr::ggarrange(
-  mmus_hsc_base_plot,
-  mcas_hsc_base_plot,
-  mspr_hsc_base_plot,
-  mcar_hsc_base_plot,
+# this legend can be used for all species
+a_mmus_legend_1_plot <- base_plot_str_celltypes_mmus_1 + 
+  theme_all+
+  ggplot2::geom_point(size = 4)+
+  ggplot2::theme(
+    legend.text = element_blank(),
+    legend.title = element_blank())
+
+a_mmus_legend_1 <- ggpubr::get_legend(a_mmus_legend_1_plot)
+a_mmus_legend_1 <- ggpubr::ggarrange(a_mmus_legend_1)
+
+a_mmus_legend_1
+```
+
+```{r a_mmus_plot_1, fig.width = 4, fig.height = 3} 
+
+a_mmus_plot_2 <- base_allu_str_mmus+
+  ggplot2::theme(
+    legend.position = "none",
+    plot.background = element_blank())
+
+a_mmus_plot_2
+```
+
+```{r a_mmus_legend_2, fig.width = 4, fig.height = 2} 
+
+# this legend can be used for all species
+a_mmus_legend_2_plot <- base_plot_str_celltypes_mmus_2 + 
+  theme_all+
+  ggplot2::geom_point(size = 4)+
+  ggplot2::theme(
+    legend.title = element_blank())
+
+a_mmus_legend_2 <- ggpubr::get_legend(a_mmus_legend_2_plot)
+a_mmus_legend_2 <- ggpubr::ggarrange(a_mmus_legend_2)
+
+a_mmus_legend_2
+```
+
+```{r a_mmus_plot_3, fig.width = 3, fig.height = 3} 
+
+a_mmus_plot_3 <- base_plot_str_celltypes_mmus_2+
+  ggplot2::theme_void()+
+  ggplot2::theme(legend.position = "none")
+
+a_mmus_plot_3
+```
+
+```{r a_mmus_plot_4, fig.width = 3, fig.height = 3} 
+
+a_mmus_plot_4 <- base_plot_str_celltypes_mmus_3+
+  ggplot2::theme_void()+
+  ggplot2::theme(legend.position = "none")
+
+a_mmus_plot_4
+```
+
+```{r arrange_a, fig.width = 18, fig.height = 3}
+
+plot_a <- ggpubr::ggarrange(
+  a_mmus_plot_1,
+  a_mmus_legend_1,
+  a_mmus_plot_2,
+  a_mmus_legend_2,
+  a_mmus_plot_3,
+  a_mmus_plot_4,
   nrow = 1
 )
-c_hsc_plot
-```
 
-## Prep Str
-
-```{r load_spsp_str}
-
-sce_str_spsp_mmus <- base::readRDS(base::paste0(
-  base_path, 
-  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/comparison/sce_mmus_str-02"))
-reducedDim(sce_str_spsp_mmus) <- NULL
-assays(sce_str_spsp_mmus) <- list()
-
-sce_str_spsp_mcas <- base::readRDS(base::paste0(
-  base_path, 
-  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/comparison/sce_mcas_str-02"))
-reducedDim(sce_str_spsp_mcas) <- NULL
-assays(sce_str_spsp_mcas) <- list()
-
-sce_str_spsp_mspr <- base::readRDS(base::paste0(
-  base_path, 
-  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/comparison/sce_mspr_str-02"))
-reducedDim(sce_str_spsp_mspr) <- NULL
-assays(sce_str_spsp_mspr) <- list()
-
-sce_str_spsp_mcar <- base::readRDS(base::paste0(
-  base_path, 
-  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/comparison/sce_mcar_str-02"))
-reducedDim(sce_str_spsp_mcar) <- NULL
-assays(sce_str_spsp_mcar) <- list()
+plot_a
 ```
 
 
-```{r prepare_spsp_str}
-sce_str_spsp_mmus$annotation_all <- unfactor(sce_str_ann$annotation_cluster[
-  base::match(colnames(sce_str_spsp_mmus), colnames(sce_str_ann))])
-sce_str_spsp_mcas$annotation_all <- unfactor(sce_str_ann$annotation_cluster[
-  base::match(colnames(sce_str_spsp_mcas), colnames(sce_str_ann))])
-sce_str_spsp_mspr$annotation_all <- unfactor(sce_str_ann$annotation_cluster[
-  base::match(colnames(sce_str_spsp_mspr), colnames(sce_str_ann))])
-sce_str_spsp_mcar$annotation_all <- unfactor(sce_str_ann$annotation_cluster[
-  base::match(colnames(sce_str_spsp_mcar), colnames(sce_str_ann))])
-```
 
-```{r prepare_spsp_mmus_str}
-str_spsp_mmus_df <- base::as.data.frame(
-  table(sce_str_spsp_mmus$annotation_all,
-       unfactor(sce_str_spsp_mmus$cluster_louvain)))
-base::table(sce_str_spsp_mmus$annotation_all,
-            sce_str_spsp_mmus$cluster_louvain)
-
-str_spsp_mmus_df$Var1 <- factor(
-  str_spsp_mmus_df$Var1,
-  levels = levels(sce_str_ann$annotation_cluster))
-
-str_spsp_mmus_df$Var2 <- factor(
-  str_spsp_mmus_df$Var2,
-  levels = c("1", "6", "8", "11", "4", "3", "2", "5", "10", "9", "7", "12"))
-stopifnot(!is.na(str_spsp_mmus_df$Var2))
-# 7 and 12 are empty
-```
-
-```{r prepare_spsp_mcas_str}
-str_spsp_mcas_df <- base::as.data.frame(
-  table(sce_str_spsp_mcas$annotation_all,
-       unfactor(sce_str_spsp_mcas$cluster_louvain)))
-
-base::table(sce_str_spsp_mcas$annotation_all,
-            sce_str_spsp_mcas$cluster_louvain)
-
-str_spsp_mcas_df$Var1 <- factor(
-  str_spsp_mcas_df$Var1,
-  levels = levels(sce_str_ann$annotation_cluster))
-
-str_spsp_mcas_df$Var2 <- factor(
- str_spsp_mcas_df$Var2,
- levels = c("1", "5", "6", "16", "9"))
-stopifnot(!is.na(str_spsp_mmus_df$Var2))
-# "11", "12", "14", "15", "7", "8", "9", "2", "3", "4" are empty
-```
-
-```{r prepare_spsp_mspr_str}
-str_spsp_mspr_df <- base::as.data.frame(
-  table(sce_str_spsp_mspr$annotation_all,
-       unfactor(sce_str_spsp_mspr$cluster_louvain)))
-
-base::table(sce_str_spsp_mspr$annotation_all,
-            sce_str_spsp_mspr$cluster_louvain)
-
-str_spsp_mspr_df$Var1 <- factor(
-  str_spsp_mspr_df$Var1,
-  levels = levels(sce_str_ann$annotation_cluster))
-
-str_spsp_mspr_df$Var2 <- factor(
-  str_spsp_mspr_df$Var2,
-  levels = c("3", "4", "9", "10", "6", "2", "5", "7", "1", "8", "11", "13", "12", "14"))
-stopifnot(!is.na(str_spsp_mspr_df$Var2))
-```
-
-```{r prepare_spsp_mcar_str}
-str_spsp_mcar_df <- base::as.data.frame(
-  table(sce_str_spsp_mcar$annotation_all,
-       unfactor(sce_str_spsp_mcar$cluster_louvain)))
-
-base::table(sce_str_spsp_mcar$annotation_all,
-            sce_str_spsp_mcar$cluster_louvain)
-
-str_spsp_mcar_df$Var1 <- factor(
-  str_spsp_mcar_df$Var1,
-  levels = levels(sce_str_ann$annotation_cluster))
-
-str_spsp_mcar_df$Var2 <- factor(
-  str_spsp_mcar_df$Var2,
-  levels = c("4", "7", "8", "11", "9", "10", "12", "1", "2", "3", "5", "6"))
-stopifnot(!is.na(str_spsp_mcar_df$Var2))
-# 9, 10, 12, 1, 2, 3, 5, 6 are empty
-```
-
-```{r mmus_str_base_plot, fig.height = 5, fig.width = 4}
-mmus_str_base_plot <- ggplot2::ggplot(data = str_spsp_mmus_df,
-                aes(axis1 = Var2,
-                    axis2 = Var1, 
-                    y = Freq))+
-  ggalluvial::geom_alluvium(aes(fill = Var1))+
-  ggalluvial::geom_stratum()+
-  ggplot2::geom_text(stat = "stratum",
-                     aes(label = after_stat(stratum)))+
-  ggplot2::scale_x_discrete(limits = c("cluster_louvain", 
-                                       "species_cluster_louvain"),
-                            expand = c(0.15, 0.05))+
-  theme_void()+
-  ggplot2::theme(legend.position = "none")
-```
-
-```{r mcas_str_base_plot, fig.height = 5, fig.width = 4}
-mcas_str_base_plot <- ggplot2::ggplot(data = str_spsp_mcas_df,
-                aes(axis1 = Var2,
-                    axis2 = Var1, 
-                    y = Freq))+
-  ggalluvial::geom_alluvium(aes(fill = Var1))+
-  ggalluvial::geom_stratum()+
-  ggplot2::geom_text(stat = "stratum",
-                     aes(label = after_stat(stratum)))+
-  ggplot2::scale_x_discrete(limits = c("cluster_louvain", 
-                                       "species_cluster_louvain"),
-                            expand = c(0.15, 0.05))+
-  theme_void()+
-  ggplot2::theme(legend.position = "none")
-```
-
-```{r mspr_str_base_plot, fig.height = 5, fig.width = 4}
-mspr_str_base_plot <- ggplot2::ggplot(data = str_spsp_mspr_df,
-                aes(axis1 = Var2,
-                    axis2 = Var1, 
-                    y = Freq))+
-  ggalluvial::geom_alluvium(aes(fill = Var1))+
-  ggalluvial::geom_stratum()+
-  ggplot2::geom_text(stat = "stratum",
-                     aes(label = after_stat(stratum)))+
-  ggplot2::scale_x_discrete(limits = c("cluster_louvain", 
-                                       "species_cluster_louvain"),
-                            expand = c(0.15, 0.05))+
-  theme_void()+
-  ggplot2::theme(legend.position = "none")
-```
-
-```{r mcar_str_base_plot, fig.height = 5, fig.width = 4}
-mcar_str_base_plot <- ggplot2::ggplot(data = str_spsp_mcar_df,
-                aes(axis1 = Var2,
-                    axis2 = Var1, 
-                    y = Freq))+
-  ggalluvial::geom_alluvium(aes(fill = Var1))+
-  ggalluvial::geom_stratum()+
-  ggplot2::geom_text(stat = "stratum",
-                     aes(label = after_stat(stratum)))+
-  ggplot2::scale_x_discrete(limits = c("cluster_louvain", 
-                                       "species_cluster_louvain"),
-                            expand = c(0.15, 0.05))+
-  theme_void()+
-  ggplot2::theme(legend.position = "none")
-```
-
-```{r assemble_c_str, fig.width = 13, fig.height = 4}
-
-c_str_plot <- ggpubr::ggarrange(
-  mmus_str_base_plot,
-  mcas_str_base_plot,
-  mspr_str_base_plot,
-  mcar_str_base_plot,
-  nrow = 1
-)
-c_str_plot
-```
-
-```{r,  fig.width = 13, fig.height = 8}
-c_plot <- ggpubr::ggarrange(
-  c_hsc_plot,
-  c_str_plot,
-  nrow = 2
-)
-c_plot
-```
-
-```{r}
-pdf(output_pdf_c, width = 16, height = 4)
-c_plot
-dev.off()
-```
-
-# Species proportions
-
-## Plot
-
-```{r d_hsc_base_plot}
-
-df_hsc <- as.data.frame(colData(sce_hsc_ann)[
-  colnames(colData(sce_hsc_ann)) %in% c("Species_ID", "Age_ID", "celltypes")])
-table_hsc <- table(sce_hsc_ann$celltypes, sce_hsc_ann$Species_ID)
-table_hsc
-
-df_hsc$Species_ID <- factor(df_hsc$Species_ID, levels = names(col_spc))
-df_hsc$Age_ID <- factor(df_hsc$Age_ID, levels = names(col_age))
-
-d_hsc_base_plot <- ggplot2::ggplot(
-  df_hsc, 
-  aes(x = Age_ID,
-      fill = Species_ID))+
-  ggplot2::geom_bar()+
-  facet_grid(cols = vars(df_hsc$celltypes))
-```
-
-Except for mcar lymph, there are at least 97 cells per specues and cell types.
-
-```{r d_hsc_theme_plot}
-d_hsc_theme_plot <- d_hsc_base_plot+
-  theme_all_supp+
-  ggplot2::xlab("Age and cell types")+
-  ggplot2::ylab("# cells")+
-  ggplot2::scale_fill_manual("Species", values = col_spc)+
-  ggplot2::theme(
-    axis.text.x = element_text(
-      angle = 90,
-      vjust = 0.5,
-      hjust = 0),
-    strip.text.x = element_text(
-      size = axis_text_size,
-      angle = 90,
-      vjust = 0.5,
-      hjust = 0
-    ),
-    strip.background = element_blank())
-d_hsc_theme_plot
-```
-
-```{r d_str_base_plot}
-
-df_str <- as.data.frame(colData(sce_str_ann)[
-  colnames(colData(sce_str_ann)) %in% c("Species_ID", "Age_ID", "celltypes")])
-table_str <- table(sce_str_ann$celltypes, sce_str_ann$Species_ID)
-table_str
-
-df_str$Species_ID <- factor(df_str$Species_ID, levels = names(col_spc))
-df_str$Age_ID <- factor(df_str$Age_ID, levels = names(col_age))
-
-d_str_base_plot <- ggplot2::ggplot(
-  df_str, 
-  aes(x = Age_ID,
-      fill = Species_ID))+
-  ggplot2::geom_bar()+
-  facet_grid(cols = vars(df_str$celltypes))
-```
-
-```{r d_str_theme_plot}
-d_str_theme_plot <- d_str_base_plot+
-  theme_all_supp+
-  ggplot2::xlab("Age and cell types")+
-  ggplot2::ylab("# cells")+
-  ggplot2::scale_fill_manual("Species", values = col_spc)+
-  ggplot2::theme(
-    axis.text.x = element_text(
-      angle = 90,
-      vjust = 0.5,
-      hjust = 0),
-    strip.text.x = element_text(
-      size = axis_text_size,
-      angle = 90,
-      vjust = 0.5,
-      hjust = 0),
-    strip.background = element_blank())
-d_str_theme_plot
-```
-
-```{r assemble_d, fig.width = 17, fig.height = 6}
-d_plot <- ggpubr::ggarrange(
-  d_hsc_theme_plot+ggplot2::theme(legend.position = "none"),
-  align = "hv",
-  d_str_theme_plot,
-  widths = c(1, 1.2)
-)
-d_plot
-```
-
-```{r export_g}
-pdf(output_pdf_d, width = 17, height = 6)
-d_plot
-dev.off()
-```
-
-```{r sessioninfo}
-sessionInfo()
-```

@@ -264,7 +264,13 @@ sce_str_all_cells$custom_label <- factor(
 ```
 
 ```{r control_cols}
-stopifnot(col_custom_str %in% c(sce_str_all_cells$custom_label))
+# make sure the color vector fits the label names 
+# the factors must be right because they have been controlled in 02/01/custom
+col_custom_str[!names(col_custom_str) %in% c(sce_str_all_cells$custom_label)]
+sce_str_all_cells$custom_label[!sce_str_all_cells$custom_label %in% names(col_custom_str)]
+
+stopifnot(names(col_custom_str) %in% c(sce_str_all_cells$custom_label))
+stopifnot(c(sce_str_all_cells$custom_label) %in% names(col_custom_str))
 ```
 
 ## Other prep
@@ -733,7 +739,7 @@ base_allu_str_mcar <- ggplot2::ggplot(
       hjust = 0),
     nudge_x = -0.7,      
     direction = "y",         
-    box.padding = 0.1,
+    box.padding = 0.2,
     alpha = c( # make the y axis text "disappear" due to 0 alpha
       rep(1, length(levels(mcar_df_str$Var1))),
       rep(0, length(unique(unfactor(
@@ -753,7 +759,13 @@ base_allu_str_mcar
 
 a_mmus_plot_1 <- base_plot_str_celltypes_mmus_1+
   ggplot2::theme_void()+
-  ggplot2::theme(legend.position = "none")
+  ggplot2::theme(legend.position = "none",
+    panel.border = element_rect(
+      fill = NA,
+      color = "grey30",
+      linewidth = 1,
+      linetype = 1
+    ))
 
 a_mmus_plot_1
 ```
@@ -806,7 +818,13 @@ a_mmus_legend_2
 
 a_mmus_plot_3 <- base_plot_str_celltypes_mmus_2+
   ggplot2::theme_void()+
-  ggplot2::theme(legend.position = "none")
+  ggplot2::theme(legend.position = "none",
+    panel.border = element_rect(
+      fill = NA,
+      color = "grey30",
+      linewidth = 1,
+      linetype = 1
+    ))
 
 a_mmus_plot_3
 ```
@@ -815,7 +833,13 @@ a_mmus_plot_3
 
 a_mmus_plot_4 <- base_plot_str_celltypes_mmus_3+
   ggplot2::theme_void()+
-  ggplot2::theme(legend.position = "none")
+  ggplot2::theme(legend.position = "none",
+    panel.border = element_rect(
+      fill = NA,
+      color = "grey30",
+      linewidth = 1,
+      linetype = 1
+    ))
 
 a_mmus_plot_4
 ```
@@ -830,7 +854,7 @@ plot_a <- ggpubr::ggarrange(
   a_mmus_plot_3,
   a_mmus_plot_4,
   nrow = 1,
-  widths = c(2.5, 0.3, 4, 4.2, 2.5, 2.5)
+  widths = c(2.5, 0.2, 4, 4.3, 2.5, 2.5)
 )
 
 plot_a
@@ -842,7 +866,13 @@ plot_a
 
 b_mcas_plot_1 <- base_plot_str_celltypes_mcas_1+
   ggplot2::theme_void()+
-  ggplot2::theme(legend.position = "none")
+  ggplot2::theme(legend.position = "none",
+    panel.border = element_rect(
+      fill = NA,
+      color = "grey30",
+      linewidth = 1,
+      linetype = 1
+    ))
 
 b_mcas_plot_1
 ```
@@ -879,7 +909,13 @@ b_mcas_legend_2
 
 b_mcas_plot_3 <- base_plot_str_celltypes_mcas_2+
   ggplot2::theme_void()+
-  ggplot2::theme(legend.position = "none")
+  ggplot2::theme(legend.position = "none",
+    panel.border = element_rect(
+      fill = NA,
+      color = "grey30",
+      linewidth = 1,
+      linetype = 1
+    ))
 
 b_mcas_plot_3
 ```
@@ -888,7 +924,13 @@ b_mcas_plot_3
 
 b_mcas_plot_4 <- base_plot_str_celltypes_mcas_3+
   ggplot2::theme_void()+
-  ggplot2::theme(legend.position = "none")
+  ggplot2::theme(legend.position = "none",
+    panel.border = element_rect(
+      fill = NA,
+      color = "grey30",
+      linewidth = 1,
+      linetype = 1
+    ))
 
 b_mcas_plot_4
 ```
@@ -903,7 +945,7 @@ plot_b <- ggpubr::ggarrange(
   b_mcas_plot_3,
   b_mcas_plot_4,
   nrow = 1,
-  widths = c(2.5, 0.3, 4, 4.2, 2.5, 2.5)
+  widths = c(2.5, 0.2, 4, 4.3, 2.5, 2.5)
 )
 
 plot_b
@@ -915,7 +957,13 @@ plot_b
 
 c_mspr_plot_1 <- base_plot_str_celltypes_mspr_1+
   ggplot2::theme_void()+
-  ggplot2::theme(legend.position = "none")
+  ggplot2::theme(legend.position = "none",
+    panel.border = element_rect(
+      fill = NA,
+      color = "grey30",
+      linewidth = 1,
+      linetype = 1
+    ))
 
 c_mspr_plot_1
 ```
@@ -952,7 +1000,13 @@ c_mspr_legend_2
 
 c_mspr_plot_3 <- base_plot_str_celltypes_mspr_2+
   ggplot2::theme_void()+
-  ggplot2::theme(legend.position = "none")
+  ggplot2::theme(legend.position = "none",
+    panel.border = element_rect(
+      fill = NA,
+      color = "grey30",
+      linewidth = 1,
+      linetype = 1
+    ))
 
 c_mspr_plot_3
 ```
@@ -961,7 +1015,13 @@ c_mspr_plot_3
 
 c_mspr_plot_4 <- base_plot_str_celltypes_mspr_3+
   ggplot2::theme_void()+
-  ggplot2::theme(legend.position = "none")
+  ggplot2::theme(legend.position = "none",
+    panel.border = element_rect(
+      fill = NA,
+      color = "grey30",
+      linewidth = 1,
+      linetype = 1
+    ))
 
 c_mspr_plot_4
 ```
@@ -976,7 +1036,7 @@ plot_c <- ggpubr::ggarrange(
   c_mspr_plot_3,
   c_mspr_plot_4,
   nrow = 1,
-  widths = c(2.5, 0.3, 4, 4.2, 2.5, 2.5)
+  widths = c(2.5, 0.2, 4, 4.3, 2.5, 2.5)
 )
 
 plot_c
@@ -988,7 +1048,13 @@ plot_c
 
 d_mcar_plot_1 <- base_plot_str_celltypes_mcar_1+
   ggplot2::theme_void()+
-  ggplot2::theme(legend.position = "none")
+  ggplot2::theme(legend.position = "none",
+    panel.border = element_rect(
+      fill = NA,
+      color = "grey30",
+      linewidth = 1,
+      linetype = 1
+    ))
 
 d_mcar_plot_1
 ```
@@ -1011,8 +1077,8 @@ d_mcar_legend_2_plot <- base_plot_str_celltypes_mcar_2 +
   ggplot2::geom_point(size = 3)+
   ggplot2::theme(
     legend.text = element_text(size = 12),
-    legend.spacing.y = unit(0.1, 'cm'),
-    legend.key.size = unit(0.45, "cm"),
+    legend.spacing.y = unit(0.08, 'cm'),
+    legend.key.size = unit(0.42, "cm"),
     legend.title = element_blank())
 
 d_mcar_legend_2 <- ggpubr::get_legend(d_mcar_legend_2_plot)
@@ -1027,9 +1093,10 @@ d_mcar_plot_3 <- base_plot_str_celltypes_mcar_2+
   ggplot2::theme_void()+
   ggplot2::theme(
     legend.position = "none",
-    plot.background = element_rect(
+    panel.border = element_rect(
+      fill = NA,
       color = "grey30",
-      linewidth = 0.5,
+      linewidth = 1,
       linetype = 1
     ))
 
@@ -1040,7 +1107,13 @@ d_mcar_plot_3
 
 d_mcar_plot_4 <- base_plot_str_celltypes_mcar_3+
   ggplot2::theme_void()+
-  ggplot2::theme(legend.position = "none")
+  ggplot2::theme(legend.position = "none",
+    panel.border = element_rect(
+      fill = NA,
+      color = "grey30",
+      linewidth = 1,
+      linetype = 1
+    ))
 
 d_mcar_plot_4
 ```
@@ -1055,7 +1128,7 @@ plot_d <- ggpubr::ggarrange(
   d_mcar_plot_3,
   d_mcar_plot_4,
   nrow = 1,
-  widths = c(2.5, 0.3, 4, 4.2, 2.5, 2.5)
+  widths = c(2.5, 0.2, 4, 4.3, 2.5, 2.5)
 )
 
 plot_d

@@ -1194,7 +1194,7 @@ sce_species$custom_label[
   sce_species$cluster_louvain_custom == "27"] <-  "Neutro 2"
 
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "13"] <-  "Mature immune, mixed 1"
+  sce_species$cluster_louvain_custom == "13"] <-  "Mature immune mix 1"
 
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "16"] <-  "Baso/Mast"
@@ -1208,7 +1208,7 @@ sce_species$custom_label[
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "12"] <-  "BC lineage 3"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "14"] <-  "Mature immune, mixed 2"
+  sce_species$cluster_louvain_custom == "14"] <-  "Mature immune mix 2"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "18"] <-  "BC lineage 7"
 sce_species$custom_label[
@@ -1228,15 +1228,15 @@ sce_species$custom_label[
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "26"] <-  "Skeletal muscle"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "3"] <-  "Mono/Macro lineage 3"
+  sce_species$cluster_louvain_custom == "3"] <-  "Mono/Macro 3"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "5"] <-  "Mono/Macro lineage 1"
+  sce_species$cluster_louvain_custom == "5"] <-  "Mono/Macro 1"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "6"] <-  "Mono/Macro lineage 4"
+  sce_species$cluster_louvain_custom == "6"] <-  "Mono/Macro 4"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "7"] <-  "Mono/Macro lineage 2, cycling"
+  sce_species$cluster_louvain_custom == "7"] <-  "Mono/Macro 2"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "17"] <-  "Mono/Macro lineage 5"
+  sce_species$cluster_louvain_custom == "17"] <-  "Mono/Macro 5"
 
 # Expected
 sce_species$custom_label[
@@ -1270,11 +1270,11 @@ sce_species$custom_label <- factor(
     "Sinusoidal EC",
     "Peri/SMC",
     "Erythroid",
-    "Mono/Macro lineage 1", # they look a bit "earlier" than the neutros
-    "Mono/Macro lineage 2, cycling",
-    "Mono/Macro lineage 3",
-    "Mono/Macro lineage 4",
-    "Mono/Macro lineage 5",
+    "Mono/Macro 1", # they look a bit "earlier" than the neutros
+    "Mono/Macro 2",
+    "Mono/Macro 3",
+    "Mono/Macro 4",
+    "Mono/Macro 5",
     "Neutro 1",
     "Neutro 2",
     "Baso/Mast",
@@ -1288,8 +1288,8 @@ sce_species$custom_label <- factor(
     "BC lineage 7",
     "Antigen-presenting 1",
     "Antigen-presenting 2",
-    "Mature immune, mixed 1",
-    "Mature immune, mixed 2",
+    "Mature immune mix 1",
+    "Mature immune mix 2",
     "Skeletal muscle"
     ))
 

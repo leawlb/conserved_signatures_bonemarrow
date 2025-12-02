@@ -8,7 +8,7 @@
 # str all custom labels correct order for factoring
 
 factors_custom_str <- c(
-  "Adipo-CAR", 
+  "Adipo CAR", 
   "Adipo/Osteo CAR", 
   "Osteo", 
       
@@ -18,7 +18,7 @@ factors_custom_str <- c(
   "Late chondro and Osteo",
   "Late chondro", 
 
-  "Articular/synovial progenitor-like",
+  "Articular/synovial-like",
 
   "Fibro/Chondro (more Fibro)",
   "Fibro", 
@@ -30,8 +30,8 @@ factors_custom_str <- c(
   "Arteriolar EC",
 
   "Transitory/Venous EC", 
-  "Mixed arteriolar/sinus EC", 
-  "Mixed ven/sinus/lymph EC", 
+  "Mix arteriolar/sinus EC", 
+  "Mix ven/sinus/lymph EC", 
   "Sinusoidal EC", 
 
   "Lymphatic EC", 
@@ -48,11 +48,11 @@ factors_custom_str <- c(
   "Ery 7", 
   "Mature ery",
 
-  "Mono/Macro lineage 1", 
-  "Mono/Macro lineage 2, cycling", 
-  "Mono/Macro lineage 3", 
-  "Mono/Macro lineage 4", 
-  "Mono/Macro lineage 5", 
+  "Mono/Macro 1", 
+  "Mono/Macro 2", 
+  "Mono/Macro 3", 
+  "Mono/Macro 4", 
+  "Mono/Macro 5", 
   
   "Early Neutro 1", 
   "Early Neutro 2", 
@@ -80,25 +80,25 @@ factors_custom_str <- c(
   "BC lineage 7", 
 
 
-  "Low quality adipo-CAR",
-  "Low quality osteo-chondro",
+  "Low qu adipo CAR",
+  "Low qu osteo-chondro",
 
-  "Mature immune, mixed 1", 
-  "Mature immune, mixed 2", 
+  "Mature immune mix 1", 
+  "Mature immune mix 2", 
   "Antigen-presenting",
   "Antigen-presenting 1", 
   "Antigen-presenting 2", 
 
-  "Mixed lymphatic EC/mature immune", 
-  "Immune/skeletal muscle, mixed", 
+  "Mix lymphatic EC/immune", 
+  "Mix skeletal muscle/immune", 
   "Skeletal muscle",
-  "Low quality skeletal muscle" 
+  "Low qu skeletal muscle" 
 )
 
 #------------------------------------------------------------------------------
 # corresponding colors
 col_custom_str <- c(
-  "Adipo-CAR" = "#1c6c6eff", # mmus, mspr 
+  "Adipo-CAR" = "#2c8284ff", # mmus, mspr 
   "Adipo/Osteo CAR" = "#35abadff", # mcas, mcar
   "Osteo" = "#1bfcdeff", # mmus, mcas, mspr
     
@@ -121,7 +121,7 @@ col_custom_str <- c(
   "Transitory/Venous EC" = "#6b44d6ff", # mmus, mspr
   "Mixed arteriolar/sinus EC" = "#4c3f6eff", # mcar
   "Mixed ven/sinus/lymph EC" = "#906eebff", # mcar
-  "Sinusoidal EC" = "#22076eff", # mmus, mcas, mspr
+  "Sinusoidal EC" = "#352957ff", # mmus, mcas, mspr
 
   "Lymphatic EC" = "#4f7389ff", # mspr
 
@@ -178,9 +178,9 @@ col_custom_str <- c(
   "Antigen-presenting 2" = "#4f4139ff", # mcas
 
   "Mixed lymphatic EC/mature immune" = "#716757ff", # mmus
-  "Immune/skeletal muscle, mixed" = "#939393ff", # mspr
-  "Skeletal muscle" = "#636363ff",  # mcas
-  "Low quality skeletal muscle" =  "#acacacff" # mmus
+  "Immune/skeletal muscle, mixed" = "grey50", # mspr
+  "Skeletal muscle" = "grey60",  # mcas
+  "Low quality skeletal muscle" =  "grey80" # mmus
 )
 
 #------------------------------------------------------------------------------

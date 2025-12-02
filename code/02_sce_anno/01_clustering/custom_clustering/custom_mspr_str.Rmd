@@ -902,7 +902,7 @@ sce_species$custom_label <- vector(length = ncol(sce_species))
 
 # Mes
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "3"] <-  "Adipo-CAR"
+  sce_species$cluster_louvain_custom == "3"] <-  "Adipo CAR"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "4"] <-  "Low quality adipo-CAR"
 sce_species$custom_label[
@@ -934,7 +934,7 @@ sce_species$custom_label[
 
 # contamination
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "14"] <-  "Immune/skeletal muscle, mixed"
+  sce_species$cluster_louvain_custom == "14"] <-  "Mix skeletal muscle/immune"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "16"] <-  "Eo/Baso/Mast"
 
@@ -942,11 +942,11 @@ sce_species$custom_label[
 sce_species$custom_label <- factor(
   sce_species$custom_label,
   levels = c(
-    "Adipo-CAR",
+    "Adipo CAR",
     "Osteo",
     "Balanced mesenchymal",
     "Early chondro",
-    "Articular/synovial progenitor-like",
+    "Articular/synovial-like",
     "Fibro/Chondro (more Fibro)",
     "Capillary EC",
     "Arteriolar EC",
@@ -955,10 +955,10 @@ sce_species$custom_label <- factor(
     "Lymphatic EC",
     "Peri/SMC",
     # contamination
-    "Low quality adipo-CAR",
-    "Low quality osteo-chondro",
+    "Low qu adipo-CAR",
+    "Low qu osteo-chondro",
     "Eo/Baso/Mast",
-    "Immune/skeletal muscle, mixed"
+    "Mix skeletal muscle/immune"
     ))
 
 sort(unique(sce_species$custom_label))

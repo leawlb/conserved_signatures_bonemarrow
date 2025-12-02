@@ -849,9 +849,9 @@ sce_species$custom_label <- vector(length = ncol(sce_species))
 
 # Mes
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "1"] <-  "Adipo-CAR"
+  sce_species$cluster_louvain_custom == "1"] <-  "Adipo CAR"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "6"] <-  "Low quality adipo-CAR"
+  sce_species$cluster_louvain_custom == "6"] <-  "Low qu adipo CAR"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "10"] <-  "Osteo"
 sce_species$custom_label[
@@ -874,7 +874,7 @@ sce_species$custom_label[
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "12"] <-  "Sinusoidal EC"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "13"] <-  "Mixed lymphatic EC/mature immune"
+  sce_species$cluster_louvain_custom == "13"] <-  "Mix lymphatic EC/immune"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "11"] <-  "Peri/SMC"
 
@@ -882,13 +882,13 @@ sce_species$custom_label[
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "15"] <-  "Erythroid"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "8"] <-  "Low quality skeletal muscle"
+  sce_species$cluster_louvain_custom == "8"] <-  "Low qu skeletal muscle"
 
 
 sce_species$custom_label <- factor(
   sce_species$custom_label,
   levels = c(
-    "Adipo-CAR",
+    "Adipo CAR",
     "Osteo",
     "Balanced mesenchymal",
     "Late chondro",
@@ -901,9 +901,9 @@ sce_species$custom_label <- factor(
     "Peri/SMC",
     # contamination
     "Erythroid",
-    "Low quality adipo-CAR",
-    "Low quality skeletal muscle",
-    "Mixed lymphatic EC/mature immune"
+    "Low qu adipo CAR",
+    "Low qu skeletal muscle",
+    "Mix lymphatic EC/immune"
     ))
 
 sort(unique(sce_species$custom_label))

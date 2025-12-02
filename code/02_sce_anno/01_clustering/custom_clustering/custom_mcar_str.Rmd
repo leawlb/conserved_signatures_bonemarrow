@@ -1365,12 +1365,12 @@ sce_species$custom_label[
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "19"] <-  "Early chondro"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "34"] <-  "Articular/synovial progenitor-like"
+  sce_species$cluster_louvain_custom == "34"] <-  "Articular/synovial-like"
 
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "12"] <-  "Mixed ven/sinus/lymph EC"
+  sce_species$cluster_louvain_custom == "12"] <-  "Mix ven/sinus/lymph EC"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "22"] <-  "Mixed arteriolar/sinus EC"
+  sce_species$cluster_louvain_custom == "22"] <-  "Mix arteriolar/sinus EC"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "18"] <-  "Arteriolar/capillary EC"
 
@@ -1384,7 +1384,7 @@ sce_species$custom_label <- factor(
     "Early chondro",
     "Late chondro and Osteo",
     "Fibro",
-    "Articular/synovial progenitor-like",
+    "Articular/synovial-like",
     "Arteriolar/capillary EC",
     "Mixed ven/sinus/lymph EC",
     "Mixed arteriolar/sinus EC",
@@ -1412,8 +1412,8 @@ sce_species$custom_label <- factor(
     "BC lineage 2",
     "BC lineage 3",
     "Antigen-presenting",
-    "Mature immune, mixed 1",
-    "Mature immune, mixed 2"
+    "Mature immune mix 1",
+    "Mature immune mix 2"
     ))
 sort(unique(sce_species$custom_label))
 levels(sce_species$custom_label)

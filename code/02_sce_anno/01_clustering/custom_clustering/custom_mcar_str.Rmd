@@ -1337,13 +1337,13 @@ sce_species$custom_label[
 
 # Lymphoid
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "20"] <-  "Mature immune, mixed 2"
+  sce_species$cluster_louvain_custom == "20"] <-  "Mature immune mix 2"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "26"] <-  "BC lineage 1"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "28"] <-  "BC lineage 3"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "30"] <-  "Mature immune, mixed 1"
+  sce_species$cluster_louvain_custom == "30"] <-  "Mature immune mix 1"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "31"] <-  "BC lineage 2"
   
@@ -1386,8 +1386,8 @@ sce_species$custom_label <- factor(
     "Fibro",
     "Articular/synovial-like",
     "Arteriolar/capillary EC",
-    "Mixed ven/sinus/lymph EC",
-    "Mixed arteriolar/sinus EC",
+    "Mix ven/sinus/lymph EC",
+    "Mix arteriolar/sinus EC",
     "Peri/SMC",
     "Ery 1",
     "Ery 2",

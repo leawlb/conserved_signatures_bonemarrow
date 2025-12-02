@@ -98,7 +98,7 @@ factors_custom_str <- c(
 #------------------------------------------------------------------------------
 # corresponding colors
 col_custom_str <- c(
-  "Adipo-CAR" = "#2c8284ff", # mmus, mspr 
+  "Adipo CAR" = "#2c8284ff", # mmus, mspr 
   "Adipo/Osteo CAR" = "#35abadff", # mcas, mcar
   "Osteo" = "#1bfcdeff", # mmus, mcas, mspr
     
@@ -110,7 +110,7 @@ col_custom_str <- c(
   "Late chondro and Osteo" = "#80f000ff",  # mcar
   "Late chondro" = "#55a646ff", # mmus, mcas
 
-  "Articular/synovial progenitor-like" = "#344b02ff",  # mspr, mcar
+  "Articular/synovial-like" = "#344b02ff",  # mspr, mcar
 
   "Capillary EC" = "#b8c1fbff", # mspr
   "Capillary EC 1" = "#b4e3fcff", # mmus
@@ -119,8 +119,8 @@ col_custom_str <- c(
   "Arteriolar EC" = "#2a66a2ff",  # mmus, mspr
 
   "Transitory/Venous EC" = "#6b44d6ff", # mmus, mspr
-  "Mixed arteriolar/sinus EC" = "#4c3f6eff", # mcar
-  "Mixed ven/sinus/lymph EC" = "#906eebff", # mcar
+  "Mix arteriolar/sinus EC" = "#4c3f6eff", # mcar
+  "Mix ven/sinus/lymph EC" = "#906eebff", # mcar
   "Sinusoidal EC" = "#352957ff", # mmus, mcas, mspr
 
   "Lymphatic EC" = "#4f7389ff", # mspr
@@ -137,11 +137,11 @@ col_custom_str <- c(
   "Ery 7" = "#b87f94ff", # mcar
   "Mature ery" = "#b04747ff", # mcar
 
-  "Mono/Macro lineage 1" = "#ff5900ff", # mcas
-  "Mono/Macro lineage 2, cycling" = "#ffa97aff", # mcas
-  "Mono/Macro lineage 3" = "#bd754dff", # mcas
-  "Mono/Macro lineage 4" = "#c4581fff", # mcas
-  "Mono/Macro lineage 5" = "#8f3606ff", # mcas
+  "Mono/Macro 1" = "#ff5900ff", # mcas
+  "Mono/Macro 2" = "#ffa97aff", # mcas
+  "Mono/Macro 3" = "#bd754dff", # mcas
+  "Mono/Macro 4" = "#c4581fff", # mcas
+  "Mono/Macro 5" = "#8f3606ff", # mcas
 
   "Early Neutro 1" = "#ff8c00ff", # mcar
   "Early Neutro 2" = "#cf7f1dff", # mcar
@@ -168,19 +168,19 @@ col_custom_str <- c(
   "BC lineage 6" = "#d9e07bff", # mcas
   "BC lineage 7" = "#9ea534ff", # mcas
 
-  "Low quality adipo-CAR" = "#acdfe0ff",  # mmus, mspr
-  "Low quality osteo-chondro" = "#9ab8a3ff",  # mspr
+  "Low qu adipo CAR" = "#acdfe0ff",  # mmus, mspr
+  "Low qu osteo-chondro" = "#9ab8a3ff",  # mspr
 
-  "Mature immune, mixed 1" = "#afa683ff", # mcas, mcar
-  "Mature immune, mixed 2" = "#7b7660ff", # mcas, mcar
+  "Mature immune mix 1" = "#afa683ff", # mcas, mcar
+  "Mature immune mix 2" = "#7b7660ff", # mcas, mcar
   "Antigen-presenting" = "#8b7467ff",  # mcar
   "Antigen-presenting 1" = "#655348ff", # mcas
   "Antigen-presenting 2" = "#4f4139ff", # mcas
 
-  "Mixed lymphatic EC/mature immune" = "#716757ff", # mmus
-  "Immune/skeletal muscle, mixed" = "grey50", # mspr
+  "Mix lymphatic EC/immune" = "#716757ff", # mmus
+  "Mix skeletal muscle/immune" = "grey50", # mspr
   "Skeletal muscle" = "grey60",  # mcas
-  "Low quality skeletal muscle" =  "grey80" # mmus
+  "Low qu skeletal muscle" =  "grey80" # mmus
 )
 
 #------------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 ---
 title: "Supplementary Figure 3"
-date: '2024-11-25'
+date: '2025-12-02'
 output: html_document
 ---
 
@@ -261,6 +261,10 @@ sce_str_all_cells$custom_label <- factor(
   sce_str_all_cells$custom_label,
   levels = factors_custom_str
 )
+```
+
+```{r control_cols}
+stopifnot(col_custom_str %in% c(sce_str_all_cells$custom_label))
 ```
 
 ## Other prep
@@ -759,7 +763,7 @@ a_mmus_plot_1
 # this legend can be used for all species
 a_mmus_legend_1_plot <- base_plot_str_celltypes_mmus_1 + 
   theme_all+
-  ggplot2::geom_point(size = 4)+
+  ggplot2::geom_point(size = 3)+
   ggplot2::theme(
     legend.text = element_blank(),
     legend.title = element_blank())
@@ -858,7 +862,7 @@ b_mcas_plot_2
 # this legend can be used for all species
 b_mcas_legend_2_plot <- base_plot_str_celltypes_mcas_2 + 
   theme_all+
-  ggplot2::geom_point(size = 4)+
+  ggplot2::geom_point(size = 3)+
   ggplot2::theme(
     legend.text = element_text(size = 12),
     legend.spacing.y = unit(0.1, 'cm'),
@@ -905,4 +909,157 @@ plot_b <- ggpubr::ggarrange(
 plot_b
 ```
 
+## C plot MSPR
+
+```{r c_mspr_plot_1, fig.width = 3, fig.height = 3} 
+
+c_mspr_plot_1 <- base_plot_str_celltypes_mspr_1+
+  ggplot2::theme_void()+
+  ggplot2::theme(legend.position = "none")
+
+c_mspr_plot_1
+```
+
+```{r c_mspr_plot_2, fig.width = 4, fig.height = 3} 
+
+c_mspr_plot_2 <- base_allu_str_mspr+
+  ggplot2::theme(
+    legend.position = "none",
+    plot.background = element_blank())
+
+c_mspr_plot_2
+```
+
+```{r c_mspr_legend_2, fig.width = 4, fig.height = 2} 
+
+# this legend can be used for all species
+c_mspr_legend_2_plot <- base_plot_str_celltypes_mspr_2 + 
+  theme_all+
+  ggplot2::geom_point(size = 3)+
+  ggplot2::theme(
+    legend.text = element_text(size = 12),
+    legend.spacing.y = unit(0.1, 'cm'),
+    legend.key.size = unit(0.45, "cm"),
+    legend.title = element_blank())
+
+c_mspr_legend_2 <- ggpubr::get_legend(c_mspr_legend_2_plot)
+c_mspr_legend_2 <- ggpubr::ggarrange(c_mspr_legend_2)
+
+c_mspr_legend_2
+```
+
+```{r c_mspr_plot_3, fig.width = 3, fig.height = 3} 
+
+c_mspr_plot_3 <- base_plot_str_celltypes_mspr_2+
+  ggplot2::theme_void()+
+  ggplot2::theme(legend.position = "none")
+
+c_mspr_plot_3
+```
+
+```{r c_mspr_plot_4, fig.width = 3, fig.height = 3} 
+
+c_mspr_plot_4 <- base_plot_str_celltypes_mspr_3+
+  ggplot2::theme_void()+
+  ggplot2::theme(legend.position = "none")
+
+c_mspr_plot_4
+```
+
+```{r arrange_c, fig.width = 16, fig.height = 3}
+
+plot_c <- ggpubr::ggarrange(
+  c_mspr_plot_1,
+  a_mmus_legend_1,
+  c_mspr_plot_2,
+  c_mspr_legend_2,
+  c_mspr_plot_3,
+  c_mspr_plot_4,
+  nrow = 1,
+  widths = c(2.5, 0.3, 4, 4.2, 2.5, 2.5)
+)
+
+plot_c
+```
+
+## D plot MCAR
+
+```{r d_mcar_plot_1, fig.width = 3, fig.height = 3} 
+
+d_mcar_plot_1 <- base_plot_str_celltypes_mcar_1+
+  ggplot2::theme_void()+
+  ggplot2::theme(legend.position = "none")
+
+d_mcar_plot_1
+```
+
+```{r d_mcar_plot_2, fig.width = 4, fig.height = 3} 
+
+d_mcar_plot_2 <- base_allu_str_mcar+
+  ggplot2::theme(
+    legend.position = "none",
+    plot.background = element_blank())
+
+d_mcar_plot_2
+```
+
+```{r d_mcar_legend_2, fig.width = 4, fig.height = 2} 
+
+# this legend can be used for all species
+d_mcar_legend_2_plot <- base_plot_str_celltypes_mcar_2 + 
+  theme_all+
+  ggplot2::geom_point(size = 3)+
+  ggplot2::theme(
+    legend.text = element_text(size = 12),
+    legend.spacing.y = unit(0.1, 'cm'),
+    legend.key.size = unit(0.45, "cm"),
+    legend.title = element_blank())
+
+d_mcar_legend_2 <- ggpubr::get_legend(d_mcar_legend_2_plot)
+d_mcar_legend_2 <- ggpubr::ggarrange(d_mcar_legend_2)
+
+d_mcar_legend_2
+```
+
+```{r d_mcar_plot_3, fig.width = 3, fig.height = 3} 
+
+d_mcar_plot_3 <- base_plot_str_celltypes_mcar_2+
+  ggplot2::theme_void()+
+  ggplot2::theme(
+    legend.position = "none",
+    plot.background = element_rect(
+      color = "grey30",
+      linewidth = 0.5,
+      linetype = 1
+    ))
+
+d_mcar_plot_3
+```
+
+```{r d_mcar_plot_4, fig.width = 3, fig.height = 3} 
+
+d_mcar_plot_4 <- base_plot_str_celltypes_mcar_3+
+  ggplot2::theme_void()+
+  ggplot2::theme(legend.position = "none")
+
+d_mcar_plot_4
+```
+
+```{r arrange_d, fig.width = 16, fig.height = 3}
+
+plot_d <- ggpubr::ggarrange(
+  d_mcar_plot_1,
+  a_mmus_legend_1,
+  d_mcar_plot_2,
+  d_mcar_legend_2,
+  d_mcar_plot_3,
+  d_mcar_plot_4,
+  nrow = 1,
+  widths = c(2.5, 0.3, 4, 4.2, 2.5, 2.5)
+)
+
+plot_d
+```
+
+# Gene expression
 

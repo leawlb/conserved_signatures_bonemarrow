@@ -20,6 +20,7 @@ library(tidyverse, quietly = TRUE)
 library(SingleCellExperiment, quietly = TRUE)
 library(ggpubr, quietly = TRUE)
 library(ggalluvial, quietly = TRUE)
+library(ggrepel, quietly = TRUE)
 ```
 
 ```{r base_path}
@@ -37,6 +38,9 @@ source("../source/custom_clustering_utils.R")
 
 col_cts_hsc <- c(col_cts_hsc, "removed" = "grey70")
 col_cts_str <- c(col_cts_str, "removed" = "grey70")
+
+col_cts_hsc
+col_cts_str
 ```
 
 ## Load and prepare objects
@@ -405,7 +409,7 @@ mcar_df_str <- mcar_df_str %>%
 
 ### MMUS
 
-```{r base_plot_str_celltypes_mmus_1, fig.height = 3, fig.width = 3}
+```{r base_plot_str_celltypes_mmus_1}
 base_plot_str_celltypes_mmus_1 <- ggplot2::ggplot(
   str_umap[str_umap$species == "BL6",], 
   aes(x = V1,
@@ -419,7 +423,7 @@ base_plot_str_celltypes_mmus_1 <- ggplot2::ggplot(
   ggplot2::scale_color_manual(values = col_cts_str)
 ```
 
-```{r base_plot_str_celltypes_mmus_2, fig.height = 3, fig.width = 3}
+```{r base_plot_str_celltypes_mmus_2}
 base_plot_str_celltypes_mmus_2 <- ggplot2::ggplot(
   str_umap[str_umap$species == "BL6",], 
   aes(x = V1,
@@ -442,12 +446,6 @@ base_plot_str_celltypes_mmus_3 <- ggplot2::ggplot(
   ggplot2::geom_point(
     size = umap_point_size,
     alpha = umap_point_alpha)+
-  ggplot2::xlim(c(
-    base::min(str_umap$UMAP_spec1)-1, 
-    base::max(str_umap$UMAP_spec1)+1))+
-  ggplot2::ylim(c(
-    base::min(str_umap$UMAP_spec2)-1, 
-    base::max(str_umap$UMAP_spec2)+1))+
   ggplot2::scale_color_manual(values = col_custom_str)
 ```
 
@@ -490,12 +488,6 @@ base_plot_str_celltypes_mcas_3 <- ggplot2::ggplot(
   ggplot2::geom_point(
     size = umap_point_size,
     alpha = umap_point_alpha)+
-  ggplot2::xlim(c(
-    base::min(str_umap$UMAP_spec1)-1, 
-    base::max(str_umap$UMAP_spec1)+1))+
-  ggplot2::ylim(c(
-    base::min(str_umap$UMAP_spec2)-1, 
-    base::max(str_umap$UMAP_spec2)+1))+
   ggplot2::scale_color_manual(values = col_custom_str)
 ```
 
@@ -538,12 +530,6 @@ base_plot_str_celltypes_mspr_3 <- ggplot2::ggplot(
   ggplot2::geom_point(
     size = umap_point_size,
     alpha = umap_point_alpha)+
-  ggplot2::xlim(c(
-    base::min(str_umap$UMAP_spec1)-1, 
-    base::max(str_umap$UMAP_spec1)+1))+
-  ggplot2::ylim(c(
-    base::min(str_umap$UMAP_spec2)-1, 
-    base::max(str_umap$UMAP_spec2)+1))+
   ggplot2::scale_color_manual(values = col_custom_str)
 ```
 
@@ -586,12 +572,6 @@ base_plot_str_celltypes_mcar_3 <- ggplot2::ggplot(
   ggplot2::geom_point(
     size = umap_point_size,
     alpha = umap_point_alpha)+
-  ggplot2::xlim(c(
-    base::min(str_umap$UMAP_spec1)-1, 
-    base::max(str_umap$UMAP_spec1)+1))+
-  ggplot2::ylim(c(
-    base::min(str_umap$UMAP_spec2)-1, 
-    base::max(str_umap$UMAP_spec2)+1))+
   ggplot2::scale_color_manual(values = col_custom_str)
 ```
 
@@ -624,7 +604,7 @@ base_allu_str_mmus <- ggplot2::ggplot(
       x = after_stat(x),
       label = after_stat(stratum),
       hjust = 0),
-    nudge_x = -0.5,      
+    nudge_x = -0.7,      
     direction = "y",         
     box.padding = 0.1,
     alpha = c( # make the y axis text "disappear" due to 0 alpha
@@ -632,7 +612,7 @@ base_allu_str_mmus <- ggplot2::ggplot(
       rep(0, length(unique(unfactor(
         mmus_df_str[mmus_df_str$Freq != 0,]$Var2_c)))))     
     )+
-  theme_void()+
+  ggplot2::theme_void()+
   ggplot2::theme(legend.position = "none")+
   ggplot2::scale_fill_manual(values = col_cts_str)
 base_allu_str_mmus
@@ -665,7 +645,7 @@ base_allu_str_mcas <- ggplot2::ggplot(
       x = after_stat(x),
       label = after_stat(stratum),
       hjust = 0),
-    nudge_x = -0.5,      
+    nudge_x = -0.7,      
     direction = "y",         
     box.padding = 0.1,
     alpha = c( # make the y axis text "disappear" due to 0 alpha
@@ -673,7 +653,7 @@ base_allu_str_mcas <- ggplot2::ggplot(
       rep(0, length(unique(unfactor(
         mmus_df_str[mcas_df_str$Freq != 0,]$Var2_c)))))     
     )+
-  theme_void()+
+  ggplot2::theme_void()+
   ggplot2::theme(legend.position = "none")+
   ggplot2::scale_fill_manual(values = col_cts_str)
 base_allu_str_mcas
@@ -706,7 +686,7 @@ base_allu_str_mspr <- ggplot2::ggplot(
       x = after_stat(x),
       label = after_stat(stratum),
       hjust = 0),
-    nudge_x = -0.5,      
+    nudge_x = -0.7,      
     direction = "y",         
     box.padding = 0.1,
     alpha = c( # make the y axis text "disappear" due to 0 alpha
@@ -714,7 +694,7 @@ base_allu_str_mspr <- ggplot2::ggplot(
       rep(0, length(unique(unfactor(
         mmus_df_str[mspr_df_str$Freq != 0,]$Var2_c)))))     
     )+
-  theme_void()+
+  ggplot2::theme_void()+
   ggplot2::theme(legend.position = "none")+
   ggplot2::scale_fill_manual(values = col_cts_str)
 base_allu_str_mspr
@@ -747,7 +727,7 @@ base_allu_str_mcar <- ggplot2::ggplot(
       x = after_stat(x),
       label = after_stat(stratum),
       hjust = 0),
-    nudge_x = -0.5,      
+    nudge_x = -0.7,      
     direction = "y",         
     box.padding = 0.1,
     alpha = c( # make the y axis text "disappear" due to 0 alpha
@@ -755,7 +735,7 @@ base_allu_str_mcar <- ggplot2::ggplot(
       rep(0, length(unique(unfactor(
         mmus_df_str[mcar_df_str$Freq != 0,]$Var2_c)))))     
     )+
-  theme_void()+
+  ggplot2::theme_void()+
   ggplot2::theme(legend.position = "none")+
   ggplot2::scale_fill_manual(values = col_cts_str)
 base_allu_str_mcar
@@ -774,7 +754,7 @@ a_mmus_plot_1 <- base_plot_str_celltypes_mmus_1+
 a_mmus_plot_1
 ```
 
-```{r a_mmus_legend_1, fig.width = 1, fig.height = 2} 
+```{r a_mmus_legend_1, fig.width = 1, fig.height = 3} 
 
 # this legend can be used for all species
 a_mmus_legend_1_plot <- base_plot_str_celltypes_mmus_1 + 
@@ -790,7 +770,7 @@ a_mmus_legend_1 <- ggpubr::ggarrange(a_mmus_legend_1)
 a_mmus_legend_1
 ```
 
-```{r a_mmus_plot_1, fig.width = 4, fig.height = 3} 
+```{r a_mmus_plot_2, fig.width = 4, fig.height = 3} 
 
 a_mmus_plot_2 <- base_allu_str_mmus+
   ggplot2::theme(
@@ -800,17 +780,20 @@ a_mmus_plot_2 <- base_allu_str_mmus+
 a_mmus_plot_2
 ```
 
-```{r a_mmus_legend_2, fig.width = 4, fig.height = 2} 
+```{r a_mmus_legend_2, fig.width = 5, fig.height = 3} 
 
 # this legend can be used for all species
 a_mmus_legend_2_plot <- base_plot_str_celltypes_mmus_2 + 
   theme_all+
-  ggplot2::geom_point(size = 4)+
+  ggplot2::geom_point(size = 3)+
   ggplot2::theme(
+    legend.text = element_text(size = 12),
+    legend.spacing.y = unit(0.1, 'cm'),
+    legend.key.size = unit(0.45, "cm"),
     legend.title = element_blank())
 
-a_mmus_legend_2 <- ggpubr::get_legend(a_mmus_legend_2_plot)
-a_mmus_legend_2 <- ggpubr::ggarrange(a_mmus_legend_2)
+a_mmus_legend_2_temp <- ggpubr::get_legend(a_mmus_legend_2_plot)
+a_mmus_legend_2 <- ggpubr::ggarrange(a_mmus_legend_2_temp)
 
 a_mmus_legend_2
 ```
@@ -833,7 +816,7 @@ a_mmus_plot_4 <- base_plot_str_celltypes_mmus_3+
 a_mmus_plot_4
 ```
 
-```{r arrange_a, fig.width = 18, fig.height = 3}
+```{r arrange_a, fig.width = 16, fig.height = 3}
 
 plot_a <- ggpubr::ggarrange(
   a_mmus_plot_1,
@@ -842,11 +825,84 @@ plot_a <- ggpubr::ggarrange(
   a_mmus_legend_2,
   a_mmus_plot_3,
   a_mmus_plot_4,
-  nrow = 1
+  nrow = 1,
+  widths = c(2.5, 0.3, 4, 4.2, 2.5, 2.5)
 )
 
 plot_a
 ```
 
+## B plot MCAS
+
+```{r b_mcas_plot_1, fig.width = 3, fig.height = 3} 
+
+b_mcas_plot_1 <- base_plot_str_celltypes_mcas_1+
+  ggplot2::theme_void()+
+  ggplot2::theme(legend.position = "none")
+
+b_mcas_plot_1
+```
+
+```{r b_mcas_plot_2, fig.width = 4, fig.height = 3} 
+
+b_mcas_plot_2 <- base_allu_str_mcas+
+  ggplot2::theme(
+    legend.position = "none",
+    plot.background = element_blank())
+
+b_mcas_plot_2
+```
+
+```{r b_mcas_legend_2, fig.width = 4, fig.height = 2} 
+
+# this legend can be used for all species
+b_mcas_legend_2_plot <- base_plot_str_celltypes_mcas_2 + 
+  theme_all+
+  ggplot2::geom_point(size = 4)+
+  ggplot2::theme(
+    legend.text = element_text(size = 12),
+    legend.spacing.y = unit(0.1, 'cm'),
+    legend.key.size = unit(0.45, "cm"),
+    legend.title = element_blank())
+
+b_mcas_legend_2 <- ggpubr::get_legend(b_mcas_legend_2_plot)
+b_mcas_legend_2 <- ggpubr::ggarrange(b_mcas_legend_2)
+
+b_mcas_legend_2
+```
+
+```{r b_mcas_plot_3, fig.width = 3, fig.height = 3} 
+
+b_mcas_plot_3 <- base_plot_str_celltypes_mcas_2+
+  ggplot2::theme_void()+
+  ggplot2::theme(legend.position = "none")
+
+b_mcas_plot_3
+```
+
+```{r b_mcas_plot_4, fig.width = 3, fig.height = 3} 
+
+b_mcas_plot_4 <- base_plot_str_celltypes_mcas_3+
+  ggplot2::theme_void()+
+  ggplot2::theme(legend.position = "none")
+
+b_mcas_plot_4
+```
+
+```{r arrange_b, fig.width = 16, fig.height = 3}
+
+plot_b <- ggpubr::ggarrange(
+  b_mcas_plot_1,
+  a_mmus_legend_1,
+  b_mcas_plot_2,
+  b_mcas_legend_2,
+  b_mcas_plot_3,
+  b_mcas_plot_4,
+  nrow = 1,
+  widths = c(2.5, 0.3, 4, 4.2, 2.5, 2.5)
+)
+
+plot_b
+```
 
 

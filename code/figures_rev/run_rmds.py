@@ -29,6 +29,8 @@ rule run_fig_s3:
         queues="medium-debian"
     output:
         OUTPUT_PATH + "/figure_s3.html"
+    conda:
+        "../envs/ggalluvial.yml"
     threads: 4
     script:
         "figure_s3.Rmd"

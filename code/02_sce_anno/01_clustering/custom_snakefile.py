@@ -36,7 +36,7 @@ fractions = get_list(metadata = METADATA, column = "Fraction_ID")
 targets = []
 
 for f in fractions:
-  targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/custom_" + f + "_comparison_report.html"]
+  targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/custom_" + f + "_expression_report.html"]
   targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/custom_" + f + "_clustering_report.html"]
   
   for s in species:
@@ -216,16 +216,20 @@ rule louvain_clustering_mcar_str:
 
 # HSC reports
 
-# TODO: add input later
-rule custom_hsc_comparison_report:
+rule custom_hsc_expression_report:
+    input:
+        mmus_sce =  OUTPUT_DAT + "/02_clst/custom/sce_mmus_hsc_custom.rds",
+        mcas_sce =  OUTPUT_DAT + "/02_clst/custom/sce_mcas_hsc_custom.rds",
+        mspr_sce =  OUTPUT_DAT + "/02_clst/custom/sce_mspr_hsc_custom.rds",
+        mcar_sce =  OUTPUT_DAT + "/02_clst/custom/sce_mcar_hsc_custom.rds"
     output:
-        OUTPUT_REP + "/02_clustering/comparison_custom/custom_hsc_comparison_report.html"
+        OUTPUT_REP + "/02_clustering/comparison_custom/custom_hsc_expression_report.html"
     resources:
         mem_mb = 70000,
         queue = "medium-debian"
     threads: 10
     script:
-        "custom_clustering/custom_hsc_comparison_report.Rmd"
+        "custom_clustering/custom_hsc_expression_report.Rmd"
 
 # TODO: add input later
 rule custom_hsc_clustering_report:
@@ -246,10 +250,14 @@ rule custom_hsc_clustering_report:
 
 # STR reports
 
-# TODO: add input later
-rule custom_str_comparison_report:
+rule custom_str_expression_report:
+    input:
+        mmus_sce =  OUTPUT_DAT + "/02_clst/custom/sce_mmus_str_custom.rds",
+        mcas_sce =  OUTPUT_DAT + "/02_clst/custom/sce_mcas_str_custom.rds",
+        mspr_sce =  OUTPUT_DAT + "/02_clst/custom/sce_mspr_str_custom.rds",
+        mcar_sce =  OUTPUT_DAT + "/02_clst/custom/sce_mcar_str_custom.rds"
     output:
-        OUTPUT_REP + "/02_clustering/comparison_custom/custom_str_comparison_report.html"
+        OUTPUT_REP + "/02_clustering/comparison_custom/custom_str_expression_report.html"
     resources:
         mem_mb = 70000,
         queue = "medium-debian"
@@ -257,7 +265,7 @@ rule custom_str_comparison_report:
         custom_utils = "../../source/custom_clustering_utils.R"
     threads: 10
     script:
-        "custom_clustering/custom_str_comparison_report.Rmd"
+        "custom_clustering/custom_str_expression_report.Rmd"
 
 # TODO: add input later
 rule custom_str_clustering_report:

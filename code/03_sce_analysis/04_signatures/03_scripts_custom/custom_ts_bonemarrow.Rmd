@@ -1,0 +1,316 @@
+---
+title: "Tabula muris bone marrow custom reclustering"
+author: "Lea Wölbert"
+date: '2025-11-10'
+output: html_document
+---
+
+General build taken from custom_mmus_hsc.Rmd etc. 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load libraries, source code 
+
+```{r seed, message = FALSE}
+set.seed(37)
+```
+
+```{r source, message = FALSE}
+source(file =  snakemake@params[["plotting"]])
+```
+
+```{r, message = FALSE}
+library(SingleCellExperiment, quietly = TRUE)
+library(BiocSingular, quietly = TRUE)
+library(scran, quietly = TRUE)
+library(igraph, quietly = TRUE)
+library(tidyverse, quietly = TRUE)
+library(scuttle, quietly = TRUE)
+library(dittoSeq, quietly = TRUE)
+library(Seurat, quietly = TRUE)
+library(SeuratObject, quietly = TRUE)
+```
+
+```{r load_objects}
+
+seu_tm_bonemarrow <- readRDS(snakemake@input[["seu_input"]])
+
+#seu_tm_bonemarrow <- readRDS("/home/l012t/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/mus_tm_bonemarrow")
+
+# define output path here
+# since in an .Rmd file run by snakemake the only output defined
+# by snakemake is the html, any other output must be defined manually
+base_path_data <- snakemake@params[["OUTPUT_DAT"]]
+#output_path <- base::paste0(base_path_data, "")
+print(output_path)
+
+```
+
+```{r colors, message = FALSE}
+col_num <- c(dittoSeq::dittoColors()[1:40])
+names(col_num) <- as.character(c(1:40))
+```
+
+# Clustering
+
+### Define parameters
+
+Just try lots of different ones.
+
+```{r parameters}
+nr_k <- 20
+resolution <- 0.6
+```
+
+Use the seurat piepline roughly takin from sce_functions_reclustering.R
+The seurat object should be pretty basic.
+
+For comparability between signature-reclustered and custom-reclustered
+partitions, I will not perform batch correction here, either.
+
+Keeping it very basic here.
+
+```{r seurat_clustering_pipeline}
+
+# seu_tm_bonemarrow uses raw_data so need to normalize first
+
+seu_tm_bonemarrow@misc$data_use 
+
+seu_tm_bonemarrow <- Seurat::NormalizeData( 
+      seu_tm_bonemarrow,
+      assay = "RNA", 
+      verbose = FALSE)
+
+seu_tm_bonemarrow <- Seurat::ScaleData(
+  seu_tm_bonemarrow, 
+  verbose = FALSE)
+
+# find variable features
+seu_tm_bonemarrow <- Seurat::FindVariableFeatures(
+  seu_tm_bonemarrow
+)
+
+# uses scaled data
+seu_tm_bonemarrow <- Seurat::RunPCA(
+  seu_tm_bonemarrow,
+  npcs = 30,
+  verbose = FALSE)
+  
+# check and possibly define nr of pcs
+nr_pca <- ncol(seu_tm_bonemarrow@reductions$pca)
+print(nr_pca)
+
+# requires PC coordinates
+seu_tm_bonemarrow <- Seurat::FindNeighbors(
+  seu_tm_bonemarrow, 
+  k.param = nr_k,
+  reduction = "pca",
+  dims = 1:nr_pca, 
+  verbose = FALSE)
+  
+# requires neighbors
+seu_tm_bonemarrow <- Seurat::FindClusters(
+  seu_tm_bonemarrow, 
+  resolution = as.numeric(resolution), 
+  verbose = FALSE) 
+
+# calculate UMAP
+seu_tm_bonemarrow <-  Seurat::RunUMAP(seu_tm_bonemarrow, dims = 1:10)
+```
+
+# Evaluate
+
+```{r table}
+table(seu_tm_bonemarrow@meta.data$seurat_clusters)
+```
+
+## Clustering separation
+
+Look at the clusters.
+Check possible batch effects but I can't do much about them.
+
+```{r umaps_base, fig.height = 6, fig.width = 6}
+DimPlot(seu_tm_bonemarrow, reduction = "umap")
+``` 
+
+```{r umaps_base, fig.height = 9, fig.width = 6}
+DimPlot(seu_tm_bonemarrow, reduction = "umap")+
+  facet_wrap(facets = vars(seu_tm_bonemarrow@meta.data$mouse.id), ncol = 2)
+``` 
+
+```{r umaps_base, fig.height = 9, fig.width = 6}
+DimPlot(seu_tm_bonemarrow, reduction = "umap")+
+  facet_wrap(facets = vars(seu_tm_bonemarrow@meta.data$mouse.sex), ncol = 2)
+``` 
+
+There is some very strong effect by sex.
+
+## Gene expression
+
+Now check the quality of cell type separation based on expressed genes.
+
+```{r marker_genes}
+
+  marker_genes <- c(
+    "Aldh1a1", # HSC, Stem
+    "Procr",
+    "Cdkn1c",
+    "Gng11",
+    "Mllt3",
+    "Mmrn1",
+    "Mpl",
+    "Alcam", 
+    "Hlf",
+    "Lmo2",
+    "Mecom",
+    "Meis1",
+    "Socs2",
+    "Pbx1",
+    "Slamf1",
+    "Txnip",
+    "Msi2",
+    "Adgrl4", # MPP, progenitors, activation
+    "Cd34", 
+    "Cdk4",
+    "Sox4",
+    "Spi1", 
+    "Cebpa", # Myeloid
+    "Ctsg",
+    "Mpo",
+    "Prtn3",
+    "Elane", # Neutro
+    "Cebpe", 
+    "Gfi1", 
+    "S100a8",
+    "S100a9",
+    "Wfdc21",
+    "Ccr2", # Mono
+    "Irf8",
+    "Ly86",
+    "Ms4a6c",
+    "Flt3", # Lymphoid
+    "Satb1",
+    "Dntt",
+    "Cd79b", 
+    "Il7r",
+    "Rag1",
+    "Cpa3", # Mast
+    "Hdc", 
+    "Ms4a2",
+    "Lmo4", # Baso
+    "Mcpt8", 
+    "Prss34",
+    "Gata2", # also Mk, Eo Baso and HSC
+    "Itga2b", # Mk
+    "Pf4",
+    "Blvrb", # Mk Ery
+    "Gata1",
+    "Zfpm1",
+    "Epor", # Ery
+    "Gfi1b",
+    "Hba-a1",
+    "Klf1",
+    "Dctpp1", # CC entry
+    "Hells",
+    "Lig1",
+    "Mcm6", 
+    "Cenpa", # CC
+    "Lockd", 
+    "Mki67"
+  )
+
+```
+
+#### Heatmap
+
+To get an overview of the rough expected populations based on well-known genes.
+
+```{r}
+assays <- GetAssayData(seu_tm_bonemarrow)
+
+any(is.infinite(assays))
+any(is.nan(assays))
+
+```
+
+```{r heatmap, fig.height = 10, fig.width = 5}
+
+seu_tm_bonemarrow@meta.data$clusters <- base::paste0(
+  "cluster-",
+  seu_tm_bonemarrow@meta.data$seurat_clusters
+)
+
+# get average logcounts per cluster
+agg_tm_bonemarrow <- Seurat::AverageExpression(
+  seu_tm_bonemarrow,
+  assays = "RNA",
+  group.by = c("clusters", "mouse.id")) # MACH HIER WEITER!!!
+
+colnames(agg_tm_bonemarrow$RNA)
+
+# turn into df formatted for visualisation
+agg_tm_df <- agg_tm_bonemarrow$RNA %>%
+  as.matrix() %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = "genes") %>%
+  tidyr::pivot_longer(
+    cols = unique(seu_tm_bonemarrow$clusters),
+    names_to = "clusters",
+    values_to = "avg_logcounts")
+
+# only keep genes for visualisation
+agg_tm_df_genes <- agg_tm_df %>%
+  dplyr::filter(genes %in% marker_genes)
+
+# factorise for nicer plot
+agg_tm_df_genes$genes <- factor(
+  agg_tm_df_genes$genes,
+  levels = rev(marker_genes))
+
+# scale expression per gene using z-scores
+agg_tm_df_genes$zscore_gene <- vector(
+  length = nrow(agg_tm_df_genes), 
+  mode = "numeric")
+
+for(gene in base::unique(agg_tm_df_genes$genes)){
+  
+  expr_vector_g <- agg_tm_df_genes[agg_tm_df_genes$genes == gene,]$avg_logcounts
+
+  # calculate z score per gene
+  z_score_g <- (expr_vector_g - base::mean(expr_vector_g))/
+    stats::sd(expr_vector_g)
+  agg_tm_df_genes$zscore_gene[agg_tm_df_genes$genes == gene] <- z_score_g
+}
+
+# plot
+ggplot2::ggplot(
+  agg_tm_df_genes,
+  aes(
+    x = clusters,
+    y = genes,
+    fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_gradient2(
+    low = "blue3",
+    mid = "white", 
+    high = "red3", 
+    midpoint = 0)
+
+ggplot2::ggplot(
+  agg_tm_df_genes,
+  aes(
+    x = clusters,
+    y = genes,
+    fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_gradient2(
+    low = "blue3",
+    mid = "white", 
+    high = "red3", 
+    midpoint = 0)+
+  ggplot2::facet_grid(cols = vars)
+```

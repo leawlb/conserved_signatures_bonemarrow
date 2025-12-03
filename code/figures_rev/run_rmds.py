@@ -14,6 +14,7 @@ OUTPUT_PATH = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/manuscript1_rev
 targets = []
 
 targets = targets + [OUTPUT_PATH + "/figure_s3.html"]
+targets = targets + [OUTPUT_PATH + "/figure_s4.html"]
 
 #-------------------------------------------------------------------------------
 
@@ -34,4 +35,15 @@ rule run_fig_s3:
     threads: 4
     script:
         "figure_s3.Rmd"
-        
+
+rule run_fig_s4:
+    resources:
+        mem_mb=80000,
+        queues="medium-debian"
+    output:
+        OUTPUT_PATH + "/figure_s4.html"
+    conda:
+        "../envs/ggalluvial.yml"
+    threads: 4
+    script:
+        "figure_s4.Rmd"

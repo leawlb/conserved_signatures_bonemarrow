@@ -20,6 +20,7 @@ set.seed(37)
 
 ```{r source, message = FALSE}
 source(file =  snakemake@params[["plotting"]])
+source(file = snakemake@params[["custom_utils"]])
 ```
 
 ```{r colors, message = FALSE}
@@ -115,120 +116,12 @@ sce_hsc_all_cells <- sce_hsc_all_cells[,base::sample(
 ```{r factor_and_colors}
 
 # for nicer handling factor the custom labels, too
+# both from utils
 sce_hsc_all_cells$custom_label <- factor(
   sce_hsc_all_cells$custom_label, 
-  levels = c(
-    "HSC",
-    "HSC/Early Mk",
-    "Early MPP cells 1",
-    "Early MPP cells 2",
-    "MPP cells 1",
-    "MPP cells 2",
-    "Activated MPP",
-    "Activated MPP cells 1",
-    "Activated MPP cells 2",
-    "Late MPP",
-    "Early myeloid",
+  levels = factors_custom_hsc)
 
-    "Early granu/mono",
-    "Granu/mono progenitor",
-    "Neutro progenitor",
-    "Later granu/neutro",
-
-    "Early lymphoid",
-    "Lymphoid",
-    "Late lymphoid",
-    "Late/Cycling lymphoid",
-
-    "Baso/Mast progenitor",
-    "Mk/E/BM (more Mk and BM)",
-    "Mk/E/BM (more Ery)",
-    "Early Mk progenitor",
-    "Mk/Ery (more Mk)",
-    "Mk/Ery",
-    "Early ery/baso/mast 1",
-    "Early ery/baso/mast 2",
-    "Early ery",
-    "Early erythroid progenitor",
-    "Ery progenitor",
-    "Erythroid 1",
-    "Erythroid 2",
-    "Erythroid 3",
-    "Late erythroid progenitor",
-    "Latest erythroid progenitor",
-    "Cycling",
-    "Cycling (more M-phase)",
-    "Cycling (more S-phase)",
-    "Cycling MPP",
-    "Cycling, mostly myeloid",
-    "Cycling granu/mono",
-    "Cycling ery",
-    # separate cells that would be removed
-    "Antigen-presenting",
-    "Mono/antigen-presenting",
-    "Late neutro",
-    "Late immune, mixed",
-    "Late neutro/ery, mixed",
-    "Low quality",
-    "Low quality, early",
-    "Low quality, neutro",
-    "Low quality, ery"
-))
-
-col_custom <- c(
-  "HSC" = "#4a0805ff", # mmus, mspr, mcar
-  "HSC/Early Mk" = "#49006bff", # mcas
-  "Early MPP cells 1" = "#6f120fff", # mmus, mcas
-  "Early MPP cells 2" = "#b51611ff", # mmus, mcas
-  "MPP cells 1" = "#fa221bff", # mspr
-  "MPP cells 2" = "#ee8581ff", # mspr
-  "Activated MPP" = "#c8605aff", # mmus, mcar 
-  "Activated MPP cells 1" = "#f49792ff", # mcasr
-  "Activated MPP cells 2" = "#e95e57ff", # mcas
-  "Late MPP" = "#e5530fff", # mcas
-  "Early myeloid" = "#9d5c1fff", # mspr
-  "Early granu/mono" = "#c87121ff", # mcas
-  "Granu/mono progenitor" = "#e28c02ff", # mmus, mcar
-  "Neutro progenitor" = "#f1ac3dff", # mspr, mcar
-  "Later granu/neutro" = "#fc8c23ff", # mcas
-  "Early lymphoid" = "#ffd000ff", # mmus, mspr
-  "Lymphoid" = "#ffe28aff", # mcas
-  "Late lymphoid" = "#faf24fff", # mcar
-  "Late/Cycling lymphoid" = "#ffff75ff", # mspr
-  "Baso/Mast progenitor" = "#ab00fbff", # mmus, mcas, mspr, mcar
-  "Mk/E/BM (more Mk and BM)" = "#6e468bff", # mcar
-  "Mk/E/BM (more Ery)" = "#9d81fbff", # mcar
-  "Early Mk progenitor" = "#8d0153ff", # mspr
-  "Mk/Ery (more Mk)" = "#8e3268ff", # mmus 
-  "Mk/Ery" = "#d857a2ff", # mcas
-  "Early ery/baso/mast 1" = "#993a8eff", # mspr
-  "Early ery/baso/mast 2" = "#d857c9ff", # mspr
-  "Early ery" = "#c519bdff", # mmus 
-  "Early erythroid progenitor" = "#f4538eff", # mcar
-  "Ery progenitor" = "#f989b2ff", # mmus, mcas, mspr
-  "Erythroid 1" = "#b32e5fff", # mcar
-  "Erythroid 2" = "#ff9bc0ff", # mcar
-  "Erythroid 3" = "#f4bde6ff", # mcar
-  "Late erythroid progenitor" = "#c26cacff", # mcar
-  "Latest erythroid progenitor" = "#6e468bff", # mcar
-  "Cycling" = "#b5b5b5ff", # mcas
-  "Cycling (more M-phase)" = "#a68482ff", # mmus 
-  "Cycling (more S-phase)" = "#cbb9b9ff", # mmus 
-  "Cycling MPP" = "#c2ac89ff", # mcar
-  "Cycling, mostly myeloid" = "#98877dff", # mspr
-  "Cycling granu/mono" = "#dfdcd6ff", # mcar
-  "Cycling ery" = "#c3a4b0ff", # mspr
-  # separate cells that would be removed
-  "Antigen-presenting" = "#4c64fbff", # mcar
-  "Mono/antigen-presenting" = "#93a0f7ff", # mspr
-  "Late neutro" = "#6cfff5ff", # mmus 
-  "Late immune, mixed" = "#37ded3ff", # mmus, mcas, mspr
-  "Late neutro/ery, mixed" = "#03b0a5ff", # mcas
-  "Low quality" = "#4adf6dff", # mcar
-  "Low quality, early" = "#208c39ff", # mspr
-  "Low quality, neutro" = "#75811bff", # mspr
-  "Low quality, ery" = "#99b835ff" # mspr
-)
+col_custom <- col_custom_hsc
 
 stopifnot(!is.na(sce_hsc_all_cells$custom_label))
 

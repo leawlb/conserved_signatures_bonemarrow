@@ -1,10 +1,349 @@
 
-# annotations, colors, and genes for the custom species-specific 
-# clusterings
+# annotations, colors, and genes for the custom species-specific clusterings
 
 # since these are so many different cell types, I'm sourcing this out
 
 #------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+
+# HSC
+
+#------------------------------------------------------------------------------
+
+factors_custom_hsc <- c(
+    "HSC",
+    "HSC/Early Mk",
+    "Early MPP cells 1",
+    "Early MPP cells 2",
+    "MPP cells 1",
+    "MPP cells 2",
+    "Activated MPP",
+    "Activated MPP cells 1",
+    "Activated MPP cells 2",
+    "Late MPP",
+    "Early myeloid",
+
+    "Early granu/mono",
+    "Granu/mono progenitor",
+    "Neutro progenitor",
+    "Later granu/neutro",
+
+    "Early lymphoid",
+    "Lymphoid",
+    "Late lymphoid",
+    "Late/Cycling lymphoid",
+
+    "Baso/Mast progenitor",
+    "Mk/E/BM (more Mk and BM)",
+    "Mk/E/BM (more Ery)",
+    "Early Mk progenitor",
+    "Mk/Ery (more Mk)",
+    "Mk/Ery",
+    "Early ery/baso/mast 1",
+    "Early ery/baso/mast 2",
+    "Early ery",
+    "Early erythroid progenitor",
+    "Ery progenitor",
+    "Erythroid 1",
+    "Erythroid 2",
+    "Erythroid 3",
+    "Late erythroid progenitor",
+    "Latest erythroid progenitor",
+    "Cycling",
+    "Cycling (more M-phase)",
+    "Cycling (more S-phase)",
+    "Cycling MPP",
+    "Cycling, mostly myeloid",
+    "Cycling granu/mono",
+    "Cycling ery",
+    # separate cells that would be removed
+    "Antigen-presenting",
+    "Mono/antigen-presenting",
+    "Late neutro",
+    "Late immune, mixed",
+    "Late neutro/ery, mixed",
+    "Low quality",
+    "Low quality, early",
+    "Low quality, neutro",
+    "Low quality, ery"
+)
+
+#------------------------------------------------------------------------------
+# colors
+
+col_custom_hsc <- c(
+  "HSC" = "#4a0805ff", # mmus, mspr, mcar
+  "HSC/Early Mk" = "#49006bff", # mcas
+  "Early MPP cells 1" = "#6f120fff", # mmus, mcas
+  "Early MPP cells 2" = "#b51611ff", # mmus, mcas
+  "MPP cells 1" = "#fa221bff", # mspr
+  "MPP cells 2" = "#ee8581ff", # mspr
+  "Activated MPP" = "#c8605aff", # mmus, mcar 
+  "Activated MPP cells 1" = "#f49792ff", # mcasr
+  "Activated MPP cells 2" = "#e95e57ff", # mcas
+  "Late MPP" = "#e5530fff", # mcas
+  "Early myeloid" = "#9d5c1fff", # mspr
+  "Early granu/mono" = "#c87121ff", # mcas
+  "Granu/mono progenitor" = "#e28c02ff", # mmus, mcar
+  "Neutro progenitor" = "#f1ac3dff", # mspr, mcar
+  "Later granu/neutro" = "#fc8c23ff", # mcas
+  "Early lymphoid" = "#ffd000ff", # mmus, mspr
+  "Lymphoid" = "#ffe28aff", # mcas
+  "Late lymphoid" = "#faf24fff", # mcar
+  "Late/Cycling lymphoid" = "#ffff75ff", # mspr
+  "Baso/Mast progenitor" = "#ab00fbff", # mmus, mcas, mspr, mcar
+  "Mk/E/BM (more Mk and BM)" = "#6e468bff", # mcar
+  "Mk/E/BM (more Ery)" = "#9d81fbff", # mcar
+  "Early Mk progenitor" = "#8d0153ff", # mspr
+  "Mk/Ery (more Mk)" = "#8e3268ff", # mmus 
+  "Mk/Ery" = "#d857a2ff", # mcas
+  "Early ery/baso/mast 1" = "#993a8eff", # mspr
+  "Early ery/baso/mast 2" = "#d857c9ff", # mspr
+  "Early ery" = "#c519bdff", # mmus 
+  "Early erythroid progenitor" = "#f4538eff", # mcar
+  "Ery progenitor" = "#f989b2ff", # mmus, mcas, mspr
+  "Erythroid 1" = "#b32e5fff", # mcar
+  "Erythroid 2" = "#ff9bc0ff", # mcar
+  "Erythroid 3" = "#f4bde6ff", # mcar
+  "Late erythroid progenitor" = "#c26cacff", # mcar
+  "Latest erythroid progenitor" = "#6e468bff", # mcar
+  "Cycling" = "#b5b5b5ff", # mcas
+  "Cycling (more M-phase)" = "#a68482ff", # mmus 
+  "Cycling (more S-phase)" = "#cbb9b9ff", # mmus 
+  "Cycling MPP" = "#c2ac89ff", # mcar
+  "Cycling, mostly myeloid" = "#98877dff", # mspr
+  "Cycling granu/mono" = "#dfdcd6ff", # mcar
+  "Cycling ery" = "#c3a4b0ff", # mspr
+  # separate cells that would be removed
+  "Antigen-presenting" = "#4c64fbff", # mcar
+  "Mono/antigen-presenting" = "#93a0f7ff", # mspr
+  "Late neutro" = "#6cfff5ff", # mmus 
+  "Late immune, mixed" = "#37ded3ff", # mmus, mcas, mspr
+  "Late neutro/ery, mixed" = "#03b0a5ff", # mcas
+  "Low quality" = "#4adf6dff", # mcar
+  "Low quality, early" = "#208c39ff", # mspr
+  "Low quality, neutro" = "#75811bff", # mspr
+  "Low quality, ery" = "#99b835ff" # mspr
+)
+
+#------------------------------------------------------------------------------
+
+# hsc marker genes list long
+  marker_genes_list_hsc <- list(
+    "HSC" = c(
+      "Ly6a", # HSC-specific, spotty
+      "Slamf1",
+      "Aldh1a1", 
+      "Alcam",
+      "Gng11",
+      "Mllt3",
+      "Socs2",
+
+      "Cdkn1c", # HSC-specific, works for all and I known them well
+      "Procr",
+      "Mmrn1",
+      "Mecom",
+      "Mpl",
+
+      "Pdzk1ip1", # HSC-specific, works for all but I don't know it well
+
+      "Ltb", # mostly HSC, works for all, and I know them
+      "Hlf", 
+      "Ldhb",
+
+      "Txnip", # redox functions, likely also expressed in other clusters
+      "Pbx1",
+
+      "Angpt1", # quite broad already, but highest in HSC and well-known mostly
+      "Hoxa9",
+      "Lmo2",
+      "Meis1",
+      "Msi2"
+    ),
+    "MPP" = c(
+      "Adgrl4", 
+      "Cd34", 
+      "Sox4",
+      "Cd48", 
+      "Sell",
+      "Cdk4"
+    ),
+    "Myeloid_general" = c(
+      "Spi1", 
+      "Cebpa",
+      "Ctsg",
+      "Mpo",
+      "Prtn3",
+      "F13a1"),
+
+    "Neutro" = c(
+      "Elane", 
+      "Gfi1",
+      "Cebpe", 
+      "S100a8",
+      "S100a9",
+      "Wfdc21",
+      "Chil1"),
+
+    "Mono" = c(  
+      "Ccr2",
+      "Irf8",
+      "Ly86",
+      "Ms4a6c"),
+
+    "Antigen_presenting_contamination" = c(
+      "Cd74",
+      "H2-Aa",
+      "H2-Eb1",
+      "H2-Ab1",
+      "Ctss"),
+
+    "Lymphoid_early" = c(
+      "Tcf4",
+      "Flt3", 
+      "Satb1",
+      "Dntt"),
+
+    "Lymphoid_late" = c(
+      "Ighm",
+      "Il7r",
+      "Rag1",
+      "Vpreb1",
+      "Vpreb3",
+      "Cd79b", 
+      "Igkc"),
+
+    "Lymph_contamination" = c(
+      "Ccl5", # NK
+      "Cd3e", # TC
+      "Cd8a",
+      "Tcf7"),
+
+    "Mast/Baso" = c(
+      "Mcpt8", 
+      "Hdc", 
+      "Lmo4", 
+      "Gzmb",
+      "Egr1",
+      "Cpa3", 
+      "Ms4a2",
+      "Prss34",
+      "Fcer1a",
+      "Gata2"#  also Mk, Eo Baso and HSC
+    ),
+
+    "Mk" = c(
+      "Itga2b", 
+      "Cavin2",
+      "Pf4",
+      "Clec4d",
+      "Plek",
+      "Fli1"),
+
+    "Mk/Ery" = c(
+      "Zfpm1",
+      "Gata1", 
+      "Trib2"),
+
+    "Ery" = c(
+      "Frat2",
+      "Ass1",
+      "Aqp11",
+      "Klf1",
+      "Blvrb",
+      "Tspo2",
+      "Epor", 
+      "Gfi1b",
+      "Gypa",
+      "Hba-a1",
+      "Hbb-bs"),
+
+    "CC entry/activation" = c(
+      "Lig1",
+      "Mcm7",
+      "Hells",
+      "Mcm6"),
+
+    "Cell cycle S phase" = c(
+      "Aurkb",
+      "Cdk1"
+      ),
+
+    "Cell cycle M phase" = c(
+      "Cdc20",
+      "Ccnb2",
+      "Knstrn"),
+
+    "Cell cycle general" = c(
+      "Mki67",
+      "Lockd",
+      "Cenpa" 
+      )
+    )
+
+#------------------------------------------------------------------------------
+# best_marker_genes, a shorter list
+
+best_marker_genes_hsc <- c(
+  "Cdkn1c",
+  "Procr",
+  "Mmrn1",
+  "Mecom",
+  "Mpl",
+  "Hlf",
+  "Meis1",
+  "Msi2",
+  "Adgrl4",
+  "Cd34",
+  "Cd48",
+  "Spi1",
+  "Cebpa",
+  "Mpo",
+  "Elane",
+  "Gfi1",
+  "S100a8",
+  "Wfdc21",
+  "Irf8",
+  "Ly86",
+  "Ms4a6c",
+  "Cd74",
+  "H2-Aa",
+  "Flt3",
+  "Satb1",
+  "Dntt",
+  "Il7r",
+  "Vpreb1",
+  "Cd79b",
+  "Gzmb",
+  "Cpa3",
+  "Ms4a2",
+  "Cavin2",
+  "Pf4",
+  "Zfpm1",
+  "Ass1",
+  "Klf1",
+  "Tspo2",
+  "Epor",
+  "Gypa",
+  "Hba-a1",
+  "Lig1",
+  "Hells",
+  "Mcm6",
+  "Aurkb",
+  "Cdc20",
+  "Mki67",
+  "Cenpa"
+)
+
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+
+# STROMAL
+
+#------------------------------------------------------------------------------
+
 # str all custom labels correct order for factoring
 
 factors_custom_str <- c(

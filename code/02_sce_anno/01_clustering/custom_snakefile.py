@@ -224,6 +224,8 @@ rule custom_hsc_expression_report:
         mcar_sce =  OUTPUT_DAT + "/02_clst/custom/sce_mcar_hsc_custom.rds"
     output:
         OUTPUT_REP + "/02_clustering/comparison_custom/custom_hsc_expression_report.html"
+    params:
+        custom_utils = "../../source/custom_clustering_utils.R"
     resources:
         mem_mb = 70000,
         queue = "medium-debian"
@@ -231,7 +233,6 @@ rule custom_hsc_expression_report:
     script:
         "custom_clustering/custom_hsc_expression_report.Rmd"
 
-# TODO: add input later
 rule custom_hsc_clustering_report:
     output:
         OUTPUT_REP + "/02_clustering/comparison_custom/custom_hsc_clustering_report.html"
@@ -243,6 +244,7 @@ rule custom_hsc_clustering_report:
     params:
         colors_path = COLORS,
         plotting = "../../source/plotting.R",
+        custom_utils = "../../source/custom_clustering_utils.R",
         colors = "../../source/colors.R"
     threads: 10
     script:
@@ -267,7 +269,6 @@ rule custom_str_expression_report:
     script:
         "custom_clustering/custom_str_expression_report.Rmd"
 
-# TODO: add input later
 rule custom_str_clustering_report:
     output:
         OUTPUT_REP + "/02_clustering/comparison_custom/custom_str_clustering_report.html"

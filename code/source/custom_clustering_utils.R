@@ -286,54 +286,56 @@ col_custom_hsc <- c(
 # best_marker_genes, a shorter list
 
 best_marker_genes_hsc <- c(
-  "Cdkn1c",
+  "Ly6a", # stem
   "Procr",
+  "Cdkn1c",
   "Mmrn1",
-  "Mecom",
   "Mpl",
+  "Mecom",
   "Hlf",
   "Meis1",
   "Msi2",
-  "Adgrl4",
+  "Adgrl4", # mpp compartment
   "Cd34",
-  "Cd48",
-  "Spi1",
+  "Spi1", # early myeloid
   "Cebpa",
   "Mpo",
   "Elane",
-  "Gfi1",
+  "Gfi1", # neutro
   "S100a8",
   "Wfdc21",
-  "Irf8",
+  "Irf8", # mono
   "Ly86",
   "Ms4a6c",
-  "Cd74",
-  "H2-Aa",
-  "Flt3",
+  "Flt3", # b early
   "Satb1",
   "Dntt",
   "Il7r",
-  "Vpreb1",
+  "Vpreb1", # b later
   "Cd79b",
-  "Gzmb",
+  "Gzmb", # baso mast
   "Cpa3",
   "Ms4a2",
-  "Cavin2",
-  "Pf4",
+  "Cavin2", # mk
+  "Pf4", 
+  "Itga2b",
   "Zfpm1",
-  "Ass1",
-  "Klf1",
+  "Klf1", # ery earliest
   "Tspo2",
-  "Epor",
+  "Epor", # ery later
   "Gypa",
   "Hba-a1",
-  "Lig1",
-  "Hells",
+  "Lig1", # cc entry
   "Mcm6",
-  "Aurkb",
-  "Cdc20",
-  "Mki67",
-  "Cenpa"
+  "Aurkb", # s phase
+  "Cdk1",
+  "Cdc20", # mphase
+  "Knstrn",
+  "Mki67", # cycling general
+  "Ccl5", # contamination, Nk
+  "Cd8a",
+  "Cd74", # contamination, antigen presenting
+  "H2-Aa"
 )
 
 #------------------------------------------------------------------------------
@@ -494,10 +496,11 @@ col_custom_str <- c(
   "Mature neutro 2" = "#94662eff", # mcar
   "Mature neutro 3" = "#78470bff", # mcar
 
-  "Nk/TC" = "#d0716cff", # mcas
   "Eosinophil" = "#ae2c42ff", # mcar
   "Eo/Baso/Mast" = "#aa2e32ff", # mspr
   "Baso/Mast"  = "#ff0008ff", # mcas, mcar
+
+  "Nk/TC" = "#d0716cff", # mcas
 
   "BC lineage 1" = "#e3c036ff", # mcas
   "BC lineage 2" = "#ffe479ff", # mcas
@@ -858,4 +861,76 @@ best_marker_genes_str <- c(
   "Lockd",
   "Cenpa" 
 
+)
+
+# shortest list for str marker genes
+minimal_marker_genes_str <- c(
+  "Cxcl12", # niche
+  "Kitl",
+  "Adipoq", # adipo
+  "Limch1", # osteo-CAR
+  "Mmp13", # osteo
+  "Bglap", 
+  "Alpl",
+  "Postn", # balanced/mixed
+  "Mgp", # Mixed/chondro
+  "Fmod", 
+  "Chad", # mid chondro
+  "Sox9", # late chondro
+  "Snorc", 
+  "Prg4", # synovial/articular
+  "Creb5", 
+  "Aspn", 
+  "Gsn", # Mixed/Fibro
+  "Clec3b", # Fibro
+  "Cd34",
+  "Pdgfra",
+  "Cdh5", # pan-endo 
+  "Pecam1", 
+  "Car4", # capillaty
+  "Timp4",
+  "Rgcc",
+  "Efnb2", # art
+  "Hey1",
+  "Sox17",
+  "Vwf", # transitory/venous
+  "Plvap",
+  "Selp", # transitory sinusoidal/venous
+  "Nr2f2",
+  "Ackr1", 
+  "Stab2", # pure sinusoidal
+  "Flt4",
+  "Lyve1", # lymphatic
+  "Ccl21a",
+  "Rgs5", # peri SMC
+  "Acta2",
+  "Klf1", # ery
+  "Kel",
+  "Elane", # early-ish myeloid
+  "Prtn3",
+  "Ccr2", # mono
+  "Mpeg1", # macro
+  "S100a8", # early-ish neutro
+  "Cebpe", # mid-ish neutro
+  "Rentlg", # late neutro
+  "Ear1", # eo
+  "Prss34",
+  "Cpa3",
+  "Nkg7", # Nk
+  "Ccl5",
+  "Cd8a", # TC
+  "Cd4",
+  "Dntt", # early lymph
+  "Vpreb1", # mid-ish lymph
+  "Cd79a", 
+  "Igha", # later lymph
+  "Jchain",
+  "H2-Aa", # antige,-presenting
+  "Cd74",
+  "Siglech", # other immune
+  "Acta1", # skeletal muscle
+  "Tnnc2",
+  "Lig1", # CC entry
+  "Mki67", # general CC 
+  "Lockd"
 )

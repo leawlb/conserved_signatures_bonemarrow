@@ -9,6 +9,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 Stromal cell species-specific re-annotation.
+UMAPs and Alluvial.
 
 #### Load objects
 
@@ -38,10 +39,7 @@ source("../source/colors.R")
 source("../source/plotting.R")
 source("../source/custom_clustering_utils.R")
 
-col_cts_hsc <- c(col_cts_hsc, "removed" = "grey70")
 col_cts_str <- c(col_cts_str, "removed" = "grey70")
-
-col_cts_hsc
 col_cts_str
 ```
 
@@ -1033,10 +1031,4 @@ plot_d <- ggpubr::ggarrange(
 
 plot_d
 ```
-
-# Gene expression
-
-Absolute minimum number of genes required to show cell types.
-Only for cell types of interest/not to be removed.
-
 

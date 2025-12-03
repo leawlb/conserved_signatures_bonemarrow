@@ -16,6 +16,9 @@ targets = []
 targets = targets + [OUTPUT_PATH + "/figure_s3.html"]
 targets = targets + [OUTPUT_PATH + "/figure_s4.html"]
 
+targets = targets + [OUTPUT_PATH + "/figure_s3_heatmaps.html"]
+targets = targets + [OUTPUT_PATH + "/figure_s4_heatmaps.html"]
+
 #-------------------------------------------------------------------------------
 
 localrules: all
@@ -36,6 +39,16 @@ rule run_fig_s3:
     script:
         "figure_s3.Rmd"
 
+rule run_fig_s3_heatmaps:
+    resources:
+        mem_mb=80000,
+        queues="medium-debian"
+    output:
+        OUTPUT_PATH + "/figure_s3_heatmaps.html"
+    threads: 4
+    script:
+        "figure_s3_heatmaps.Rmd"
+
 rule run_fig_s4:
     resources:
         mem_mb=80000,
@@ -47,3 +60,13 @@ rule run_fig_s4:
     threads: 4
     script:
         "figure_s4.Rmd"
+
+rule run_fig_s4_heatmaps:
+    resources:
+        mem_mb=80000,
+        queues="medium-debian"
+    output:
+        OUTPUT_PATH + "/figure_s4_heatmaps.html"
+    threads: 4
+    script:
+        "figure_s4_heatmaps.Rmd"

@@ -741,7 +741,7 @@ a_mmus_plot_4 <- base_plot_hsc_celltypes_mmus_3+
 a_mmus_plot_4
 ```
 
-```{r arrange_a, fig.width = 16, fig.height = 3}
+```{r arrange_a, fig.width = 16, fig.height = 3.5}
 
 plot_a <- ggpubr::ggarrange(
   a_mmus_plot_1,
@@ -751,7 +751,7 @@ plot_a <- ggpubr::ggarrange(
   a_mmus_plot_3,
   a_mmus_plot_4,
   nrow = 1,
-  widths = c(2.5, 0.2, 4, 4.3, 2.5, 2.5)
+  widths = c(3, 0.2, 4, 2.8, 3, 3)
 )
 
 plot_a
@@ -774,7 +774,7 @@ b_mcas_plot_1 <- base_plot_hsc_celltypes_mcas_1+
 b_mcas_plot_1
 ```
 
-```{r b_mcas_plot_2, fig.width = 4, fig.height = 3} 
+```{r b_mcas_plot_2, fig.width = 4, fig.height = 3.5} 
 
 b_mcas_plot_2 <- base_allu_hsc_mcas+
   ggplot2::theme(
@@ -832,7 +832,7 @@ b_mcas_plot_4 <- base_plot_hsc_celltypes_mcas_3+
 b_mcas_plot_4
 ```
 
-```{r arrange_b, fig.width = 16, fig.height = 3}
+```{r arrange_b, fig.width = 16, fig.height = 3.5}
 
 plot_b <- ggpubr::ggarrange(
   b_mcas_plot_1,
@@ -923,7 +923,7 @@ c_mspr_plot_4 <- base_plot_hsc_celltypes_mspr_3+
 c_mspr_plot_4
 ```
 
-```{r arrange_c, fig.width = 16, fig.height = 3}
+```{r arrange_c, fig.width = 16, fig.height = 3.5}
 
 plot_c <- ggpubr::ggarrange(
   c_mspr_plot_1,
@@ -1015,7 +1015,7 @@ d_mcar_plot_4 <- base_plot_hsc_celltypes_mcar_3+
 d_mcar_plot_4
 ```
 
-```{r arrange_d, fig.width = 16, fig.height = 3}
+```{r arrange_d, fig.width = 16, fig.height = 3.5}
 
 plot_d <- ggpubr::ggarrange(
   d_mcar_plot_1,

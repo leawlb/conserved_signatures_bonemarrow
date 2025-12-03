@@ -393,7 +393,7 @@ e_base_heatmap_orig_all <- ggplot2::ggplot(
 e_base_heatmap_orig_all
 ```
 
-```{r e_theme_heatmap_orig_all, fig.height = 12, fig.width = 16}
+```{r e_theme_heatmap_orig_all, fig.height = 11, fig.width = 16}
 e_theme_heatmap_orig_all <- e_base_heatmap_orig_all+
   theme_all+
   ggplot2::theme(
@@ -593,7 +593,7 @@ i_theme_heatmap_cust_mcar
 
 Build the species-specific heatmaps together
 
-```{r fghi_heatmap, fig.height = 12, fig.width = 16}
+```{r fghi_heatmap, fig.height = 11, fig.width = 16}
 
 fghi_heatmap <- ggpubr::ggarrange(
   f_theme_heatmap_cust_mmus+ggplot2::theme(plot.margin = margin(0.1,0.1,0.4,0.1)),

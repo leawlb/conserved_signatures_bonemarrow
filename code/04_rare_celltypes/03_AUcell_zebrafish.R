@@ -5,7 +5,6 @@ library(biomaRt)
 
 zebrafish_HSC <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/zeb_all_hspc")
 hsc_sig <- read.delim("/omics/odcf/analysis/OE0538_projects/DO-0008/data/manuscript1/hsc_signature_table.csv", sep = ";", check.names = FALSE)
-str_sig <- read.delim("/omics/odcf/analysis/OE0538_projects/DO-0008/data/manuscript1/str_signature_table.csv", sep = ";", check.names = FALSE)
 
 zebrafish_HSC <- zebrafish_HSC |>
   NormalizeData() |>
@@ -25,8 +24,7 @@ DimPlot(zebrafish_HSC,
   raster = F) & NoAxes()
 
 
-sig_df <- bind_rows(hsc_sig, str_sig) %>% 
-  dplyr::select(celltype, signature_gene)
+sig_df <- dplyr::select(hsc_sig, celltype, signature_gene)
 gene_sets_mouse <- split(sig_df$signature_gene, sig_df$celltype)
 names(gene_sets_mouse) <- make.names(names(gene_sets_mouse))
 
@@ -45,6 +43,9 @@ map <- map[map$zebrafish_symbol != "", ]
 zebrafish_map <- setNames(map$zebrafish_symbol, map$mouse_symbol)
 gene_sets_zebrafish <- lapply(gene_sets_mouse, function(g) unname(zebrafish_map[g]))
 gene_sets_zebrafish <- lapply(gene_sets_zebrafish, function(v) v[!is.na(v)])
+
+
+### stopped here, jumped below
 
 expr <- GetAssayData(
   zebrafish_HSC,
@@ -66,4 +67,52 @@ zebrafish_HSC <- AddMetaData(zebrafish_HSC, auc_mat)
 
 saveRDS(zebrafish_HSC, 
   file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/04_rare_celltypes/zebrafish_Athanasiadis2017/03_zebrafish.rds")
+
+
+
+
+
+
+
+##### recieved data from original authors #####
+
+meta <- read.csv("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/04_rare_celltypes/zebrafish_Athanasiadis2017/Tg_Tp_PhenoData.csv",
+                  header = T, row.names = 1)
+cells <- read.csv("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/04_rare_celltypes/zebrafish_Athanasiadis2017/All_Norm_Counts.csv",
+                  header = T, row.names = 1)
+
+rownames(cells) <- sub(",.*", "", rownames(cells))
+
+ggplot(meta,
+      aes(x = Component1,
+          y = Component2,
+          color = Type)) +
+      geom_point() +
+      theme_classic()
+
+
+seu <- CreateSeuratObject(
+  counts    = cells,      # we have no raw counts, so we use normalized
+  meta.data = meta
+)
+
+expr <- GetAssayData(
+  seu,
+  assay = "RNA",
+  slot  = "counts"
+)
+gene_sets_zebrafish <- lapply(gene_sets_zebrafish, function(g) intersect(g, rownames(expr)))
+
+rankings <- AUCell_buildRankings(expr, 
+                                 plotStats = FALSE, 
+                                 verbose = FALSE)
+cellsAUC  <- AUCell_calcAUC(gene_sets_zebrafish, 
+                            rankings, 
+                            aucMaxRank = ceiling(0.25 * nrow(rankings)))
+auc_mat   <- t(getAUC(cellsAUC))
+
+seu <- AddMetaData(seu, auc_mat)
+
+saveRDS(seu, 
+  file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/04_rare_celltypes/zebrafish_Athanasiadis2017/03_zebrafish_new.rds")
 

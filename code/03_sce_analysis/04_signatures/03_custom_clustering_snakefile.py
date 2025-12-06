@@ -28,11 +28,9 @@ import pandas as pd
 
 OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/04_signatures/03_custom"
+OUTPUT_DAT = OUTPUT_BASE + "/sce_objects/03_sce_analysis/04_signatures/03_custom_clustering/"
 
 COLORS = config["base"] + config["metadata_paths"]["colors"]
-
-VALUES =  config["values"]["02_sce_anno"]
-BATCH_USE = VALUES["batch_use"] # which colData to use as batch
 
 METADATA = pd.read_csv(config["table"])
 def get_list(metadata, column):
@@ -49,7 +47,7 @@ fractions = get_list(metadata = METADATA, column = "Fraction_ID")
 
 targets = []
 
-targets = targets + [OUTPUT_REP + "/02_clustering/comparison_custom/custom_" + f + "_expression_report.html"]
+targets = targets + [OUTPUT_REP + "/custom_ts_bonemarrow.html"]
 
 
 #-------------------------------------------------------------------------------
@@ -70,6 +68,7 @@ rule all:
 rule custom_ts_bonemarrow:
     input: 
         seu_input = config["base"] + config["metadata_paths"]["datasets_other_path"] + "/ts_bone_marrow",
+        ensembl_hum = config["base"] + config["metadata_paths"]["ensembl_hum"]
     output:
         OUTPUT_REP + "/custom_ts_bonemarrow.html"
     resources:

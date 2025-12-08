@@ -1,0 +1,826 @@
+---
+title: "Weinreb et al mouse HSPC custom reclustering"
+author: "Lea Wölbert"
+date: '2025-12-04'
+output: html_document
+---
+
+General build taken from custom_mmus_hsc.Rmd etc. 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load libraries, source code 
+
+```{r seed, message = FALSE}
+set.seed(37)
+```
+
+```{r source, message = FALSE}
+source(file =  snakemake@params[["plotting"]])
+```
+
+```{r, message = FALSE}
+library(SingleCellExperiment, quietly = TRUE)
+library(BiocSingular, quietly = TRUE)
+library(tidyverse, quietly = TRUE)
+library(dittoSeq, quietly = TRUE)
+library(Seurat, quietly = TRUE)
+library(SeuratObject, quietly = TRUE)
+```
+
+```{r load_objects}
+
+# the un-clustered original object
+seu_mus_weinreb_hspc <- readRDS(snakemake@input[["seu_input"]])
+
+#seu_mus_weinreb_hspc <- readRDS("/home/l012t/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/mus_weinreb_hspc")
+
+# the same object but re-clustered with signature genes
+seu_mus_weinreb_hspc_recl_list <- readRDS(snakemake@input[["seu_input_recl"]])
+
+#seu_mus_weinreb_hspc_recl_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_mus_weinreb_hspc_list")
+
+# get the resolution
+resolution_df_path <- snakemake@input[["resolution_df_path"]]
+#resolution_df_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt"
+
+resolution_df <- utils::read.csv(file = resolution_df_path, 
+                               header = TRUE, 
+                               sep = ";", 
+                               check.names=FALSE, 
+                               stringsAsFactors=FALSE, 
+                               as.is=TRUE, 
+                               colClasses = "character")
+
+resolution <- resolution_df %>%
+  dplyr::filter(conservation_level == "conserved_signature") %>%
+  dplyr::filter(dataset == "mus_weinreb_hspc") %>%
+  dplyr::pull()
+  
+seu_mus_weinreb_hspc_recl <- seu_mus_weinreb_hspc_recl_list$seu_sign[[resolution]]
+
+```
+
+```{r output_path}
+# define output path here
+# since in an .Rmd file run by snakemake the only output defined
+# by snakemake is the html, any other output must be defined manually
+base_path_data <- snakemake@params[["OUTPUT_DAT"]]
+output_path <- base::paste0(base_path_data, "/03_custom_clustering/mus_weinreb_hspc_both.Rds")
+print(output_path)
+```
+
+```{r colors, message = FALSE}
+col_num <- c(dittoSeq::dittoColors()[1:20])
+names(col_num) <- as.character(c(1:20))
+```
+
+# Clustering
+
+### Define parameters
+
+Just try lots of different ones.
+
+```{r parameters}
+nr_k <- 30
+resolution <- 0.35
+```
+
+Use the seurat pipeline roughly taken from sce_functions_reclustering.R
+The seurat object should be pretty basic.
+
+For comparability between signature-reclustered and custom-reclustered
+partitions, I will not perform batch correction here, either.
+
+Keeping it very basic here.
+
+```{r seurat_clustering_pipeline}
+
+# seu_mus_weinreb_hspc uses raw data so need to normalize first
+
+seu_mus_weinreb_hspc@misc$data_use 
+
+seu_mus_weinreb_hspc <- Seurat::NormalizeData( 
+      seu_mus_weinreb_hspc,
+      assay = "RNA", 
+      verbose = FALSE)
+
+seu_mus_weinreb_hspc <- Seurat::ScaleData(
+  seu_mus_weinreb_hspc, 
+  verbose = FALSE)
+
+# find variable features
+seu_mus_weinreb_hspc <- Seurat::FindVariableFeatures(
+  seu_mus_weinreb_hspc
+)
+
+# uses scaled data
+seu_mus_weinreb_hspc <- Seurat::RunPCA(
+  seu_mus_weinreb_hspc,
+  npcs = 30,
+  verbose = FALSE)
+  
+# check and possibly define nr of pcs
+nr_pca <- ncol(seu_mus_weinreb_hspc@reductions$pca)
+print(nr_pca)
+
+# requires PC coordinates
+seu_mus_weinreb_hspc <- Seurat::FindNeighbors(
+  seu_mus_weinreb_hspc, 
+  k.param = nr_k,
+  reduction = "pca",
+  dims = 1:nr_pca, 
+  verbose = FALSE)
+  
+# requires neighbors
+seu_mus_weinreb_hspc <- Seurat::FindClusters(
+  seu_mus_weinreb_hspc, 
+  resolution = as.numeric(resolution), 
+  verbose = FALSE) 
+
+# calculate UMAP
+seu_mus_weinreb_hspc <-  Seurat::RunUMAP(seu_mus_weinreb_hspc, dims = 1:10)
+```
+
+Shooting for about 12 clusters as this is the number of clusters when reclustering
+with signature genes.
+
+# Evaluate
+
+```{r table}
+table(seu_mus_weinreb_hspc@meta.data$seurat_clusters)
+```
+
+## Clustering separation
+
+Look at the clusters.
+Check possible batch effects but I can't do much about them.
+
+```{r umaps_base, fig.height = 6, fig.width = 6}
+DimPlot(seu_mus_weinreb_hspc, reduction = "umap")
+``` 
+
+```{r umaps_tp, fig.height = 6, fig.width = 6}
+DimPlot(seu_mus_weinreb_hspc, reduction = "umap")+
+  facet_wrap(facets = vars(seu_mus_weinreb_hspc@meta.data$Time.point), ncol = 2)
+``` 
+
+There is some strong effect by sex.
+
+## Gene expression
+
+Now check the quality of cell type separation based on expressed genes.
+
+```{r marker_genes}
+
+  marker_genes <- c(
+    "Procr", # HSC, Stem 
+    "Cdkn1c",
+    "Mllt3",
+    "Mmrn1",
+    "Mpl",
+    "Alcam", 
+    "Hlf",
+    "Lmo2",
+    "Mecom",
+    "Meis1",
+    "Pbx1",
+    "Msi2",
+    "Adgrl4", # MPP, progenitors, activation
+    "Cd34",
+    "Cdk4",
+    "Sox4",
+    "Spi1", 
+    "Cebpa", # Myeloid
+    "Ctsg",
+    "Mpo",
+    "Prtn3",
+    "Elane", # Neutro
+    "Cebpe", 
+    "S100a8",
+    "S100a9",
+    "Wfdc21",
+    "Ccr2", # Mono
+    "Irf8",
+    "Ms4a6c",
+    "Flt3", # Lymphoid
+    "Satb1",
+    "Dntt",
+    "Cd79b", 
+    "Il7r",
+    "Rag1",
+    "Cpa3", # Mast
+    "Hdc", 
+    "Ms4a2",
+    "Lmo4", # Baso
+    "Gata2", # also Mk, Eo Baso and HSC
+    "Itga2b", # Mk
+    "Pf4",
+    "Plek",
+    "Cd9",
+    "Blvrb", # Mk Ery
+    "Gata1",
+    "Zfpm1",
+    "Epor", # Ery
+    "Hba-a1",
+    "Gypa",
+    "Klf1",
+    "Hells",
+    "Lig1",
+    "Mcm6", 
+    "Cenpa", # CC
+    "Lockd"
+  )
+
+```
+
+#### Heatmap
+
+To get an overview of the rough expected populations based on well-known genes.
+
+```{r heatmap, fig.height = 10, fig.width = 5}
+
+seu_mus_weinreb_hspc@meta.data$clusters <- base::paste0(
+  "cluster-",
+  seu_mus_weinreb_hspc@meta.data$seurat_clusters
+)
+
+# get average logcounts per cluster
+agg_ts_bonemarrow <- Seurat::AverageExpression(
+  seu_mus_weinreb_hspc,
+  assays = "RNA",
+  group.by = c("clusters")) 
+
+# turn into df formatted for visualisation
+agg_ts_df <- agg_ts_bonemarrow$RNA %>%
+  as.matrix() %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = "genes") %>%
+  tidyr::pivot_longer(
+    cols = unique(seu_mus_weinreb_hspc$clusters),
+    names_to = "clusters",
+    values_to = "avg_logcounts")
+
+# only keep genes for visualisation
+agg_ts_df_genes <- agg_ts_df %>%
+  dplyr::filter(genes %in% marker_genes)
+
+print(unique(agg_ts_df_genes$genes))
+
+# factorise for nicer plot
+agg_ts_df_genes$genes <- factor(
+  agg_ts_df_genes$genes,
+  levels = rev(marker_genes))
+
+# scale expression per gene using z-scores
+agg_ts_df_genes$zscore_gene <- vector(
+  length = nrow(agg_ts_df_genes), 
+  mode = "numeric")
+
+for(gene in base::unique(agg_ts_df_genes$genes)){
+  
+  expr_vector_g <- agg_ts_df_genes[agg_ts_df_genes$genes == gene,]$avg_logcounts
+
+  # calculate z score per gene
+  z_score_g <- (expr_vector_g - base::mean(expr_vector_g))/
+    stats::sd(expr_vector_g)
+  agg_ts_df_genes$zscore_gene[agg_ts_df_genes$genes == gene] <- z_score_g
+}
+
+# plot
+ggplot2::ggplot(
+  agg_ts_df_genes,
+  aes(
+    x = clusters,
+    y = genes,
+    fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_gradient2(
+    low = "blue3",
+    mid = "white", 
+    high = "red3", 
+    midpoint = 0)+
+  ggplot2::theme(
+    axis.text.x = element_text(angle = 90)
+  )
+
+```
+
+#### UMAPs
+
+```{r umaps_genes, fig.width = 4.5, fig.height = 4}
+plotlist <- lapply(as.list(marker_genes), function(gene){
+  print(gene)
+
+  plot <- FeaturePlot(seu_mus_weinreb_hspc, reduction = "umap", gene)
+  return(plot)
+})
+names(plotlist) <- marker_genes
+
+plotlist
+```
+
+## Markers
+
+```{r markers}
+# replace the original idents with the new clusters 
+
+Seurat::Idents(seu_mus_weinreb_hspc) <- seu_mus_weinreb_hspc@meta.data$clusters
+clustlist <- as.list(base::sort(base::unique(seu_mus_weinreb_hspc@meta.data$clusters)))
+
+cluster_markers <- lapply(clustlist, function(x){
+  
+  print(x)
+  markers <- Seurat::FindMarkers(
+    seu_mus_weinreb_hspc,
+    slot = "data",
+    test.use = "wilcox", 
+    ident.1 = x)
+  
+  markers <- markers[base::order(base::abs(markers$avg_log2FC), 
+                                 decreasing=TRUE),]
+  
+  markers$which_cluster <- base::rep(x, nrow(markers))
+  
+  return(markers)
+})
+names(cluster_markers) <- base::sort(base::unique(seu_mus_weinreb_hspc@meta.data$clusters))
+```
+
+Gave provisional names based on the heatmap.
+
+### HSC and early progenitors
+
+```{r markers_hsc_and_mpp}
+# only few genes in the heatmap but let's see if it's hscs
+cluster_markers[["cluster-12"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 25)
+
+# looks early with somne mk
+cluster_markers[["cluster-1"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 25)
+
+# looks early with some lymphoid
+cluster_markers[["cluster-9"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 25)
+```
+
+All three clusters are approximately in roughly the "same UMAP space".
+But each is predominantly detected in only of of the three time points.
+They are also of vastly different numbers of cells.
+
+Cluster 12 is tiny and only detected in time point 16 unless I'm mistaken.
+It actually highly expresses classic Antigen-presenting markers so it may 
+in fact be closer to that than HSCs. 
+I suspected it may not be HSCs because this cluster only expresses Alcam 
+and Procr in the heatmap.
+
+Cluster 1 is the only cluster predodimantly found in time point 2.
+It is almost not found in time point 16, so it might be early in development.
+It expresses Mpl, Hlf, Lmo2, Meis1, Pbx1, Msi2, a bit of Mecom.
+But also Cd34.
+Ly6a, Cd34, Ldha, Ctla3a, Cdk6, Pim2, Adgrl4, Nrgn are main marker genes, 
+to me it looks like a mix of HSC and MPP/progenitor genes.
+
+Cluster 9 is predominantly detected in time point 9.
+The genes atually look like very early lymphoid (Dntt, Flt3, Runx2, Satb1,
+Cd34, Irf8) but with Nrgn. 
+Also some cell cycle stuff (Ccnd2 for example).
+Some weaker expression of some HSC genes but not in the marker list.
+
+```{r hsc_umaps_additional, fig.width = 4.5, fig.height = 4}
+
+hsc_additional_genes <- c(
+  "Mecom",
+  "Ccl5",
+  "H2-Eb1",
+  "H2-Aa",
+  "Cd74",
+  "Cst4",
+  "Id2",
+  "Fscn1",
+  "Ccr7",
+  "Dlk1",
+  "Ctla2a",
+  "Ly6a",
+  "Ldha",
+  "Cdk6",
+  "Nrgn",
+  "Hmox1",
+  "Runx2",
+  "Ccnd2",
+  "Ly6d",
+  "Ccnd1",
+  "Cd27"
+)
+
+plotlist <- lapply(as.list(hsc_additional_genes), function(gene){
+  print(gene)
+
+  plot <- FeaturePlot(seu_mus_weinreb_hspc, reduction = "umap", gene)
+  return(plot)
+})
+names(plotlist) <- hsc_additional_genes
+
+plotlist
+```
+
+### Myeloid and Lymphoid
+
+```{r markers_myeloid}
+
+# early myeloid
+cluster_markers[["cluster-6"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 30)
+
+# neutro
+cluster_markers[["cluster-2"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 30)
+
+# mono
+cluster_markers[["cluster-3"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 30)
+
+# baso mast? a bit early?
+cluster_markers[["cluster-10"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 30)
+
+# lymphoid a bit earlier
+cluster_markers[["cluster-8"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 30)
+
+# lymphoid a bit later
+cluster_markers[["cluster-5"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 30)
+
+```
+
+Cluster 6 has top markers Elane, Prtn3, Mpo, Ctsg, Nkg7 (NK), Srgn,
+Calr, Prss57, Clec12 (mono), Gfi1, Cd63 (neutro) indicating a still 
+mixed-lineage early myeloid progenitor.
+
+Cluster 2 expresses clearly neutro genes like Nhp, S100a8 and S100a9, Camp,
+Retnlg, Wfdc21, Chil3, Lrg1.
+
+Cluster 3 is mono-ish/antigen-present-ish.
+Irf8, Ccr1, Mgep1, Ahnak, Ly86 are mono/macro lineages.
+Ctss is going into apc direction.
+Some genes like Lyz2 etc also look a bit granu-ish.
+
+Cluster 10 is very clearly Eo baso mast. 
+Prss34, Cpa3, Gata2 are baso mast, Ccl4 and Ccl3 are eo. 
+Fcer1a, Cd63, Itga2b, Cebpa, Hdc, Ier3 support this.
+
+Cluster 8 is lymphoid but later than cluster 9, with Vpreb1, Igll1 etc.
+
+Cluster 5 is only detected in time point 16, the latest time point?
+It expresses more Ig genes and some antigen-presenting stuff.
+
+
+
+```{r myeloid_umaps_additional, fig.width = 4.5, fig.height = 4}
+
+myeloid_additional_genes <- c(
+  "Nkg7",
+  "Srgn",
+  "Prss57",
+  "Calr",
+  "Clec12a",
+  "Gfi1",
+  "Fcnb",
+  "Cd63",
+  "Cst7",
+  "Anxa3",
+  "Ngp",
+  "Lcn2",
+  "Retnlg",
+  "Camp",
+  "Chil3",
+  "F13a1",
+  "Mpeg1",
+  "Ahnak",
+  "Lyz2",
+  "Ctss",
+  "Crip1",
+  "S100a10",
+  "Prss34",
+  "Ccl4",
+  "Ccl3",
+  "Fcer1a",
+  "Ier3",
+  "Vpreb1",
+  "Igll1",
+  "Vpreb3",
+  "Ebf1",
+  "Cd79a",
+  "Igkc",
+  "Ighm",
+  "Iglc2",
+  "H2-Aa",
+  "Cd19"
+)
+
+plotlist <- lapply(as.list(myeloid_additional_genes), function(gene){
+  print(gene)
+
+  plot <- FeaturePlot(seu_mus_weinreb_hspc, reduction = "umap", gene)
+  return(plot)
+})
+names(plotlist) <- myeloid_additional_genes
+
+plotlist
+```
+
+### Mk and Ery
+
+```{r markers_mkery}
+
+# ery
+cluster_markers[["cluster-0"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 30)
+
+# ery
+cluster_markers[["cluster-4"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 30)
+
+# ery
+cluster_markers[["cluster-7"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 30)
+
+# late ery
+cluster_markers[["cluster-11"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 30)
+```
+
+Cluster 0 is early-ish Ery? 
+No Hb genes yet, but Klf1, Car1, Blvrb, Gata1, and then some Hmbs,
+Prdx2, Ermap.
+
+Cluster 4 looks similar. 
+Also no Hb genes but Car1, Ermap, Klf1, Car2, Epor.
+
+For cluster 7, things look a bit more mature with Gypa and Hbb-bt. 
+
+Cluster 11 has four Hbs as main markers - I think it looks the latest.
+
+```{r erymk_umaps_additional, fig.width = 4.5, fig.height = 4}
+
+erymk_additional_genes <- c(
+  "Car2",
+  "Car1",
+  "Gata1",
+  "Ermap",
+  "Hmbs",
+  "Alad",
+  "Hemgn",
+  "Aqp1",
+  "Mt2",
+  "Mt1",
+  "Epor",
+  "Hbb-bt",
+  "Tfrc",
+  "Hba-a2",
+  "Hbb-bs",
+  "Alas2",
+  "Fech"
+)
+
+plotlist <- lapply(as.list(erymk_additional_genes), function(gene){
+  print(gene)
+  
+  plot <- FeaturePlot(seu_mus_weinreb_hspc, reduction = "umap", gene)
+  return(plot)
+})
+names(plotlist) <- erymk_additional_genes
+
+plotlist
+```
+
+# Assign
+
+```{r assign}
+seu_mus_weinreb_hspc$custom_label <- vector(length = ncol(seu_mus_weinreb_hspc))
+
+seu_mus_weinreb_hspc$custom_label[
+  seu_mus_weinreb_hspc$clusters == "cluster-1"] <- "HSC and MPP"
+seu_mus_weinreb_hspc$custom_label[
+  seu_mus_weinreb_hspc$clusters == "cluster-9"] <- "Lymphoid MPP"
+seu_mus_weinreb_hspc$custom_label[
+  seu_mus_weinreb_hspc$clusters == "cluster-6"] <- "Early myeloid"
+seu_mus_weinreb_hspc$custom_label[
+  seu_mus_weinreb_hspc$clusters == "cluster-2"] <- "Neutro"
+seu_mus_weinreb_hspc$custom_label[
+  seu_mus_weinreb_hspc$clusters == "cluster-3"] <- "Mono"
+seu_mus_weinreb_hspc$custom_label[
+  seu_mus_weinreb_hspc$clusters == "cluster-10"] <- "Eo/Baso/Mast"
+seu_mus_weinreb_hspc$custom_label[
+  seu_mus_weinreb_hspc$clusters == "cluster-8"] <- "Early lymphoid"
+seu_mus_weinreb_hspc$custom_label[
+  seu_mus_weinreb_hspc$clusters == "cluster-5"] <- "Late lymphoid"
+seu_mus_weinreb_hspc$custom_label[
+  seu_mus_weinreb_hspc$clusters == "cluster-12"] <- "Antigen-presenting"
+seu_mus_weinreb_hspc$custom_label[
+  seu_mus_weinreb_hspc$clusters == "cluster-0"] <- "Early ery 1"
+seu_mus_weinreb_hspc$custom_label[
+  seu_mus_weinreb_hspc$clusters == "cluster-4"] <- "Early ery 2"
+seu_mus_weinreb_hspc$custom_label[
+  seu_mus_weinreb_hspc$clusters == "cluster-7"] <- "Erythroid"
+seu_mus_weinreb_hspc$custom_label[
+  seu_mus_weinreb_hspc$clusters == "cluster-11"] <- "Late ery"
+
+seu_mus_weinreb_hspc$custom_label <- factor(
+  seu_mus_weinreb_hspc$custom_label,
+  levels = c(
+    "HSC and MPP",
+    "Lymphoid MPP",
+    "Early myeloid",
+    "Neutro",
+    "Mono",
+    "Eo/Baso/Mast",
+    "Early lymphoid",
+    "Late lymphoid",
+    "Antigen-presenting",
+    "Early ery 1",
+    "Early ery 2",
+    "Erythroid",
+    "Late ery"
+  ))
+
+stopifnot(!is.na(seu_mus_weinreb_hspc$custom_label))
+```
+
+#### One last plot to check
+
+```{r slightly_better_markers}
+
+# these must be human genes
+# try straight up with the same genes as for mouse first
+# but then alter as necessary/possible
+slightly_better_markers <- c(
+    "Mpl",
+    "Mecom",
+    "Meis1",
+    "Msi2",
+    "Hlf",
+    "Adgrl4",
+    "Cd34",
+    "Cdk6",
+    "Cdk4",
+    "Flt3",
+    "Sox4",
+    "Tcf4",
+    "Spi1",
+    "Ctsg",
+    "Mpo",
+    "Prtn3",
+    "Elane",
+    "Cebpe",
+    "S100a8",
+    "S100a9",
+    "Retnlg",
+    "Ngp",
+    "Irf8",
+    "Ccr2",
+    "Clec12a",
+    "Ms4a6c",
+    "F13a1",
+    "Cpa3",
+    "Hdc",
+    "Ms4a2",
+    "Gata2",
+    "Ccl4",
+    "Ccl3",
+    "Satb1",
+    "Dntt1",
+    "Il7r",
+    "Cd79a"
+    "Cd79b",
+    "Rag1",
+    "Vpreb1",
+    "Vpreb3",
+    "Igll",
+    "Ighk",
+    "Ighm",
+    "Pf4",
+    "Plek",
+    "Itga2b",
+    "Cd9",
+    "Zfpm1",
+    "Blvrb",
+    "Klf1",
+    "Ermap",
+    "Tspo2",
+    "Epor",
+    "Hba-a1",
+    "Hba-bs",
+    "Gypa"
+  )
+```
+
+```{r last_heatmap, fig.height = 10, fig.width = 5}
+
+# get average logcounts per cluster
+agg_ts_bonemarrow <- Seurat::AverageExpression(
+  seu_mus_weinreb_hspc,
+  assays = "RNA",
+  group.by = c("custom_label")) 
+
+# turn into df formatted for visualisation
+agg_ts_df <- agg_ts_bonemarrow$RNA %>%
+  as.matrix() %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = "genes") %>%
+  tidyr::pivot_longer(
+    cols = unique(seu_mus_weinreb_hspc$custom_label),
+    names_to = "custom_label",
+    values_to = "avg_logcounts")
+
+# only keep genes for visualisation
+agg_ts_df_genes <- agg_ts_df %>%
+  dplyr::filter(genes %in% slightly_better_markers)
+
+print(unique(agg_ts_df_genes$genes))
+
+# factorise for nicer plot
+agg_ts_df_genes$genes <- factor(
+  agg_ts_df_genes$genes,
+  levels = rev(slightly_better_markers))
+
+agg_ts_df_genes$custom_label <- factor(
+  agg_ts_df_genes$custom_label, 
+  levels = levels(seu_mus_weinreb_hspc$custom_label))
+
+# scale expression per gene using z-scores
+agg_ts_df_genes$zscore_gene <- vector(
+  length = nrow(agg_ts_df_genes), 
+  mode = "numeric")
+
+for(gene in base::unique(agg_ts_df_genes$genes)){
+  
+  expr_vector_g <- agg_ts_df_genes[agg_ts_df_genes$genes == gene,]$avg_logcounts
+
+  # calculate z score per gene
+  z_score_g <- (expr_vector_g - base::mean(expr_vector_g))/
+    stats::sd(expr_vector_g)
+  agg_ts_df_genes$zscore_gene[agg_ts_df_genes$genes == gene] <- z_score_g
+}
+
+# plot
+ggplot2::ggplot(
+  agg_ts_df_genes,
+  aes(
+    x = custom_label,
+    y = genes,
+    fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_gradient2(
+    low = "blue3",
+    mid = "white", 
+    high = "red3", 
+    midpoint = 0)+
+  ggplot2::theme(
+    axis.text.x = element_text(angle = 90)
+  )
+```
+
+```{r add_clusters}
+# add the signature-based clusters
+# seu_ts_bone_marrow_recl@meta.data
+
+seu_ts_bone_marrow$signature_clust <- vector(length = ncol(seu_ts_bone_marrow))
+
+# match to be sure but they should be identical
+seu_ts_bone_marrow$signature_clust <- seu_ts_bone_marrow_recl$seurat_clusters[
+  match(
+    colnames(seu_ts_bone_marrow),
+    colnames(seu_ts_bone_marrow_recl))]
+```
+
+```{r tables_all}
+print(table(seu_mus_weinreb_hspc$custom_label, seu_mus_weinreb_hspc$cell_type))
+print(table(seu_mus_weinreb_hspc$custom_label, seu_mus_weinreb_hspc$signature_clust))
+print(table(seu_mus_weinreb_hspc$signature_clust, seu_mus_weinreb_hspc$cell_type))
+```
+
+Save the object now.
+
+```{r save}
+saveRDS(seu_mus_weinreb_hspc, output_path)
+```

@@ -167,7 +167,7 @@ DimPlot(seu_mus_weinreb_hspc, reduction = "umap")+
   facet_wrap(facets = vars(seu_mus_weinreb_hspc@meta.data$Time.point), ncol = 2)
 ``` 
 
-There is some strong effect by sex.
+There is some strong effect by time point.
 
 ## Gene expression
 
@@ -382,7 +382,7 @@ I suspected it may not be HSCs because this cluster only expresses Alcam
 and Procr in the heatmap.
 
 Cluster 1 is the only cluster predodimantly found in time point 2.
-It is almost not found in time point 16, so it might be early in development.
+It is almost not found in time point 16.
 It expresses Mpl, Hlf, Lmo2, Meis1, Pbx1, Msi2, a bit of Mecom.
 But also Cd34.
 Ly6a, Cd34, Ldha, Ctla3a, Cdk6, Pim2, Adgrl4, Nrgn are main marker genes, 
@@ -394,6 +394,9 @@ Cd34, Irf8) but with Nrgn.
 Also some cell cycle stuff (Ccnd2 for example).
 Some weaker expression of some HSC genes but not in the marker list.
 
+It seems that cells had differentiated at later time points, explaining the 
+lack of HSCs at the latest time point.
+
 ```{r hsc_umaps_additional, fig.width = 4.5, fig.height = 4}
 
 hsc_additional_genes <- c(
@@ -402,7 +405,7 @@ hsc_additional_genes <- c(
   "H2-Eb1",
   "H2-Aa",
   "Cd74",
-  "Cst4",
+  "Cst3",
   "Id2",
   "Fscn1",
   "Ccr7",
@@ -628,11 +631,11 @@ seu_mus_weinreb_hspc$custom_label[
 seu_mus_weinreb_hspc$custom_label[
   seu_mus_weinreb_hspc$clusters == "cluster-3"] <- "Mono"
 seu_mus_weinreb_hspc$custom_label[
-  seu_mus_weinreb_hspc$clusters == "cluster-10"] <- "Eo/Baso/Mast"
+  seu_mus_weinreb_hspc$clusters == "cluster-10"] <- "Eo/Baso/Mast/Mk"
 seu_mus_weinreb_hspc$custom_label[
-  seu_mus_weinreb_hspc$clusters == "cluster-8"] <- "Early lymphoid"
+  seu_mus_weinreb_hspc$clusters == "cluster-8"] <- "Lymphoid 1"
 seu_mus_weinreb_hspc$custom_label[
-  seu_mus_weinreb_hspc$clusters == "cluster-5"] <- "Late lymphoid"
+  seu_mus_weinreb_hspc$clusters == "cluster-5"] <- "Lymphoid 2, time point 16" # it appears inb a later time point
 seu_mus_weinreb_hspc$custom_label[
   seu_mus_weinreb_hspc$clusters == "cluster-12"] <- "Antigen-presenting"
 seu_mus_weinreb_hspc$custom_label[
@@ -652,7 +655,7 @@ seu_mus_weinreb_hspc$custom_label <- factor(
     "Early myeloid",
     "Neutro",
     "Mono",
-    "Eo/Baso/Mast",
+    "Eo/Baso/Mast/Mk",
     "Early lymphoid",
     "Late lymphoid",
     "Antigen-presenting",
@@ -676,17 +679,24 @@ slightly_better_markers <- c(
     "Mpl",
     "Mecom",
     "Meis1",
+    "Ctla2a",
+    "Ly6a",
+    "Nrgn",
     "Msi2",
     "Hlf",
     "Adgrl4",
     "Cd34",
     "Cdk6",
     "Cdk4",
+    "Ccnd1",
+    "Runx2",
     "Flt3",
     "Sox4",
+    "Satb1",
     "Tcf4",
     "Spi1",
     "Ctsg",
+    "Prss57",
     "Mpo",
     "Prtn3",
     "Elane",
@@ -697,7 +707,6 @@ slightly_better_markers <- c(
     "Ngp",
     "Irf8",
     "Ccr2",
-    "Clec12a",
     "Ms4a6c",
     "F13a1",
     "Cpa3",
@@ -706,17 +715,23 @@ slightly_better_markers <- c(
     "Gata2",
     "Ccl4",
     "Ccl3",
-    "Satb1",
     "Dntt1",
-    "Il7r",
-    "Cd79a"
-    "Cd79b",
-    "Rag1",
     "Vpreb1",
     "Vpreb3",
-    "Igll",
-    "Ighk",
+    "Il7r",
+    "Cd79a",
+    "Cd79b",
     "Ighm",
+    "Igkc",
+    "Ighm",
+    "Iglc2",
+    "Cd74"
+    "Ccl5",
+    "H2-Eb1",
+    "H2-Aa",
+    "Fscn1",
+    "Ccr7",
+    "Ctss",
     "Pf4",
     "Plek",
     "Itga2b",
@@ -725,11 +740,12 @@ slightly_better_markers <- c(
     "Blvrb",
     "Klf1",
     "Ermap",
-    "Tspo2",
     "Epor",
+    "Tspo2",
     "Hba-a1",
-    "Hba-bs",
-    "Gypa"
+    "Hbb-bt",
+    "Gypa",
+    "Alas2"
   )
 ```
 
@@ -804,13 +820,13 @@ ggplot2::ggplot(
 # add the signature-based clusters
 # seu_ts_bone_marrow_recl@meta.data
 
-seu_ts_bone_marrow$signature_clust <- vector(length = ncol(seu_ts_bone_marrow))
+seu_mus_weinreb_hspc$signature_clust <- vector(length = ncol(seu_mus_weinreb_hspc))
 
 # match to be sure but they should be identical
-seu_ts_bone_marrow$signature_clust <- seu_ts_bone_marrow_recl$seurat_clusters[
+seu_mus_weinreb_hspc$signature_clust <- seu_mus_weinreb_hspc_recl$seurat_clusters[
   match(
-    colnames(seu_ts_bone_marrow),
-    colnames(seu_ts_bone_marrow_recl))]
+    colnames(seu_mus_weinreb_hspc),
+    colnames(seu_mus_weinreb_hspc_recl))]
 ```
 
 ```{r tables_all}

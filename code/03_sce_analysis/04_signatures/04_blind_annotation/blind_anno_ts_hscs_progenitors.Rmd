@@ -1,0 +1,511 @@
+---
+title: "Blind annotation of TABULA SAPIENS HSPC PROGENITORS"
+author: "Lea Wölbert"
+date: '2025-12-09'
+output: html_document
+---
+
+Blind annotation of two human HSPC datasets after unbiased re-clustering with
+signature genes.
+This is the script for annotating TABULA SAPIENS HSPC/PROGENITORS from fetal data.
+The thusly obtained clusters will now be annotated based only on the expression
+of signature gene orthologs within these clusters, and without knowledge of
+which cells from which originally annotated cell type these clusters contain.
+
+This is another occasion where I will save an object from an .Rmd file because
+after naming it and looking at it this way, I'm already adding the annotations.
+
+These parts of code were originally in the first iteration of Figure 4 but after
+adding the custom annotations, I have decided to separate the blind annotations
+from the figure, too.
+I didn't change too much from the original figure script though.
+Instead, I added some comments why I chose each annotation.
+
+#### Load objects
+
+```{r seed, message = FALSE}
+RNGkind("L'Ecuyer-CMRG") 
+set.seed(37)
+```
+
+```{r load_packages, message = FALSE}
+library(Seurat, quietly = TRUE)
+library(SingleCellExperiment, quietly = TRUE)
+library(ggpubr, quietly = TRUE)
+library(tidyverse, quietly = TRUE)
+```
+
+```{r base_path}
+base_path <- snakemake@input[["base_path"]]
+#base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+```
+
+```{r load_objects}
+
+# data frame containing the correct resolutions for other datasets as visually determined
+resolution_df_path <- base::paste0(
+  base_path,
+  "/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt")
+
+resolution_df <- utils::read.csv(file = resolution_df_path, 
+                               header = TRUE, 
+                               sep = ";", 
+                               check.names=FALSE, 
+                               stringsAsFactors=FALSE, 
+                               as.is=TRUE, 
+                               colClasses = "character")
+
+ensembl_sign <- readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/02_endf/ensembl_sign_hsc"))
+```
+
+```{r load_other2}
+#-------------------------------------------------------------------------------
+#### OTHER MOUSE DATASET 2 (HSPC)
+#### Tabula sapiens HSCs and Progs (fetal)
+
+dataset_o2 <- "ts_hscs_progenitors"
+
+# original seurat dataset
+seu_orig_o2 <- base::readRDS(base::paste0(
+  base_path,
+  "/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_hscs_progenitors"))
+
+# list of seurat objects with reclustering vectors for each gene set+ resolution
+seu_hsc_recl_list_o2 <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_ts_hscs_progenitors_list"))
+```
+
+```{r selected_seu_o2}
+
+resolution_df_o2 <- resolution_df[resolution_df$dataset == dataset_o2,]
+
+selected_seu_list_o2 <- lapply(seu_hsc_recl_list_o2, function(seu_list){
+  
+  conslev_curr <- seu_list[[1]]@misc$used_genes
+  
+  resdf_temp <- resolution_df_o2[
+    resolution_df_o2$conservation_level == conslev_curr,]
+  res_curr <- resdf_temp$resolution
+  
+  seu_return <- seu_list[[res_curr]]
+  return(seu_return)
+  
+})
+
+rm(seu_hsc_recl_list_o2)
+gc()
+```
+
+```{r export_paths}
+output_path <- base::paste0(base_path, "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/04_blind_annotation/ts_hscs_progenitors_both.Rds")
+print(output_path)
+```
+
+## Blindly annotate
+
+```{r prepare_annotate_o2}
+
+seu_sign_o2 <- selected_seu_list_o2$seu_sign
+reclustered_o2 <- base::unique(seu_sign_o2$seurat_clusters)
+
+clust_list_o2 <- as.list(reclustered_o2)
+
+ct_markers_o2 <- lapply(clust_list_o2, function(x){
+  markers <- Seurat::FindMarkers(seu_sign_o2,
+                                 test.use = "wilcox",
+                                 ident.1 = x)
+  markers <- markers[base::order(base::abs(markers$avg_log2FC), 
+                                 decreasing=TRUE),]
+  markers$which_cluster <- base::rep(x, nrow(markers))
+  markers <- rownames_to_column(markers, var = "genes")
+  
+  # need to add only ensembl gene symbols as I will not be using others
+  markers$symbol <- markers$genes
+  markers$symbol <- ensembl_sign$HSAPIENS_SYMBOL[
+    base::match(markers$genes, ensembl_sign$ENSG_ID)]
+  return(markers)
+})
+names(ct_markers_o2) <- reclustered_o2
+
+ct_markers_df_o2 <- bind_rows(ct_markers_o2)
+head(ct_markers_df_o2)
+```
+
+```{r prepare_annotate_o2_hsc_only}
+
+seu_sign_o2_hsc <- seu_sign_o2[,seu_sign_o2$seurat_clusters %in%
+                                 c("4", "10", "1")]
+reclustered_o2_hsc <- base::unique(seu_sign_o2_hsc$seurat_clusters)
+
+clust_list_o2_hsc <- as.list(unfactor(reclustered_o2_hsc))
+
+ct_markers_o2_hsc <- lapply(clust_list_o2_hsc, function(x){
+  markers <- Seurat::FindMarkers(seu_sign_o2_hsc,
+                                 test.use = "wilcox",
+                                 ident.1 = x)
+  markers <- markers[base::order(base::abs(markers$avg_log2FC), 
+                                 decreasing=TRUE),]
+  markers$which_cluster <- base::rep(x, nrow(markers))
+  markers <- rownames_to_column(markers, var = "genes")
+  
+  # need to add only ensembl gene symbols as I will not be using others
+  markers$symbol <- markers$genes
+  markers$symbol <- ensembl_sign$HSAPIENS_SYMBOL[
+    base::match(markers$genes, ensembl_sign$ENSG_ID)]
+  return(markers)
+})
+names(ct_markers_o2_hsc) <- reclustered_o2_hsc
+
+ct_markers_df_o2_hsc <- bind_rows(ct_markers_o2_hsc)
+head(ct_markers_df_o2_hsc)
+```
+
+## UMAPs
+
+```{r umap_others_2}
+DimPlot(seu_sign_o2, dims = c(1,2), group.by = "seurat_clusters")
+DimPlot(seu_sign_o2, dims = c(1,2), group.by = "assay")
+DimPlot(seu_sign_o2, dims = c(1,2), group.by = "donor_id")
+DimPlot(seu_sign_o2, dims = c(1,2), group.by = "sex")
+DimPlot(seu_sign_o2, dims = c(1,2), group.by = "development_stage")
+DimPlot(seu_sign_o2, dims = c(1,2), group.by = "tissue")
+
+seu_sign_o2$annotated_reclustered <- vector(length = ncol(seu_sign_o2))
+# clusters 3, 9 and 7 are batch V1
+# clusters 1, 8 and 6 are batch V2
+```
+
+```{r umaps_dev, fig.height = 10, fig.width = 6}
+DimPlot(seu_sign_o2, reduction = "umap")+
+  facet_wrap(facets = vars(seu_sign_o2@meta.data$development_stage), ncol = 2)
+``` 
+
+```{r umaps_sex, fig.height = 3, fig.width = 6}
+DimPlot(seu_sign_o2, reduction = "umap")+
+  facet_wrap(facets = vars(seu_sign_o2@meta.data$sex), ncol = 2)
+``` 
+
+```{r umaps_assay, fig.height = 3, fig.width = 6}
+DimPlot(seu_sign_o2, reduction = "umap")+
+  facet_wrap(facets = vars(seu_sign_o2@meta.data$assay), ncol = 2)
+``` 
+
+## Show markers
+
+```{r others2_cluster0}
+nr <- "0"
+markers <- ct_markers_o2[[nr]]$genes[
+  !is.na(ct_markers_o2[[nr]]$symbol) &
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05]
+
+# ANXA2, CTSZ, CLEC12A, H1-10, LY86, BLVRB, CEBPE, MPO
+ct_markers_o2[[nr]][
+  !is.na(ct_markers_o2[[nr]]$symbol) & 
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,][c(1, 3, 6, 8)]
+
+FeaturePlot(seu_sign_o2, markers[1:6])
+FeaturePlot(seu_sign_o2, markers[7:12])
+# Early myeloid (MPO, CLEC12a, SPI1) granu (ANXA2, CEBPE,CTSZ)
+# mono (LY86, CLEC12A, LAMP1 I think, too) 
+# I had previously called this "cycling", too but cannot explain why atm
+
+seu_sign_o2$annotated_reclustered[
+  seu_sign_o2$seurat_clusters == nr] <- "Early Granu/Mono"
+```
+
+```{r others2_cluster1}
+nr <- "2"
+markers <- ct_markers_o2[[nr]]$gene[
+  !is.na(ct_markers_o2[[nr]]$symbol) &
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05]
+
+# PRTN3, TIFAB, MPO, MS4A3, CTSG, CEBPE, MS4A2, MS4A2, CALR, CLEC12A
+ct_markers_o2[[nr]][
+  !is.na(ct_markers_o2[[nr]]$symbol) & 
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,][, c(1, 3, 6, 8)]
+
+FeaturePlot(seu_sign_o2, markers[1:6])
+# CALR, SRGN, CEBPE, PRSS57, HSP90B1, CALR, ANXA1 go more into
+# granu/neutro direction 
+
+seu_sign_o2$annotated_reclustered[
+  seu_sign_o2$seurat_clusters == nr] <- "Granu"
+```
+
+```{r others2_cluster6}
+nr <- "4"
+markers <- ct_markers_o2[[nr]]$genes[
+  !is.na(ct_markers_o2[[nr]]$symbol) &
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05]
+
+# CTSG, PRTN3, MPO, SRGN, CEPBE, MS4A2, CLEC12A
+ct_markers_o2[[nr]][
+  !is.na(ct_markers_o2[[nr]]$symbol) & 
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,][, c(1, 3, 6, 8)]
+
+FeaturePlot(seu_sign_o2, markers[1:6])
+# strong CTSG, PRTN3, MPO, without much downstream neutro genes
+# like S100A genes always look (earlier) myeloid to me, not clearly
+# neutro, granu or mono
+
+seu_sign_o2$annotated_reclustered[
+  seu_sign_o2$seurat_clusters == nr] <- "Myeloid"
+```
+
+```{r others2_cluster10}
+nr <- "10"
+markers <- ct_markers_o2[[nr]]$genes[
+  !is.na(ct_markers_o2[[nr]]$symbol) &
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05]
+
+# TMEM176B, TMEM176A, ANXA2, CLEC12A, TSPO, LY86, CTSZ, CEBPE, 
+ct_markers_o2[[nr]][
+  !is.na(ct_markers_o2[[nr]]$symbol) & 
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,][, c(1, 3, 6, 8)]
+
+FeaturePlot(seu_sign_o2, markers[1:6])
+FeaturePlot(seu_sign_o2, markers[7:12])
+FeaturePlot(seu_sign_o2, markers[13:18])
+
+# TMEM176B and TMEM176A are mono dendritic genes, The others are 
+# mostly generally myeloid except CEBPE, LAMP1 is found in monos
+seu_sign_o2$annotated_reclustered[
+  seu_sign_o2$seurat_clusters == nr] <- "Mono/Dendritic"
+```
+
+
+```{r others2_cluster4}
+nr <- "5"
+markers <- ct_markers_o2[[nr]]$genes[
+  !is.na(ct_markers_o2[[nr]]$symbol) &
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05]
+
+# LTB, TRIB2, TCF4, MEF2C, SMIM14, LY86, RAMP1, LSP1, FUT8, CD34, LMO4, CD37
+ct_markers_o2[[nr]][
+  !is.na(ct_markers_o2[[nr]]$symbol) & 
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,][, c(1, 3, 6, 8)]
+
+FeaturePlot(seu_sign_o2, markers[1:6])
+# LTB, TCF4, LY86, RAMP1, CD37 are lymphoid
+# more "classic" lymphoid markers are not in the signature
+
+seu_sign_o2$annotated_reclustered[
+  seu_sign_o2$seurat_clusters == nr] <- "Lymphoid"
+```
+
+```{r others2_cluster3}
+nr <- "3"
+markers <- ct_markers_o2[[nr]]$genes[
+  !is.na(ct_markers_o2[[nr]]$symbol) &
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05]
+
+# MPL, HLF, MECOM, CD34, ANGPT1, RAMP1, MEIS1
+ct_markers_o2[[nr]][
+  !is.na(ct_markers_o2[[nr]]$symbol) & 
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,][1:50, c(1, 3, 6, 8)]
+
+FeaturePlot(seu_sign_o2, markers[1:6])
+# MPL, HLF, CD34, MECOM, MEIS1 all classic HSC genes in human
+
+seu_sign_o2$annotated_reclustered[
+  seu_sign_o2$seurat_clusters == nr] <- "HSC1 10xV1"
+```
+
+```{r others2_cluster5}
+nr <- "7"
+markers <- ct_markers_o2[[nr]]$genes[
+  !is.na(ct_markers_o2[[nr]]$symbol) &
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05]
+
+# CDCA3, CENPA, CENPE, CDC20, MKI67, AURKB, CDK1, H1-4, MPL, NKX2-3, CD34, 
+ct_markers_o2[[nr]][
+  !is.na(ct_markers_o2[[nr]]$symbol) & 
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,][1:50, c(1, 3, 6, 8)]
+
+FeaturePlot(seu_sign_o2, markers[1:6])
+FeaturePlot(seu_sign_o2, markers[7:12])
+# clear cycling genes but lack of lineage markers and expression of
+# MPL, NKX2-3, CD34 etc a little bit down the line instead of lineage markers
+
+seu_sign_o2$annotated_reclustered[
+  seu_sign_o2$seurat_clusters == nr] <- "Cycling Early 10xV1"
+```
+
+```{r others2_cluster2}
+nr <- "1"
+markers <- ct_markers_o2[[nr]]$genes[
+  !is.na(ct_markers_o2[[nr]]$symbol) &
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05]
+
+# HLF, NFIA, VAMP5, MECOM, ANGPT1, MEIS1, RAMP1, GCNT2, CD34, TXNIP
+ct_markers_o2[[nr]][
+  !is.na(ct_markers_o2[[nr]]$symbol) & 
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,][1:50, c(1, 3, 6, 8)]
+
+FeaturePlot(seu_sign_o2, markers[1:6])
+# again HLF, MSI2, MECOM are classic HSC, maybe a slight Mk hint with VAMP5 
+# but nonetheless mostly HSC
+
+seu_sign_o2$annotated_reclustered[
+  seu_sign_o2$seurat_clusters == nr] <- "HSC2 10xV2"
+```
+
+```{r others2_cluster9}
+nr <- "9"
+markers <- ct_markers_o2[[nr]]$genes[
+  !is.na(ct_markers_o2[[nr]]$symbol) &
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05]
+
+# GATA1, ITGA2B, KLF1, GATA2, MPL, CENPV, EPOR, LMO4, ZFPM1, AQP1, MEIS1
+ct_markers_o2[[nr]][
+  !is.na(ct_markers_o2[[nr]]$symbol) & 
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,][1:50, c(1, 3, 6, 8)]
+
+FeaturePlot(seu_sign_o2, markers[1:6])
+FeaturePlot(seu_sign_o2, markers[7:12])
+# GATA1, ITGA2B, GATA2, KLF1, MPL, EPOR indicate some early Mk ery prog
+
+seu_sign_o2$annotated_reclustered[
+  seu_sign_o2$seurat_clusters == nr] <- "Mk/Ery1 10xV1"
+```
+
+```{r others2_cluster8}
+nr <- "8"
+markers <- ct_markers_o2[[nr]]$gene[
+  !is.na(ct_markers_o2[[nr]]$symbol) &
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05]
+
+# CENPA, AURKB, CDCA3, CDK1, CDC20, CENPE, MKI67
+ct_markers_o2[[nr]][
+  !is.na(ct_markers_o2[[nr]]$symbol) & 
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,][1:50, c(1, 3, 6, 8)]
+
+FeaturePlot(seu_sign_o2, markers[1:6])
+# cycling genes, lack of lineage markers and also lack of HSC markers 
+# I can recognize, making it "only" cycling
+
+seu_sign_o2$annotated_reclustered[
+  seu_sign_o2$seurat_clusters == nr] <- "Cycling 10xV2"
+```
+
+```{r others2_cluster7}
+nr <- "6"
+markers <- ct_markers_o2[[nr]]$gene[
+  !is.na(ct_markers_o2[[nr]]$symbol) &
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05]
+
+# KLF1, ITGA2B, GATA1, EPOR, AQP1, GATA2, LMO2, ZFPM1, CDK1, CENPV, AURKB
+ct_markers_o2[[nr]][
+  !is.na(ct_markers_o2[[nr]]$symbol) & 
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,][1:50, c(1, 3, 6, 8)]
+
+FeaturePlot(seu_sign_o2, markers[1:6])
+# KLF1, ITGA2B, GATA1, EOIR, GATA2 together, also TRIB2, so mk/ery again
+
+seu_sign_o2$annotated_reclustered[
+  seu_sign_o2$seurat_clusters == nr] <- "Mk/Ery2 10xV2"
+```
+
+```{r others2_cluster11}
+nr <- "11"
+markers <- ct_markers_o2[[nr]]$gene[
+  !is.na(ct_markers_o2[[nr]]$symbol) &
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05]
+
+# C17orf50, RAMP1, HLF, CD34, MPL, ANPGT1, MECOM
+ct_markers_o2[[nr]][
+  !is.na(ct_markers_o2[[nr]]$symbol) & 
+    ct_markers_o2[[nr]]$avg_log2FC > 0 &
+    ct_markers_o2[[nr]]$p_val_adj < 0.05,][1:50, c(1, 3, 6, 8)]
+
+FeaturePlot(seu_sign_o2, markers[1:6])
+# interesting that C17orf50 appears here again like in ts_bonemarrow
+# NKF2-3, HLF, MPL, MECOM are all HSC signature genes
+
+seu_sign_o2$annotated_reclustered[
+  seu_sign_o2$seurat_clusters == nr] <- "HSC3"
+unique(seu_sign_o2$annotated_reclustered)
+```
+
+Factorize for nicer plots.
+
+```{r others2_level}
+seu_sign_o2$annotated_reclustered <- factor(seu_sign_o2$annotated_reclustered,
+                                            levels = c(  
+    "HSC1 10xV1",
+    "HSC2 10xV2",
+    "HSC3",
+    "Cycling Early 10xV1",
+    "Cycling 10xV2",
+    "Granu",
+    "Myeloid",
+    "Mono/Dendritic",
+    "Early Granu/Mono",
+    "Lymphoid",
+    "Mk/Ery1 10xV1",
+    "Mk/Ery2 10xV2"))
+
+# change some names from the original annotations for better visualisation later
+seu_sign_o2$cell_type <- unfactor(seu_sign_o2$cell_type)
+seu_sign_o2$cell_type[
+  seu_sign_o2$cell_type == "hematopoietic stem cell"] <- "HSC"
+seu_sign_o2$cell_type[
+  seu_sign_o2$cell_type == "hematopoietic multipotent progenitor cell"] <- "hematopoietic MPP"
+seu_sign_o2$cell_type[
+  seu_sign_o2$cell_type == "common myeloid progenitor"] <- "common myeloid prog"
+seu_sign_o2$cell_type[
+  seu_sign_o2$cell_type == "granulocyte monocyte progenitor cell"] <- "granu-mono prog"
+seu_sign_o2$cell_type[
+  seu_sign_o2$cell_type == "early lymphoid progenitor"] <- "early lymphoid prog"
+seu_sign_o2$cell_type[
+  seu_sign_o2$cell_type == "megakaryocyte-erythroid progenitor cell"] <- "mk-ery prog"
+
+seu_sign_o2$cell_type <- factor(
+  seu_sign_o2$cell_type,
+  levels = base::c(
+    "HSC",
+    "hematopoietic MPP",
+    "common myeloid prog",
+    "granu-mono prog",
+    "promonocyte",
+    "promyelocyte",
+    "early lymphoid prog",
+    "mk-ery prog"
+  ))
+stopifnot(!is.na(seu_sign_o2$annotated_reclustered))
+stopifnot(!is.na(seu_sign_o2$cell_type))
+```
+
+```{r save}
+saveRDS(seu_ts_bone_marrow, output_path)
+```
+
+```{r sessioninfo}
+utils::sessionInfo()
+```

@@ -24,3 +24,7 @@ snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resour
 # 03 CUSTOM CLUSTERING
 
 snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resources.mem_mb}]" -p -j30 -c20 -s 03_custom_clustering_snakefile.py --latency-wait 40 --configfile ../../config.yaml --use-conda -n 
+
+# 04 BLIND ANNOTATION
+
+snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resources.mem_mb}]" -p -j30 -c20 -s 04_blind_anno_snakefile.py --latency-wait 40 --configfile ../../config.yaml --use-conda -n 

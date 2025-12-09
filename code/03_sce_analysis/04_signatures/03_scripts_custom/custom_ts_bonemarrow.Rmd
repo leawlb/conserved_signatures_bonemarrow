@@ -942,3 +942,7 @@ Save the object now.
 ```{r save}
 saveRDS(seu_ts_bone_marrow, output_path)
 ```
+
+```{r sessioninfo}
+utils::sessionInfo()
+```

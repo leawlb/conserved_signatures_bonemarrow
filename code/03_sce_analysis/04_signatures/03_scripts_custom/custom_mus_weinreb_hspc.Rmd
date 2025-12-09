@@ -68,7 +68,7 @@ seu_mus_weinreb_hspc_recl <- seu_mus_weinreb_hspc_recl_list$seu_sign[[resolution
 # since in an .Rmd file run by snakemake the only output defined
 # by snakemake is the html, any other output must be defined manually
 base_path_data <- snakemake@params[["OUTPUT_DAT"]]
-output_path <- base::paste0(base_path_data, "/03_custom_clustering/mus_weinreb_hspc_both.Rds")
+output_path <- base::paste0(base_path_data, "/03_custom_clustering/mus_weinreb_hspc.Rds")
 print(output_path)
 ```
 
@@ -656,8 +656,8 @@ seu_mus_weinreb_hspc$custom_label <- factor(
     "Neutro",
     "Mono",
     "Eo/Baso/Mast/Mk",
-    "Early lymphoid",
-    "Late lymphoid",
+    "Lymphoid 1",
+    "Lymphoid 2, time point 16",
     "Antigen-presenting",
     "Early ery 1",
     "Early ery 2",
@@ -725,7 +725,7 @@ slightly_better_markers <- c(
     "Igkc",
     "Ighm",
     "Iglc2",
-    "Cd74"
+    "Cd74",
     "Ccl5",
     "H2-Eb1",
     "H2-Aa",
@@ -816,27 +816,12 @@ ggplot2::ggplot(
   )
 ```
 
-```{r add_clusters}
-# add the signature-based clusters
-# seu_ts_bone_marrow_recl@meta.data
-
-seu_mus_weinreb_hspc$signature_clust <- vector(length = ncol(seu_mus_weinreb_hspc))
-
-# match to be sure but they should be identical
-seu_mus_weinreb_hspc$signature_clust <- seu_mus_weinreb_hspc_recl$seurat_clusters[
-  match(
-    colnames(seu_mus_weinreb_hspc),
-    colnames(seu_mus_weinreb_hspc_recl))]
-```
-
-```{r tables_all}
-print(table(seu_mus_weinreb_hspc$custom_label, seu_mus_weinreb_hspc$cell_type))
-print(table(seu_mus_weinreb_hspc$custom_label, seu_mus_weinreb_hspc$signature_clust))
-print(table(seu_mus_weinreb_hspc$signature_clust, seu_mus_weinreb_hspc$cell_type))
-```
-
 Save the object now.
 
 ```{r save}
 saveRDS(seu_mus_weinreb_hspc, output_path)
+```
+
+```{r sessioninfo}
+utils::sessionInfo()
 ```

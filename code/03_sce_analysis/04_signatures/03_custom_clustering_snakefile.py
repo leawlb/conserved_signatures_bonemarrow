@@ -49,6 +49,7 @@ targets = []
 
 targets = targets + [OUTPUT_REP + "/custom_ts_bonemarrow.html"]
 targets = targets + [OUTPUT_REP + "/custom_mus_weinreb_hspc.html"]
+targets = targets + [OUTPUT_REP + "/custom_ts_all_stromal.html"]
 
 
 #-------------------------------------------------------------------------------
@@ -101,3 +102,21 @@ rule custom_mus_weinreb_hspc:
         OUTPUT_DAT = OUTPUT_DAT
     script:
         "03_scripts_custom/custom_mus_weinreb_hspc.Rmd"
+
+rule custom_ts_all_stromal:
+    input: 
+        seu_input = config["base"] + config["metadata_paths"]["datasets_other_path"] + "/ts_all_stromal",
+        ensembl_hum = config["base"] + config["metadata_paths"]["ensembl_hum"],
+        seu_input_recl = OUTPUT_DAT + "/02_reclustering_other/03_recl/reclustered_ts_all_stromal_list",
+        resolution_df_path = config["base"] + config["metadata_paths"]["resolution_other"]
+    output:
+        OUTPUT_REP + "/custom_ts_all_stromal.html"
+    resources:
+        mem_mb = 50000,
+        queue = "medium-debian"
+    threads: 10
+    params:
+        plotting = "../../source/plotting.R",
+        OUTPUT_DAT = OUTPUT_DAT
+    script:
+        "03_scripts_custom/custom_ts_all_stromal.Rmd"

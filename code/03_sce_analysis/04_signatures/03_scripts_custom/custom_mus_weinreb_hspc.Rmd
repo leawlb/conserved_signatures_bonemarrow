@@ -721,7 +721,6 @@ slightly_better_markers <- c(
     "Il7r",
     "Cd79a",
     "Cd79b",
-    "Ighm",
     "Igkc",
     "Ighm",
     "Iglc2",
@@ -747,6 +746,8 @@ slightly_better_markers <- c(
     "Gypa",
     "Alas2"
   )
+
+slightly_better_markers[duplicated(slightly_better_markers)]
 ```
 
 ```{r last_heatmap, fig.height = 10, fig.width = 5}

@@ -73,7 +73,7 @@ head(ensembl_hum)
 # since in an .Rmd file run by snakemake the only output defined
 # by snakemake is the html, any other output must be defined manually
 base_path_data <- snakemake@params[["OUTPUT_DAT"]]
-output_path <- base::paste0(base_path_data, "/03_custom_clustering/ts_bone_marrow_both.Rds")
+output_path <- base::paste0(base_path_data, "/03_custom_clustering/ts_bone_marrow.Rds")
 print(output_path)
 ```
 

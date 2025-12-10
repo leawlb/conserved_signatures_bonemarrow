@@ -98,6 +98,14 @@ rm(seu_hsc_recl_list_o1)
 gc()
 ```
 
+```{r load_custom_labels}
+# load the object with the custom labels to put them into one object
+seu_ts_bone_marrow_cust <-  base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/03_custom_clustering/ts_bone_marrow.Rds"))
+
+```
+
 ```{r export_paths}
 output_path <- base::paste0(base_path, "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/04_blind_annotation/ts_bone_marrow_both.Rds")
 print(output_path)
@@ -366,8 +374,29 @@ seu_sign_o1$annotated_reclustered <- factor(seu_sign_o1$annotated_reclustered,
 stopifnot(!is.na(seu_sign_o1$annotated_reclustered))
 ```
 
+## Add clusters from the custom clustering
+
+```{r add_clusters}
+# add the custom-labelled clusters
+
+seu_sign_o1$signature_label <- seu_sign_o1$annotated_reclustered
+seu_sign_o1$custom_label <- vector(length = ncol(seu_sign_o1))
+
+# match to be sure but they should be identical
+seu_sign_o1$custom_label <- seu_ts_bone_marrow_cust$custom_labels[
+  match(
+    colnames(seu_sign_o1),
+    colnames(seu_ts_bone_marrow_cust))]
+```
+
+```{r tables_all}
+print(table(seu_sign_o1$custom_label, seu_sign_o1$signature_label))
+print(table(seu_sign_o1$cell_type, seu_sign_o1$signature_label))
+print(table(seu_sign_o1$custom_label, seu_sign_o1$cell_type))
+```
+
 ```{r save}
-saveRDS(seu_ts_bone_marrow, output_path)
+saveRDS(seu_sign_o1, output_path)
 ```
 
 ```{r sessioninfo}

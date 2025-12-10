@@ -34,32 +34,7 @@ library(SeuratObject, quietly = TRUE)
 
 # the un-clustered original object
 seu_ts_bone_marrow <- readRDS(snakemake@input[["seu_input"]])
-
 #seu_ts_bone_marrow <- readRDS("/home/l012t/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_bone_marrow")
-
-# the same object but re-clustered with signature genes
-seu_ts_bone_marrow_recl_list <- readRDS(snakemake@input[["seu_input_recl"]])
-
-#seu_ts_bone_marrow_recl_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_ts_bone_marrow_list")
-
-# get the resolution
-resolution_df_path <- snakemake@input[["resolution_df_path"]]
-#resolution_df_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt"
-
-resolution_df <- utils::read.csv(file = resolution_df_path, 
-                               header = TRUE, 
-                               sep = ";", 
-                               check.names=FALSE, 
-                               stringsAsFactors=FALSE, 
-                               as.is=TRUE, 
-                               colClasses = "character")
-
-resolution <- resolution_df %>%
-  dplyr::filter(conservation_level == "conserved_signature") %>%
-  dplyr::filter(dataset == "ts_bone_marrow") %>%
-  dplyr::pull()
-  
-seu_ts_bone_marrow_recl <- seu_ts_bone_marrow_recl_list$seu_sign[[resolution]]
 
 
 # load ensembl df to get the ENS IDs for the genes I need
@@ -875,66 +850,6 @@ ggplot2::ggplot(
     axis.text.x = element_text(angle = 90)
   )
 
-```
-
-```{r add_clusters}
-# add the signature-based clusters
-# seu_ts_bone_marrow_recl@meta.data
-
-seu_ts_bone_marrow$signature_clust <- vector(length = ncol(seu_ts_bone_marrow))
-
-# match to be sure but they should be identical
-seu_ts_bone_marrow$signature_clust <- seu_ts_bone_marrow_recl$seurat_clusters[
-  match(
-    colnames(seu_ts_bone_marrow),
-    colnames(seu_ts_bone_marrow_recl))]
-```
-
-TODO: change this later but add actual annotations
-
-Taken form Fig 4.
-
-```{r labels2}
-
-seu_ts_bone_marrow$signature_label <- vector(length = ncol(seu_ts_bone_marrow))
-
-seu_ts_bone_marrow$signature_label[
-  seu_ts_bone_marrow$signature_clust == "6"] <- "Mk"
-seu_ts_bone_marrow$signature_label[
-  seu_ts_bone_marrow$signature_clust == "5"] <- "Mk/Ery"
-seu_ts_bone_marrow$signature_label[
-  seu_ts_bone_marrow$signature_clust == "1"] <- "Ery"
-seu_ts_bone_marrow$signature_label[
-  seu_ts_bone_marrow$signature_clust == "8"] <- "Late Ery"
-seu_ts_bone_marrow$signature_label[
-  seu_ts_bone_marrow$signature_clust == "0"] <- "batch, Smart-Seq2"
-seu_ts_bone_marrow$signature_label[
-  seu_ts_bone_marrow$signature_clust == "4"] <- "HSC"
-seu_ts_bone_marrow$signature_label[
-  seu_ts_bone_marrow$signature_clust == "7"] <- "Mono"
-seu_ts_bone_marrow$signature_label[
-  seu_ts_bone_marrow$signature_clust == "3"] <- "Myeloid"
-seu_ts_bone_marrow$signature_label[
-  seu_ts_bone_marrow$signature_clust == "2"] <- "Cycling Myeloid"
-
-seu_ts_bone_marrow$signature_label <- 
-  factor(seu_ts_bone_marrow$signature_label,
-  levels = c(
-    "HSC",
-    "Mk/Ery",
-    "Mk",
-    "Ery",
-    "Late Ery",
-    "Myeloid",
-    "Mono",
-    "Cycling Myeloid",
-    "batch, Smart-Seq2"))
-```
-
-```{r tables_all}
-print(table(seu_ts_bone_marrow$custom_label, seu_ts_bone_marrow$signature_label))
-print(table(seu_ts_bone_marrow$cell_type, seu_ts_bone_marrow$signature_label))
-print(table(seu_ts_bone_marrow$custom_label, seu_ts_bone_marrow$cell_type))
 ```
 
 Save the object now.

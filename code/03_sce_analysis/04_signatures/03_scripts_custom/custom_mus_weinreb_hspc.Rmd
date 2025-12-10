@@ -34,33 +34,7 @@ library(SeuratObject, quietly = TRUE)
 
 # the un-clustered original object
 seu_mus_weinreb_hspc <- readRDS(snakemake@input[["seu_input"]])
-
 #seu_mus_weinreb_hspc <- readRDS("/home/l012t/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/mus_weinreb_hspc")
-
-# the same object but re-clustered with signature genes
-seu_mus_weinreb_hspc_recl_list <- readRDS(snakemake@input[["seu_input_recl"]])
-
-#seu_mus_weinreb_hspc_recl_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_mus_weinreb_hspc_list")
-
-# get the resolution
-resolution_df_path <- snakemake@input[["resolution_df_path"]]
-#resolution_df_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt"
-
-resolution_df <- utils::read.csv(file = resolution_df_path, 
-                               header = TRUE, 
-                               sep = ";", 
-                               check.names=FALSE, 
-                               stringsAsFactors=FALSE, 
-                               as.is=TRUE, 
-                               colClasses = "character")
-
-resolution <- resolution_df %>%
-  dplyr::filter(conservation_level == "conserved_signature") %>%
-  dplyr::filter(dataset == "mus_weinreb_hspc") %>%
-  dplyr::pull()
-  
-seu_mus_weinreb_hspc_recl <- seu_mus_weinreb_hspc_recl_list$seu_sign[[resolution]]
-
 ```
 
 ```{r output_path}

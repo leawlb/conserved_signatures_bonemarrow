@@ -100,7 +100,7 @@ gc()
 ```
 
 ```{r export_paths}
-output_path <- base::paste0(base_path, "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/04_blind_annotation/ts_hscs_progenitors_both.Rds")
+output_path <- base::paste0(base_path, "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/04_blind_annotation/ts_hscs_progenitors.Rds")
 print(output_path)
 ```
 
@@ -502,8 +502,14 @@ stopifnot(!is.na(seu_sign_o2$annotated_reclustered))
 stopifnot(!is.na(seu_sign_o2$cell_type))
 ```
 
+## Add clusters from the signature-based re-clustering
+
+For this dataset, there was custom labelling. 
+So there is nothing to add.
+So also don't save it under "both".
+
 ```{r save}
-saveRDS(seu_ts_bone_marrow, output_path)
+saveRDS(seu_sign_o2, output_path)
 ```
 
 ```{r sessioninfo}

@@ -30,6 +30,9 @@ scRNAseq_data_paths:
 # METADATA # 
 
 metadata_paths: 
+
+  metadata: "/data/metadata"
+
   colors: "/data/metadata/colors/colors.txt"
   colors_ref: "/data/metadata/colors/colors_references.txt"
   

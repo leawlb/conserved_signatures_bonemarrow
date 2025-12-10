@@ -5,8 +5,8 @@ date: '2025-12-09'
 output: html_document
 ---
 
-Blind annotation of two human HSPC datasets after unbiased re-clustering with
-signature genes.
+Blind annotation of two human HSPC datasets and one mouse and one human
+niche cell datasets after unbiased re-clustering with signature genes.
 This is the script for annotating TABULA SAPIENS HSPC/PROGENITORS from fetal data.
 The thusly obtained clusters will now be annotated based only on the expression
 of signature gene orthologs within these clusters, and without knowledge of
@@ -37,15 +37,16 @@ library(tidyverse, quietly = TRUE)
 
 ```{r base_path}
 base_path <- snakemake@input[["base_path"]]
-#base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+metadata_path <- snakemake@input[["metadata_path"]]
+#base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/"
 ```
 
 ```{r load_objects}
 
 # data frame containing the correct resolutions for other datasets as visually determined
 resolution_df_path <- base::paste0(
-  base_path,
-  "/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt")
+  metadata_path,
+  "/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt")
 
 resolution_df <- utils::read.csv(file = resolution_df_path, 
                                header = TRUE, 
@@ -57,26 +58,30 @@ resolution_df <- utils::read.csv(file = resolution_df_path,
 
 ensembl_sign <- readRDS(base::paste0(
   base_path,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/02_endf/ensembl_sign_hsc"))
+  "/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/02_endf/ensembl_sign_hsc"))
 ```
 
+Name "other 2" is a remnant from previous figure iterations
+
 ```{r load_other2}
-#-------------------------------------------------------------------------------
-#### OTHER MOUSE DATASET 2 (HSPC)
-#### Tabula sapiens HSCs and Progs (fetal)
-
 dataset_o2 <- "ts_hscs_progenitors"
-
-# original seurat dataset
-seu_orig_o2 <- base::readRDS(base::paste0(
-  base_path,
-  "/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_hscs_progenitors"))
 
 # list of seurat objects with reclustering vectors for each gene set+ resolution
 seu_hsc_recl_list_o2 <- base::readRDS(base::paste0(
   base_path,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_ts_hscs_progenitors_list"))
+  "/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_ts_hscs_progenitors_list"))
 ```
+
+```{r export_paths}
+output_path <- base::paste0(
+  base_path,
+  "/sce_objects/03_sce_analysis/04_signatures/04_blind_annotation/ts_hscs_progenitors.Rds")
+print(output_path)
+```
+
+## Blindly annotate
+
+### Prep
 
 ```{r selected_seu_o2}
 
@@ -98,13 +103,6 @@ selected_seu_list_o2 <- lapply(seu_hsc_recl_list_o2, function(seu_list){
 rm(seu_hsc_recl_list_o2)
 gc()
 ```
-
-```{r export_paths}
-output_path <- base::paste0(base_path, "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/04_blind_annotation/ts_hscs_progenitors.Rds")
-print(output_path)
-```
-
-## Blindly annotate
 
 ```{r prepare_annotate_o2}
 
@@ -133,6 +131,8 @@ names(ct_markers_o2) <- reclustered_o2
 ct_markers_df_o2 <- bind_rows(ct_markers_o2)
 head(ct_markers_df_o2)
 ```
+
+Get more markers between specific sub-clusters.
 
 ```{r prepare_annotate_o2_hsc_only}
 
@@ -163,7 +163,7 @@ ct_markers_df_o2_hsc <- bind_rows(ct_markers_o2_hsc)
 head(ct_markers_df_o2_hsc)
 ```
 
-## UMAPs
+### UMAPs
 
 ```{r umap_others_2}
 DimPlot(seu_sign_o2, dims = c(1,2), group.by = "seurat_clusters")
@@ -193,7 +193,7 @@ DimPlot(seu_sign_o2, reduction = "umap")+
   facet_wrap(facets = vars(seu_sign_o2@meta.data$assay), ncol = 2)
 ``` 
 
-## Show markers
+### Show markers
 
 ```{r others2_cluster0}
 nr <- "0"
@@ -283,7 +283,6 @@ FeaturePlot(seu_sign_o2, markers[13:18])
 seu_sign_o2$annotated_reclustered[
   seu_sign_o2$seurat_clusters == nr] <- "Mono/Dendritic"
 ```
-
 
 ```{r others2_cluster4}
 nr <- "5"
@@ -456,8 +455,9 @@ unique(seu_sign_o2$annotated_reclustered)
 Factorize for nicer plots.
 
 ```{r others2_level}
-seu_sign_o2$annotated_reclustered <- factor(seu_sign_o2$annotated_reclustered,
-                                            levels = c(  
+seu_sign_o2$annotated_reclustered <- factor(
+  seu_sign_o2$annotated_reclustered,
+  levels = c(  
     "HSC1 10xV1",
     "HSC2 10xV2",
     "HSC3",
@@ -471,42 +471,14 @@ seu_sign_o2$annotated_reclustered <- factor(seu_sign_o2$annotated_reclustered,
     "Mk/Ery1 10xV1",
     "Mk/Ery2 10xV2"))
 
-# change some names from the original annotations for better visualisation later
-seu_sign_o2$cell_type <- unfactor(seu_sign_o2$cell_type)
-seu_sign_o2$cell_type[
-  seu_sign_o2$cell_type == "hematopoietic stem cell"] <- "HSC"
-seu_sign_o2$cell_type[
-  seu_sign_o2$cell_type == "hematopoietic multipotent progenitor cell"] <- "hematopoietic MPP"
-seu_sign_o2$cell_type[
-  seu_sign_o2$cell_type == "common myeloid progenitor"] <- "common myeloid prog"
-seu_sign_o2$cell_type[
-  seu_sign_o2$cell_type == "granulocyte monocyte progenitor cell"] <- "granu-mono prog"
-seu_sign_o2$cell_type[
-  seu_sign_o2$cell_type == "early lymphoid progenitor"] <- "early lymphoid prog"
-seu_sign_o2$cell_type[
-  seu_sign_o2$cell_type == "megakaryocyte-erythroid progenitor cell"] <- "mk-ery prog"
-
-seu_sign_o2$cell_type <- factor(
-  seu_sign_o2$cell_type,
-  levels = base::c(
-    "HSC",
-    "hematopoietic MPP",
-    "common myeloid prog",
-    "granu-mono prog",
-    "promonocyte",
-    "promyelocyte",
-    "early lymphoid prog",
-    "mk-ery prog"
-  ))
 stopifnot(!is.na(seu_sign_o2$annotated_reclustered))
-stopifnot(!is.na(seu_sign_o2$cell_type))
 ```
 
 ## Add clusters from the signature-based re-clustering
 
-For this dataset, there was custom labelling. 
-So there is nothing to add.
-So also don't save it under "both".
+For this dataset, there was custom labelling so there is nothing to add.
+
+## Save
 
 ```{r save}
 saveRDS(seu_sign_o2, output_path)

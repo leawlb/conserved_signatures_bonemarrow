@@ -28,3 +28,11 @@ snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resour
 # 04 BLIND ANNOTATION
 
 snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resources.mem_mb}]" -p -j30 -c20 -s 04_blind_anno_snakefile.py --latency-wait 40 --configfile ../../config.yaml --use-conda -n 
+
+# 05 THRESHOLDS
+
+
+# 06 INCLUDING BATCH CORRECTION
+
+snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resources.mem_mb}]" -p -j30 -c20 -s 06_include_batchcorrection_snakefile.py --latency-wait 40 --configfile ../../config.yaml --use-conda -n 
+

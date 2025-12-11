@@ -610,7 +610,7 @@ seu_mus_weinreb_hspc$custom_label[
 seu_mus_weinreb_hspc$custom_label[
   seu_mus_weinreb_hspc$clusters == "cluster-8"] <- "Lymphoid"
 seu_mus_weinreb_hspc$custom_label[
-  seu_mus_weinreb_hspc$clusters == "cluster-5"] <- "Later lymphoid 2, time point 16"
+  seu_mus_weinreb_hspc$clusters == "cluster-5"] <- "Later lymphoid, time point 16"
 seu_mus_weinreb_hspc$custom_label[
   seu_mus_weinreb_hspc$clusters == "cluster-12"] <- "Antigen-presenting"
 seu_mus_weinreb_hspc$custom_label[

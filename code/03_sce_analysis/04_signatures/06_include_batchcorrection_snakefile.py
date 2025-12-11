@@ -45,7 +45,7 @@ fractions = get_list(metadata = METADATA, column = "Fraction_ID")
 targets = []
 
 targets = targets + [OUTPUT_REP + "/bc_ts_bonemarrow.html"]
-
+targets = targets + [OUTPUT_REP + "/bc_ts_hscs_progenitors.html"]
 
 #-------------------------------------------------------------------------------
 
@@ -80,4 +80,22 @@ rule batchcorrection_ts_bonemarrow:
         OUTPUT_DAT = OUTPUT_DAT
     script:
         "06_include_batchcorrection/bc_ts_bonemarrow.Rmd"
+
+
+rule batchcorrection_ts_hscs_progenitors:
+    input: 
+        seu_input = config["base"] + config["metadata_paths"]["datasets_other_path"] + "/ts_hscs_progenitors",
+        ensembl_sign = OUTPUT_DAT + "/01_reclustering_own/02_endf/ensembl_sign_hsc",
+        resolution_df_path = config["base"] + config["metadata_paths"]["resolution_other"]
+    output:
+        OUTPUT_REP + "/bc_ts_hscs_progenitors.html"
+    resources:
+        mem_mb = 50000,
+        queue = "medium-debian"
+    threads: 10
+    params:
+        plotting = "../../source/plotting.R",
+        OUTPUT_DAT = OUTPUT_DAT
+    script:
+        "06_include_batchcorrection/bc_ts_hscs_progenitors.Rmd"
 

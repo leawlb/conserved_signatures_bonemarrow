@@ -1,0 +1,533 @@
+---
+title: "Tabula sapiens fetal HSPC batch-corrected reclustering"
+author: "Lea Wölbert"
+date: '2025-12-11'
+output: html_document
+---
+
+General build taken from custom_mmus_hsc.Rmd etc. 
+
+Similarly to before this script will be used to recluster and annotate 
+one of the published datasets, in this case tabula sapiens fetal HSPCs.
+
+This time, I will perform the standard clustering pipeline, but 
+
+ - FIRST subset to signature gene orthologs only,
+
+ - THEN perform batch correction (or I'd need to calculate variable features),
+
+ - THEN cluster with the same resolution used for the non-batch-corrected
+signature-based reclustering, 
+
+ - and THEN do a blind annotation.
+
+This is to show the effect of batch correction as would be done in a 
+normal preprocessing pipeline.
+
+Again, I will save the resulting object from within this script 
+for simplicity reasons.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load libraries, source code 
+
+```{r seed, message = FALSE}
+set.seed(37)
+```
+
+```{r source, message = FALSE}
+source(file =  snakemake@params[["plotting"]])
+```
+
+```{r, message = FALSE}
+library(SingleCellExperiment, quietly = TRUE)
+library(BiocSingular, quietly = TRUE)
+library(tidyverse, quietly = TRUE)
+library(dittoSeq, quietly = TRUE)
+library(Seurat, quietly = TRUE)
+library(SeuratObject, quietly = TRUE)
+
+# see which seurat version 
+utils::sessionInfo()
+```
+
+```{r load_objects}
+
+# the un-clustered original object
+seu_ts_hscs_progenitors <- readRDS(snakemake@input[["seu_input"]])
+#seu_ts_hscs_progenitors <- readRDS("/home/l012t/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_hscs_progenitors")
+
+# this contains the ensembl IDs for orthologs of ONLY the signature genes
+# used for subsetting later
+ensembl_sign <- base::readRDS(snakemake@input[["ensembl_sign"]])
+#ensembl_sign <- readRDS("/home/l012t/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/02_endf/ensembl_sign_hsc")
+head(ensembl_sign)
+
+# this contains info on the selected resolution for each dataset
+# for clustering with each gene set
+resolution_df_path <- snakemake@input[["resolution_df_path"]]
+# resolution_df_path <- "/home/l012t/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt"
+
+resolution_df <- utils::read.csv(file = resolution_df_path, 
+                               header = TRUE, 
+                               sep = ";", 
+                               check.names=FALSE, 
+                               stringsAsFactors=FALSE, 
+                               as.is=TRUE, 
+                               colClasses = "character")
+```
+
+```{r output_path}
+# define output path here
+# since in an .Rmd file run by snakemake the only output defined
+# by snakemake is the html, any other output must be defined manually
+base_path_data <- snakemake@params[["OUTPUT_DAT"]]
+output_path <- base::paste0(base_path_data, "/06_include_batch_correction/ts_hscs_progenitors.Rds")
+print(output_path)
+```
+
+# Batch correction and clustering
+
+```{r resolution}
+# get the resolution used to recluster the same object with signature genes
+# but without batch-correction
+resolution <- resolution_df %>%
+  dplyr::filter(dataset == "ts_hscs_progenitors") %>%
+  dplyr::filter(conservation_level == "conserved_signature") %>%
+  dplyr::pull()
+resolution
+```
+
+Similar to the seurat pipeline roughly taken from sce_functions_reclustering.R
+The seurat object should be pretty basic.
+
+Adding a step for batch correction. 
+Still keeping it very basic here.
+Sticking to this vignette: https://satijalab.org/seurat/archive/v4.3/integration_introduction
+because the original clustering was done in Seurat v4.3.0
+
+```{r subset}
+
+# subset right from the beginnging
+# this is because if variable or integration features are calculated, 
+# they will not include enough/all signature genes
+# seems a little silly but this also seems to be the best option right now
+
+ensembl_column_use <- seu_ts_hscs_progenitors@misc$ensembl_column_use
+ensembl_column_use
+
+length(unique(ensembl_sign$MMUS_SYMBOL)) # there are 229 signature genes
+
+sign_ids <- unique(ensembl_sign[,ensembl_column_use])
+length(sign_ids) # and 226 features that are orthologs of those
+table(sign_ids %in% rownames(seu_ts_hscs_progenitors)) # of which 224 are in the object's rownames
+
+# subset seurat_object 
+seu_ts_hscs_progenitors_sub <- seu_ts_hscs_progenitors[
+  rownames(seu_ts_hscs_progenitors) %in% sign_ids,]
+```
+
+```{r seurat_clustering_pipeline_split}
+
+# start from raw data
+seu_ts_hscs_progenitors_sub@misc$data_use 
+
+seu_ts_hscs_progenitors_list <- Seurat::SplitObject(
+  seu_ts_hscs_progenitors_sub, 
+  split.by = "assay")
+# unlike ts_bone_marrow, there are many fetal donors from many different stages 
+# so instead I'd like to try assay first which was the main cause of cell type
+# separation in figure 4
+# also, there SHOULD be biological differences between some cell type of diff-
+# erent fetal stages so not sure that overcorrecting those away are a good idea
+
+# normalize and identify variable features for each dataset independently
+seu_ts_hscs_progenitors_list <- lapply(
+  X = seu_ts_hscs_progenitors_list, 
+  FUN = function(seu){
+    
+    seu <- Seurat::NormalizeData(
+      seu, 
+      assay = "RNA", 
+      verbose = FALSE)
+
+    seu <- Seurat::FindVariableFeatures(
+      seu, 
+      selection.method = "vst", 
+      nfeatures = nrow(seu)) # just use all genes
+
+    return(seu)
+})
+seu_ts_hscs_progenitors_list
+```
+
+```{r seurat_clustering_pipeline_integration}
+# start integration
+
+int_features <- Seurat::SelectIntegrationFeatures(
+  object.list = seu_ts_hscs_progenitors_list)
+length(int_features) 
+
+anchors_ts_hscs_progenitors <- Seurat::FindIntegrationAnchors(
+  object.list = seu_ts_hscs_progenitors_list,
+  anchor.features = int_features,
+  verbose = FALSE)
+
+combined_ts_hscs_progenitors <- Seurat::IntegrateData(
+  anchorset = anchors_ts_hscs_progenitors,
+  verbose = FALSE)
+
+dim(combined_ts_hscs_progenitors)
+combined_ts_hscs_progenitors
+```
+
+```{r seurat_clustering_pipeline_downstream}
+# run the downstream analysis on the integrated data
+DefaultAssay(combined_ts_hscs_progenitors) <- "integrated"
+
+combined_ts_hscs_progenitors <- Seurat::ScaleData(
+  combined_ts_hscs_progenitors, 
+  verbose = FALSE)
+
+# uses scaled data
+combined_ts_hscs_progenitors <- Seurat::RunPCA(
+  combined_ts_hscs_progenitors,
+  npcs = 30,
+  verbose = FALSE)
+  
+# check and possibly define nr of pcs
+nr_pca <- ncol(combined_ts_hscs_progenitors@reductions$pca)
+print(nr_pca)
+
+# requires PC coordinates
+combined_ts_hscs_progenitors <- Seurat::FindNeighbors(
+  combined_ts_hscs_progenitors, 
+  reduction = "pca",
+  dims = 1:nr_pca, 
+  verbose = FALSE)
+  
+# requires neighbors
+combined_ts_hscs_progenitors <- Seurat::FindClusters(
+  combined_ts_hscs_progenitors, 
+  resolution = as.numeric(resolution), 
+  verbose = FALSE) 
+
+# calculate UMAP
+combined_ts_hscs_progenitors <-  Seurat::RunUMAP(
+  combined_ts_hscs_progenitors,
+  dims = 1:10)
+combined_ts_hscs_progenitors
+```
+
+# Evaluate
+
+```{r table}
+table(combined_ts_hscs_progenitors@meta.data$seurat_clusters)
+```
+
+## Clustering separation
+
+Look at the clusters.
+Check possible remaining batch effects.
+
+```{r umaps_base, fig.height = 6, fig.width = 6}
+Seurat::DimPlot(combined_ts_hscs_progenitors, reduction = "umap")
+``` 
+
+```{r umaps_base_donid, fig.height = 6, fig.width = 6}
+Seurat::DimPlot(combined_ts_hscs_progenitors, reduction = "umap", group.by = "donor_id")
+``` 
+
+```{r umaps_dev, fig.height = 6, fig.width = 6}
+Seurat::DimPlot(combined_ts_hscs_progenitors, reduction = "umap")+
+  ggplot2::facet_wrap(
+    facets = vars(combined_ts_hscs_progenitors@meta.data$development_stage), ncol = 2)
+``` 
+
+```{r umaps_sex, fig.height = 3, fig.width = 6}
+Seurat::DimPlot(combined_ts_hscs_progenitors, reduction = "umap")+
+  ggplot2::facet_wrap(
+    facets = vars(combined_ts_hscs_progenitors@meta.data$sex), ncol = 2)
+``` 
+
+```{r umaps_sex_assay, fig.height = 3, fig.width = 6}
+Seurat::DimPlot(combined_ts_hscs_progenitors, reduction = "umap", group.by = "assay")+
+  ggplot2::facet_wrap(
+    facets = vars(combined_ts_hscs_progenitors@meta.data$sex), ncol = 2)
+``` 
+
+```{r umaps_assay_donid, fig.height = 3, fig.width = 6}
+Seurat::DimPlot(combined_ts_hscs_progenitors, reduction = "umap", group.by = "assay")+
+  ggplot2::facet_wrap(
+    facets = vars(combined_ts_hscs_progenitors@meta.data$donor_id), ncol = 2)
+``` 
+
+```{r umaps_sex_donid, fig.height = 3, fig.width = 6}
+Seurat::DimPlot(combined_ts_hscs_progenitors, reduction = "umap", group.by = "sex")+
+  ggplot2::facet_wrap(
+      facets = vars(combined_ts_hscs_progenitors@meta.data$donor_id), ncol = 2)
+``` 
+
+```{r umaps_assay, fig.height = 6, fig.width = 6}
+Seurat::DimPlot(combined_ts_hscs_progenitors, reduction = "umap")+
+  ggplot2::facet_wrap(facets = vars(combined_ts_hscs_progenitors@meta.data$assay), ncol = 2)
+knitr::knit_exit()
+``` 
+
+
+
+Now continue with the blind annotation.
+
+# Blind annotation
+
+## Calculate markers
+
+```{r marker_list}
+clust_list <- as.list(levels(combined_ts_hscs_progenitors$seurat_clusters))
+
+ct_markers_ts_hscs_progenitors <- lapply(clust_list, function(x){
+  markers <- Seurat::FindMarkers(combined_ts_hscs_progenitors,
+                                 test.use = "wilcox",
+                                 ident.1 = x)
+
+  markers <- markers[base::order(base::abs(markers$avg_log2FC), 
+                                 decreasing=TRUE),]
+
+  markers$which_cluster <- base::rep(x, nrow(markers))
+  markers <- rownames_to_column(markers, var = "genes")
+  
+  # need to add only ensembl gene symbols as I will not be using others
+  markers$symbol <- markers$genes
+  markers$symbol <- ensembl_sign$HSAPIENS_SYMBOL[
+    base::match(markers$genes, ensembl_sign$ENSG_ID)]
+
+  return(markers)
+})
+names(ct_markers_ts_hscs_progenitors) <- levels(combined_ts_hscs_progenitors$seurat_clusters)
+
+combined_ts_hscs_progenitors$batchc_sign_labels <- vector(length = ncol(combined_ts_hscs_progenitors))
+```
+
+Will go in the order of 1, 7, 0, 8 (interspersed with 0), 3, 6, 2, 5, 4.
+
+### Show markers
+
+```{r cluster1}
+nr <- "1"
+markers <- ct_markers_ts_hscs_progenitors[[nr]]$genes[
+  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) &
+    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
+    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05]
+
+ct_markers_ts_hscs_progenitors[[nr]][
+  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) & 
+    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
+    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05,][c(1, 3, 6, 8)]
+
+Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[1:6])
+Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[7:12])
+# HLF, CD34, MSI2, MECOM, MPL among the top genes are major HSC genes
+
+combined_ts_hscs_progenitors$batchc_sign_labels[
+  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "HSC"
+```
+
+```{r cluster7}
+nr <- "7"
+markers <- ct_markers_ts_hscs_progenitors[[nr]]$genes[
+  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) &
+    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
+    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05]
+
+ct_markers_ts_hscs_progenitors[[nr]][
+  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) & 
+    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
+    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05,][c(1, 3, 6, 8)]
+
+Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[1:6])
+Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[7:12])
+# LY86, ANXA2, SPI1, CLEC12A, CTSZ, MEF2C seem granu/mono to me
+# possibly more mono depending on the other clusters
+
+combined_ts_hscs_progenitors$batchc_sign_labels[
+  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "Granu/Mono prog"
+```
+
+```{r cluster0}
+nr <- "0"
+markers <- ct_markers_ts_hscs_progenitors[[nr]]$genes[
+  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) &
+    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
+    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05]
+
+ct_markers_ts_hscs_progenitors[[nr]][
+  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) & 
+    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
+    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05,][c(1, 3, 6, 8)]
+
+Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[1:6])
+Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[7:12])
+# PRTN3, CTSG, MPO, CLEC12A, CEBPE, LY86, ANXA2, SPI1, CALR, CD63, CALR
+# so this is early myeloid with both neutro and mono potential
+
+combined_ts_hscs_progenitors$batchc_sign_labels[
+  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "Early Myeloid"
+```
+
+```{r cluster8}
+nr <- "8"
+markers <- ct_markers_ts_hscs_progenitors[[nr]]$genes[
+  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) &
+    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
+    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05]
+
+ct_markers_ts_hscs_progenitors[[nr]][
+  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) & 
+    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
+    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05,][c(1, 3, 6, 8)]
+
+Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[1:6])
+Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[7:12])
+# very short list of markers but those identified are granu-like baso/
+# mast/eo (LMO4, CD63, GATA2)
+
+combined_ts_hscs_progenitors$batchc_sign_labels[
+  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "Baso/Eo/Mast/Granu"
+```
+
+```{r cluster3}
+nr <- "3"
+markers <- ct_markers_ts_hscs_progenitors[[nr]]$genes[
+  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) &
+    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
+    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05]
+
+ct_markers_ts_hscs_progenitors[[nr]][
+  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) & 
+    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
+    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05,][c(1, 3, 6, 8)]
+
+Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[1:6])
+Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[7:12])
+# definitely some cycling, but also some myeloid signature with
+# ANXA2, CTSZ, LY86, SPI1
+
+combined_ts_hscs_progenitors$batchc_sign_labels[
+  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "Cycling Myeloid"
+```
+
+```{r cluster6}
+nr <- "6"
+markers <- ct_markers_ts_hscs_progenitors[[nr]]$genes[
+  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) &
+    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
+    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05]
+
+ct_markers_ts_hscs_progenitors[[nr]][
+  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) & 
+    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
+    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05,][c(1, 3, 6, 8)]
+
+Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[1:6])
+Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[7:12])
+# TSPO2, HMBS, ERMAP, AQP1, KLF1, EPOR in that order look 
+# already like fairly mature erythroid cells, let's see what the others
+# look like
+
+combined_ts_hscs_progenitors$batchc_sign_labels[
+  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "Late Ery"
+```
+
+```{r cluster2, fig.height = 7, fig.width = 5}
+nr <- "2"
+markers <- ct_markers_ts_hscs_progenitors[[nr]]$genes[
+  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) &
+    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
+    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05]
+
+ct_markers_ts_hscs_progenitors[[nr]][
+  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) & 
+    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
+    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05,][c(1, 3, 6, 8)]
+
+Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[1:6])
+Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[7:12])
+# higher KLF1, GATA1 EPOR in this population make it seem earlier to me
+
+combined_ts_hscs_progenitors$batchc_sign_labels[
+  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "Early Ery"
+```
+
+```{r cluster5}
+nr <- "5"
+markers <- ct_markers_ts_hscs_progenitors[[nr]]$genes[
+  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) &
+    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
+    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05]
+
+ct_markers_ts_hscs_progenitors[[nr]][
+  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) & 
+    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
+    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05,][c(1, 3, 6, 8)]
+
+Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[1:6])
+Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[7:12])
+# ITGA2B, RAMP1, GATA2, TGFB1, MEF2C, ZFPM1 give it a more mk than ery
+# profile, KLF1, etc is missing
+
+combined_ts_hscs_progenitors$batchc_sign_labels[
+  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "Mk"
+```
+
+```{r cluster4}
+nr <- "4"
+markers <- ct_markers_ts_hscs_progenitors[[nr]]$genes[
+  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) &
+    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
+    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05]
+
+ct_markers_ts_hscs_progenitors[[nr]][
+  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) & 
+    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
+    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05,][c(1, 3, 6, 8)]
+
+Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[1:6])
+Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[7:12])
+# also expression of ITGA2B, ZFPM1, GATA2, but KLF1, EPOR are also
+# detected, so some Ery profile as well
+
+combined_ts_hscs_progenitors$batchc_sign_labels[
+  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "Mk/Ery"
+```
+
+Factorize for nicer plots.
+
+```{r others2_level}
+combined_ts_hscs_progenitors$batchc_sign_labels <- factor(
+  combined_ts_hscs_progenitors$batchc_sign_labels,
+  levels = c(  
+    "HSC",
+    "Early Myeloid",
+    "Granu/Mono prog",
+    "Cycling Myeloid",
+    "Baso/Eo/Mast/Granu",
+    "Mk",
+    "Mk/Ery",
+    "Early Ery",
+    "Late Ery"
+   ))
+
+stopifnot(!is.na(combined_ts_hscs_progenitors$batchc_sign_labels))
+```
+
+```{r umaps_labels, fig.height = 6, fig.width = 6}
+Seurat::DimPlot(combined_ts_hscs_progenitors, reduction = "umap", group.by = "batchc_sign_labels")
+``` 
+
+## Save
+
+```{r save}
+saveRDS(combined_ts_hscs_progenitors, output_path)
+```

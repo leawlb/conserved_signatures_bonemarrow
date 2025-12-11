@@ -1,0 +1,464 @@
+---
+title: "Supplementary Figure X"
+date: '2025-12-10'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Compare the custom_clustering of other datasets to their original 
+cell type annotation.
+
+These are ts_bone_marrow, ts_all_stromal, and mus_weinreb, and they were
+selected for custom_clustering because they had relatively lower 
+cell type resolution or clustering from the original publication because
+many cell types had to be removed.
+
+Also check how many signature genes (or orthologs) are detected in each
+cluster's or cell types marker gene list to see if this is comparable.
+
+#### Load objects
+
+```{r seed, message = FALSE}
+RNGkind("L'Ecuyer-CMRG") 
+set.seed(37)
+```
+
+```{r load, message = FALSE}
+library(tidyverse, quietly = TRUE)
+library(SingleCellExperiment, quietly = TRUE)
+library(ggpubr, quietly = TRUE)
+library(Seurat, quietly = TRUE)
+
+```
+
+```{r base_path}
+base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+```
+
+```{r source}
+colors_path <- base::paste0(
+  base_path, 
+  "/metadata/colors/colors.txt")
+ 
+source("../source/colors.R")
+source("../source/plotting.R")
+source("../figures/determine_params.R")
+```
+
+## Load and prepare objects
+
+```{r load_objects}
+# custom clustered datasets
+
+seu_ts_bone_marrow <- readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/03_custom_clustering/ts_bone_marrow.Rds"))
+
+seu_ts_all_stromal <- readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/03_custom_clustering/ts_all_stromal.Rds"))
+
+seu_mus_weinreb_hspc <- readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/03_custom_clustering/mus_weinreb_hspc.Rds"))
+```
+
+```{r load_recl}
+
+seu_ts_bone_marrow_recl_list <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_ts_bone_marrow_list"))
+
+seu_ts_all_stromal_recl_list <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_ts_all_stromal_list"))
+
+seu_mus_weinreb_hspc_recl_list <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_mus_weinreb_hspc_list"))
+```
+
+## Prep
+
+get the selected object by using the resolution df with the recorded
+chosen optimal resolution
+
+```{r resolution_df}
+resolution_df_path <- base::paste0(
+  base_path,
+  "/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt")
+
+resolution_df <- utils::read.csv(
+  file = resolution_df_path, 
+  header = TRUE, 
+  sep = ";", 
+  check.names=FALSE, 
+  stringsAsFactors=FALSE, 
+  as.is=TRUE, 
+  colClasses = "character")
+```
+
+```{r get_res}
+res_ts_bone_marrow <- resolution_df %>%
+  dplyr::filter(dataset == "ts_bone_marrow") %>%
+  dplyr::filter(conservation_level == "conserved_signature") %>%
+  dplyr::pull()
+
+res_ts_all_stromal <- resolution_df %>%
+  dplyr::filter(dataset == "ts_all_stromal") %>%
+  dplyr::filter(conservation_level == "conserved_signature") %>%
+  dplyr::pull()
+
+res_mus_weinreb_hspc <- resolution_df %>%
+  dplyr::filter(dataset == "mus_weinreb_hspc") %>%
+  dplyr::filter(conservation_level == "conserved_signature") %>%
+  dplyr::pull()
+```
+
+```{r get_selected}
+seu_ts_bone_marrow_sign <- seu_ts_bone_marrow_recl_list$seu_sign[[res_ts_bone_marrow]]
+seu_ts_all_stromal_sign <- seu_ts_all_stromal_recl_list$seu_sign[[res_ts_all_stromal]]
+seu_mus_weinreb_hspc_sign <- seu_mus_weinreb_hspc_recl_list$seu_sign[[res_mus_weinreb_hspc]]
+```
+
+```{r add_clusters}
+# add the custom-labelled clusters
+
+seu_ts_bone_marrow$signature_clust <- vector(length = ncol(seu_ts_bone_marrow))
+seu_ts_bone_marrow$signature_clust <- seu_ts_bone_marrow_sign$seurat_clusters[
+  match(
+    colnames(seu_ts_bone_marrow),
+    colnames(seu_ts_bone_marrow_sign))]
+
+seu_ts_all_stromal$signature_clust <- vector(length = ncol(seu_ts_all_stromal))
+seu_ts_all_stromal$signature_clust <- seu_ts_all_stromal_sign$seurat_clusters[
+  match(
+    colnames(seu_ts_all_stromal),
+    colnames(seu_ts_all_stromal_sign))]
+
+seu_mus_weinreb_hspc$signature_clust <- vector(length = ncol(seu_mus_weinreb_hspc))
+seu_mus_weinreb_hspc$signature_clust <- seu_mus_weinreb_hspc_sign$seurat_clusters[
+  match(
+    colnames(seu_mus_weinreb_hspc),
+    colnames(seu_mus_weinreb_hspc_sign))]
+```
+
+# Heatmaps
+
+Between original cell types and custom clustering.
+
+## ts_bone_marrow
+
+```{r mat_ts_bone_marrow}
+
+mat_ts_bone_marrow <- base::table(
+  seu_ts_bone_marrow$cell_type, 
+  seu_ts_bone_marrow$custom_label)
+
+for(i in 1:ncol(mat_ts_bone_marrow)){
+  mat_ts_bone_marrow[,i] <- mat_ts_bone_marrow[,i]/base::sum(mat_ts_bone_marrow[,i])
+}
+ts_bone_marrow_df <- base::as.data.frame(mat_ts_bone_marrow)
+
+ts_bone_marrow_df$Var2 <- factor(
+  ts_bone_marrow_df$Var2,
+  levels = rev(levels(seu_ts_bone_marrow$custom_label)))
+```
+
+```{r base_heatmap_ts_bone_marrow}
+base_heatmap_ts_bone_marrow <- ggplot2::ggplot(
+  ts_bone_marrow_df, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+base_heatmap_ts_bone_marrow
+```
+
+```{r theme_heatmap_ts_bone_marrow}
+theme_heatmap_ts_bone_marrow <- base_heatmap_ts_bone_marrow+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    #axis.title = element_blank(),
+    #axis.text = element_blank(),
+    axis.text.x = element_text(
+      angle = 90
+    ),
+    axis.ticks.y = element_blank())+
+  ggplot2::scale_fill_gradientn(
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  ggplot2::ylab("Custom clustering and annotation")+
+  ggplot2::xlab("Original annotation")
+  
+theme_heatmap_ts_bone_marrow
+```
+
+## ts_all_stromal
+
+```{r mat_ts_all_stromal}
+
+mat_ts_all_stromal <- base::table(
+  seu_ts_all_stromal$cell_type, 
+  seu_ts_all_stromal$custom_label)
+
+for(i in 1:ncol(mat_ts_all_stromal)){
+  mat_ts_all_stromal[,i] <- mat_ts_all_stromal[,i]/base::sum(mat_ts_all_stromal[,i])
+}
+ts_all_stromal_df <- base::as.data.frame(mat_ts_all_stromal)
+
+ts_all_stromal_df$Var2 <- factor(
+  ts_all_stromal_df$Var2,
+  levels = rev(levels(seu_ts_all_stromal$custom_label)))
+```
+
+```{r base_heatmap_ts_all_stromal}
+base_heatmap_ts_all_stromal <- ggplot2::ggplot(
+  ts_all_stromal_df, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+base_heatmap_ts_all_stromal
+```
+
+```{r theme_heatmap_ts_all_stromal}
+theme_heatmap_ts_all_stromal <- base_heatmap_ts_all_stromal+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    #axis.title = element_blank(),
+    #axis.text = element_blank(),
+    axis.text.x = element_text(
+      angle = 90
+    ),
+    axis.ticks.y = element_blank())+
+  ggplot2::scale_fill_gradientn(
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  ggplot2::ylab("Custom clustering and annotation")+
+  ggplot2::xlab("Original annotation")
+  
+theme_heatmap_ts_all_stromal
+```
+
+## mus_weinreb_hspc
+
+```{r mat_ts_all_stromal}
+
+mat_mus_weinreb_hspc <- base::table(
+  seu_mus_weinreb_hspc$cell_type, 
+  seu_mus_weinreb_hspc$custom_label)
+
+for(i in 1:ncol(mat_mus_weinreb_hspc)){
+  mat_mus_weinreb_hspc[,i] <- mat_mus_weinreb_hspc[,i]/base::sum(mat_mus_weinreb_hspc[,i])
+}
+mus_weinreb_hspc_df <- base::as.data.frame(mat_mus_weinreb_hspc)
+
+mus_weinreb_hspc_df$Var2 <- factor(
+  mus_weinreb_hspc_df$Var2,
+  levels = rev(levels(seu_mus_weinreb_hspc$custom_label)))
+```
+
+```{r base_heatmap_weinreb_hspc_df}
+base_heatmap_weinreb_hspc_df <- ggplot2::ggplot(
+  mus_weinreb_hspc_df, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+base_heatmap_weinreb_hspc_df
+```
+
+```{r theme_heatmap_weinreb_hspc_df}
+theme_heatmap_weinreb_hspc_df <- base_heatmap_weinreb_hspc_df+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    #axis.title = element_blank(),
+    #axis.text = element_blank(),
+    axis.text.x = element_text(
+      angle = 90
+    ),
+    axis.ticks.y = element_blank())+
+  ggplot2::scale_fill_gradientn(
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  ggplot2::ylab("Custom clustering and annotation")+
+  ggplot2::xlab("Original annotation")
+  
+theme_heatmap_weinreb_hspc_df
+```
+
+# Heatmaps vs signature clusters
+
+## ts_bone_marrow_sign
+
+```{r mat_ts_bone_marrow}
+
+mat_ts_bone_marrow_sign <- base::table(
+  seu_ts_bone_marrow$custom_label, 
+  seu_ts_bone_marrow$signature_clust)
+
+for(i in 1:ncol(mat_ts_bone_marrow_sign)){
+  mat_ts_bone_marrow_sign[,i] <- mat_ts_bone_marrow_sign[,i]/base::sum(mat_ts_bone_marrow_sign[,i])
+}
+ts_bone_marrow_sign_df <- base::as.data.frame(mat_ts_bone_marrow_sign)
+
+ts_bone_marrow_sign_df$Var1 <- factor(
+  ts_bone_marrow_sign_df$Var1,
+  levels = levels(seu_ts_bone_marrow$custom_label))
+
+ts_bone_marrow_sign_df$Var2 <- factor(
+  ts_bone_marrow_sign_df$Var2,
+  levels = rev(c(
+    "0",
+    "4",
+    "3",
+    "2",
+    "7",
+    "6",
+    "5",
+    "1",
+    "8"
+  )))
+
+```
+
+```{r base_heatmap_ts_bone_marrow_sign}
+base_heatmap_ts_bone_marrow_sign <- ggplot2::ggplot(
+  ts_bone_marrow_sign_df, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+base_heatmap_ts_bone_marrow_sign
+```
+
+```{r theme_heatmap_ts_bone_marrow_sign}
+theme_heatmap_ts_bone_marrow_sign <- base_heatmap_ts_bone_marrow_sign+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    #axis.title = element_blank(),
+    #axis.text = element_blank(),
+    axis.text.x = element_text(
+      angle = 90
+    ),
+    axis.ticks.y = element_blank())+
+  ggplot2::scale_fill_gradientn(
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  ggplot2::ylab("Re-clustered")+
+  ggplot2::xlab("Custom clustering and annotation")
+  
+theme_heatmap_ts_bone_marrow_sign
+```
+
+## ts_all_stromal
+
+```{r mat_ts_all_stromal}
+
+mat_ts_all_stromal_sign <- base::table(
+  seu_ts_all_stromal$cell_type, 
+  seu_ts_all_stromal$custom_label)
+
+for(i in 1:ncol(mat_ts_all_stromal)){
+  mat_ts_all_stromal[,i] <- mat_ts_all_stromal[,i]/base::sum(mat_ts_all_stromal[,i])
+}
+ts_all_stromal_df <- base::as.data.frame(mat_ts_all_stromal)
+
+ts_all_stromal_df$Var2 <- factor(
+  ts_all_stromal_df$Var2,
+  levels = rev(levels(seu_ts_all_stromal$custom_label)))
+```
+
+```{r base_heatmap_ts_all_stromal}
+base_heatmap_ts_all_stromal <- ggplot2::ggplot(
+  ts_all_stromal_df, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+base_heatmap_ts_all_stromal
+```
+
+```{r theme_heatmap_ts_all_stromal}
+theme_heatmap_ts_all_stromal <- base_heatmap_ts_all_stromal+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    #axis.title = element_blank(),
+    #axis.text = element_blank(),
+    axis.text.x = element_text(
+      angle = 90
+    ),
+    axis.ticks.y = element_blank())+
+  ggplot2::scale_fill_gradientn(
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  ggplot2::ylab("Custom clustering and annotation")+
+  ggplot2::xlab("Original annotation")
+  
+theme_heatmap_ts_all_stromal
+```
+
+## mus_weinreb_hspc
+
+```{r mat_ts_all_stromal}
+
+mat_mus_weinreb_hspc <- base::table(
+  seu_mus_weinreb_hspc$cell_type, 
+  seu_mus_weinreb_hspc$custom_label)
+
+for(i in 1:ncol(mat_mus_weinreb_hspc)){
+  mat_mus_weinreb_hspc[,i] <- mat_mus_weinreb_hspc[,i]/base::sum(mat_mus_weinreb_hspc[,i])
+}
+mus_weinreb_hspc_df <- base::as.data.frame(mat_mus_weinreb_hspc)
+
+mus_weinreb_hspc_df$Var2 <- factor(
+  mus_weinreb_hspc_df$Var2,
+  levels = rev(levels(seu_mus_weinreb_hspc$custom_label)))
+```
+
+```{r base_heatmap_weinreb_hspc_df}
+base_heatmap_weinreb_hspc_df <- ggplot2::ggplot(
+  mus_weinreb_hspc_df, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+base_heatmap_weinreb_hspc_df
+```
+
+```{r theme_heatmap_weinreb_hspc_df}
+theme_heatmap_weinreb_hspc_df <- base_heatmap_weinreb_hspc_df+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    #axis.title = element_blank(),
+    #axis.text = element_blank(),
+    axis.text.x = element_text(
+      angle = 90
+    ),
+    axis.ticks.y = element_blank())+
+  ggplot2::scale_fill_gradientn(
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  ggplot2::ylab("Custom clustering and annotation")+
+  ggplot2::xlab("Original annotation")
+  
+theme_heatmap_weinreb_hspc_df
+```
+
+

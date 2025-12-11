@@ -1,0 +1,1112 @@
+---
+title: "Tabula sapiens all stromal cells custom reclustering"
+author: "Lea Wölbert"
+date: '2025-12-09'
+output: html_document
+---
+
+General build taken from custom_mmus_hsc.Rmd etc. 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load libraries, source code 
+
+```{r seed, message = FALSE}
+set.seed(37)
+```
+
+```{r source, message = FALSE}
+source(file =  snakemake@params[["plotting"]])
+```
+
+```{r, message = FALSE}
+library(SingleCellExperiment, quietly = TRUE)
+library(BiocSingular, quietly = TRUE)
+library(tidyverse, quietly = TRUE)
+library(dittoSeq, quietly = TRUE)
+library(Seurat, quietly = TRUE)
+library(SeuratObject, quietly = TRUE)
+```
+
+```{r load_objects}
+
+# the un-clustered original object
+seu_ts_all_stromal <- readRDS(snakemake@input[["seu_input"]])
+
+#seu_ts_all_stromal <- readRDS("/home/l012t/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_all_stromal")
+
+# load ensembl df to get the ENS IDs for the genes I need
+ensembl_hum <- base::readRDS(snakemake@input[["ensembl_hum"]])
+#ensembl_hum <- readRDS("/home/l012t/data/metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_hum")
+head(ensembl_hum)
+```
+
+```{r output_path}
+# define output path here
+# since in an .Rmd file run by snakemake the only output defined
+# by snakemake is the html, any other output must be defined manually
+base_path_data <- snakemake@params[["OUTPUT_DAT"]]
+output_path <- base::paste0(base_path_data, "/03_custom_clustering/ts_all_stromal.Rds")
+print(output_path)
+```
+
+```{r colors, message = FALSE}
+col_num <- c(dittoSeq::dittoColors()[1:20])
+names(col_num) <- as.character(c(1:20))
+```
+
+# Clustering
+
+### Define parameters
+
+Just try lots of different ones.
+
+```{r parameters}
+nr_k <- 20
+resolution <- 0.5
+```
+
+Use the seurat piepline roughly takin from sce_functions_reclustering.R
+The seurat object should be pretty basic.
+
+For comparability between signature-reclustered and custom-reclustered
+partitions, I will not perform batch correction here, either.
+
+Keeping it very basic here.
+
+```{r seurat_clustering_pipeline}
+
+# seu_ts_all_stromal uses raw data so need to normalize first
+
+seu_ts_all_stromal@misc$data_use 
+
+seu_ts_all_stromal <- Seurat::NormalizeData( 
+      seu_ts_all_stromal,
+      assay = "RNA", 
+      verbose = FALSE)
+
+seu_ts_all_stromal <- Seurat::ScaleData(
+  seu_ts_all_stromal, 
+  verbose = FALSE)
+
+# find variable features
+seu_ts_all_stromal <- Seurat::FindVariableFeatures(
+  seu_ts_all_stromal
+)
+
+# uses scaled data
+seu_ts_all_stromal <- Seurat::RunPCA(
+  seu_ts_all_stromal,
+  npcs = 30,
+  verbose = FALSE)
+  
+# check and possibly define nr of pcs
+nr_pca <- ncol(seu_ts_all_stromal@reductions$pca)
+print(nr_pca)
+
+# requires PC coordinates
+seu_ts_all_stromal <- Seurat::FindNeighbors(
+  seu_ts_all_stromal, 
+  k.param = nr_k,
+  reduction = "pca",
+  dims = 1:nr_pca, 
+  verbose = FALSE)
+  
+# requires neighbors
+seu_ts_all_stromal <- Seurat::FindClusters(
+  seu_ts_all_stromal, 
+  resolution = as.numeric(resolution), 
+  verbose = FALSE) 
+
+# calculate UMAP
+seu_ts_all_stromal <-  Seurat::RunUMAP(seu_ts_all_stromal, dims = 1:10)
+```
+
+# Evaluate
+
+With signature genes there were 13 clusters.
+
+```{r table}
+table(seu_ts_all_stromal@meta.data$seurat_clusters)
+```
+
+## Clustering separation
+
+Look at the clusters.
+Check possible batch effects but I can't do much about them.
+
+```{r umaps_base, fig.height = 6, fig.width = 6}
+DimPlot(seu_ts_all_stromal, reduction = "umap")
+``` 
+
+```{r umaps_dev, fig.height = 6, fig.width = 6}
+DimPlot(seu_ts_all_stromal, reduction = "umap")+
+  facet_wrap(facets = vars(seu_ts_all_stromal@meta.data$development_stage), ncol = 2)
+``` 
+
+```{r umaps_sex, fig.height = 3, fig.width = 6}
+DimPlot(seu_ts_all_stromal, reduction = "umap")+
+  facet_wrap(facets = vars(seu_ts_all_stromal@meta.data$sex), ncol = 2)
+``` 
+
+```{r umaps_assay, fig.height = 6, fig.width = 6}
+DimPlot(seu_ts_all_stromal, reduction = "umap")+
+  facet_wrap(facets = vars(seu_ts_all_stromal@meta.data$assay), ncol = 2)
+``` 
+
+There is some clear sex and assay-dependent effects, so need to keep in mind.
+
+Check out some single clusters.
+
+```{r umaps_single, fig.height = 6, fig.width = 6}
+Seurat::DimPlot(
+  seu_ts_all_stromal[,seu_ts_all_stromal$seurat_clusters == "2"], 
+  reduction = "umap")+
+  ggplot2::xlim(
+    limits = c(
+      min(Seurat::Embeddings(seu_ts_all_stromal@reductions$umap)[,1]),
+      max(Seurat::Embeddings(seu_ts_all_stromal@reductions$umap)[,1])))+
+  ggplot2::ylim(  
+    limits = c(
+      min(Seurat::Embeddings(seu_ts_all_stromal@reductions$umap)[,2]),
+      max(Seurat::Embeddings(seu_ts_all_stromal@reductions$umap)[,2])))
+
+Seurat::DimPlot(
+  seu_ts_all_stromal[,seu_ts_all_stromal$seurat_clusters == "5"], 
+  reduction = "umap")+
+  ggplot2::xlim(
+    limits = c(
+      min(Seurat::Embeddings(seu_ts_all_stromal@reductions$umap)[,1]),
+      max(Seurat::Embeddings(seu_ts_all_stromal@reductions$umap)[,1])))+
+  ggplot2::ylim(  
+    limits = c(
+      min(Seurat::Embeddings(seu_ts_all_stromal@reductions$umap)[,2]),
+      max(Seurat::Embeddings(seu_ts_all_stromal@reductions$umap)[,2])))
+
+Seurat::DimPlot(
+  seu_ts_all_stromal[,seu_ts_all_stromal$seurat_clusters == "10"], 
+  reduction = "umap")+
+  ggplot2::xlim(
+    limits = c(
+      min(Seurat::Embeddings(seu_ts_all_stromal@reductions$umap)[,1]),
+      max(Seurat::Embeddings(seu_ts_all_stromal@reductions$umap)[,1])))+
+  ggplot2::ylim(  
+    limits = c(
+      min(Seurat::Embeddings(seu_ts_all_stromal@reductions$umap)[,2]),
+      max(Seurat::Embeddings(seu_ts_all_stromal@reductions$umap)[,2])))
+
+Seurat::DimPlot(
+  seu_ts_all_stromal[,seu_ts_all_stromal$seurat_clusters == "11"], 
+  reduction = "umap")+
+  ggplot2::xlim(
+    limits = c(
+      min(Seurat::Embeddings(seu_ts_all_stromal@reductions$umap)[,1]),
+      max(Seurat::Embeddings(seu_ts_all_stromal@reductions$umap)[,1])))+
+  ggplot2::ylim(  
+    limits = c(
+      min(Seurat::Embeddings(seu_ts_all_stromal@reductions$umap)[,2]),
+      max(Seurat::Embeddings(seu_ts_all_stromal@reductions$umap)[,2])))
+
+Seurat::DimPlot(
+  seu_ts_all_stromal[,seu_ts_all_stromal$seurat_clusters == "12"], 
+  reduction = "umap")+
+  ggplot2::xlim(
+    limits = c(
+      min(Seurat::Embeddings(seu_ts_all_stromal@reductions$umap)[,1]),
+      max(Seurat::Embeddings(seu_ts_all_stromal@reductions$umap)[,1])))+
+  ggplot2::ylim(  
+    limits = c(
+      min(Seurat::Embeddings(seu_ts_all_stromal@reductions$umap)[,2]),
+      max(Seurat::Embeddings(seu_ts_all_stromal@reductions$umap)[,2])))
+
+Seurat::DimPlot(
+  seu_ts_all_stromal[,seu_ts_all_stromal$seurat_clusters == "13"], 
+  reduction = "umap")+
+  ggplot2::xlim(
+    limits = c(
+      min(Seurat::Embeddings(seu_ts_all_stromal@reductions$umap)[,1]),
+      max(Seurat::Embeddings(seu_ts_all_stromal@reductions$umap)[,1])))+
+  ggplot2::ylim(  
+    limits = c(
+      min(Seurat::Embeddings(seu_ts_all_stromal@reductions$umap)[,2]),
+      max(Seurat::Embeddings(seu_ts_all_stromal@reductions$umap)[,2])))
+``` 
+
+## Gene expression
+
+Now check the quality of cell type separation based on expressed genes.
+
+```{r marker_genes}
+
+# these must be human genes
+# try straight up with the same genes as for mouse first
+# but then alter as necessary/possible
+  marker_genes <- c(
+    "CXCL12", 
+    "KITLG", 
+    "LEPR",
+    "ALPL",
+    "BGLAP",
+    "CD200",
+    "IBSP",
+    "MMP13",
+    "POSTN",
+    "PTGIS",
+    "PTH1R",
+    "RUNX2",
+    "SP7",
+    "SPP1",
+    "TNC",
+    "ACAN", 
+    "ADAMTS5",
+    "CHAD",
+    "FMOD",
+    "MEF2C",
+    "MGP",
+    "PRELP",
+    "PRG4",
+    "SOX9",
+    "COMP", 
+    "S100A10",
+    "CD34", 
+    "COL3A1",
+    "DCN",
+    "FN1",
+    "LUM",
+    "PDGFRA",
+    "THY1",
+    "CDH5", 
+    "PECAM1",
+    "CA4", 
+    "RGCC",
+    "TIMP4",
+    "EFNB2",
+    "HEY1",
+    "SOX17",
+    "ACKR1", 
+    "EMCN",
+    "EPHB4",
+    "ICAM1",
+    "LRG1",
+    "NR2F2",
+    "SELP",
+    "VCAM1", 
+    "FLT4",
+    "STAB2",
+    "TFPI",
+    "CCL21",
+    "LYVE1", 
+    "PDPN",
+    "PROX1",
+    "RGS4",
+    "RGS5",
+    "STEAP4",
+    "ACTA2",
+    "MYH11", 
+    "TAGLN",
+    "DES",
+    "CD8A", # just some mature immune cell markers for contamination
+    "CD4",
+    "IL7R",
+    "CD79A",
+    "IGHM",
+    "GZMB",
+    "CD74",
+    "S100A8",
+    "S100A9",
+    "CCL5",
+    "CPA3", 
+    "HDC",
+    "GYPA", 
+    "HBA1"
+  )
+
+```
+
+```{r ensmus_ids}
+# not get the ensmus IDs
+head(rownames(seu_ts_all_stromal))
+
+marker_genes[!marker_genes %in% ensembl_hum$external_gene_name]
+gene_ids_keep <- ensembl_hum$ensembl_gene_id[
+  ensembl_hum$external_gene_name %in% marker_genes]
+```
+
+#### Heatmap
+
+To get an overview of the rough expected populations based on well-known genes.
+
+```{r heatmap, fig.height = 10, fig.width = 5}
+
+seu_ts_all_stromal@meta.data$clusters <- base::paste0(
+  "cluster-",
+  seu_ts_all_stromal@meta.data$seurat_clusters
+)
+
+# get average logcounts per cluster
+agg_ts_bonemarrow <- Seurat::AverageExpression(
+  seu_ts_all_stromal,
+  assays = "RNA",
+  group.by = c("clusters")) 
+
+# turn into df formatted for visualisation
+agg_ts_df <- agg_ts_bonemarrow$RNA %>%
+  as.matrix() %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = "gene_ids") %>%
+  tidyr::pivot_longer(
+    cols = unique(seu_ts_all_stromal$clusters),
+    names_to = "clusters",
+    values_to = "avg_logcounts")
+
+# only keep genes for visualisation
+agg_ts_df_genes <- agg_ts_df %>%
+  dplyr::filter(gene_ids %in% gene_ids_keep)
+
+agg_ts_df_genes$genes <- vector(length = nrow(agg_ts_df_genes))
+agg_ts_df_genes$genes <- ensembl_hum$external_gene_name[
+  match(
+    agg_ts_df_genes$gene_ids,
+    ensembl_hum$ensembl_gene_id
+  )]
+
+print(unique(agg_ts_df_genes$genes))
+
+# factorise for nicer plot
+agg_ts_df_genes$genes <- factor(
+  agg_ts_df_genes$genes,
+  levels = rev(marker_genes))
+
+# scale expression per gene using z-scores
+agg_ts_df_genes$zscore_gene <- vector(
+  length = nrow(agg_ts_df_genes), 
+  mode = "numeric")
+
+for(gene in base::unique(agg_ts_df_genes$genes)){
+  
+  expr_vector_g <- agg_ts_df_genes[agg_ts_df_genes$genes == gene,]$avg_logcounts
+
+  # calculate z score per gene
+  z_score_g <- (expr_vector_g - base::mean(expr_vector_g))/
+    stats::sd(expr_vector_g)
+  agg_ts_df_genes$zscore_gene[agg_ts_df_genes$genes == gene] <- z_score_g
+}
+
+# plot
+ggplot2::ggplot(
+  agg_ts_df_genes,
+  aes(
+    x = clusters,
+    y = genes,
+    fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_gradient2(
+    low = "blue3",
+    mid = "white", 
+    high = "red3", 
+    midpoint = 0)+
+  ggplot2::theme(
+    axis.text.x = element_text(angle = 90)
+  )
+
+```
+
+#### UMAPs
+
+```{r umaps_genes, fig.width = 4.5, fig.height = 4}
+plotlist <- lapply(as.list(marker_genes), function(gene){
+  print(gene)
+  
+  gene_id <- ensembl_hum$ensembl_gene_id[
+    ensembl_hum$external_gene_name == gene]
+
+  plot <- FeaturePlot(seu_ts_all_stromal, reduction = "umap", gene_id)
+  return(plot)
+})
+names(plotlist) <- marker_genes
+
+plotlist
+```
+
+## Markers
+
+```{r markers}
+# replace the original idents with the new clusters 
+
+Seurat::Idents(seu_ts_all_stromal) <- seu_ts_all_stromal@meta.data$clusters
+clustlist <- as.list(base::sort(base::unique(seu_ts_all_stromal@meta.data$clusters)))
+
+cluster_markers <- lapply(clustlist, function(x){
+  
+  print(x)
+  markers <- Seurat::FindMarkers(
+    seu_ts_all_stromal,
+    slot = "data",
+    test.use = "wilcox", 
+    ident.1 = x)
+  
+  markers <- markers[base::order(base::abs(markers$avg_log2FC), 
+                                 decreasing=TRUE),]
+  
+  markers$which_cluster <- base::rep(x, nrow(markers))
+  
+  # add gene names otherwise I cannot interpret
+  markers$genes <- vector(length = nrow(markers))
+  markers$genes <- ensembl_hum$external_gene_name[
+    match(
+      rownames(markers),
+      ensembl_hum$ensembl_gene_id)]
+
+  return(markers)
+})
+names(cluster_markers) <- base::sort(base::unique(seu_ts_all_stromal@meta.data$clusters))
+```
+
+Gave provisional names based on the heatmap.
+
+### Mesenchymal
+
+```{r markers_hsc}
+# adipo/CAR expression
+cluster_markers[["cluster-9"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+
+cluster_markers[["cluster-4"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+
+# osteo expression
+cluster_markers[["cluster-0"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+
+cluster_markers[["cluster-3"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+
+cluster_markers[["cluster-7"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+
+cluster_markers[["cluster-2"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+
+# chondro expression
+cluster_markers[["cluster-12"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+
+# (chondro) fibro
+# contains eo baso mast contamination
+cluster_markers[["cluster-10"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+```
+
+Cluster 4 has very high CXCL12 expression, so by definition they are CAR cells
+It is exclusively from 10X V1.
+Other classic top markers are VCAM1 and LPL.
+
+Cluster 9 also has very high CXCL12 expression = CAR cells.
+It is exclusively from 10X V2.
+Other top markers like VCAM1, LPL, PAPPA also make sense in an 
+adipo-CAR-context.
+
+Both also express KITLG, LEPR and a bit of ALPL.
+
+Clusters 0, 3 and 12 are one group (with Cluster 4) and are again only 10X V1.
+Cluster 0 expresses ALPL, CD200, IBSP, MMP13, SP7, but not BGLAP.
+Top markers are TNC, SPP1, LIMCH1, ALPL, so these are early Osteo-CAR-ish.
+
+Cluster 3 has high osteo markers like BGLAP but also chondro marker CHAD.
+But no SOX9 or ACAN. 
+Top markers are SPARC, IBSP, GGN, SPP1, I think these are osteo-early-chondro
+mixed.
+
+Cluster 12 is quite small and also belongs to the "next group" in the UMAP.
+COL2A1, COL9A3, SNORC, MGP, COMP, FMOD, ACAB and PRELP in the top marker
+list make it very chondro.
+
+Another group of osteo-ish cells are clusters 2 and 7 of which 2 us only 
+really found in 10X V2. 
+
+Cluster 7 is cycling. 
+The top markers look cycling exclusive but the umaps show ALPL, ISBP, MMP13,
+SP7, SPP1, TNC, ACAN expression so I'm going with cycling osteo-early-chondro.
+Cluster 2 is low quality or batch + neutrophil contamonation in the top markers.
+Maybe it's just a mix of a lot of stuff, but the expression of osteo-markers is 
+alsoseen in the UMAPs. 
+It seems only one little part of cluster 2 is contaminatin that dominates the marker
+gene list, but the rest do look osteo.
+High IBSP, MMP13, RUNX2, SPP1.
+
+Another group of Fibro/Chondro/PRG4+ cells is cluster 10.
+It looks slightly different from the other chondro group, with high POSTN,
+OGN, ASPN, S100A6, S100a5, PRG6, COL3A1, THBS4, CREB5, CRIP1, SEMA3C which
+looks fibro-ish articular chondro/synovial fibro like, maybe a mix of prognenitors for
+those populations.
+
+```{r mes_umaps_additional, fig.width = 4.5, fig.height = 4}
+
+mes_additional_genes <- c(
+  "PPARG",
+  "PAPPA",
+  "VCAM1",
+  "LPL",
+  "ESM1",
+  "HES1",
+  "PDGFRB",
+  "SNAI2",
+  "CRABP1",
+  "EGR1",
+  "APOE",
+  "CLEC11A",
+  "SCARA3",
+  "LIMCH1",
+  "TGFBI",
+  "COL1A2",
+  "DPT",
+  "SPARC",
+  "SERPINF1",
+  "BGN",
+  "BAMBI",
+  "TOP2A",
+  "MKI67",
+  "CENPF",
+  "RPS17",
+  "RPS10",
+  "LYZ",
+  "MT-ND2",
+  "CPE",
+  "MPO",
+  "COL2A1",
+  "COL9A3",
+  "COL10A1",
+  "SNORC",
+  "DLK1",
+  "COMP",
+  "FMOD",
+  "OGN",
+  "ASPN",
+  "S100A6",
+  "S100A4",
+  "PRG4",
+  "THBS4",
+  "SEMA3C",
+  "CRIP1",
+  "CREB5"
+)
+
+plotlist <- lapply(as.list(mes_additional_genes), function(gene){
+  print(gene)
+  
+  gene_id <- ensembl_hum$ensembl_gene_id[
+    ensembl_hum$external_gene_name == gene]
+
+  print(gene_id)
+
+  plot <- FeaturePlot(seu_ts_all_stromal, reduction = "umap", gene_id)
+  return(plot)
+})
+names(plotlist) <- mes_additional_genes
+
+plotlist
+```
+
+### Endothelial cells and Peri/SMC
+
+```{r markers_ec}
+
+# more venous
+cluster_markers[["cluster-13"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+  
+# more capillary?
+cluster_markers[["cluster-5"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+
+# a bit smeary
+cluster_markers[["cluster-8"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+
+# a bit smeary
+cluster_markers[["cluster-6"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+
+# a bit smeary
+cluster_markers[["cluster-1"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+
+# peri SMC and also kind of fibro
+# contains neutro contamination
+cluster_markers[["cluster-11"]] %>%
+  dplyr::filter(avg_log2FC > 0) %>%
+  head(n = 40)
+```
+
+All clusters 1, 8, 5 in one group (10X V2) and 6 (10X v1) are clearly ECs.
+The mouse capillary markers CA4, TIMP4 and RGCC look kind of useless.
+Sinusoidal marker STAB2 is highest in clusters 1, 5 and 6 but missing from
+clusters 13 and 5 in the UMAP.
+
+Cluster 5 has top markers PVLAP, CD34, PECAM1, ESAM, AQP1, PODXL. 
+They look fairly standard to me, with RGCC and PLVAP indicating something
+more capillary-ish. 
+Cluster 1 looks slightly different from the other two following sinusoidal ECs
+with STAB1, STAB2, ENG, KDT for some sinusoidal identity but also some fatty acid 
+binding stuff, RGCC, and slightly immuno/activated looking.
+Cluster 8 has top markers inclusing STAB2, CD36, FLT1, LYVE1, KDR, so I'm going
+with sinusoidal.
+Same with cluster 6, high NR2F1, LYVE1, FLT1, KDR. 
+Also some batch/low quality-ish look with lots of R-proteins.
+
+Cluster 13 is just a handful of cells interspersed into the V1 EC group.
+The top markers are LYVE1, DNASE1L3, FLT1, STAB2, all CLEARLY related to 
+sinusoidal ECs?
+Even KDR and VWV and TFPI. 
+
+Regarding Peri/SMCs, the classic genes from the heatmap are barely expressed.
+In fact, the first few markers look very neutrophil-ish to me.
+LAter, some NOTCH3, THY1, MYO1E, FN1, CSPG4, PDGFRB, OGN also give SOME muscle or 
+mesenchymal idea.
+
+```{r ec_umaps_additional, fig.width = 4.5, fig.height = 4}
+
+ec_additional_genes <- c(
+  "DNASE1L3",
+  "FLT1",
+  "KDR",
+  "VWF",
+  "TFPI",
+  "PLVAP",
+  "PODXL",
+  "AQP1",
+  "ESAM",
+  "HSPA1A",
+  "PLIN2",
+  "UGCG",
+  "CD36",
+  "BACH1",
+  "IL6ST",
+  "NR2F1",
+  "HBG1",
+  "CTSD",
+  "FABP4",
+  "NEAT1",
+  "STC1",
+  "RPS17",
+  "CTSL",
+  "EGFL7",
+  "RNASE1",
+  "PIM3",
+  "FABP5",
+  "SELE",
+  "APLNR",
+  "MMP9",
+  "CCL3",
+  "MMP14",
+  "GPC1",
+  "CALD1",
+  "DLK1",
+  "NOTCH3",
+  "EDNRA",
+  "TGFB3",
+  "MYO1E",
+  "CSPG4"
+)
+
+plotlist <- lapply(as.list(ec_additional_genes), function(gene){
+  print(gene)
+  
+  gene_id <- ensembl_hum$ensembl_gene_id[
+    ensembl_hum$external_gene_name == gene]
+
+  #print(gene_id %in% Features(seu_ts_all_stromal))
+  plot <- FeaturePlot(seu_ts_all_stromal, reduction = "umap", gene_id)
+  return(plot)
+})
+names(plotlist) <- ec_additional_genes
+
+plotlist
+```
+
+
+# Assign
+
+```{r assign}
+seu_ts_all_stromal$custom_label <- vector(length = ncol(seu_ts_all_stromal))
+
+# MES
+seu_ts_all_stromal$custom_label[
+  seu_ts_all_stromal$clusters == "cluster-4"] <- "Adipo-CAR, V1"
+seu_ts_all_stromal$custom_label[
+  seu_ts_all_stromal$clusters == "cluster-9"] <- "Adipo-CAR, V2"
+
+seu_ts_all_stromal$custom_label[
+  seu_ts_all_stromal$clusters == "cluster-0"] <- "Osteo-CAR, V1"
+
+seu_ts_all_stromal$custom_label[
+  seu_ts_all_stromal$clusters == "cluster-3"] <- "Osteo-Chondro, V1"
+
+seu_ts_all_stromal$custom_label[
+  seu_ts_all_stromal$clusters == "cluster-2"] <- "Osteo-Chondro/Immune contamination, V2"
+
+seu_ts_all_stromal$custom_label[
+  seu_ts_all_stromal$clusters == "cluster-7"] <- "Osteo Cycling"
+
+seu_ts_all_stromal$custom_label[
+  seu_ts_all_stromal$clusters == "cluster-12"] <- "Chondrocyte"
+
+# I think this is a mix of all fibro/chondro-like looking cells except actual chondros
+seu_ts_all_stromal$custom_label[
+  seu_ts_all_stromal$clusters == "cluster-10"] <- "Fibro/chondro/synovial/articular-like"
+
+
+# EC
+seu_ts_all_stromal$custom_label[
+  seu_ts_all_stromal$clusters == "cluster-5"] <- "Arterial EC"
+
+seu_ts_all_stromal$custom_label[
+  seu_ts_all_stromal$clusters == "cluster-8"] <- "Sinusoidal EC 1, V1"
+seu_ts_all_stromal$custom_label[
+  seu_ts_all_stromal$clusters == "cluster-6"] <- "Sinusoidal EC 2, V1"
+seu_ts_all_stromal$custom_label[
+  seu_ts_all_stromal$clusters == "cluster-1"] <- "Sinusoidal EC 3, V2"
+
+seu_ts_all_stromal$custom_label[
+  seu_ts_all_stromal$clusters == "cluster-13"] <- "Sinusoidal EC 4, V1"
+
+seu_ts_all_stromal$custom_label[
+  seu_ts_all_stromal$clusters == "cluster-11"] <- "Pericyte/Immune contamination"
+
+seu_ts_all_stromal$custom_label <- factor(
+  seu_ts_all_stromal$custom_label,
+  levels = c(
+    "Adipo-CAR, V1",
+    "Adipo-CAR, V2",
+    "Osteo-CAR, V1",
+    "Osteo Cycling",
+    "Osteo-Chondro/Immune contamination, V2",
+    "Osteo-Chondro, V1",
+    "Chondrocyte",
+    "Fibro/chondro/synovial/articular-like",
+    "Arterial EC",
+    "Sinusoidal EC 1, V1",
+    "Sinusoidal EC 2, V1",
+    "Sinusoidal EC 3, V2",
+    "Sinusoidal EC 4, V1",
+    "Pericyte/Immune contamination"
+  ))
+
+stopifnot(!is.na(seu_ts_all_stromal$custom_label))
+```
+
+```{r unify}
+
+# unify some annotations by cell type in cases where cell types were split
+# by high resolution clustering or by batch
+# it is not always super obvious what can be unified and what cannot
+
+seu_ts_all_stromal$custom_label_unif <- unfactor(seu_ts_all_stromal$custom_label)
+
+# I think the adipo CARs overlap pretty nicely but this is not the case
+# for other mesenchymal cells
+seu_ts_all_stromal$custom_label_unif[
+  seu_ts_all_stromal$custom_label == "Adipo-CAR, V1"] <- "Adipo-CAR"
+seu_ts_all_stromal$custom_label_unif[
+  seu_ts_all_stromal$custom_label == "Adipo-CAR, V2"] <- "Adipo-CAR"
+
+# I am merging all sinusoidal ECs
+seu_ts_all_stromal$custom_label_unif[
+  seu_ts_all_stromal$custom_label == "Sinusoidal EC 1, V1"] <- "Sinusoidal EC"
+seu_ts_all_stromal$custom_label_unif[
+  seu_ts_all_stromal$custom_label == "Sinusoidal EC 2, V1"] <- "Sinusoidal EC"
+seu_ts_all_stromal$custom_label_unif[
+  seu_ts_all_stromal$custom_label == "Sinusoidal EC 3, V2"] <- "Sinusoidal EC"
+seu_ts_all_stromal$custom_label_unif[
+  seu_ts_all_stromal$custom_label == "Sinusoidal EC 4, V1"] <- "Sinusoidal EC"
+
+seu_ts_all_stromal$custom_label_unif <- factor(
+  seu_ts_all_stromal$custom_label_unif,
+  levels = c(
+    "Adipo-CAR",
+    "Osteo-CAR, V1",
+    "Osteo Cycling",
+    "Osteo-Chondro/Immune contamination, V2",
+    "Osteo-Chondro, V1",
+    "Chondrocyte",
+    "Fibro/chondro/synovial/articular-like",
+    "Arterial EC",
+    "Sinusoidal EC",
+    "Pericyte/Immune contamination"
+  ))
+
+stopifnot(!is.na(seu_ts_all_stromal$custom_label_unif))
+
+```
+
+#### One last plot to check
+
+```{r slightly_better_markers}
+
+# these must be human genes
+# after cghecking plots above
+# check the 02/01/ custom clustering of our own datasets for additional sources
+# also supplementary table 1 of the corresponding publication
+slightly_better_markers <- c(
+    "CXCL12",
+    "KITLG",
+    "LEPR",
+    "LPL", # lipoprotein lipase adipocyte/fatty acid related
+    "VCAM1", # Adipo-CAR and sinusoid
+    "SNAI2", # EMT, adipose tissue mass
+    "LIMCH1", # osteo-CAR
+    "TNC", 
+    "ALPL",
+    "IBSP", 
+    "SP7",
+    "MMP13",
+    "RUNX2",
+    "SPP1", # osteo lineage, also osteochondric progenitor
+    "BGLAP",
+    "SPARC", # osteoblastic differentiation
+    "BAMBI", # chondrogenic differentiation https://doi.org/10.1155/2016/2685147
+    "CHAD", # both osteo and chondro https://doi.org/10.1038/s41598-020-67998-0  https://doi.org/10.1371/annotation/cb7d7b4c-624f-46e6-957e-13b355ca8e02
+    "MGP",
+    "COMP",
+    "FMOD",
+    "SOX9",
+    "SNORC", # specific to chondrocytes
+    "PRELP",
+    "POSTN",
+    "OGN", # osteo and cartilage
+    "PRG4",
+    "CREB5",
+    "CRIP1",
+    "ASPN",
+    "S100A6", # chondro, fibro
+    "S100A4", # fibro-specific 
+    "THBS4", # fibro mifration
+    "SEMA3C", # several fibroblast type
+    "PDGFRA",
+    "DCN",
+    "DES",
+    "CD34", # also AEC
+    "PECAM1",
+    "CDH5",
+    "AQP1", # EC migration
+    "EFNB2",
+    "SOX17",
+    "BCAM", # EC
+    "IGFBP7", # EC recovery, attachment, .. activity
+    "RGCC",
+    "PLVAP",
+    "APLNR", # vascular remodelling
+    "STAB1",
+    "CD36", # FA 
+    "KDR",
+    "STAB2",
+    "FLT1",
+    "DNASE1L3",
+    "LYVE1", # sometimes also SEC not just LEC
+    "VWF", # EC subsets, venous
+    "MMP14", # can be osteo
+    "MYO1E", # non-muscle myosin
+    "MYH11", # smooth muscle
+    "NOTCH3", # osteo
+    "EDNRA", # peri and smc
+    "CSPG4", # pericytes
+    "RGS5", # SMC/Peri
+    "CALD1", # pericytes
+    "ACTA2", # pericytes
+    "TAGLN", # pericytes
+    "MYOCD", # smooth muscle
+    "CPA3", # cont, baso mast
+    "HDC",
+    "CCL5",    
+    "GZMB", # cont, granu
+    "S100A8", # cont, neutro
+    "S100A9",
+    "LYZ",
+    "HBG2", # cont, ery
+    "MMP9",
+    "CCL3",
+    "CENPA", # cycling
+    "MKI67",
+    "TOP2A"
+  )
+
+slightly_better_markers[!slightly_better_markers %in% ensembl_hum$external_gene_name]
+gene_ids_keep <- ensembl_hum$ensembl_gene_id[
+  ensembl_hum$external_gene_name %in% slightly_better_markers]
+```
+
+```{r last_heatmap, fig.height = 15, fig.width = 5}
+
+# get average logcounts per cluster
+agg_ts_all_stromal <- Seurat::AverageExpression(
+  seu_ts_all_stromal,
+  assays = "RNA",
+  group.by = c("custom_label")) 
+
+# turn into df formatted for visualisation
+agg_ts_df <- agg_ts_all_stromal$RNA %>%
+  as.matrix() %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = "gene_ids") %>%
+  tidyr::pivot_longer(
+    cols = unique(seu_ts_all_stromal$custom_label),
+    names_to = "custom_label",
+    values_to = "avg_logcounts")
+
+# only keep genes for visualisation
+agg_ts_df_genes <- agg_ts_df %>%
+  dplyr::filter(gene_ids %in% gene_ids_keep)
+
+agg_ts_df_genes$genes <- vector(length = nrow(agg_ts_df_genes))
+agg_ts_df_genes$genes <- ensembl_hum$external_gene_name[
+  match(
+    agg_ts_df_genes$gene_ids,
+    ensembl_hum$ensembl_gene_id
+  )]
+
+print(unique(agg_ts_df_genes$genes))
+
+# factorise for nicer plot
+agg_ts_df_genes$genes <- factor(
+  agg_ts_df_genes$genes,
+  levels = rev(slightly_better_markers))
+
+agg_ts_df_genes$custom_label <- factor(
+  agg_ts_df_genes$custom_label, 
+  levels = levels(seu_ts_all_stromal$custom_label))
+
+# scale expression per gene using z-scores
+agg_ts_df_genes$zscore_gene <- vector(
+  length = nrow(agg_ts_df_genes), 
+  mode = "numeric")
+
+for(gene in base::unique(agg_ts_df_genes$genes)){
+  
+  expr_vector_g <- agg_ts_df_genes[agg_ts_df_genes$genes == gene,]$avg_logcounts
+
+  # calculate z score per gene
+  z_score_g <- (expr_vector_g - base::mean(expr_vector_g))/
+    stats::sd(expr_vector_g)
+  agg_ts_df_genes$zscore_gene[agg_ts_df_genes$genes == gene] <- z_score_g
+}
+
+# plot
+ggplot2::ggplot(
+  agg_ts_df_genes,
+  aes(
+    x = custom_label,
+    y = genes,
+    fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_gradient2(
+    low = "blue3",
+    mid = "white", 
+    high = "red3", 
+    midpoint = 0)+
+  ggplot2::theme(
+    axis.text.x = element_text(angle = 90)
+  )
+
+```
+
+```{r last_heatmap_unif, fig.height = 15, fig.width = 5}
+
+# get average logcounts per cluster
+agg_ts_all_stromal <- Seurat::AverageExpression(
+  seu_ts_all_stromal,
+  assays = "RNA",
+  group.by = c("custom_label_unif")) 
+
+# turn into df formatted for visualisation
+agg_ts_df <- agg_ts_all_stromal$RNA %>%
+  as.matrix() %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = "gene_ids") %>%
+  tidyr::pivot_longer(
+    cols = unique(seu_ts_all_stromal$custom_label_unif),
+    names_to = "custom_label_unif",
+    values_to = "avg_logcounts")
+
+# only keep genes for visualisation
+agg_ts_df_genes <- agg_ts_df %>%
+  dplyr::filter(gene_ids %in% gene_ids_keep)
+
+agg_ts_df_genes$genes <- vector(length = nrow(agg_ts_df_genes))
+agg_ts_df_genes$genes <- ensembl_hum$external_gene_name[
+  match(
+    agg_ts_df_genes$gene_ids,
+    ensembl_hum$ensembl_gene_id
+  )]
+
+print(unique(agg_ts_df_genes$genes))
+
+# factorise for nicer plot
+agg_ts_df_genes$genes <- factor(
+  agg_ts_df_genes$genes,
+  levels = rev(slightly_better_markers))
+
+agg_ts_df_genes$custom_label_unif <- factor(
+  agg_ts_df_genes$custom_label_unif, 
+  levels = levels(seu_ts_all_stromal$custom_label_unif))
+
+# scale expression per gene using z-scores
+agg_ts_df_genes$zscore_gene <- vector(
+  length = nrow(agg_ts_df_genes), 
+  mode = "numeric")
+
+for(gene in base::unique(agg_ts_df_genes$genes)){
+  
+  expr_vector_g <- agg_ts_df_genes[agg_ts_df_genes$genes == gene,]$avg_logcounts
+
+  # calculate z score per gene
+  z_score_g <- (expr_vector_g - base::mean(expr_vector_g))/
+    stats::sd(expr_vector_g)
+  agg_ts_df_genes$zscore_gene[agg_ts_df_genes$genes == gene] <- z_score_g
+}
+
+# plot
+ggplot2::ggplot(
+  agg_ts_df_genes,
+  aes(
+    x = custom_label_unif,
+    y = genes,
+    fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_gradient2(
+    low = "blue3",
+    mid = "white", 
+    high = "red3", 
+    midpoint = 0)+
+  ggplot2::theme(
+    axis.text.x = element_text(angle = 90)
+  )
+
+```
+
+Save the object now.
+
+```{r save}
+saveRDS(seu_ts_all_stromal, output_path)
+```
+
+```{r sessioninfo}
+utils::sessionInfo()
+```

@@ -1,5 +1,5 @@
 ---
-title: "Custom clustering comparison"
+title: "Custom clustering report - gene expression"
 author: "Lea Wölbert"
 date: '2025-11-10'
 output: html_document
@@ -19,6 +19,10 @@ Just to make sure that a unified manner of annotation was used.
 set.seed(37)
 ```
 
+```{r source, message = FALSE}
+source(file = snakemake@params[["custom_utils"]])
+```
+
 ```{r, message = FALSE}
 library(SingleCellExperiment, quietly = TRUE)
 library(BiocSingular, quietly = TRUE)
@@ -27,13 +31,11 @@ library(igraph, quietly = TRUE)
 library(tidyverse, quietly = TRUE)
 ```
 
-#todo input snakemake later
-
 ```{r load_objects}
-sce_mmus_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mmus_hsc_custom.rds")
-sce_mcas_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcas_hsc_custom.rds")
-sce_mspr_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mspr_hsc_custom.rds")
-sce_mcar_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcar_hsc_custom.rds")
+sce_mmus_hsc <- readRDS(snakemake@input[["mmus_sce"]])
+sce_mcas_hsc <- readRDS(snakemake@input[["mcas_sce"]])
+sce_mspr_hsc <- readRDS(snakemake@input[["mspr_sce"]])
+sce_mcar_hsc <- readRDS(snakemake@input[["mcar_sce"]])
 ```
 
 ## Control gene expression
@@ -46,213 +48,17 @@ marker gene lists of individual species and cell types.
 # this list is a bit longer than the one in the custom assignment .Rmd scripts
 # so it can cover all species
 # it's also not JUST to get an idea, but to better show cell type seperation. 
-  marker_genes_list <- list(
-    "HSC" = c(
-      "Ly6a", # HSC-specific, spotty
-      "Slamf1",
-      "Aldh1a1", 
-      "Alcam",
-      "Gng11",
-      "Mllt3",
-      "Socs2",
 
-      "Cdkn1c", # HSC-specific, works for all and I known them well
-      "Procr",
-      "Mmrn1",
-      "Mecom",
-      "Mpl",
-
-      "Pdzk1ip1", # HSC-specific, works for all but I don't know it well
-
-      "Ltb", # mostly HSC, works for all, and I know them
-      "Hlf", 
-      "Ldhb",
-
-      "Txnip", # redox functions, likely also expressed in other clusters
-      "Pbx1",
-
-      "Angpt1", # quite broad already, but highest in HSC and well-known mostly
-      "Hoxa9",
-      "Lmo2",
-      "Meis1",
-      "Msi2"
-    ),
-    "MPP" = c(
-      "Adgrl4", 
-      "Cd34", 
-      "Sox4",
-      "Cd48", 
-      "Sell",
-      "Cdk4"
-    ),
-    "Myeloid_general" = c(
-      "Spi1", 
-      "Cebpa",
-      "Ctsg",
-      "Mpo",
-      "Prtn3",
-      "F13a1"),
-
-    "Neutro" = c(
-      "Elane", 
-      "Gfi1",
-      "Cebpe", 
-      "S100a8",
-      "S100a9",
-      "Wfdc21",
-      "Chil1"),
-
-    "Mono" = c(  
-      "Ccr2",
-      "Irf8",
-      "Ly86",
-      "Ms4a6c"),
-
-    "Antigen_presenting_contamination" = c(
-      "Cd74",
-      "H2-Aa",
-      "H2-Eb1",
-      "H2-Ab1",
-      "Ctss"),
-
-    "Lymphoid_early" = c(
-      "Tcf4",
-      "Flt3", 
-      "Satb1",
-      "Dntt"),
-
-    "Lymphoid_late" = c(
-      "Ighm",
-      "Il7r",
-      "Rag1",
-      "Vpreb1",
-      "Vpreb3",
-      "Cd79b", 
-      "Igkc"),
-
-    "Lymph_contamination" = c(
-      "Ccl5", # NK
-      "Cd3e", # TC
-      "Cd8a",
-      "Tcf7"),
-
-    "Mast/Baso" = c(
-      "Mcpt8", 
-      "Hdc", 
-      "Lmo4", 
-      "Gzmb",
-      "Egr1",
-      "Cpa3", 
-      "Ms4a2",
-      "Prss34",
-      "Fcer1a",
-      "Gata2"#  also Mk, Eo Baso and HSC
-    ),
-
-    "Mk" = c(
-      "Itga2b", 
-      "Cavin2",
-      "Pf4",
-      "Clec4d",
-      "Plek",
-      "Fli1"),
-
-    "Mk/Ery" = c(
-      "Zfpm1",
-      "Gata1", 
-      "Trib2"),
-
-    "Ery" = c(
-      "Frat2",
-      "Ass1",
-      "Aqp11",
-      "Klf1",
-      "Blvrb",
-      "Tspo2",
-      "Epor", 
-      "Gfi1b",
-      "Gypa",
-      "Hba-a1",
-      "Hbb-bs"),
-
-    "CC entry/activation" = c(
-      "Lig1",
-      "Mcm7",
-      "Hells",
-      "Mcm6"),
-
-    "Cell cycle S phase" = c(
-      "Aurkb",
-      "Cdk1"
-      ),
-
-    "Cell cycle M phase" = c(
-      "Cdc20",
-      "Ccnb2",
-      "Knstrn"),
-
-    "Cell cycle general" = c(
-      "Mki67",
-      "Lockd",
-      "Cenpa" 
-      )
-    )
+# from custom utils
+marker_genes_list <- marker_genes_list_hsc
 ```
 
 Make a shorter marker gene lists based on my observations
 from the annotation .Rmds.
 
 ```{r best_marker_genes_list}
-best_marker_genes <- c(
-  "Cdkn1c",
-  "Procr",
-  "Mmrn1",
-  "Mecom",
-  "Mpl",
-  "Hlf",
-  "Meis1",
-  "Msi2",
-  "Adgrl4",
-  "Cd34",
-  "Cd48",
-  "Spi1",
-  "Cebpa",
-  "Mpo",
-  "Elane",
-  "Gfi1",
-  "S100a8",
-  "Wfdc21",
-  "Irf8",
-  "Ly86",
-  "Ms4a6c",
-  "Cd74",
-  "H2-Aa",
-  "Flt3",
-  "Satb1",
-  "Dntt",
-  "Il7r",
-  "Vpreb1",
-  "Cd79b",
-  "Gzmb",
-  "Cpa3",
-  "Ms4a2",
-  "Cavin2",
-  "Pf4",
-  "Zfpm1",
-  "Ass1",
-  "Klf1",
-  "Tspo2",
-  "Epor",
-  "Gypa",
-  "Hba-a1",
-  "Lig1",
-  "Hells",
-  "Mcm6",
-  "Aurkb",
-  "Cdc20",
-  "Mki67",
-  "Cenpa"
-)
+# from custom utils
+best_marker_genes <- best_marker_genes_hsc
 ```
 
 #### Heatmap
@@ -392,3 +198,6 @@ make_heatmap(sce_mspr_hsc, best_marker_genes)
 make_heatmap(sce_mcar_hsc, best_marker_genes)
 ```
 
+```{r session_info}
+utils::sessionInfo()
+```

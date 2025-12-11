@@ -41,7 +41,6 @@ source(file =  snakemake@params[["plotting"]])
 
 ```{r load_objects}
 sce_species <- base::readRDS(file = snakemake@input[["sce_species"]])
-#sce_species <- base::readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/01_mnnc/comparison/sce_mcas_str_Object_ID-01")
 
 fraction_curr <- "str"
 species_curr <- "mcas"
@@ -51,8 +50,7 @@ stopifnot(unique(sce_species$Species_ID == species_curr))
 
 # define output path here
 # since in an .Rmd file run by snakemake the only output defined
-# by snakemake is the html, any other output must be
-# defined manually
+# by snakemake is the html, any other output must be defined manually
 base_path_data <- snakemake@params[["OUTPUT_DAT"]]
 output_path <- base::paste0(base_path_data, "/02_clst/custom/sce_mcas_str_custom.rds")
 print(output_path)
@@ -297,11 +295,11 @@ if(fraction_curr == "str"){
 
 if(fraction_curr == "str"){
   marker_genes_short <- c(
-    "Adipoq", # adipo CAR
-    "Cxcl12", # also arteriolar EC
+    "Adipoq", 
+    "Cxcl12", 
     "Kitl", 
     "Lepr",
-    "Alpl", # Osteo
+    "Alpl", 
     "Bglap",
     "Ibsp",
     "Mmp13",
@@ -530,15 +528,14 @@ they are of interest, so I will not annotate them too nicely.
 cluster_markers[[24]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
+# top markers strongly support Hb synthesis.
 ```
-
-The top markers strongly support Hb synthesis.
 
 #### Neutro and other myeloid
 
 ```{r markers_contamination_neutrom}
 
-# also looks mixed with some Lyve1 LEC, Hdc, and Cd3
+# also looks mixed with some Lyve1, Hdc, and Cd3
 cluster_markers[[4]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
@@ -558,7 +555,7 @@ cluster_markers[[27]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
 # the top markers are more Neutro than others I can tell.
-# Retnlg, S100a8 and S100a9, Cxcr2, Il1b all related to neutro
+# Retnlg, S100a8 and S100a9 all related to neutro
 # check because in the heatmap there was "contamination" with Hdc and Cd3d
 
 # baso mast
@@ -566,13 +563,12 @@ cluster_markers[[16]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
 # classic baso mast markers like Prss34, Gata2, Hdc
-# but also some neutro like Cd63 ...
-# might also call them mixed.
+# but also some neutro like Cd63 ... might also call them mixed.
 # check more
 ```
 
 ```{r umaps_neu, fig.height = 3, fig.width = 4}
-# find the cluster
+# find the clusters
 umap_base(sce_species, "cluster_louvain_custom")+
   ggplot2::scale_color_manual("cluster", values = col_num)
 umap_base(
@@ -741,7 +737,6 @@ cluster_markers[[30]] %>%
   head(n = 15)
 # clearly BC lineage with Vpreb1 and Vpreb3, Sox4, also maybe slightly early
 # with Socs2?
-
 ```
 
 ```{r umaps_lym, fig.height = 3, fig.width = 4}
@@ -785,6 +780,7 @@ umap_base(
       max(reducedDims(sce_species)$UMAP[,2])))+
   ggplot2::scale_color_manual("cluster", values = col_num)
 
+# addind some known markers genes to the markers from the lists
 marker_genes_list_ery <- as.list(c(
   "Cd3d",
   "Cd3e",
@@ -818,6 +814,7 @@ plot_list_gene
 ```
 
 Cluster 2 is looking more NK than T cell.
+But I still cannot exclude that TC are in there.
 Cluster 12 is indeed cycling B lineage.
 Cluster 14 is indeed mono/macrophage.
 
@@ -836,8 +833,7 @@ cluster_markers[[3]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
 # I'd say some sort of mature monocyte-ish cell type? Fn1, F13a1, Ccr2
-# Mpeg1, Itga4 is macrophage, Lyst possibly, too
-# Dleu2 is TC, Zeb2 is mesenchyme?
+# Mpeg1, Itga4 is macrophage, Lyst possibly, to. Dleu2 is TC, Zeb2 is mesenchyme?
 # check more
 
 cluster_markers[[5]] %>%
@@ -970,15 +966,15 @@ names(plot_list_gene) <- marker_genes_list_ery
 plot_list_gene
 ```
 
-So the blob of clusters containing clusters 3, 5, 6, 7, and 17
-all look like the belong to the same populations.
-They express lots of markers that are not super exclusive to 
-cell types, like Fcer1g, Il6ra, F13a1.
+So the blob containing clusters 3, 5, 6, 7, and 17 all look like the belong to 
+the same populations.
+They express lots of markers that are not super exclusive to cell types, 
+like Fcer1g, Il6ra, F13a1.
 Given the lack of Cd8, Cd4, Cd3 these are not activated TCs.
 Given the lack of BC markers like Ig genes, Vprebs, Cd79 these are not BC lin.
 Given the lack of Mpo, Elane, S100a8, Hdc, Hba-a1, they are also not these
 lineages.
-They do express Irf8, Ccr2, Mpeg1, so I decide that they are all
+They do express Irf8, Ccr2, Mpeg1, so I conclude that they are all
 mono/macrophage lineage of some sort.
 
 ### Expected clusters
@@ -1017,7 +1013,7 @@ cluster_markers[[1]] %>%
   head(n = 20)
 ```
 
-No Cxcl12 etc., but Alpl, Bglap, Ibsp and Runx2 are expressed here, looks very 
+No Cxcl12 etc, but Alpl, Bglap, Ibsp and Runx2 are expressed here, looks very 
 Osteo.
 
 ```{r markers_msc_balanced}
@@ -1176,7 +1172,7 @@ cluster_markers[[20]] %>%
 ```
 
 Rgs5, Acta2, Tagln, Tpm2 are Peri/SMC.
-Seems to contain some chondro contamination with Mgp, aspn if I interpret 
+Seems to contain some chondro contamination with Mgp, Aspn if I interpret 
 correctly.
 
 # Assign
@@ -1198,26 +1194,27 @@ sce_species$custom_label[
   sce_species$cluster_louvain_custom == "27"] <-  "Neutro 2"
 
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "13"] <-  "Mature immune, mixed"
+  sce_species$cluster_louvain_custom == "13"] <-  "Mature immune mix 1"
 
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "16"] <-  "Baso/Mast"
 
 # Lymphoid
+# order BC for nicer gene expression plots downstream
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "2"] <-  "Nk"
+  sce_species$cluster_louvain_custom == "2"] <-  "Nk/TC"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "10"] <-  "Antigen-presenting 1"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "12"] <-  "BC lineage 1"
+  sce_species$cluster_louvain_custom == "12"] <-  "BC lineage 3"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "14"] <-  "DC lineage 1"
+  sce_species$cluster_louvain_custom == "14"] <-  "Mature immune mix 2"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "18"] <-  "BC lineage 2"
+  sce_species$cluster_louvain_custom == "18"] <-  "BC lineage 7"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "21"] <-  "BC lineage 3"
+  sce_species$cluster_louvain_custom == "21"] <-  "BC lineage 4"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "23"] <-  "BC lineage 4"
+  sce_species$cluster_louvain_custom == "23"] <-  "BC lineage 2"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "25"] <-  "BC lineage 5"
 sce_species$custom_label[
@@ -1225,25 +1222,26 @@ sce_species$custom_label[
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "29"] <-  "BC lineage 6"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "30"] <-  "BC lineage 7"
+  sce_species$cluster_louvain_custom == "30"] <-  "BC lineage 1"
 
 # Other
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "26"] <-  "Skeletal muscle"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "3"] <-  "Mono/Macro lineage 1"
+  sce_species$cluster_louvain_custom == "3"] <-  "Mono/Macro 3"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "5"] <-  "Mono/Macro lineage 2"
+  sce_species$cluster_louvain_custom == "5"] <-  "Mono/Macro 1"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "6"] <-  "Mono/Macro lineage 3"
+  sce_species$cluster_louvain_custom == "6"] <-  "Mono/Macro 4"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "7"] <-  "Mono/Macro lineage 4, cycling"
+  sce_species$cluster_louvain_custom == "7"] <-  "Mono/Macro 2"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "17"] <-  "Mono/Macro lineage 5"
+  sce_species$cluster_louvain_custom == "17"] <-  "Mono/Macro 5"
 
 # Expected
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "8"] <-  "Adipo/Osteo CAR"
+  # because there is significant osteo expression here, as well
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "1"] <-  "Osteo"
 sce_species$custom_label[
@@ -1251,12 +1249,12 @@ sce_species$custom_label[
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "11"] <-  "Fibro"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "22"] <-  "Chondro"
+  sce_species$cluster_louvain_custom == "22"] <-  "Late chondro"
 
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "19"] <-  "Sinusoidal EC"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "15"] <-  "Artiolar/capillary EC"
+  sce_species$cluster_louvain_custom == "15"] <-  "Arteriolar/capillary EC"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "20"] <-  "Peri/SMC"
 
@@ -1266,21 +1264,21 @@ sce_species$custom_label <- factor(
     "Adipo/Osteo CAR",
     "Osteo",
     "Balanced mesenchymal",
-    "Chondro",
+    "Late chondro",
     "Fibro",
-    "Artiolar/capillary EC",
+    "Arteriolar/capillary EC",
     "Sinusoidal EC",
     "Peri/SMC",
     "Erythroid",
+    "Mono/Macro 1", # they look a bit "earlier" than the neutros
+    "Mono/Macro 2",
+    "Mono/Macro 3",
+    "Mono/Macro 4",
+    "Mono/Macro 5",
     "Neutro 1",
     "Neutro 2",
-    "Mono/Macro lineage 1",
-    "Mono/Macro lineage 2",
-    "Mono/Macro lineage 3",
-    "Mono/Macro lineage 4, cycling",
-    "Mono/Macro lineage 5",
-    "DC lineage 1",
     "Baso/Mast",
+    "Nk/TC",
     "BC lineage 1",
     "BC lineage 2",
     "BC lineage 3",
@@ -1288,10 +1286,10 @@ sce_species$custom_label <- factor(
     "BC lineage 5",
     "BC lineage 6",
     "BC lineage 7",
-    "Nk",
     "Antigen-presenting 1",
     "Antigen-presenting 2",
-    "Mature immune, mixed",
+    "Mature immune mix 1",
+    "Mature immune mix 2",
     "Skeletal muscle"
     ))
 

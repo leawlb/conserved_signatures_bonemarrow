@@ -1,0 +1,221 @@
+---
+title: "Custom clustering comparison"
+author: "Lea Wölbert"
+date: '2025-11-10'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This report is to compare the custom clusterings to each other based on 
+the selected marker genes as well as some observed marker genes.
+To make sure that a unified manner of annotation was used and very similar
+populations didn't get different names due to time having passed in-between.
+
+#### Load libraries, source code 
+
+```{r seed,  message = FALSE}
+set.seed(37)
+```
+
+```{r source, message = FALSE}
+source(file = snakemake@params[["custom_utils"]])
+```
+
+```{r, message = FALSE}
+library(SingleCellExperiment, quietly = TRUE)
+library(BiocSingular, quietly = TRUE)
+library(scran, quietly = TRUE)
+library(igraph, quietly = TRUE)
+library(tidyverse, quietly = TRUE)
+```
+
+#todo input snakemake later
+
+```{r load_objects}
+sce_mmus_str <- readRDS(snakemake@input[["mmus_sce"]])
+sce_mcas_str <- readRDS(snakemake@input[["mcas_sce"]])
+sce_mspr_str <- readRDS(snakemake@input[["mspr_sce"]])
+sce_mcar_str <- readRDS(snakemake@input[["mcar_sce"]])
+```
+
+## Control gene expression
+
+Compare the expression of marker genes (either from the literature, see 
+supplementary table of the corresponding publication) or picked from the
+marker gene lists of individual species and cell types.
+
+```{r marker_genes}
+# this list is a bit longer than the one in the custom assignment .Rmd scripts
+# so it can cover all species
+# it's also not JUST to get an idea, but to better show cell type seperation. 
+
+# from the sourced custom utils
+marker_genes_list <- marker_genes_list_str
+```
+
+Get a shorter marker gene lists also based on my observations
+from the annotation .Rmds.
+
+```{r best_marker_genes_list}
+best_marker_genes <- best_marker_genes_str
+```
+
+#### Heatmap
+
+```{r make_heatmap_function}
+make_heatmap <- function(sce_species, marker_genes){
+
+  # get average logcounts per label
+agg_sce_species <- scuttle::aggregateAcrossCells(
+  sce_species,
+  id=colData(sce_species)[,c("custom_label")], 
+  statistics = "mean",
+  use.assay.type = "logcounts")
+
+# turn into df formatted for visualisation
+agg_logcounts_df <- logcounts(agg_sce_species) %>%
+  as.matrix() %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = "genes") %>%
+  tidyr::pivot_longer(
+    cols = unique(agg_sce_species$custom_label),
+    names_to = "custom_label",
+    values_to = "avg_logcounts")
+
+# only keep genes for visualisation
+agg_logcounts_df <- agg_logcounts_df %>%
+  dplyr::filter(genes %in% marker_genes)
+
+# factorise for nicer plot
+agg_logcounts_df$genes <- factor(
+  agg_logcounts_df$genes,
+  levels = rev(marker_genes))
+
+agg_logcounts_df$custom_label <- factor(
+  agg_logcounts_df$custom_label,
+  levels = levels(sce_species$custom_label))
+
+# scale expression per gene using z-scores
+agg_logcounts_df$zscore_gene <- vector(
+  length = nrow(agg_logcounts_df), 
+  mode = "numeric")
+
+for(gene in base::unique(agg_logcounts_df$genes)){
+  
+  expr_vector_g <- agg_logcounts_df[
+    agg_logcounts_df$genes == gene,]$avg_logcounts
+
+  # calculate z score per gene
+  z_score_g <- (expr_vector_g - base::mean(expr_vector_g))/
+    stats::sd(expr_vector_g)
+  agg_logcounts_df$zscore_gene[agg_logcounts_df$genes == gene] <- z_score_g
+}
+
+# plot
+ggplot2::ggplot(
+  agg_logcounts_df,
+  aes(
+    x = custom_label,
+    y = genes,
+    fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_gradient2(
+    low = "blue3",
+    mid = "white", 
+    high = "red3", 
+    midpoint = 0)+
+  ggplot2::theme(
+    axis.text.x = element_text(
+      angle = 90,
+      vjust = 0.5,
+      hjust = 1))
+}
+```
+
+```{r heatmap_mes, fig.height = 9, fig.width = 9}
+
+marker_genes_mes <- unlist(marker_genes_list[1:8])
+
+make_heatmap(sce_mmus_str, marker_genes_mes)
+make_heatmap(sce_mcas_str, marker_genes_mes)
+make_heatmap(sce_mspr_str, marker_genes_mes)
+make_heatmap(sce_mcar_str, marker_genes_mes)
+```
+
+```{r heatmap_ec, fig.height = 6, fig.width = 9}
+# and peri SMC
+marker_genes_ec <- unlist(marker_genes_list[9:17])
+
+make_heatmap(sce_mmus_str, marker_genes_ec)
+make_heatmap(sce_mcas_str, marker_genes_ec)
+make_heatmap(sce_mspr_str, marker_genes_ec)
+make_heatmap(sce_mcar_str, marker_genes_ec)
+```
+
+```{r heatmap_ery, fig.height = 4, fig.width = 9}
+
+marker_genes_ery <- unlist(marker_genes_list[18:19])
+
+make_heatmap(sce_mmus_str, marker_genes_ery)
+make_heatmap(sce_mcas_str, marker_genes_ery)
+make_heatmap(sce_mspr_str, marker_genes_ery)
+make_heatmap(sce_mcar_str, marker_genes_ery)
+```
+
+```{r heatmap_myeloid, fig.height = 6, fig.width = 9}
+
+marker_genes_myeloid <- unlist(marker_genes_list[20:25])
+
+make_heatmap(sce_mmus_str, marker_genes_myeloid)
+make_heatmap(sce_mcas_str, marker_genes_myeloid)
+make_heatmap(sce_mspr_str, marker_genes_myeloid)
+make_heatmap(sce_mcar_str, marker_genes_myeloid)
+```
+
+```{r heatmap_lym, fig.height = 5.3, fig.width = 9}
+
+marker_genes_lym <- unlist(marker_genes_list[26:31])
+
+make_heatmap(sce_mmus_str, marker_genes_lym)
+make_heatmap(sce_mcas_str, marker_genes_lym)
+make_heatmap(sce_mspr_str, marker_genes_lym)
+make_heatmap(sce_mcar_str, marker_genes_lym)
+```
+
+```{r heatmap_immu, fig.height = 9, fig.width = 9}
+
+marker_genes_immu <- unlist(marker_genes_list[20:31])
+
+make_heatmap(sce_mmus_str, marker_genes_immu)
+make_heatmap(sce_mcas_str, marker_genes_immu)
+make_heatmap(sce_mspr_str, marker_genes_immu)
+make_heatmap(sce_mcar_str, marker_genes_immu)
+```
+
+```{r heatmap_all_marker_genes_list, fig.height = 21, fig.width = 9}
+
+marker_genes_all <- unlist(marker_genes_list)
+
+make_heatmap(sce_mmus_str, marker_genes_all)
+make_heatmap(sce_mcas_str, marker_genes_all)
+make_heatmap(sce_mspr_str, marker_genes_all)
+make_heatmap(sce_mcar_str, marker_genes_all)
+```
+
+```{r best_marker_genes, fig.height = 11, fig.width = 9}
+ 
+make_heatmap(sce_mmus_str, best_marker_genes)
+make_heatmap(sce_mcas_str, best_marker_genes)
+make_heatmap(sce_mspr_str, best_marker_genes)
+make_heatmap(sce_mcar_str, best_marker_genes)
+
+#best_marker_genes[duplicated(best_marker_genes)]
+```
+
+```{r session_info}
+utils::sessionInfo()
+```

@@ -698,6 +698,46 @@ seu_ts_bone_marrow$custom_label <- factor(
 stopifnot(!is.na(seu_ts_bone_marrow$custom_label))
 ```
 
+```{r unify}
+
+# unify some annotations by cell type in cases where cell types were split
+# by high resolution clustering or by batch
+# it is not always super obvious what can be unified and what cannot
+
+seu_ts_bone_marrow$custom_label_unif <- unfactor(seu_ts_bone_marrow$custom_label)
+
+# the two HSC clusters are both clearly HSCs
+seu_ts_bone_marrow$custom_label_unif[
+  seu_ts_bone_marrow$custom_label == "HSC, female-biased"] <- "HSC"
+seu_ts_bone_marrow$custom_label_unif[
+  seu_ts_bone_marrow$custom_label == "HSC, male-biased"] <- "HSC"
+
+# same with the two earlier erythroid clusters
+seu_ts_bone_marrow$custom_label_unif[
+  seu_ts_bone_marrow$custom_label == "Erythroid, female-biased"] <- "Early erythroid"
+seu_ts_bone_marrow$custom_label_unif[
+  seu_ts_bone_marrow$custom_label == "Erythroid, male-biased"] <- "Early erythroid"
+
+# same with the two neutro clusters, one is already mixed
+seu_ts_bone_marrow$custom_label_unif[
+  seu_ts_bone_marrow$custom_label == "Neutro prog, male-biased"] <- "Neutro prog"
+
+seu_ts_bone_marrow$custom_label_unif <- factor(
+  seu_ts_bone_marrow$custom_label_unif,
+  levels = c(
+    "HSC",
+    "Early granu prog",
+    "Neutro prog",
+    "Antigen-presenting and lymphoid",
+    "Early Mk",
+    "Early erythroid",
+    "Late erythroid, male-biased"
+  ))
+
+
+stopifnot(!is.na(seu_ts_bone_marrow$custom_label_unif))
+```
+
 #### One last plot to check
 
 ```{r slightly_better_markers}
@@ -837,6 +877,81 @@ ggplot2::ggplot(
   agg_ts_df_genes,
   aes(
     x = custom_label,
+    y = genes,
+    fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_gradient2(
+    low = "blue3",
+    mid = "white", 
+    high = "red3", 
+    midpoint = 0)+
+  ggplot2::theme(
+    axis.text.x = element_text(angle = 90)
+  )
+
+```
+
+```{r last_heatmap2, fig.height = 10, fig.width = 5}
+
+# get average logcounts per cluster
+agg_ts_bonemarrow <- Seurat::AverageExpression(
+  seu_ts_bone_marrow,
+  assays = "RNA",
+  group.by = c("custom_label_unif")) 
+
+# turn into df formatted for visualisation
+agg_ts_df <- agg_ts_bonemarrow$RNA %>%
+  as.matrix() %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = "gene_ids") %>%
+  tidyr::pivot_longer(
+    cols = unique(seu_ts_bone_marrow$custom_label_unif),
+    names_to = "custom_label_unif",
+    values_to = "avg_logcounts")
+
+# only keep genes for visualisation
+agg_ts_df_genes <- agg_ts_df %>%
+  dplyr::filter(gene_ids %in% gene_ids_keep)
+
+agg_ts_df_genes$genes <- vector(length = nrow(agg_ts_df_genes))
+agg_ts_df_genes$genes <- ensembl_hum$external_gene_name[
+  match(
+    agg_ts_df_genes$gene_ids,
+    ensembl_hum$ensembl_gene_id
+  )]
+
+print(unique(agg_ts_df_genes$genes))
+
+# factorise for nicer plot
+agg_ts_df_genes$genes <- factor(
+  agg_ts_df_genes$genes,
+  levels = rev(slightly_better_markers))
+
+agg_ts_df_genes$custom_label_unif <- factor(
+  agg_ts_df_genes$custom_label_unif, 
+  levels = levels(seu_ts_bone_marrow$custom_label_unif))
+
+# scale expression per gene using z-scores
+agg_ts_df_genes$zscore_gene <- vector(
+  length = nrow(agg_ts_df_genes), 
+  mode = "numeric")
+
+for(gene in base::unique(agg_ts_df_genes$genes)){
+  
+  expr_vector_g <- agg_ts_df_genes[agg_ts_df_genes$genes == gene,]$avg_logcounts
+
+  # calculate z score per gene
+  z_score_g <- (expr_vector_g - base::mean(expr_vector_g))/
+    stats::sd(expr_vector_g)
+  agg_ts_df_genes$zscore_gene[agg_ts_df_genes$genes == gene] <- z_score_g
+}
+
+# plot
+ggplot2::ggplot(
+  agg_ts_df_genes,
+  aes(
+    x = custom_label_unif,
     y = genes,
     fill = zscore_gene))+
   ggplot2::geom_tile()+

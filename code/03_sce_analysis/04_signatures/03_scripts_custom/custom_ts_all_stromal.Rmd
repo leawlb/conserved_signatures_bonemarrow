@@ -777,7 +777,7 @@ seu_ts_all_stromal$custom_label[
   seu_ts_all_stromal$clusters == "cluster-5"] <- "Arterial EC"
 
 seu_ts_all_stromal$custom_label[
-  seu_ts_all_stromal$clusters == "cluster-8"] <- "Sinusoidal EC 1, V2"
+  seu_ts_all_stromal$clusters == "cluster-8"] <- "Sinusoidal EC 1, V1"
 seu_ts_all_stromal$custom_label[
   seu_ts_all_stromal$clusters == "cluster-6"] <- "Sinusoidal EC 2, V1"
 seu_ts_all_stromal$custom_label[
@@ -801,7 +801,7 @@ seu_ts_all_stromal$custom_label <- factor(
     "Chondrocyte",
     "Fibro/chondro/synovial/articular-like",
     "Arterial EC",
-    "Sinusoidal EC 1, V2",
+    "Sinusoidal EC 1, V1",
     "Sinusoidal EC 2, V1",
     "Sinusoidal EC 3, V2",
     "Sinusoidal EC 4, V1",
@@ -809,6 +809,50 @@ seu_ts_all_stromal$custom_label <- factor(
   ))
 
 stopifnot(!is.na(seu_ts_all_stromal$custom_label))
+```
+
+```{r unify}
+
+# unify some annotations by cell type in cases where cell types were split
+# by high resolution clustering or by batch
+# it is not always super obvious what can be unified and what cannot
+
+seu_ts_all_stromal$custom_label_unif <- unfactor(seu_ts_all_stromal$custom_label)
+
+# I think the adipo CARs overlap pretty nicely but this is not the case
+# for other mesenchymal cells
+seu_ts_all_stromal$custom_label_unif[
+  seu_ts_all_stromal$custom_label == "Adipo-CAR, V1"] <- "Adipo-CAR"
+seu_ts_all_stromal$custom_label_unif[
+  seu_ts_all_stromal$custom_label == "Adipo-CAR, V2"] <- "Adipo-CAR"
+
+# I am merging all sinusoidal ECs
+seu_ts_all_stromal$custom_label_unif[
+  seu_ts_all_stromal$custom_label == "Sinusoidal EC 1, V1"] <- "Sinusoidal EC"
+seu_ts_all_stromal$custom_label_unif[
+  seu_ts_all_stromal$custom_label == "Sinusoidal EC 2, V1"] <- "Sinusoidal EC"
+seu_ts_all_stromal$custom_label_unif[
+  seu_ts_all_stromal$custom_label == "Sinusoidal EC 3, V2"] <- "Sinusoidal EC"
+seu_ts_all_stromal$custom_label_unif[
+  seu_ts_all_stromal$custom_label == "Sinusoidal EC 4, V1"] <- "Sinusoidal EC"
+
+seu_ts_all_stromal$custom_label_unif <- factor(
+  seu_ts_all_stromal$custom_label_unif,
+  levels = c(
+    "Adipo-CAR",
+    "Osteo-CAR, V1",
+    "Osteo Cycling",
+    "Osteo-Chondro/Immune contamination, V2",
+    "Osteo-Chondro, V1",
+    "Chondrocyte",
+    "Fibro/chondro/synovial/articular-like",
+    "Arterial EC",
+    "Sinusoidal EC",
+    "Pericyte/Immune contamination"
+  ))
+
+stopifnot(!is.na(seu_ts_all_stromal$custom_label_unif))
+
 ```
 
 #### One last plot to check
@@ -910,13 +954,13 @@ gene_ids_keep <- ensembl_hum$ensembl_gene_id[
 ```{r last_heatmap, fig.height = 15, fig.width = 5}
 
 # get average logcounts per cluster
-agg_ts_bonemarrow <- Seurat::AverageExpression(
+agg_ts_all_stromal <- Seurat::AverageExpression(
   seu_ts_all_stromal,
   assays = "RNA",
   group.by = c("custom_label")) 
 
 # turn into df formatted for visualisation
-agg_ts_df <- agg_ts_bonemarrow$RNA %>%
+agg_ts_df <- agg_ts_all_stromal$RNA %>%
   as.matrix() %>%
   as.data.frame() %>%
   tibble::rownames_to_column(var = "gene_ids") %>%
@@ -967,6 +1011,81 @@ ggplot2::ggplot(
   agg_ts_df_genes,
   aes(
     x = custom_label,
+    y = genes,
+    fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_gradient2(
+    low = "blue3",
+    mid = "white", 
+    high = "red3", 
+    midpoint = 0)+
+  ggplot2::theme(
+    axis.text.x = element_text(angle = 90)
+  )
+
+```
+
+```{r last_heatmap_unif, fig.height = 15, fig.width = 5}
+
+# get average logcounts per cluster
+agg_ts_all_stromal <- Seurat::AverageExpression(
+  seu_ts_all_stromal,
+  assays = "RNA",
+  group.by = c("custom_label_unif")) 
+
+# turn into df formatted for visualisation
+agg_ts_df <- agg_ts_all_stromal$RNA %>%
+  as.matrix() %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = "gene_ids") %>%
+  tidyr::pivot_longer(
+    cols = unique(seu_ts_all_stromal$custom_label_unif),
+    names_to = "custom_label_unif",
+    values_to = "avg_logcounts")
+
+# only keep genes for visualisation
+agg_ts_df_genes <- agg_ts_df %>%
+  dplyr::filter(gene_ids %in% gene_ids_keep)
+
+agg_ts_df_genes$genes <- vector(length = nrow(agg_ts_df_genes))
+agg_ts_df_genes$genes <- ensembl_hum$external_gene_name[
+  match(
+    agg_ts_df_genes$gene_ids,
+    ensembl_hum$ensembl_gene_id
+  )]
+
+print(unique(agg_ts_df_genes$genes))
+
+# factorise for nicer plot
+agg_ts_df_genes$genes <- factor(
+  agg_ts_df_genes$genes,
+  levels = rev(slightly_better_markers))
+
+agg_ts_df_genes$custom_label_unif <- factor(
+  agg_ts_df_genes$custom_label_unif, 
+  levels = levels(seu_ts_all_stromal$custom_label_unif))
+
+# scale expression per gene using z-scores
+agg_ts_df_genes$zscore_gene <- vector(
+  length = nrow(agg_ts_df_genes), 
+  mode = "numeric")
+
+for(gene in base::unique(agg_ts_df_genes$genes)){
+  
+  expr_vector_g <- agg_ts_df_genes[agg_ts_df_genes$genes == gene,]$avg_logcounts
+
+  # calculate z score per gene
+  z_score_g <- (expr_vector_g - base::mean(expr_vector_g))/
+    stats::sd(expr_vector_g)
+  agg_ts_df_genes$zscore_gene[agg_ts_df_genes$genes == gene] <- z_score_g
+}
+
+# plot
+ggplot2::ggplot(
+  agg_ts_df_genes,
+  aes(
+    x = custom_label_unif,
     y = genes,
     fill = zscore_gene))+
   ggplot2::geom_tile()+

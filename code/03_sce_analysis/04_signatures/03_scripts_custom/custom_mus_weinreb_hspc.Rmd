@@ -222,13 +222,13 @@ seu_mus_weinreb_hspc@meta.data$clusters <- base::paste0(
 )
 
 # get average logcounts per cluster
-agg_ts_bonemarrow <- Seurat::AverageExpression(
+agg_mus_weinreb_hspc <- Seurat::AverageExpression(
   seu_mus_weinreb_hspc,
   assays = "RNA",
   group.by = c("clusters")) 
 
 # turn into df formatted for visualisation
-agg_ts_df <- agg_ts_bonemarrow$RNA %>%
+agg_mus_weinreb_hspc_df <- agg_mus_weinreb_hspc$RNA %>%
   as.matrix() %>%
   as.data.frame() %>%
   tibble::rownames_to_column(var = "genes") %>%
@@ -238,34 +238,36 @@ agg_ts_df <- agg_ts_bonemarrow$RNA %>%
     values_to = "avg_logcounts")
 
 # only keep genes for visualisation
-agg_ts_df_genes <- agg_ts_df %>%
+agg_mus_weinreb_hspc_df_genes <- agg_mus_weinreb_hspc_df %>%
   dplyr::filter(genes %in% marker_genes)
 
-print(unique(agg_ts_df_genes$genes))
+print(unique(agg_mus_weinreb_hspc_df_genes$genes))
 
 # factorise for nicer plot
-agg_ts_df_genes$genes <- factor(
-  agg_ts_df_genes$genes,
+agg_mus_weinreb_hspc_df_genes$genes <- factor(
+  agg_mus_weinreb_hspc_df_genes$genes,
   levels = rev(marker_genes))
 
 # scale expression per gene using z-scores
-agg_ts_df_genes$zscore_gene <- vector(
-  length = nrow(agg_ts_df_genes), 
+agg_mus_weinreb_hspc_df_genes$zscore_gene <- vector(
+  length = nrow(agg_mus_weinreb_hspc_df_genes), 
   mode = "numeric")
 
-for(gene in base::unique(agg_ts_df_genes$genes)){
+for(gene in base::unique(agg_mus_weinreb_hspc_df_genes$genes)){
   
-  expr_vector_g <- agg_ts_df_genes[agg_ts_df_genes$genes == gene,]$avg_logcounts
+  expr_vector_g <- agg_mus_weinreb_hspc_df_genes[
+    agg_mus_weinreb_hspc_df_genes$genes == gene,]$avg_logcounts
 
   # calculate z score per gene
   z_score_g <- (expr_vector_g - base::mean(expr_vector_g))/
     stats::sd(expr_vector_g)
-  agg_ts_df_genes$zscore_gene[agg_ts_df_genes$genes == gene] <- z_score_g
+  agg_mus_weinreb_hspc_df_genes$zscore_gene[
+    agg_mus_weinreb_hspc_df_genes$genes == gene] <- z_score_g
 }
 
 # plot
 ggplot2::ggplot(
-  agg_ts_df_genes,
+  agg_mus_weinreb_hspc_df_genes,
   aes(
     x = clusters,
     y = genes,
@@ -460,12 +462,11 @@ Cluster 10 is very clearly Eo baso mast.
 Prss34, Cpa3, Gata2 are baso mast, Ccl4 and Ccl3 are eo. 
 Fcer1a, Cd63, Itga2b, Cebpa, Hdc, Ier3 support this.
 
-Cluster 8 is lymphoid but later than cluster 9, with Vpreb1, Igll1 etc.
+Cluster 8 is lymphoid but later than the MPP cluster 9, with Vpreb1, Igll1 etc.
 
 Cluster 5 is only detected in time point 16, the latest time point?
-It expresses more Ig genes and some antigen-presenting stuff.
-
-
+It expresses more Ig genes and already some antigen-presenting genes, so I 
+think it's a bit later.
 
 ```{r myeloid_umaps_additional, fig.width = 4.5, fig.height = 4}
 
@@ -607,9 +608,9 @@ seu_mus_weinreb_hspc$custom_label[
 seu_mus_weinreb_hspc$custom_label[
   seu_mus_weinreb_hspc$clusters == "cluster-10"] <- "Eo/Baso/Mast/Mk"
 seu_mus_weinreb_hspc$custom_label[
-  seu_mus_weinreb_hspc$clusters == "cluster-8"] <- "Lymphoid 1"
+  seu_mus_weinreb_hspc$clusters == "cluster-8"] <- "Lymphoid"
 seu_mus_weinreb_hspc$custom_label[
-  seu_mus_weinreb_hspc$clusters == "cluster-5"] <- "Lymphoid 2, time point 16" # it appears inb a later time point
+  seu_mus_weinreb_hspc$clusters == "cluster-5"] <- "Later lymphoid 2, time point 16"
 seu_mus_weinreb_hspc$custom_label[
   seu_mus_weinreb_hspc$clusters == "cluster-12"] <- "Antigen-presenting"
 seu_mus_weinreb_hspc$custom_label[
@@ -630,8 +631,8 @@ seu_mus_weinreb_hspc$custom_label <- factor(
     "Neutro",
     "Mono",
     "Eo/Baso/Mast/Mk",
-    "Lymphoid 1",
-    "Lymphoid 2, time point 16",
+    "Lymphoid",
+    "Later lymphoid, time point 16",
     "Antigen-presenting",
     "Early ery 1",
     "Early ery 2",
@@ -640,6 +641,42 @@ seu_mus_weinreb_hspc$custom_label <- factor(
   ))
 
 stopifnot(!is.na(seu_mus_weinreb_hspc$custom_label))
+```
+
+```{r unify}
+
+# unify some annotations by cell type in cases where cell types were split
+# by high resolution clustering or by batch
+# it is not always super obvious what can be unified and what cannot
+
+seu_mus_weinreb_hspc$custom_label_unif <- unfactor(seu_mus_weinreb_hspc$custom_label)
+
+# the two early Ery overlap quite significantly but I think the "Erthroid"
+# cluster already looks more mature compared to those
+seu_mus_weinreb_hspc$custom_label_unif[
+  seu_mus_weinreb_hspc$custom_label == "Early ery 1"] <- "Early ery"
+seu_mus_weinreb_hspc$custom_label_unif[
+  seu_mus_weinreb_hspc$custom_label == "Early ery 2"] <- "Early ery"
+
+seu_mus_weinreb_hspc$custom_label_unif <- factor(
+  seu_mus_weinreb_hspc$custom_label_unif,
+  levels = c(
+    "HSC and MPP",
+    "Lymphoid MPP",
+    "Early myeloid",
+    "Neutro",
+    "Mono",
+    "Eo/Baso/Mast/Mk",
+    "Lymphoid",
+    "Later lymphoid, time point 16",
+    "Antigen-presenting",
+    "Early ery",
+    "Erythroid",
+    "Late ery"
+  ))
+
+stopifnot(!is.na(seu_mus_weinreb_hspc$custom_label_unif))
+
 ```
 
 #### One last plot to check
@@ -691,6 +728,7 @@ slightly_better_markers <- c(
     "Ccl3",
     "Dntt1",
     "Vpreb1",
+    "Igll1",
     "Vpreb3",
     "Il7r",
     "Cd79a",
@@ -727,13 +765,13 @@ slightly_better_markers[duplicated(slightly_better_markers)]
 ```{r last_heatmap, fig.height = 10, fig.width = 5}
 
 # get average logcounts per cluster
-agg_ts_bonemarrow <- Seurat::AverageExpression(
+agg_mus_weinreb_hspc <- Seurat::AverageExpression(
   seu_mus_weinreb_hspc,
   assays = "RNA",
   group.by = c("custom_label")) 
 
 # turn into df formatted for visualisation
-agg_ts_df <- agg_ts_bonemarrow$RNA %>%
+agg_mus_weinreb_hspc_df <- agg_mus_weinreb_hspc$RNA %>%
   as.matrix() %>%
   as.data.frame() %>%
   tibble::rownames_to_column(var = "genes") %>%
@@ -743,40 +781,111 @@ agg_ts_df <- agg_ts_bonemarrow$RNA %>%
     values_to = "avg_logcounts")
 
 # only keep genes for visualisation
-agg_ts_df_genes <- agg_ts_df %>%
+agg_mus_weinreb_hspc_df_genes <- agg_mus_weinreb_hspc_df %>%
   dplyr::filter(genes %in% slightly_better_markers)
 
-print(unique(agg_ts_df_genes$genes))
+print(unique(agg_mus_weinreb_hspc_df_genes$genes))
 
 # factorise for nicer plot
-agg_ts_df_genes$genes <- factor(
-  agg_ts_df_genes$genes,
+agg_mus_weinreb_hspc_df_genes$genes <- factor(
+  agg_mus_weinreb_hspc_df_genes$genes,
   levels = rev(slightly_better_markers))
 
-agg_ts_df_genes$custom_label <- factor(
-  agg_ts_df_genes$custom_label, 
+agg_mus_weinreb_hspc_df_genes$custom_label <- factor(
+  agg_mus_weinreb_hspc_df_genes$custom_label, 
   levels = levels(seu_mus_weinreb_hspc$custom_label))
 
 # scale expression per gene using z-scores
-agg_ts_df_genes$zscore_gene <- vector(
-  length = nrow(agg_ts_df_genes), 
+agg_mus_weinreb_hspc_df_genes$zscore_gene <- vector(
+  length = nrow(agg_mus_weinreb_hspc_df_genes), 
   mode = "numeric")
 
-for(gene in base::unique(agg_ts_df_genes$genes)){
+for(gene in base::unique(agg_mus_weinreb_hspc_df_genes$genes)){
   
-  expr_vector_g <- agg_ts_df_genes[agg_ts_df_genes$genes == gene,]$avg_logcounts
+  expr_vector_g <- agg_mus_weinreb_hspc_df_genes[
+    agg_mus_weinreb_hspc_df_genes$genes == gene,]$avg_logcounts
 
   # calculate z score per gene
   z_score_g <- (expr_vector_g - base::mean(expr_vector_g))/
     stats::sd(expr_vector_g)
-  agg_ts_df_genes$zscore_gene[agg_ts_df_genes$genes == gene] <- z_score_g
+  agg_mus_weinreb_hspc_df_genes$zscore_gene[
+    agg_mus_weinreb_hspc_df_genes$genes == gene] <- z_score_g
 }
 
 # plot
 ggplot2::ggplot(
-  agg_ts_df_genes,
+  agg_mus_weinreb_hspc_df_genes,
   aes(
     x = custom_label,
+    y = genes,
+    fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::theme_classic()+
+  ggplot2::scale_fill_gradient2(
+    low = "blue3",
+    mid = "white", 
+    high = "red3", 
+    midpoint = 0)+
+  ggplot2::theme(
+    axis.text.x = element_text(angle = 90)
+  )
+```
+
+```{r last_heatmap2, fig.height = 10, fig.width = 5}
+
+# get average logcounts per cluster
+agg_mus_weinreb_hspc <- Seurat::AverageExpression(
+  seu_mus_weinreb_hspc,
+  assays = "RNA",
+  group.by = c("custom_label_unif")) 
+
+# turn into df formatted for visualisation
+agg_mus_weinreb_hspc_df <- agg_mus_weinreb_hspc$RNA %>%
+  as.matrix() %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = "genes") %>%
+  tidyr::pivot_longer(
+    cols = unique(seu_mus_weinreb_hspc$custom_label_unif),
+    names_to = "custom_label_unif",
+    values_to = "avg_logcounts")
+
+# only keep genes for visualisation
+agg_mus_weinreb_hspc_df_genes <- agg_mus_weinreb_hspc_df %>%
+  dplyr::filter(genes %in% slightly_better_markers)
+
+print(unique(agg_mus_weinreb_hspc_df_genes$genes))
+
+# factorise for nicer plot
+agg_mus_weinreb_hspc_df_genes$genes <- factor(
+  agg_mus_weinreb_hspc_df_genes$genes,
+  levels = rev(slightly_better_markers))
+
+agg_mus_weinreb_hspc_df_genes$custom_label_unif <- factor(
+  agg_mus_weinreb_hspc_df_genes$custom_label_unif, 
+  levels = levels(seu_mus_weinreb_hspc$custom_label_unif))
+
+# scale expression per gene using z-scores
+agg_mus_weinreb_hspc_df_genes$zscore_gene <- vector(
+  length = nrow(agg_mus_weinreb_hspc_df_genes), 
+  mode = "numeric")
+
+for(gene in base::unique(agg_mus_weinreb_hspc_df_genes$genes)){
+  
+  expr_vector_g <- agg_mus_weinreb_hspc_df_genes[
+    agg_mus_weinreb_hspc_df_genes$genes == gene,]$avg_logcounts
+
+  # calculate z score per gene
+  z_score_g <- (expr_vector_g - base::mean(expr_vector_g))/
+    stats::sd(expr_vector_g)
+  agg_mus_weinreb_hspc_df_genes$zscore_gene[
+    agg_mus_weinreb_hspc_df_genes$genes == gene] <- z_score_g
+}
+
+# plot
+ggplot2::ggplot(
+  agg_mus_weinreb_hspc_df_genes,
+  aes(
+    x = custom_label_unif,
     y = genes,
     fill = zscore_gene))+
   ggplot2::geom_tile()+

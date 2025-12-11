@@ -11,11 +11,15 @@ Similarly to before this script will be used to recluster and annotate
 one of the published datasets, in this case tabula sapiens bone marrow.
 
 This time, I will perform the standard clustering pipeline, but 
-- FIRST subset to signature gene orthologs only,
-- THEN perform batch correction (or I'd need to calculate variable features),
-- THEN cluster with the same resolution used for the non-batch-corrected
+
+ - FIRST subset to signature gene orthologs only,
+
+ - THEN perform batch correction (or I'd need to calculate variable features),
+
+ - THEN cluster with the same resolution used for the non-batch-corrected
 signature-based reclustering, 
-- and THEN do a blind annotation.
+
+ - and THEN do a blind annotation.
 
 This is to show the effect of batch correction as would be done in a 
 normal preprocessing pipeline.
@@ -117,7 +121,7 @@ ensembl_column_use
 length(unique(ensembl_sign$MMUS_SYMBOL)) # there are 229 signature genes
 
 sign_ids <- unique(ensembl_sign[,ensembl_column_use])
-length(sign_ids) # and 226 int features that are orthologs of those
+length(sign_ids) # and 226 features that are orthologs of those
 table(sign_ids %in% rownames(seu_ts_bone_marrow)) # of which 225 are in the objects rownames
 
 # subset seurat_object 
@@ -161,7 +165,7 @@ seu_ts_bone_marrow_list
 
 int_features <- Seurat::SelectIntegrationFeatures(
   object.list = seu_ts_bone_marrow_list)
-length(int_features) # it's the same signature genes
+length(int_features) 
 
 anchors_ts_bone_marrow <- Seurat::FindIntegrationAnchors(
   object.list = seu_ts_bone_marrow_list,
@@ -408,7 +412,7 @@ Seurat::FeaturePlot(combined_ts_bone_marrow, markers[7:12])
 # ANXA2, CTSZ, LY86, SPI1
 
 combined_ts_bone_marrow$batchc_sign_labels[
-  combined_ts_bone_marrow$seurat_clusters == nr] <- "Cycling myeloid"
+  combined_ts_bone_marrow$seurat_clusters == nr] <- "Cycling Myeloid"
 ```
 
 ```{r cluster6}
@@ -493,11 +497,6 @@ Seurat::FeaturePlot(combined_ts_bone_marrow, markers[7:12])
 
 combined_ts_bone_marrow$batchc_sign_labels[
   combined_ts_bone_marrow$seurat_clusters == nr] <- "Mk/Ery"
-
-head(combined_ts_bone_marrow$batchc_sign_labels)
-sort(unique(combined_ts_bone_marrow$batchc_sign_labels))
-
-knitr::knit_exit()
 ```
 
 Factorize for nicer plots.
@@ -519,6 +518,10 @@ combined_ts_bone_marrow$batchc_sign_labels <- factor(
 
 stopifnot(!is.na(combined_ts_bone_marrow$batchc_sign_labels))
 ```
+
+```{r umaps_labels, fig.height = 6, fig.width = 6}
+Seurat::DimPlot(combined_ts_bone_marrow, reduction = "umap", group.by = "batchc_sign_labels")
+``` 
 
 ## Save
 

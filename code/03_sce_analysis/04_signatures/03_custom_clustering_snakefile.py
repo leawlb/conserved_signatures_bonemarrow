@@ -95,7 +95,7 @@ rule custom_mus_weinreb_hspc:
         OUTPUT_REP + "/custom_mus_weinreb_hspc.html"
     resources:
         mem_mb = 50000,
-        queue = "medium-debian"
+        queue = "long-debian"
     threads: 10
     params:
         plotting = "../../source/plotting.R",

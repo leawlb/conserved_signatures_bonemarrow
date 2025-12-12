@@ -1,0 +1,498 @@
+---
+title: "Identifying reclaimable signature genes in other datasets' markers"
+date: '2025-12-11'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo       = TRUE,
+  message    = FALSE,
+  warning    = FALSE,
+  fig.align  = "left"
+)
+```
+
+```{r seed}
+RNGkind("L'Ecuyer-CMRG")
+set.seed(37)
+```
+
+```{r libraries}
+library(tidyverse)
+library(Seurat)
+```
+
+```{r paths}
+base_path    <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+project_path <- "/omics/groups/OE0433/internal/veronica/github/Interspecies_BM_phd"
+```
+
+```{r source}
+colors_path <- base::paste0(
+  base_path,
+  "/metadata/colors/colors.txt"
+)
+
+source(file.path(project_path, "code/source/colors.R"))
+source(file.path(project_path, "code/source/plotting.R"))
+source(file.path(project_path, "code/figures/determine_params.R"))
+```
+
+---
+
+# Load input objects
+
+```{r load_objects}
+hsc_sig <- read.delim(
+  file.path(
+    base_path,
+    "manuscript1/hsc_signature_table.csv"
+  ),
+  sep = ";"
+)
+
+str_sig <- read.delim(
+  file.path(
+    base_path,
+    "manuscript1/str_signature_table.csv"
+  ),
+  sep = ";"
+)
+
+ensembl_hum <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_hum")
+
+ensembl_mus <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_mus")
+
+weinreb_hspc <- readRDS(file.path(
+  base_path,
+  "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/03_custom_clustering/mus_weinreb_hspc.Rds"
+))
+
+tabula_sapiens_hspc <- readRDS(file.path(
+  base_path,
+  "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/03_custom_clustering/ts_bone_marrow.Rds"
+))
+
+tabula_sapiens_stromal <- readRDS(file.path(
+  base_path,
+  "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/03_custom_clustering/ts_all_stromal.Rds"
+))
+```
+
+---
+
+# Load precomputed ortholog table (mouse symbols -> human Ensembl IDs)
+
+> This analysis assumes you have already created an ortholog table
+> with columns `sig_gene` (mouse signature symbol) and
+> `seurat_gene` (gene ID used in your Seurat objects, e.g. human Ensembl ID),
+> and saved it as an `.rds` file on disk.
+
+```{r build_orthologs}
+# Build mouse symbol -> human Ensembl ortholog table
+# using: ensembl_hum (has mmusculus_homolog_ensembl_gene) and ensembl_mus
+
+ortholog_mouse2human <- ensembl_hum %>%
+  dplyr::select(
+    human_ensembl = ensembl_gene_id,              # human Ensembl
+    mm_ensembl    = mmusculus_homolog_ensembl_gene,
+    human_gene_name = external_gene_name          # optional, for debugging
+  ) %>%
+  dplyr::filter(!is.na(mm_ensembl)) %>%
+  dplyr::left_join(
+    ensembl_mus %>%
+      dplyr::select(
+        mm_ensembl = ensembl_gene_id,
+        sig_gene   = external_gene_name          # mouse gene symbol
+      ),
+    by = "mm_ensembl"
+  ) %>%
+  dplyr::filter(!is.na(sig_gene)) %>%
+  dplyr::transmute(
+    sig_gene,                   # mouse signature symbol (matches hsc_sig$str_sig$signature_gene)
+    seurat_gene    = human_ensembl,
+    human_gene_name
+  ) %>%
+  dplyr::distinct()
+
+```
+
+---
+
+# Helper function to calculate markers with optional ortholog mapping
+
+```{r calculate_sig_marker_conservation}
+analyze_seurat_vs_signatures <- function(seurat_obj,
+                                          signatures,
+                                          ortholog_df     = NULL,
+                                          logfc_threshold = 0.25,
+                                          min_pct         = 0.1) {
+  # signatures: data.frame with at least:
+  #   signature_gene (mouse symbol)
+  #   celltype
+  #   subclustering_gene_for_ct (logical) – we ignore it here unless you want a filter
+
+  signatures_df <- signatures %>%
+    dplyr::filter(
+      !is.na(signature_gene),
+      !is.na(celltype)
+      # if you want to drop subclustering genes:
+      # , !subclustering_gene_for_ct
+    )
+
+  # list: celltype -> vector of raw signature genes (mouse symbols)
+  sig_list_raw <- signatures_df %>%
+    dplyr::group_by(celltype) %>%
+    dplyr::summarise(
+      genes = list(unique(signature_gene)),
+      .groups = "drop"
+    )
+
+  sig_cts <- sig_list_raw$celltype
+  signature_genes_raw <- rlang::set_names(sig_list_raw$genes, sig_cts)
+
+  gene_universe <- rownames(seurat_obj)
+
+  # Map signature genes into the ID space of the Seurat object
+  if (is.null(ortholog_df)) {
+    # same-ID-space case (mouse signatures vs mouse Seurat object)
+    signature_genes_mapped <- lapply(signature_genes_raw, function(gs) {
+      intersect(gs, gene_universe)
+    })
+  } else {
+    # cross-ID case: sig_gene (mouse symbol) -> seurat_gene (human Ensembl)
+    ortholog_df_filt <- ortholog_df %>%
+      dplyr::filter(seurat_gene %in% gene_universe)
+
+    signature_genes_mapped <- lapply(sig_cts, function(ct) {
+      gs <- signature_genes_raw[[ct]]
+      ortholog_df_filt %>%
+        dplyr::filter(sig_gene %in% gs) %>%
+        dplyr::pull(seurat_gene) %>%
+        unique()
+    })
+    names(signature_genes_mapped) <- sig_cts
+  }
+
+  # union of all signature genes (now in seurat_obj ID space)
+  signatures_all <- unique(unlist(signature_genes_mapped))
+
+  # use custom_label_unif as identities
+  if (is.null(seurat_obj$custom_label_unif)) {
+    stop("seurat_obj has no meta.data column 'custom_label_unif'")
+  }
+  Idents(seurat_obj) <- seurat_obj$custom_label_unif
+  custom_cts <- levels(Idents(seurat_obj))
+
+  custom_sig_by_ct     <- vector("list", length(custom_cts))
+  names(custom_sig_by_ct) <- custom_cts
+  custom_markers_by_ct <- vector("list", length(custom_cts))
+  names(custom_markers_by_ct) <- custom_cts
+
+  per_custom_ct_rows <- vector("list", length(custom_cts))
+  names(per_custom_ct_rows) <- custom_cts
+
+  for (ct in custom_cts) {
+    mk <- Seurat::FindMarkers(
+      object          = seurat_obj,
+      ident.1         = ct,
+      only.pos        = TRUE,
+      logfc.threshold = logfc_threshold,
+      min.pct         = min_pct
+    )
+
+    genes_ct <- rownames(mk)
+    custom_markers_by_ct[[ct]] <- genes_ct
+
+    overlap_any <- intersect(genes_ct, signatures_all)
+    custom_sig_by_ct[[ct]] <- overlap_any
+
+    per_custom_ct_rows[[ct]] <- tibble::tibble(
+      custom_label_unif = ct,
+      n_custom_markers  = length(genes_ct),
+      n_overlap_any_set = length(overlap_any)
+    )
+  }
+
+  all_custom_markers <- unique(unlist(custom_markers_by_ct))
+
+  per_signature_rows <- purrr::map_dfr(sig_cts, function(hct) {
+    raw_genes    <- unique(signature_genes_raw[[hct]])      # mouse symbols
+    mapped_genes <- unique(signature_genes_mapped[[hct]])   # in seurat ID space
+
+    n_sig_total <- length(raw_genes)
+
+    sig_detectable   <- intersect(mapped_genes, gene_universe)
+    n_sig_detectable <- length(sig_detectable)
+
+    overlap <- intersect(mapped_genes, all_custom_markers)
+
+    tibble::tibble(
+      celltype                = hct,
+      n_sig_total             = n_sig_total,
+      n_sig_detectable        = n_sig_detectable,
+      n_overlap_any_custom_ct = length(overlap),
+      prop_overlap_any_custom =
+        if (n_sig_detectable > 0) length(overlap) / n_sig_detectable else NA_real_
+    )
+  })
+
+  list(
+    per_custom_ct          = dplyr::bind_rows(per_custom_ct_rows),
+    custom_sig_by_ct       = custom_sig_by_ct,
+    custom_markers_by_ct   = custom_markers_by_ct,
+    per_signature          = per_signature_rows,
+    signature_genes_raw    = signature_genes_raw,    # list: celltype -> mouse symbols
+    signature_genes_mapped = signature_genes_mapped  # list: celltype -> IDs in seurat_obj
+  )
+}
+```
+
+---
+
+# Run the analysis and save outputs
+
+```{r run_weinreb}
+# Mouse dataset; same ID space as signatures, so no ortholog mapping needed
+weinreb_markers <- analyze_seurat_vs_signatures(
+  seurat_obj  = weinreb_hspc,
+  signatures  = hsc_sig,
+  ortholog_df = NULL
+)
+
+saveRDS(
+  weinreb_markers,
+  file.path(base_path, "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/03_custom_clustering/mus_weinreb_markers.rds")
+)
+```
+
+```{r run_sapiens_hspc}
+# Human dataset; use precomputed ortholog mapping from mouse symbols to human Ensembl IDs
+tabula_sapiens_hspc_markers <- analyze_seurat_vs_signatures(
+  seurat_obj  = tabula_sapiens_hspc,
+  signatures  = hsc_sig,
+  ortholog_df = ortholog_mouse2human
+)
+
+saveRDS(
+  tabula_sapiens_hspc_markers,
+  file.path(base_path, "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/03_custom_clustering/ts_hspc_markers.rds")
+)
+```
+
+```{r run_sapiens_str}
+# Human stromal dataset; same mapping
+tabula_sapiens_str_markers <- analyze_seurat_vs_signatures(
+  seurat_obj  = tabula_sapiens_stromal,
+  signatures  = str_sig,
+  ortholog_df = ortholog_mouse2human
+)
+
+saveRDS(
+  tabula_sapiens_str_markers,
+  file.path(base_path, "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/03_custom_clustering/ts_str_markers.rds")
+)
+```
+
+---
+
+# Plot: mouse Weinreb HSPC (same-species, symbol-based)
+
+```{r plot_weinreb}
+custom_markers_by_ct   <- weinreb_markers$custom_markers_by_ct
+per_signature          <- weinreb_markers$per_signature
+signature_genes_mapped <- weinreb_markers$signature_genes_mapped
+
+custom_order    <- names(custom_markers_by_ct)
+# use whatever signature order you want; example assumes col_cts_hsc exists
+signature_order <- rev(names(col_cts_hsc))
+
+pairwise_overlap_weinreb <- tidyr::crossing(
+  custom_label_unif = custom_order,
+  celltype          = signature_order
+) %>%
+  dplyr::mutate(
+    n_overlap = purrr::map2_int(
+      custom_label_unif, celltype,
+      ~ length(intersect(custom_markers_by_ct[[.x]],
+                         signature_genes_mapped[[.y]]))
+    )
+  ) %>%
+  dplyr::left_join(
+    per_signature %>% dplyr::select(celltype, n_sig_detectable),
+    by = "celltype"
+  ) %>%
+  dplyr::mutate(
+    prop_of_sig_detectable =
+      dplyr::if_else(n_sig_detectable > 0, n_overlap / n_sig_detectable, NA_real_),
+    custom_label_unif = factor(custom_label_unif, levels = custom_order),
+    celltype          = factor(celltype,          levels = signature_order)
+  )
+
+weinreb_dot <- pairwise_overlap_weinreb %>%
+  ggplot(aes(x = custom_label_unif, y = celltype)) +
+  geom_point(aes(size  = n_overlap,
+                 color = prop_of_sig_detectable)) +
+  scale_size_continuous(name = "# overlapping genes",
+                        range = c(5, 9)) +
+  scale_color_gradient(
+    name = "Frac. recovered\nsignature genes",
+    low  = "white",
+    high = "blue"
+  ) +
+  labs(
+    x = NULL,
+    y = NULL,
+    title = "Mouse Weinreb HSPC"
+  )  +
+  theme_all +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+weinreb_dot
+```
+
+---
+
+# Plot: human Tabula Sapiens HSPC (ortholog-based)
+
+```{r plot_ts_hspc}
+custom_markers_by_ct   <- tabula_sapiens_hspc_markers$custom_markers_by_ct
+per_signature          <- tabula_sapiens_hspc_markers$per_signature
+signature_genes_mapped <- tabula_sapiens_hspc_markers$signature_genes_mapped
+
+custom_order    <- names(custom_markers_by_ct)
+signature_order <- rev(names(col_cts_hsc))
+
+pairwise_overlap_ts_hspc <- tidyr::crossing(
+  custom_label_unif = custom_order,
+  celltype          = signature_order
+) %>%
+  dplyr::mutate(
+    n_overlap = purrr::map2_int(
+      custom_label_unif, celltype,
+      ~ length(intersect(custom_markers_by_ct[[.x]],
+                         signature_genes_mapped[[.y]]))
+    )
+  ) %>%
+  dplyr::left_join(
+    per_signature %>% dplyr::select(celltype, n_sig_detectable),
+    by = "celltype"
+  ) %>%
+  dplyr::mutate(
+    prop_of_sig_detectable =
+      dplyr::if_else(n_sig_detectable > 0, n_overlap / n_sig_detectable, NA_real_),
+    custom_label_unif = factor(custom_label_unif, levels = custom_order),
+    celltype          = factor(celltype,          levels = signature_order)
+  )
+
+ts_hspc_dot <-  ggplot(pairwise_overlap_ts_hspc,
+  aes(x = custom_label_unif, 
+      y = celltype)) +
+  geom_point(aes(size  = n_overlap,
+                 color = prop_of_sig_detectable)) +
+  scale_size_continuous(name = "# overlapping genes",
+                        range = c(5, 9)) +
+  scale_color_gradient(
+    name = "Frac. recovered\nsignature orthologs",
+    low  = "white",
+    high = "blue"
+  ) +
+  labs(
+    x = NULL,
+    y = NULL,
+    title = "Tabula Sapiens HSPC"
+  )  +
+  theme_all +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+ts_hspc_dot
+```
+
+---
+
+# Plot: human Tabula Sapiens stromal (ortholog-based)
+
+```{r plot_ts_stromal}
+custom_markers_by_ct   <- tabula_sapiens_str_markers$custom_markers_by_ct
+per_signature          <- tabula_sapiens_str_markers$per_signature
+signature_genes_mapped <- tabula_sapiens_str_markers$signature_genes_mapped
+
+custom_order    <- names(custom_markers_by_ct)
+# define an appropriate order for stromal signatures; here we use names as-is
+signature_order <- rev(names(col_cts_str))
+signature_order <- signature_order[signature_order %in% names(signature_genes_mapped)] # some celltypes omitted
+
+
+pairwise_overlap_ts_str <- tidyr::crossing(
+  custom_label_unif = custom_order,
+  celltype          = signature_order
+) %>%
+  dplyr::mutate(
+    n_overlap = purrr::map2_int(
+      custom_label_unif, celltype,
+      ~ length(intersect(custom_markers_by_ct[[.x]],
+                         signature_genes_mapped[[.y]]))
+    )
+  ) %>%
+  dplyr::left_join(
+    per_signature %>% dplyr::select(celltype, n_sig_detectable),
+    by = "celltype"
+  ) %>%
+  dplyr::mutate(
+    prop_of_sig_detectable =
+      dplyr::if_else(n_sig_detectable > 0, n_overlap / n_sig_detectable, NA_real_),
+    custom_label_unif = factor(custom_label_unif, levels = custom_order),
+    celltype          = factor(celltype,          levels = signature_order)
+  )
+
+ts_str_dot <- ggplot(pairwise_overlap_ts_str,
+  aes(x = custom_label_unif, 
+      y = celltype)) +
+  geom_point(aes(size  = n_overlap,
+                 color = prop_of_sig_detectable)) +
+  scale_size_continuous(name = "# overlapping genes",
+                        range = c(5, 9)) +
+  scale_color_gradient(
+    name = "Frac. recovered\nsignature orthologs",
+    low  = "white",
+    high = "blue"
+  )  +
+    labs(
+    x = NULL,
+    y = NULL,
+    title = "Tabula Sapiens Stromal"
+  )  +
+  theme_all +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+ts_str_dot
+```
+
+# save pdfs
+
+```{r export_pdf}
+pdf(
+  file   = file.path(base_path, "manuscript1_rev/pdfs/reclaiming_sigs_weinreb.pdf"),
+  height = 8,
+  width  = 8
+)
+print(weinreb_dot)
+dev.off()
+
+pdf(
+  file   = file.path(base_path, "manuscript1_rev/pdfs/reclaiming_sigs_ts_hspc.pdf"),
+  height = 8,
+  width  = 8
+)
+print(ts_hspc_dot)
+dev.off()
+
+pdf(
+  file   = file.path(base_path, "manuscript1_rev/pdfs/reclaiming_sigs_ts_str.pdf"),
+  height = 10,
+  width  = 8
+)
+print(ts_str_dot)
+dev.off()
+```

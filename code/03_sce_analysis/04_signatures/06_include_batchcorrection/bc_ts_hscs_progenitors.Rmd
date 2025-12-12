@@ -240,7 +240,7 @@ Seurat::DimPlot(combined_ts_hscs_progenitors, reduction = "umap")
 Seurat::DimPlot(combined_ts_hscs_progenitors, reduction = "umap", group.by = "donor_id")
 ``` 
 
-```{r umaps_dev, fig.height = 6, fig.width = 6}
+```{r umaps_dev, fig.height = 12, fig.width = 6}
 Seurat::DimPlot(combined_ts_hscs_progenitors, reduction = "umap")+
   ggplot2::facet_wrap(
     facets = vars(combined_ts_hscs_progenitors@meta.data$development_stage), ncol = 2)
@@ -258,25 +258,25 @@ Seurat::DimPlot(combined_ts_hscs_progenitors, reduction = "umap", group.by = "as
     facets = vars(combined_ts_hscs_progenitors@meta.data$sex), ncol = 2)
 ``` 
 
-```{r umaps_assay_donid, fig.height = 3, fig.width = 6}
+```{r umaps_assay_donid, fig.height = 12, fig.width = 6}
 Seurat::DimPlot(combined_ts_hscs_progenitors, reduction = "umap", group.by = "assay")+
   ggplot2::facet_wrap(
     facets = vars(combined_ts_hscs_progenitors@meta.data$donor_id), ncol = 2)
 ``` 
 
-```{r umaps_sex_donid, fig.height = 3, fig.width = 6}
+```{r umaps_sex_donid, fig.height = 12, fig.width = 6}
 Seurat::DimPlot(combined_ts_hscs_progenitors, reduction = "umap", group.by = "sex")+
   ggplot2::facet_wrap(
       facets = vars(combined_ts_hscs_progenitors@meta.data$donor_id), ncol = 2)
 ``` 
 
-```{r umaps_assay, fig.height = 6, fig.width = 6}
+```{r umaps_assay, fig.height = 3, fig.width = 6}
 Seurat::DimPlot(combined_ts_hscs_progenitors, reduction = "umap")+
   ggplot2::facet_wrap(facets = vars(combined_ts_hscs_progenitors@meta.data$assay), ncol = 2)
-knitr::knit_exit()
 ``` 
 
-
+It looks pretty well integrated in terms of sex, donor id and assay.
+For the developmental stages it also seems ok.
 
 Now continue with the blind annotation.
 
@@ -310,12 +310,12 @@ names(ct_markers_ts_hscs_progenitors) <- levels(combined_ts_hscs_progenitors$seu
 combined_ts_hscs_progenitors$batchc_sign_labels <- vector(length = ncol(combined_ts_hscs_progenitors))
 ```
 
-Will go in the order of 1, 7, 0, 8 (interspersed with 0), 3, 6, 2, 5, 4.
+Will go in the order of 4, 3, 0, 5, 2, 1, 6, 7
 
 ### Show markers
 
-```{r cluster1}
-nr <- "1"
+```{r cluster4}
+nr <- "4"
 markers <- ct_markers_ts_hscs_progenitors[[nr]]$genes[
   !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) &
     ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
@@ -328,73 +328,12 @@ ct_markers_ts_hscs_progenitors[[nr]][
 
 Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[1:6])
 Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[7:12])
-# HLF, CD34, MSI2, MECOM, MPL among the top genes are major HSC genes
+# so that cluster is cliearly cycling.
+# in the top genes quite far down I find CD34 but that and TCF4 are
+# about it for markers that otherwise really jump out to me
 
 combined_ts_hscs_progenitors$batchc_sign_labels[
-  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "HSC"
-```
-
-```{r cluster7}
-nr <- "7"
-markers <- ct_markers_ts_hscs_progenitors[[nr]]$genes[
-  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) &
-    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
-    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05]
-
-ct_markers_ts_hscs_progenitors[[nr]][
-  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) & 
-    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
-    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05,][c(1, 3, 6, 8)]
-
-Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[1:6])
-Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[7:12])
-# LY86, ANXA2, SPI1, CLEC12A, CTSZ, MEF2C seem granu/mono to me
-# possibly more mono depending on the other clusters
-
-combined_ts_hscs_progenitors$batchc_sign_labels[
-  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "Granu/Mono prog"
-```
-
-```{r cluster0}
-nr <- "0"
-markers <- ct_markers_ts_hscs_progenitors[[nr]]$genes[
-  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) &
-    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
-    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05]
-
-ct_markers_ts_hscs_progenitors[[nr]][
-  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) & 
-    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
-    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05,][c(1, 3, 6, 8)]
-
-Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[1:6])
-Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[7:12])
-# PRTN3, CTSG, MPO, CLEC12A, CEBPE, LY86, ANXA2, SPI1, CALR, CD63, CALR
-# so this is early myeloid with both neutro and mono potential
-
-combined_ts_hscs_progenitors$batchc_sign_labels[
-  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "Early Myeloid"
-```
-
-```{r cluster8}
-nr <- "8"
-markers <- ct_markers_ts_hscs_progenitors[[nr]]$genes[
-  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) &
-    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
-    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05]
-
-ct_markers_ts_hscs_progenitors[[nr]][
-  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) & 
-    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
-    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05,][c(1, 3, 6, 8)]
-
-Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[1:6])
-Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[7:12])
-# very short list of markers but those identified are granu-like baso/
-# mast/eo (LMO4, CD63, GATA2)
-
-combined_ts_hscs_progenitors$batchc_sign_labels[
-  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "Baso/Eo/Mast/Granu"
+  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "Cycling"
 ```
 
 ```{r cluster3}
@@ -411,15 +350,15 @@ ct_markers_ts_hscs_progenitors[[nr]][
 
 Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[1:6])
 Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[7:12])
-# definitely some cycling, but also some myeloid signature with
-# ANXA2, CTSZ, LY86, SPI1
+# GATA1, ITGA2B, KL!, GATA2, EPOR, TRIB2 are markers from early Ery
+# and Mk cells
 
 combined_ts_hscs_progenitors$batchc_sign_labels[
-  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "Cycling Myeloid"
+  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "Mk/Ery"
 ```
 
-```{r cluster6}
-nr <- "6"
+```{r cluster0}
+nr <- "0"
 markers <- ct_markers_ts_hscs_progenitors[[nr]]$genes[
   !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) &
     ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
@@ -432,32 +371,10 @@ ct_markers_ts_hscs_progenitors[[nr]][
 
 Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[1:6])
 Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[7:12])
-# TSPO2, HMBS, ERMAP, AQP1, KLF1, EPOR in that order look 
-# already like fairly mature erythroid cells, let's see what the others
-# look like
+# MECOM, CD34, MSI2, MEIS1, MPL are again major HSC markers in human
 
 combined_ts_hscs_progenitors$batchc_sign_labels[
-  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "Late Ery"
-```
-
-```{r cluster2, fig.height = 7, fig.width = 5}
-nr <- "2"
-markers <- ct_markers_ts_hscs_progenitors[[nr]]$genes[
-  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) &
-    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
-    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05]
-
-ct_markers_ts_hscs_progenitors[[nr]][
-  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) & 
-    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
-    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05,][c(1, 3, 6, 8)]
-
-Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[1:6])
-Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[7:12])
-# higher KLF1, GATA1 EPOR in this population make it seem earlier to me
-
-combined_ts_hscs_progenitors$batchc_sign_labels[
-  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "Early Ery"
+  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "HSC"
 ```
 
 ```{r cluster5}
@@ -474,15 +391,18 @@ ct_markers_ts_hscs_progenitors[[nr]][
 
 Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[1:6])
 Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[7:12])
-# ITGA2B, RAMP1, GATA2, TGFB1, MEF2C, ZFPM1 give it a more mk than ery
-# profile, KLF1, etc is missing
+# LTB, TCF4 are early lymphoid
+# TRIB2 is Mk
+# CD34, MSI2 is HSC
+# LY68 is mono/myeloid/lymphoid/
+# I think these are early multi-lineage, so MPP but slightly lymphoid
 
 combined_ts_hscs_progenitors$batchc_sign_labels[
-  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "Mk"
+  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "Lymphoid MPP"
 ```
 
-```{r cluster4}
-nr <- "4"
+```{r cluster2}
+nr <- "2"
 markers <- ct_markers_ts_hscs_progenitors[[nr]]$genes[
   !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) &
     ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
@@ -495,11 +415,75 @@ ct_markers_ts_hscs_progenitors[[nr]][
 
 Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[1:6])
 Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[7:12])
-# also expression of ITGA2B, ZFPM1, GATA2, but KLF1, EPOR are also
-# detected, so some Ery profile as well
+# PRTN3, MPO, CTSG, PRSS57 (myeloid), CEBPE, CALR (neutro)
+# LY86, CLEC12A (mono) suggest non-restricted early Myeloid
 
 combined_ts_hscs_progenitors$batchc_sign_labels[
-  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "Mk/Ery"
+  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "Early Myeloid"
+```
+
+```{r cluster1}
+nr <- "1"
+markers <- ct_markers_ts_hscs_progenitors[[nr]]$genes[
+  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) &
+    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
+    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05]
+
+ct_markers_ts_hscs_progenitors[[nr]][
+  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) & 
+    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
+    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05,][c(1, 3, 6, 8)]
+
+Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[1:6])
+Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[7:12])
+# now more ANXA2, TSPO, CTSZ, LY86, MPO, LAMP1, SPI1, CEBPE1,
+# sounds more granu/mono diff, but not mixed rather than non-
+# restricted necessarily, also some H1 stuff in there
+
+combined_ts_hscs_progenitors$batchc_sign_labels[
+  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "Granu/Mono prog"
+```
+
+```{r cluster6, fig.height = 7, fig.width = 5}
+nr <- "6"
+markers <- ct_markers_ts_hscs_progenitors[[nr]]$genes[
+  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) &
+    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
+    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05]
+
+ct_markers_ts_hscs_progenitors[[nr]][
+  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) & 
+    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
+    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05,][c(1, 3, 6, 8)]
+
+Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[1:6])
+Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[7:12])
+# again CTSG, PRTN3, CLEC12A, ANXA3 so earl-ish again?
+# I think it looks slitghtly more granu
+
+combined_ts_hscs_progenitors$batchc_sign_labels[
+  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "More Granu prog"
+```
+
+```{r cluster7}
+nr <- "7"
+markers <- ct_markers_ts_hscs_progenitors[[nr]]$genes[
+  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) &
+    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
+    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05]
+
+ct_markers_ts_hscs_progenitors[[nr]][
+  !is.na(ct_markers_ts_hscs_progenitors[[nr]]$symbol) & 
+    ct_markers_ts_hscs_progenitors[[nr]]$avg_log2FC > 0 &
+    ct_markers_ts_hscs_progenitors[[nr]]$p_val_adj < 0.05,][c(1, 3, 6, 8)]
+
+Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[1:6])
+Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[7:12])
+# TMEM176B and TMEM176A are dendritic markers, LAMP1 also 
+# associated with mono I think, CTSZ too
+
+combined_ts_hscs_progenitors$batchc_sign_labels[
+  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "More Mono prog"
 ```
 
 Factorize for nicer plots.
@@ -509,14 +493,13 @@ combined_ts_hscs_progenitors$batchc_sign_labels <- factor(
   combined_ts_hscs_progenitors$batchc_sign_labels,
   levels = c(  
     "HSC",
+    "Lymphoid MPP",
+    "Mk/Ery",
+    "Cycling",
     "Early Myeloid",
     "Granu/Mono prog",
-    "Cycling Myeloid",
-    "Baso/Eo/Mast/Granu",
-    "Mk",
-    "Mk/Ery",
-    "Early Ery",
-    "Late Ery"
+    "More Granu prog",
+    "More Mono prog"
    ))
 
 stopifnot(!is.na(combined_ts_hscs_progenitors$batchc_sign_labels))

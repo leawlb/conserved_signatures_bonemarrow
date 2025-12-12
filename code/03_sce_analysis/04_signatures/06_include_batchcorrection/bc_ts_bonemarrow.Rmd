@@ -391,7 +391,7 @@ Seurat::FeaturePlot(combined_ts_bone_marrow, markers[7:12])
 # mast/eo (LMO4, CD63, GATA2)
 
 combined_ts_bone_marrow$batchc_sign_labels[
-  combined_ts_bone_marrow$seurat_clusters == nr] <- "Baso/Eo/Mast/Granu"
+  combined_ts_bone_marrow$seurat_clusters == nr] <- "Baso/Eo/Mast/Granu prog"
 ```
 
 ```{r cluster3}
@@ -434,7 +434,7 @@ Seurat::FeaturePlot(combined_ts_bone_marrow, markers[7:12])
 # look like
 
 combined_ts_bone_marrow$batchc_sign_labels[
-  combined_ts_bone_marrow$seurat_clusters == nr] <- "Late Ery"
+  combined_ts_bone_marrow$seurat_clusters == nr] <- "Late Ery prog"
 ```
 
 ```{r cluster2, fig.height = 7, fig.width = 5}
@@ -454,7 +454,7 @@ Seurat::FeaturePlot(combined_ts_bone_marrow, markers[7:12])
 # higher KLF1, GATA1 EPOR in this population make it seem earlier to me
 
 combined_ts_bone_marrow$batchc_sign_labels[
-  combined_ts_bone_marrow$seurat_clusters == nr] <- "Early Ery"
+  combined_ts_bone_marrow$seurat_clusters == nr] <- "Early Ery prog"
 ```
 
 ```{r cluster5}
@@ -475,7 +475,7 @@ Seurat::FeaturePlot(combined_ts_bone_marrow, markers[7:12])
 # profile, KLF1, etc is missing
 
 combined_ts_bone_marrow$batchc_sign_labels[
-  combined_ts_bone_marrow$seurat_clusters == nr] <- "Mk"
+  combined_ts_bone_marrow$seurat_clusters == nr] <- "Mk prog"
 ```
 
 ```{r cluster4}
@@ -496,7 +496,7 @@ Seurat::FeaturePlot(combined_ts_bone_marrow, markers[7:12])
 # detected, so some Ery profile as well
 
 combined_ts_bone_marrow$batchc_sign_labels[
-  combined_ts_bone_marrow$seurat_clusters == nr] <- "Mk/Ery"
+  combined_ts_bone_marrow$seurat_clusters == nr] <- "Mk/Ery prog"
 ```
 
 Factorize for nicer plots.
@@ -509,11 +509,11 @@ combined_ts_bone_marrow$batchc_sign_labels <- factor(
     "Early Myeloid",
     "Granu/Mono prog",
     "Cycling Myeloid",
-    "Baso/Eo/Mast/Granu",
-    "Mk",
-    "Mk/Ery",
-    "Early Ery",
-    "Late Ery"
+    "Baso/Eo/Mast/Granu prog",
+    "Mk prog",
+    "Mk/Ery prog",
+    "Early Ery prog",
+    "Late Ery prog"
    ))
 
 stopifnot(!is.na(combined_ts_bone_marrow$batchc_sign_labels))

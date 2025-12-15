@@ -1,7 +1,9 @@
 
 #-------------------------------------------------------------------------------
 
-# import ALL computed pvals and correct them
+# import all computed pvals for the main other datasets that were reclustered
+# for visualisation and analysis and correct them together
+# as well as the zebrafish dataset
 
 RNGkind("L'Ecuyer-CMRG")
 set.seed(37)

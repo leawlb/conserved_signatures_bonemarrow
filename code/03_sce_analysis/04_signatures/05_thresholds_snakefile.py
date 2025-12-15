@@ -82,7 +82,8 @@ rule reclustering_other_scores_p:
     input:
         seu_list = rules.recl_ts_hscs_progenitors_by_p.output,
     params:
-        reclustering_functions = "../../source/sce_functions_reclustering.R"
+        reclustering_functions = "../../source/sce_functions_reclustering.R",
+        threshold_used = "conserved_signature_treshold_testing_by_p"
     conda:
         "../../envs/reclust_scores_perm_others.yml" 
     output:
@@ -99,7 +100,8 @@ rule reclustering_other_scores_t:
     input:
         seu_list = rules.recl_ts_hscs_progenitors_by_t.output,
     params:
-        reclustering_functions = "../../source/sce_functions_reclustering.R"
+        reclustering_functions = "../../source/sce_functions_reclustering.R",
+        threshold_used = "conserved_signature_treshold_testing_by_t"
     conda:
         "../../envs/reclust_scores_perm_others.yml" 
     output:

@@ -23,16 +23,23 @@ source(file = snakemake@params[["reclustering_functions"]])
 seu_list_all <- base::readRDS(snakemake@input[["seu_list"]])
 #seu_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_thresholds/ts_hscs_progenitors_recl_by_p.rds")
 
+threshold_used <- snakemake@params[["threshold_used"]]
+
 #-------------------------------------------------------------------------------
-# for each item of the nested list, add the used to misc so it's recorded for
-# later
+# for each item of the list, add the used to misc so it's recorded for later
 
 for(threshold in names(seu_list_all)){
   seu_list_all[[threshold]]@misc$threshold_used <- threshold
 }
 
+if(threshold_used == "conserved_signature_treshold_testing_by_t"){
+  # below a certain number of genes there are not enough pcs to calculate scores
+  seu_list_all <- seu_list_all[!names(seu_list_all) %in% c("0.7", "1")]
+  names(seu_list_all)
+}
+
 #-------------------------------------------------------------------------------
-# for each item of the nested list, calculate the reclustering scores 
+# for each item of the list, calculate the reclustering scores 
 score_df_list <- lapply(seu_list_all, function(seu){
     
     print(seu@misc$used_genes)

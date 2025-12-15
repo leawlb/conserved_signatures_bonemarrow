@@ -23,6 +23,9 @@ targets = []
 targets = targets + [OUTPUT_DAT + "/ts_hscs_progenitors_recl_by_p.rds"]
 targets = targets + [OUTPUT_DAT + "/ts_hscs_progenitors_recl_by_t.rds"]
 
+targets = targets + [OUTPUT_DAT + "/ts_hscs_progenitors_scores_by_p.rds"]
+targets = targets + [OUTPUT_DAT + "/ts_hscs_progenitors_scores_by_t.rds"]
+
 #-------------------------------------------------------------------------------
 
 localrules: all  
@@ -72,3 +75,38 @@ rule recl_ts_hscs_progenitors_by_t:
     threads: 10
     script:
         "05_thresholds/0X_recluster_by_t.R"
+
+# get the reclustering scores 
+# based on 02_scripts_other/04_reclustering_other_scores.R
+rule reclustering_other_scores_p:
+    input:
+        seu_list = rules.recl_ts_hscs_progenitors_by_p.output,
+    params:
+        reclustering_functions = "../../source/sce_functions_reclustering.R"
+    conda:
+        "../../envs/reclust_scores_perm_others.yml" 
+    output:
+        score_df_list = OUTPUT_DAT + "/ts_hscs_progenitors_scores_by_p.rds"
+    resources:
+        mem_mb=50000,
+        queue="medium-debian"
+    threads: 4
+    script:
+        "05_thresholds/0X_recl_scores.R"
+
+# using the same script
+rule reclustering_other_scores_t:
+    input:
+        seu_list = rules.recl_ts_hscs_progenitors_by_t.output,
+    params:
+        reclustering_functions = "../../source/sce_functions_reclustering.R"
+    conda:
+        "../../envs/reclust_scores_perm_others.yml" 
+    output:
+        score_df_list = OUTPUT_DAT + "/ts_hscs_progenitors_scores_by_t.rds"
+    resources:
+        mem_mb=50000,
+        queue="medium-debian"
+    threads: 4
+    script:
+        "05_thresholds/0X_recl_scores.R"

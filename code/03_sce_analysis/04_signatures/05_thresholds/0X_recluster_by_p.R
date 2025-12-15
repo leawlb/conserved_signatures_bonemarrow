@@ -3,12 +3,6 @@
 # obtained from sliding the pvalue threshold of the nDGE analysis.
 # use the same resolution as determined for the signature genes.
 
-# !!!!
-# this script is CUSTOM-WRITTEN for ts_hsc_progenitors, so it will not work
-# for other datasets without manual adjustment of the resolution, ensembl IDs 
-# and so on
-# !!!!
-
 # determine random number generator for sample
 library(parallel)
 RNGkind("L'Ecuyer-CMRG") # using this for parallel is necessary
@@ -23,7 +17,7 @@ source(snakemake@params[["reclustering_functions"]])
 #-------------------------------------------------------------------------------
 # load objects from different thresholding
 
-threshold_path <- snakemake@input[["threshold_path"]]
+threshold_path <- snakemake@params[["threshold_path"]]
 print(threshold_path)
 #threshold_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_thresholds/"
 
@@ -41,14 +35,17 @@ lapply(signature_genes_by_p, function(vec){print(length(vec))})
 #-------------------------------------------------------------------------------
 # load other objects 
 
-# I select ts_hspcs_progenitors, because it looks relatively stable in
-# figure S4 even with different numbers of genes (no big jumps or bumps
-# of scores with changes in resolution, because it is one of the first 
-# human datasets and because the annotation has a better resolution than 
-# the ts adult whole bone marrow
+seu_dataset <- readRDS(snakemake@input[["seu_input"]])
+#seu_dataset <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_hscs_progenitors")
 
-seu_ts_hscs_progenitors <- readRDS(snakemake@input[["seu_input"]])
-#seu_ts_hscs_progenitors <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_hscs_progenitors")
+dataset_curr <- snakemake@params[["dataset"]]
+print(dataset_curr)
+
+ens_col_use <- seu_dataset@misc$ensembl_column_use
+print(ens_col_use)
+
+# the downtream code will not work if the seurat features aren't human ens IDs 
+stopifnot(ens_col_use == "ENSG_ID")
 
 #-------------------------------------------------------------------------------
 
@@ -80,7 +77,7 @@ resolution_df <- utils::read.csv(
   colClasses = "character")
 
 res_sign <- resolution_df %>%
-  dplyr::filter(dataset == "ts_hscs_progenitors") %>%
+  dplyr::filter(dataset == dataset_curr) %>%
   dplyr::filter(conservation_level == "conserved_signature") %>%
   dplyr::pull(resolution)
 
@@ -140,7 +137,7 @@ subset_seu_list_by_p <- lapply(
     # some more genes are lost that are not part of the object
     return(seu_sign)
   },
-  seu_ts_hscs_progenitors
+  seu_dataset
 )
 
 subset_seu_list_by_p[[1]]
@@ -181,7 +178,6 @@ seu_sign_list_reclustered <- mclapply(
   mc.set.seed = TRUE
 )
 
-
 # for testing
 #print("testing")
 #seu_sign_list_reclustered <- lapply(
@@ -203,7 +199,6 @@ seu_sign_list_reclustered <- mclapply(
 #  }
 #)
 #print("done testing")
-
 
 names(seu_sign_list_reclustered)
 head(seu_sign_list_reclustered[[1]]@meta.data)

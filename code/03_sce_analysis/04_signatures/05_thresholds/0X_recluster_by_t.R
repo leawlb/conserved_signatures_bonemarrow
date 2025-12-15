@@ -23,7 +23,7 @@ source(snakemake@params[["reclustering_functions"]])
 #-------------------------------------------------------------------------------
 # load objects from different thresholding
 
-threshold_path <- snakemake@input[["threshold_path"]]
+threshold_path <- snakemake@params[["threshold_path"]]
 #threshold_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_thresholds/"
 print(threshold_path)
 
@@ -47,8 +47,17 @@ lapply(signature_genes_by_t, function(vec){print(length(vec))})
 # human datasets and because the annotation has a better resolution than 
 # the ts adult whole bone marrow
 
-seu_ts_hscs_progenitors <- readRDS(snakemake@input[["seu_input"]])
-#seu_ts_hscs_progenitors <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_hscs_progenitors")
+seu_dataset <- readRDS(snakemake@input[["seu_input"]])
+#seu_dataset <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_hscs_progenitors")
+
+dataset_curr <- snakemake@params[["dataset"]]
+print(dataset_curr)
+
+ens_col_use <- seu_dataset@misc$ensembl_column_use
+print(ens_col_use)
+
+# the downtream code will not work if the seurat features aren't human ens IDs 
+stopifnot(ens_col_use == "ENSG_ID")
 
 # I will keep all thresholds although some contain >1000s of genes, to compute
 # them anyways but maybe not visualize them since they are too different from
@@ -84,7 +93,7 @@ resolution_df <- utils::read.csv(
   colClasses = "character")
 
 res_sign <- resolution_df %>%
-  dplyr::filter(dataset == "ts_hscs_progenitors") %>%
+  dplyr::filter(dataset == dataset_curr) %>%
   dplyr::filter(conservation_level == "conserved_signature") %>%
   dplyr::pull(resolution)
 
@@ -144,7 +153,7 @@ subset_seu_list_by_t <- lapply(
     # some more genes are lost that are not part of the object
     return(seu_sign)
   },
-  seu_ts_hscs_progenitors
+  seu_dataset
 )
 
 subset_seu_list_by_t[[1]]

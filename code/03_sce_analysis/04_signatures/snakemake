@@ -31,6 +31,7 @@ snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resour
 
 # 05 THRESHOLDS
 
+snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resources.mem_mb}]" -p -j30 -c20 -s 05_thresholds_snakefile.py --latency-wait 40 --configfile ../../config.yaml --use-conda -n 
 
 # 06 INCLUDING BATCH CORRECTION
 

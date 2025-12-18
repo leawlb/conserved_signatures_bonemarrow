@@ -47,7 +47,7 @@ sce_str <- base::readRDS(base::paste0(
 # list containing genes in the correct order for the dotplot
 order_list_dotplot <- base::paste0(
   base_path, 
-  "/metadata/scRNAseq/02_sce_anno/dotplot_order_TEST.txt")
+  "/metadata/scRNAseq/02_sce_anno/dotplot_order.txt")
 
 dotplot_order_df <- utils::read.csv(order_list_dotplot, 
   header = TRUE, 
@@ -530,10 +530,12 @@ This is for all cell types together.
 gene_df_hsc <- dotplot_order_df[dotplot_order_df$fraction == "hsc",]
 gene_df_hsc$gene <- factor(gene_df_hsc$gene, levels = gene_df_hsc$gene)
 genes_hsc <- gene_df_hsc$gene
+genes_hsc
 
 gene_df_str <- dotplot_order_df[dotplot_order_df$fraction == "str",]
 gene_df_str$gene <- factor(gene_df_str$gene, levels = gene_df_str$gene)
 genes_str <- gene_df_str$gene
+genes_str
 
 # aggregate across cell types, get average expression, use normalized counts
 agg_hsc <- scuttle::aggregateAcrossCells(
@@ -687,36 +689,37 @@ vis_df_ct_hsc <- get_perc_expressed(vis_df_ct_hsc, sce_hsc)
 vis_df_ct_str <- get_perc_expressed(vis_df_ct_str, sce_str)
 ```
 
-```{r background_hsc, eval = FALSE, include = FALSE}
+```{r background_hsc}
 # make background grid
 background_hsc <- data.frame(
-  xmin = c(
-    "Mecom", # HSC
-    "Adgrl4", # MPP
-    "Dctpp1", # Activated
+  xmin = c( # start of each segment 
+    "Mllt3", # HSC
+    "Cd34", # MPP
     "Cebpa", # Myeloid
     "Irf8", # Mono
     "Cebpe", # Neutro
     "Satb1", # Lymph
-    "Hdc", # BM
+    "Gata2", # BM
     "Itga2b", # Mk
-    "Gata2", # Mk ery
+    "Gata1", # Mk ery
     "Klf1", # Ery
-    "Mki67"), # Cycling # start of each segment (character values)
-  xmax = c(
-    "Meis1", # HSC
-    "Flt3", # MPP
-    "Hells", # Activated
+    "Mcm6", # Cell cycle entry
+    "Mki67" # Cycling
+    ), 
+  xmax = c( # end of each segment 
+    "Hlf", # HSC
+    "Cd34", # MPP
     "Cebpa", # Myeloid
     "Ccr2", # Mono
     "S100a8", # Neutro 
     "Il7r", # Lymph
-    "Cpa3", # BM
-    "Pf4", # Mk
-    "Car2", # Mk ery
+    "Lmo4", # BM
+    "Zfpm1", # Mk
+    "Gata1", # Mk ery
     "Hba-a1", # Ery
-    "Lockd" # Cycling
-  ),  # end of each segment (character values)
+    "Lig1", # Cell cycle entry
+    "Cenpa" # Cycling
+  ), 
   ymin = -Inf,              # covers full height
   ymax = Inf,
   fill = c(
@@ -725,55 +728,79 @@ background_hsc <- data.frame(
     "white")  # alternating colors
 )
 
+background_hsc$xmin[!background_hsc$xmin %in% vis_df_ct_hsc$gene]
+background_hsc$xmax[!background_hsc$xmax %in% vis_df_ct_hsc$gene]
+
+background_hsc$xmin[!background_hsc$xmin %in% vis_df_hsc$gene]
+background_hsc$xmax[!background_hsc$xmax %in% vis_df_hsc$gene]
 
 background_hsc$xmin <- base::match(background_hsc$xmin, 
                                    levels(vis_df_ct_hsc$gene))
 background_hsc$xmax <- base::match(background_hsc$xmax, 
                                    levels(vis_df_ct_hsc$gene))
+
+background_hsc$xmin
+background_hsc$xmax
+
+background_hsc
 ```
 
-```{r background_str, eval = FALSE, include = FALSE}
+```{r background_str}
 # make background grid
 background_str <- data.frame(
   xmin = c(
-    "Cxcl12",
-    "Spp1",
-    "Comp",
-    "S100a10",
-    "Cdh5",
-    "Ly6a",
-    "Car4",
-    "Nr2f2",
-    "Tfpi",
-    "Lyve1",
-    "Tagln",
-    "Rgs4"
+    "Cxcl12", # Niche
+    "Lepr", # Adipo
+    "Spp1", # Osteo
+    "Sox9", # Chondro
+    "Comp", # Fibro/Chondro
+    "Clec3b", # Fibro
+    "Cdh5", # Pan EC
+    "Sox17", # Art
+    "Car4", # Cap
+    "Ackr1", # Ven
+    "Tfpi", # Sinusoid
+    "Lyve1", # Lymphatic
+    "Acta2" # Peri SMC
     ),  
   xmax = c(
-    "Lepr",
-    "Bglap",
-    "Fmod",
-    "Thy1",
-    "Pecam1",
-    "Efnb2",
-    "Timp4",
-    "Lrg1",
-    "Flt4",
-    "Ccl21a",
-    "Acta2",
-    "Rgs5"
+    "Kitl", # Niche
+    "Lepr", # Adipo
+    "Bglap", # Osteo
+    "Fmod", # Chondro
+    "Apod", # Fibro/Chondro
+    "Cd34", #  Fibro
+    "Pecam1", # PAN EC
+    "Efnb2", # Art
+    "Rgcc", # Cap
+    "Lrg1", # Ven
+    "Stab2", # Sinusoid
+    "Ccl21a", # Lymphatic
+    "Rgs5" # Peri SMC
   ), 
   ymin = -Inf,             
   ymax = Inf,
   fill = c(
     "grey80",
-    rep(c("white", "grey80"),  5), "white") 
+    rep(c("white", "grey80"),  6)) 
 )
+
+background_str$xmin[!background_str$xmin %in% vis_df_ct_str$gene]
+background_str$xmax[!background_str$xmax %in% vis_df_ct_str$gene]
+
+background_str$xmin[!background_str$xmin %in% vis_df_str$gene]
+background_str$xmax[!background_str$xmax %in% vis_df_str$gene]
+
 
 background_str$xmin <- base::match(background_str$xmin,
                                    levels(vis_df_ct_str$gene))
 background_str$xmax <- base::match(background_str$xmax,
                                    levels(vis_df_ct_str$gene))
+
+background_str$xmin
+background_str$xmax
+
+background_str
 ```
 
 #### PLOT
@@ -785,16 +812,18 @@ dp_base_plot_top_left <- ggplot2::ggplot(
       y = species,
       color = percent_expressed,
       size = expression))+
-#  ggplot2::geom_rect(
-#    data = background_hsc, 
-#    aes(xmin = xmin - 0.5,
-#        xmax = xmax + 0.5, 
-#        ymin = ymin,
-#        ymax = ymax),
-#    fill = background_hsc$fill,
-#    inherit.aes = FALSE, 
-#    alpha = 0.2)+
+  ggplot2::geom_rect(
+    data = background_hsc, 
+    aes(xmin = xmin - 0.5,
+        xmax = xmax + 0.5, 
+        ymin = ymin,
+        ymax = ymax),
+    fill = background_hsc$fill,
+    inherit.aes = FALSE, 
+    alpha = 0.2)+
   ggplot2::geom_point()
+# printing the base plots from snkmk_isbm doesn't work for
+# unclear reasons!!
 ```
 
 ```{r dp_theme_plot_top_left}
@@ -831,15 +860,15 @@ dp_base_plot_top_right <- ggplot2::ggplot(
       y = species,
       color = percent_expressed,
       size = expression))+
-#  ggplot2::geom_rect(
-#    data = background_str, 
-#    aes(xmin = xmin - 0.5,
-#        xmax = xmax + 0.5, 
-#        ymin = ymin,
-#        ymax = ymax),
-#    fill = background_str$fill,
-#    inherit.aes = FALSE, 
-#    alpha = 0.2)+
+  ggplot2::geom_rect(
+    data = background_str, 
+    aes(xmin = xmin - 0.5,
+        xmax = xmax + 0.5, 
+        ymin = ymin,
+        ymax = ymax),
+    fill = background_str$fill,
+    inherit.aes = FALSE, 
+    alpha = 0.2)+
   ggplot2::scale_x_discrete(position = "top")+
   ggplot2::geom_point()
 ```
@@ -876,16 +905,7 @@ dp_base_plot_bottom_left <- ggplot2::ggplot(
       y = celltypes,
       color = percent_expressed,
       size = expression))+
-  # ggplot2::geom_rect( #doesn't work with snakemake_isbm 
-  #   data = background_hsc,
-  #   aes(xmin = xmin - 0.5,
-  #       xmax = xmax + 0.5,
-  #       ymin = ymin,
-  #       ymax = ymax),
-  #   fill = background_hsc$fill,
-  #   inherit.aes = FALSE,
-  #   alpha = 0.2)+
-  ggplot2::geom_point()
+  ggplot2::geom_point() 
 ```
 
 ```{r dp_theme_plot_bottom_left, fig.width = 25, fig.height = 6}
@@ -907,7 +927,7 @@ dp_theme_plot_bottom_left <- dp_base_plot_bottom_left+
      colors = mycolors_to100,
      limits = c(0, 100)
   )
-  dp_theme_plot_bottom_left
+dp_theme_plot_bottom_left
 ```
 
 ```{r dp_base_plot_bottom_right}
@@ -917,15 +937,6 @@ dp_base_plot_bottom_right <- ggplot2::ggplot(
       y = celltypes,
       color = percent_expressed,
       size = expression))+
-  # ggplot2::geom_rect( #doesn't work with snakemake_isbm 
-  #   data = background_str,
-  #   aes(xmin = xmin - 0.5,
-  #       xmax = xmax + 0.5,
-  #       ymin = ymin,
-  #       ymax = ymax),
-  #   fill = background_str$fill,
-  #   inherit.aes = FALSE,
-  #   alpha = 0.2)+
   ggplot2::geom_point()
 ```
 
@@ -1036,13 +1047,13 @@ dp_legend_right <- ggpubr::get_legend(dp_legend_theme_plot_right)
 ```{r dp_theme_plot2, fig.width = 16, fig.height = 6}
 dp_theme_plot2 <- ggpubr::ggarrange(
   dp_theme_plot_top_left + theme(
-    plot.margin = margin(t = 10, r = 5, b = 20, l = 10, unit = "pt")), 
+    plot.margin = margin(t = 10, r = 5, b = 20, l = 60, unit = "pt")), 
   dp_theme_plot_top_right + theme(
-    plot.margin = margin(t = 5, r = 5, b = 20, l = 10, unit = "pt")),
+    plot.margin = margin(t = 5, r = 5, b = 20, l = 120, unit = "pt")),
   dp_theme_plot_bottom_left,
   dp_theme_plot_bottom_right,
   heights = c(1.1,1.8),
-  widths = c(1.1, 1))
+  widths = c(1, 1.15))
 
 dp_theme_plot2
 ```

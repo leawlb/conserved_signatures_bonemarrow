@@ -3,6 +3,9 @@
 # doesn't have to be base
 OUTPUT_PATH = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/manuscript1_rev/htmls"
 
+# base path to pass into the .Rmds for saving the pdfs
+BASE_PATH = "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+
 # input and output paths of data and separate plots are separarely defined
 # in each .Rmd script for better overview within the script
 
@@ -12,6 +15,9 @@ OUTPUT_PATH = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/manuscript1_rev
 #-------------------------------------------------------------------------------
 
 targets = []
+
+targets = targets + [OUTPUT_PATH + "/figure_1.html"]
+
 
 targets = targets + [OUTPUT_PATH + "/figure_s3.html"]
 targets = targets + [OUTPUT_PATH + "/figure_s4.html"]
@@ -26,6 +32,20 @@ localrules: all
 rule all: 
   input:
       targets
+
+#-------------------------------------------------------------------------------
+
+rule run_fig_1:
+    resources:
+        mem_mb=80000,
+        queues="medium-debian"
+    output:
+        OUTPUT_PATH + "/figure_1.html"
+    params:
+        base_path = BASE_PATH
+    threads: 4
+    script:
+        "figure_1.Rmd"
 
 rule run_fig_s3:
     resources:

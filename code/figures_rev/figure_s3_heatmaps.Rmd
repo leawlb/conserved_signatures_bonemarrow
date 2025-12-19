@@ -60,11 +60,9 @@ sce_hsc_all_cells <- base::readRDS(base::paste0(
 # remove unnecessary assays because the objects become too large to load
 assays(sce_hsc_all_cells) <- list(
   counts = assays(sce_hsc_all_cells)$counts,
-  logcounts = assays(sce_hsc_all_cells)$logcounts
-)
+  logcounts = assays(sce_hsc_all_cells)$logcounts)
 reducedDims(sce_hsc_all_cells) <- list(
-  UMAP = reducedDims(sce_hsc_all_cells)$UMAP
-)
+  UMAP = reducedDims(sce_hsc_all_cells)$UMAP)
 
 gc()
 ```
@@ -182,6 +180,34 @@ stopifnot(c(sce_hsc_all_cells$custom_label) %in% names(col_custom_hsc))
 source("../figures/determine_params.R")
 
 heatmap_text_size <- 12
+
+# keeping the stem compartment for comparisons
+cts_keep_hsc <- c(
+  "HSC",
+  "Early MPP",
+  "Activated MPP",
+  "Early MPP cells",
+  "HSC/Early Mk",
+  "Activated MPP cells",
+  "Late MPP",
+  "MPP cells"
+)
+
+# keeping possible CAR and osteo populations
+cts_keep_str <- c(
+  "Adipo/CAR",
+  "Osteo",
+  "Adipo/Osteo CAR",
+  "Early MPP cells",
+  "HSC/Early Mk",
+  "Activated MPP cells",
+  "Late MPP",
+  "MPP cells"
+)
+
+# sometimes there is only one cell type per species, so the scaling
+# will be done compared to all other cell types even if those are not
+# shown
 ```
 
 # Gene expression heatmaps

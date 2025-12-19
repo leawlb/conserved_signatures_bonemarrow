@@ -228,6 +228,7 @@ col_custom_hsc_unif <- c(
 #------------------------------------------------------------------------------
 
 # hsc marker genes list long
+# comments relate to the species-specific clustering
   marker_genes_list_hsc <- list(
     "HSC" = c(
       "Ly6a", # HSC-specific, spotty
@@ -378,6 +379,62 @@ col_custom_hsc_unif <- c(
       "Cenpa" 
       )
     )
+
+# for figure s3
+# names related to merged clustering
+marker_genes_list_hsc_figs3 <- list(
+    "HSC_spotty" = c(
+      "Slamf1",
+      "Aldh1a1", 
+      "Ly6a", 
+      "Pdzk1ip1",
+      "Procr",
+      "Alcam",
+      "Cdkn1c", 
+      "Gng11",
+      "Socs2",
+    ),
+    "HSC_shared" = c(
+      "Mecom",
+      "Mllt3",
+      "Mmrn1",
+      "Mpl",
+      "Txnip", 
+      "Pbx1",
+    ),  
+    "Stem" = c( # this includes expression in MPPs, albeit lower
+      "Ltb",
+      "Hlf", 
+      "Ldhb",
+      "Angpt1", 
+      "Hoxa9",
+      "Lmo2",
+      "Meis1",
+      "Msi2"
+    ),
+    "MPP" = c( 
+      "Adgrl4", 
+      "Cd34", 
+      "Sox4",
+      "Cd48", 
+      "Sell",
+      "Cdk4",
+      "Flt3"
+    ),
+    "CC_entry_activation" = c(
+      "Lig1",
+      "Mcm7",
+      "Hells",
+      "Mcm6"
+    ),
+    "Myeloid_general" = c(
+      "Spi1", 
+      "Cebpa",
+      "Ctsg",
+      "Mpo",
+      "Prtn3",
+      "F13a1")
+  )
 
 #------------------------------------------------------------------------------
 # best_marker_genes, a shorter list
@@ -645,9 +702,9 @@ col_custom_str <- c(
   "Neutro 3" = "#ceb493ff", # mcar
   "Neutro 4" = "#a6865fff", # mcar
 
-  "Mature neutro 1" = "#8e775aff", # mcar
-  "Mature neutro 2" = "#94662eff", # mcar
-  "Mature neutro 3" = "#78470bff", # mcar
+  "Mature Neutro 1" = "#8e775aff", # mcar
+  "Mature Neutro 2" = "#94662eff", # mcar
+  "Mature Neutro 3" = "#78470bff", # mcar
 
   "Eosinophil" = "#ae2c42ff", # mcar
   "Eo/Baso/Mast" = "#aa2e32ff", # mspr
@@ -978,6 +1035,80 @@ marker_genes_list_str <- list(
       "Cenpa" 
       )
 
+  )
+
+marker_genes_list_str_figs3 <- list(
+    "Niche" = c( # classic niche 
+      "Cxcl14", 
+      "Ebf3", # niche cells https://doi.org/10.1101/gad.314013.118
+      "Cxcl12", # also arteriolar EC
+      "Kitl" # also arteriolar EC
+      ),
+    "Adipo" = c(
+      "Adipoq",
+      "Hp",
+      "Lepr", 
+      "Lpl",
+      "Cebpa",
+      "Pappa"  # adipocyte marker in MALP https://doi.org/10.7554/eLife.54695
+      ),
+    "Osteo" = c( # from early/CAR to more osteocyte-ish (approx)
+      "Limch1", # Osteo-CAR https://doi.org/10.1016/j.jbc.2024.107158
+      "Angpt4", # Osteo-CAR https://doi.org/10.1016/j.jbc.2024.107158
+      "Wif1", # Osteo-CAR https://doi.org/10.1016/j.jbc.2024.107158
+      "Spp1", # pre-osteoblast https://doi.org/10.1016/j.jbc.2024.107158
+      "Mmp13", # pre-osteoblast https://doi.org/10.1016/j.jbc.2024.107158
+      "Alpl", # Osteo-CAR https://doi.org/10.1038/s41556-019-0439-6
+      "Slit2", # pre-osteoblast https://doi.org/10.1016/j.jbc.2024.107158
+      "Sp7", # Osteo-CAR and osteoblast https://doi.org/10.1038/s41556-019-0439-6
+      "Pth1r", # osteo ST1
+      "Bglap", # osteo https://doi.org/10.1016/j.jbc.2024.107158
+      "Bglap2", # osteoblasts https://doi.org/10.7554/eLife.54695
+      "Bglap3", # 
+      "Mepe", # osteocyte https://doi.org/10.1016/j.jbc.2024.107158
+      "Ibsp", # osteoblasts https://doi.org/10.7554/eLife.54695
+      "Phex" # osteocyte https://doi.org/10.1016/j.jbc.2024.107158
+      ),
+    "Chondro/Osteo/fibro/early mixed" = c(
+      "Tnc", # osteo-X https://doi.org/10.1016/j.jbc.2024.107158
+      "Ptgis", # osteo ST1
+      "Postn", # osteo-X https://doi.org/10.1016/j.jbc.2024.107158
+      "Ptn", # osteo-X https://doi.org/10.1016/j.jbc.2024.107158
+      "Comp", # fibro-chondro ST1
+      "Ogn", # in branch point cekk type to osteogenic state https://doi.org/10.1186/s13073-023-01224-0
+      "Aspn", # osteo-X https://doi.org/10.1016/j.jbc.2024.107158
+      "Gsn", # several undefined MSC populations 
+      "Apod", # several undefined MSC populations 
+      "Tnn" # osteo-X https://doi.org/10.1016/j.jbc.2024.107158
+      ),
+    "Chondro early/other/mixed" = c(
+      "Fmod", # chondro ST1
+      "Chad", # chondro ST1
+      "Prelp", # chondro ST1
+      "Mgp", # chondro ST1
+      "Crispld1",  # art ch https://doi.org/10.1016/j.jbc.2024.107158
+      "Cytl1" # art ch https://doi.org/10.1016/j.jbc.2024.107158
+      ),
+    "Articular cartilage/Synovial fibro" = c(  # these genes can be articular chondros or also early chondros or also early synovial fibros.
+      "Htra4", # see mspr
+      "Prg4", # art ch and syn fibro https://doi.org/10.1016/j.jbc.2024.107158
+      "Creb5" # see mspr
+      ),   
+    "Chondro late" = c(  
+      "Sox9", # chondro https://doi.org/10.1016/j.jbc.2024.107158
+      "Snorc",  # chondro https://doi.org/10.1016/j.jbc.2024.107158
+      "Acan"
+      ),
+    "Early Fibro mixed" = c(
+      "Dcn", # fibro ST1
+      "Lum", # fibro ST1
+      "Dpt", # fibro https://doi.org/10.1016/j.jbc.2024.107158
+      "Clec3b", # fibro https://doi.org/10.1016/j.jbc.2024.107158
+      "Cd34", # also arteriolar EC
+      "Thy1", # fibro, msc, related to osteogenesis https://doi.org/10.1096/fj.201701379R
+      "Pdgfra", # fibro ST1
+      "Pdgfrb" # 
+      )
   )
 
 # shorter list for str marker genes

@@ -188,6 +188,8 @@ source("../figures/determine_params.R")
 
 heatmap_text_size <- 12
 
+colors_z_score_ct <- c("steelblue3", "white", "red3")
+
 # keeping the stem compartment for comparisons
 cts_keep_hsc <- c(
   "HSC",
@@ -207,21 +209,6 @@ cts_keep_hsc <- c(
 
 cts_keep_hsc[!cts_keep_hsc %in% factors_custom_hsc]
 cts_keep_hsc[!cts_keep_hsc %in% names(col_cts_hsc)]
-
-# keeping possible CAR and osteo populations
-cts_keep_str <- c(
-  "Adipo/CAR",
-  "Osteo",
-  "Adipo/Osteo CAR",
-  "Early MPP cells",
-  "HSC/Early Mk",
-  "Activated MPP cells",
-  "Late MPP",
-  "MPP cells"
-)
-
-cts_keep_str[!cts_keep_str %in% factors_custom_str]
-cts_keep_str[!cts_keep_str %in% names(col_cts_str)]
 ```
 
 # Gene expression heatmaps
@@ -362,12 +349,7 @@ scale_expression <- function(expression_df){
 
 ```{r determine_genes}
 # stem and MPP genes from the utils source .R script
-marker_genes <- unlist(marker_genes_list_hsc[
-  names(marker_genes_list_hsc) %in% c(
-  "HSC",
-  "MPP",
-  "CC entry/activation"
-  )])
+marker_genes <- unlist(marker_genes_list_hsc_figs3)
 ```
 
 ```{r scale_orig}
@@ -452,11 +434,11 @@ e_base_heatmap_orig_all <- ggplot2::ggplot(
     y = genes,
     fill = zscore_gene))+
   ggplot2::geom_tile()+
-  ggplot2::scale_fill_gradient2(
-    low = "blue3",
-    mid = "white", 
-    high = "red3", 
-    midpoint = 0)+
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene\nacross all cell types", 
+    colours = colors_z_score_ct,
+    breaks = c(-6, -3, 0, 3, 6), 
+    limits = c(-6,6))+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
   ggplot2::facet_grid(cols = vars(agg_orig_df_vis$species))
 e_base_heatmap_orig_all
@@ -500,11 +482,11 @@ f_base_heatmap_cust_mmus <- ggplot2::ggplot(
     y = genes,
     fill = zscore_gene))+
   ggplot2::geom_tile()+
-  ggplot2::scale_fill_gradient2(
-    low = "blue3",
-    mid = "white", 
-    high = "red3", 
-    midpoint = 0)+
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene\nacross all cell types", 
+    colours = colors_z_score_ct,
+    breaks = c(-6, -3, 0, 3, 6), 
+    limits = c(-6,6))+
   ggplot2::theme(axis.text.x = element_text(angle = 90))
 f_base_heatmap_cust_mmus
 ```
@@ -545,11 +527,11 @@ g_base_heatmap_cust_mcas <- ggplot2::ggplot(
     y = genes,
     fill = zscore_gene))+
   ggplot2::geom_tile()+
-  ggplot2::scale_fill_gradient2(
-    low = "blue3",
-    mid = "white", 
-    high = "red3", 
-    midpoint = 0)+
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene\nacross all cell types", 
+    colours = colors_z_score_ct,
+    breaks = c(-6, -3, 0, 3, 6), 
+    limits = c(-6,6))+
   ggplot2::theme(axis.text.x = element_text(angle = 90))
 g_base_heatmap_cust_mcas
 ```
@@ -586,11 +568,11 @@ h_base_heatmap_cust_mspr <- ggplot2::ggplot(
     y = genes,
     fill = zscore_gene))+
   ggplot2::geom_tile()+
-  ggplot2::scale_fill_gradient2(
-    low = "blue3",
-    mid = "white", 
-    high = "red3", 
-    midpoint = 0)+
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene\nacross all cell types", 
+    colours = colors_z_score_ct,
+    breaks = c(-6, -3, 0, 3, 6), 
+    limits = c(-6,6))+
   ggplot2::theme(axis.text.x = element_text(angle = 90))
 h_base_heatmap_cust_mspr
 ```
@@ -627,11 +609,11 @@ i_base_heatmap_cust_mcar <- ggplot2::ggplot(
     y = genes,
     fill = zscore_gene))+
   ggplot2::geom_tile()+
-  ggplot2::scale_fill_gradient2(
-    low = "blue3",
-    mid = "white", 
-    high = "red3", 
-    midpoint = 0)+
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene\nacross all cell types", 
+    colours = colors_z_score_ct,
+    breaks = c(-6, -3, 0, 3, 6), 
+    limits = c(-6,6))+
   ggplot2::theme(axis.text.x = element_text(angle = 90))
 i_base_heatmap_cust_mcar
 ```
@@ -671,7 +653,7 @@ fghi_heatmap <- ggpubr::ggarrange(
   h_theme_heatmap_cust_mspr+ggplot2::theme(plot.margin = margin(0,0.1,0.4,0.1)),
   i_theme_heatmap_cust_mcar+ggplot2::theme(plot.margin = margin(0,0.1,0.1,0.1)),
   nrow = 1,
-  widths = c(6, 7, 3, 2),
+  widths = c(6, 6, 3, 2),
   align = c("h")
 )
 

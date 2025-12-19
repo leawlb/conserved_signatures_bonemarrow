@@ -53,6 +53,8 @@ rule run_fig_s3:
         queues="medium-debian"
     output:
         OUTPUT_PATH + "/figure_s3.html"
+    params:
+        base_path = BASE_PATH
     conda:
         "../envs/ggalluvial.yml"
     threads: 4
@@ -63,6 +65,8 @@ rule run_fig_s3_heatmaps:
     resources:
         mem_mb=80000,
         queues="medium-debian"
+    params:
+        base_path = BASE_PATH
     output:
         OUTPUT_PATH + "/figure_s3_heatmaps.html"
     threads: 4
@@ -75,6 +79,8 @@ rule run_fig_s4:
         queues="medium-debian"
     output:
         OUTPUT_PATH + "/figure_s4.html"
+    params:
+         base_path = BASE_PATH
     conda:
         "../envs/ggalluvial.yml"
     threads: 4
@@ -87,6 +93,8 @@ rule run_fig_s4_heatmaps:
         queues="medium-debian"
     output:
         OUTPUT_PATH + "/figure_s4_heatmaps.html"
+    params:
+         base_path = BASE_PATH
     threads: 4
     script:
         "figure_s4_heatmaps.Rmd"

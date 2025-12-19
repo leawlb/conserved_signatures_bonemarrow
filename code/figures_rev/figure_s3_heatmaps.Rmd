@@ -1,5 +1,5 @@
 ---
-title: "Supplementary Figure 3"
+title: "Supplementary Figure 3 HSPC heatmaps"
 date: '2025-12-02'
 output: html_document
 ---
@@ -8,10 +8,16 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-HSPC cell species-specific re-annotation.
-Do the heatmaps here.
+HSPC species-specific re-annotation.
+Do the heatmaps here as they need different libraries.
+
+Using the unified annotatiosn here.
 
 #### Load objects
+
+```{r set_export}
+export <- FALSE
+```
 
 ```{r seed, message = FALSE}
 RNGkind("L'Ecuyer-CMRG") 
@@ -27,7 +33,8 @@ library(scuttle, quietly = TRUE)
 ```
 
 ```{r base_path}
-base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+base_path <- snakemake@params[["base_path"]]
+#base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
 ```
 
 ```{r source}
@@ -38,9 +45,6 @@ colors_path <- base::paste0(
 source("../source/colors.R")
 source("../source/plotting.R")
 source("../source/custom_clustering_utils.R")
-
-col_cts_hsc <- c(col_cts_hsc, "removed" = "grey70")
-col_cts_hsc
 ```
 
 ## Load and prepare objects
@@ -112,7 +116,9 @@ gc()
 Final annotation after sub-clustering.
 
 ```{r load_anno_hsc}
-sce_hsc_anno <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data_freeze/05_annotated_objects/sce_hsc.rds")
+sce_hsc_anno <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10"))
 
 sce_hsc_all_cells$celltypes <- vector(length = ncol(sce_hsc_all_cells))
 sce_hsc_all_cells$celltypes <- sce_hsc_anno$celltypes[
@@ -171,8 +177,9 @@ stopifnot(c(sce_hsc_all_cells$custom_label) %in% names(col_custom_hsc))
 
 ```{r pdf_output}
 # define output paths for pdf export
+if(export){
 
-
+}
 ```
 
 ```{r params}
@@ -186,12 +193,20 @@ cts_keep_hsc <- c(
   "HSC",
   "Early MPP",
   "Activated MPP",
-  "Early MPP cells",
+  "Early MPP cells 1",
+  "Early MPP cells 2",
   "HSC/Early Mk",
-  "Activated MPP cells",
+  "MPP cells 1",
+  "MPP cells 2",
+  "Activated MPP cells 1",
+  "Activated MPP cells 2",
   "Late MPP",
   "MPP cells"
 )
+# it looks like a lot but each species has different names
+
+cts_keep_hsc[!cts_keep_hsc %in% factors_custom_hsc]
+cts_keep_hsc[!cts_keep_hsc %in% names(col_cts_hsc)]
 
 # keeping possible CAR and osteo populations
 cts_keep_str <- c(
@@ -205,9 +220,8 @@ cts_keep_str <- c(
   "MPP cells"
 )
 
-# sometimes there is only one cell type per species, so the scaling
-# will be done compared to all other cell types even if those are not
-# shown
+cts_keep_str[!cts_keep_str %in% factors_custom_str]
+cts_keep_str[!cts_keep_str %in% names(col_cts_str)]
 ```
 
 # Gene expression heatmaps
@@ -218,18 +232,28 @@ Absolute minimum number of genes required to show cell types.
 
 Make an appropriate dataframe.
 I want to have gene expression scaled per cell type-average. 
-For both the original merged and the custom species-specific clusterings to
-show that each annotated cluster actually contains cells expressing the
-well-known markers genes.
+For both the original merged and the custom species-specific clusterings.
+Even though only some cell types are shown, I initially think I want to 
+scale across all cell types - open for discussion. 
+I think it's OK if we very clearly state it.
+
+I also think it wouldn't be fair to compare otherwise, since the cells that are
+part of the stem compartment in one annotation may not be exactly the same
+as the cells in the stem compartment of the other annotation, so we'Re not 
+comparing equal datasets.
 
 I am using the logcounts based on the merged batch-normalisation for both the
 orig clustering and the custom clusterings by using sce_hsc_all_cells as 
 basis.
 I think that is better comparable.
-So even if a cell has two different labels in both, it has still the same 
-expression levels no matter what.
+So by using the the merged batch-normalized logcounts, then even if a cell has 
+two different labels in both, it has still the same expression levels.
+That seems fair.
+Although the logcounts are averaged and then scaled anyways.
 
-### aggregate by type of clustering
+### Aggregate by type of clustering
+
+All cells from all cell types
 
 ```{r aggregate_orig}
 
@@ -316,7 +340,7 @@ agg_cust_df <- agg_cust_df %>%
     remove = FALSE)
 ```
 
-### subset to required genes and scale
+### Subset to required genes and scale
 
 Scale within each clustering.
 
@@ -337,7 +361,13 @@ scale_expression <- function(expression_df){
 ```
 
 ```{r determine_genes}
-marker_genes <- best_marker_genes_hsc
+# stem and MPP genes from the utils source .R script
+marker_genes <- unlist(marker_genes_list_hsc[
+  names(marker_genes_list_hsc) %in% c(
+  "HSC",
+  "MPP",
+  "CC entry/activation"
+  )])
 ```
 
 ```{r scale_orig}
@@ -396,11 +426,24 @@ agg_cust_df_mcar <- scale_expression(agg_cust_df_genes %>%
 # will not put back together because they contain different cell types
 ```
 
+### Subset to the required cell types
+
+After scaling.
+
+```{r subset_ct_keep}
+agg_cust_df_mmus <- agg_cust_df_mmus[agg_cust_df_mmus$cluster %in% cts_keep_hsc,]
+agg_cust_df_mcas <- agg_cust_df_mcas[agg_cust_df_mcas$cluster %in% cts_keep_hsc,]
+agg_cust_df_mspr <- agg_cust_df_mspr[agg_cust_df_mspr$cluster %in% cts_keep_hsc,]
+agg_cust_df_mcar <- agg_cust_df_mcar[agg_cust_df_mcar$cluster %in% cts_keep_hsc,]
+
+agg_orig_df_vis <- agg_orig_df_vis[agg_orig_df_vis$cluster %in% cts_keep_hsc,]
+```
+
 ## Plot
 
 First a shared orig expression heatmap separated by species.
 
-```{r e_base_heatmap_orig_all, fig.height = 10, fig.width = 16}
+```{r e_base_heatmap_orig_all, fig.height = 6, fig.width = 5}
 
 e_base_heatmap_orig_all <- ggplot2::ggplot(
   agg_orig_df_vis,
@@ -419,7 +462,7 @@ e_base_heatmap_orig_all <- ggplot2::ggplot(
 e_base_heatmap_orig_all
 ```
 
-```{r e_theme_heatmap_orig_all, fig.height = 11, fig.width = 16}
+```{r e_theme_heatmap_orig_all, fig.height = 6, fig.width = 5}
 e_theme_heatmap_orig_all <- e_base_heatmap_orig_all+
   theme_all+
   ggplot2::theme(
@@ -448,7 +491,7 @@ e_theme_heatmap_orig_all
 
 Now four separate heatmaps per species-specific custom clustering.
 
-```{r f_base_heatmap_cust_mmus, fig.height = 10, fig.width = 4}
+```{r f_base_heatmap_cust_mmus, fig.height = 6, fig.width = 3}
 
 f_base_heatmap_cust_mmus <- ggplot2::ggplot(
   agg_cust_df_mmus,
@@ -466,7 +509,7 @@ f_base_heatmap_cust_mmus <- ggplot2::ggplot(
 f_base_heatmap_cust_mmus
 ```
 
-```{r f_theme_heatmap_cust_mmus, fig.height = 10, fig.width = 4}
+```{r f_theme_heatmap_cust_mmus, fig.height = 6, fig.width = 2}
 f_theme_heatmap_cust_mmus <- f_base_heatmap_cust_mmus+
   theme_all+
   ggplot2::theme(
@@ -492,7 +535,8 @@ f_theme_heatmap_cust_mmus <- f_base_heatmap_cust_mmus+
     legend.position = "none")
 f_theme_heatmap_cust_mmus
 ```
-```{r g_base_heatmap_cust_mcas, fig.height = 10, fig.width = 5}
+
+```{r g_base_heatmap_cust_mcas, fig.height = 6, fig.width = 3}
 
 g_base_heatmap_cust_mcas <- ggplot2::ggplot(
   agg_cust_df_mcas,
@@ -510,7 +554,7 @@ g_base_heatmap_cust_mcas <- ggplot2::ggplot(
 g_base_heatmap_cust_mcas
 ```
 
-```{r g_theme_heatmap_cust_mcas, fig.height = 10, fig.width = 4}
+```{r g_theme_heatmap_cust_mcas, fig.height = 6, fig.width = 2}
 g_theme_heatmap_cust_mcas <- g_base_heatmap_cust_mcas+
   theme_all+
   ggplot2::theme(
@@ -533,7 +577,7 @@ g_theme_heatmap_cust_mcas <- g_base_heatmap_cust_mcas+
 g_theme_heatmap_cust_mcas
 ```
 
-```{r h_base_heatmap_cust_mspr, fig.height = 10, fig.width = 4}
+```{r h_base_heatmap_cust_mspr, fig.height = 6, fig.width = 3}
 
 h_base_heatmap_cust_mspr <- ggplot2::ggplot(
   agg_cust_df_mspr,
@@ -551,7 +595,7 @@ h_base_heatmap_cust_mspr <- ggplot2::ggplot(
 h_base_heatmap_cust_mspr
 ```
 
-```{r h_theme_heatmap_cust_mspr, fig.height = 10, fig.width = 3}
+```{r h_theme_heatmap_cust_mspr, fig.height = 6, fig.width = 2}
 h_theme_heatmap_cust_mspr <- h_base_heatmap_cust_mspr+
   theme_all+
   ggplot2::theme(
@@ -574,7 +618,7 @@ h_theme_heatmap_cust_mspr <- h_base_heatmap_cust_mspr+
 h_theme_heatmap_cust_mspr
 ```
 
-```{r i_base_heatmap_cust_mcar, fig.height = 10, fig.width = 5}
+```{r i_base_heatmap_cust_mcar, fig.height = 6, fig.width = 3}
 
 i_base_heatmap_cust_mcar <- ggplot2::ggplot(
   agg_cust_df_mcar,
@@ -592,7 +636,7 @@ i_base_heatmap_cust_mcar <- ggplot2::ggplot(
 i_base_heatmap_cust_mcar
 ```
 
-```{r i_theme_heatmap_cust_mcar, fig.height = 10, fig.width = 5}
+```{r i_theme_heatmap_cust_mcar, fig.height = 6, fig.width = 2}
 i_theme_heatmap_cust_mcar <- i_base_heatmap_cust_mcar+
   theme_all+
   ggplot2::theme(
@@ -619,7 +663,7 @@ i_theme_heatmap_cust_mcar
 
 Build the species-specific heatmaps together
 
-```{r fghi_heatmap, fig.height = 11, fig.width = 16}
+```{r fghi_heatmap, fig.height = 6, fig.width = 5}
 
 fghi_heatmap <- ggpubr::ggarrange(
   f_theme_heatmap_cust_mmus+ggplot2::theme(plot.margin = margin(0.1,0.1,0.4,0.1)),
@@ -627,7 +671,7 @@ fghi_heatmap <- ggpubr::ggarrange(
   h_theme_heatmap_cust_mspr+ggplot2::theme(plot.margin = margin(0,0.1,0.4,0.1)),
   i_theme_heatmap_cust_mcar+ggplot2::theme(plot.margin = margin(0,0.1,0.1,0.1)),
   nrow = 1,
-  widths = c(3.8, 3.1, 3.5, 3.5),
+  widths = c(6, 7, 3, 2),
   align = c("h")
 )
 

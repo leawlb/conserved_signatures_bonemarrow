@@ -129,7 +129,7 @@ col_custom_hsc <- c(
   "MPP cells 1" = "#fa221bff", # mspr
   "MPP cells 2" = "#ee8581ff", # mspr
   "Activated MPP" = "#c8605aff", # mmus, mcar 
-  "Activated MPP cells 1" = "#f49792ff", # mcasr
+  "Activated MPP cells 1" = "#f49792ff", # mcas
   "Activated MPP cells 2" = "#e95e57ff", # mcas
   "Late MPP" = "#e5530fff", # mcas
   "Early myeloid" = "#9d5c1fff", # mspr

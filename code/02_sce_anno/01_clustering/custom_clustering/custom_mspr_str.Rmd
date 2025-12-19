@@ -968,6 +968,12 @@ stopifnot(!is.na(sce_species$custom_label))
 #knitr::knit_exit()
 ```
 
+```{r unif}
+
+sce_species$custom_label_unif <- sce_species$custom_label
+stopifnot(!is.na(sce_species$custom_label_unif))
+```
+
 One last plot to confirm in correct order.
 
 ```{r heatmap_confirm, fig.height = 10, fig.width = 7}

@@ -1298,6 +1298,76 @@ levels(sce_species$custom_label)
 stopifnot(!is.na(sce_species$custom_label))
 ```
 
+```{r unif}
+
+sce_species$custom_label_unif <- unfactor(sce_species$custom_label)
+
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Mono/Macro 1"] <-  "Mono/Macro"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Mono/Macro 2"] <-  "Mono/Macro"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Mono/Macro 3"] <-  "Mono/Macro"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Mono/Macro 4"] <-  "Mono/Macro"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Mono/Macro 5"] <-  "Mono/Macro"
+
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Neutro 1"] <-  "Neutro"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Neutro 2"] <-  "Neutro"
+
+sce_species$custom_label_unif[
+  sce_species$custom_label == "BC lineage 1"] <-  "BC lineage"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "BC lineage 2"] <-  "BC lineage"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "BC lineage 3"] <-  "BC lineage"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "BC lineage 4"] <-  "BC lineage"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "BC lineage 5"] <-  "BC lineage"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "BC lineage 6"] <-  "BC lineage"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "BC lineage 7"] <-  "BC lineage"
+
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Antigen-presenting 1"] <-  "Antigen-presenting"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Antigen-presenting 2"] <-  "Antigen-presenting"
+
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Mature immune mix 1"] <-  "Mature immune mix"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Mature immune mix 2"] <-  "Mature immune mix"
+
+sce_species$custom_label_unif <- factor(
+  sce_species$custom_label_unif,
+  levels = c(
+    "Adipo/Osteo CAR",
+    "Osteo",
+    "Balanced mesenchymal",
+    "Late chondro",
+    "Fibro",
+    "Arteriolar/capillary EC",
+    "Sinusoidal EC",
+    "Peri/SMC",
+    "Erythroid",
+    "Mono/Macro",
+    "Neutro",
+    "Baso/Mast",
+    "Nk/TC",
+    "BC lineage",
+    "Antigen-presenting",
+    "Mature immune mix",
+    "Skeletal muscle"
+  ))
+
+stopifnot(!is.na(sce_species$custom_label_unif))
+```
+
 One last plot to confirm in correct order.
 
 ```{r heatmap_confirm, fig.height = 10, fig.width = 7}

@@ -82,12 +82,7 @@ tabula_sapiens_stromal <- readRDS(file.path(
 
 ---
 
-# Load precomputed ortholog table (mouse symbols -> human Ensembl IDs)
-
-> This analysis assumes you have already created an ortholog table
-> with columns `sig_gene` (mouse signature symbol) and
-> `seurat_gene` (gene ID used in your Seurat objects, e.g. human Ensembl ID),
-> and saved it as an `.rds` file on disk.
+# Create ortholog table (mouse symbols -> human Ensembl IDs)
 
 ```{r build_orthologs}
 # Build mouse symbol -> human Ensembl ortholog table

@@ -1,0 +1,240 @@
+---
+title: "tabula sapiens AUCell (mouse->human ortholog-mapped signatures)"
+date: "`r format(Sys.Date())`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo       = TRUE,
+  message    = FALSE,
+  warning    = FALSE,
+  fig.align  = "left"
+)
+```
+
+```{r libraries}
+suppressPackageStartupMessages({
+  library(Seurat)
+  library(tidyverse)
+  library(AUCell)
+  library(ggrastr)
+})
+```
+
+```{r paths}
+base_path    <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+project_path <- "/omics/groups/OE0433/internal/veronica/github/Interspecies_BM_phd"
+```
+
+## Load Ensembl annotations and build ortholog table
+
+```{r load_ensembl}
+ensembl_hum <- readRDS(
+  file.path(
+    base_path,
+    "metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_hum"
+  )
+)
+
+ensembl_mus <- readRDS(
+  file.path(
+    base_path,
+    "metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_mus"
+  )
+)
+```
+
+```{r build_ortholog_table}
+ortholog_mouse2human <- ensembl_hum %>%
+  dplyr::select(
+    human_ensembl   = ensembl_gene_id,
+    mm_ensembl      = mmusculus_homolog_ensembl_gene,
+    human_gene_name = external_gene_name
+  ) %>%
+  dplyr::filter(!is.na(mm_ensembl)) %>%
+  dplyr::left_join(
+    ensembl_mus %>%
+      dplyr::select(
+        mm_ensembl = ensembl_gene_id,
+        sig_gene   = external_gene_name
+      ),
+    by = "mm_ensembl"
+  ) %>%
+  dplyr::filter(!is.na(sig_gene)) %>%
+  dplyr::transmute(
+    sig_gene,
+    seurat_gene    = human_ensembl,
+    human_gene_name
+  ) %>%
+  dplyr::distinct()
+
+map_mouse_to_human <- ortholog_mouse2human$seurat_gene
+names(map_mouse_to_human) <- ortholog_mouse2human$sig_gene
+```
+
+```{r helper_map_gene_sets}
+convert_mouse_sets_to_human <- function(gene_sets_mouse, map_mouse_to_human) {
+  lapply(gene_sets_mouse, function(genes) {
+    mapped <- unname(map_mouse_to_human[genes])
+    mapped <- mapped[!is.na(mapped)]
+    unique(mapped)
+  })
+}
+```
+
+## TS bone marrow: clustering + AUCell (HSC signatures)
+
+```{r load_ts_bm}
+ts_bone_marrow <- readRDS(
+  file.path(
+    base_path,
+    "metadata/scRNAseq/03_sce_analysis/reclustering_bm/raw_hum/ts_bone_marrow"
+  )
+)
+```
+
+```{r process_ts_bm}
+ts_bone_marrow <- ts_bone_marrow |>
+  NormalizeData() |>
+  FindVariableFeatures(nfeatures = 10000) |>
+  ScaleData() |>
+  RunPCA(npcs = 30, verbose = FALSE) |>
+  FindNeighbors(reduction = "pca", dims = 1:30) |>
+  RunUMAP(reduction = "pca", dims = 1:30) |>
+  FindClusters(resolution = 0.5)
+```
+
+```{r load_hsc_signature}
+hsc_sig <- read.delim(
+  file.path(base_path, "manuscript1/hsc_signature_table.csv"),
+  sep = ";"
+)
+gene_sets_mouse_hsc <- split(hsc_sig$signature_gene, hsc_sig$celltype)
+gene_sets_human_hsc <- convert_mouse_sets_to_human(gene_sets_mouse_hsc, map_mouse_to_human)
+```
+
+```{r aucell_ts_bm}
+expr_bm <- LayerData(ts_bone_marrow[["RNA"]], layer = "counts")
+gene_sets_human_hsc <- lapply(gene_sets_human_hsc, function(g) intersect(g, rownames(expr_bm)))
+
+rankings_bm <- AUCell_buildRankings(expr_bm, plotStats = FALSE, verbose = FALSE)
+cellsAUC_bm <- AUCell_calcAUC(
+  gene_sets_human_hsc,
+  rankings_bm,
+  aucMaxRank = ceiling(0.25 * nrow(rankings_bm))
+)
+
+auc_mat_bm <- t(getAUC(cellsAUC_bm))
+ts_bone_marrow <- AddMetaData(ts_bone_marrow, auc_mat_bm)
+```
+
+```{r pdf_ts_bm}
+pdf(
+  file   = file.path(base_path, "manuscript1_rev/pdfs/ts_bone_marrow_AUCell_sigs.pdf"),
+  height = 7,
+  width  = 7
+)
+
+DimPlot(
+  ts_bone_marrow,
+  label     = TRUE,
+  raster    = FALSE,
+  reduction = "umap",
+  group.by  = "cell_type"
+) & NoAxes() & NoLegend()
+
+for (feat in names(gene_sets_human_hsc)) {
+  p <- FeaturePlot(
+    ts_bone_marrow,
+    features  = feat,
+    reduction = "umap",
+    raster    = FALSE,
+    order     = TRUE
+  ) + ggtitle(feat) & NoAxes()
+
+  p$layers[[1]] <- ggrastr::rasterise(p$layers[[1]], dpi = 300)
+  print(p)
+}
+
+dev.off()
+```
+
+## TS stromal: clustering + AUCell (stromal signatures)
+
+```{r load_ts_stromal}
+ts_stromal <- readRDS(
+  file.path(
+    base_path,
+    "metadata/scRNAseq/03_sce_analysis/reclustering_bm/raw_hum/ts_all_stromal"
+  )
+)
+
+ts_stromal <- ts_stromal[, ts_stromal$tissue == "bone marrow"]
+```
+
+```{r process_ts_stromal}
+ts_stromal <- ts_stromal |>
+  NormalizeData() |>
+  FindVariableFeatures(nfeatures = 10000) |>
+  ScaleData() |>
+  RunPCA(npcs = 50, verbose = FALSE) |>
+  FindNeighbors(reduction = "pca", dims = 1:50) |>
+  RunUMAP(reduction = "pca", dims = 1:50) |>
+  FindClusters(resolution = 0.5)
+```
+
+```{r load_stromal_signature}
+str_sig <- read.delim(
+  file.path(base_path, "manuscript1/str_signature_table.csv"),
+  sep = ";"
+)
+gene_sets_mouse_str <- split(str_sig$signature_gene, str_sig$celltype)
+gene_sets_human_str <- convert_mouse_sets_to_human(gene_sets_mouse_str, map_mouse_to_human)
+```
+
+```{r aucell_ts_stromal}
+expr_str <- LayerData(ts_stromal[["RNA"]], layer = "counts")
+gene_sets_human_str <- lapply(gene_sets_human_str, function(g) intersect(g, rownames(expr_str)))
+
+rankings_str <- AUCell_buildRankings(expr_str, plotStats = FALSE, verbose = FALSE)
+cellsAUC_str <- AUCell_calcAUC(
+  gene_sets_human_str,
+  rankings_str,
+  aucMaxRank = ceiling(0.25 * nrow(rankings_str))
+)
+
+auc_mat_str <- t(getAUC(cellsAUC_str))
+ts_stromal <- AddMetaData(ts_stromal, auc_mat_str)
+```
+
+```{r pdf_ts_stromal}
+pdf(
+  file   = file.path(base_path, "manuscript1_rev/pdfs/ts_bone_AUCell_sigs.pdf"),
+  height = 7,
+  width  = 7
+)
+
+DimPlot(
+  ts_stromal,
+  label     = TRUE,
+  raster    = FALSE,
+  reduction = "umap",
+  group.by  = "cell_type"
+) & NoAxes() & NoLegend()
+
+for (feat in names(gene_sets_human_str)) {
+  p <- FeaturePlot(
+    ts_stromal,
+    features  = feat,
+    reduction = "umap",
+    raster    = FALSE,
+    order     = TRUE
+  ) + ggtitle(feat) & NoAxes()
+
+  p$layers[[1]] <- ggrastr::rasterise(p$layers[[1]], dpi = 300)
+  print(p)
+}
+
+dev.off()
+```

@@ -1,0 +1,1094 @@
+---
+title: "Figure 1"
+date: '2024-08-29'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Generate Figure 1 
+
+#### Load objects
+
+```{r set_export}
+export = FALSE
+```
+
+```{r seed, message = FALSE}
+RNGkind("L'Ecuyer-CMRG") 
+set.seed(37)
+```
+
+```{r load, message = FALSE}
+library(tidyverse, quietly = TRUE)
+library(SingleCellExperiment, quietly = TRUE)
+library(ggpubr, quietly = TRUE)
+library(scuttle, quietly = TRUE)
+```
+
+```{r base_path}
+base_path <- snakemake@params[["base_path"]]
+#base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+```
+
+```{r load_sce}
+# fully annotated SCE objects
+sce_hsc <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10"))
+sce_str <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10"))
+```
+
+```{r load_short}
+# list containing genes in the correct order for the dotplot
+order_list_dotplot <- base::paste0(
+  base_path, 
+  "/metadata/scRNAseq/02_sce_anno/dotplot_order.txt")
+
+dotplot_order_df <- utils::read.csv(order_list_dotplot, 
+  header = TRUE, 
+  sep = ";", 
+  check.names=FALSE, 
+  stringsAsFactors=FALSE, 
+  as.is=TRUE, 
+  colClasses = "character")
+
+# list of genes used for subclustering
+# only for printing info not for making plots
+gene_list_subclustering <- base::paste0(
+  base_path, 
+  "/metadata/scRNAseq/02_sce_anno/gene_list_subclustering.txt")
+
+subclustering_df <- utils::read.csv(gene_list_subclustering, 
+  header = TRUE, 
+  sep = ";", 
+  check.names=FALSE, 
+  stringsAsFactors=FALSE, 
+  as.is=TRUE, 
+  colClasses = "character")
+
+# color table
+colors_path <- base::paste0(
+  base_path,
+  "/metadata/colors/colors.txt")
+print(colors_path)
+source("../source/colors.R")
+print(col_spc_pub)
+```
+
+```{r prep_sces}
+
+# randomize the barcodes for nicer visualisation
+sce_hsc <- sce_hsc[,base::sample(
+  x = c(1:ncol(sce_hsc)), 
+  size = ncol(sce_hsc),
+  replace = FALSE)]
+
+sce_str <- sce_str[,base::sample(
+  x = c(1:ncol(sce_str)), 
+  size = ncol(sce_str),
+  replace = FALSE)]
+
+# change species names to currently used abbreviations
+sce_hsc$species_pub <- vector(length = ncol(sce_hsc))
+sce_hsc$species_pub[sce_hsc$Species_ID == "mmus"] <- "BL6"
+sce_hsc$species_pub[sce_hsc$Species_ID == "mcas"] <- "CAST"
+sce_hsc$species_pub[sce_hsc$Species_ID == "mspr"] <- "SPRET"
+sce_hsc$species_pub[sce_hsc$Species_ID == "mcar"] <- "CAROLI"
+sce_hsc$species_pub <- factor(sce_hsc$species_pub, 
+                              levels = names(col_spc_pub))
+print(col_spc_pub)
+
+sce_str$species_pub <- vector(length = ncol(sce_str))
+sce_str$species_pub[sce_str$Species_ID == "mmus"] <- "BL6"
+sce_str$species_pub[sce_str$Species_ID == "mcas"] <- "CAST"
+sce_str$species_pub[sce_str$Species_ID == "mspr"] <- "SPRET"
+sce_str$species_pub[sce_str$Species_ID == "mcar"] <- "CAROLI"
+sce_str$species_pub <- factor(sce_str$species_pub, 
+                              levels = names(col_spc_pub))
+```
+
+```{r pdf_output}
+# define output paths for pdf export
+if(export){
+  output_pdf_umap_species_hsc <- base::paste0(
+    base_path,
+    "/manuscript1/figure1/figure1_umap_species_hsc.pdf")
+  output_pdf_umap_species_str <- base::paste0(
+    base_path,
+    "/manuscript1/figure1/figure1_umap_species_str.pdf")
+  output_pdf_umap_species_legend <- base::paste0(
+    base_path,
+    "/manuscript1/figure1/figure1_umap_species_legend.pdf")
+
+  output_pdf_umap_spec_sep_hsc <- base::paste0(
+    base_path,
+    "/manuscript1/figure1/figure1_umap_specsep_hsc.pdf") 
+  output_pdf_umap_spec_sep_str <- base::paste0(
+    base_path,
+    "/manuscript1/figure1/figure1_umap_specsep_str.pdf") 
+  output_pdf_umap_spec_sep_legend <- base::paste0(
+    base_path,
+    "/manuscript1/figure1/figure1_umap_specsep_legend.pdf") 
+
+  output_pdf_dotplot <- base::paste0(
+    base_path,
+    "/manuscript1/figure1/figure1_dotplot.pdf") 
+  output_pdf_dotplot_legend <- base::paste0(
+    base_path,
+    "/manuscript1/figure1/figure1_dotplot_legend.pdf") 
+}
+```
+
+```{r params}
+# global params
+source("../figures/determine_params.R")
+
+# specific params
+ct_hsc <- "HSC"
+ct_str <- "Adipo/CAR"
+```
+
+## Obtain data
+
+Obtain data needed only for manuscript text, e.g. cell numbers.
+
+```{r obtain_data}
+# nr of cells
+ncol(sce_hsc)
+ncol(sce_str)
+
+# median nr of UMIs per cell
+# remove lots of unneccessary stuff to avoid overloading the environment
+sce_hsc_met <- sce_hsc
+sce_str_met <- sce_str
+rowData(sce_hsc_met) <- rowData(sce_hsc_met)[,c(2, 3, 4)]
+rowData(sce_str_met) <- rowData(sce_str_met)[,c(2, 3, 4)]
+
+reducedDim(sce_hsc_met) <- NULL
+reducedDim(sce_str_met) <- NULL
+
+assays(sce_hsc_met) <- list(assays(sce_hsc_met)[["counts_before_BC"]])
+names(assays(sce_hsc_met)) <- "counts_before_BC"
+assays(sce_str_met) <- list(assays(sce_str_met)[["counts_before_BC"]])
+names(assays(sce_str_met)) <- "counts_before_BC"
+
+qc_df <- scuttle::perCellQCMetrics(cbind(sce_hsc_met, sce_str_met),
+                                   assay.type = "counts_before_BC")
+median(qc_df$sum)
+
+rm(sce_hsc_met)
+rm(sce_str_met)
+gc()
+
+# nr of subclustering genes, and which genes are subclustering genes
+subclustering_df[subclustering_df$purpose == "subclustering",]
+
+data.frame(table(sce_hsc$Object_ID, sce_hsc$PID)) %>% subset(Freq >0)
+data.frame(table(sce_str$Object_ID, sce_str$PID)) %>% subset(Freq >0)
+table(sce_hsc$Object_ID)
+table(sce_str$Object_ID)
+
+table(sce_hsc$Age_weeks)
+table(sce_str$Age_weeks)
+```
+
+## UMAPs Species
+
+HSPCs (left) and Niche cells (right) clustered in UMAP space, 
+colored by species.
+For Figure 1b and Figure 1c.
+
+#### Prep
+
+```{r species_prep}
+hsc_umap_species <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_hsc, type = "UMAP"))
+hsc_umap_species$color_by <- sce_hsc$species_pub
+hsc_umap_species <- hsc_umap_species[base::sample(
+  1:nrow(hsc_umap_species),
+  nrow(hsc_umap_species),
+  replace = FALSE),]
+
+str_umap_species <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_str, type = "UMAP"))
+str_umap_species$color_by <- sce_str$species_pub
+str_umap_species <- str_umap_species[base::sample(
+  1:nrow(str_umap_species),
+  nrow(str_umap_species),
+  replace = FALSE),]
+```
+
+#### Plot
+
+```{r species_base_plot_left}
+stopifnot(unique(hsc_umap_species$color_by) %in% names(col_spc_pub))
+species_base_plot_left <- ggplot2::ggplot(
+  hsc_umap_species, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c((base::min(hsc_umap_species$X1)-1), 
+                  (base::max(hsc_umap_species$X1))+1))+
+  ggplot2::ylim(c((base::min(hsc_umap_species$X2)-1),
+                  (base::max(hsc_umap_species$X2))+1))+
+  ggplot2::scale_color_manual("Species", values = col_spc_pub)
+species_base_plot_left
+```
+
+```{r species_theme_plot_left, fig.width = 4, fig.height = 3}
+species_theme_plot_left <- species_base_plot_left+
+  cowplot::theme_nothing()
+species_theme_plot_left
+```
+
+```{r species_base_plot_right}
+species_base_plot_right <- ggplot2::ggplot(
+  str_umap_species, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c((base::min(str_umap_species$X1)-1),
+                  (base::max(str_umap_species$X1))+1))+
+  ggplot2::ylim(c((base::min(str_umap_species$X2)-1), 
+                  (base::max(str_umap_species$X2))+1))+
+  ggplot2::scale_color_manual("Species", values = col_spc_pub)
+```
+
+```{r species_theme_plot_right, fig.width = 4, fig.height = 3}
+species_theme_plot_right <- species_base_plot_right+
+  cowplot::theme_nothing()
+species_theme_plot_right
+```
+
+#### Legend
+
+only one required
+
+```{r species_legend_plot}
+species_legend_plot <- ggplot2::ggplot(
+  hsc_umap_species, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_legend_point_size,
+    alpha = umap_legend_point_alpha)+
+  ggplot2::scale_color_manual("Mouse species", values = col_spc_pub)
+```
+
+```{r species_legend_theme_plot, fig.width = 2, fig.height = 2}
+species_legend_theme_plot <- species_legend_plot+
+  theme_all+
+  ggplot2::theme(legend.key.height = unit(0.3, "lines"))
+species_theme_legend <- ggpubr::get_legend(species_legend_theme_plot)
+species_legend <- ggpubr::ggarrange(species_theme_legend)
+
+species_legend
+```
+
+## UMAPs celltype separated species 
+
+HSPCs (left) and Niche cells (right) clustered in UMAP space, 
+separated by mouse species.
+For Figure 1d and Figure 1e.
+
+#### PREP
+
+```{r d_prep2}
+hsc_umap <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_hsc, type = "UMAP"))
+hsc_umap$color_by <- sce_hsc$celltypes 
+hsc_umap$species <- sce_hsc$species_pub 
+hsc_umap <- hsc_umap[base::sample(
+  1:nrow(hsc_umap),
+  nrow(hsc_umap),
+  replace = FALSE),]
+hsc_umap$color_by <- factor(
+  hsc_umap$color_by,
+  levels = names(col_cts_hsc)
+)
+
+str_umap <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_str, type = "UMAP"))
+str_umap$color_by <- sce_str$celltypes
+str_umap$species <- sce_str$species_pub 
+str_umap <- str_umap[base::sample(
+  1:nrow(str_umap),
+  nrow(str_umap),
+  replace = FALSE),]
+str_umap$color_by <- factor(
+  str_umap$color_by,
+  levels = names(col_cts_str)
+)
+```
+
+#### PLOT
+
+```{r ctspc_base_plot_left}
+ctspc_base_plot_left <- ggplot2::ggplot(
+  hsc_umap, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(hsc_umap$X1)-1), (base::max(hsc_umap$X1)+1))+
+  ggplot2::ylim(c(base::min(hsc_umap$X2)-1), (base::max(hsc_umap$X2)+1))+
+  ggplot2::scale_color_manual(values = col_cts_hsc)+
+  facet_grid(rows = vars(hsc_umap$species))
+```
+
+```{r ctspc_theme_plot_left, fig.height = 9, fig.width = 3}
+ctspc_theme_plot_left <- ctspc_base_plot_left+
+  cowplot::theme_nothing()
+ctspc_theme_plot_left
+```
+
+```{r ctspc_base_plot_right}
+ctspc_base_plot_right <- ggplot2::ggplot(
+  str_umap, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(str_umap$X1)-1), (base::max(str_umap$X1)+1))+
+  ggplot2::ylim(c(base::min(str_umap$X2)-1), (base::max(str_umap$X2)+1))+
+  ggplot2::scale_color_manual(values = col_cts_str)+
+  facet_grid(rows = vars(str_umap$species))
+```
+
+```{r d_theme_plot_right, fig.height = 10, fig.width = 4}
+ctspc_theme_plot_right <- ctspc_base_plot_right+
+  cowplot::theme_nothing()
+ctspc_theme_plot_right
+```
+
+#### Legend
+
+```{r ct_legend_plot_left}
+ct_legend_plot_left <- ggplot2::ggplot(
+  hsc_umap, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_legend_point_size,
+    alpha = umap_legend_point_alpha)+
+  ggplot2::scale_color_manual("Cell type", values = col_cts_hsc)
+```
+
+```{r ct_legend_plot_right}
+ct_legend_plot_right <- ggplot2::ggplot(
+  str_umap, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_legend_point_size,
+    alpha = umap_legend_point_alpha)+
+  ggplot2::scale_color_manual("Cell type", values = col_cts_str)
+```
+
+```{r ct_theme_legend_plot_left, fig.width = 3, fig.height = 4}
+ct_theme_legend_plot_left <- ct_legend_plot_left+
+  theme_all+
+  ggplot2::theme(legend.key.height = unit(0.3, "lines"))
+ct_legend_left_theme <- ggpubr::get_legend(ct_theme_legend_plot_left)
+
+ct_legend_left <- ggpubr::ggarrange(ct_legend_left_theme) 
+ct_legend_left
+```
+
+
+```{r ct_theme_legend_plot_right, fig.width = 3, fig.height = 3}
+ct_theme_legend_plot_right <- ct_legend_plot_right+
+  theme_all+
+  ggplot2::theme(
+    legend.title = element_blank(),
+    legend.key.height = unit(0.3, "lines")
+  )
+ct_legend_right_theme <- ggpubr::get_legend(ct_theme_legend_plot_right)
+
+ct_legend_right <- ggpubr::ggarrange(ct_legend_right_theme) 
+ct_legend_right
+```
+
+```{r e_theme_legend, fig.height = 7, fig.width = 4}
+ct_legend <- ggpubr::ggarrange(
+  ncol = 1,
+  align = "v",
+  ct_legend_left,
+  ct_legend_right)
+
+ct_legend
+```
+
+## Assemble UMAPs
+
+```{r umap_construct1, fig.width = 8, fig.height = 3}
+species_plot <- ggpubr::ggarrange(
+  align = "hv",
+  species_theme_plot_left,
+  species_theme_plot_right,
+  ncol = 2
+)
+species_plot
+```
+
+```{r umap_construct2, fig.width = 8, fig.height = 10}
+species_sep_plot <- ggpubr::ggarrange(
+  align = "hv",
+  ctspc_theme_plot_left,
+  ctspc_theme_plot_right,  
+  ncol = 2
+)
+species_sep_plot
+```
+
+#### EXPORT
+
+```{r export_species_plot_left_pdf}
+if(export){
+  pdf(output_pdf_umap_species_hsc, width = 4, height = 3)
+  species_theme_plot_left
+  dev.off()
+} 
+```
+
+```{r export_species_plot_right_pdf}
+if(export){
+  pdf(output_pdf_umap_species_str, width = 4, height = 3)
+  species_theme_plot_right
+  dev.off()
+}
+```
+
+```{r export_species_legend_pdf}
+if(export){
+  pdf(output_pdf_umap_species_legend, width = 2, height = 2)
+  species_legend
+  dev.off()
+}
+```
+
+```{r export_ctspc_left_pdf}
+if(export){
+  pdf(output_pdf_umap_spec_sep_hsc, width = 3, height = 9)
+  ctspc_theme_plot_left
+  dev.off()
+}
+```
+
+```{r export_ctspc_right_pdf}
+if(export){
+  pdf(output_pdf_umap_spec_sep_str, width = 3, height = 9)
+  ctspc_theme_plot_right
+  dev.off()
+}
+```
+
+```{r export_ctspc_legend_pdf}
+if(export){
+  pdf(output_pdf_umap_spec_sep_legend, width = 4, height = 7)
+  ct_legend
+  dev.off()
+}
+```
+
+## DOTPLOT
+
+Average gene expression of well-known marker genes that were not used for
+cell type sub-clustering per species for HSCs (top left) and Adipo/CARs 
+(top right) or per cell type for HSPC fraction (bottom left) or Niche fraction 
+(bottom right).
+For Figure 1f.
+
+#### PREP
+
+This is for all cell types together.
+
+```{r dp_prepare}
+# get genes
+gene_df_hsc <- dotplot_order_df[dotplot_order_df$fraction == "hsc",]
+gene_df_hsc$gene <- factor(gene_df_hsc$gene, levels = gene_df_hsc$gene)
+genes_hsc <- gene_df_hsc$gene
+genes_hsc
+
+gene_df_str <- dotplot_order_df[dotplot_order_df$fraction == "str",]
+gene_df_str$gene <- factor(gene_df_str$gene, levels = gene_df_str$gene)
+genes_str <- gene_df_str$gene
+genes_str
+
+# aggregate across cell types, get average expression, use normalized counts
+agg_hsc <- scuttle::aggregateAcrossCells(
+  sce_hsc, 
+  id=colData(sce_hsc)[,c("celltypes")], 
+  statistics = "mean",
+  use.assay.type = "logcounts")
+
+agg_str <- scuttle::aggregateAcrossCells(
+  sce_str, 
+  id=colData(sce_str)[,c("celltypes")], 
+  statistics = "mean",
+  use.assay.type = "logcounts")
+
+# make data frames for visualisation
+vis_df_hsc <- base::as.data.frame(
+  t(SummarizedExperiment::assays(agg_hsc)$logcounts[
+    rownames(SummarizedExperiment::assays(agg_hsc)$logcounts) %in% genes_hsc,]))
+
+vis_df_str <- base::as.data.frame(
+  t(SummarizedExperiment::assays(agg_str)$logcounts[
+    rownames(SummarizedExperiment::assays(agg_str)$logcounts) %in% genes_str,]))
+
+# format data frames
+vis_df_hsc <- tibble::rownames_to_column(vis_df_hsc, "celltypes")
+vis_df_hsc <- tidyr::pivot_longer(
+  vis_df_hsc, 
+  cols = c(2:ncol(vis_df_hsc)), 
+  values_to = "expression", 
+  names_to = "gene")
+
+vis_df_str <- tibble::rownames_to_column(vis_df_str, "celltypes")
+vis_df_str <- tidyr::pivot_longer(
+  vis_df_str, 
+  cols = c(2:ncol(vis_df_str)), 
+  values_to = "expression", 
+  names_to = "gene")
+
+# factor cell types for correct order
+vis_df_hsc$celltypes <- factor(
+  vis_df_hsc$celltypes, 
+  levels = base::rev(names(col_cts_hsc)))
+
+vis_df_str$celltypes <- factor(
+  vis_df_str$celltypes, 
+  levels = base::rev(names(col_cts_str)))
+
+# factor genes for correct order
+vis_df_hsc$gene <- factor(
+  vis_df_hsc$gene, 
+  levels = levels(gene_df_hsc$gene))
+
+vis_df_str$gene <- factor(
+  vis_df_str$gene, 
+  levels = levels(gene_df_str$gene))
+```
+
+```{r dp_function}
+get_perc_expressed <- function(vis_df, sce){
+  
+  vis_df <- vis_df
+  sce <- sce
+  
+  vis_df$percent_expressed <- vector(length = nrow(vis_df))
+  
+  cts <- base::unique(vis_df$celltypes)
+  gs <- base::unique(vis_df$gene)
+  
+  for(ct in cts){
+    
+    # normalized (MultiBatchNorm)
+    lc_temp <- SummarizedExperiment::assays(sce)$logcounts[,sce$celltypes == ct]
+    
+    for(g in gs){
+      
+      # the number of cells expressing g > 0 times / absolute cells * 100 per ct
+      perc_expr <- length(which(lc_temp[
+        rownames(lc_temp) == g,] > 0))/ncol(lc_temp)*100
+      
+      vis_df$percent_expressed[
+        which(vis_df$celltypes == ct & vis_df$gene == g)] <- perc_expr
+    }
+  }
+  return(vis_df)
+}
+
+vis_df_hsc <- get_perc_expressed(vis_df_hsc, sce_hsc)
+vis_df_str <- get_perc_expressed(vis_df_str, sce_str)
+```
+
+This is for just the selected cell types.
+
+```{r dp_prepare_ct}
+# aggregate
+sce_hsc_ct <- sce_hsc[,sce_hsc$celltypes == ct_hsc]
+agg_ct_hsc <- scuttle::aggregateAcrossCells(
+  sce_hsc_ct,
+  id=colData(sce_hsc_ct)[,c("species_pub")], 
+  statistics = "mean",
+  use.assay.type = "logcounts")
+
+sce_str_ct <- sce_str[,sce_str$celltypes == ct_str]
+agg_ct_str <- scuttle::aggregateAcrossCells(
+  sce_str_ct,
+  id=colData(sce_str_ct)[,c("species_pub")], 
+  statistics = "mean",
+  use.assay.type = "logcounts")
+
+# make vis_dfs
+vis_df_ct_hsc <- base::as.data.frame(
+  t(SummarizedExperiment::assays(agg_ct_hsc)$logcounts[
+    rownames(SummarizedExperiment::assays(agg_ct_hsc)$logcounts) %in% 
+      genes_hsc,]))
+
+vis_df_ct_str <- base::as.data.frame(
+  t(SummarizedExperiment::assays(agg_ct_str)$logcounts[
+    rownames(SummarizedExperiment::assays(agg_ct_str)$logcounts) %in% 
+      genes_str,]))
+
+# format
+vis_df_ct_hsc <- tibble::rownames_to_column(vis_df_ct_hsc, "species")
+vis_df_ct_hsc <- tidyr::pivot_longer(
+  vis_df_ct_hsc,
+  cols = c(2:ncol(vis_df_ct_hsc)), 
+  values_to = "expression", 
+  names_to = "gene")
+
+vis_df_ct_str <- tibble::rownames_to_column(vis_df_ct_str, "species")
+vis_df_ct_str <- tidyr::pivot_longer(
+  vis_df_ct_str,
+  cols = c(2:ncol(vis_df_ct_str)), 
+  values_to = "expression", 
+  names_to = "gene")
+
+vis_df_ct_hsc$celltypes <- base::rep(ct_hsc, nrow(vis_df_ct_hsc))
+vis_df_ct_str$celltypes <- base::rep(ct_str, nrow(vis_df_ct_str))
+
+# factor
+vis_df_ct_hsc$species <- factor(vis_df_ct_hsc$species, 
+                                levels = base::rev(names(col_spc_pub)))
+vis_df_ct_hsc$gene <- factor(vis_df_ct_hsc$gene,
+                             levels = levels(gene_df_hsc$gene))
+
+vis_df_ct_str$species <- factor(vis_df_ct_str$species, 
+                              levels = base::rev(names(col_spc_pub)))
+vis_df_ct_str$gene <- factor(vis_df_ct_str$gene,
+                             levels = levels(gene_df_str$gene))
+
+# perc expressed
+vis_df_ct_hsc <- get_perc_expressed(vis_df_ct_hsc, sce_hsc)
+vis_df_ct_str <- get_perc_expressed(vis_df_ct_str, sce_str)
+```
+
+```{r background_hsc}
+# make background grid
+background_hsc <- data.frame(
+  xmin = c( # start of each segment 
+    "Mllt3", # HSC
+    "Cd34", # MPP
+    "Cebpa", # Myeloid
+    "Irf8", # Mono
+    "Cebpe", # Neutro
+    "Satb1", # Lymph
+    "Gata2", # BM
+    "Itga2b", # Mk
+    "Gata1", # Mk ery
+    "Klf1", # Ery
+    "Mcm6", # Cell cycle entry
+    "Mki67" # Cycling
+    ), 
+  xmax = c( # end of each segment 
+    "Hlf", # HSC
+    "Cd34", # MPP
+    "Cebpa", # Myeloid
+    "Ccr2", # Mono
+    "S100a8", # Neutro 
+    "Il7r", # Lymph
+    "Lmo4", # BM
+    "Zfpm1", # Mk
+    "Gata1", # Mk ery
+    "Hba-a1", # Ery
+    "Lig1", # Cell cycle entry
+    "Cenpa" # Cycling
+  ), 
+  ymin = -Inf,              # covers full height
+  ymax = Inf,
+  fill = c(
+    "grey80",
+    rep(c("white", "grey80"), 5),
+    "white")  # alternating colors
+)
+
+background_hsc$xmin[!background_hsc$xmin %in% vis_df_ct_hsc$gene]
+background_hsc$xmax[!background_hsc$xmax %in% vis_df_ct_hsc$gene]
+
+background_hsc$xmin[!background_hsc$xmin %in% vis_df_hsc$gene]
+background_hsc$xmax[!background_hsc$xmax %in% vis_df_hsc$gene]
+
+background_hsc$xmin <- base::match(background_hsc$xmin, 
+                                   levels(vis_df_ct_hsc$gene))
+background_hsc$xmax <- base::match(background_hsc$xmax, 
+                                   levels(vis_df_ct_hsc$gene))
+
+background_hsc$xmin
+background_hsc$xmax
+
+background_hsc
+```
+
+```{r background_str}
+# make background grid
+background_str <- data.frame(
+  xmin = c(
+    "Cxcl12", # Niche
+    "Lepr", # Adipo
+    "Spp1", # Osteo
+    "Sox9", # Chondro
+    "Comp", # Fibro/Chondro
+    "Clec3b", # Fibro
+    "Cdh5", # Pan EC
+    "Sox17", # Art
+    "Car4", # Cap
+    "Ackr1", # Ven
+    "Tfpi", # Sinusoid
+    "Lyve1", # Lymphatic
+    "Acta2" # Peri SMC
+    ),  
+  xmax = c(
+    "Kitl", # Niche
+    "Lepr", # Adipo
+    "Bglap", # Osteo
+    "Fmod", # Chondro
+    "Apod", # Fibro/Chondro
+    "Cd34", #  Fibro
+    "Pecam1", # PAN EC
+    "Efnb2", # Art
+    "Rgcc", # Cap
+    "Lrg1", # Ven
+    "Stab2", # Sinusoid
+    "Ccl21a", # Lymphatic
+    "Rgs5" # Peri SMC
+  ), 
+  ymin = -Inf,             
+  ymax = Inf,
+  fill = c(
+    "grey80",
+    rep(c("white", "grey80"),  6)) 
+)
+
+background_str$xmin[!background_str$xmin %in% vis_df_ct_str$gene]
+background_str$xmax[!background_str$xmax %in% vis_df_ct_str$gene]
+
+background_str$xmin[!background_str$xmin %in% vis_df_str$gene]
+background_str$xmax[!background_str$xmax %in% vis_df_str$gene]
+
+
+background_str$xmin <- base::match(background_str$xmin,
+                                   levels(vis_df_ct_str$gene))
+background_str$xmax <- base::match(background_str$xmax,
+                                   levels(vis_df_ct_str$gene))
+
+background_str$xmin
+background_str$xmax
+
+background_str
+```
+
+#### PLOT
+
+```{r dp_base_plot_top_left}
+dp_base_plot_top_left <- ggplot2::ggplot(
+  vis_df_ct_hsc, 
+  aes(x = gene,
+      y = species,
+      color = percent_expressed,
+      size = expression))+
+  ggplot2::geom_rect(
+    data = background_hsc, 
+    aes(xmin = xmin - 0.5,
+        xmax = xmax + 0.5, 
+        ymin = ymin,
+        ymax = ymax),
+    fill = background_hsc$fill,
+    inherit.aes = FALSE, 
+    alpha = 0.2)+
+  ggplot2::geom_point()
+# printing the base plots from snkmk_isbm doesn't work for
+# unclear reasons!!
+```
+
+```{r dp_theme_plot_top_left}
+dp_theme_plot_top_left <- dp_base_plot_top_left+
+  theme_all+
+  ggplot2::scale_x_discrete(position = "top")+
+  ggplot2::theme(
+    axis.title = element_blank(),
+    axis.text.x.top = element_text(
+      size = axis_text_size_small,
+      hjust = 0,
+      vjust = 0.5,
+      angle = 90),
+    axis.text.y = element_text(
+      hjust = 1),
+    legend.position = "none")+
+  ggplot2::ylab("Species")+
+  ggplot2::xlab("Gene")+
+  ggplot2::scale_size_area(
+    "logcounts",
+    max_size = max_size_dotplots,
+    limits = c(0, base::max(vis_df_hsc$expression)))+
+  ggplot2::scale_colour_gradientn(
+     "% expressed",
+     colors = mycolors_to100,
+     limits = c(0, 100))
+dp_theme_plot_top_left
+```
+
+```{r dp_base_plot_top_right}
+dp_base_plot_top_right <- ggplot2::ggplot(
+  vis_df_ct_str, 
+  aes(x = gene,
+      y = species,
+      color = percent_expressed,
+      size = expression))+
+  ggplot2::geom_rect(
+    data = background_str, 
+    aes(xmin = xmin - 0.5,
+        xmax = xmax + 0.5, 
+        ymin = ymin,
+        ymax = ymax),
+    fill = background_str$fill,
+    inherit.aes = FALSE, 
+    alpha = 0.2)+
+  ggplot2::scale_x_discrete(position = "top")+
+  ggplot2::geom_point()
+```
+
+```{r dp_theme_plot_top_right}
+dp_theme_plot_top_right <- dp_base_plot_top_right+
+  theme_all+
+  ggplot2::theme(
+    axis.title = element_blank(),
+    axis.text.x.top = element_text(
+      size = axis_text_size_small,
+      hjust = 0,
+      vjust = 0.5,
+      angle = 90),
+    axis.text.y = element_blank(),
+    legend.position = "none")+
+  ggplot2::xlab("Gene")+
+  ggplot2::scale_size_area(
+    "logcounts",
+    max_size = max_size_dotplots,
+    limits = c(0, base::max(vis_df_ct_str$expression)))+
+  ggplot2::scale_colour_gradientn(
+     "% expressed",
+     colors = mycolors_to100,
+     limits = c(0, 100)
+  )
+dp_theme_plot_top_right
+```
+
+```{r dp_base_plot_bottom_left}
+dp_base_plot_bottom_left <- ggplot2::ggplot(
+  vis_df_hsc, 
+  aes(x = gene,
+      y = celltypes,
+      color = percent_expressed,
+      size = expression))+
+  ggplot2::geom_point() 
+```
+
+```{r dp_theme_plot_bottom_left, fig.width = 25, fig.height = 6}
+dp_theme_plot_bottom_left <- dp_base_plot_bottom_left+
+  theme_all+
+  ggplot2::theme(
+    axis.title = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.text.y = element_text(
+      hjust = 1),
+    legend.position = "none")+
+  ggplot2::scale_size_area(
+    "logcounts",
+    max_size = max_size_dotplots,
+    limits = c(0, base::max(vis_df_hsc$expression)))+
+  ggplot2::scale_colour_gradientn(
+     "% expressed",
+     colors = mycolors_to100,
+     limits = c(0, 100)
+  )
+dp_theme_plot_bottom_left
+```
+
+```{r dp_base_plot_bottom_right}
+dp_base_plot_bottom_right <- ggplot2::ggplot(
+  vis_df_str, 
+  aes(x = gene,
+      y = celltypes,
+      color = percent_expressed,
+      size = expression))+
+  ggplot2::geom_point()
+```
+
+```{r dp_theme_plot_bottom_right, fig.width = 20,fig.height = 5}
+dp_theme_plot_bottom_right <- dp_base_plot_bottom_right+
+  theme_all+
+  ggplot2::theme(
+    axis.title = element_blank(),
+    axis.text.y = element_text(
+      hjust = 1),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    legend.position = "none")+
+  ggplot2::ylab("Cell type")+
+  ggplot2::scale_size_area(
+    "logcounts",
+    max_size = max_size_dotplots,
+    limits = c(0, base::max(vis_df_ct_str$expression)))+
+  ggplot2::scale_colour_gradientn(
+     "% expressed",
+     colors = mycolors_to100,
+     limits = c(0, 100)
+  )
+dp_theme_plot_bottom_right
+```
+
+#### LEGEND
+
+Since logcounts have different upper limits in HSPCs vs Niche, need two.
+
+```{r dp_legend_base_plot_left}
+dp_legend_base_plot_left <- ggplot2::ggplot(
+  vis_df_hsc, 
+  aes(x = gene,
+      y = celltypes,
+      size = expression))+
+  ggplot2::geom_point()
+```
+
+```{r dp_legend_theme_plot_left}
+dp_legend_theme_plot_left <- dp_legend_base_plot_left+
+  theme_all+
+  ggplot2::theme(
+    legend.box.just = "left",
+    legend.position = "bottom",
+    legend.box = "vertical", # Stack legends vertically
+    legend.spacing.y = unit(0.5, 'cm'))+
+  ggplot2::scale_size_area(
+    "logcounts",
+    max_size = max_size_dotplots,
+    breaks = c(0, 1, 2),
+    limits = c(0, base::max(vis_df_hsc$expression)))
+dp_legend_left <- ggpubr::get_legend(dp_legend_theme_plot_left)
+```
+
+```{r dp_legend_base_plot_middle}
+dp_legend_base_plot_middle <- ggplot2::ggplot(
+  vis_df_str, 
+  aes(x = gene,
+      y = celltypes,
+      color = percent_expressed))+
+  ggplot2::geom_point()
+```
+
+```{r dp_legend_theme_plot_middle}
+dp_legend_theme_plot_middle <- dp_legend_base_plot_middle+
+  theme_all+
+  ggplot2::theme(
+    legend.box.just = "left",
+    legend.position = "bottom",
+    legend.box = "vertical", # Stack legends vertically
+    legend.spacing.y = unit(0.5, 'cm'))+
+  ggplot2::scale_colour_gradientn(
+    "% expressed",
+    breaks = c(0, 50, 100),
+    colors = mycolors_to100,
+    limits = c(0, 100)
+  )
+dp_legend_middle <- ggpubr::get_legend(dp_legend_theme_plot_middle)
+```
+
+```{r dp_legend_base_plot_right}
+dp_legend_base_plot_right <- ggplot2::ggplot(
+  vis_df_str, 
+  aes(x = gene,
+      y = celltypes,
+      size = expression))+
+  ggplot2::geom_point()
+```
+
+```{r dp_legend_theme_plot_right}
+dp_legend_theme_plot_right <- dp_legend_base_plot_right+
+  theme_all+
+  ggplot2::theme(
+    legend.box.just = "left",
+    legend.position = "bottom",
+    legend.box = "vertical", # Stack legends vertically
+    legend.spacing.y = unit(0.5, 'cm'))+
+  ggplot2::scale_size_area(
+    "logcounts",
+    max_size = max_size_dotplots,
+    limits = c(0, base::max(vis_df_ct_str$expression)))
+dp_legend_right <- ggpubr::get_legend(dp_legend_theme_plot_right)
+```
+
+#### ASSEMBLE
+
+```{r dp_theme_plot2, fig.width = 16, fig.height = 6}
+dp_theme_plot2 <- ggpubr::ggarrange(
+  dp_theme_plot_top_left + theme(
+    plot.margin = margin(t = 10, r = 5, b = 20, l = 60, unit = "pt")), 
+  dp_theme_plot_top_right + theme(
+    plot.margin = margin(t = 5, r = 5, b = 20, l = 120, unit = "pt")),
+  dp_theme_plot_bottom_left,
+  dp_theme_plot_bottom_right,
+  heights = c(1.1,1.8),
+  widths = c(1, 1.15))
+
+dp_theme_plot2
+```
+
+```{r dp_theme_legends, fig.width = 6, fig.height = 5}
+dp_theme_legends <- ggpubr::ggarrange(
+  nrow = 3,
+  dp_legend_left,
+  dp_legend_middle,
+  dp_legend_right
+  )
+
+dp_theme_legends
+```
+
+#### EXPORT
+
+```{r export_dp}
+if(export){
+  pdf(output_pdf_dotplot, width = 15.5, height = 6)
+  dp_theme_plot2
+  dev.off()
+}
+```
+
+```{r export_dp_legend}
+if(export){
+  pdf(output_pdf_dotplot_legend, width = 6, height = 5)
+  dp_theme_legends
+  dev.off()
+}
+```
+
+# UTILS
+
+```{r sessioninfo}
+utils::sessionInfo()
+```

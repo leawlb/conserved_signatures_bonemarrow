@@ -65,10 +65,11 @@ gc()
 
 sce_hsc_all_cells$custom_label <- vector(length = ncol(sce_hsc_all_cells))
 
-sce_mmus_hsc$custom_label <- unfactor(sce_mmus_hsc$custom_label)
-sce_mcas_hsc$custom_label <- unfactor(sce_mcas_hsc$custom_label)
-sce_mspr_hsc$custom_label <- unfactor(sce_mspr_hsc$custom_label)
-sce_mcar_hsc$custom_label <- unfactor(sce_mcar_hsc$custom_label)
+# use unif here (some clusters with similar populations were unified)
+sce_mmus_hsc$custom_label <- unfactor(sce_mmus_hsc$custom_label_unif)
+sce_mcas_hsc$custom_label <- unfactor(sce_mcas_hsc$custom_label_unif)
+sce_mspr_hsc$custom_label <- unfactor(sce_mspr_hsc$custom_label_unif)
+sce_mcar_hsc$custom_label <- unfactor(sce_mcar_hsc$custom_label_unif)
 
 sce_hsc_all_cells$custom_label[match(
   colnames(sce_mmus_hsc), colnames(sce_hsc_all_cells))] <- sce_mmus_hsc$custom_label
@@ -115,16 +116,20 @@ sce_hsc_all_cells <- sce_hsc_all_cells[,base::sample(
 
 ```{r factor_and_colors}
 
+unique(sce_hsc_all_cells$custom_label)[!unique(sce_hsc_all_cells$custom_label) %in% factors_custom_hsc_unif]
+factors_custom_hsc_unif[!factors_custom_hsc_unif %in% sce_hsc_all_cells$custom_label]
+
 # for nicer handling factor the custom labels, too
 # both from utils
 sce_hsc_all_cells$custom_label <- factor(
   sce_hsc_all_cells$custom_label, 
-  levels = factors_custom_hsc)
+  levels = factors_custom_hsc_unif)
 
-col_custom <- col_custom_hsc
+col_custom <- col_custom_hsc_unif
 
 stopifnot(!is.na(sce_hsc_all_cells$custom_label))
 
+#knitr::knit_exit()
 print(col_custom)
 ```
 

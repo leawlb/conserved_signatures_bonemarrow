@@ -1317,15 +1317,15 @@ sce_species$custom_label[
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "5"] <-  "Neutro 2"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "10"] <-  "Mature neutro 1"
+  sce_species$cluster_louvain_custom == "10"] <-  "Mature Neutro 1"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "13"] <-  "Neutro 3"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "14"] <-  "Mature neutro 2"
+  sce_species$cluster_louvain_custom == "14"] <-  "Mature Neutro 2"
   sce_species$custom_label[
   sce_species$cluster_louvain_custom == "21"] <-  "Neutro 3"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "29"] <-  "Mature neutro 3"
+  sce_species$cluster_louvain_custom == "29"] <-  "Mature Neutro 3"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "32"] <-  "Neutro 4"
 sce_species$custom_label[
@@ -1403,9 +1403,9 @@ sce_species$custom_label <- factor(
     "Neutro 2",
     "Neutro 3",
     "Neutro 4",
-    "Mature neutro 1",
-    "Mature neutro 2",
-    "Mature neutro 3",
+    "Mature Neutro 1",
+    "Mature Neutro 2",
+    "Mature Neutro 3",
     "Eosinophil",
     "Baso/Mast",
     "BC lineage 1",
@@ -1418,6 +1418,85 @@ sce_species$custom_label <- factor(
 sort(unique(sce_species$custom_label))
 levels(sce_species$custom_label)
 stopifnot(!is.na(sce_species$custom_label))
+```
+
+```{r unif}
+
+sce_species$custom_label_unif <- unfactor(sce_species$custom_label)
+
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Ery 1"] <-  "Ery"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Ery 2"] <-  "Ery"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Ery 3"] <-  "Ery"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Ery 4"] <-  "Ery"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Ery 5"] <-  "Ery"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Ery 6"] <-  "Ery"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Ery 7"] <-  "Ery"
+
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Early Neutro 1"] <-  "Early Neutro"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Early Neutro 2"] <-  "Early Neutro"
+
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Neutro 1"] <-  "Neutro"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Neutro 2"] <-  "Neutro"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Neutro 3"] <-  "Neutro"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Neutro 4"] <-  "Neutro"
+
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Mature Neutro 1"] <-  "Mature Neutro"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Mature Neutro 2"] <-  "Mature Neutro"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Mature Neutro 3"] <-  "Mature Neutro"
+
+sce_species$custom_label_unif[
+  sce_species$custom_label == "BC lineage 1"] <-  "BC lineage"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "BC lineage 2"] <-  "BC lineage"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "BC lineage 3"] <-  "BC lineage"
+
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Mature immune mix 1"] <-  "Mature immune mix"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Mature immune mix 2"] <-  "Mature immune mix"
+
+sce_species$custom_label_unif <- factor(
+  sce_species$custom_label_unif,
+  levels = c(
+    "Adipo/Osteo CAR",
+    "Early chondro",
+    "Late chondro and Osteo",
+    "Fibro",
+    "Articular/synovial-like",
+    "Arteriolar/capillary EC",
+    "Mix ven/sinus/lymph EC",
+    "Mix arteriolar/sinus EC",
+    "Peri/SMC",
+    "Ery",
+    "Mature ery",
+    "Early Neutro",
+    "Neutro",
+    "Mature Neutro",
+    "Eosinophil",
+    "Baso/Mast",
+    "BC lineage",
+    "Antigen-presenting",
+    "Mature immune mix"
+    ))
+
+stopifnot(!is.na(sce_species$custom_label_unif))
 ```
 
 One last plot to confirm in correct order.

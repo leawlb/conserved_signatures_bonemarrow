@@ -1,0 +1,186 @@
+---
+title: "Reclustering ts_hscs_progenitors with signatures obtained from different thresholds"
+author: "Lea Wölbert"
+date: '2025-12-15'
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load objects
+
+```{r seed, message = FALSE}
+set.seed(37)
+```
+
+```{r load, message = FALSE}
+library(Seurat, quietly = TRUE)
+library(tidyverse, quietly = TRUE)
+```
+
+```{r load_objects}
+score_df_list <- base::readRDS(snakemake@input[["score_df_list"]])
+#score_df_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_thresholds/ts_hscs_progenitors_scores_by_t.rds")
+dataset_curr <- snakemake@params[["dataset"]]
+
+threshold_used <- snakemake@params[["threshold_used"]]
+
+threshold_used_p <- "0.05"
+threshold_used_t <- "0.25"
+
+```
+
+```{r colors}
+colors_path <- snakemake@params[["colors_path"]]
+source(snakemake@params[["colors"]])
+
+col_scores <- c(
+  col_score1, 
+  col_score2,
+  col_cl_per_ct,
+  "nr_celltypes" = "grey50")
+```
+
+```{r prep_df}
+score_df_all <- dplyr::bind_rows(score_df_list)
+head(score_df_all)
+
+if(threshold_used == "conserved_signature_treshold_testing_by_t"){
+  threshold_u <- threshold_used_t
+  score_df_all$threshold_used <- as.numeric(score_df_all$threshold_used)
+  threshold_u_plot <- as.numeric(threshold_u)
+  xtitle <- "log2FC FindMarkers"
+}else if(threshold_used == "conserved_signature_treshold_testing_by_p"){
+  threshold_u <- threshold_used_p
+  score_df_all$threshold_used <- -log10(as.numeric(score_df_all$threshold_used))
+  threshold_u_plot <- -log10(as.numeric(threshold_u))
+  xtitle <- "-log10 (padj) nDEG"
+}
+
+print(threshold_u)
+score_df_all[score_df_all$threshold_used == threshold_u,]
+```
+
+Plot scores:
+
+```{r plot_by_threshold, fig.width = 6, fig.height = 4}
+
+# for plotting the important scores together
+ggplot2::ggplot(
+  score_df_all[score_df_all$type %in% c(
+    "adjusted_rand_index",
+    "mean_prop_cells_cluster",
+    "variation_information",
+    "mean_cluster_purity"
+  ),],
+  aes(
+    x = threshold_used,
+    y = value,
+    color = type))+
+  ggplot2::geom_point(size = 2.6)+
+  ggplot2::theme_classic()+
+  ggplot2::geom_vline(xintercept = threshold_u_plot, color = "grey80")+
+  ggplot2::ggtitle(paste(score_df_all$conservation_level[1]), dataset_curr)+
+  ggplot2::scale_color_manual("score", values = col_scores)+
+  ggplot2::xlab(xtitle)
+
+# for better overview
+ggplot2::ggplot(
+  score_df_all[score_df_all$type %in% c(
+    "adjusted_rand_index",
+    "mean_prop_cells_cluster",
+    "mean_cluster_purity"
+  ),],
+  aes(
+    x = threshold_used,
+    y = value,
+    color = type))+
+  ggplot2::geom_point(size = 2.6)+
+  ggplot2::theme_classic()+
+  ggplot2::scale_y_continuous(limits = c(0,1))+
+  ggplot2::geom_vline(xintercept = threshold_u_plot, color = "grey80")+
+  ggplot2::ggtitle(paste(score_df_all$conservation_level[1]), dataset_curr)+
+  ggplot2::scale_color_manual("score", values = col_scores)+
+  ggplot2::xlab(xtitle)
+
+ggplot2::ggplot(
+  score_df_all[score_df_all$type %in% c(
+    "variation_information"
+  ),],
+  aes(
+    x = threshold_used,
+    y = value,
+    color = type))+
+  ggplot2::geom_point(size = 2.6)+
+  ggplot2::theme_classic()+
+  ggplot2::scale_y_continuous(limits = c(0,8))+
+  ggplot2::geom_vline(xintercept = threshold_u_plot, color = "grey80")+
+  ggplot2::ggtitle(paste(score_df_all$conservation_level[1]), dataset_curr)+
+  ggplot2::scale_color_manual("score", values = col_scores)+
+  ggplot2::xlab(xtitle)
+
+ggplot2::ggplot(
+  score_df_all[score_df_all$type %in% c(
+    "nr_clusters",
+    "nr_celltypes"
+  ),],
+  aes(
+    x = threshold_used,
+    y = value,
+    color = type))+
+  ggplot2::geom_point(size = 2.6)+
+  ggplot2::theme_classic()+
+  ggplot2::geom_vline(xintercept = threshold_u_plot, color = "grey80")+
+  ggplot2::ggtitle(paste(score_df_all$conservation_level[1]), dataset_curr)+
+  ggplot2::scale_color_manual("score", values = col_scores)+
+  ggplot2::xlab(xtitle)
+```
+
+```{r plot_by_nrgenes}
+
+ggplot2::ggplot(
+  score_df_all[score_df_all$type %in% c(
+    "adjusted_rand_index",
+    "mean_prop_cells_cluster",
+    "mean_cluster_purity"
+  ),],
+  aes(
+    x = as.numeric(nr_genes_used),
+    y = value,
+    color = type))+
+  ggplot2::geom_point(size = 2.6)+
+  ggplot2::theme_classic()+
+  ggplot2::scale_y_continuous(limits = c(0,1))+
+  ggplot2::ggtitle(paste(score_df_all$conservation_level[1]), dataset_curr)+
+  ggplot2::scale_color_manual("score", values = col_scores)
+
+ggplot2::ggplot(
+  score_df_all[score_df_all$type %in% c(
+    "variation_information"
+  ),],
+  aes(
+    x = as.numeric(nr_genes_used),
+    y = value,
+    color = type))+
+  ggplot2::geom_point(size = 2.6)+
+  ggplot2::theme_classic()+
+  ggplot2::scale_y_continuous(limits = c(0,8))+
+  ggplot2::ggtitle(paste(score_df_all$conservation_level[1]), dataset_curr)+
+  ggplot2::scale_color_manual("score", values = col_scores)
+
+ggplot2::ggplot(
+  score_df_all[score_df_all$type %in% c(
+    "nr_clusters",
+    "nr_celltypes"
+  ),],
+  aes(
+    x = as.numeric(nr_genes_used),
+    y = value,
+    color = type))+
+  ggplot2::geom_point(size = 2.6)+
+  ggplot2::theme_classic()+
+  ggplot2::ggtitle(paste(score_df_all$conservation_level[1]), dataset_curr)+
+  ggplot2::scale_color_manual("score", values = col_scores)
+```

@@ -24,6 +24,7 @@ OUTPUT_BASE = config["base"] + config["scRNAseq_data_paths"]["main"]
 METADATA_PATH = config["base"] + config["metadata_paths"]["metadata"]
 OUTPUT_REP = OUTPUT_BASE + "/sce_objects/reports/03_sce_analysis/04_signatures/04_blind_anno"
 
+"""
 METADATA = pd.read_csv(config["table"])
 def get_list(metadata, column):
   values = METADATA[column]
@@ -31,7 +32,8 @@ def get_list(metadata, column):
   values = values.squeeze()
   values = values.tolist()
   return(values)
-  
+"""
+
 #-------------------------------------------------------------------------------
 
 targets = []

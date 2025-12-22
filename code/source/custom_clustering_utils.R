@@ -69,6 +69,55 @@ factors_custom_hsc <- c(
     "Low quality, ery"
 )
 
+factors_custom_hsc_unif <- c(
+    "HSC",
+    "HSC/Early Mk",
+    "Early MPP cells",
+    "MPP cells",
+    "Activated MPP",
+    "Activated MPP cells",
+    "Late MPP",
+    "Early myeloid",
+
+    "Early granu/mono",
+    "Granu/mono progenitor",
+    "Neutro progenitor",
+    "Later granu/neutro",
+
+    "Early lymphoid",
+    "Lymphoid",
+    "Late lymphoid",
+    "Late/Cycling lymphoid",
+
+    "Baso/Mast progenitor",
+    "Mk/E/BM (more Mk and BM)",
+    "Mk/E/BM (more Ery)",
+    "Early Mk progenitor",
+    "Mk/Ery (more Mk)",
+    "Mk/Ery",
+    "Early ery/baso/mast",
+    "Early ery",
+    "Early erythroid progenitor",
+    "Ery progenitor",
+    "Erythroid",
+    "Late erythroid progenitor",
+    "Latest erythroid progenitor",
+    "Cycling",
+    "Cycling (more M-phase)",
+    "Cycling (more S-phase)",
+    "Cycling MPP",
+    "Cycling, mostly myeloid",
+    "Cycling granu/mono",
+    "Cycling ery",
+    # separate cells that would be removed
+    "Antigen-presenting",
+    "Mono/antigen-presenting",
+    "Late neutro",
+    "Late immune, mixed",
+    "Late neutro/ery, mixed",
+    "Low quality"
+)
+
 #------------------------------------------------------------------------------
 # colors
 
@@ -80,7 +129,7 @@ col_custom_hsc <- c(
   "MPP cells 1" = "#fa221bff", # mspr
   "MPP cells 2" = "#ee8581ff", # mspr
   "Activated MPP" = "#c8605aff", # mmus, mcar 
-  "Activated MPP cells 1" = "#f49792ff", # mcasr
+  "Activated MPP cells 1" = "#f49792ff", # mcas
   "Activated MPP cells 2" = "#e95e57ff", # mcas
   "Late MPP" = "#e5530fff", # mcas
   "Early myeloid" = "#9d5c1fff", # mspr
@@ -127,9 +176,59 @@ col_custom_hsc <- c(
   "Low quality, ery" = "#99b835ff" # mspr
 )
 
+col_custom_hsc_unif <- c(
+  "HSC" = "#4a0805ff", # mmus, mspr, mcar
+  "HSC/Early Mk" = "#49006bff", # mcas
+  "Early MPP cells" = "#b51611ff", # mmus, mcas
+  "MPP cells" = "#ee8581ff", # mspr
+  "Activated MPP" = "#c8605aff", # mmus, mcar 
+  "Activated MPP cells" = "#e95e57ff", # mcas
+  "Late MPP" = "#e5530fff", # mcas
+  "Early myeloid" = "#9d5c1fff", # mspr
+  "Early granu/mono" = "#c87121ff", # mcas
+  "Granu/mono progenitor" = "#e28c02ff", # mmus, mcar
+  "Neutro progenitor" = "#f1ac3dff", # mspr, mcar
+  "Later granu/neutro" = "#fc8c23ff", # mcas
+  "Early lymphoid" = "#ffd000ff", # mmus, mspr
+  "Lymphoid" = "#ffe28aff", # mcas
+  "Late lymphoid" = "#faf24fff", # mcar
+  "Late/Cycling lymphoid" = "#ffff75ff", # mspr
+  "Baso/Mast progenitor" = "#ab00fbff", # mmus, mcas, mspr, mcar
+  "Mk/E/BM (more Mk and BM)" = "#6e468bff", # mcar
+  "Mk/E/BM (more Ery)" = "#9d81fbff", # mcar
+  "Early Mk progenitor" = "#8d0153ff", # mspr
+  "Mk/Ery (more Mk)" = "#8e3268ff", # mmus 
+  "Mk/Ery" = "#d857a2ff", # mcas
+  "Early ery/baso/mast" = "#993a8eff", # mspr
+  "Early ery" = "#c519bdff", # mmus 
+  "Early erythroid progenitor" = "#f4538eff", # mcar
+  "Ery progenitor" = "#f989b2ff", # mmus, mcas, mspr
+  "Erythroid" = "#b32e5fff", # mcar
+  "Late erythroid progenitor" = "#c26cacff", # mcar
+  "Latest erythroid progenitor" = "#6e468bff", # mcar
+  "Cycling" = "#b5b5b5ff", # mcas
+  "Cycling (more M-phase)" = "#a68482ff", # mmus 
+  "Cycling (more S-phase)" = "#cbb9b9ff", # mmus 
+  "Cycling MPP" = "#c2ac89ff", # mcar
+  "Cycling, mostly myeloid" = "#98877dff", # mspr
+  "Cycling granu/mono" = "#dfdcd6ff", # mcar
+  "Cycling ery" = "#c3a4b0ff", # mspr
+  # separate cells that would be removed
+  "Antigen-presenting" = "#4c64fbff", # mcar
+  "Mono/antigen-presenting" = "#93a0f7ff", # mspr
+  "Late neutro" = "#6cfff5ff", # mmus 
+  "Late immune, mixed" = "#37ded3ff", # mmus, mcas, mspr
+  "Late neutro/ery, mixed" = "#03b0a5ff", # mcas
+  "Low quality" = "#4adf6dff", # mcar
+  "Low quality, early" = "#208c39ff", # mspr
+  "Low quality, neutro" = "#75811bff", # mspr
+  "Low quality, ery" = "#99b835ff" # mspr
+)
+
 #------------------------------------------------------------------------------
 
 # hsc marker genes list long
+# comments relate to the species-specific clustering
   marker_genes_list_hsc <- list(
     "HSC" = c(
       "Ly6a", # HSC-specific, spotty
@@ -145,8 +244,7 @@ col_custom_hsc <- c(
       "Mmrn1",
       "Mecom",
       "Mpl",
-
-      "Pdzk1ip1", # HSC-specific, works for all but I don't know it well
+      "Pdzk1ip1", 
 
       "Ltb", # mostly HSC, works for all, and I know them
       "Hlf", 
@@ -282,6 +380,62 @@ col_custom_hsc <- c(
       )
     )
 
+# for figure s3
+# names related to merged clustering
+marker_genes_list_hsc_figs3 <- list(
+    "HSC_spotty" = c(
+      "Slamf1",
+      "Aldh1a1", 
+      "Ly6a", 
+      "Pdzk1ip1",
+      "Procr",
+      "Alcam",
+      "Cdkn1c", 
+      "Gng11",
+      "Socs2",
+    ),
+    "HSC_shared" = c(
+      "Mecom",
+      "Mllt3",
+      "Mmrn1",
+      "Mpl",
+      "Txnip", 
+      "Pbx1",
+    ),  
+    "Stem" = c( # this includes expression in MPPs, albeit lower
+      "Ltb",
+      "Hlf", 
+      "Ldhb",
+      "Angpt1", 
+      "Hoxa9",
+      "Lmo2",
+      "Meis1",
+      "Msi2"
+    ),
+    "MPP" = c( 
+      "Adgrl4", 
+      "Cd34", 
+      "Sox4",
+      "Cd48", 
+      "Sell",
+      "Cdk4",
+      "Flt3"
+    ),
+    "CC_entry_activation" = c(
+      "Lig1",
+      "Mcm7",
+      "Hells",
+      "Mcm6"
+    ),
+    "Myeloid_general" = c(
+      "Spi1", 
+      "Cebpa",
+      "Ctsg",
+      "Mpo",
+      "Prtn3",
+      "F13a1")
+  )
+
 #------------------------------------------------------------------------------
 # best_marker_genes, a shorter list
 
@@ -403,9 +557,9 @@ factors_custom_str <- c(
   "Neutro 3",
   "Neutro 4",
 
-  "Mature neutro 1", 
-  "Mature neutro 2", 
-  "Mature neutro 3", 
+  "Mature Neutro 1", 
+  "Mature Neutro 2", 
+  "Mature Neutro 3", 
 
   "Nk/TC", 
   "Eosinophil", 
@@ -420,7 +574,6 @@ factors_custom_str <- c(
   "BC lineage 6", 
   "BC lineage 7", 
 
-
   "Low qu adipo CAR",
   "Low qu osteo-chondro",
 
@@ -429,6 +582,63 @@ factors_custom_str <- c(
   "Antigen-presenting",
   "Antigen-presenting 1", 
   "Antigen-presenting 2", 
+
+  "Mix lymphatic EC/immune", 
+  "Mix skeletal muscle/immune", 
+  "Skeletal muscle",
+  "Low qu skeletal muscle" 
+)
+
+factors_custom_str_unif <- c(
+  "Adipo CAR", 
+  "Adipo/Osteo CAR", 
+  "Osteo", 
+      
+  "Balanced mesenchymal", 
+
+  "Early chondro",
+  "Late chondro and Osteo",
+  "Late chondro", 
+
+  "Articular/synovial-like",
+
+  "Fibro/Chondro (more Fibro)",
+  "Fibro", 
+      
+  "Capillary EC", 
+  "Arteriolar/capillary EC", 
+  "Arteriolar EC",
+
+  "Transitory/Venous EC", 
+  "Mix arteriolar/sinus EC", 
+  "Mix ven/sinus/lymph EC", 
+  "Sinusoidal EC", 
+
+  "Lymphatic EC", 
+
+  "Peri/SMC", 
+
+  "Erythroid", 
+  "Ery", 
+  "Mature ery",
+
+  "Mono/Macro", 
+  "Early Neutro", 
+  "Neutro", 
+  "Mature Neutro", 
+
+  "Nk/TC", 
+  "Eosinophil", 
+  "Eo/Baso/Mast", 
+  "Baso/Mast", 
+
+  "BC lineage",
+
+  "Low qu adipo CAR",
+  "Low qu osteo-chondro",
+
+  "Mature immune mix", 
+  "Antigen-presenting",
 
   "Mix lymphatic EC/immune", 
   "Mix skeletal muscle/immune", 
@@ -492,9 +702,9 @@ col_custom_str <- c(
   "Neutro 3" = "#ceb493ff", # mcar
   "Neutro 4" = "#a6865fff", # mcar
 
-  "Mature neutro 1" = "#8e775aff", # mcar
-  "Mature neutro 2" = "#94662eff", # mcar
-  "Mature neutro 3" = "#78470bff", # mcar
+  "Mature Neutro 1" = "#8e775aff", # mcar
+  "Mature Neutro 2" = "#94662eff", # mcar
+  "Mature Neutro 3" = "#78470bff", # mcar
 
   "Eosinophil" = "#ae2c42ff", # mcar
   "Eo/Baso/Mast" = "#aa2e32ff", # mspr
@@ -518,6 +728,65 @@ col_custom_str <- c(
   "Antigen-presenting" = "#8b7467ff",  # mcar
   "Antigen-presenting 1" = "#655348ff", # mcas
   "Antigen-presenting 2" = "#4f4139ff", # mcas
+
+  "Mix lymphatic EC/immune" = "#716757ff", # mmus
+  "Mix skeletal muscle/immune" = "grey50", # mspr
+  "Skeletal muscle" = "grey60",  # mcas
+  "Low qu skeletal muscle" =  "grey80" # mmus
+)
+
+col_custom_str_unif <- c(
+  "Adipo CAR" = "#2c8284ff", # mmus, mspr 
+  "Adipo/Osteo CAR" = "#35abadff", # mcas, mcar
+  "Osteo" = "#1bfcdeff", # mmus, mcas, mspr
+    
+  "Balanced mesenchymal" = "#64fc71ff", # mmus, mcas, mspr
+
+  "Fibro" = "#557113ff",  # mmus, mcas, mcar
+  "Fibro/Chondro (more Fibro)" = "#7bab0aff", # mspr
+  "Early chondro" = "#c1fda3ff",  # mspr, mcar
+  "Late chondro and Osteo" = "#80f000ff",  # mcar
+  "Late chondro" = "#55a646ff", # mmus, mcas
+
+  "Articular/synovial-like" = "#344b02ff",  # mspr, mcar
+
+  "Capillary EC" = "#43bbfbff", # mspr
+  "Arteriolar/capillary EC" = "#70abfeff", # mcas, mcar
+  "Arteriolar EC" = "#2a66a2ff",  # mmus, mspr
+
+  "Transitory/Venous EC" = "#6b44d6ff", # mmus, mspr
+  "Mix arteriolar/sinus EC" = "#4c3f6eff", # mcar
+  "Mix ven/sinus/lymph EC" = "#906eebff", # mcar
+  "Sinusoidal EC" = "#352957ff", # mmus, mcas, mspr
+
+  "Lymphatic EC" = "#4f7389ff", # mspr
+
+  "Peri/SMC" = "#cc00ffff", # mmus, mcas, mspr, mcar
+
+  "Erythroid" = "#ff005dff", # mmus, mcas
+  "Ery" = "#ff92baff", # mcar
+  "Mature ery" = "#b04747ff", # mcar
+
+  "Mono/Macro" = "#ff5900ff", # mcas
+  "Early Neutro" = "#cf7f1dff", # mcar
+  "Neutro" = "#fdc98aff", # mcas, mcar
+  "Mature neutro" = "#8e775aff", # mcar
+
+
+  "Eosinophil" = "#ae2c42ff", # mcar
+  "Eo/Baso/Mast" = "#aa2e32ff", # mspr
+  "Baso/Mast"  = "#ff0008ff", # mcas, mcar
+
+  "Nk/TC" = "#d0716cff", # mcas
+
+  "BC lineage" = "#deec1cff", # mcas
+
+  "Low qu adipo CAR" = "#acdfe0ff",  # mmus, mspr
+  "Low qu osteo-chondro" = "#9ab8a3ff",  # mspr
+
+  "Mature immune mix" = "#7b7660ff", # mcas, mcar
+  "Antigen-presenting" = "#8b7467ff",  # mcar
+  "Antigen-presenting" = "#4f4139ff", # mcas
 
   "Mix lymphatic EC/immune" = "#716757ff", # mmus
   "Mix skeletal muscle/immune" = "grey50", # mspr
@@ -766,6 +1035,80 @@ marker_genes_list_str <- list(
       "Cenpa" 
       )
 
+  )
+
+marker_genes_list_str_figs3 <- list(
+    "Niche" = c( # classic niche 
+      "Cxcl14", 
+      "Ebf3", # niche cells https://doi.org/10.1101/gad.314013.118
+      "Cxcl12", # also arteriolar EC
+      "Kitl" # also arteriolar EC
+      ),
+    "Adipo" = c(
+      "Adipoq",
+      "Hp",
+      "Lepr", 
+      "Lpl",
+      "Cebpa",
+      "Pappa"  # adipocyte marker in MALP https://doi.org/10.7554/eLife.54695
+      ),
+    "Osteo" = c( # from early/CAR to more osteocyte-ish (approx)
+      "Limch1", # Osteo-CAR https://doi.org/10.1016/j.jbc.2024.107158
+      "Angpt4", # Osteo-CAR https://doi.org/10.1016/j.jbc.2024.107158
+      "Wif1", # Osteo-CAR https://doi.org/10.1016/j.jbc.2024.107158
+      "Spp1", # pre-osteoblast https://doi.org/10.1016/j.jbc.2024.107158
+      "Mmp13", # pre-osteoblast https://doi.org/10.1016/j.jbc.2024.107158
+      "Alpl", # Osteo-CAR https://doi.org/10.1038/s41556-019-0439-6
+      "Slit2", # pre-osteoblast https://doi.org/10.1016/j.jbc.2024.107158
+      "Sp7", # Osteo-CAR and osteoblast https://doi.org/10.1038/s41556-019-0439-6
+      "Pth1r", # osteo ST1
+      "Bglap", # osteo https://doi.org/10.1016/j.jbc.2024.107158
+      "Bglap2", # osteoblasts https://doi.org/10.7554/eLife.54695
+      "Bglap3", # 
+      "Mepe", # osteocyte https://doi.org/10.1016/j.jbc.2024.107158
+      "Ibsp", # osteoblasts https://doi.org/10.7554/eLife.54695
+      "Phex" # osteocyte https://doi.org/10.1016/j.jbc.2024.107158
+      ),
+    "Chondro/Osteo/fibro/early mixed" = c(
+      "Tnc", # osteo-X https://doi.org/10.1016/j.jbc.2024.107158
+      "Ptgis", # osteo ST1
+      "Postn", # osteo-X https://doi.org/10.1016/j.jbc.2024.107158
+      "Ptn", # osteo-X https://doi.org/10.1016/j.jbc.2024.107158
+      "Comp", # fibro-chondro ST1
+      "Ogn", # in branch point cekk type to osteogenic state https://doi.org/10.1186/s13073-023-01224-0
+      "Aspn", # osteo-X https://doi.org/10.1016/j.jbc.2024.107158
+      "Gsn", # several undefined MSC populations 
+      "Apod", # several undefined MSC populations 
+      "Tnn" # osteo-X https://doi.org/10.1016/j.jbc.2024.107158
+      ),
+    "Chondro early/other/mixed" = c(
+      "Fmod", # chondro ST1
+      "Chad", # chondro ST1
+      "Prelp", # chondro ST1
+      "Mgp", # chondro ST1
+      "Crispld1",  # art ch https://doi.org/10.1016/j.jbc.2024.107158
+      "Cytl1" # art ch https://doi.org/10.1016/j.jbc.2024.107158
+      ),
+    "Articular cartilage/Synovial fibro" = c(  # these genes can be articular chondros or also early chondros or also early synovial fibros.
+      "Htra4", # see mspr
+      "Prg4", # art ch and syn fibro https://doi.org/10.1016/j.jbc.2024.107158
+      "Creb5" # see mspr
+      ),   
+    "Chondro late" = c(  
+      "Sox9", # chondro https://doi.org/10.1016/j.jbc.2024.107158
+      "Snorc",  # chondro https://doi.org/10.1016/j.jbc.2024.107158
+      "Acan"
+      ),
+    "Early Fibro mixed" = c(
+      "Dcn", # fibro ST1
+      "Lum", # fibro ST1
+      "Dpt", # fibro https://doi.org/10.1016/j.jbc.2024.107158
+      "Clec3b", # fibro https://doi.org/10.1016/j.jbc.2024.107158
+      "Cd34", # also arteriolar EC
+      "Thy1", # fibro, msc, related to osteogenesis https://doi.org/10.1096/fj.201701379R
+      "Pdgfra", # fibro ST1
+      "Pdgfrb" # 
+      )
   )
 
 # shorter list for str marker genes

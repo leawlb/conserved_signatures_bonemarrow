@@ -879,6 +879,41 @@ sce_species$custom_label <- factor(
 stopifnot(!is.na(sce_species$custom_label))
 ```
 
+```{r unif}
+
+sce_species$custom_label_unif <- unfactor(sce_species$custom_label)
+
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Erythroid 1"] <-  "Erythroid"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Erythroid 2"] <-  "Erythroid"
+sce_species$custom_label_unif[
+  sce_species$custom_label == "Erythroid 3"] <-  "Erythroid"
+
+sce_species$custom_label_unif <- factor(
+  sce_species$custom_label_unif,
+  levels = c(
+    "HSC",
+    "Activated MPP",
+    "Cycling MPP",
+    "Granu/mono progenitor",
+    "Cycling granu/mono",
+    "Neutro progenitor",
+    "Antigen-presenting",
+    "Late lymphoid",
+    "Baso/Mast progenitor",
+    "Mk/E/BM (more Mk and BM)",
+    "Mk/E/BM (more Ery)",
+    "Early erythroid progenitor",
+    "Erythroid",
+    "Late erythroid progenitor",
+    "Latest erythroid progenitor",
+    # contamination
+    "Low quality"
+    ))
+stopifnot(!is.na(sce_species$custom_label))
+```
+
 One last plot to confirm in correct order.
 
 ```{r heatmap_confirm, fig.height = 10, fig.width = 5}

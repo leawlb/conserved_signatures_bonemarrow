@@ -849,30 +849,12 @@ that similar to the mysterious cluster in mcar expresses Prg4 and Clic5.
 Maybe if I work together on both I can figure out what it is now.
 I will do that here and not with mcar because there are more cells here.
 
+For Prg4, Creb5 and Htra4 check supplementary table 1.
+
 #### Clic5: 
 - myoblast diff in skeletal muscle cells https://doi.org/10.1126/sciadv.adq6795
 - fibroblast-like synoviocytes are marked by Clic5 in synovial joints https://doi.org/10.1136/ard-2021-221682
 - expressed on bone-marrow derived macrophages https://doi.org/10.1038/s41467-017-00227-x
-
-#### Prg4:
-- expressed in synovial fibroblast progenitors https://doi.org/10.1136/ard-2021-221682
-- related to accumulation of macrophages in synovium/synovial fibrosis https://doi.org/10.1186/s13075-021-02621-9
-- reduces friction in the synovial fluid https://doi.org/10.1016/j.joca.2021.02.566
-- related to wound healing and scar formation https://doi.org/10.1038/s41536-022-00228-5
-- fibroadipogenic progenitors in muscle https://doi.org/10.1073/pnas.2417806122
-- progenitors that repair articular cartilage wounds https://doi.org/10.1172/jci.insight.167858
-- hallmark of articular cartilage chondrocytes https://doi.org/10.1038/s42003-021-01857-0
-- chondro-progenitor cells in superficial zone articular cartilage https://doi.org/10.3390/ijms25115605
-- lining synovial fibroblasts while Prg4 low, Thy1 high fibros are sublining https://doi.org/10.1016/j.isci.2024.109707
-
-#### Creb5:
-- TF that causes Prg4 expression in articular cartilage chondrocytes https://doi.org/10.1038/s42003-021-01857-0
-- causes Prg4 expression in articular cartilage chondrocyte progenitors https://doi.org/10.3390/ijms25115605
-
-#### Htra4:
-- articular cartilage chondrocyte-specific transcriptome https://doi.org/10.1016/j.joca.2021.03.007 
-- zone-specific in human cartilage superficial zone https://doi.org/10.1002/art.37760
-- in Prg4-high fibroblasts related to synovium in some way https://doi.org/10.1038/s42003-025-08250-1
 
 #### F13a1
 - originating from synovial fibroblasts https://doi.org/10.1186/s41232-022-00252-4

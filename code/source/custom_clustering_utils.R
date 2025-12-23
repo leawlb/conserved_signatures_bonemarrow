@@ -420,7 +420,7 @@ marker_genes_list_hsc_figs3 <- list(
       "Sell",
       "Cdk4"
     ),
-    "CC_entry_activation" = c(
+    "Cell_cycle_entry" = c(
       "Lig1",
       "Mcm7",
       "Hells",
@@ -1050,7 +1050,7 @@ marker_genes_list_str_figs3 <- list(
       "Limch1", 
       "Wif1"
     ),
-    "Earlier_Osteo" = c(
+    "Osteo" = c(
       "Spp1", 
       "Mmp13",
       "Bglap", 
@@ -1058,21 +1058,26 @@ marker_genes_list_str_figs3 <- list(
       "Ibsp"
       ),
     "Early_mixed_expression" = c( 
-      # These are genes that are expressed in some sort of multi-lineage
+      # These are genes that are expressed in some sort of early multi-lineage
       # cells or progenitor/MSC-like populations.
+      # Like genes expressed in bi-potent osteo-chondro progenitors.
       # Although they may be already strongly related to one lineage,
-      # expression in early multi-lineage cells has been observed.
+      # expression in early multi-lineage cells has been observed in other studies
+      # but also in our dataset.
       # Mostly excluding adipo-lineage gene expression.
+
       # Ordered rom biased towards osteo to chondro to fibro-ish but excluding
       # the lineage exclusive genes AS OBSERVED IN OUT DATASET.
-      "Tnc", # osteo-biased expression
-      "Runx2",
-      "Sp7", # osteo-chondro-biased epxression
+
+      # again, for sources please check supplementary table 1
+      "Tnc", # osteo-biased expression, also observed in CAR, MSC and chondro and important for niche function
+      "Runx2", # osteo-diff, also expressed in CARs, terminally diff chondros
+      "Sp7", # osteo diff, also in osteo-chondro progenitors 
       "Pth1r",
-      "Ptgis", # osteo-fibro-biased expression
+      "Ptgis", 
       "Postn",
       "Aspn", 
-      "Lum",  # osteo-fibro-and-chondro-biased expression
+      "Lum",  
       "Dcn",
       "Gsn", 
       "Apod", # fibro-chondro-biased
@@ -1092,7 +1097,7 @@ marker_genes_list_str_figs3 <- list(
       "Prg4",
       "Creb5" 
       ),   
-    "More_fibro" = c(
+    "Fibro" = c(
       "Dpt",
       "Clec3b", 
       "Cd34", 

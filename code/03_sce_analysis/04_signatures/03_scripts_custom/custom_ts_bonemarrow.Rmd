@@ -680,19 +680,21 @@ seu_ts_bone_marrow$custom_label[
 seu_ts_bone_marrow$custom_label[
   seu_ts_bone_marrow$clusters == "cluster-8"] <- "Late erythroid, male-biased"
 
+# for this dataset, the Mk and Ery lineage cells are "earlier" than the
+# myeloid cells in how I determined the levels of the original cell types
 seu_ts_bone_marrow$custom_label <- factor(
   seu_ts_bone_marrow$custom_label,
   levels = c(
     "HSC, female-biased",
     "HSC, male-biased",
-    "Early granu prog",
-    "Neutro prog",
-    "Neutro prog, male-biased",
     "Antigen-presenting and lymphoid",
     "Early Mk",
     "Erythroid, female-biased",
     "Erythroid, male-biased",
-    "Late erythroid, male-biased"
+    "Late erythroid, male-biased",
+    "Early granu prog",
+    "Neutro prog",
+    "Neutro prog, male-biased"
   ))
 
 stopifnot(!is.na(seu_ts_bone_marrow$custom_label))

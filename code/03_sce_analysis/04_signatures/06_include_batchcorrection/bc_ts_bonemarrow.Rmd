@@ -502,18 +502,22 @@ combined_ts_bone_marrow$batchc_sign_labels[
 Factorize for nicer plots.
 
 ```{r others2_level}
+
+# for this dataset, the Mk and Ery lineage cells are "earlier" than the
+# myeloid cells in how I determined the levels of the original cell types
+
 combined_ts_bone_marrow$batchc_sign_labels <- factor(
   combined_ts_bone_marrow$batchc_sign_labels,
   levels = c(  
     "HSC",
-    "Early Myeloid",
-    "Granu/Mono prog",
-    "Cycling Myeloid",
-    "Baso/Eo/Mast/Granu prog",
     "Mk prog",
     "Mk/Ery prog",
     "Early Ery prog",
-    "Late Ery prog"
+    "Late Ery prog",
+    "Baso/Eo/Mast/Granu prog",
+    "Early Myeloid",
+    "Granu/Mono prog",
+    "Cycling Myeloid"
    ))
 
 stopifnot(!is.na(combined_ts_bone_marrow$batchc_sign_labels))

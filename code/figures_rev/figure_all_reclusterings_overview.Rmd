@@ -20,7 +20,6 @@ library(tidyverse, quietly = TRUE)
 library(SingleCellExperiment, quietly = TRUE)
 library(ggpubr, quietly = TRUE)
 library(Seurat, quietly = TRUE)
-
 ```
 
 ```{r base_path}
@@ -92,7 +91,6 @@ seu_ts_bone_marrow_bc <- readRDS(base::paste0(
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/06_include_batch_correction/ts_bone_marrow.Rds"))
 ```
 
-
 ## Prep
 
 get the selected object by using the resolution df with the recorded
@@ -161,12 +159,22 @@ seu_ts_bone_marrow$seurat_rand <- seu_ts_bone_marrow_rand$seurat_clusters[
     colnames(seu_ts_bone_marrow),
     colnames(seu_ts_bone_marrow_rand))]
 
+seu_ts_bone_marrow$seurat_rand <- unfactor(seu_ts_bone_marrow$seurat_rand) 
+seu_ts_bone_marrow$seurat_rand <- factor(
+  seu_ts_bone_marrow$seurat_rand,
+  levels = c("5", "3", "0", "2", "1", "4", "6"))
+
 # after reclustering with BL6-only markers
 seu_ts_bone_marrow$seurat_mmms <- vector(length = ncol(seu_ts_bone_marrow))
 seu_ts_bone_marrow$seurat_mmms <- seu_ts_bone_marrow_mmms$seurat_clusters[
   match(
     colnames(seu_ts_bone_marrow),
-    colnames(seu_ts_bone_marrow_mmms))]
+  colnames(seu_ts_bone_marrow_mmms))]
+
+seu_ts_bone_marrow$seurat_mmms <- unfactor(seu_ts_bone_marrow$seurat_mmms) 
+seu_ts_bone_marrow$seurat_mmms <- factor(
+  seu_ts_bone_marrow$seurat_mmms,
+  levels = c("6", "11", "14", "1", "12", "7", "5", "9", "10", "8", "4", "0", "2", "3", "15", "13"))
 
 # after reclustering with conserved markers
 seu_ts_bone_marrow$seurat_mark <- vector(length = ncol(seu_ts_bone_marrow))
@@ -175,12 +183,22 @@ seu_ts_bone_marrow$seurat_mark <- seu_ts_bone_marrow_mark$seurat_clusters[
     colnames(seu_ts_bone_marrow),
     colnames(seu_ts_bone_marrow_mark))]
 
+seu_ts_bone_marrow$seurat_mark <- unfactor(seu_ts_bone_marrow$seurat_mark) 
+seu_ts_bone_marrow$seurat_mark <- factor(
+  seu_ts_bone_marrow$seurat_mark,
+  levels = c("3", "4", "8", "7", "2", "10", "5", "0", "1", "6", "9"))
+
 # after reclustering with signature genes
 seu_ts_bone_marrow$seurat_sign <- vector(length = ncol(seu_ts_bone_marrow))
 seu_ts_bone_marrow$seurat_sign <- seu_ts_bone_marrow_sign$seurat_clusters[
   match(
     colnames(seu_ts_bone_marrow),
     colnames(seu_ts_bone_marrow_sign))]
+
+seu_ts_bone_marrow$seurat_sign <- unfactor(seu_ts_bone_marrow$seurat_sign) 
+seu_ts_bone_marrow$seurat_sign <- factor(
+  seu_ts_bone_marrow$seurat_sign,
+  levels = c("4", "5", "6", "1", "8", "2", "3", "7", "0"))
 
 # after also adding a blind annotation of these same signature-based clusters
 seu_ts_bone_marrow$sign_blind_labels <- vector(length = ncol(seu_ts_bone_marrow))
@@ -195,6 +213,11 @@ seu_ts_bone_marrow$seurat_sign_bc <- seu_ts_bone_marrow_bc$seurat_clusters[
   match(
     colnames(seu_ts_bone_marrow),
     colnames(seu_ts_bone_marrow_bc))]
+
+seu_ts_bone_marrow$seurat_sign_bc <- unfactor(seu_ts_bone_marrow$seurat_sign_bc) 
+seu_ts_bone_marrow$seurat_sign_bc <- factor(
+  seu_ts_bone_marrow$seurat_sign_bc,
+  levels = c("1", "4", "5", "2", "6", "8", "0", "3", "7"))
 
 # after batch correction for signature clustering AND blind annotation
 seu_ts_bone_marrow$sign_bc_labels <- vector(length = ncol(seu_ts_bone_marrow))
@@ -234,12 +257,122 @@ for (treshold_t in names(seu_ts_bone_marrow_by_t)){
   colnames(seu_ts_bone_marrow@meta.data)[
     colnames(seu_ts_bone_marrow@meta.data) == "new_col"] <- colname
 }
-
-colnames(seu_ts_bone_marrow@meta.data)
-
 ```
 
 # Heatmaps
 
 Between original cell types and custom clustering.
 
+```{r make_heatmaps_function}
+
+make_heatmaps <- function(colname1, colname2, seu){
+
+  mat <- base::table(
+    seu@meta.data[,which(colnames(seu@meta.data) == colname1)], 
+    seu@meta.data[,which(colnames(seu@meta.data) == colname2)])
+
+  for(i in 1:ncol(mat)){
+    mat[,i] <- mat[,i]/base::sum(mat[,i])
+  }
+
+  plot_df <- base::as.data.frame(mat)
+
+  plot_df$Var1 <- factor(
+    plot_df$Var1,
+    levels = levels(seu@meta.data[,which(colnames(seu@meta.data) == colname1)]))
+  
+  plot_df$Var2 <- factor(
+    plot_df$Var2,
+    levels = rev(levels(seu@meta.data[,which(colnames(seu@meta.data) == colname2)])))
+
+  base_heatmap_return <- ggplot2::ggplot(
+    plot_df, 
+    aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+    ggplot2::geom_tile()+
+    theme_all+
+    ggplot2::theme(
+      legend.position = "none",
+      axis.text.x = element_text(
+        angle = 90
+      ),
+      axis.ticks.y = element_blank())+
+    ggplot2::scale_fill_gradientn(
+      colors = mycolors_to1,
+      limits = c(0, 1),
+      breaks = c(0, 0.5, 1))+
+    xlab(colname1)+
+    ylab(colname2)
+  
+
+  return(base_heatmap_return)
+}
+```
+
+```{r colnames}
+colnames(seu_ts_bone_marrow@meta.data)
+```
+
+Comparing original labels from the dataset to the ones I added from
+custom clustering and annotation.
+
+```{r fig.height = 10, fig.width = 10}
+make_heatmaps("cell_type", "custom_label", seu_ts_bone_marrow)
+```
+
+Comparing original labels to reclustering using signature genes.
+
+```{r fig.height = 10, fig.width = 4}
+make_heatmaps("cell_type", "seurat_sign", seu_ts_bone_marrow)
+```
+
+Comparing to signature genes after blind annotation of these clusters.
+
+```{r fig.height = 10, fig.width = 10}
+make_heatmaps("cell_type", "sign_blind_labels", seu_ts_bone_marrow)
+```
+
+Now comparing to clusters after signature genes reclustering 
+including batch correction
+
+```{r fig.height = 10, fig.width = 4}
+make_heatmaps("cell_type", "seurat_sign_bc", seu_ts_bone_marrow)
+```
+
+With blind annotation labels
+
+```{r fig.height = 10, fig.width = 10}
+make_heatmaps("cell_type", "sign_bc_labels", seu_ts_bone_marrow)
+```
+
+The same number of random genes as there are signature genes,
+no batch correction.
+
+```{r fig.height = 10, fig.width = 4}
+make_heatmaps("cell_type", "seurat_rand", seu_ts_bone_marrow)
+```
+
+Now compare to the other gene sets.
+
+```{r fig.height = 10, fig.width = 4}
+make_heatmaps("cell_type", "seurat_mark", seu_ts_bone_marrow)
+```
+
+```{r fig.height = 10, fig.width = 4}
+make_heatmaps("cell_type", "seurat_mmms", seu_ts_bone_marrow)
+```
+
+threshold testing
+
+```{r fig.height = 10, fig.width = 4}
+make_heatmaps("cell_type", "by_t_1", seu_ts_bone_marrow)
+```
+
+```{r fig.height = 10, fig.width = 4}
+make_heatmaps("cell_type", "by_p_1e-06", seu_ts_bone_marrow)
+```
+
+```{r}
+utils::sessionInfo()
+```

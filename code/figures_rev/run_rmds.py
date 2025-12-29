@@ -25,6 +25,7 @@ targets = targets + [OUTPUT_PATH + "/figure_s4.html"]
 targets = targets + [OUTPUT_PATH + "/figure_s3_heatmaps.html"]
 targets = targets + [OUTPUT_PATH + "/figure_s4_heatmaps.html"]
 targets = targets + [OUTPUT_PATH + "/figure_all_reclusterings_overview.html"]
+targets = targets + [OUTPUT_PATH + "/figure_batch_correction.html"]
 
 #-------------------------------------------------------------------------------
 
@@ -111,3 +112,15 @@ rule run_fig_overview:
     threads: 4
     script:
         "figure_all_reclusterings_overview.Rmd"
+
+rule run_fig_batchcorrection:
+    resources:
+        mem_mb=80000,
+        queues="medium-debian"
+    output:
+        OUTPUT_PATH + "/figure_batch_correction.html"
+    params:
+         base_path = BASE_PATH
+    threads: 4
+    script:
+        "figure_batch_correction.Rmd"

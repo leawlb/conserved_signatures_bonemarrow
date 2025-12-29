@@ -41,7 +41,7 @@ source("../figures/determine_params.R")
 ### Original
 
 ```{r load_orig}
-# custom clustered datasets
+# original dataset
 seu_ts_bone_marrow_orig <- readRDS(base::paste0(
   base_path,
   "/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_bone_marrow"))
@@ -371,6 +371,12 @@ make_heatmaps("cell_type", "by_t_1", seu_ts_bone_marrow)
 
 ```{r fig.height = 10, fig.width = 4}
 make_heatmaps("cell_type", "by_p_1e-06", seu_ts_bone_marrow)
+```
+
+## 
+
+```{r fig.height = 8, fig.width = 8}
+make_heatmaps("custom_label", "sign_bc_labels", seu_ts_bone_marrow)
 ```
 
 ```{r}

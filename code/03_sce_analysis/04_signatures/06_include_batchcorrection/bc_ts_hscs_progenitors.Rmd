@@ -493,13 +493,13 @@ combined_ts_hscs_progenitors$batchc_sign_labels <- factor(
   combined_ts_hscs_progenitors$batchc_sign_labels,
   levels = c(  
     "HSC",
-    "Lymphoid MPP",
-    "Mk/Ery",
     "Cycling",
     "Early Myeloid",
     "Granu/Mono prog",
     "More Granu prog",
-    "More Mono prog"
+    "More Mono prog",
+    "Lymphoid MPP",
+    "Mk/Ery"
    ))
 
 stopifnot(!is.na(combined_ts_hscs_progenitors$batchc_sign_labels))

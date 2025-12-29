@@ -215,7 +215,7 @@ FeaturePlot(seu_sign_o2, markers[7:12])
 # I had previously called this "cycling", too but cannot explain why atm
 
 seu_sign_o2$annotated_reclustered[
-  seu_sign_o2$seurat_clusters == nr] <- "Early Granu/Mono"
+  seu_sign_o2$seurat_clusters == nr] <- "Early Granu/Mono prog"
 ```
 
 ```{r others2_cluster1}
@@ -236,7 +236,7 @@ FeaturePlot(seu_sign_o2, markers[1:6])
 # granu/neutro direction 
 
 seu_sign_o2$annotated_reclustered[
-  seu_sign_o2$seurat_clusters == nr] <- "Granu"
+  seu_sign_o2$seurat_clusters == nr] <- "Granu prog"
 ```
 
 ```{r others2_cluster6}
@@ -258,7 +258,7 @@ FeaturePlot(seu_sign_o2, markers[1:6])
 # neutro, granu or mono
 
 seu_sign_o2$annotated_reclustered[
-  seu_sign_o2$seurat_clusters == nr] <- "Myeloid"
+  seu_sign_o2$seurat_clusters == nr] <- "Early Myeloid prog"
 ```
 
 ```{r others2_cluster10}
@@ -281,7 +281,7 @@ FeaturePlot(seu_sign_o2, markers[13:18])
 # TMEM176B and TMEM176A are mono dendritic genes, The others are 
 # mostly generally myeloid except CEBPE, LAMP1 is found in monos
 seu_sign_o2$annotated_reclustered[
-  seu_sign_o2$seurat_clusters == nr] <- "Mono/Dendritic"
+  seu_sign_o2$seurat_clusters == nr] <- "Mono/Dendritic prog"
 ```
 
 ```{r others2_cluster4}
@@ -302,7 +302,7 @@ FeaturePlot(seu_sign_o2, markers[1:6])
 # more "classic" lymphoid markers are not in the signature
 
 seu_sign_o2$annotated_reclustered[
-  seu_sign_o2$seurat_clusters == nr] <- "Lymphoid"
+  seu_sign_o2$seurat_clusters == nr] <- "Lymphoid prog"
 ```
 
 ```{r others2_cluster3}
@@ -463,13 +463,15 @@ seu_sign_o2$annotated_reclustered <- factor(
     "HSC3",
     "Cycling Early 10xV1",
     "Cycling 10xV2",
-    "Granu",
-    "Myeloid",
-    "Mono/Dendritic",
-    "Early Granu/Mono",
-    "Lymphoid",
+    "Early Myeloid prog",
+    "Early Granu/Mono prog",
+    "Granu prog",
+    "Mono/Dendritic prog",
+    "Lymphoid prog",
     "Mk/Ery1 10xV1",
-    "Mk/Ery2 10xV2"))
+    "Mk/Ery2 10xV2"
+    ))
+
 
 stopifnot(!is.na(seu_sign_o2$annotated_reclustered))
 ```
@@ -477,6 +479,10 @@ stopifnot(!is.na(seu_sign_o2$annotated_reclustered))
 ## Add clusters from the signature-based re-clustering
 
 For this dataset, there was custom labelling so there is nothing to add.
+
+```{r umaps_labels, fig.height = 6, fig.width = 6}
+Seurat::DimPlot(seu_sign_o2, reduction = "umap", group.by = "annotated_reclustered")
+```
 
 ## Save
 

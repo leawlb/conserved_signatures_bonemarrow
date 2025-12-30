@@ -413,7 +413,7 @@ print(table(seu_sign_o1$custom_label, seu_sign_o1$cell_type))
 Seurat::DimPlot(seu_sign_o1, reduction = "umap", group.by = "signature_label")
 ```
 
-```{r umaps_labels2, fig.height = 6, fig.width = 6}
+```{r umaps_labels2, fig.height = 6, fig.width = 8}
 Seurat::DimPlot(seu_sign_o1, reduction = "umap", group.by = "custom_label")
 ```
 

@@ -8,14 +8,14 @@ The three chosen datasets are ts_bone_marrow, mus_weinreb_hspc, and
 ts_all_stromal.
 
 They were chosen because they have relatively low resolution of cell types/
-clusters after I removed cells not found in our datase.
+clusters after I removed cells not found in our dataset.
 For example, ts_bone_marrow contained all bone marrow cells, including mature
-cells, which I had however removed, so the remaining progenitors, originally
+cells, which I had removed, so the remaining progenitors, originally
 making up only a small fraction, are labelled in low resolution.
 
-To fairly compare to our reclustering with optimized clustering resolution, 
-I will perform a custom clustering and cell type annotation based on my 
-expertise in computational analysis of hematopoietic and niche cells.
+Because of their low resolution, I will now also perform a custom clustering 
+and cell type annotation based on my expertise in hematopoietic and niche 
+cell type identities.
 
 Because it is much simpler and each dataset needs to be treated highly
 individually, I will perform the analysis in .Rmd scripts in contrast to
@@ -51,7 +51,6 @@ targets = targets + [OUTPUT_REP + "/custom_ts_bonemarrow.html"]
 targets = targets + [OUTPUT_REP + "/custom_mus_weinreb_hspc.html"]
 targets = targets + [OUTPUT_REP + "/custom_ts_all_stromal.html"]
 
-
 #-------------------------------------------------------------------------------
 
 localrules: all  
@@ -60,13 +59,10 @@ rule all:
     input:
         targets
  
-
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------
-
 
 # tabula sapiens adult bone marrow
-
 rule custom_ts_bonemarrow:
     input: 
         seu_input = config["base"] + config["metadata_paths"]["datasets_other_path"] + "/ts_bone_marrow",
@@ -85,6 +81,7 @@ rule custom_ts_bonemarrow:
     script:
         "03_scripts_custom/custom_ts_bonemarrow.Rmd"
 
+# Weinreb et al mouse HSPCs
 rule custom_mus_weinreb_hspc:
     input: 
         seu_input = config["base"] + config["metadata_paths"]["datasets_other_path"] + "/mus_weinreb_hspc",
@@ -103,6 +100,7 @@ rule custom_mus_weinreb_hspc:
     script:
         "03_scripts_custom/custom_mus_weinreb_hspc.Rmd"
 
+# tabula sapiens stromal cells
 rule custom_ts_all_stromal:
     input: 
         seu_input = config["base"] + config["metadata_paths"]["datasets_other_path"] + "/ts_all_stromal",

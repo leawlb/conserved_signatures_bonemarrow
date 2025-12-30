@@ -1,7 +1,8 @@
 
 # annotations, colors, and genes for the custom species-specific clusterings
-
 # since these are so many different cell types, I'm sourcing this out
+
+# also contains gene lists for the correspondinng supplementary figure heatmaps 
 
 #------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -22,7 +23,7 @@ factors_custom_hsc <- c(
     "Activated MPP cells 1",
     "Activated MPP cells 2",
     "Late MPP",
-    "Early myeloid",
+    "Early myeloid prog",
 
     "Early granu/mono",
     "Granu/mono progenitor",
@@ -401,9 +402,7 @@ marker_genes_list_hsc_figs3 <- list(
       "Mmrn1",
       "Mecom",
       "Cdkn1c", 
-      "Txnip"
-    ),  
-    "Stem" = c( # this includes expression in MPPs, albeit lower
+      "Txnip",
       "Lmo2",
       "Meis1",
       "Hlf", 

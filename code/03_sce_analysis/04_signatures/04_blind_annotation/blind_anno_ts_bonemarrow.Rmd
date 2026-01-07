@@ -202,7 +202,7 @@ ct_markers_o1[[nr]][
 FeaturePlot(seu_sign_o1, markers[1:6])
 # Itga2b, Tgfb1,Zfpm1, Gata2, Mpl as markers indicate Mk cells 
 
-seu_sign_o1$annotated_reclustered[seu_sign_o1$seurat_clusters == nr] <- "Mk"
+seu_sign_o1$annotated_reclustered[seu_sign_o1$seurat_clusters == nr] <- "Mk prog"
 ```
 
 ```{r others1_cluster4}
@@ -221,7 +221,7 @@ ct_markers_o1[[nr]][
 Seurat::FeaturePlot(seu_sign_o1, markers[1:6])
 # Itga2b, Klf1, Gata1, Zfpm1 indicate early Mk and Ery mixed cells
 
-seu_sign_o1$annotated_reclustered[seu_sign_o1$seurat_clusters == nr] <- "Mk/Ery" 
+seu_sign_o1$annotated_reclustered[seu_sign_o1$seurat_clusters == nr] <- "Mk/Ery prog" 
 ```
 
 ```{r others1_cluster2}
@@ -241,7 +241,7 @@ Seurat::FeaturePlot(seu_sign_o1, markers[1:6])
 # Gata1, Klf1, Blvrb, Epor are slightly more early-ish than Hb genes
 
 seu_sign_o1$annotated_reclustered[
-  seu_sign_o1$seurat_clusters == nr] <- "Ery" 
+  seu_sign_o1$seurat_clusters == nr] <- "Ery prog" 
 ```
 
 ```{r others1_cluster8}
@@ -261,7 +261,7 @@ ct_markers_o1[[nr]][
 Seurat::FeaturePlot(seu_sign_o1, markers[1:6])
 
 seu_sign_o1$annotated_reclustered[
-  seu_sign_o1$seurat_clusters == nr] <- "Late Ery"
+  seu_sign_o1$seurat_clusters == nr] <- "Late Ery prog"
 ```
 
 ```{r others1_cluster1}
@@ -323,7 +323,7 @@ Seurat::FeaturePlot(seu_sign_o1, markers[1:6])
 # mono and lymphoid do overlap some genes, so I went with a more mono anno
 
 seu_sign_o1$annotated_reclustered[
-  seu_sign_o1$seurat_clusters == nr] <- "Mono"
+  seu_sign_o1$seurat_clusters == nr] <- "Mono prog"
 ```
 
 ```{r others1_cluster0}
@@ -344,7 +344,7 @@ Seurat::FeaturePlot(seu_sign_o1, markers[1:6])
 # myeloid cells (not neutro or mono-restricted yet)
 
 seu_sign_o1$annotated_reclustered[
-  seu_sign_o1$seurat_clusters == nr] <- "Myeloid" 
+  seu_sign_o1$seurat_clusters == nr] <- "Myeloid prog" 
 ```
 
 ```{r others1_cluster5}
@@ -364,7 +364,7 @@ Seurat::FeaturePlot(seu_sign_o1, markers[1:6])
 # these are cycling clearly, but also express myeloid markers like Spi1
 
 seu_sign_o1$annotated_reclustered[
-  seu_sign_o1$seurat_clusters == nr] <- "Cycling Myeloid"
+  seu_sign_o1$seurat_clusters == nr] <- "Cycling Myeloid prog"
 ```
 
 Factorize for nicer plots.
@@ -374,14 +374,16 @@ seu_sign_o1$annotated_reclustered <- factor(
   seu_sign_o1$annotated_reclustered,
   levels = c(
     "HSC",
-    "Mk/Ery",
-    "Mk",
-    "Ery",
-    "Late Ery",
-    "Myeloid",
-    "Mono",
-    "Cycling Myeloid",
+    "Mk prog",
+    "Mk/Ery prog",
+    "Ery prog",
+    "Late Ery prog",
+    "Myeloid prog",
+    "Mono prog",
+    "Cycling Myeloid prog",
     "batch, Smart-Seq2"))
+
+print(sort(levels(seu_sign_o1$annotated_reclustered)))
 
 stopifnot(!is.na(seu_sign_o1$annotated_reclustered))
 ```
@@ -405,6 +407,14 @@ seu_sign_o1$custom_label <- seu_ts_bone_marrow_cust$custom_label[
 print(table(seu_sign_o1$custom_label, seu_sign_o1$signature_label))
 print(table(seu_sign_o1$cell_type, seu_sign_o1$signature_label))
 print(table(seu_sign_o1$custom_label, seu_sign_o1$cell_type))
+```
+
+```{r umaps_labels, fig.height = 6, fig.width = 6}
+Seurat::DimPlot(seu_sign_o1, reduction = "umap", group.by = "signature_label")
+```
+
+```{r umaps_labels2, fig.height = 6, fig.width = 8}
+Seurat::DimPlot(seu_sign_o1, reduction = "umap", group.by = "custom_label")
 ```
 
 ## Save

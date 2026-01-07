@@ -394,7 +394,17 @@ agg_cust_df_genes$cluster <- factor(
 agg_cust_df_genes$zscore_gene <- vector(
   length = nrow(agg_cust_df_genes), 
   mode = "numeric")
+```
 
+I had initially considered to scale them within each species
+separately, since the same cell types cannot be easily compared.
+
+However, this means that the scaling in the original and in the custom
+clusterings are not based on all the same cells.
+So species-specific differences in expression level are not shown.
+And here, we actually do want to compare across species, too.
+
+```{r scale_cust_within, eval = FALSE}
 # but scale WITHIN each species!
 agg_cust_df_mmus <- scale_expression(agg_cust_df_genes %>% 
   dplyr::filter(species == "BL6"))
@@ -406,6 +416,20 @@ agg_cust_df_mcar <- scale_expression(agg_cust_df_genes %>%
   dplyr::filter(species == "CAROLI"))
 
 # will not put back together because they contain different cell types
+```
+
+```{r scale_cust_across}
+
+agg_cust_df_genes <- scale_expression(agg_cust_df_genes)
+
+agg_cust_df_mmus <- agg_cust_df_genes %>% 
+  dplyr::filter(species == "BL6")
+agg_cust_df_mcas <- agg_cust_df_genes %>% 
+  dplyr::filter(species == "CAST")
+agg_cust_df_mspr <- agg_cust_df_genes %>% 
+  dplyr::filter(species == "SPRET")
+agg_cust_df_mcar <- agg_cust_df_genes %>% 
+  dplyr::filter(species == "CAROLI")
 ```
 
 ### Subset to the required cell types
@@ -437,14 +461,14 @@ e_base_heatmap_orig_all <- ggplot2::ggplot(
   ggplot2::scale_fill_gradientn(
     "z-score per gene\nacross all cell types", 
     colours = colors_z_score_ct,
-    breaks = c(-6, -3, 0, 3, 6), 
-    limits = c(-6,6))+
+    breaks = c(-7, -3.5, 0, 3.5, 7), 
+    limits = c(-7, 7))+
   ggplot2::theme(axis.text.x = element_text(angle = 90))+
   ggplot2::facet_grid(cols = vars(agg_orig_df_vis$species))
 e_base_heatmap_orig_all
 ```
 
-```{r e_theme_heatmap_orig_all, fig.height = 6, fig.width = 5}
+```{r e_theme_heatmap_orig_all, fig.height = 7, fig.width = 3}
 e_theme_heatmap_orig_all <- e_base_heatmap_orig_all+
   theme_all+
   ggplot2::theme(
@@ -485,8 +509,8 @@ f_base_heatmap_cust_mmus <- ggplot2::ggplot(
   ggplot2::scale_fill_gradientn(
     "z-score per gene\nacross all cell types", 
     colours = colors_z_score_ct,
-    breaks = c(-6, -3, 0, 3, 6), 
-    limits = c(-6,6))+
+    breaks = c(-7, -3.5, 0, 3.5, 7), 
+    limits = c(-7, 7))+
   ggplot2::theme(axis.text.x = element_text(angle = 90))
 f_base_heatmap_cust_mmus
 ```
@@ -530,8 +554,8 @@ g_base_heatmap_cust_mcas <- ggplot2::ggplot(
   ggplot2::scale_fill_gradientn(
     "z-score per gene\nacross all cell types", 
     colours = colors_z_score_ct,
-    breaks = c(-6, -3, 0, 3, 6), 
-    limits = c(-6,6))+
+    breaks = c(-7, -3.5, 0, 3.5, 7), 
+    limits = c(-7, 7))+
   ggplot2::theme(axis.text.x = element_text(angle = 90))
 g_base_heatmap_cust_mcas
 ```
@@ -571,8 +595,8 @@ h_base_heatmap_cust_mspr <- ggplot2::ggplot(
   ggplot2::scale_fill_gradientn(
     "z-score per gene\nacross all cell types", 
     colours = colors_z_score_ct,
-    breaks = c(-6, -3, 0, 3, 6), 
-    limits = c(-6,6))+
+    breaks = c(-7, -3.5, 0, 3.5, 7), 
+    limits = c(-7, 7))+
   ggplot2::theme(axis.text.x = element_text(angle = 90))
 h_base_heatmap_cust_mspr
 ```
@@ -612,8 +636,8 @@ i_base_heatmap_cust_mcar <- ggplot2::ggplot(
   ggplot2::scale_fill_gradientn(
     "z-score per gene\nacross all cell types", 
     colours = colors_z_score_ct,
-    breaks = c(-6, -3, 0, 3, 6), 
-    limits = c(-6,6))+
+    breaks = c(-7, -3.5, 0, 3.5, 7), 
+    limits = c(-7, 7))+
   ggplot2::theme(axis.text.x = element_text(angle = 90))
 i_base_heatmap_cust_mcar
 ```
@@ -645,7 +669,7 @@ i_theme_heatmap_cust_mcar
 
 Build the species-specific heatmaps together
 
-```{r fghi_heatmap, fig.height = 6, fig.width = 5}
+```{r fghi_heatmap, fig.height = 7, fig.width = 4}
 
 fghi_heatmap <- ggpubr::ggarrange(
   f_theme_heatmap_cust_mmus+ggplot2::theme(plot.margin = margin(0.1,0.1,0.4,0.1)),

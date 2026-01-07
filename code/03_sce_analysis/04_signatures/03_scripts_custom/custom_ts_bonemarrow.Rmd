@@ -34,12 +34,9 @@ library(SeuratObject, quietly = TRUE)
 
 # the un-clustered original object
 seu_ts_bone_marrow <- readRDS(snakemake@input[["seu_input"]])
-#seu_ts_bone_marrow <- readRDS("/home/l012t/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_bone_marrow")
-
 
 # load ensembl df to get the ENS IDs for the genes I need
 ensembl_hum <- base::readRDS(snakemake@input[["ensembl_hum"]])
-#ensembl_hum <- readRDS("/home/l012t/data/metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_hum")
 head(ensembl_hum)
 ```
 
@@ -68,7 +65,7 @@ nr_k <- 15
 resolution <- 0.5
 ```
 
-Use the seurat piepline roughly takin from sce_functions_reclustering.R
+Use the seurat piepline roughly taken from sce_functions_reclustering.R
 The seurat object should be pretty basic.
 
 For comparability between signature-reclustered and custom-reclustered
@@ -135,7 +132,7 @@ table(seu_ts_bone_marrow@meta.data$seurat_clusters)
 ## Clustering separation
 
 Look at the clusters.
-Check possible batch effects but I can't do much about them.
+Check possible batch effects but I won't do much about them.
 
 ```{r umaps_base, fig.height = 6, fig.width = 6}
 DimPlot(seu_ts_bone_marrow, reduction = "umap")
@@ -164,11 +161,12 @@ Now check the quality of cell type separation based on expressed genes.
 
 ```{r marker_genes}
 
-# these must be human genes
-# try straight up with the same genes as for mouse first
-# but then alter as necessary/possible
+# human genes
+# try with the orthologues of mouse genes I would use here
+# but then altered as necessary/possible
+# from supplementary table 1 of the corresponding publication
   marker_genes <- c(
-    "ALDH1A1", # HSC, Stem
+    "ALDH1A1",
     "PROCR",
     "CDKN1C",
     "CD34",
@@ -182,48 +180,47 @@ Now check the quality of cell type separation based on expressed genes.
     "MEIS1",
     "PBX1",
     "MSI2",
-    "ADGRL4", # MPP, progenitors, activation
+    "ADGRL4",
     "CDK4",
     "SOX4",
     "SPI1", 
-    "CEBPA", # Myeloid
+    "CEBPA", 
     "CTSG",
     "MPO",
     "PRTN3",
-    "ELANE", # Neutro
+    "ELANE", 
     "CEBPE", 
     "S100A8",
     "S100A9",
     "WFDC21P",
-    "CCR2", # Mono
+    "CCR2", 
     "IRF8",
     "MS4A6A",
-    "FLT3", # Lymphoid
+    "FLT3", 
     "SATB1",
     "DNTT",
     "CD79B", 
     "IL7R",
     "RAG1",
-    "CPA3", # Mast
+    "CPA3", 
     "HDC", 
     "MS4A2",
-    "LMO4", # Baso
-    "GATA2", # also Mk, Eo Baso and HSC
-    "ITGA2B", # Mk
+    "LMO4", 
+    "GATA2", 
+    "ITGA2B", 
     "PF4",
-    "BLVRB", # Mk Ery
+    "BLVRB", 
     "GATA1",
     "ZFPM1",
-    "EPOR", # Ery
+    "EPOR", 
     "HBA1",
     "KLF1",
     "HELLS",
     "LIG1",
     "MCM6", 
-    "CENPA", # CC
+    "CENPA", 
     "MKI67"
   )
-
 ```
 
 ```{r ensmus_ids}
@@ -381,8 +378,8 @@ cluster_markers[["cluster-6"]] %>%
   head(n = 40)
 ```
 
-Sorry, throughout this text I will also use the mouse gene nomenclature 
-because I'm so used to it.
+Using mouse and human gene name conventions interchangeably because I'm
+much more used to one than the other, sorry.
 
 "Cluster-5" is female-biased and found in all assays.
 It expresses Cdkn1c, Cd34, Mllt3, Mmrn, Mpl, Mecom, Meis1, Msi2, but no
@@ -394,27 +391,28 @@ from batch or other, probably between seyes?
 Since this cluster basically represents "female HSCs".
 
 In contrast, cluster-6 is male-exclusive. 
-High CD34, Mmrn1, Alcam, Hlf, Mecom, Meis1, PBX1, Msi2 expression.
-Top marker genes like CD69, MSI2, EGR1, Jun, Mmrn1, also suggest HSCs, the
+High Cd34, Mmrn1, Alcam, Hlf, Mecom, Meis1, Pbx1, Msi2 expression.
+Top marker genes like Cd69, Msi2, Egr1, Jun also suggest HSCs, the
 others I either don't know yet or also could be batch/sex.
 
 ```{r hsc_umaps_additional, fig.width = 4.5, fig.height = 4}
 
+# checking some interesting genes from the marker gene lists
 hsc_additional_genes <- c(
-  "HOPX", # related to HSPC biology, possible stem cell marker, stemness
-  "SOCS2", # HSC stemness
-  "BST2", # CD137, HSC quiescence and maintenance, division
-  "DEPP1", # related to autophagy? or hypoxia
-  "CD52", # related to lymphoma, lymphocytes but not stem cells
-  "CD37", # more lymphoid/mature
-  "PRDX1", # antioxidant, peroxidase
-  "SELL", # stemness
-  "RPS4X", # ribosomal really looks like batch, low qu
-  "FOS", # HSC subsets, stemness but not specific
-  "JUN", # HSC subsets but not specific
-  "EGR1", # immature state
-  "JUNB", # HSC subsets but not specific
-  "ELMO1" # in AML, related to Fos, HOPX, stemness
+  "HOPX", 
+  "SOCS2", 
+  "BST2", 
+  "DEPP1", 
+  "CD52", 
+  "CD37", 
+  "PRDX1",
+  "SELL", 
+  "RPS4X", 
+  "FOS", 
+  "JUN", 
+  "EGR1", 
+  "JUNB", 
+  "ELMO1"
 )
 
 plotlist <- lapply(as.list(hsc_additional_genes), function(gene){
@@ -470,7 +468,8 @@ early-mid myeloid.
 Also a bit of Gata2 and other eo/baso must stuff, like CPA3, HDC, MS4A2.
 The top markers are Prtn3, Mpo, Ctsg, Igll1, Calr, Srgn, Clec11a, 
 Gata2, AZU1, PRSS57.
-Could even be MPP because they also express some lymnphoid stuff and even some mk ery stuff like gata2, calr
+Could even be MPP because they also express some lymnphoid stuff and
+even some mk ery stuff like Gata2.
 
 Cluster 4 top markers are Lyz, Srgn, Cxcl8, Klf6, Actr2, Il1r2, Lyst,
 Klf2, Mpo, Fosb, Azu1, Vcan, Elane, Fos.
@@ -483,6 +482,7 @@ It is detected in all batches.
 
 ```{r myeloid_umaps_additional, fig.width = 4.5, fig.height = 4}
 
+# checking some interesting genes, some of which are well known
 myeloid_additional_genes <- c(
   "S100A10", # S100 genes primarily myeloid
   "S100A12",
@@ -494,48 +494,35 @@ myeloid_additional_genes <- c(
   "LST1", # mono/activation
   "MS4A6A", # mono
   "FCER1G", # neutrophil
-  "LGALS1", # several
   "NKG7", # nk cells
   "CAPG", # macrophage capping 
   "CLC", # granu/myeloid ish early progs eo baso mast
   "SNORD3A",
-  "CST7", # neutro ish
-  "AZU1", # neutrophil, looks earlier
-  "IGLL1",  # b cells
-  "CALR", # mk ery?
-  "PRSS57", # neutro
-  "SRGN", # immune cell infiltration
-  "CLEC11A", # immune cell infiltration
+  "CST7", 
+  "AZU1",
+  "IGLL1", # Ig gene
+  "CALR", 
+  "PRSS57", # Neutro/Granu https://doi.org/10.1073/pnas.1200470109
+  "SRGN", # neutros and others https://doi.org/10.3389/fonc.2013.00327
+  "CLEC11A", 
   "CXCL8",
   "EREG",
-  "KLF6", # myeloid
+  "KLF6",
   "KLF2",
   "ACTR2",
-  "LYST", # lysosomes/granules e.g. nk or tc
+  "LYST", 
   "VCAN",
-  "CYBB", # general immune cell actibity
+  "CYBB",
   "JCHAIN", # B cell lineage. antibody related
   "CD74", # antigen presenting
-  "HLA-DPA1",
-  "HLA-DRA",
-  "LSP1", # all leukocytes, most in myeloid
-  "IRF8", # myeloid/mono/macro/Dc and b cells
-  "RUNX2", # nk cells and DCs
-  "CD69", # add some other important markers
-  "PROM1", # hsc
-  "CD2", # neg in hsc
-  "CD38", # neg in hsc
-  "LYL1", # mpp
-  "CD33", # cmp
-  "LCN2", # gmp
-  "CXCR2", # proneu
-  "EPX", # eo
-  "FCER1A", # bm
-  "CLEC9A", # APC DC
-  "ITGAX", # CD11c, dc
-  "GP9", # mk
-  "VWF", # mk
-  "FLI1" # mk
+  "HLA-DPA1", # antigen presenting
+  "HLA-DRA" ,# antigen presenting
+  "LSP1",
+  "IRF8", 
+  "RUNX2", # macro TF
+  "PROM1", # add some other important markers from literature https://doi.org/10.3389/fphys.2022.1009160
+  "CD2", # mature lineage marker https://doi.org/10.4049/jimmunol.0802008
+  "CD38" # neg in hsc https://doi.org/10.3389/fphys.2022.1009160
 )
 
 plotlist <- lapply(as.list(myeloid_additional_genes), function(gene){
@@ -593,10 +580,11 @@ Strongly Ery, with HBAs and so on.
 
 ```{r erymk_umaps_additional, fig.width = 4.5, fig.height = 4}
 
+# interesting genes from the marker gene list
 erymk_additional_genes <- c(
   "CA1", # ery diff
   "CA2", # ery diff
-  "PRDX2", # related to anemia
+  "PRDX2", 
   "CYTL1", # ery mk progenitor
   "BLVRB", 
   "REXO2", # ery diff
@@ -608,7 +596,7 @@ erymk_additional_genes <- c(
   "PNMT",
   "EEF2", # elongation factor protein synth
   "EEF1G", # elongation factor protein synth
-  "APOE", # apoloprotein e
+  "APOE", 
   "TFR2", # transferrin receptor, precursors
   "HDHD3",
   "CDK6",
@@ -617,7 +605,7 @@ erymk_additional_genes <- c(
   "CXCL3", # inflammatory
   "TGFB1", # mk signalling
   "MGLL",
-  "CD9", # yes, CD for mks
+  "CD9", # Mk
   "HBA2", # hemeglobins
   "HBA1",
   "HBB",
@@ -671,28 +659,30 @@ seu_ts_bone_marrow$custom_label[
 
 # mk ery
 seu_ts_bone_marrow$custom_label[
-  seu_ts_bone_marrow$clusters == "cluster-7"] <- "Early Mk"
+  seu_ts_bone_marrow$clusters == "cluster-7"] <- "Early Mk prog"
 
 seu_ts_bone_marrow$custom_label[
-  seu_ts_bone_marrow$clusters == "cluster-0"] <- "Erythroid, female-biased"
+  seu_ts_bone_marrow$clusters == "cluster-0"] <- "Ery prog, female-biased"
 seu_ts_bone_marrow$custom_label[
-  seu_ts_bone_marrow$clusters == "cluster-2"] <- "Erythroid, male-biased"
+  seu_ts_bone_marrow$clusters == "cluster-2"] <- "Ery prog, male-biased"
 seu_ts_bone_marrow$custom_label[
-  seu_ts_bone_marrow$clusters == "cluster-8"] <- "Late erythroid, male-biased"
+  seu_ts_bone_marrow$clusters == "cluster-8"] <- "Late ery prog, male-biased"
 
+# for this dataset, the Mk and Ery lineage cells are "earlier" than the
+# myeloid cells in how I determined the levels of the original cell types
 seu_ts_bone_marrow$custom_label <- factor(
   seu_ts_bone_marrow$custom_label,
   levels = c(
     "HSC, female-biased",
     "HSC, male-biased",
+    "Antigen-presenting and lymphoid",
+    "Early Mk prog",
+    "Ery prog, female-biased",
+    "Ery prog, male-biased",
+    "Late ery prog, male-biased",
     "Early granu prog",
     "Neutro prog",
-    "Neutro prog, male-biased",
-    "Antigen-presenting and lymphoid",
-    "Early Mk",
-    "Erythroid, female-biased",
-    "Erythroid, male-biased",
-    "Late erythroid, male-biased"
+    "Neutro prog, male-biased"
   ))
 
 stopifnot(!is.na(seu_ts_bone_marrow$custom_label))
@@ -714,9 +704,9 @@ seu_ts_bone_marrow$custom_label_unif[
 
 # same with the two earlier erythroid clusters
 seu_ts_bone_marrow$custom_label_unif[
-  seu_ts_bone_marrow$custom_label == "Erythroid, female-biased"] <- "Early erythroid"
+  seu_ts_bone_marrow$custom_label == "Ery prog, female-biased"] <- "Early ery prog"
 seu_ts_bone_marrow$custom_label_unif[
-  seu_ts_bone_marrow$custom_label == "Erythroid, male-biased"] <- "Early erythroid"
+  seu_ts_bone_marrow$custom_label == "Ery prog, male-biased"] <- "Early ery prog"
 
 # same with the two neutro clusters, one is already mixed
 seu_ts_bone_marrow$custom_label_unif[
@@ -729,11 +719,10 @@ seu_ts_bone_marrow$custom_label_unif <- factor(
     "Early granu prog",
     "Neutro prog",
     "Antigen-presenting and lymphoid",
-    "Early Mk",
-    "Early erythroid",
-    "Late erythroid, male-biased"
+    "Early Mk prog",
+    "Early ery prog",
+    "Late ery prog, male-biased"
   ))
-
 
 stopifnot(!is.na(seu_ts_bone_marrow$custom_label_unif))
 ```
@@ -742,9 +731,9 @@ stopifnot(!is.na(seu_ts_bone_marrow$custom_label_unif))
 
 ```{r slightly_better_markers}
 
-# these must be human genes
-# try straight up with the same genes as for mouse first
-# but then alter as necessary/possible
+# human genes
+# taken from supp table 1 of the corresponding publications
+# for genes without reference mentioned here
 slightly_better_markers <- c(
     "CD34",
     "MPL",
@@ -752,63 +741,62 @@ slightly_better_markers <- c(
     "MECOM",
     "MLLT3",
     "SOCS2",
-    "HOPX",
+    "HOPX", # stemness https://doi.org/10.1038/s41388-020-1340-2
     "CDKN1C",
     "HLF",
     "MMRN1",
     "MSI2",
-    "PROM1",
+    "PROM1", # HSC https://doi.org/10.3389/fphys.2022.1009160
     "ALCAM", 
-    "CD38", # MPP, progenitors, activation
+    "CD38", # MPP, progenitors, activation https://doi.org/10.3389/fphys.2022.1009160
     "SPI1", 
-    "CEBPA", # Myeloid
+    "CEBPA", 
     "CTSG",
     "MPO",
     "PRTN3",
-    "LMO4", # Eo Baso, Mk, HSC
-    "CPA3", # Mast
-    "GATA2", # Baso
+    "LMO4", 
+    "CPA3", 
+    "GATA2", 
     "HDC", 
     "MS4A2",
-    "CEBPE", # Neutro
+    "CEBPE", 
     "ELANE", 
-    "AZU1",
+    "AZU1", # neutros https://doi.org/10.1002/1873-3468.14183
     "S100A8",
     "S100A9",
-    "S100A10",
-    "LYZ",
-    "CCR2", # Mono
+    "LYZ", # lysozyme
+    "CCR2", 
     "MS4A6A",
     "IRF8",
-    "ITGAX", # DC
-    "FLT3", # Lymphoid early-late
+    "ITGAX", # DCs https://doi.org/10.3389/fimmu.2025.1556992
+    "FLT3", 
     "IL7R",
     "SATB1", 
     "CD79B", 
     "DNTT",
-    "JCHAIN", # later 
+    "JCHAIN", # BC differentiation 
     "CD74", # antigen-presenting
-    "HLA-DPA1",
-    "HLA-DRA",
-    "ITGA2B", # Mk
+    "HLA-DPA1", # MHCII
+    "HLA-DRA", # MHCII
+    "ITGA2B",
     "PF4",
-    "GP9",
-    "PLEK",
-    "VWF",
+    "GP9", # Mk https://doi.org/10.1038/ncomms11208
+    "PLEK", # Mk https://doi.org/10.1182/blood-2006-08-038901
+    "VWF", # Mk https://doi.org/10.1038/ncomms11208
     "PBX1",
-    "ZFPM1", # Mk -> Ery
+    "ZFPM1", 
     "GATA1",
     "BLVRB", 
-    "KLF1", # Ery early
+    "KLF1",
     "EPOR",
-    "HBA1",
-    "HBB", # ery late
+    "HBA1", # hemoglobins
+    "HBB", 
     "HBA2",
-    "GYPA",
-    "HELLS", # cc entry
+    "GYPA", # Ery https://doi.org/10.1016/j.exphem.2023.05.001
+    "HELLS", 
     "LIG1",
     "MCM6", 
-    "CENPA", # CC
+    "CENPA", 
     "MKI67"
   )
 
@@ -966,6 +954,10 @@ ggplot2::ggplot(
   )
 
 ```
+
+```{r umaps_last, fig.height = 6, fig.width = 6}
+DimPlot(seu_ts_bone_marrow, reduction = "umap", group.by = "custom_label")
+``` 
 
 Save the object now.
 

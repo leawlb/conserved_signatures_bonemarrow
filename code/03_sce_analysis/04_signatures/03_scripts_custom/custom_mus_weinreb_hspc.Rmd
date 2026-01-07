@@ -7,6 +7,9 @@ output: html_document
 
 General build taken from custom_mmus_hsc.Rmd etc. 
 
+Cluster and annotate Weinreb et al mouse HSPC dataset into more
+finely resolved clusters.
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -30,11 +33,9 @@ library(Seurat, quietly = TRUE)
 library(SeuratObject, quietly = TRUE)
 ```
 
-```{r load_objects}
-
+```{r load_object}
 # the un-clustered original object
 seu_mus_weinreb_hspc <- readRDS(snakemake@input[["seu_input"]])
-#seu_mus_weinreb_hspc <- readRDS("/home/l012t/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/mus_weinreb_hspc")
 ```
 
 ```{r output_path}
@@ -68,7 +69,7 @@ The seurat object should be pretty basic.
 For comparability between signature-reclustered and custom-reclustered
 partitions, I will not perform batch correction here, either.
 
-Keeping it very basic here.
+Keeping it very basic.
 
 ```{r seurat_clustering_pipeline}
 
@@ -141,7 +142,7 @@ DimPlot(seu_mus_weinreb_hspc, reduction = "umap")+
   facet_wrap(facets = vars(seu_mus_weinreb_hspc@meta.data$Time.point), ncol = 2)
 ``` 
 
-There is some strong effect by time point.
+There is some strong technical effect by time point.
 
 ## Gene expression
 
@@ -149,8 +150,9 @@ Now check the quality of cell type separation based on expressed genes.
 
 ```{r marker_genes}
 
+# taken from supplementary table 1 of the corresponding publication
   marker_genes <- c(
-    "Procr", # HSC, Stem 
+    "Procr", 
     "Cdkn1c",
     "Mllt3",
     "Mmrn1",
@@ -162,49 +164,49 @@ Now check the quality of cell type separation based on expressed genes.
     "Meis1",
     "Pbx1",
     "Msi2",
-    "Adgrl4", # MPP, progenitors, activation
+    "Adgrl4", 
     "Cd34",
     "Cdk4",
     "Sox4",
     "Spi1", 
-    "Cebpa", # Myeloid
+    "Cebpa", 
     "Ctsg",
     "Mpo",
     "Prtn3",
-    "Elane", # Neutro
+    "Elane", 
     "Cebpe", 
     "S100a8",
     "S100a9",
     "Wfdc21",
-    "Ccr2", # Mono
+    "Ccr2", 
     "Irf8",
     "Ms4a6c",
-    "Flt3", # Lymphoid
+    "Flt3", 
     "Satb1",
     "Dntt",
     "Cd79b", 
     "Il7r",
     "Rag1",
-    "Cpa3", # Mast
+    "Cpa3",
     "Hdc", 
     "Ms4a2",
-    "Lmo4", # Baso
-    "Gata2", # also Mk, Eo Baso and HSC
-    "Itga2b", # Mk
+    "Lmo4",
+    "Gata2", 
+    "Itga2b", 
     "Pf4",
-    "Plek",
-    "Cd9",
-    "Blvrb", # Mk Ery
+    "Plek", #  Mk https://doi.org/10.1182/blood-2006-08-038901
+    "Cd9", # Mk https://doi.org/10.1182/blood.v97.7.1982
+    "Blvrb", 
     "Gata1",
     "Zfpm1",
-    "Epor", # Ery
+    "Epor", 
     "Hba-a1",
-    "Gypa",
+    "Gypa", # Ery https://doi.org/10.1016/j.exphem.2023.05.001
     "Klf1",
     "Hells",
     "Lig1",
     "Mcm6", 
-    "Cenpa", # CC
+    "Cenpa",
     "Lockd"
   )
 
@@ -301,6 +303,8 @@ plotlist
 
 ## Markers
 
+Get the markers to help annotate the clusters in more detail.
+
 ```{r markers}
 # replace the original idents with the new clusters 
 
@@ -326,7 +330,7 @@ cluster_markers <- lapply(clustlist, function(x){
 names(cluster_markers) <- base::sort(base::unique(seu_mus_weinreb_hspc@meta.data$clusters))
 ```
 
-Gave provisional names based on the heatmap.
+Gave provisional name ideas based on the heatmap.
 
 ### HSC and early progenitors
 
@@ -351,7 +355,7 @@ All three clusters are approximately in roughly the "same UMAP space".
 But each is predominantly detected in only of of the three time points.
 They are also of vastly different numbers of cells.
 
-Cluster 12 is tiny and only detected in time point 16 unless I'm mistaken.
+Cluster 12 is tiny and only detected in time point 16.
 It actually highly expresses classic Antigen-presenting markers so it may 
 in fact be closer to that than HSCs. 
 I suspected it may not be HSCs because this cluster only expresses Alcam 
@@ -375,6 +379,7 @@ lack of HSCs at the latest time point.
 
 ```{r hsc_umaps_additional, fig.width = 4.5, fig.height = 4}
 
+# checking some interesting genes from the marker lists 
 hsc_additional_genes <- c(
   "Mecom",
   "Ccl5",
@@ -450,13 +455,13 @@ Cluster 6 has top markers Elane, Prtn3, Mpo, Ctsg, Nkg7 (NK), Srgn,
 Calr, Prss57, Clec12 (mono), Gfi1, Cd63 (neutro) indicating a still 
 mixed-lineage early myeloid progenitor.
 
-Cluster 2 expresses clearly neutro genes like Nhp, S100a8 and S100a9, Camp,
+Cluster 2 expresses clearly neutro genes like Ngp, S100a8 and S100a9, Camp,
 Retnlg, Wfdc21, Chil3, Lrg1.
 
 Cluster 3 is mono-ish/antigen-present-ish.
 Irf8, Ccr1, Mgep1, Ahnak, Ly86 are mono/macro lineages.
-Ctss is going into apc direction.
-Some genes like Lyz2 etc also look a bit granu-ish.
+Ctss is going into APC direction.
+Some genes like Lyz2 etc also look granu-ish.
 
 Cluster 10 is very clearly Eo baso mast. 
 Prss34, Cpa3, Gata2 are baso mast, Ccl4 and Ccl3 are eo. 
@@ -470,6 +475,7 @@ think it's a bit later.
 
 ```{r myeloid_umaps_additional, fig.width = 4.5, fig.height = 4}
 
+# checking some interesting genes
 myeloid_additional_genes <- c(
   "Nkg7",
   "Srgn",
@@ -559,6 +565,7 @@ Cluster 11 has four Hbs as main markers - I think it looks the latest.
 
 ```{r erymk_umaps_additional, fig.width = 4.5, fig.height = 4}
 
+# some interesting genes from the marker gene lists
 erymk_additional_genes <- c(
   "Car2",
   "Car1",
@@ -600,44 +607,44 @@ seu_mus_weinreb_hspc$custom_label[
 seu_mus_weinreb_hspc$custom_label[
   seu_mus_weinreb_hspc$clusters == "cluster-9"] <- "Lymphoid MPP"
 seu_mus_weinreb_hspc$custom_label[
-  seu_mus_weinreb_hspc$clusters == "cluster-6"] <- "Early myeloid"
+  seu_mus_weinreb_hspc$clusters == "cluster-6"] <- "Early myeloid prog"
 seu_mus_weinreb_hspc$custom_label[
-  seu_mus_weinreb_hspc$clusters == "cluster-2"] <- "Neutro"
+  seu_mus_weinreb_hspc$clusters == "cluster-2"] <- "Neutro prog"
 seu_mus_weinreb_hspc$custom_label[
-  seu_mus_weinreb_hspc$clusters == "cluster-3"] <- "Mono"
+  seu_mus_weinreb_hspc$clusters == "cluster-3"] <- "Mono prog"
 seu_mus_weinreb_hspc$custom_label[
-  seu_mus_weinreb_hspc$clusters == "cluster-10"] <- "Eo/Baso/Mast/Mk"
+  seu_mus_weinreb_hspc$clusters == "cluster-10"] <- "Eo/Baso/Mast/Mk prog"
 seu_mus_weinreb_hspc$custom_label[
-  seu_mus_weinreb_hspc$clusters == "cluster-8"] <- "Lymphoid"
+  seu_mus_weinreb_hspc$clusters == "cluster-8"] <- "Lymphoid prog"
 seu_mus_weinreb_hspc$custom_label[
-  seu_mus_weinreb_hspc$clusters == "cluster-5"] <- "Later lymphoid, time point 16"
+  seu_mus_weinreb_hspc$clusters == "cluster-5"] <- "Later lymphoid prog"
 seu_mus_weinreb_hspc$custom_label[
   seu_mus_weinreb_hspc$clusters == "cluster-12"] <- "Antigen-presenting"
 seu_mus_weinreb_hspc$custom_label[
-  seu_mus_weinreb_hspc$clusters == "cluster-0"] <- "Early ery 1"
+  seu_mus_weinreb_hspc$clusters == "cluster-0"] <- "Early ery prog 1"
 seu_mus_weinreb_hspc$custom_label[
-  seu_mus_weinreb_hspc$clusters == "cluster-4"] <- "Early ery 2"
+  seu_mus_weinreb_hspc$clusters == "cluster-4"] <- "Early ery prog 2"
 seu_mus_weinreb_hspc$custom_label[
-  seu_mus_weinreb_hspc$clusters == "cluster-7"] <- "Erythroid"
+  seu_mus_weinreb_hspc$clusters == "cluster-7"] <- "Ery prog"
 seu_mus_weinreb_hspc$custom_label[
-  seu_mus_weinreb_hspc$clusters == "cluster-11"] <- "Late ery"
+  seu_mus_weinreb_hspc$clusters == "cluster-11"] <- "Late ery prog"
 
 seu_mus_weinreb_hspc$custom_label <- factor(
   seu_mus_weinreb_hspc$custom_label,
   levels = c(
     "HSC and MPP",
     "Lymphoid MPP",
-    "Early myeloid",
-    "Neutro",
-    "Mono",
-    "Eo/Baso/Mast/Mk",
-    "Lymphoid",
-    "Later lymphoid, time point 16",
+    "Early myeloid prog",
+    "Neutro prog",
+    "Mono prog",
+    "Eo/Baso/Mast/Mk prog",
+    "Lymphoid prog",
+    "Later lymphoid prog",
     "Antigen-presenting",
-    "Early ery 1",
-    "Early ery 2",
-    "Erythroid",
-    "Late ery"
+    "Early ery prog 1",
+    "Early ery prog 2",
+    "Ery prog",
+    "Late ery prog"
   ))
 
 stopifnot(!is.na(seu_mus_weinreb_hspc$custom_label))
@@ -651,32 +658,31 @@ stopifnot(!is.na(seu_mus_weinreb_hspc$custom_label))
 
 seu_mus_weinreb_hspc$custom_label_unif <- unfactor(seu_mus_weinreb_hspc$custom_label)
 
-# the two early Ery overlap quite significantly but I think the "Erthroid"
+# the two early Ery overlap quite significantly but I think the "Ery prog"
 # cluster already looks more mature compared to those
 seu_mus_weinreb_hspc$custom_label_unif[
-  seu_mus_weinreb_hspc$custom_label == "Early ery 1"] <- "Early ery"
+  seu_mus_weinreb_hspc$custom_label == "Early ery prog 1"] <- "Early ery prog"
 seu_mus_weinreb_hspc$custom_label_unif[
-  seu_mus_weinreb_hspc$custom_label == "Early ery 2"] <- "Early ery"
+  seu_mus_weinreb_hspc$custom_label == "Early ery prog 2"] <- "Early ery prog"
 
 seu_mus_weinreb_hspc$custom_label_unif <- factor(
   seu_mus_weinreb_hspc$custom_label_unif,
   levels = c(
     "HSC and MPP",
     "Lymphoid MPP",
-    "Early myeloid",
-    "Neutro",
-    "Mono",
-    "Eo/Baso/Mast/Mk",
-    "Lymphoid",
-    "Later lymphoid, time point 16",
+    "Early myeloid prog",
+    "Neutro prog",
+    "Mono prog",
+    "Eo/Baso/Mast/Mk prog",
+    "Lymphoid prog",
+    "Later lymphoid prog",
     "Antigen-presenting",
-    "Early ery",
-    "Erythroid",
-    "Late ery"
+    "Early ery prog",
+    "Ery prog",
+    "Late ery prog"
   ))
 
 stopifnot(!is.na(seu_mus_weinreb_hspc$custom_label_unif))
-
 ```
 
 #### One last plot to check
@@ -690,32 +696,28 @@ slightly_better_markers <- c(
     "Mpl",
     "Mecom",
     "Meis1",
-    "Ctla2a",
     "Ly6a",
-    "Nrgn",
     "Msi2",
     "Hlf",
     "Adgrl4",
     "Cd34",
-    "Cdk6",
+    "Cdk6", # https://doi.org/10.1182/blood-2014-06-584417
     "Cdk4",
-    "Ccnd1",
-    "Runx2",
+    "Ccnd1", # cell cycle
     "Flt3",
     "Sox4",
     "Satb1",
-    "Tcf4",
     "Spi1",
     "Ctsg",
-    "Prss57",
+    "Prss57", # Neutro/Granu https://doi.org/10.1073/pnas.1200470109
     "Mpo",
     "Prtn3",
     "Elane",
     "Cebpe",
     "S100a8",
     "S100a9",
-    "Retnlg",
-    "Ngp",
+    "Retnlg", # neutro https://doi.org/10.1038/s41467-021-22973-9
+    "Ngp", # neutro https://doi.org/10.1038/s41467-021-22973-9
     "Irf8",
     "Ccr2",
     "Ms4a6c",
@@ -724,39 +726,36 @@ slightly_better_markers <- c(
     "Hdc",
     "Ms4a2",
     "Gata2",
-    "Ccl4",
-    "Ccl3",
     "Dntt1",
-    "Vpreb1",
-    "Igll1",
-    "Vpreb3",
+    "Vpreb1", # BC development
+    "Igll1", # Ig gene
+    "Vpreb3", # BC development
     "Il7r",
-    "Cd79a",
-    "Cd79b",
-    "Igkc",
-    "Ighm",
-    "Iglc2",
-    "Cd74",
-    "Ccl5",
-    "H2-Eb1",
-    "H2-Aa",
-    "Fscn1",
-    "Ccr7",
-    "Ctss",
-    "Pf4",
-    "Plek",
+    "Cd79a", # BC development
+    "Cd79b", # BC development
+    "Igkc", # Ig gene
+    "Ighm", # Ig gene
+    "Iglc2", # Ig gene
+    "Cd74", # antigen presentation https://doi.org/10.3748/wjg.15.2855
+    "H2-Eb1", # MHCII gene
+    "H2-Aa", # MHCII gene
+    "Fscn1", # DCs https://doi.org/10.4049/jimmunol.1001667
+    "Ccr7", # immune cells
+    "Ctss", # antigen presentation among other things https://doi.org/10.1016/j.mam.2022.101106
+    "Pf4", 
+    "Plek", # see above
     "Itga2b",
-    "Cd9",
+    "Cd9", # see above
     "Zfpm1",
     "Blvrb",
     "Klf1",
-    "Ermap",
+    "Ermap", # Ery https://www.ncbi.nlm.nih.gov/gene?Db=gene&Cmd=DetailsSearch&Term=114625
     "Epor",
-    "Tspo2",
-    "Hba-a1",
-    "Hbb-bt",
-    "Gypa",
-    "Alas2"
+    "Tspo2", # Ery https://doi.org/10.1074/jbc.RA119.011679
+    "Hba-a1", # hemoglobin
+    "Hbb-bt", # hemoglobin
+    "Gypa", # see above
+    "Alas2" # Ery https://doi.org/10.3389/fimmu.2024.1431303
   )
 
 slightly_better_markers[duplicated(slightly_better_markers)]
@@ -899,6 +898,10 @@ ggplot2::ggplot(
     axis.text.x = element_text(angle = 90)
   )
 ```
+
+```{r umaps_last, fig.height = 6, fig.width = 6}
+DimPlot(seu_mus_weinreb_hspc, reduction = "umap", group.by = "custom_label")
+``` 
 
 Save the object now.
 

@@ -41,7 +41,6 @@ source(file =  snakemake@params[["plotting"]])
 
 ```{r load_objects}
 sce_species <- base::readRDS(file = snakemake@input[["sce_species"]])
-#sce_species <- base::readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/01_mnnc/comparison/sce_mspr_str_Object_ID-01")
 
 fraction_curr <- "str"
 species_curr <- "mspr"
@@ -51,8 +50,7 @@ stopifnot(unique(sce_species$Species_ID == species_curr))
 
 # define output path here
 # since in an .Rmd file run by snakemake the only output defined
-# by snakemake is the html, any other output must be
-# defined manually
+# by snakemake is the html, any other output must be defined manually
 base_path_data <- snakemake@params[["OUTPUT_DAT"]]
 output_path <- base::paste0(base_path_data, "/02_clst/custom/sce_mspr_str_custom.rds")
 print(output_path)
@@ -196,11 +194,11 @@ but let's start with this first.
 
 if(fraction_curr == "str"){
   marker_genes <- c(
-    "Adipoq", # adipo CAR
-    "Cxcl12", # also arteriolar EC
+    "Adipoq", 
+    "Cxcl12", 
     "Kitl", 
     "Lepr",
-    "Alpl", # Osteo
+    "Alpl", 
     "Anxa1",
     "Bglap",
     "Bglap2",
@@ -214,7 +212,7 @@ if(fraction_curr == "str"){
     "Sp7",
     "Spp1",
     "Tnc",
-    "Acan", # Chondro
+    "Acan", 
     "Adamts5",
     "Chad",
     "Fmod",
@@ -223,52 +221,51 @@ if(fraction_curr == "str"){
     "Prelp",
     "Prg4",
     "Sox9",
-    "Comp", # fibro chondro
+    "Comp", 
     "S100a10",
-    "Cd34", # fibro
+    "Cd34",
     "Col3a1",
     "Dcn",
     "Fn1",
     "Lum",
     "Pdgfra",
     "Thy1",
-    "Cdh5", # pan endo
+    "Cdh5", 
     "Pecam1",
-    "Car4", # capillary
+    "Car4",
     "Rgcc",
     "Timp4",
-    "Efnb2", # Arteriolar
+    "Efnb2", 
     "Hey1",
     "Ly6a",
     "Sox17",
-    "Ackr1", # Venous/sinusoidal
+    "Ackr1",
     "Emcn",
     "Ephb4",
     "Icam1",
     "Lrg1",
     "Nr2f2",
     "Selp",
-    "Vcam1", # sinusoidal
+    "Vcam1", 
     "Flt4",
     "Stab2",
     "Tfpi",
-    "Ccl21a", # Lymphatic EC
+    "Ccl21a", 
     "Lyve1", 
     "Pdpn",
     "Prox1",
-    "Rgs4", # pericyte
+    "Rgs4",
     "Rgs5",
     "Steap4",
-    "Acta2", # smooth muscle
+    "Acta2",
     "Myh11", 
     "Tagln",
-    "Myod1", # just some skeletal muscle markers for contamination
-    "Myh2",
-    "Des",
-    "Cd3d", # just some mature immune cell markers for contamination
-    "Cd8a",
-    "Cd4",
-    "Il7r",
+    "Myod1", # just some skeletal muscle markers for contamination https://doi.org/10.4161/epi.25441
+    "Myh2", # skeletal muscle https://doi.org/10.1038/s41467-025-56896-6
+    "Cd3d", # TC just some mature immune cell markers for contamination
+    "Cd8a", # TC
+    "Cd4", # TC
+    "Il7r", # check also HSPC part of supp table 1
     "Cd79a",
     "Ighm",
     "Gzmb",

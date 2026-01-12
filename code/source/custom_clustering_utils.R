@@ -25,43 +25,42 @@ factors_custom_hsc <- c(
     "Late MPP",
     "Early myeloid prog",
 
-    "Early granu/mono",
-    "Granu/mono progenitor",
-    "Neutro progenitor",
-    "Later granu/neutro",
+    "Early granu/mono prog",
+    "Granu/mono prog",
+    "Neutro prog",
+    "Later granu/neutro prog",
 
-    "Early lymphoid",
-    "Lymphoid",
-    "Late lymphoid",
-    "Late/Cycling lymphoid",
+    "Early lymphoid prog",
+    "Lymphoid prog",
+    "Late lymphoid prog",
+    "Late/Cycling lymphoid prog",
 
-    "Baso/Mast progenitor",
-    "Mk/E/BM (more Mk and BM)",
-    "Mk/E/BM (more Ery)",
-    "Early Mk progenitor",
-    "Mk/Ery (more Mk)",
-    "Mk/Ery",
-    "Early ery/baso/mast 1",
-    "Early ery/baso/mast 2",
-    "Early ery",
-    "Early erythroid progenitor",
-    "Ery progenitor",
-    "Erythroid 1",
-    "Erythroid 2",
-    "Erythroid 3",
-    "Late erythroid progenitor",
-    "Latest erythroid progenitor",
+    "BM prog",
+    "Mk/Ery/BM (more Mk/BM) prog",
+    "Mk/Ery/BM (more Ery) prog",
+    "Early Mk prog",
+    "Mk/Ery (more Mk) prog",
+    "Mk/Ery prog",
+    "Early ery/BM 1",
+    "Early ery/BM 2",
+    "Early ery prog",
+    "Ery prog",
+    "Ery prog 1",
+    "Ery prog 2",
+    "Ery prog 3",
+    "Late ery prog",
+    "Latest ery prog",
     "Cycling",
     "Cycling (more M-phase)",
     "Cycling (more S-phase)",
     "Cycling MPP",
     "Cycling, mostly myeloid",
-    "Cycling granu/mono",
-    "Cycling ery",
+    "Cycling granu/mono prog",
+    "Cycling ery prog",
     # separate cells that would be removed
     "Antigen-presenting",
     "Mono/antigen-presenting",
-    "Late neutro",
+    "Late neutro prog",
     "Late immune, mixed",
     "Late neutro/ery, mixed",
     "Low quality",
@@ -78,38 +77,36 @@ factors_custom_hsc_unif <- c(
     "Activated MPP",
     "Activated MPP cells",
     "Late MPP",
-    "Early myeloid",
+    "Early myeloid prog",
 
-    "Early granu/mono",
-    "Granu/mono progenitor",
-    "Neutro progenitor",
-    "Later granu/neutro",
+    "Early granu/mono prog",
+    "Granu/mono prog",
+    "Neutro prog",
+    "Later granu/neutro prog",
 
-    "Early lymphoid",
-    "Lymphoid",
-    "Late lymphoid",
-    "Late/Cycling lymphoid",
+    "Early lymphoid prog",
+    "Lymphoid prog",
+    "Late lymphoid prog",
+    "Late/Cycling lymphoid prog",
 
-    "Baso/Mast progenitor",
-    "Mk/E/BM (more Mk and BM)",
-    "Mk/E/BM (more Ery)",
-    "Early Mk progenitor",
-    "Mk/Ery (more Mk)",
-    "Mk/Ery",
-    "Early ery/baso/mast",
-    "Early ery",
-    "Early erythroid progenitor",
-    "Ery progenitor",
-    "Erythroid",
-    "Late erythroid progenitor",
-    "Latest erythroid progenitor",
+    "BM prog",
+    "Mk/Ery/BM (more Mk/BM) prog",
+    "Mk/Ery/BM (more Ery) prog",
+    "Early Mk prog",
+    "Mk/Ery (more Mk) prog",
+    "Mk/Ery prog",
+    "Early ery/BM prog",
+    "Early ery prog",
+    "Ery prog",
+    "Late ery prog",
+    "Latest ery prog",
     "Cycling",
     "Cycling (more M-phase)",
     "Cycling (more S-phase)",
     "Cycling MPP",
     "Cycling, mostly myeloid",
-    "Cycling granu/mono",
-    "Cycling ery",
+    "Cycling granu/mono prog",
+    "Cycling ery prog",
     # separate cells that would be removed
     "Antigen-presenting",
     "Mono/antigen-presenting",
@@ -133,37 +130,36 @@ col_custom_hsc <- c(
   "Activated MPP cells 1" = "#f49792ff", # mcas
   "Activated MPP cells 2" = "#e95e57ff", # mcas
   "Late MPP" = "#e5530fff", # mcas
-  "Early myeloid" = "#9d5c1fff", # mspr
-  "Early granu/mono" = "#c87121ff", # mcas
-  "Granu/mono progenitor" = "#e28c02ff", # mmus, mcar
-  "Neutro progenitor" = "#f1ac3dff", # mspr, mcar
-  "Later granu/neutro" = "#fc8c23ff", # mcas
-  "Early lymphoid" = "#ffd000ff", # mmus, mspr
-  "Lymphoid" = "#ffe28aff", # mcas
-  "Late lymphoid" = "#faf24fff", # mcar
-  "Late/Cycling lymphoid" = "#ffff75ff", # mspr
-  "Baso/Mast progenitor" = "#ab00fbff", # mmus, mcas, mspr, mcar
-  "Mk/E/BM (more Mk and BM)" = "#6e468bff", # mcar
-  "Mk/E/BM (more Ery)" = "#9d81fbff", # mcar
-  "Early Mk progenitor" = "#8d0153ff", # mspr
-  "Mk/Ery (more Mk)" = "#8e3268ff", # mmus 
-  "Mk/Ery" = "#d857a2ff", # mcas
-  "Early ery/baso/mast 1" = "#993a8eff", # mspr
-  "Early ery/baso/mast 2" = "#d857c9ff", # mspr
-  "Early ery" = "#c519bdff", # mmus 
-  "Early erythroid progenitor" = "#f4538eff", # mcar
-  "Ery progenitor" = "#f989b2ff", # mmus, mcas, mspr
-  "Erythroid 1" = "#b32e5fff", # mcar
-  "Erythroid 2" = "#ff9bc0ff", # mcar
-  "Erythroid 3" = "#f4bde6ff", # mcar
-  "Late erythroid progenitor" = "#c26cacff", # mcar
-  "Latest erythroid progenitor" = "#6e468bff", # mcar
+  "Early myeloid prog" = "#9d5c1fff", # mspr
+  "Early granu/mono prog" = "#c87121ff", # mcas
+  "Granu/mono prog" = "#e28c02ff", # mmus, mcar
+  "Neutro prog" = "#f1ac3dff", # mspr, mcar
+  "Later granu/neutro prog" = "#fc8c23ff", # mcas
+  "Early lymphoid prog" = "#ffd000ff", # mmus, mspr
+  "Lymphoid prog" = "#ffe28aff", # mcas
+  "Late lymphoid prog" = "#faf24fff", # mcar
+  "Late/Cycling lymphoid prog" = "#ffff75ff", # mspr
+  "BM prog" = "#ab00fbff", # mmus, mcas, mspr, mcar
+  "Mk/Ery/BM (more Mk/BM) prog" = "#6e468bff", # mcar
+  "Mk/Ery/BM (more Ery) prog" = "#9d81fbff", # mcar
+  "Early Mk prog" = "#8d0153ff", # mspr
+  "Mk/Ery (more Mk) prog" = "#8e3268ff", # mmus 
+  "Mk/Ery prog" = "#d857a2ff", # mcas
+  "Early ery/BM prog 1" = "#993a8eff", # mspr
+  "Early ery/BM prog 2" = "#d857c9ff", # mspr
+  "Early ery prog" = "#f4538eff", # mmus mcar
+  "Ery prog" = "#f989b2ff", # mmus, mcas, mspr
+  "Ery prog 1" = "#b32e5fff", # mcar
+  "Ery prog 2" = "#ff9bc0ff", # mcar
+  "Ery prog 3" = "#f4bde6ff", # mcar
+  "Late ery prog" = "#c26cacff", # mcar
+  "Latest ery prog" = "#6e468bff", # mcar
   "Cycling" = "#b5b5b5ff", # mcas
   "Cycling (more M-phase)" = "#a68482ff", # mmus 
   "Cycling (more S-phase)" = "#cbb9b9ff", # mmus 
   "Cycling MPP" = "#c2ac89ff", # mcar
   "Cycling, mostly myeloid" = "#98877dff", # mspr
-  "Cycling granu/mono" = "#dfdcd6ff", # mcar
+  "Cycling granu/mono prog" = "#dfdcd6ff", # mcar
   "Cycling ery" = "#c3a4b0ff", # mspr
   # separate cells that would be removed
   "Antigen-presenting" = "#4c64fbff", # mcar
@@ -185,34 +181,32 @@ col_custom_hsc_unif <- c(
   "Activated MPP" = "#c8605aff", # mmus, mcar 
   "Activated MPP cells" = "#e95e57ff", # mcas
   "Late MPP" = "#e5530fff", # mcas
-  "Early myeloid" = "#9d5c1fff", # mspr
-  "Early granu/mono" = "#c87121ff", # mcas
-  "Granu/mono progenitor" = "#e28c02ff", # mmus, mcar
-  "Neutro progenitor" = "#f1ac3dff", # mspr, mcar
-  "Later granu/neutro" = "#fc8c23ff", # mcas
-  "Early lymphoid" = "#ffd000ff", # mmus, mspr
-  "Lymphoid" = "#ffe28aff", # mcas
-  "Late lymphoid" = "#faf24fff", # mcar
-  "Late/Cycling lymphoid" = "#ffff75ff", # mspr
-  "Baso/Mast progenitor" = "#ab00fbff", # mmus, mcas, mspr, mcar
-  "Mk/E/BM (more Mk and BM)" = "#6e468bff", # mcar
-  "Mk/E/BM (more Ery)" = "#9d81fbff", # mcar
-  "Early Mk progenitor" = "#8d0153ff", # mspr
-  "Mk/Ery (more Mk)" = "#8e3268ff", # mmus 
-  "Mk/Ery" = "#d857a2ff", # mcas
-  "Early ery/baso/mast" = "#993a8eff", # mspr
-  "Early ery" = "#c519bdff", # mmus 
-  "Early erythroid progenitor" = "#f4538eff", # mcar
-  "Ery progenitor" = "#f989b2ff", # mmus, mcas, mspr
-  "Erythroid" = "#b32e5fff", # mcar
-  "Late erythroid progenitor" = "#c26cacff", # mcar
-  "Latest erythroid progenitor" = "#6e468bff", # mcar
+  "Early myeloid prog" = "#9d5c1fff", # mspr
+  "Early granu/mono prog" = "#c87121ff", # mcas
+  "Granu/mono prog" = "#e28c02ff", # mmus, mcar
+  "Neutro prog" = "#f1ac3dff", # mspr, mcar
+  "Later granu/neutro prog" = "#fc8c23ff", # mcas
+  "Early lymphoid prog" = "#ffd000ff", # mmus, mspr
+  "Lymphoid prog" = "#ffe28aff", # mcas
+  "Late lymphoid prog" = "#faf24fff", # mcar
+  "Late/Cycling lymphoid prog" = "#ffff75ff", # mspr
+  "BM prog" = "#ab00fbff", # mmus, mcas, mspr, mcar
+  "Mk/E/BM (more Mk/BM) prog" = "#6e468bff", # mcar
+  "Mk/E/BM (more Ery) prog" = "#9d81fbff", # mcar
+  "Early Mk progeprognitor" = "#8d0153ff", # mspr
+  "Mk/Ery (more Mk) prog" = "#8e3268ff", # mmus 
+  "Mk/Ery prog" = "#d857a2ff", # mcas
+  "Early ery/BM prog" = "#993a8eff", # mspr
+  "Early ery prog" = "#f4538eff", # mmus, mcar
+  "Ery prog" = "#f989b2ff", # mmus, mcas, mspr, mcar
+  "Late ery prog" = "#c26cacff", # mcar
+  "Latest ery prog" = "#6e468bff", # mcar
   "Cycling" = "#b5b5b5ff", # mcas
   "Cycling (more M-phase)" = "#a68482ff", # mmus 
   "Cycling (more S-phase)" = "#cbb9b9ff", # mmus 
   "Cycling MPP" = "#c2ac89ff", # mcar
   "Cycling, mostly myeloid" = "#98877dff", # mspr
-  "Cycling granu/mono" = "#dfdcd6ff", # mcar
+  "Cycling granu/mono prog" = "#dfdcd6ff", # mcar
   "Cycling ery" = "#c3a4b0ff", # mspr
   # separate cells that would be removed
   "Antigen-presenting" = "#4c64fbff", # mcar
@@ -229,6 +223,7 @@ col_custom_hsc_unif <- c(
 #------------------------------------------------------------------------------
 
 # hsc marker genes list long
+# check supp table 1 of the corresponding publication for sources not mentioned
 # comments relate to the species-specific clustering
   marker_genes_list_hsc <- list(
     "HSC" = c(
@@ -239,27 +234,28 @@ col_custom_hsc_unif <- c(
       "Gng11",
       "Mllt3",
       "Socs2",
-
-      "Cdkn1c", # HSC-specific, works for all and I known them well
       "Procr",
+      "Pdzk1ip1", 
+
+      "Cdkn1c", # HSC-specific, works for all species-ish
       "Mmrn1",
       "Mecom",
       "Mpl",
-      "Pdzk1ip1", 
 
-      "Ltb", # mostly HSC, works for all, and I know them
+      "Ltb", # mostly HSC, works for all
       "Hlf", 
       "Ldhb",
 
       "Txnip", # redox functions, likely also expressed in other clusters
       "Pbx1",
 
-      "Angpt1", # quite broad already, but highest in HSC and well-known mostly
+      "Angpt1", # quite broad already, but highest in HSC and well-known 
       "Hoxa9",
       "Lmo2",
       "Meis1",
       "Msi2"
     ),
+
     "MPP" = c(
       "Adgrl4", 
       "Cd34", 
@@ -268,13 +264,15 @@ col_custom_hsc_unif <- c(
       "Sell",
       "Cdk4"
     ),
+
     "Myeloid_general" = c(
       "Spi1", 
       "Cebpa",
       "Ctsg",
       "Mpo",
       "Prtn3",
-      "F13a1"),
+      "F13a1"
+    ),
 
     "Neutro" = c(
       "Elane", 
@@ -283,98 +281,102 @@ col_custom_hsc_unif <- c(
       "S100a8",
       "S100a9",
       "Wfdc21",
-      "Chil1"),
+      "Chil1" # neutro https://doi.org/10.3389/fimmu.2022.824385
+    ), 
 
     "Mono" = c(  
       "Ccr2",
       "Irf8",
       "Ly86",
-      "Ms4a6c"),
+      "Ms4a6c"
+    ),
 
     "Antigen_presenting_contamination" = c(
-      "Cd74",
-      "H2-Aa",
-      "H2-Eb1",
-      "H2-Ab1",
-      "Ctss"),
+      "Cd74", # antigen presentation https://doi.org/10.3748/wjg.15.2855
+      "H2-Aa", # MHCII gene
+      "H2-Eb1", # MHCII gene
+      "H2-Ab1", # MHCII gene
+      "Ctss" # antigen presentation among other things https://doi.org/10.1016/j.mam.2022.101106
+    ),
 
     "Lymphoid_early" = c(
-      "Tcf4",
       "Flt3", 
       "Satb1",
       "Dntt"),
 
     "Lymphoid_late" = c(
-      "Ighm",
+      "Ighm", # Ig gene
       "Il7r",
-      "Rag1",
-      "Vpreb1",
-      "Vpreb3",
-      "Cd79b", 
-      "Igkc"),
+      "Rag1", # lymphoid https://doi.org/10.1093/nar/27.14.2938
+      "Vpreb1", # BC development
+      "Vpreb3", # BC development
+      "Cd79b", # BC development
+      "Igkc" # Ig gene
+    ),
 
     "Lymph_contamination" = c(
-      "Ccl5", # NK
       "Cd3e", # TC
       "Cd8a",
-      "Tcf7"),
+      "Tcf7" # lymphoid/TC https://doi.org/10.3389/fimmu.2020.00470
+    ),
 
     "Mast/Baso" = c(
       "Mcpt8", 
       "Hdc", 
       "Lmo4", 
-      "Gzmb",
-      "Egr1",
+      "Gzmb", # granzyme b
       "Cpa3", 
       "Ms4a2",
       "Prss34",
-      "Fcer1a",
-      "Gata2"#  also Mk, Eo Baso and HSC
+      "Fcer1a", # baso mast progenitors https://doi.org/10.1038/s41467-023-38356-1
+      "Gata2"
     ),
 
     "Mk" = c(
       "Itga2b", 
-      "Cavin2",
+      "Cavin2", # Mk http://dx.doi.org/10.1097/BS9.0000000000000187
       "Pf4",
-      "Clec4d",
-      "Plek",
-      "Fli1"),
+      "Plek", # Mk https://doi.org/10.1182/blood-2006-08-038901
+      "Fli1" # Mk https://doi.org/10.1182/blood-2017-02-770958
+    ),
 
     "Mk/Ery" = c(
       "Zfpm1",
-      "Gata1", 
-      "Trib2"),
+      "Gata1"
+    ),
 
     "Ery" = c(
-      "Frat2",
-      "Ass1",
-      "Aqp11",
       "Klf1",
       "Blvrb",
-      "Tspo2",
+      "Tspo2", # Ery https://doi.org/10.1074/jbc.RA119.011679
       "Epor", 
       "Gfi1b",
-      "Gypa",
-      "Hba-a1",
-      "Hbb-bs"),
+      "Gypa",  # Ery https://doi.org/10.1016/j.exphem.2023.05.001
+      "Hba-a1", # Hb gene
+      "Hbb-bs" # Hb gene
+    ),
 
     "CC entry/activation" = c(
       "Lig1",
       "Mcm7",
       "Hells",
-      "Mcm6"),
+      "Mcm6"
+    ),
 
     "Cell cycle S phase" = c(
-      "Aurkb",
-      "Cdk1"
+      "Cdk1", # https://doi.org/10.1083/jcb.200702034
+      "Brca2", #  https://doi.org/10.1091/mbc.02-02-0030
+      "Pcna" # https://doi.org/10.1002/jcp.1041540106
       ),
 
     "Cell cycle M phase" = c(
-      "Cdc20",
-      "Ccnb2",
-      "Knstrn"),
+      "Cdc20", # https://doi.org/10.1016/j.molcel.2017.11.008
+      "Aurkb", # https://doi.org/10.1016/j.bbrc.2004.01.178
+      "Ccnb2", #  https://doi.org/10.1091/mbc.02-02-0030
+      "Knstrn" # https://doi.org/10.1101/2023.03.14.532643
+    ),
 
-    "Cell cycle general" = c(
+    "Cell cycle used general" = c(
       "Mki67",
       "Lockd",
       "Cenpa" 
@@ -383,6 +385,7 @@ col_custom_hsc_unif <- c(
 
 # for figure s3
 # names related to merged clustering
+# all sources in supp table 1 of corresponding publication
 marker_genes_list_hsc_figs3 <- list(
     "HSC_by_spec" = c(
       "Slamf1", # generally weak
@@ -431,7 +434,7 @@ marker_genes_list_hsc_figs3 <- list(
   )
 
 #------------------------------------------------------------------------------
-# best_marker_genes, a shorter list
+# best_marker_genes, a shorter list from above, see also for sources
 
 best_marker_genes_hsc <- c(
   "Ly6a", # stem
@@ -443,46 +446,44 @@ best_marker_genes_hsc <- c(
   "Hlf",
   "Meis1",
   "Msi2",
-  "Adgrl4", # mpp compartment
+  "Adgrl4",
   "Cd34",
-  "Spi1", # early myeloid
+  "Spi1", 
   "Cebpa",
   "Mpo",
   "Elane",
-  "Gfi1", # neutro
+  "Gfi1", 
   "S100a8",
   "Wfdc21",
-  "Irf8", # mono
+  "Irf8", 
   "Ly86",
   "Ms4a6c",
-  "Flt3", # b early
+  "Flt3", # 
   "Satb1",
   "Dntt",
   "Il7r",
-  "Vpreb1", # b later
+  "Vpreb1", 
   "Cd79b",
-  "Gzmb", # baso mast
+  "Gzmb", 
   "Cpa3",
   "Ms4a2",
-  "Cavin2", # mk
+  "Cavin2",
   "Pf4", 
   "Itga2b",
   "Zfpm1",
-  "Klf1", # ery earliest
+  "Klf1",
   "Tspo2",
-  "Epor", # ery later
+  "Epor",
   "Gypa",
   "Hba-a1",
-  "Lig1", # cc entry
+  "Lig1", 
   "Mcm6",
-  "Aurkb", # s phase
   "Cdk1",
-  "Cdc20", # mphase
+  "Cdc20", 
   "Knstrn",
-  "Mki67", # cycling general
-  "Ccl5", # contamination, Nk
+  "Mki67", 
   "Cd8a",
-  "Cd74", # contamination, antigen presenting
+  "Cd74",
   "H2-Aa"
 )
 

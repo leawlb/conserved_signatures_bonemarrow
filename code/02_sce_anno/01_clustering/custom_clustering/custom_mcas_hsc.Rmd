@@ -187,9 +187,10 @@ but let's start with this first.
 
 ```{r marker_genes}
 
+# check supp table 1 of corresponding publication for sources not mentioned
 if(fraction_curr == "hsc"){
   marker_genes <- c(
-    "Aldh1a1", # HSC, Stem
+    "Aldh1a1", 
     "Procr",
     "Cdkn1c",
     "Gng11",
@@ -206,60 +207,59 @@ if(fraction_curr == "hsc"){
     "Slamf1",
     "Txnip",
     "Msi2",
-    "Adgrl4", # MPP, progenitors, activation
+    "Adgrl4", 
     "Cd34", 
     "Cdk4",
     "Sox4",
     "Spi1", 
-    "Cebpa", # Myeloid
+    "Cebpa", 
     "Ctsg",
     "Mpo",
     "Prtn3",
-    "Elane", # Neutro
+    "Elane", 
     "Cebpe", 
     "Gfi1", 
     "S100a8",
     "S100a9",
     "Wfdc21",
-    "Ccr2", # Mono
+    "Ccr2", 
     "Irf8",
     "Ly86",
     "Ms4a6c",
-    "Flt3", # Lymphoid
+    "Flt3", 
     "Satb1",
     "Dntt",
     "Cd79b", 
     "Il7r",
     "Rag1",
-    "Ighm",
-    "Vpreb1",
-    "Vpreb3",
-    "Igkc",
-    "Ccl5", # NK
+    "Ighm", # Ig gene
+    "Vpreb1", # BC development
+    "Vpreb3", # BC development
+    "Igkc", # Ig gene
     "Cd3e", # TC
-    "Cd8a",
-    "Tcf7",    
-    "Cpa3", # Mast
+    "Cd8a", # TC
+    "Tcf7", # lymphoid/TC https://doi.org/10.3389/fimmu.2020.00470   
+    "Cpa3",
     "Hdc", 
     "Ms4a2",
-    "Lmo4", # Baso
+    "Lmo4", 
     "Mcpt8", 
     "Prss34",
-    "Gata2", # also Mk, Eo Baso and HSC
-    "Itga2b", # Mk
+    "Gata2", 
+    "Itga2b", 
     "Pf4",
-    "Blvrb", # Mk Ery
+    "Blvrb", 
     "Gata1",
     "Zfpm1",
-    "Epor", # Ery
+    "Epor", 
     "Gfi1b",
     "Hba-a1",
     "Klf1",
-    "Dctpp1", # CC entry
+    "Dctpp1", 
     "Hells",
     "Lig1",
     "Mcm6", 
-    "Cenpa", # CC
+    "Cenpa", 
     "Lockd", 
     "Mki67"
   )
@@ -501,28 +501,36 @@ like Tsix, mt genes etc.
 Probably not many strong, meaniningful differences between these clusters.
 
 ```{r markers_mpp}
-# still kind of HSC-looking and not very activated
+# still kind of HSC-looking and not very activated based on markers
 cluster_markers[[1]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 40)
-# even more HSC-looking but a bit more lympho?
-# some batch-y gene expression, like Tsix, Mt genes
+
+# even more HSC-looking but a bit more lympho too?
+# some batch-y low quality gene expression, like Tsix, Mt genes
 cluster_markers[[13]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 40)
+
 # a bit more mature looking than 13, also looking much more batch-y
 cluster_markers[[12]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 40)
-# nicely activated MPP like, much less HSC-like
+
+# clearly activated MPP-like, much less HSC-like
 cluster_markers[[10]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 40)
+
 # just mostly activated, some MPP, not much else?
 cluster_markers[[4]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 40)
 ```
+
+Cannot really clearly separate very different MPP clusters except for 
+level of activation.
+Some look a bit low quality/batchy.
 
 ### Myeloid
 
@@ -531,17 +539,20 @@ cluster_markers[[4]] %>%
 cluster_markers[[2]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 40)
-# earlier myeloid, more neutro-biased
+
+# later myeloid, more neutro-biased
 cluster_markers[[8]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 40)
-# this cluster looks myeloid early to late
+
+# this cluster looks myeloid early to much later
 # also some mk ery expression
 # much more neutro-biased
 cluster_markers[[14]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 40)
-# Antigen presenting genes like Cd74, H2s
+
+# Antigen presenting genes like Cd74, H2s could be contamination
 cluster_markers[[3]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 40)
@@ -563,10 +574,12 @@ cluster_markers[[9]] %>%
 cluster_markers[[5]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 40)
+
 # purely ery
 cluster_markers[[15]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 40)
+
 # mk and baso mast, more the latter
 cluster_markers[[11]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
@@ -604,9 +617,9 @@ sce_species$custom_label[
 
 # myeloid
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "2"] <-  "Early granu/mono"  
+  sce_species$cluster_louvain_custom == "2"] <-  "Early granu/mono prog"  
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "8"] <-  "Later granu/neutro"  
+  sce_species$cluster_louvain_custom == "8"] <-  "Later granu/neutro prog"  
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "3"] <-  "Late immune, mixed"
 sce_species$custom_label[
@@ -614,15 +627,15 @@ sce_species$custom_label[
 
 # lymphoid
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "9"] <-  "Lymphoid"
+  sce_species$cluster_louvain_custom == "9"] <-  "Lymphoid prog"
 
 # mk ery baso mast
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "5"] <-  "Mk/Ery"
+  sce_species$cluster_louvain_custom == "5"] <-  "Mk/Ery prog"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "11"] <-  "Baso/Mast progenitor"
+  sce_species$cluster_louvain_custom == "11"] <-  "BM prog"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "15"] <-  "Ery progenitor"
+  sce_species$cluster_louvain_custom == "15"] <-  "Ery prog"
 
 # cycling
 sce_species$custom_label[
@@ -637,12 +650,12 @@ sce_species$custom_label <- factor(
     "Late MPP",
     "Activated MPP cells 1",
     "Activated MPP cells 2",
-    "Early granu/mono",
-    "Later granu/neutro",
-    "Lymphoid",
-    "Baso/Mast progenitor",
-    "Mk/Ery",
-    "Ery progenitor",
+    "Early granu/mono prog",
+    "Later granu/neutro prog",
+    "Lymphoid prog",
+    "BM prog",
+    "Mk/Ery prog",
+    "Ery prog",
     "Cycling",
     # contamination
     "Late immune, mixed",
@@ -674,12 +687,12 @@ sce_species$custom_label_unif <- factor(
     "Early MPP cells",
     "Late MPP",
     "Activated MPP cells",
-    "Early granu/mono",
-    "Later granu/neutro",
-    "Lymphoid",
-    "Baso/Mast progenitor",
-    "Mk/Ery",
-    "Ery progenitor",
+    "Early granu/mono prog",
+    "Later granu/neutro prog",
+    "Lymphoid prog",
+    "BM prog",
+    "Mk/Ery prog",
+    "Ery prog",
     "Cycling",
     # contamination
     "Late immune, mixed",

@@ -8,4 +8,4 @@ snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resour
 snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resources.mem_mb}]" -p -j8 -c20 -s custom_snakefile.py --configfile ../../config.yaml --latency-wait 60 --use-conda -n
 
 # with reports
-snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resources.mem_mb}]" -p -j8 -c20 -s custom_snakefile.py --configfile ../../config.yaml --latency-wait 60 --use-conda --config run_custom_reports=True -n
+snakemake --cluster "bsub -q {resources.queue} -n{threads} -R rusage[mem={resources.mem_mb}]" -p -j8 -c20 -s custom_snakefile.py --configfile ../../config.yaml --latency-wait 60 --use-conda --config run_custom_reports=True -R custom_str_clustering_report_unif  custom_str_clustering_report custom_str_expression_report custom_hsc_clustering_report_unif custom_hsc_clustering_report custom_hsc_expression_report -n

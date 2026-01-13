@@ -833,7 +833,7 @@ sce_species$custom_label[
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "14"] <-  "Mk/Ery/BM (more Mk/BM) prog"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "12"] <-  "Mk/Ery/BM (more ery) prog"
+  sce_species$cluster_louvain_custom == "12"] <-  "Mk/Ery/BM (more Ery) prog"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "8"] <-  "BM prog"
 
@@ -864,7 +864,7 @@ sce_species$custom_label <- factor(
     "Late lymphoid prog",
     "BM prog",
     "Mk/Ery/BM (more Mk/BM) prog",
-    "Mk/Ery/BM (more ery) prog",
+    "Mk/Ery/BM (more Ery) prog",
     "Early ery prog",
     "Ery prog 1",
     "Ery prog 2",
@@ -900,8 +900,8 @@ sce_species$custom_label_unif <- factor(
     "Antigen-presenting",
     "Late lymphoid prog",
     "BM prog",
-    "Mk/Ery/BM (more Mk/BM)",
-    "Mk/Ery/BM (more ery)",
+    "Mk/Ery/BM (more Mk/BM) prog",
+    "Mk/Ery/BM (more Ery) prog",
     "Early ery prog",
     "Ery prog",
     "Late ery prog",

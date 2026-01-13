@@ -40,14 +40,27 @@ library(ggalluvial, quietly = TRUE)
 ```
 
 ```{r load_objects}
-sce_mmus_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mmus_str_custom.rds")
-sce_mcas_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcas_str_custom.rds")
-sce_mspr_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mspr_str_custom.rds")
-sce_mcar_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcar_str_custom.rds")
+base_path <- snakemake@params[["base_path"]]
+#base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008"
+
+sce_mmus_str <- readRDS(base::paste0(
+  base_path,
+  "/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mmus_str_custom.rds"))
+sce_mcas_str <- readRDS(base::paste0(
+  base_path,
+  "/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcas_str_custom.rds"))
+sce_mspr_str <- readRDS(base::paste0(
+  base_path,
+  "/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mspr_str_custom.rds"))
+sce_mcar_str <- readRDS(base::paste0(
+  base_path,
+  "/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcar_str_custom.rds"))
 ```
 
 ```{r load_merged}
-sce_str_all_cells <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/sce_str-02")
+sce_str_all_cells <- readRDS(base::paste0(
+  base_path,
+  "/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/sce_str-02"))
 
 # remove unnecessary assays because the objects become too large to load
 assays(sce_str_all_cells) <- list(
@@ -89,7 +102,9 @@ gc()
 ```
 
 ```{r load_anno}
-sce_str_anno <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data_freeze/05_annotated_objects/sce_str.rds")
+sce_str_anno <- readRDS(base::paste0(
+  base_path,
+  "/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10"))
 
 sce_str_all_cells$celltypes <- vector(length = ncol(sce_str_all_cells))
 sce_str_all_cells$celltypes <- sce_str_anno$celltypes[
@@ -118,7 +133,8 @@ print(sort(unique(sce_str_all_cells$custom_label)))
 
 ```{r factor_and_colors}
 
-unique(sce_str_all_cells$custom_label)[!unique(sce_str_all_cells$custom_label) %in% factors_custom_str_unif]
+unique(sce_str_all_cells$custom_label)[!unique(sce_str_all_cells$custom_label) %in%
+  factors_custom_str_unif]
 factors_custom_str_unif[!factors_custom_str_unif %in% sce_str_all_cells$custom_label]
 
 # for nicer handling factor the custom labels, too
@@ -486,3 +502,6 @@ ggplot2::ggplot(data = all_df2,
   ggplot2::scale_fill_manual(values = col_cts_str_orig)
 ```
 
+```{r sessioninfo}
+utils::sessionInfo()
+```

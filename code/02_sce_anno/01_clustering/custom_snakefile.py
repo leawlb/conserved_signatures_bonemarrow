@@ -253,7 +253,8 @@ if config["run_custom_reports"]:
             colors_path = COLORS,
             plotting = "../../source/plotting.R",
             custom_utils = "../../source/custom_clustering_utils.R",
-            colors = "../../source/colors.R"
+            colors = "../../source/colors.R",
+            base_path = config["base"]
         threads: 10
         script:
             "custom_clustering/custom_hsc_clustering_report.Rmd"
@@ -270,7 +271,8 @@ if config["run_custom_reports"]:
             colors_path = COLORS,
             plotting = "../../source/plotting.R",
             custom_utils = "../../source/custom_clustering_utils.R",
-            colors = "../../source/colors.R"
+            colors = "../../source/colors.R",
+            base_path = config["base"]
         threads: 10
         script:
             "custom_clustering/custom_hsc_clustering_report_unif.Rmd"
@@ -306,7 +308,8 @@ if config["run_custom_reports"]:
             colors_path = COLORS,
             plotting = "../../source/plotting.R",
             custom_utils = "../../source/custom_clustering_utils.R",
-            colors = "../../source/colors.R"
+            colors = "../../source/colors.R",
+            base_path = config["base"]
         threads: 10
         script:
             "custom_clustering/custom_str_clustering_report.Rmd"
@@ -323,7 +326,8 @@ if config["run_custom_reports"]:
             colors_path = COLORS,
             plotting = "../../source/plotting.R",
             custom_utils = "../../source/custom_clustering_utils.R",
-            colors = "../../source/colors.R"
+            colors = "../../source/colors.R",
+            base_path = config["base"]
         threads: 10
         script:
             "custom_clustering/custom_str_clustering_report_unif.Rmd"

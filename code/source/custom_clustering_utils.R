@@ -41,8 +41,8 @@ factors_custom_hsc <- c(
     "Early Mk prog",
     "Mk/Ery (more Mk) prog",
     "Mk/Ery prog",
-    "Early ery/BM 1",
-    "Early ery/BM 2",
+    "Early ery/BM prog 1",
+    "Early ery/BM prog 2",
     "Early ery prog",
     "Ery prog",
     "Ery prog 1",
@@ -110,7 +110,7 @@ factors_custom_hsc_unif <- c(
     # separate cells that would be removed
     "Antigen-presenting",
     "Mono/antigen-presenting",
-    "Late neutro",
+    "Late neutro prog",
     "Late immune, mixed",
     "Late neutro/ery, mixed",
     "Low quality"

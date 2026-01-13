@@ -40,14 +40,27 @@ library(ggalluvial, quietly = TRUE)
 ```
 
 ```{r load_objects}
-sce_mmus_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mmus_hsc_custom.rds")
-sce_mcas_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcas_hsc_custom.rds")
-sce_mspr_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mspr_hsc_custom.rds")
-sce_mcar_hsc <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcar_hsc_custom.rds")
+base_path <- snakemake@params[["base_path"]]
+# base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008"
+
+sce_mmus_hsc <- readRDS(base::paste0(
+  base_path,
+  "/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mmus_hsc_custom.rds"))
+sce_mcas_hsc <- readRDS(base::paste0(
+  base_path,
+  "/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcas_hsc_custom.rds"))
+sce_mspr_hsc <- readRDS(base::paste0(
+  base_path,
+  "/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mspr_hsc_custom.rds"))
+sce_mcar_hsc <- readRDS(base::paste0(
+  base_path,
+  "/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcar_hsc_custom.rds"))
 ```
 
 ```{r load_merged}
-sce_hsc_all_cells <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/sce_hsc-02")
+sce_hsc_all_cells <- readRDS(base::paste0(
+  base_path,
+  "/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/sce_hsc-02"))
 
 # remove unnecessary assays because the objects become too large to load
 assays(sce_hsc_all_cells) <- list(
@@ -89,7 +102,9 @@ gc()
 ```
 
 ```{r load_anno}
-sce_hsc_anno <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data_freeze/05_annotated_objects/sce_hsc.rds")
+sce_hsc_anno <- readRDS(base::paste0(
+  base_path,
+  "/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10"))
 
 sce_hsc_all_cells$celltypes <- vector(length = ncol(sce_hsc_all_cells))
 sce_hsc_all_cells$celltypes <- sce_hsc_anno$celltypes[
@@ -115,8 +130,10 @@ sce_hsc_all_cells <- sce_hsc_all_cells[,base::sample(
 ## Basics
 
 ```{r factor_and_colors}
+#print(sort(unique(sce_hsc_all_cells$custom_label)))
 
-unique(sce_hsc_all_cells$custom_label)[!unique(sce_hsc_all_cells$custom_label) %in% factors_custom_hsc_unif]
+unique(sce_hsc_all_cells$custom_label)[!unique(sce_hsc_all_cells$custom_label) %in% 
+  factors_custom_hsc_unif]
 factors_custom_hsc_unif[!factors_custom_hsc_unif %in% sce_hsc_all_cells$custom_label]
 
 # for nicer handling factor the custom labels, too
@@ -128,6 +145,9 @@ sce_hsc_all_cells$custom_label <- factor(
 col_custom <- col_custom_hsc_unif
 
 stopifnot(!is.na(sce_hsc_all_cells$custom_label))
+
+#print(sort(unique(sce_hsc_all_cells$custom_label)))
+#print(levels(sce_hsc_all_cells$custom_label))
 
 #knitr::knit_exit()
 print(col_custom)
@@ -485,6 +505,8 @@ ggplot2::ggplot(data = all_df2,
   theme_void()+
   ggplot2::theme(legend.position = "none")+
   ggplot2::scale_color_manual(values = col_cts_hsc_orig)
-knitr::knit_exit()
 ```
 
+```{r sessioninfo}
+utils::sessionInfo()
+```

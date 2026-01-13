@@ -81,7 +81,9 @@ resolution_df <- utils::read.csv(file = resolution_df_path,
 # since in an .Rmd file run by snakemake the only output defined
 # by snakemake is the html, any other output must be defined manually
 base_path_data <- snakemake@params[["OUTPUT_DAT"]]
-output_path <- base::paste0(base_path_data, "/06_include_batch_correction/ts_hscs_progenitors.Rds")
+output_path <- base::paste0(
+  base_path_data, 
+  "/06_include_batch_correction/ts_hscs_progenitors.Rds")
 print(output_path)
 ```
 
@@ -329,7 +331,8 @@ ct_markers_ts_hscs_progenitors <- lapply(clust_list, function(x){
 
   return(markers)
 })
-names(ct_markers_ts_hscs_progenitors) <- levels(combined_ts_hscs_progenitors$seurat_clusters)
+names(ct_markers_ts_hscs_progenitors) <- levels(
+  combined_ts_hscs_progenitors$seurat_clusters)
 
 combined_ts_hscs_progenitors$batchc_sign_labels <- vector(length = ncol(
   combined_ts_hscs_progenitors))
@@ -538,4 +541,8 @@ Seurat::DimPlot(combined_ts_hscs_progenitors, reduction = "umap", group.by = "ba
 
 ```{r save}
 saveRDS(combined_ts_hscs_progenitors, output_path)
+```
+
+```{r sessioninfo}
+utils::sessionInfo()
 ```

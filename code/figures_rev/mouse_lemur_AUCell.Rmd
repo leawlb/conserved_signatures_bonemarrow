@@ -1,0 +1,257 @@
+---
+title: "Mouse lemur AUCell analysis"
+date: "`r format(Sys.Date())`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo       = TRUE,
+  message    = FALSE,
+  warning    = FALSE,
+  fig.align  = "left"
+)
+```
+
+```{r libraries}
+suppressPackageStartupMessages({
+  library(Seurat)
+  library(tidyverse)
+  library(ggrastr)
+  library(harmony)
+})
+```
+
+```{r paths}
+base_path    <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+project_path <- "/omics/groups/OE0433/internal/veronica/github/Interspecies_BM_phd"
+```
+
+#### Load colors and plotting helpers
+
+```{r source_helpers}
+colors_path <- file.path(
+  base_path,
+  "metadata/colors/colors.txt"
+)
+
+source(file.path(project_path, "code/source/colors.R"))
+source(file.path(project_path, "code/source/plotting.R"))
+source(file.path(project_path, "code/figures/determine_params.R"))
+```
+
+```{r load_mouse_lemur}
+mouse_lemur_harmony <- readRDS(
+  file.path(
+    base_path,
+    "metadata/scRNAseq/04_rare_celltypes/mouse_lemur_Ezran2025/02_mouse_lemur_harmony.rds"
+  )
+)
+
+Idents(mouse_lemur_harmony) <- "seurat_clusters"
+```
+
+```{r celltypes_full}
+celltypes_full <- c(
+  "Adipo.CAR", 
+  "Art.Cap.EC",
+  "BM.prog",
+  "Cycling",
+  "Early.MPP",
+  "Early.Myeloid",
+  "Erythroid",
+  "Fibro.Chondro",
+  "Fibroblast",
+  "HSC",
+  "Lymphoid",
+  "Mk.prog",
+  "Mk.Ery.prog",
+  "Mono.prog",
+  "Neutro.prog",
+  "Osteo",
+  "Peri.SMC",
+  "Sinusoid.EC",
+  "Sinusoid.Ven.EC"
+)
+```
+
+## Global AUCell feature plots (all cells)
+
+```{r pdf_allcells, eval=TRUE}
+pdf(
+  file   = file.path(
+    base_path,
+    "manuscript1_rev/pdfs/mouse_lemur_AUCell_weights_all.pdf"
+  ),
+  height = 7,
+  width  = 7
+)
+
+for (feat in celltypes_full) {
+  p <- FeaturePlot(
+    mouse_lemur_harmony,
+    features  = feat,
+    reduction = "umap_harmony",
+    raster    = FALSE,
+    order     = TRUE
+  ) +
+    ggplot2::ggtitle(feat) &
+    NoAxes()
+
+  ## rasterize first layer (points) at high dpi
+  p$layers[[1]] <- ggrastr::rasterise(p$layers[[1]], dpi = 500)
+
+  print(p)
+}
+
+dev.off()
+```
+
+```{r dimplot_allcells, fig.width=4, fig.height=4}
+DimPlot(
+  mouse_lemur_harmony,
+  reduction = "umap_harmony",
+  label     = TRUE,
+  repel     = TRUE,
+  raster    = FALSE
+) & NoAxes() & NoLegend()
+```
+
+## HSC re-embedding with Harmony
+
+```{r subset_hsc}
+## 21 = HSCs according to original clustering
+HSC <- subset(mouse_lemur_harmony, idents = 21)
+DefaultAssay(HSC) <- "RNA"
+```
+
+```{r process_hsc}
+HSC <- HSC |>
+  NormalizeData() |>
+  FindVariableFeatures(nfeatures = 10000) |>
+  ScaleData() |>
+  RunPCA(npcs = 50, verbose = FALSE)
+
+HSC <- harmony::RunHarmony(
+  object         = HSC,
+  group.by.vars  = "tissue",
+  reduction.use  = "pca",
+  dims.use       = 1:50,
+  reduction.save = "harmony",
+  project.dim    = FALSE,
+  verbose        = TRUE
+)
+
+HSC <- HSC |>
+  FindNeighbors(reduction = "harmony", dims = 1:50) |>
+  RunUMAP(
+    reduction      = "harmony",
+    dims           = 1:50,
+    reduction.name = "umap_harmony",
+    n.neighbors    = 200,
+    min.dist       = 1
+  ) |>
+  FindClusters(resolution = 0.5)
+```
+
+```{r pdf_hsc_feature, eval=TRUE}
+pdf(
+  file   = file.path(
+    base_path,
+    "manuscript1_rev/pdfs/mouse_lemur_AUCell_HSC.pdf"
+  ),
+  height = 3,
+  width  = 3
+)
+
+FeaturePlot(
+  HSC,
+  features  = "HSC",
+  reduction = "umap_harmony",
+  raster    = FALSE,
+  order     = TRUE
+) & NoAxes()
+
+dev.off()
+```
+
+## Stromal / EC re-embedding with Harmony
+
+```{r subset_stromal}
+## 26 & 29 = stromal / EC according to original clustering
+stromal <- subset(mouse_lemur_harmony, idents = c(26, 29))
+DefaultAssay(stromal) <- "RNA"
+```
+
+```{r process_stromal}
+stromal <- stromal |>
+  NormalizeData() |>
+  FindVariableFeatures(nfeatures = 10000) |>
+  ScaleData() |>
+  RunPCA(npcs = 50, verbose = FALSE)
+
+stromal <- harmony::RunHarmony(
+  object         = stromal,
+  group.by.vars  = "tissue",
+  reduction.use  = "pca",
+  dims.use       = 1:50,
+  reduction.save = "harmony",
+  project.dim    = FALSE,
+  verbose        = TRUE
+)
+
+stromal <- stromal |>
+  FindNeighbors(reduction = "harmony", dims = 1:50) |>
+  RunUMAP(
+    reduction      = "harmony",
+    dims           = 1:10,
+    reduction.name = "umap_harmony",
+    n.neighbors    = 200,
+    min.dist       = 1
+  ) |>
+  FindClusters(resolution = 0.5)
+```
+
+```{r stromal_celltypes}
+celltypes_stromal <- c(
+  "Adipo.CAR", 
+  "Art.Cap.EC",
+  "Cycling",
+  "Fibro.Chondro",
+  "Fibroblast",
+  "Osteo",
+  "Peri.SMC",
+  "Sinusoid.EC",
+  "Sinusoid.Ven.EC"
+)
+```
+
+```{r pdf_stromal_feature, eval=TRUE}
+pdf(
+  file   = file.path(
+    base_path,
+    "manuscript1_rev/pdfs/mouse_lemur_AUCell_stromal.pdf"
+  ),
+  height = 4,
+  width  = 4
+)
+
+for (feat in celltypes_stromal) {
+  p <- FeaturePlot(
+    stromal,
+    features  = feat,
+    reduction = "umap_harmony",
+    raster    = FALSE,
+    order     = TRUE
+  ) +
+    ggplot2::ggtitle(feat) &
+    NoAxes()
+
+  ## rasterize first layer (points) at high dpi
+  p$layers[[1]] <- ggrastr::rasterise(p$layers[[1]], dpi = 500)
+
+  print(p)
+}
+
+dev.off()
+```

@@ -1,0 +1,239 @@
+---
+title: "Supplementary Figure X – Zebrafish AUCell"
+date: '2025-12-11'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo    = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+#### Load libraries
+
+```{r load_libs}
+library(tidyverse, quietly = TRUE)
+library(Seurat, quietly = TRUE)
+library(ggrastr, quietly = TRUE)
+```
+
+#### Define base paths
+
+```{r base_paths}
+base_path    <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+project_path <- "/omics/groups/OE0433/internal/veronica/github/Interspecies_BM_phd"
+```
+
+#### Load colors and plotting helpers
+
+```{r source_helpers}
+colors_path <- file.path(
+  base_path,
+  "metadata/colors/colors.txt"
+)
+
+source(file.path(project_path, "code/source/colors.R"))
+source(file.path(project_path, "code/source/plotting.R"))
+source(file.path(project_path, "code/figures/determine_params.R"))
+```
+
+## Load zebrafish object
+
+```{r load_zebrafish}
+zebrafish_HSC <- readRDS(
+  file.path(
+    base_path,
+    "metadata/scRNAseq/04_rare_celltypes/zebrafish_Athanasiadis2017/03_zebrafish.rds"
+  )
+)
+
+celltypes <- c(
+  "Cycling","HSC",
+  #"Early.MPP",
+  "Mk.prog","BM.prog","Mk.Ery.prog",
+  "Erythroid","Early.Myeloid","Mono.prog","Neutro.prog","Lymphoid"
+)
+
+meta <- zebrafish_HSC@meta.data %>%
+  dplyr::select(dplyr::all_of(celltypes)) %>%
+  dplyr::bind_cols(
+    zebrafish_HSC@reductions$umap_pca@cell.embeddings[rownames(.), , drop = FALSE]
+  )
+```
+
+## AUCell weights on embedding
+
+```{r zf_embedding_by_type_pdf}
+pdf(
+  file   = file.path(base_path, "manuscript1_rev/pdfs/zebrafish_AUCell_weights.pdf"),
+  height = 2,
+  width  = 3
+)
+
+
+for (feat in celltypes) {
+  meta_sorted <- meta %>%
+    dplyr::arrange(.data[[feat]])
+
+  p_feat <- ggplot(
+      meta_sorted,
+      aes(
+        x     = umappca_1,
+        y     = umappca_2,
+        color = .data[[feat]]
+      )
+    ) +
+    ggrastr::geom_point_rast(size = 0.5) +
+    theme_void() +
+    scale_color_gradient(
+      low    = "grey90",
+      high   = "blue",
+      limits = c(0, 0.5),
+      oob    = scales::squish
+    ) +
+    labs(color = NULL) +
+    ggtitle(feat)
+
+  print(p_feat)
+}
+
+dev.off()
+```
+
+
+## Perform the same again, but with the object from email correspondence
+
+```{r load_zebrafish_new}
+zebrafish_HSC <- readRDS(
+  file.path(
+    base_path,
+    "metadata/scRNAseq/04_rare_celltypes/zebrafish_Athanasiadis2017/03_zebrafish_new.rds"
+  )
+)
+
+meta <- zebrafish_HSC@meta.data %>%
+  dplyr::select(
+    Component1,
+    Component2,
+    Type,
+    dplyr::all_of(celltypes)
+  )
+```
+
+```{r zf_embedding_by_type_new}
+p_type <- ggplot(
+  meta,
+  aes(
+    x     = Component1,
+    y     = Component2,
+    color = Type
+  )
+) +
+  ggrastr::geom_point_rast(size = 0.5) +
+  theme_void()
+
+p_type
+```
+
+```{r zf_embedding_by_type_pdf}
+pdf(
+  file   = file.path(base_path, "manuscript1_rev/pdfs/zebrafish_AUCell_weights_new.pdf"),
+  height = 2,
+  width  = 3
+)
+
+print(p_type)
+
+for (feat in celltypes) {
+  meta_sorted <- meta %>%
+    dplyr::arrange(.data[[feat]])
+
+  p_feat <- ggplot(
+      meta_sorted,
+      aes(
+        x     = Component1,
+        y     = Component2,
+        color = .data[[feat]]
+      )
+    ) +
+    ggrastr::geom_point_rast(size = 0.5) +
+    theme_void() +
+    scale_color_gradient(
+      low    = "grey90",
+      high   = "blue",
+      limits = c(0, 0.8),
+      oob    = scales::squish
+    ) +
+    labs(color = NULL) +
+    ggtitle(feat)
+
+  print(p_feat)
+}
+
+dev.off()
+```
+
+```{r zf_long_meta_new}
+plot_meta <- meta %>%
+  tidyr::pivot_longer(
+    cols      = all_of(celltypes),
+    names_to  = "celltype",
+    values_to = "score"
+  )
+```
+
+```{r zf_scores_by_cluster_new}
+zf_ordered_types <- c(
+  "HSPC","Neutrophils","Monocytes","Erythrocytes","Thrombocytes"
+)
+
+zf_focal_celltypes <- c(
+  "HSC","Neutro.prog","Mono.prog","Erythroid","Mk.prog"
+)
+
+p_box <- ggplot(
+  dplyr::filter(
+    plot_meta,
+    celltype %in% zf_focal_celltypes
+  ),
+  aes(
+    x     = factor(Type, levels = zf_ordered_types),
+    y     = score,
+    color = Type
+  )
+) +
+  facet_wrap(
+    ~ factor(
+      celltype,
+      levels = zf_focal_celltypes
+    ),
+    nrow = 1
+  ) +
+  geom_boxplot(outlier.size = 0.5) +
+  theme_classic() +
+  theme(
+    axis.text.x      = element_text(angle = 90, hjust = 1, vjust = 0.5),
+    legend.position  = "none",
+    strip.background = element_blank()
+  ) +
+  labs(
+    x = NULL,
+    y = "AUCell score"
+  )
+
+p_box
+```
+
+```{r zf_scores_by_cluster_pdf_new}
+pdf(
+  file   = file.path(base_path, "manuscript1_rev/pdfs/zebrafish_AUCell_weights_new_clusters.pdf"),
+  height = 3,
+  width  = 5
+)
+
+print(p_box)
+dev.off()
+```

@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 Blind annotation of two human HSPC datasets and one mouse and one human
 niche cell datasets after unbiased re-clustering with signature genes.
 This is the script for annotating LI ET AL STROMAL.
-The thusly obtained clusters will now be annotated based only on the expression
+The obtained clusters will now be annotated based only on the expression
 of signature gene orthologs within these clusters, and without knowledge of
 which cells from which originally annotated cell type these clusters contain.
 
@@ -23,6 +23,9 @@ adding the custom annotations, I have decided to separate the blind annotations
 from the figure, too.
 I didn't change too much from the original figure script though.
 Instead, I added some comments why I chose each annotation.
+
+Check supplementary table 1 of the corresponding publication for some of the 
+marker gene sources.
 
 #### Load objects
 
@@ -41,7 +44,6 @@ library(Seurat, quietly = TRUE)
 ```{r define_basepath}
 base_path <- snakemake@input[["base_path"]]
 metadata_path <- snakemake@input[["metadata_path"]]
-#base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
 ```
 
 ```{r load_short}
@@ -167,7 +169,6 @@ for(ct in names(geneset_list_str)){
     }
   }
 }
-
 ```
 
 ```{r annotated_reclustered}
@@ -222,6 +223,8 @@ signature_df[signature_df$genes %in% SOI,]
 # CXCL12, CXCL14
 # ABCA8, EDIL3, ABI3BP, SOD3, COL6A3 fibro-like from list of signature genes
 
+# by definition, CXCL12 expressing cells are CARs
+# these also express some fibro genes
 seu_sign_o3$annotated_reclustered[
   seu_sign_o3$seurat_clusters == nr] <- "Fibro-like CAR2"
 ```
@@ -262,6 +265,7 @@ signature_df[signature_df$genes %in% SOI,]
 # CXCL12: CAR cell
 # FSTL1, HP, MME, FBN1, RSPO3 all from "Adipo/CAR"
 
+# CAR cells without much other lineage expression 
 seu_sign_o3$annotated_reclustered[seu_sign_o3$seurat_clusters == nr] <- "CAR"
 ```
 
@@ -301,6 +305,7 @@ signature_df[signature_df$genes %in% SOI,]
 # PDGFRB, FBN1, COL3A1, C1S, ABCA8 = fibro-like
 # SPARCL1
 
+# again some fibro-like expression in addition to CXCL12
 seu_sign_o3$annotated_reclustered[
   seu_sign_o3$seurat_clusters == nr] <- "Fibro-like CAR1"
 ```
@@ -336,7 +341,7 @@ signature_df[signature_df$genes %in% SOI,]
 
 # CXCL12: CAR cell
 # ID1, LMNA, OSR2, 
-# FABP4, PPP1R15A, FABP4-> adipocytic 
+# FABP4, PPP1R15A -> adipocytic lineage
 
 seu_sign_o3$annotated_reclustered[
   seu_sign_o3$seurat_clusters == nr] <- "Adipo-like CAR"
@@ -371,6 +376,8 @@ SOI <- ensembl_sign$MMUS_SYMBOL[ensembl_sign$HSAPIENS_SYMBOL %in% GOI]
 signature_df[signature_df$genes %in% SOI,]
 
 # CPE, SP7, PTPRD, RUNX2, PALS2, OMD, MMP13, PTH1R, CD9
+
+# some of these genes are clearly osteo (SP7), some more clearly chondro (CD9)
 seu_sign_o3$annotated_reclustered[
   seu_sign_o3$seurat_clusters == nr] <- "Osteo-Chondro"
 ```
@@ -399,14 +406,14 @@ FeaturePlot(seu_sign_o3, markers[1:6])
 FeaturePlot(seu_sign_o3, markers[7:12])
 FeaturePlot(seu_sign_o3, markers[13:18])
 
-FeaturePlot(seu_sign_o3, "ENSG00000106537") #TSPAN13
-FeaturePlot(seu_sign_o3, "ENSG00000149564") #ESAM # BARELY EXPR
-FeaturePlot(seu_sign_o3, "ENSG00000042493") #CAPG
-FeaturePlot(seu_sign_o3, "ENSG00000174059") #CD34
-FeaturePlot(seu_sign_o3, "ENSG00000102760") #RGCC
-FeaturePlot(seu_sign_o3, "ENSG00000008394") #MGST1
-FeaturePlot(seu_sign_o3, "ENSG00000135218") #CD36
-FeaturePlot(seu_sign_o3, "ENSG00000148400") #NOTCH1
+FeaturePlot(seu_sign_o3, "ENSG00000106537") # TSPAN13
+FeaturePlot(seu_sign_o3, "ENSG00000149564") # ESAM # BARELY EXPR
+FeaturePlot(seu_sign_o3, "ENSG00000042493") # CAPG
+FeaturePlot(seu_sign_o3, "ENSG00000174059") # CD34
+FeaturePlot(seu_sign_o3, "ENSG00000102760") # RGCC
+FeaturePlot(seu_sign_o3, "ENSG00000008394") # MGST1
+FeaturePlot(seu_sign_o3, "ENSG00000135218") # CD36
+FeaturePlot(seu_sign_o3, "ENSG00000148400") # NOTCH1
 
 GOI <- c("CD34", "RGCC", "TSPAN13", "CAPG", "MGST1", "GPX1",
          "PPP1R14B", "TXN", "CD36", "NOTCH1")

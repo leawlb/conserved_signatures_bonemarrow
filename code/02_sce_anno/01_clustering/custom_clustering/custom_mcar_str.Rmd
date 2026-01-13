@@ -195,13 +195,15 @@ but let's start with this first.
 
 ```{r marker_genes}
 
+# see supplementary table of the corresponding publication for sources
+# see also the hspc list for contamination genes
 if(fraction_curr == "str"){
   marker_genes <- c(
-    "Adipoq", # adipo CAR
-    "Cxcl12", # also arteriolar EC
+    "Adipoq",
+    "Cxcl12",
     "Kitl", 
     "Lepr",
-    "Alpl", # Osteo
+    "Alpl", 
     "Anxa1",
     "Bglap",
     "Bglap2",
@@ -215,7 +217,7 @@ if(fraction_curr == "str"){
     "Sp7",
     "Spp1",
     "Tnc",
-    "Acan", # Chondro
+    "Acan", 
     "Adamts5",
     "Chad",
     "Fmod",
@@ -224,64 +226,62 @@ if(fraction_curr == "str"){
     "Prelp",
     "Prg4",
     "Sox9",
-    "Comp", # fibro chondro
+    "Comp", 
     "S100a10",
-    "Cd34", # fibro
+    "Cd34", 
     "Col3a1",
     "Dcn",
     "Fn1",
     "Lum",
     "Pdgfra",
     "Thy1",
-    "Cdh5", # pan endo
+    "Cdh5",
     "Pecam1",
-    "Car4", # capillary
+    "Car4", 
     "Rgcc",
     "Timp4",
-    "Efnb2", # Arteriolar
+    "Efnb2", 
     "Hey1",
     "Ly6a",
     "Sox17",
-    "Ackr1", # Venous/sinusoidal
+    "Ackr1", 
     "Emcn",
     "Ephb4",
     "Icam1",
     "Lrg1",
     "Nr2f2",
     "Selp",
-    "Vcam1", # sinusoidal
+    "Vcam1", 
     "Flt4",
     "Stab2",
     "Tfpi",
-    "Ccl21a", # Lymphatic EC
+    "Ccl21a", 
     "Lyve1", 
     "Pdpn",
     "Prox1",
-    "Rgs4", # pericyte
+    "Rgs4", 
     "Rgs5",
     "Steap4",
-    "Acta2", # smooth muscle
+    "Acta2", 
     "Myh11", 
     "Tagln",
-    "Myod1", # just some skeletal muscle markers for contamination
-    "Myh2",
-    "Des",
-    "Cd3d", # just some mature immune cell markers for contamination
-    "Cd8a",
-    "Cd4",
-    "Il7r",
-    "Cd79a",
-    "Ighm",
-    "Gzmb",
-    "Cd74",
+    "Myod1", # contamination, skeletal muscle https://doi.org/10.4161/epi.25441
+    "Myh2", # skeletal muscle https://doi.org/10.1038/s41467-025-56896-6
+    "Cd3d", # TC
+    "Cd3e", 
+    "Cd8a", # TC
+    "Cd4", # TC
+    "Tcf7", # lymphoid/TC https://doi.org/10.3389/fimmu.2020.00470   
+    "Il7r", 
+    "Cd79a", # BC
+    "Ighm", # Ig gene
+    "Gzmb", # mature immune cell
+    "Cd74", # antigen presentation https://doi.org/10.3748/wjg.15.2855
     "S100a8",
     "S100a9",
-    "Ccl5",
-    "Cd3e", # TC
-    "Tcf7",
-    "Cpa3", # Mast
+    "Cpa3", 
     "Hdc",
-    "Gypa", # Ery
+    "Gypa", 
     "Hba-a1"
   )
 }
@@ -537,7 +537,7 @@ cluster_markers[[6]] %>%
 cluster_markers[[7]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
-# Car, Car2, Gype, Hba-a1, Klf2, Alad
+# Car, Car2, Gype, Hba-a1, Klf1, Alad
 
 cluster_markers[[8]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
@@ -585,13 +585,13 @@ umap_base(
   ggplot2::scale_color_manual("cluster", values = col_num)
 
 marker_genes_list_ery <- as.list(c(
-  "Slc4a1", # in eythroid membrane
-  "Kel", # in erythroid membrane, blood group antigen
-  "Ermap",
-  "Ctse",
-  "Rhd",
-  "Sox6", # erythroid maturation
-  "Tfrc", # iron transporter
+  "Slc4a1", # in eythroid membrane https://doi.org/10.1182/blood-2005-07-2806
+  "Kel", # in erythroid membrane, blood group antigen https://doi.org/10.1042/0264-6021:3560171
+  "Ermap", # ery membrane https://doi.org/10.1006/bcmd.2001.0465
+  "Ctse", # https://doi.org/10.1016/j.abb.2007.08.001
+  "Rhd", # https://doi.org/10.1002/(sici)1096-8652(199707)55:3%3C139::aid-ajh4%3E3.0.co;2-t
+  "Sox6", # erythroid maturation https://doi.org/10.1182/blood-2010-04-282350
+  "Tfrc", # iron transporter, erys https://doi.org/10.1016/j.exphem.2015.03.001
   # also adding some Ery classics
   "Hba-a1",
   "Gypa",
@@ -720,22 +720,20 @@ umap_base(
   ggplot2::scale_color_manual("cluster", values = col_num)
 
 marker_genes_list_neu <- as.list(c(
-  "Thbs1", # related to  neutro serine protease function
-  "Atf3", # neutrophilic responses, mature neutro
-  "Trem1", # neutro migration
-  "Ccl6", # one of the most abundant chemokines in mouse neutros
-  "Ctss", # macrophage mabye, neutro inflammation
-  "Fn1", 
-  "Lrg1", # in neutro granules
-  "Ltf", # lactoferrin, related to NETs?
-  "Mmp9", # a subset of neutrophils
-  "Asprv1", # macrophage-like  neutrophil cells
-  "Cd52", # also expressed on neutrophils
-  "Retnlg", # different subsets of neutrophils
-  "Prg2", # eosinophil
-  "Ear2",
-  "Prg3", # eosinophil granules
-  "Ear6"  # eosinophil granules
+  "Thbs1", # neutro  https://doi.org/10.1038/mi.2014.120
+  "Atf3", # neutro migration https://doi.org/10.1182/blood-2013-06-510909
+  "Trem1", # neutros https://doi.org/10.1182/blood-2024-198810
+  "Ccl6", # neutrotime https://doi.org/10.1038/s41467-021-22973-9
+  "Ctss", # antigen-presentation and other things https://doi.org/10.1016/j.mam.2022.101106
+  "Lrg1", # in neutro granules https://doi.org/10.1371/journal.pone.0170261
+  "Mmp9", # subset of neutrophils https://doi.org/10.1002/advs.202415205
+  "Asprv1", # neutro https://doi.org/10.1172/jci.insight.96882
+  "Cd52", # also expressed on neutrophils https://doi.org/10.1182/blood-2009-02-203075
+  "Retnlg", # neutrotime https://doi.org/10.1038/s41467-021-22973-9
+  "Prg2", # eosinophil https://www.ncbi.nlm.nih.gov/gene/5553
+  "Ear2", # eosinophil https://www.uniprot.org/uniprotkb/P97425/entry
+  "Prg3", # eosinophil granules https://www.uniprot.org/uniprotkb/Q9Y2Y8/entry
+  "Ear6"  # eosinophil granules https://www.ncbi.nlm.nih.gov/gene/93719
 ))
 
 plot_list_gene <- lapply(marker_genes_list_neu, function(gene){
@@ -935,6 +933,7 @@ umap_base(
   ggplot2::scale_color_manual("cluster", values = col_num)
 # it is "closer" to other MSC like clusters
 
+# checking some genes also from the lists
 marker_genes_list_weird <- as.list(c(
   "Mpo", # 15: myeloid 
   "Elane", # 15: myeloid 
@@ -1041,29 +1040,25 @@ also not overtly osteo-lineage.
 ```{r marker_genes_list_msc}
 marker_genes_list_msc <- as.list(c(
   # add some more expected genes that I know even though we had them before
-  "Cxcl12", # adipo 4
+  "Cxcl12", 
   "Cxcl14",
   "Lpl",
   "Vcam1",
   "Kitl",
   "Adipoq",
   "Lepr",
-  "Dcn", # fibro-osteo 11
+  "Dcn",
   "Lum",
-  "Col1a1",
-  "Col1a2",
   "Aspn",
   "Ogn",
   "Fmod",
   "Comp",
-  "Thbs2",
-  "Abi3bp",
   "Fn1",
   "Pdgfra",
   "Pdgfrb",
   "Cd34",
   "Thy1",
-  "Thbs4", # osteo chondro/19
+  "Thbs4", # chondro-descendants https://doi.org/10.1038/s41413-025-00469-2
   "Mgp",
   "Prelp",
   "Chad",
@@ -1076,12 +1071,9 @@ marker_genes_list_msc <- as.list(c(
   "Spp1",
   "Postn",
   "Runx2",
-  "Gsn", # chondro fibro/16
+  "Gsn", 
   "Clec3b",
   "Col3a1",
-  "Pcolce2",
-  "Tnxb",
-  "Ccl11",
   "Dpt",
   "Acan"
 ))
@@ -1150,8 +1142,9 @@ Markers look similar but tbh the Cxcl12 makes me really believe it's
 arteriolar.
 
 ```{r marker_genes_list_ec}
+# check some interesting genes from the marker lists and supp table 1
 marker_genes_list_ec <- as.list(c(
-  "Plvap", # EC sinusoidal, venular, lymphatic?
+  "Plvap",
   "Fabp4",
   "Cavin2",
   "Vwf",
@@ -1163,7 +1156,7 @@ marker_genes_list_ec <- as.list(c(
   "Bcam",
   "Eng",
   "Mustn1", 
-  "Stab2", # add some more well-known
+  "Stab2", 
   "Ackr1",
   "Ephb4",
   "Selp",
@@ -1182,9 +1175,9 @@ marker_genes_list_ec <- as.list(c(
   "Adgrf5",
   "Kdr",
   "Epas1",
-  "Sparcl1", # EC arteriolar and capillary?
+  "Sparcl1", 
   "Hspb1",
-  "Rgcc", # add more
+  "Rgcc", 
   "Car4",
   "Hey1",
   "Sox17",
@@ -1229,6 +1222,7 @@ cluster_markers[[34]] %>%
 ```
 
 ```{r marker_genes_list_weird_msc}
+# check some interesting observed genes
 marker_genes_list_weird_msc <- as.list(c(
   "Prg4",
   "Clic5",
@@ -1244,11 +1238,11 @@ marker_genes_list_weird_msc <- as.list(c(
   "Cd9",
   "Serping1",
   "Aebp1",
-  # add some myofibroblast markers
-  "Acta2",
-  "Vim",
-  "Des",
-  "Vcl",
+  # add some myofibroblast markers from literature just to check
+  "Acta2", # https://doi.org/10.1172/jci.insight.150323
+  "Vim", # https://doi.org/10.1371/journal.pone.0133399
+  "Des", # https://doi.org/10.1038/s41467-021-24607-6
+  "Vcl", # https://doi.org/10.1172/jci.insight.150323
   "Ackr3", # add some markers from mspr
   "F13a1",
   "Htra4",
@@ -1272,18 +1266,16 @@ plot_list_gene
 Prg4, Cpe, Fbln7, are co-expressed with chondro.
 Gpx3, Creb5, Sparcl1, Cfh with fibro.
 Clic5 is co-expressed with Art/Cap EC.
-Ccn2 is an MSC gene.
-
-Clic5 seems pre-adipocytic?
-Cpe also obesity related.
 
 Prg4 seems to be a marker for some Chondro/fibro subset at a specific
-location but I don't want to give location names (like endosteal) from
+location but I wasn't sure I want to give location names (like endosteal) from
 scRNAseq data alone.
+However, some of the markers seem quite specific so I think these may be 
+some sort of related population.
 
-I just cannot tell, these express markers from all lineages, and lack
-important others, so I'll just call them "unclear". 
-It's a tiny cluster anyways.
+See supplementary table 1 and custom_mspr_str where I decide that these
+are likely some sort of articular cartilage/synovial fibroblast progenitor or
+mixed population.
 
 # Assign
 

@@ -41,7 +41,6 @@ source(file =  snakemake@params[["plotting"]])
 
 ```{r load_objects}
 sce_species <- base::readRDS(file = snakemake@input[["sce_species"]])
-#sce_species <- base::readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/01_mnnc/comparison/sce_mspr_str_Object_ID-01")
 
 fraction_curr <- "str"
 species_curr <- "mspr"
@@ -51,8 +50,7 @@ stopifnot(unique(sce_species$Species_ID == species_curr))
 
 # define output path here
 # since in an .Rmd file run by snakemake the only output defined
-# by snakemake is the html, any other output must be
-# defined manually
+# by snakemake is the html, any other output must be defined manually
 base_path_data <- snakemake@params[["OUTPUT_DAT"]]
 output_path <- base::paste0(base_path_data, "/02_clst/custom/sce_mspr_str_custom.rds")
 print(output_path)
@@ -196,11 +194,11 @@ but let's start with this first.
 
 if(fraction_curr == "str"){
   marker_genes <- c(
-    "Adipoq", # adipo CAR
-    "Cxcl12", # also arteriolar EC
+    "Adipoq", 
+    "Cxcl12", 
     "Kitl", 
     "Lepr",
-    "Alpl", # Osteo
+    "Alpl", 
     "Anxa1",
     "Bglap",
     "Bglap2",
@@ -214,7 +212,7 @@ if(fraction_curr == "str"){
     "Sp7",
     "Spp1",
     "Tnc",
-    "Acan", # Chondro
+    "Acan", 
     "Adamts5",
     "Chad",
     "Fmod",
@@ -223,78 +221,76 @@ if(fraction_curr == "str"){
     "Prelp",
     "Prg4",
     "Sox9",
-    "Comp", # fibro chondro
+    "Comp", 
     "S100a10",
-    "Cd34", # fibro
+    "Cd34",
     "Col3a1",
     "Dcn",
     "Fn1",
     "Lum",
     "Pdgfra",
     "Thy1",
-    "Cdh5", # pan endo
+    "Cdh5", 
     "Pecam1",
-    "Car4", # capillary
+    "Car4",
     "Rgcc",
     "Timp4",
-    "Efnb2", # Arteriolar
+    "Efnb2", 
     "Hey1",
     "Ly6a",
     "Sox17",
-    "Ackr1", # Venous/sinusoidal
+    "Ackr1",
     "Emcn",
     "Ephb4",
     "Icam1",
     "Lrg1",
     "Nr2f2",
     "Selp",
-    "Vcam1", # sinusoidal
+    "Vcam1", 
     "Flt4",
     "Stab2",
     "Tfpi",
-    "Ccl21a", # Lymphatic EC
+    "Ccl21a", 
     "Lyve1", 
     "Pdpn",
     "Prox1",
-    "Rgs4", # pericyte
+    "Rgs4",
     "Rgs5",
     "Steap4",
-    "Acta2", # smooth muscle
+    "Acta2",
     "Myh11", 
     "Tagln",
-    "Myod1", # just some skeletal muscle markers for contamination
-    "Myh2",
-    "Des",
-    "Cd3d", # just some mature immune cell markers for contamination
-    "Cd8a",
-    "Cd4",
-    "Il7r",
-    "Cd79a",
-    "Ighm",
-    "Gzmb",
+    "Myod1", # just some skeletal muscle markers for contamination https://doi.org/10.4161/epi.25441
+    "Myh2", # skeletal muscle https://doi.org/10.1038/s41467-025-56896-6
+    "Cd3d", # TC just some mature immune cell markers for contamination
+    "Cd8a", # TC
+    "Cd4", # TC
+    "Il7r", # check also HSPC part of supp table 1
+    "Cd79b",
+    "Ighm", # Ig gene
+    "Gzmb",  # granzyme B
     "Cd74",
     "S100a8",
     "S100a9",
     "Ccl5",
     "Tcf7",
-    "Cpa3", # Mast
+    "Cpa3", 
     "Hdc",
-    "Gypa", # Ery
+    "Gypa", 
     "Hba-a1"
   )
 }
-
 ```
 
 ```{r genes_short}
 
 if(fraction_curr == "str"){
   marker_genes_short <- c(
-    "Adipoq", # adipo CAR
-    "Cxcl12", # also arteriolar EC
+    "Adipoq",
+    "Cxcl12",
     "Kitl", 
     "Lepr",
-    "Alpl", # Osteo
+    "Alpl",
     "Bglap",
     "Ibsp",
     "Mmp13",
@@ -341,7 +337,6 @@ if(fraction_curr == "str"){
     "Myh2"
   )
 }
-
 ```
 
 #### Heatmap
@@ -559,52 +554,43 @@ Check these unclear clusters ALSO check quality.
 
 ```{r umaps_mes, fig.height = 3, fig.width = 4}
 
+# some from the marker gene lists, some additional genes
+# check also supp table 1
 marker_genes_list_mes <- as.list(c(
   "Ntng1",
   "Palld",
   "Tns3", # osteogenic vs adipocytic fate https://doi.org/10.1007/s00018-023-04930-5
-  "Ptprd", # related to adipogenesis in some way https://doi.org/10.2217/epi-2019-0267 https://doi.org/10.1016/j.cmet.2022.02.012
+  "Ptprd", # related to adipogenesis https://doi.org/10.2217/epi-2019-0267 https://doi.org/10.1016/j.cmet.2022.02.012
   "Cp", # related to obesity, expressed in adipose tissue https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0080274
-  "Rai14", # related to migration, mechanical sensing? 
-  "Grem1", # Zhong
-  "Cebpa", # Zhong
-  "Cebpe", # Zhong
+  "Rai14", 
+  "Grem1", # https://doi.org/10.1016/j.beem.2021.101518 MALP
+  "Cebpa", # https://doi.org/10.1016/j.beem.2021.101518 MALP
+  "Cebpe", # https://doi.org/10.1016/j.beem.2021.101518 MALP
   "Runx1", # adding some from mmus and literature. 
-           # osteogenic differentation, inhibits adipo , https://doi.org/10.7554/eLife.54695
-  "Pappa", # adipocyte marker in MALP, getting several genes from here: https://doi.org/10.7554/eLife.54695
-  "Pparg", # adipocyte marker in MALP
-  "Plin1", # # lipid droplet coating
-  "Fabp4", # fatty acid bp indicating no lipid droplet
-  "Lep", # white adipose tissue
-  "Ucp1", # brown
-  "Tnfrsf9", # beige
-  "Cidea", # brown
-  "Cited1", # beige
-  "Tbx1", # beige
+           # osteogenic differentation, inhibits adipo https://doi.org/10.7554/eLife.54695
+  "Pappa", 
+  "Pparg", # https://doi.org/10.1016/j.beem.2021.101518 MALP
+  "Plin1", # https://doi.org/10.1016/j.beem.2021.101518 lipid droplet coating
+  "Fabp4", # fatty acid bp indicating no lipid droplet https://doi.org/10.1016/j.beem.2021.101518 
+  "Lep", # white adipose tissue https://doi.org/10.1016/j.beem.2021.101518 
+  "Ucp1", # brown https://doi.org/10.1016/j.beem.2021.101518 
+  "Tnfrsf9", # beige  https://doi.org/10.1016/j.beem.2021.101518 
+  "Cidea", # brown  https://doi.org/10.1016/j.beem.2021.101518 
+  "Cited1", # beige  https://doi.org/10.1016/j.beem.2021.101518 
+  "Tbx1", # beige https://doi.org/10.1016/j.beem.2021.101518 
   "Hoxc9", # adipose depot
-  "Vegfc", # angiogenic factor expressed by adipo CAR/MAlP
-  "Vegfa", # angiogenic factor expressed by adipo CAR/MAlP
-  "Rspo3", # angiogenic factor expressed by adipo CAR/MAlP
+  "Vegfc", # angiogenic factor expressed by adipo CAR/MAlP https://doi.org/10.1016/j.beem.2021.101518 
+  "Vegfa", # angiogenic factor expressed by adipo CAR/MAlP https://doi.org/10.1016/j.beem.2021.101518 
+  "Rspo3", # angiogenic factor expressed by adipo CAR/MAlP https://doi.org/10.1016/j.beem.2021.101518 
   "Apoe", # adipocyte marker in MALP
-  "Ebf3", # niche cells https://doi.org/10.1101/gad.314013.118
-  "Tnc", # niche https://doi.org/10.1182/blood-2011-11-393645 
-  "Ltbp2", # related to adipocytic gene expession in adipocytes
-  "Gdpd2", # adipocyte marker in MALP
-  "Xist", # always view this as low quality
-  "Mycbp2", # ?
-  "Omd",
+  "Ebf3", 
+  "Tnc", 
+  "Xist", # view this as low quality
+  "Omd", # from fibro-like lists
   "Ptn",
   "Gpx3",
   "Ogn",
-  "Apod",
-  "Clec3b",
-  "Dcn",
-  "Gsn",
   "Tnxb",
-  "Ecm1",
-  "Ccn3", 
-  "Cd34", # add two known fibro genes
-  "Thy1",
   "Thbs4",
   "Scx",
   "Tnmd",
@@ -612,7 +598,15 @@ marker_genes_list_mes <- as.list(c(
   "Chodl",
   "Itgbl1",
   "Mgp",
-  "Neat1",
+  "Neat1", 
+  "Ecm1",
+  "Ccn3", 
+  "Cd34", # add known fibro genes from st1
+  "Thy1",
+  "Clec3b",
+  "Dcn",
+  "Apod",
+  "Gsn",
   "Fn1"
 ))
 
@@ -624,10 +618,7 @@ plot_list_gene
 ```
 
 Cluster 2 looks more fibro-like, but also contains the transition 
-from more chondro-osteo-like cells, so I think it's still mixed.
-Genes like Clec3b, Pcolce2, Tnxb, Dpt are chondro and genes like
-Dcn, Gsn, Thy1, Cd34 are fibro, in the umaps the transition is 
-clearly visible.
+from more mixed-chondro-osteo-like cells, so I think it's still mixed.
 
 Cluster 10 is starting to look VERY chondro. 
 Already loosing some intermediate gene expression like Chad, Comp.
@@ -664,7 +655,7 @@ Clusters 4 and 11, and a bit 1, have very low quality compared to the others.
 I did remove a "low-quality" CAR-like cluster from the merged dataset, so
 maybe this was mostly from Spret.
 Both of these cluster express many marker genes similar to the "real" high-
-quality corresponding cluster, but weakly, but lack genes that differentiate
+quality corresponding cluster, but weakly, and lack genes that differentiate
 them from them, so I view them as "low quality copies".
 ECs also contain some low-quality cells but these didn't cluster separately
 so I cannot get rid of them easily right now.
@@ -728,7 +719,7 @@ cluster_markers[[1]] %>%
 cluster_markers[[6]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 15)
-# Car4, Cd36, Rgcc I have used as classic capillary
+# Car4, Cd36, Rgcc as classic capillary
 
 # sinusoidal 1
 cluster_markers[[8]] %>%
@@ -787,28 +778,26 @@ cluster_markers[[16]] %>%
 ```{r umaps_cont, fig.height = 3, fig.width = 4}
 
 marker_genes_list_cont <- as.list(c(
-  "Ighm",
+  "Ighm", # BC/antigen-presenting
   "Cd52",
   "Cd74",
   "H2-Ab1",
-  "Myh2",
+  "Myh2", # muscle
   "Acta1", 
   "Tnnt3",
   "Tnnc2",
   "Tpm2",
-  "Nkg7",
-  "Trbc1",
-  "Klf1",
+  "Klf1", # ery
   "Epor",  
-  "Wfdc21",
+  "Wfdc21", # neutro
   "Trem1",
   "Cebpe",
   "Camp",
-  "Ear1",
+  "Ear1", # eo
   "Ear6",
   "Prg3",
   "Prg4",
-  "Clic5",
+  "Clic5", # from list
   "Htra4",
   "F13a1", 
   "Ackr3",
@@ -819,7 +808,7 @@ marker_genes_list_cont <- as.list(c(
   "Anxa8",
   "Has1",
   "Ccn2", 
-  "Cpe", # add some markers of this population from mcar
+  "Cpe", # add some markers of a similar population from mcar
   "Spp1",
   "Creb5",
   "Fbln7",
@@ -871,8 +860,7 @@ For Prg4, Creb5 and Htra4 check supplementary table 1.
 Well, so it seems it's either synovial fibro or articular cartilage, or both,
 or progenitors of one or both.
 They are in similar places, probably they are derived from the same cell type.
-I'll call them Articular/synovial progenitor-like, because now I already did 
-the work.
+I'll call them Articular/synovial-like.
 
 # Assign
 
@@ -946,8 +934,6 @@ sce_species$custom_label <- factor(
 sort(unique(sce_species$custom_label))
 levels(sce_species$custom_label)
 stopifnot(!is.na(sce_species$custom_label))
-
-#knitr::knit_exit()
 ```
 
 ```{r unif}
@@ -1024,8 +1010,7 @@ ggplot2::ggplot(
 ```
 
 Unfortunately, looks like removing the low-quality osteo-chondro
-cells also removes chondrocytes, but I've already made the 
-decision.
+cells also removes chondrocytes, but I'm sticking to the decision.
 
 ## Save 
 

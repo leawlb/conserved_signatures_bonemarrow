@@ -191,9 +191,10 @@ but let's start with this first.
 
 ```{r marker_genes}
 
+# Check supplementary table of the corresponding publication for sources
 if(fraction_curr == "hsc"){
   marker_genes <- c(
-    "Aldh1a1", # HSC, Stem
+    "Aldh1a1",
     "Procr",
     "Cdkn1c",
     "Gng11",
@@ -210,59 +211,58 @@ if(fraction_curr == "hsc"){
     "Slamf1",
     "Txnip",
     "Msi2",
-    "Adgrl4", # MPP, progenitors, activation
+    "Adgrl4", 
     "Cd34", 
     "Cdk4",
     "Sox4",
     "Spi1", 
-    "Cebpa", # Myeloid
+    "Cebpa", 
     "Ctsg",
     "Mpo",
     "Prtn3",
-    "Elane", # Neutro
+    "Elane",
     "Cebpe", 
     "Gfi1", 
     "S100a8",
     "S100a9",
     "Wfdc21",
-    "Ccr2", # Mono
+    "Ccr2", 
     "Irf8",
     "Ly86",
     "Ms4a6c",
-    "Flt3", # Lymphoid
+    "Flt3", 
     "Satb1",
     "Dntt",
     "Cd79b", 
     "Il7r",
     "Rag1",
-    "Cpa3", # Mast
+    "Cpa3", 
     "Hdc", 
     "Ms4a2",
-    "Lmo4", # Baso
+    "Lmo4",
     "Mcpt8", 
     "Prss34",
-    "Gata2", # also Mk, Eo Baso and HSC
-    "Itga2b", # Mk
+    "Gata2", 
+    "Itga2b",
     "Pf4",
-    "Blvrb", # Mk Ery
+    "Blvrb", 
     "Gata1",
     "Zfpm1",
-    "Epor", # Ery
+    "Epor", 
     "Gfi1b",
     "Hba-a1",
     "Klf1",
-    "Dctpp1", # CC entry
+    "Dctpp1",
     "Hells",
     "Lig1",
     "Mcm6", 
-    "Cenpa", # CC
+    "Cenpa",
     "Lockd", 
     "Mki67"
   )
 }else{
   stop()
 }
-
 ```
 
 ```{r genes_short}
@@ -493,7 +493,7 @@ cluster_markers[[7]] %>%
 ```
 
 ```{r hsc_add_plots, fig.width = 4, fig.height = 3}
-# adding specific genes from the marker list to visualise in umap
+# adding potentially interesting genes from the marker list to visualise
 hsc_markers_add <- c(
   "Ramp2",
   "Gas6",
@@ -678,6 +678,7 @@ cluster_markers[[13]] %>%
 ```
 
 ```{r myeloid_add_plots, fig.width = 4, fig.height = 3}
+# some potentially interesting genes from the marker gene lists
 early_neutro_markers_17 <- c(
   "Alas1",
   "Anxa3",
@@ -744,7 +745,7 @@ cluster_markers[[10]] %>%
 ```
 
 These are also pretty cut and dry a progression frome early lymphoid cells
-(Flit3, Satb1) to later, more mature B lineage cells (Cd79b)
+(Flt3, Satb1) to later, more mature B lineage cells (Cd79b)
 
 ### Rest of Bm and ery
 
@@ -782,7 +783,7 @@ cluster_markers[[12]] %>%
 ```
 
 ```{r ery_add_plots, fig.width = 4, fig.height = 3}
-# from the marker genes, 
+# from the marker gene lists, 
 # these are not black-white different genes but slightly higher or lower
 ery_6_markers <- c(
   "Cpa3",
@@ -854,9 +855,9 @@ sce_species$custom_label[
 
 # myeloid
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "8"] <-  "Early myeloid"
+  sce_species$cluster_louvain_custom == "8"] <-  "Early myeloid prog"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "17"] <-  "Neutro progenitor"
+  sce_species$cluster_louvain_custom == "17"] <-  "Neutro prog"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "18"] <-  "Low quality, neutro"
 sce_species$custom_label[
@@ -866,25 +867,25 @@ sce_species$custom_label[
 
 # lymphoid
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "16"] <-  "Early lymphoid"
+  sce_species$cluster_louvain_custom == "16"] <-  "Early lymphoid prog"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "10"] <-  "Late/Cycling lymphoid"
+  sce_species$cluster_louvain_custom == "10"] <-  "Late/Cycling lymphoid prog"
 
 # baso mast
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "11"] <-  "Baso/Mast progenitor"
+  sce_species$cluster_louvain_custom == "11"] <-  "BM prog"
 
 # ery and mk populations
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "4"] <-  "Early Mk progenitor"
+  sce_species$cluster_louvain_custom == "4"] <-  "Early Mk prog"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "1"] <-  "Early ery/baso/mast 1"
+  sce_species$cluster_louvain_custom == "1"] <-  "Early ery/BM prog 1"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "6"] <-  "Early ery/baso/mast 2"
+  sce_species$cluster_louvain_custom == "6"] <-  "Early ery/BM prog 2"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "9"] <-  "Ery progenitor"
+  sce_species$cluster_louvain_custom == "9"] <-  "Ery prog"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "12"] <-  "Cycling ery"
+  sce_species$cluster_louvain_custom == "12"] <-  "Cycling ery prog"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "19"] <-  "Low quality, ery"
 
@@ -898,18 +899,18 @@ sce_species$custom_label <- factor(
     "HSC",
     "MPP cells 1",
     "MPP cells 2",
-    "Early myeloid",
-    "Neutro progenitor",
+    "Early myeloid prog",
+    "Neutro prog",
     "Cycling, mostly myeloid",
     "Mono/antigen-presenting",
-    "Early lymphoid",
-    "Late/Cycling lymphoid",
-    "Baso/Mast progenitor",
-    "Early Mk progenitor",
-    "Early ery/baso/mast 1",
-    "Early ery/baso/mast 2",
-    "Ery progenitor",
-    "Cycling ery",
+    "Early lymphoid prog",
+    "Late/Cycling lymphoid prog",
+    "BM prog",
+    "Early Mk prog",
+    "Early ery/BM prog 1",
+    "Early ery/BM prog 2",
+    "Ery prog",
+    "Cycling ery prog",
     # add populations that will be removed due to their status
     # as mature immune cell contamination or low quality cell contamination
     "Low quality, early",
@@ -930,9 +931,9 @@ sce_species$custom_label_unif[
   sce_species$custom_label == "MPP cells 2"] <-  "MPP cells"
 
 sce_species$custom_label_unif[
-  sce_species$custom_label == "Early ery/baso/mast 1"] <-  "Early ery/baso/mast"
+  sce_species$custom_label == "Early ery/BM prog 1"] <-  "Early ery/BM prog"
 sce_species$custom_label_unif[
-  sce_species$custom_label == "Early ery/baso/mast 2"] <-  "Early ery/baso/mast"
+  sce_species$custom_label == "Early ery/BM prog 2"] <-  "Early ery/BM prog"
 
 sce_species$custom_label_unif[
   sce_species$custom_label == "Low quality, early"] <-  "Low quality"
@@ -946,17 +947,17 @@ sce_species$custom_label_unif <- factor(
   levels = c(
     "HSC",
     "MPP cells",
-    "Early myeloid",
-    "Neutro progenitor",
+    "Early myeloid prog",
+    "Neutro prog",
     "Cycling, mostly myeloid",
     "Mono/antigen-presenting",
-    "Early lymphoid",
-    "Late/Cycling lymphoid",
-    "Baso/Mast progenitor",
-    "Early Mk progenitor",
-    "Early ery/baso/mast",
-    "Ery progenitor",
-    "Cycling ery",
+    "Early lymphoid prog",
+    "Late/Cycling lymphoid prog",
+    "BM prog",
+    "Early Mk prog",
+    "Early ery/BM prog",
+    "Ery prog",
+    "Cycling ery prog",
     # add populations that will be removed due to their status
     # as mature immune cell contamination or low quality cell contamination
     "Low quality",

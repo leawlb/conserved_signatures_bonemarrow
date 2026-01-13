@@ -21,6 +21,9 @@ from the figure, too.
 I didn't change too much from the original figure script though.
 Instead, I added some comments why I chose each annotation.
 
+Check supplementary table 1 of the corresponding publication for some of the 
+marker gene sources.
+
 #### Load objects
 
 ```{r seed, message = FALSE}
@@ -38,7 +41,6 @@ library(tidyverse, quietly = TRUE)
 ```{r base_path}
 base_path <- snakemake@input[["base_path"]]
 metadata_path <- snakemake@input[["metadata_path"]]
-#base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/"
 ```
 
 ```{r load_objects}

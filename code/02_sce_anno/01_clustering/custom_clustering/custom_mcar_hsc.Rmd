@@ -41,7 +41,6 @@ source(file =  snakemake@params[["plotting"]])
 
 ```{r load_objects}
 sce_species <- base::readRDS(file = snakemake@input[["sce_species"]])
-#sce_species <- base::readRDS(file = "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/01_mnnc/comparison/sce_mcar_hsc_Object_ID-01")
 
 fraction_curr <- "hsc"
 species_curr <- "mcar"
@@ -51,18 +50,13 @@ stopifnot(unique(sce_species$Species_ID == species_curr))
 
 # define output path here
 # since in an .Rmd file run by snakemake the only output defined
-# by snakemake is the html, any other output must be
-# defined manually
+# by snakemake is the html, any other output must be defined manually
 base_path_data <- snakemake@params[["OUTPUT_DAT"]]
 output_path <- base::paste0(base_path_data, "/02_clst/custom/sce_mcar_hsc_custom.rds")
 print(output_path)
 ```
 
 ```{r colors, message = FALSE}
-#colors_path <- snakemake@params[["colors_path"]]
-#source(snakemake@params[["colors"]])
-#source("repositories/Interspecies_BM_phd/code/source/plotting.R")
-
 col_num <- c(dittoSeq::dittoColors()[1:20])
 names(col_num) <- as.character(c(1:20))
 ```
@@ -195,9 +189,10 @@ but let's start with this first.
 
 ```{r marker_genes}
 
+# check corresponding supplementary table 1 for sources not mentioned here
 if(fraction_curr == "hsc"){
   marker_genes <- c(
-    "Aldh1a1", # HSC, Stem
+    "Aldh1a1", 
     "Procr",
     "Cdkn1c",
     "Gng11",
@@ -215,65 +210,64 @@ if(fraction_curr == "hsc"){
     "Txnip",
     "Msi2",
     "Ldhb",
-    "Adgrl4", # MPP, progenitors, activation
+    "Adgrl4", 
     "Cd34", 
     "Cdk4",
     "Sox4",
     "Spi1", 
-    "Cebpa", # Myeloid
+    "Cebpa", 
     "Ctsg",
     "Mpo",
     "Prtn3",
-    "Elane", # Neutro
+    "Elane",
     "Cebpe", 
     "Gfi1", 
     "S100a8",
     "S100a9",
     "Wfdc21",
-    "Ccr2", # Mono
+    "Ccr2", 
     "Irf8",
     "Ly86",
     "Ms4a6c",
-    "Flt3", # Lymphoid
+    "Flt3", 
     "Satb1",
     "Dntt",
     "Cd79b", 
     "Il7r",
-    "Rag1",
-    "Ighm",
-    "Vpreb1",
-    "Vpreb3",
-    "Igkc",
-    "Ccl5", # NK
+    "Rag1", # adding some additional genes, Rag1 is lymphoid https://doi.org/10.1093/nar/27.14.2938
+    "Ighm", # Ig gene
+    "Vpreb1", # BC development
+    "Vpreb3", # BC development
+    "Igkc", # Ig gene
     "Cd3e", # TC
-    "Cd8a",
-    "Tcf7",
-    "Cpa3", # Mast
+    "Cd8a", # TC
+    "Tcf7", # lymphoid/TC https://doi.org/10.3389/fimmu.2020.00470
+    "Cpa3", 
     "Hdc", 
     "Ms4a2",
-    "Lmo4", # Baso
+    "Lmo4", 
     "Mcpt8", 
     "Prss34",
-    "Gata2", # also Mk, Eo Baso and HSC
-    "Itga2b", # Mk
+    "Gata2",
+    "Itga2b", 
     "Pf4",
-    "Cavin2",
-    "Plek",
-    "Rap1b",
-    "Cd9",
-    "Fli1",
-    "Blvrb", # Mk Ery
+    "Cavin2", # Mk http://dx.doi.org/10.1097/BS9.0000000000000187
+    "Plek", # Mk https://doi.org/10.1182/blood-2006-08-038901
+    "Rap1b", # Mk https://doi.org/10.1182/blood-2018-03-838714
+    "Cd9", # Mk https://doi.org/10.1182/blood.v97.7.1982
+    "Fli1", # Mk https://doi.org/10.1182/blood-2017-02-770958
+    "Blvrb",
     "Gata1",
     "Zfpm1",
-    "Epor", # Ery
+    "Epor", 
     "Gfi1b",
-    "Hba-a1",
+    "Hba-a1", # hemoglobin gene
     "Klf1",
-    "Dctpp1", # CC entry
+    "Dctpp1", 
     "Hells",
     "Lig1",
     "Mcm6", 
-    "Cenpa", # CC
+    "Cenpa",
     "Lockd", 
     "Mki67"
   )
@@ -284,6 +278,7 @@ if(fraction_curr == "hsc"){
 
 ```{r genes_short}
 
+# shorter version of the above list
 if(fraction_curr == "hsc"){
   marker_genes_short <- c(
     "Alcam", 
@@ -456,7 +451,7 @@ plot_list_gene
 ## Markers
 
 Similarly to SPRETUS, I decided to go for a larger number of clusters.
-In this case, a lot of clustering is happening in the erythroid populations first,
+In this case, a lot of clustering is happening in the erythroid populations,
 but I also wanted to separate some other populations better.
 So this clustering will result in a larger number of erythroid clusters which
 can later be merged back together.
@@ -498,7 +493,7 @@ cluster_markers <- lapply(clustlist, function(x){
 
 ### HSC
 
-These HSC contain a small nucleus of very early lymphoid cells because
+These HSC contain a small population of very early lymphoid cells because
 there are not enough immature lymphoid cells to form their own
 cluster in CAROLI.
 Also, compared to other species, many BL6 HSC genes seem more broadly
@@ -512,7 +507,7 @@ cluster_markers[[2]] %>%
 
 It actually already looks quite MPP-ish, expressing Cd34, but it is
 also visible that Cd34 is not really excluded from an immature population,
-so for CAST it's simply not a good HSC-MPP differentiation marker.
+so for CAROLI it's maybe simply not a good HSC-MPP differentiation marker.
 Despite some more mature-looking expression, Msi2, Meis1, Hoxa9, Mecom
 place it in the (most) immature stem compartment (in this species' dataset).
 Or we simply don't know the right stemness genes for CAROLI.
@@ -543,7 +538,7 @@ Both start expressing Lig1 and Mcm6.
 I think cluster 7 is activated MPPs in different cycling phases.
 
 ```{r hsc_mpp_genes_add, fig.width = 4, fig.height = 3}
-# I don't know most of these genes
+# testing some interesting genes from the marker gene lust
 hsc_mpp_genes_add <- c(
   "Hoxa9",
   "Cd302",
@@ -597,6 +592,7 @@ cluster_markers[[18]] %>%
 ```
 
 ```{r markers_myeloid_add, fig.width = 4, fig.height = 3}
+# testing some interesting genes from the marker gene lists
 markers_myeloid_add <- c(
   "Mcpt8",
   "F13a1",
@@ -689,6 +685,7 @@ cluster_markers[[12]] %>%
 ```
 
 ```{r markers_meb_add, fig.width = 4, fig.height = 3}
+# testing some interesting genes from the marker gene lists
 markers_meb_add <- c(
   "Ifi204",
   "Clec2d",
@@ -772,6 +769,7 @@ cluster_markers[[13]] %>%
 ```
 
 ```{r ery_markers_add, fig.width = 4, fig.height = 3}
+# testing some potentially interesting genes from the marker gene lists
 ery_markers_add <- c(
   "Bex4",
   "Ermap",
@@ -817,41 +815,41 @@ sce_species$custom_label[
 
 # myeloid
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "5"] <-  "Granu/mono progenitor"  
+  sce_species$cluster_louvain_custom == "5"] <-  "Granu/mono prog"  
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "15"] <-  "Cycling granu/mono" 
+  sce_species$cluster_louvain_custom == "15"] <-  "Cycling granu/mono prog" 
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "18"] <-  "Antigen-presenting"   
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "10"] <-  "Neutro progenitor"  
+  sce_species$cluster_louvain_custom == "10"] <-  "Neutro prog"  
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "17"] <-  "Low quality"  
 
 # lymphoid
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "16"] <-  "Late lymphoid"
+  sce_species$cluster_louvain_custom == "16"] <-  "Late lymphoid prog"
   
 # BM Ery Mk
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "14"] <-  "Mk/E/BM (more Mk and BM)"
+  sce_species$cluster_louvain_custom == "14"] <-  "Mk/Ery/BM (more Mk/BM) prog"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "12"] <-  "Mk/E/BM (more Ery)"
+  sce_species$cluster_louvain_custom == "12"] <-  "Mk/Ery/BM (more ery) prog"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "8"] <-  "Baso/Mast progenitor"
+  sce_species$cluster_louvain_custom == "8"] <-  "BM prog"
 
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "4"] <-  "Early erythroid progenitor"
+  sce_species$cluster_louvain_custom == "4"] <-  "Early ery prog"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "3"] <-  "Erythroid 1"
+  sce_species$cluster_louvain_custom == "3"] <-  "Ery prog 1"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "11"] <-  "Erythroid 2"
+  sce_species$cluster_louvain_custom == "11"] <-  "Ery prog 2"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "9"] <-  "Erythroid 3"
+  sce_species$cluster_louvain_custom == "9"] <-  "Ery prog 3"
 
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "6"] <-  "Late erythroid progenitor"
+  sce_species$cluster_louvain_custom == "6"] <-  "Late ery prog"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "13"] <-  "Latest erythroid progenitor"
+  sce_species$cluster_louvain_custom == "13"] <-  "Latest ery prog"
 
 sce_species$custom_label <- factor(
   sce_species$custom_label,
@@ -859,20 +857,20 @@ sce_species$custom_label <- factor(
     "HSC",
     "Activated MPP",
     "Cycling MPP",
-    "Granu/mono progenitor",
-    "Cycling granu/mono",
-    "Neutro progenitor",
+    "Granu/mono prog",
+    "Cycling granu/mono prog",
+    "Neutro prog",
     "Antigen-presenting",
-    "Late lymphoid",
-    "Baso/Mast progenitor",
-    "Mk/E/BM (more Mk and BM)",
-    "Mk/E/BM (more Ery)",
-    "Early erythroid progenitor",
-    "Erythroid 1",
-    "Erythroid 2",
-    "Erythroid 3",
-    "Late erythroid progenitor",
-    "Latest erythroid progenitor",
+    "Late lymphoid prog",
+    "BM prog",
+    "Mk/Ery/BM (more Mk/BM) prog",
+    "Mk/Ery/BM (more ery) prog",
+    "Early ery prog",
+    "Ery prog 1",
+    "Ery prog 2",
+    "Ery prog 3",
+    "Late ery prog",
+    "Latest ery prog",
     # contamination
     "Low quality"
     ))
@@ -884,11 +882,11 @@ stopifnot(!is.na(sce_species$custom_label))
 sce_species$custom_label_unif <- unfactor(sce_species$custom_label)
 
 sce_species$custom_label_unif[
-  sce_species$custom_label == "Erythroid 1"] <-  "Erythroid"
+  sce_species$custom_label == "Ery prog 1"] <-  "Ery prog"
 sce_species$custom_label_unif[
-  sce_species$custom_label == "Erythroid 2"] <-  "Erythroid"
+  sce_species$custom_label == "Ery prog 2"] <-  "Ery prog"
 sce_species$custom_label_unif[
-  sce_species$custom_label == "Erythroid 3"] <-  "Erythroid"
+  sce_species$custom_label == "Ery prog 3"] <-  "Ery prog"
 
 sce_species$custom_label_unif <- factor(
   sce_species$custom_label_unif,
@@ -896,18 +894,18 @@ sce_species$custom_label_unif <- factor(
     "HSC",
     "Activated MPP",
     "Cycling MPP",
-    "Granu/mono progenitor",
-    "Cycling granu/mono",
-    "Neutro progenitor",
+    "Granu/mono prog",
+    "Cycling granu/mono prog",
+    "Neutro prog",
     "Antigen-presenting",
-    "Late lymphoid",
-    "Baso/Mast progenitor",
-    "Mk/E/BM (more Mk and BM)",
-    "Mk/E/BM (more Ery)",
-    "Early erythroid progenitor",
-    "Erythroid",
-    "Late erythroid progenitor",
-    "Latest erythroid progenitor",
+    "Late lymphoid prog",
+    "BM prog",
+    "Mk/Ery/BM (more Mk/BM)",
+    "Mk/Ery/BM (more ery)",
+    "Early ery prog",
+    "Ery prog",
+    "Late ery prog",
+    "Latest ery prog",
     # contamination
     "Low quality"
     ))

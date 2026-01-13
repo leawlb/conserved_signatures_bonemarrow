@@ -57,18 +57,15 @@ utils::sessionInfo()
 
 # the un-clustered original object
 seu_ts_hscs_progenitors <- readRDS(snakemake@input[["seu_input"]])
-#seu_ts_hscs_progenitors <- readRDS("/home/l012t/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_hscs_progenitors")
 
 # this contains the ensembl IDs for orthologs of ONLY the signature genes
 # used for subsetting later
 ensembl_sign <- base::readRDS(snakemake@input[["ensembl_sign"]])
-#ensembl_sign <- readRDS("/home/l012t/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/02_endf/ensembl_sign_hsc")
 head(ensembl_sign)
 
 # this contains info on the selected resolution for each dataset
 # for clustering with each gene set
 resolution_df_path <- snakemake@input[["resolution_df_path"]]
-# resolution_df_path <- "/home/l012t/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt"
 
 resolution_df <- utils::read.csv(file = resolution_df_path, 
                                header = TRUE, 
@@ -233,46 +230,73 @@ Look at the clusters.
 Check possible remaining batch effects.
 
 ```{r umaps_base, fig.height = 6, fig.width = 6}
-Seurat::DimPlot(combined_ts_hscs_progenitors, reduction = "umap")
+Seurat::DimPlot(
+  combined_ts_hscs_progenitors, 
+  reduction = "umap")
 ``` 
 
 ```{r umaps_base_donid, fig.height = 6, fig.width = 6}
-Seurat::DimPlot(combined_ts_hscs_progenitors, reduction = "umap", group.by = "donor_id")
+Seurat::DimPlot(
+  combined_ts_hscs_progenitors, 
+  reduction = "umap", 
+  group.by = "donor_id")
 ``` 
 
 ```{r umaps_dev, fig.height = 12, fig.width = 6}
-Seurat::DimPlot(combined_ts_hscs_progenitors, reduction = "umap")+
+Seurat::DimPlot(
+  combined_ts_hscs_progenitors, 
+  reduction = "umap")+
   ggplot2::facet_wrap(
-    facets = vars(combined_ts_hscs_progenitors@meta.data$development_stage), ncol = 2)
+    facets = vars(combined_ts_hscs_progenitors@meta.data$development_stage), 
+    ncol = 2)
 ``` 
 
 ```{r umaps_sex, fig.height = 3, fig.width = 6}
-Seurat::DimPlot(combined_ts_hscs_progenitors, reduction = "umap")+
+Seurat::DimPlot(
+  combined_ts_hscs_progenitors, 
+  reduction = "umap")+
   ggplot2::facet_wrap(
-    facets = vars(combined_ts_hscs_progenitors@meta.data$sex), ncol = 2)
+    facets = vars(combined_ts_hscs_progenitors@meta.data$sex), 
+    ncol = 2)
 ``` 
 
 ```{r umaps_sex_assay, fig.height = 3, fig.width = 6}
-Seurat::DimPlot(combined_ts_hscs_progenitors, reduction = "umap", group.by = "assay")+
+Seurat::DimPlot(
+  combined_ts_hscs_progenitors, 
+  reduction = "umap", 
+  group.by = "assay")+
   ggplot2::facet_wrap(
-    facets = vars(combined_ts_hscs_progenitors@meta.data$sex), ncol = 2)
+    facets = vars(combined_ts_hscs_progenitors@meta.data$sex), 
+    ncol = 2)
 ``` 
 
 ```{r umaps_assay_donid, fig.height = 12, fig.width = 6}
-Seurat::DimPlot(combined_ts_hscs_progenitors, reduction = "umap", group.by = "assay")+
+Seurat::DimPlot(
+  combined_ts_hscs_progenitors, 
+  reduction = "umap", 
+  group.by = "assay")+
   ggplot2::facet_wrap(
-    facets = vars(combined_ts_hscs_progenitors@meta.data$donor_id), ncol = 2)
+    facets = vars(combined_ts_hscs_progenitors@meta.data$donor_id), 
+    ncol = 2)
 ``` 
 
 ```{r umaps_sex_donid, fig.height = 12, fig.width = 6}
-Seurat::DimPlot(combined_ts_hscs_progenitors, reduction = "umap", group.by = "sex")+
+Seurat::DimPlot(
+  combined_ts_hscs_progenitors, 
+  reduction = "umap", 
+  group.by = "sex")+
   ggplot2::facet_wrap(
-      facets = vars(combined_ts_hscs_progenitors@meta.data$donor_id), ncol = 2)
+    facets = vars(combined_ts_hscs_progenitors@meta.data$donor_id), 
+    ncol = 2)
 ``` 
 
 ```{r umaps_assay, fig.height = 3, fig.width = 6}
-Seurat::DimPlot(combined_ts_hscs_progenitors, reduction = "umap")+
-  ggplot2::facet_wrap(facets = vars(combined_ts_hscs_progenitors@meta.data$assay), ncol = 2)
+Seurat::DimPlot(
+  combined_ts_hscs_progenitors, 
+  reduction = "umap")+
+  ggplot2::facet_wrap(
+    facets = vars(combined_ts_hscs_progenitors@meta.data$assay), 
+    ncol = 2)
 ``` 
 
 It looks pretty well integrated in terms of sex, donor id and assay.
@@ -307,7 +331,8 @@ ct_markers_ts_hscs_progenitors <- lapply(clust_list, function(x){
 })
 names(ct_markers_ts_hscs_progenitors) <- levels(combined_ts_hscs_progenitors$seurat_clusters)
 
-combined_ts_hscs_progenitors$batchc_sign_labels <- vector(length = ncol(combined_ts_hscs_progenitors))
+combined_ts_hscs_progenitors$batchc_sign_labels <- vector(length = ncol(
+  combined_ts_hscs_progenitors))
 ```
 
 Will go in the order of 4, 3, 0, 5, 2, 1, 6, 7
@@ -328,7 +353,7 @@ ct_markers_ts_hscs_progenitors[[nr]][
 
 Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[1:6])
 Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[7:12])
-# so that cluster is cliearly cycling.
+# so that cluster is clearly cycling.
 # in the top genes quite far down I find CD34 but that and TCF4 are
 # about it for markers that otherwise really jump out to me
 
@@ -354,7 +379,7 @@ Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[7:12])
 # and Mk cells
 
 combined_ts_hscs_progenitors$batchc_sign_labels[
-  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "Mk/Ery"
+  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "Mk/Ery prog"
 ```
 
 ```{r cluster0}
@@ -419,7 +444,7 @@ Seurat::FeaturePlot(combined_ts_hscs_progenitors, markers[7:12])
 # LY86, CLEC12A (mono) suggest non-restricted early Myeloid
 
 combined_ts_hscs_progenitors$batchc_sign_labels[
-  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "Early Myeloid"
+  combined_ts_hscs_progenitors$seurat_clusters == nr] <- "Early Myeloid prog"
 ```
 
 ```{r cluster1}
@@ -494,12 +519,12 @@ combined_ts_hscs_progenitors$batchc_sign_labels <- factor(
   levels = c(  
     "HSC",
     "Cycling",
-    "Early Myeloid",
+    "Early Myeloid prog",
     "Granu/Mono prog",
     "More Granu prog",
     "More Mono prog",
     "Lymphoid MPP",
-    "Mk/Ery"
+    "Mk/Ery prog"
    ))
 
 stopifnot(!is.na(combined_ts_hscs_progenitors$batchc_sign_labels))

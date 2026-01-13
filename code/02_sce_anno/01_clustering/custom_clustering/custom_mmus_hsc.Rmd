@@ -191,9 +191,10 @@ but let's start with this first.
 
 ```{r marker_genes}
 
+# check supp table 1 of corresponding publication for sources
 if(fraction_curr == "hsc"){
   marker_genes <- c(
-    "Aldh1a1", # HSC, Stem
+    "Aldh1a1", 
     "Procr",
     "Cdkn1c",
     "Gng11",
@@ -210,59 +211,58 @@ if(fraction_curr == "hsc"){
     "Slamf1",
     "Txnip",
     "Msi2",
-    "Adgrl4", # MPP, progenitors, activation
+    "Adgrl4", 
     "Cd34", 
     "Cdk4",
     "Sox4",
     "Spi1", 
-    "Cebpa", # Myeloid
+    "Cebpa", 
     "Ctsg",
     "Mpo",
     "Prtn3",
-    "Elane", # Neutro
+    "Elane", 
     "Cebpe", 
     "Gfi1", 
     "S100a8",
     "S100a9",
     "Wfdc21",
-    "Ccr2", # Mono
+    "Ccr2", 
     "Irf8",
     "Ly86",
     "Ms4a6c",
-    "Flt3", # Lymphoid
+    "Flt3", 
     "Satb1",
     "Dntt",
     "Cd79b", 
     "Il7r",
     "Rag1",
-    "Cpa3", # Mast
+    "Cpa3", 
     "Hdc", 
     "Ms4a2",
-    "Lmo4", # Baso
+    "Lmo4", 
     "Mcpt8", 
     "Prss34",
-    "Gata2", # also Mk, Eo Baso and HSC
-    "Itga2b", # Mk
+    "Gata2",
+    "Itga2b", 
     "Pf4",
-    "Blvrb", # Mk Ery
+    "Blvrb", 
     "Gata1",
     "Zfpm1",
-    "Epor", # Ery
+    "Epor", 
     "Gfi1b",
     "Hba-a1",
     "Klf1",
-    "Dctpp1", # CC entry
+    "Dctpp1", 
     "Hells",
     "Lig1",
     "Mcm6", 
-    "Cenpa", # CC
+    "Cenpa",
     "Lockd", 
     "Mki67"
   )
 }else{
   stop()
 }
-
 ```
 
 ```{r genes_short}
@@ -501,7 +501,8 @@ cluster_markers[[9]] %>%
   dplyr::filter(avg_log2FC > 0) %>%
   head(n = 20)
 
-# some extra genes of interest for differentiating the cell type
+# some extra genes of potential interest for differentiating the cell type
+# from the marker gene list
 mpp_genes <- c(
   "Myl10",
   "Ly6a"
@@ -529,14 +530,13 @@ Cluster 9 shows clear signs of CC entry/activation.
 # define some extra lymph genes, also add some TC and APC genes 
 mature_lymph_genes <- c(
   "Ccl5", # NK cell
-  "Vpreb3", # early BC
+  "Vpreb3", # early BC development
   "Ighm", # mature BC
-  "Ccl5", # NK
   "Cd3e", # TC
-  "Cd8a",
-  "Tcf7",
-  "Cd74",
-  "H2-Aa"
+  "Cd8a", # TC
+  "Tcf7", # lymphoid/TC https://doi.org/10.3389/fimmu.2020.00470   
+  "Cd74", # antigen presentation https://doi.org/10.3748/wjg.15.2855
+  "H2-Aa" # MHC II gene
 )
 
 mature_lymph_genes_list <- as.list(mature_lymph_genes)
@@ -594,18 +594,18 @@ cluster_markers[[14]] %>%
 cluster_markers[[1]][1:30,]
 cluster_markers[[7]][1:30,]
 
-# cycling marker genes that may differentiate
+# cycling marker genes from the marker gene lists
 cycling_genes <- c(
-  "Hist1h1b", # cluster 1
+  "Hist1h1b", 
   "Hist1h2ap",
   "Prc1",
   "Cdk1",
   "Smc4",
-  "Aurkb", # general, S->G2 transition
-  "Ptms", # cluster 7
+  "Aurkb",
+  "Ptms", 
   "Cdc20", 
   "Cdkn3",
-  "Ccnb2", # general, towards M phase
+  "Ccnb2", 
   "Knstrn"
 )
 
@@ -643,27 +643,27 @@ sce_species$custom_label[
 
 # lymphoid
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "3"] <-  "Early lymphoid"
+  sce_species$cluster_louvain_custom == "3"] <-  "Early lymphoid prog"
 sce_species$custom_label[
   sce_species$cluster_louvain_custom == "13"] <-  "Late immune, mixed"
 
 # ery and mk
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "4"] <-  "Ery progenitor"
+  sce_species$cluster_louvain_custom == "4"] <-  "Ery prog"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "6"] <-  "Early ery"
+  sce_species$cluster_louvain_custom == "6"] <-  "Early ery prog"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "10"] <-  "Mk/Ery (more Mk)"
+  sce_species$cluster_louvain_custom == "10"] <-  "Mk/Ery (more Mk) prog"
 
 # mast/baso
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "5"] <-  "Baso/Mast progenitor"
+  sce_species$cluster_louvain_custom == "5"] <-  "BM prog"
 
 # myeloid
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "12"] <-  "Granu/mono progenitor"
+  sce_species$cluster_louvain_custom == "12"] <-  "Granu/mono prog"
 sce_species$custom_label[
-  sce_species$cluster_louvain_custom == "14"] <-  "Late neutro"
+  sce_species$cluster_louvain_custom == "14"] <-  "Late neutro prog"
 
 # cycling cells
 sce_species$custom_label[
@@ -678,13 +678,13 @@ sce_species$custom_label <- factor(
     "Early MPP cells 1",
     "Early MPP cells 2",
     "Activated MPP",
-    "Granu/mono progenitor",
-    "Late neutro",
-    "Early lymphoid",
-    "Baso/Mast progenitor",
-    "Mk/Ery (more Mk)",
-    "Early ery",
-    "Ery progenitor",
+    "Granu/mono prog",
+    "Late neutro prog",
+    "Early lymphoid prog",
+    "BM prog",
+    "Mk/Ery (more Mk) prog",
+    "Early ery prog",
+    "Ery prog",
     "Cycling (more S-phase)",
     "Cycling (more M-phase)",
     # contamination
@@ -708,13 +708,13 @@ sce_species$custom_label_unif <- factor(
     "HSC",
     "Early MPP cells",
     "Activated MPP",
-    "Granu/mono progenitor",
-    "Late neutro",
-    "Early lymphoid",
-    "Baso/Mast progenitor",
-    "Mk/Ery (more Mk)",
-    "Early ery",
-    "Ery progenitor",
+    "Granu/mono prog",
+    "Late neutro prog",
+    "Early lymphoid prog",
+    "BM prog",
+    "Mk/Ery (more Mk) prog",
+    "Early ery prog",
+    "Ery prog",
     "Cycling (more S-phase)",
     "Cycling (more M-phase)",
     # contamination

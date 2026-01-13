@@ -24,6 +24,9 @@ from the figure, too.
 I didn't change too much from the original figure script though.
 Instead, I added some comments why I chose each annotation.
 
+Check supplementary table 1 of the corrsponding publication for some of the 
+marker gene sources.
+
 #### Load objects
 
 ```{r seed, message = FALSE}
@@ -41,7 +44,6 @@ library(Seurat, quietly = TRUE)
 ```{r define_basepath}
 base_path <- snakemake@input[["base_path"]]
 metadata_path <- snakemake@input[["metadata_path"]]
-#base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/"
 ```
 
 ```{r load_short}
@@ -160,7 +162,6 @@ for(ct in names(geneset_list_str)){
     }
   }
 }
-
 ```
 
 ### UMAPs
@@ -210,6 +211,8 @@ SOI <-  c("Mgp", "Cxcl12", "Hp", "Notch3", "Ebf3", "Dpep1", "Cxcl14", "Cyp1b1",
           "Esm1")
 signature_df[signature_df$genes %in% SOI,]
 
+# Cxcl12 is by definition a CAR cells, some other genes are also clearly niche or
+# adipo-related
 seu_sign_o2$annotated_reclustered[
   seu_sign_o2$seurat_clusters == nr] <- "Adipo/CAR1, pbs"
 ```
@@ -240,6 +243,8 @@ signature_df[signature_df$genes %in% SOI,]
 
 # Alpl, Sp7, Pth1r osteo
 
+# still enough cxcl12 expression, Limch1 is Osteo-CAR, other genes are also
+# osteo-related but not too differentiated
 seu_sign_o2$annotated_reclustered[
   seu_sign_o2$seurat_clusters == nr] <- "Osteo/CAR"
 ```
@@ -271,6 +276,7 @@ signature_df[signature_df$genes %in% SOI,]
 # Kitl, Cxcl12: CAR
 # Dpep1, Esm1, Mme: adipo
 
+# standard Adipo-CAR gene expression
 seu_sign_o2$annotated_reclustered[
   seu_sign_o2$seurat_clusters == nr] <- "Adipo/CAR3, non-pbs"
 ```
@@ -324,6 +330,8 @@ FeaturePlot(seu_sign_o2, markers[13:18])
 SOI <-  c("Aspn", "Edil3", "Fmod", "Lum", "Mmp2", "Prrx2", "Sema3c")
 signature_df[signature_df$genes %in% SOI,]
 
+# this is classic for some sort of mixed fibro/chondro possible
+# transitory or progenitor population 
 seu_sign_o2$annotated_reclustered[
   seu_sign_o2$seurat_clusters == nr] <- "Fibro-Chondro"
 ```
@@ -348,6 +356,8 @@ FeaturePlot(seu_sign_o2, markers[13:18])
 SOI <-  c("Thbs4", "Clec3b", "Crispld2", "Tnxb", "Itgbl1", "Sema3c", "Prrx2")
 signature_df[signature_df$genes %in% SOI,]
 
+# still some fibro-related erxpression with Clec3b but much more clearly 
+# early chondro
 seu_sign_o2$annotated_reclustered[
   seu_sign_o2$seurat_clusters == nr] <- "Chondro"
 ```
@@ -373,6 +383,7 @@ FeaturePlot(seu_sign_o2, markers[13:16])
 SOI <-  c("Scara5", "Pdgfrb", "Snrk", "Ebf3", "Ltbp3", "Mgp", "Hp", "Foxc1")
 signature_df[signature_df$genes %in% SOI,]
 
+# adipo- or niche related expression
 seu_sign_o2$annotated_reclustered[
   seu_sign_o2$seurat_clusters == nr] <- "Adipo/CAR2"
 ```
@@ -399,6 +410,8 @@ SOI <-  c("Serpinf1", "Sgms2", "Col5a2", "Cpe", "Dcn", "Satb2", "Sp7",
           "Serpinh1", "Lum", "Ptgis")
 signature_df[signature_df$genes %in% SOI,]
 
+# with the Lum and Dcn, still looks kind of early/mixed-ish but Sp7 
+# and Satb2 are clearly osteo lineage
 seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Osteo1"
 ```
 
@@ -422,6 +435,7 @@ FeaturePlot(seu_sign_o2, markers[13:18])
 SOI <-  c("Ackr3", "Jam2", "Mustn1", "Cryab", "Sgms2", "Ptgis")
 signature_df[signature_df$genes %in% SOI,]
 
+# losing some mixed/fibro gene expression
 seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Osteo2"
 ```
 
@@ -448,8 +462,7 @@ SOI <-  c("Serpinf1", "Cpe", "Col5a2", "Sgms2", "Mmp2", "Thbs1", "Lum",
           "Col5a1", "Omd", "Ptgis", "Satb2", "Sp7")
 signature_df[signature_df$genes %in% SOI,]
 
-# high expression of Osteo-markers
-
+# high expression of Osteo-markers like Sp7
 seu_sign_o2$annotated_reclustered[seu_sign_o2$seurat_clusters == nr] <- "Osteo3"
 ```
 

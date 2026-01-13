@@ -138,11 +138,10 @@ pdf(
 
 DimPlot(
   ts_bone_marrow,
-  label     = TRUE,
   raster    = FALSE,
   reduction = "umap",
   group.by  = "cell_type"
-) & NoAxes() & NoLegend()
+) & NoAxes()
 
 for (feat in names(gene_sets_human_hsc)) {
   p <- FeaturePlot(
@@ -170,7 +169,10 @@ ts_stromal <- readRDS(
   )
 )
 
-ts_stromal <- ts_stromal[, ts_stromal$tissue == "bone marrow"]
+ts_stromal <- ts_stromal[,
+  ts_stromal$tissue == "bone marrow" &
+  ts_stromal$cell_type != "skeletal muscle satellite cell" &
+  ts_stromal$cell_type != "cell of skeletal muscle"]
 ```
 
 ```{r process_ts_stromal}
@@ -194,7 +196,7 @@ gene_sets_human_str <- convert_mouse_sets_to_human(gene_sets_mouse_str, map_mous
 ```
 
 ```{r aucell_ts_stromal}
-expr_str <- LayerData(ts_stromal[["RNA"]], layer = "counts")
+expr_str <- LayerData(ts_stromal[["RNA"]], layer = "scale.data")
 gene_sets_human_str <- lapply(gene_sets_human_str, function(g) intersect(g, rownames(expr_str)))
 
 rankings_str <- AUCell_buildRankings(expr_str, plotStats = FALSE, verbose = FALSE)
@@ -217,11 +219,10 @@ pdf(
 
 DimPlot(
   ts_stromal,
-  label     = TRUE,
   raster    = FALSE,
   reduction = "umap",
   group.by  = "cell_type"
-) & NoAxes() & NoLegend()
+) & NoAxes()
 
 for (feat in names(gene_sets_human_str)) {
   p <- FeaturePlot(

@@ -1,7 +1,19 @@
 #!/bin/python 
 
 """
-TODO LATER
+
+This script is for reclustering two datasets using signature genes obtained
+after sliding the thresholds for the nDGE analysis and the marker gene 
+analysis separately.
+
+This results in different sets of signature genes.
+
+Calculate reclustering scores to compare the performance of signature genes
+from different thresholds. 
+
+TODO Rename the scripts after addition of the script used to slide the
+thresholds.
+
 """
 
 #-------------------------------------------------------------------------------
@@ -56,6 +68,9 @@ rule all:
 # of scores with changes in resolution, because it is one of the first 
 # human datasets and because the annotation has a better resolution than 
 # the ts adult whole bone marrow
+
+# also used ts_nome_marrow as support/to get another look but it's not the
+# focus of analysis
 
 #-------------------------------------------------------------------------------
 #-------------------------------------------------------------------------------

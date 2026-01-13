@@ -4,9 +4,9 @@
 # use the same resolution as determined for the signature genes.
 
 # !!!!
-# this script is CUSTOM-WRITTEN for ts_hsc_progenitors, so it will not work
-# for other datasets without manual adjustment of the resolution, ensembl IDs 
-# and so on
+# this script is written for Tabula Sapiens datasets like
+# ts_hscs_progenitors and ts_bone_marrow, so it will not work
+# for other datasets without adjustments
 # !!!!
 
 # determine random number generator for sample
@@ -24,7 +24,6 @@ source(snakemake@params[["reclustering_functions"]])
 # load objects from different thresholding
 
 threshold_path <- snakemake@params[["threshold_path"]]
-#threshold_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_thresholds/"
 print(threshold_path)
 
 # list of signature genes obtained when sliding pval threshold for nDGE analysis
@@ -41,14 +40,15 @@ lapply(signature_genes_by_t, function(vec){print(length(vec))})
 #-------------------------------------------------------------------------------
 # load other objects 
 
-# I select ts_hspcs_progenitors, because it looks relatively stable in
+# I select ts_hscs_progenitors, because it looks relatively stable in
 # figure S4 even with different numbers of genes (no big jumps or bumps
 # of scores with changes in resolution, because it is one of the first 
 # human datasets and because the annotation has a better resolution than 
 # the ts adult whole bone marrow
 
+# am also testing ts_bone_marrow in addition
+
 seu_dataset <- readRDS(snakemake@input[["seu_input"]])
-#seu_dataset <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_hscs_progenitors")
 
 dataset_curr <- snakemake@params[["dataset"]]
 print(dataset_curr)
@@ -56,7 +56,7 @@ print(dataset_curr)
 ens_col_use <- seu_dataset@misc$ensembl_column_use
 print(ens_col_use)
 
-# the downtream code will not work if the seurat features aren't human ens IDs 
+# the downstream code will not work if the seurat features aren't human ens IDs 
 stopifnot(ens_col_use == "ENSG_ID")
 
 # I will keep all thresholds although some contain >1000s of genes, to compute
@@ -71,8 +71,6 @@ stopifnot(ens_col_use == "ENSG_ID")
 # df because the human one only has the ensmus ID
 ensembl_hum <- readRDS(snakemake@input[["ensembl_hum"]])
 ensembl_mus <- readRDS(snakemake@input[["ensembl_mus"]])
-#ensembl_hum <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_hum")
-#ensembl_mus <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_mus")
 
 #-------------------------------------------------------------------------------
 # get the selected resolution
@@ -194,8 +192,7 @@ seu_sign_list_reclustered <- mclapply(
   mc.set.seed = TRUE
 )
 
-
-# for testing
+# for testing without parallel
 #print("testing")
 #seu_sign_list_reclustered <- lapply(
 #  X = subset_seu_list_by_t, 

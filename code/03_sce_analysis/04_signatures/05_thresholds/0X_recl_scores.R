@@ -21,7 +21,6 @@ source(file = snakemake@params[["reclustering_functions"]])
 # signature gene lists
 
 seu_list_all <- base::readRDS(snakemake@input[["seu_list"]])
-#seu_list_all <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_thresholds/ts_hscs_progenitors_recl_by_p.rds")
 
 threshold_used <- snakemake@params[["threshold_used"]]
 
@@ -48,14 +47,18 @@ score_df_list <- lapply(seu_list_all, function(seu){
     score_df <- calculate_scores(seu) # own function
     
     # add specific info
-    score_df$conservation_level <- base::rep(seu@misc$used_genes,
-                                             nrow(score_df))
-    score_df$resolution <- base::rep(seu@misc$resolution,
-                                             nrow(score_df))   
-    score_df$nr_genes_used <- base::rep(seu@misc$nr_genes_used,
-                                        nrow(score_df))
-    score_df$threshold_used <- base::rep(seu@misc$threshold_used,
-                                        nrow(score_df))
+    score_df$conservation_level <- base::rep(
+      seu@misc$used_genes,
+      nrow(score_df))
+    score_df$resolution <- base::rep(
+      seu@misc$resolution,
+      nrow(score_df))   
+    score_df$nr_genes_used <- base::rep(
+      seu@misc$nr_genes_used,
+      nrow(score_df))
+    score_df$threshold_used <- base::rep(
+      seu@misc$threshold_used,
+      nrow(score_df))
     
     return(score_df)
 })

@@ -3,6 +3,12 @@
 # obtained from sliding the pvalue threshold of the nDGE analysis.
 # use the same resolution as determined for the signature genes.
 
+# !!!!
+# this script is written for Tabula Sapiens datasets like
+# ts_hscs_progenitors and ts_bone_marrow, so it will not work
+# for other datasets without adjustments
+# !!!!
+
 # determine random number generator for sample
 library(parallel)
 RNGkind("L'Ecuyer-CMRG") # using this for parallel is necessary
@@ -19,7 +25,6 @@ source(snakemake@params[["reclustering_functions"]])
 
 threshold_path <- snakemake@params[["threshold_path"]]
 print(threshold_path)
-#threshold_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_thresholds/"
 
 # list of signature genes obtained when sliding pval threshold for nDGE analysis
 signature_genes_by_p <- readRDS(base::paste0(
@@ -36,7 +41,6 @@ lapply(signature_genes_by_p, function(vec){print(length(vec))})
 # load other objects 
 
 seu_dataset <- readRDS(snakemake@input[["seu_input"]])
-#seu_dataset <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_hscs_progenitors")
 
 dataset_curr <- snakemake@params[["dataset"]]
 print(dataset_curr)
@@ -44,7 +48,7 @@ print(dataset_curr)
 ens_col_use <- seu_dataset@misc$ensembl_column_use
 print(ens_col_use)
 
-# the downtream code will not work if the seurat features aren't human ens IDs 
+# the downstream code will not work if the seurat features aren't human ens IDs 
 stopifnot(ens_col_use == "ENSG_ID")
 
 #-------------------------------------------------------------------------------
@@ -55,8 +59,6 @@ stopifnot(ens_col_use == "ENSG_ID")
 # df because the human one only has the ensmus ID
 ensembl_hum <- readRDS(snakemake@input[["ensembl_hum"]])
 ensembl_mus <- readRDS(snakemake@input[["ensembl_mus"]])
-#ensembl_hum <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_hum")
-#ensembl_mus <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_mus")
 
 #-------------------------------------------------------------------------------
 # get the selected resolution
@@ -178,7 +180,7 @@ seu_sign_list_reclustered <- mclapply(
   mc.set.seed = TRUE
 )
 
-# for testing
+# for testing without parallel
 #print("testing")
 #seu_sign_list_reclustered <- lapply(
 #  X = subset_seu_list_by_p, 

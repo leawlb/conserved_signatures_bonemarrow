@@ -24,7 +24,7 @@ from the figure, too.
 I didn't change too much from the original figure script though.
 Instead, I added some comments why I chose each annotation.
 
-Check supplementary table 1 of the corrsponding publication for some of the 
+Check supplementary table 1 of the corresponding publication for some of the 
 marker gene sources.
 
 #### Load objects

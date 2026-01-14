@@ -35,10 +35,13 @@ for (s in species) {
                celltypes == ct) %>%
       row.names() %>% unique()
     # Identify markers that are specific to this cell type in this species
-    markers <- FindMarkers(object = species_subset,
-                           ident.1 = cells,
-                           only.pos = TRUE,
-                           min.pct = 0.1) # Require genes to be expressed in at least 10% of cells in each group
+    markers <- FindMarkers(
+      object = species_subset,
+      ident.1 = cells,
+      only.pos = TRUE,
+      logfc.threshold = 0.25, # default is 0.25
+      min.pct = 0.1
+    ) # Require genes to be expressed in at least 10% of cells in each group
     
     # Add these markers to the list of markers for this cell type
     markers_list[[paste(s, ct, sep = "_")]] <- markers
@@ -126,10 +129,13 @@ for (s in species) {
                celltypes == ct) %>%
       row.names() %>% unique()
     # Identify markers that are specific to this cell type in this species
-    markers <- FindMarkers(object = species_subset,
-                           ident.1 = cells,
-                           only.pos = TRUE,
-                           min.pct = 0.1) # Require genes to be expressed in at least 10% of cells in each group
+    markers <- FindMarkers(
+      object = species_subset,
+      ident.1 = cells,
+      only.pos = TRUE,
+      logfc.threshold = 0.25, # default is 0.25
+      min.pct = 0.1
+    ) # Require genes to be expressed in at least 10% of cells in each group
     # Add these markers to the list of markers for this cell type
     
     markers_list[[paste(s, ct, sep = "_")]] <- markers

@@ -3,11 +3,12 @@ library(Seurat)
 library(dplyr)
 library(biomaRt)
 
-setwd("/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/04_rare_celltypes/mouse_lemur_Ezran2025")
-mouse_lemur_harmony <- readRDS("01_mouse_lemur_harmony.rds")
+base_dir <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/04_rare_celltypes/mouse_lemur_Ezran2025"
+manuscript_dir <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/manuscript1"
 
-hsc_sig <- read.delim("../../../../manuscript1/hsc_signature_table.csv", sep = ";", check.names = FALSE)
-str_sig <- read.delim("../../../../manuscript1/str_signature_table.csv", sep = ";", check.names = FALSE)
+mouse_lemur_harmony <- readRDS(file.path(base_dir, "01_mouse_lemur_harmony.rds"))
+hsc_sig <- read.delim(file.path(manuscript_dir, "hsc_signature_table.csv"), sep=";", check.names=FALSE)
+str_sig <- read.delim(file.path(manuscript_dir, "str_signature_table.csv"), sep=";", check.names=FALSE)
 
 sig_df <- bind_rows(hsc_sig, str_sig) %>% 
   dplyr::select(celltype, signature_gene)
@@ -47,7 +48,7 @@ auc_mat   <- t(getAUC(cellsAUC))
 
 mouse_lemur_harmony <- AddMetaData(mouse_lemur_harmony, auc_mat)
 
-saveRDS(mouse_lemur_harmony, 
-  file = "02_mouse_lemur_harmony.rds")
+saveRDS(mouse_lemur_harmony, file = file.path(base_dir, "02_mouse_lemur_harmony.rds"))
+
 
 

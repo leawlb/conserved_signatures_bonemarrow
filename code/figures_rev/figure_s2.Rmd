@@ -1,0 +1,520 @@
+---
+title: "Supplementary Figure 2"
+date: '2026-02-19'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This is going to be a very big figure containing many subplots.
+Trying to make it still relatively understandable.
+This figure will contain data too big to run locally (for me).
+
+## Load objects
+
+```{r seed, message = FALSE}
+RNGkind("L'Ecuyer-CMRG") 
+set.seed(37)
+```
+
+```{r load, message = FALSE}
+library(tidyverse, quietly = TRUE)
+library(SingleCellExperiment, quietly = TRUE)
+library(ggpubr, quietly = TRUE)
+library(ggalluvial, quietly = TRUE)
+```
+
+```{r base_path}
+base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+```
+
+```{r source}
+colors_path <- base::paste0(
+  base_path, 
+  "/metadata/colors/colors.txt")
+ 
+source("../source/colors.R")
+source("../source/plotting.R")
+source("../source/custom_clustering_utils.R")
+```
+
+### SCE objects
+
+#### Objects with merged clustering, containing all cells
+
+Because some cells were removed between this step and the final annotation.
+So that we can show all cells, even contamination, these objects will 
+serve as a basis and other annotations or reductions can be added. 
+For instance, for the alluvial plots and the pre-removal umaps.
+
+```{r load_all_cells_hsc}
+sce_hsc_all_cells <- readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/sce_hsc-02"
+))
+```
+
+```{r load_all_cells_str}
+sce_str_all_cells <- readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/sce_str-02"
+))
+```
+
+#### Finally annotated objects
+
+These are needed for the heatmaps and for the final annotation names.
+
+```{r load_anno_hsc}
+sce_hsc_anno <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10"
+))
+```
+
+```{r load_anno_str}
+sce_str_anno <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10"
+))
+```
+
+#### Species-specific custom annotations
+
+These objects were annotated by species and fraction, so there are
+eight objects in total.
+These will be depicted individually.
+
+```{r load_species_specific_hsc}
+
+sce_mmus_hsc <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mmus_hsc_custom.rds"))
+sce_mcas_hsc <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcas_hsc_custom.rds"))
+sce_mspr_hsc <-base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mspr_hsc_custom.rds"))
+sce_mcar_hsc <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcar_hsc_custom.rds"))
+```
+
+```{r load_species_specific_str}
+sce_mmus_str <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mmus_str_custom.rds"))
+sce_mcas_str <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcas_str_custom.rds"))
+sce_mspr_str <-base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mspr_str_custom.rds"))
+sce_mcar_str <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcar_str_custom.rds"))
+```
+
+## Params
+
+```{r params}
+# global params for figures specifically
+# this is a supp figure so text size can be smaller (6-8 pts)
+source("../figures/determine_params.R")
+
+# local params
+legend_text_size_allu <- 14
+umap_point_size <- 0.4
+```
+
+## Prep 
+
+### Randomize barcodes
+
+#### HSC objects
+
+```{r rand_barc_hsc}
+# randomize the barcodes for nicer visualisation
+dim(sce_hsc_all_cells)
+sce_hsc_all_cells <- sce_hsc_all_cells[,base::sample(
+  x = c(1:ncol(sce_hsc_all_cells)), 
+  size = ncol(sce_hsc_all_cells),
+  replace = FALSE)]
+dim(sce_hsc_all_cells)
+```
+
+Also for the BL6 custom object
+
+```{r rand_barc_hsc_anno}
+# randomize the barcodes for nicer visualisation
+dim(sce_mmus_hsc)
+sce_mmus_hsc <- sce_mmus_hsc[,base::sample(
+  x = c(1:ncol(sce_mmus_hsc)), 
+  size = ncol(sce_mmus_hsc),
+  replace = FALSE)]
+dim(sce_mmus_hsc)
+```
+
+Also for the finally annotated object.
+
+```{r rand_barc_mmus_hsc}
+# randomize the barcodes for nicer visualisation
+dim(sce_hsc_anno)
+sce_hsc_anno <- sce_hsc_anno[,base::sample(
+  x = c(1:ncol(sce_hsc_anno)), 
+  size = ncol(sce_hsc_anno),
+  replace = FALSE)]
+dim(sce_hsc_anno)
+```
+
+#### STR objects
+
+```{r rand_barc_str}
+# randomize the barcodes for nicer visualisation
+dim(sce_str_all_cells)
+sce_str_all_cells <- sce_str_all_cells[,base::sample(
+  x = c(1:ncol(sce_str_all_cells)), 
+  size = ncol(sce_str_all_cells),
+  replace = FALSE)]
+dim(sce_str_all_cells)
+```
+
+### Final anno
+
+Add the labels used for analysis and shown in main Figure 1.
+
+```{r add_final_anno_hsc}
+
+sce_hsc_all_cells$celltypes <- vector(length = ncol(sce_hsc_all_cells))
+sce_hsc_all_cells$celltypes <- sce_hsc_anno$celltypes[
+  match(colnames(sce_hsc_all_cells), colnames(sce_hsc_anno))]
+
+# i have removed some cells from the finally annotated object, so those
+# that are missing from that object are not called "removed"
+levels(sce_hsc_all_cells$celltypes) <- c(
+  levels(sce_hsc_all_cells$celltypes), 
+  "removed")
+sce_hsc_all_cells$celltypes[is.na(sce_hsc_all_cells$celltypes)] <- "removed"
+```
+
+```{r add_final_anno_str}
+
+sce_str_all_cells$celltypes <- vector(length = ncol(sce_str_all_cells))
+sce_str_all_cells$celltypes <- sce_str_anno$celltypes[
+  match(colnames(sce_str_all_cells), colnames(sce_str_anno))]
+
+levels(sce_str_all_cells$celltypes) <- c(
+  levels(sce_str_all_cells$celltypes), 
+  "removed")
+sce_str_all_cells$celltypes[is.na(sce_str_all_cells$celltypes)] <- "removed"
+```
+
+### Custom labels
+
+These are the labels from the species-specific custom clustering.
+
+```{r add_custom_hsc}
+
+sce_hsc_all_cells$custom_label <- vector(length = ncol(sce_hsc_all_cells))
+
+sce_mmus_hsc$custom_label <- unfactor(sce_mmus_hsc$custom_label)
+sce_mcas_hsc$custom_label <- unfactor(sce_mcas_hsc$custom_label)
+sce_mspr_hsc$custom_label <- unfactor(sce_mspr_hsc$custom_label)
+sce_mcar_hsc$custom_label <- unfactor(sce_mcar_hsc$custom_label)
+
+sce_hsc_all_cells$custom_label[match(
+  colnames(sce_mmus_hsc), colnames(sce_hsc_all_cells))] <- sce_mmus_hsc$custom_label
+sce_hsc_all_cells$custom_label[match(
+  colnames(sce_mcas_hsc), colnames(sce_hsc_all_cells))] <- sce_mcas_hsc$custom_label
+sce_hsc_all_cells$custom_label[match(
+  colnames(sce_mspr_hsc), colnames(sce_hsc_all_cells))] <- sce_mspr_hsc$custom_label
+sce_hsc_all_cells$custom_label[match(
+  colnames(sce_mcar_hsc), colnames(sce_hsc_all_cells))] <- sce_mcar_hsc$custom_label
+```
+
+```{r add_custom_str}
+
+sce_str_all_cells$custom_label <- vector(length = ncol(sce_str_all_cells))
+
+sce_mmus_str$custom_label <- unfactor(sce_mmus_str$custom_label)
+sce_mcas_str$custom_label <- unfactor(sce_mcas_str$custom_label)
+sce_mspr_str$custom_label <- unfactor(sce_mspr_str$custom_label)
+sce_mcar_str$custom_label <- unfactor(sce_mcar_str$custom_label)
+
+sce_str_all_cells$custom_label[match(
+  colnames(sce_mmus_str), colnames(sce_str_all_cells))] <- sce_mmus_str$custom_label
+sce_str_all_cells$custom_label[match(
+  colnames(sce_mcas_str), colnames(sce_str_all_cells))] <- sce_mcas_str$custom_label
+sce_str_all_cells$custom_label[match(
+  colnames(sce_mspr_str), colnames(sce_str_all_cells))] <- sce_mspr_str$custom_label
+sce_str_all_cells$custom_label[match(
+  colnames(sce_mcar_str), colnames(sce_str_all_cells))] <- sce_mcar_str$custom_label
+```
+
+### Factorize
+
+#### HSC objects
+
+```{r factors_hsc}
+# change species names to currently used abbreviations
+sce_hsc_all_cells$species_pub <- vector(length = ncol(sce_hsc_all_cells))
+sce_hsc_all_cells$species_pub[sce_hsc_all_cells$Species_ID == "mmus"] <- "BL6"
+sce_hsc_all_cells$species_pub[sce_hsc_all_cells$Species_ID == "mcas"] <- "CAST"
+sce_hsc_all_cells$species_pub[sce_hsc_all_cells$Species_ID == "mspr"] <- "SPRET"
+sce_hsc_all_cells$species_pub[sce_hsc_all_cells$Species_ID == "mcar"] <- "CAROLI"
+sce_hsc_all_cells$species_pub <- factor(
+  sce_hsc_all_cells$species_pub, 
+  levels = names(col_spc_pub))
+
+sce_hsc_all_cells$custom_label <- factor(
+  sce_hsc_all_cells$custom_label,
+  levels = factors_custom_hsc
+)
+```
+
+Also need to do this for the example BL6 HSC fraction object.
+For the schematic A.
+
+```{r factors_mmus_hsc}
+# change species names to currently used abbreviations
+sce_mmus_hsc$species_pub <- vector(length = ncol(sce_mmus_hsc))
+sce_mmus_hsc$species_pub[sce_mmus_hsc$Species_ID == "mmus"] <- "BL6"
+sce_mmus_hsc$species_pub[sce_mmus_hsc$Species_ID == "mcas"] <- "CAST"
+sce_mmus_hsc$species_pub[sce_mmus_hsc$Species_ID == "mspr"] <- "SPRET"
+sce_mmus_hsc$species_pub[sce_mmus_hsc$Species_ID == "mcar"] <- "CAROLI"
+sce_mmus_hsc$species_pub <- factor(
+  sce_mmus_hsc$species_pub, 
+  levels = names(col_spc_pub))
+```
+
+Also need to do this for the final merged anno HSC object.
+For the schematic A.
+
+```{r factors_hsc_anno}
+# change species names to currently used abbreviations
+sce_hsc_anno$species_pub <- vector(length = ncol(sce_hsc_anno))
+sce_hsc_anno$species_pub[sce_hsc_anno$Species_ID == "mmus"] <- "BL6"
+sce_hsc_anno$species_pub[sce_hsc_anno$Species_ID == "mcas"] <- "CAST"
+sce_hsc_anno$species_pub[sce_hsc_anno$Species_ID == "mspr"] <- "SPRET"
+sce_hsc_anno$species_pub[sce_hsc_anno$Species_ID == "mcar"] <- "CAROLI"
+sce_hsc_anno$species_pub <- factor(
+  sce_hsc_anno$species_pub, 
+  levels = names(col_spc_pub))
+```
+
+#### STR objects
+
+```{r factors_str}
+# change species names to currently used abbreviations
+sce_str_all_cells$species_pub <- vector(length = ncol(sce_str_all_cells))
+sce_str_all_cells$species_pub[sce_str_all_cells$Species_ID == "mmus"] <- "BL6"
+sce_str_all_cells$species_pub[sce_str_all_cells$Species_ID == "mcas"] <- "CAST"
+sce_str_all_cells$species_pub[sce_str_all_cells$Species_ID == "mspr"] <- "SPRET"
+sce_str_all_cells$species_pub[sce_str_all_cells$Species_ID == "mcar"] <- "CAROLI"
+sce_str_all_cells$species_pub <- factor(
+  sce_str_all_cells$species_pub, 
+  levels = names(col_spc_pub))
+
+sce_str_all_cells$custom_label <- factor(
+  sce_str_all_cells$custom_label,
+  levels = factors_custom_str
+)
+```
+
+# Plots
+
+## Schematic A
+
+This will be three different UMAPs, using the species-specific custom BL6 
+HSPC fraction object as example.
+
+### Prep DF
+
+```{r a_umap_prep_dfs}
+
+umap_df_mmus_hsc <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_mmus_hsc, type = "UMAP"))
+
+# first show the species
+umap_df_mmus_hsc$species_pub <- sce_mmus_hsc$species_pub 
+# then the louvain clusterings
+umap_df_mmus_hsc$cluster_louvain <- sce_mmus_hsc$cluster_louvain 
+# then the annotated popuations
+umap_df_mmus_hsc$custom_label <- sce_mmus_hsc$custom_label 
+
+colnames(umap_df_mmus_hsc)[1] <- "UMAP1"
+colnames(umap_df_mmus_hsc)[2] <- "UMAP2"
+```
+
+### Plot 
+
+```{r a_umap_1, fig.width = 2, fig.height = 2}
+a_umap_1 <- ggplot2::ggplot(
+  umap_df_mmus_hsc,
+  aes(
+    x = UMAP1,
+    y = UMAP2,
+    color = species_pub
+  ))+
+  geom_point(size = umap_point_size.8)+
+  scale_color_manual(values = col_spc_pub)+
+  theme_void()+
+  theme(legend.position = "none")
+
+a_umap_1
+```
+
+```{r a_umap_2, fig.width = 2, fig.height = 2}
+a_umap_2 <- ggplot2::ggplot(
+  umap_df_mmus_hsc,
+  aes(
+    x = UMAP1,
+    y = UMAP2,
+    color = as.character(cluster_louvain)
+  ))+
+  geom_point(size = umap_point_size)+
+  scale_color_manual(values = col_num)+
+  theme_void()+
+  theme(legend.position = "none")
+
+a_umap_2
+```
+
+```{r a_umap_3, fig.width = 2, fig.height = 2}
+a_umap_3 <- ggplot2::ggplot(
+  umap_df_mmus_hsc,
+  aes(
+    x = UMAP1,
+    y = UMAP2,
+    color = custom_label
+  ))+
+  geom_point(size = umap_point_size)+
+  scale_color_manual(values = col_custom_hsc)+
+  theme_void()+
+  theme(legend.position = "none")
+
+a_umap_3
+```
+
+## Schematic B
+
+This is a schematic for the merged annotation including sub-clustering
+based on several objects.
+It will contain several umaps, as well.
+
+### Prep DFs
+
+```{r b_prep_mixed_umap}
+
+# all cells, colored by species
+# and also colored by louvain cluster
+umap_df_sce_hsc_all_cells <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_hsc_all_cells, type = "UMAP"))
+
+umap_df_sce_hsc_all_cells$species_pub <- sce_hsc_all_cells$species_pub 
+umap_df_sce_hsc_all_cells$cluster_louvain <- sce_hsc_all_cells$cluster_louvain 
+
+colnames(umap_df_sce_hsc_all_cells)[1] <- "UMAP1"
+colnames(umap_df_sce_hsc_all_cells)[2] <- "UMAP2"
+
+# also only the HSC - MPP portion, colored by Mecom expression
+sce_hsc_stem <- sce_hsc_all_cells[,sce_hsc_all_cells$cluster_louvain %in% c(2, 4)]
+dim(sce_hsc_stem)
+
+umap_df_sce_hsc_stem <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_hsc_stem, type = "UMAP"))
+
+# logcounts have been batch-normalized
+logcounts_stem <- SingleCellExperiment::logcounts(sce_hsc_stem)
+umap_df_sce_hsc_stem$expression <- logcounts_stem["Mecom",]
+
+colnames(umap_df_sce_hsc_stem)[1] <- "UMAP1"
+colnames(umap_df_sce_hsc_stem)[2] <- "UMAP2"
+```
+
+```{r b_prep_hsc_anno}
+
+# final annotation, last umap of the plot
+# contaminating cells have been removed
+umap_df_sce_hsc_anno <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_hsc_anno, type = "UMAP"))
+umap_df_sce_hsc_anno$celltypes <- sce_hsc_anno$celltypes 
+umap_df_sce_hsc_anno$species_pub <- sce_hsc_anno$species_pub 
+
+colnames(umap_df_sce_hsc_anno)[1] <- "UMAP1"
+colnames(umap_df_sce_hsc_anno)[2] <- "UMAP2"
+```
+
+### Plots
+
+```{r b_umap_1, fig.width = 2, fig.height = 2}
+b_umap_1 <- ggplot2::ggplot(
+  umap_df_sce_hsc_all_cells,
+  aes(
+    x = UMAP1,
+    y = UMAP2,
+    color = species_pub
+  ))+
+  geom_point(size = umap_point_size)+
+  scale_color_manual(values = col_spc_pub)+
+  theme_void()+
+  theme(legend.position = "none")
+
+b_umap_1
+```
+
+```{r b_umap_2, fig.width = 2, fig.height = 2}
+b_umap_2 <- ggplot2::ggplot(
+  umap_df_sce_hsc_all_cells,
+  aes(
+    x = UMAP1,
+    y = UMAP2,
+    color = as.character(cluster_louvain)
+  ))+
+  geom_point(size = umap_point_size)+
+  scale_color_manual(values = col_num)+
+  theme_void()+
+  theme(legend.position = "none")
+
+b_umap_2
+```
+
+```{r b_umap_3, fig.width = 2, fig.height = 2}
+b_umap_3 <- ggplot2::ggplot(
+  umap_df_sce_hsc_stem,
+  aes(
+    x = UMAP1,
+    y = UMAP2,
+    color = expression
+  ))+
+  geom_point(size = 0.8)+
+  scale_color_gradientn(colours = mycolors_to_max)+
+  theme_void()+
+  theme(legend.position = "none")
+
+b_umap_3
+```
+
+```{r b_umap_4, fig.width = 2, fig.height = 2}
+b_umap_4 <- ggplot2::ggplot(
+  umap_df_sce_hsc_anno,
+  aes(
+    x = UMAP1,
+    y = UMAP2,
+    color = celltypes
+  ))+
+  geom_point(size = umap_point_size)+
+  scale_color_manual(values = col_cts_hsc)+
+  theme_void()+
+  theme(legend.position = "none")
+
+b_umap_4
+```
+

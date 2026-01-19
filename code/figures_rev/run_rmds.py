@@ -18,6 +18,8 @@ targets = []
 
 targets = targets + [OUTPUT_PATH + "/figure_1.html"]
 
+targets = targets + [OUTPUT_PATH + "/figure_s2.html"]
+
 
 targets = targets + [OUTPUT_PATH + "/figure_s3.html"]
 targets = targets + [OUTPUT_PATH + "/figure_s4.html"]
@@ -48,6 +50,21 @@ rule run_fig_1:
     threads: 4
     script:
         "figure_1.Rmd"
+
+rule run_fig_s2:
+    resources:
+        mem_mb=120000,
+        queues="medium"
+    output:
+        OUTPUT_PATH + "/figure_s2.html"
+    params:
+        base_path = BASE_PATH
+    conda:
+        "../envs/ggalluvial.yml"
+    threads: 4
+    script:
+        "figure_s2.Rmd"
+
 
 rule run_fig_s3:
     resources:

@@ -557,3 +557,7 @@ Seurat::DimPlot(combined_ts_bone_marrow, reduction = "umap", group.by = "batchc_
 ```{r save}
 saveRDS(combined_ts_bone_marrow, output_path)
 ```
+
+```{r sessioninfo}
+utils::sessionInfo()
+```

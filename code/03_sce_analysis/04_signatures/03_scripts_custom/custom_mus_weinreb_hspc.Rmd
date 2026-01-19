@@ -293,7 +293,7 @@ ggplot2::ggplot(
 plotlist <- lapply(as.list(marker_genes), function(gene){
   print(gene)
 
-  plot <- FeaturePlot(seu_mus_weinreb_hspc, reduction = "umap", gene)
+  plot <- Seurat::FeaturePlot(seu_mus_weinreb_hspc, reduction = "umap", gene)
   return(plot)
 })
 names(plotlist) <- marker_genes
@@ -330,7 +330,7 @@ cluster_markers <- lapply(clustlist, function(x){
 names(cluster_markers) <- base::sort(base::unique(seu_mus_weinreb_hspc@meta.data$clusters))
 ```
 
-Gave provisional name ideas based on the heatmap.
+Gave provisional name ideas based on the heatmap. 
 
 ### HSC and early progenitors
 
@@ -407,7 +407,7 @@ hsc_additional_genes <- c(
 plotlist <- lapply(as.list(hsc_additional_genes), function(gene){
   print(gene)
 
-  plot <- FeaturePlot(seu_mus_weinreb_hspc, reduction = "umap", gene)
+  plot <- Seurat::FeaturePlot(seu_mus_weinreb_hspc, reduction = "umap", gene)
   return(plot)
 })
 names(plotlist) <- hsc_additional_genes

@@ -18,7 +18,7 @@ axis_title_color <- "black"
 axis_text_face <- "plain"
 axis_text_size <- 20
 axis_text_color <- "black"
-axis_text_size_small <- 14
+axis_text_size_small <- 15
 
 plot_title_face <- "plain"
 plot_title_size <- 24

@@ -12,10 +12,6 @@ Generate Figure 1
 
 #### Load objects
 
-```{r set_export}
-export = FALSE
-```
-
 ```{r seed, message = FALSE}
 RNGkind("L'Ecuyer-CMRG") 
 set.seed(37)
@@ -31,6 +27,7 @@ library(scuttle, quietly = TRUE)
 ```{r base_path}
 base_path <- snakemake@params[["base_path"]]
 #base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+#setwd("repositories/Interspecies_BM_phd/code/figures_rev")
 ```
 
 ```{r load_sce}
@@ -114,34 +111,34 @@ sce_str$species_pub <- factor(sce_str$species_pub,
 
 ```{r pdf_output}
 # define output paths for pdf export
-if(export){
+
   output_pdf_umap_species_hsc <- base::paste0(
     base_path,
-    "/manuscript1/figure1/figure1_umap_species_hsc.pdf")
+    "/manuscript1_rev/figure1/figure1_umap_species_hsc.pdf")
   output_pdf_umap_species_str <- base::paste0(
     base_path,
-    "/manuscript1/figure1/figure1_umap_species_str.pdf")
+    "/manuscript1_rev/figure1/figure1_umap_species_str.pdf")
   output_pdf_umap_species_legend <- base::paste0(
     base_path,
-    "/manuscript1/figure1/figure1_umap_species_legend.pdf")
+    "/manuscript1_rev/figure1/figure1_umap_species_legend.pdf")
 
   output_pdf_umap_spec_sep_hsc <- base::paste0(
     base_path,
-    "/manuscript1/figure1/figure1_umap_specsep_hsc.pdf") 
+    "/manuscript1_rev/figure1/figure1_umap_specsep_hsc.pdf") 
   output_pdf_umap_spec_sep_str <- base::paste0(
     base_path,
-    "/manuscript1/figure1/figure1_umap_specsep_str.pdf") 
+    "/manuscript1_rev/figure1/figure1_umap_specsep_str.pdf") 
   output_pdf_umap_spec_sep_legend <- base::paste0(
     base_path,
-    "/manuscript1/figure1/figure1_umap_specsep_legend.pdf") 
+    "/manuscript1_rev/figure1/figure1_umap_specsep_legend.pdf") 
 
   output_pdf_dotplot <- base::paste0(
     base_path,
-    "/manuscript1/figure1/figure1_dotplot.pdf") 
+    "/manuscript1_rev/figure1/figure1_dotplot.pdf") 
   output_pdf_dotplot_legend <- base::paste0(
     base_path,
-    "/manuscript1/figure1/figure1_dotplot_legend.pdf") 
-}
+    "/manuscript1_rev/figure1/figure1_dotplot_legend.pdf") 
+
 ```
 
 ```{r params}
@@ -201,7 +198,6 @@ table(sce_str$Age_weeks)
 
 HSPCs (left) and Niche cells (right) clustered in UMAP space, 
 colored by species.
-For Figure 1b and Figure 1c.
 
 #### Prep
 
@@ -275,7 +271,7 @@ species_theme_plot_right
 
 #### Legend
 
-only one required
+Only one required
 
 ```{r species_legend_plot}
 species_legend_plot <- ggplot2::ggplot(
@@ -303,7 +299,6 @@ species_legend
 
 HSPCs (left) and Niche cells (right) clustered in UMAP space, 
 separated by mouse species.
-For Figure 1d and Figure 1e.
 
 #### PREP
 
@@ -466,51 +461,39 @@ species_sep_plot
 #### EXPORT
 
 ```{r export_species_plot_left_pdf}
-if(export){
-  pdf(output_pdf_umap_species_hsc, width = 4, height = 3)
-  species_theme_plot_left
-  dev.off()
-} 
+pdf(output_pdf_umap_species_hsc, width = 4, height = 3)
+species_theme_plot_left
+dev.off()
 ```
 
 ```{r export_species_plot_right_pdf}
-if(export){
-  pdf(output_pdf_umap_species_str, width = 4, height = 3)
-  species_theme_plot_right
-  dev.off()
-}
+pdf(output_pdf_umap_species_str, width = 4, height = 3)
+species_theme_plot_right
+dev.off()
 ```
 
 ```{r export_species_legend_pdf}
-if(export){
-  pdf(output_pdf_umap_species_legend, width = 2, height = 2)
-  species_legend
-  dev.off()
-}
+pdf(output_pdf_umap_species_legend, width = 2, height = 2)
+species_legend
+dev.off()
 ```
 
 ```{r export_ctspc_left_pdf}
-if(export){
-  pdf(output_pdf_umap_spec_sep_hsc, width = 3, height = 9)
-  ctspc_theme_plot_left
-  dev.off()
-}
+pdf(output_pdf_umap_spec_sep_hsc, width = 3, height = 9)
+ctspc_theme_plot_left
+dev.off()
 ```
 
 ```{r export_ctspc_right_pdf}
-if(export){
-  pdf(output_pdf_umap_spec_sep_str, width = 3, height = 9)
-  ctspc_theme_plot_right
-  dev.off()
-}
+pdf(output_pdf_umap_spec_sep_str, width = 3, height = 9)
+ctspc_theme_plot_right
+dev.off()
 ```
 
 ```{r export_ctspc_legend_pdf}
-if(export){
-  pdf(output_pdf_umap_spec_sep_legend, width = 4, height = 7)
-  ct_legend
-  dev.off()
-}
+pdf(output_pdf_umap_spec_sep_legend, width = 4, height = 7)
+ct_legend
+dev.off()
 ```
 
 ## DOTPLOT
@@ -519,7 +502,6 @@ Average gene expression of well-known marker genes that were not used for
 cell type sub-clustering per species for HSCs (top left) and Adipo/CARs 
 (top right) or per cell type for HSPC fraction (bottom left) or Niche fraction 
 (bottom right).
-For Figure 1f.
 
 #### PREP
 
@@ -836,7 +818,9 @@ dp_theme_plot_top_left <- dp_base_plot_top_left+
       size = axis_text_size_small,
       hjust = 0,
       vjust = 0.5,
-      angle = 90),
+      angle = 90,
+      color = axis_text_color,
+      face = axis_text_face),
     axis.text.y = element_text(
       hjust = 1),
     legend.position = "none")+
@@ -882,7 +866,9 @@ dp_theme_plot_top_right <- dp_base_plot_top_right+
       size = axis_text_size_small,
       hjust = 0,
       vjust = 0.5,
-      angle = 90),
+      angle = 90,
+      color = axis_text_color,
+      face = axis_text_face),
     axis.text.y = element_blank(),
     legend.position = "none")+
   ggplot2::xlab("Gene")+
@@ -916,7 +902,10 @@ dp_theme_plot_bottom_left <- dp_base_plot_bottom_left+
     axis.text.x = element_blank(),
     axis.ticks.x = element_blank(),
     axis.text.y = element_text(
-      hjust = 1),
+      hjust = 1,
+      size = axis_text_size,
+      color = axis_text_color,
+      face = axis_text_face),
     legend.position = "none")+
   ggplot2::scale_size_area(
     "logcounts",
@@ -946,7 +935,10 @@ dp_theme_plot_bottom_right <- dp_base_plot_bottom_right+
   ggplot2::theme(
     axis.title = element_blank(),
     axis.text.y = element_text(
-      hjust = 1),
+      hjust = 1,
+      size = axis_text_size,
+      color = axis_text_color,
+      face = axis_text_face),
     axis.text.x = element_blank(),
     axis.ticks.x = element_blank(),
     legend.position = "none")+
@@ -1042,28 +1034,156 @@ dp_legend_theme_plot_right <- dp_legend_base_plot_right+
 dp_legend_right <- ggpubr::get_legend(dp_legend_theme_plot_right)
 ```
 
+### Species proportions tiny
+
+Add little barplots showing the nr of cells per cell type per species.
+
+```{r x_hsc_base_plot}
+
+df_hsc <- as.data.frame(colData(sce_hsc)[
+  colnames(colData(sce_hsc)) %in% c("species_pub", "celltypes")])
+table_hsc <- table(sce_hsc$celltypes, sce_hsc$species_pub)
+table_hsc
+
+df_hsc$species_pub <- factor(df_hsc$species_pub, levels = names(col_spc_pub))
+df_hsc$celltypes <- factor(df_hsc$celltypes, levels = rev(names(col_cts_hsc)))
+
+x_hsc_base_plot <- ggplot2::ggplot(
+  df_hsc, 
+  aes(y = celltypes,
+      fill = species_pub))+
+  ggplot2::geom_bar()
+```
+
+Except for mcar lymph, there are at least 97 cells per species and cell types.
+
+```{r x_hsc_theme_plot}
+x_hsc_theme_plot <- x_hsc_base_plot+
+  theme_all_supp+
+  ggplot2::scale_fill_manual("Species", values = col_spc_pub)+
+  ggplot2::scale_x_continuous(
+    limits = c(0, 25000),
+    breaks = c(0, 10000, 20000),
+    labels = c(0, "", 20000))+
+  ggplot2::theme(
+    axis.text.y = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.x = element_text(
+      angle = 0,
+      vjust = 0.5,
+      hjust = 0.5,
+      size = axis_text_size,
+      color = axis_text_color,
+      face = axis_text_face),
+    axis.title.x = element_text(
+      size = axis_title_size,
+    ),
+    legend.position = "none")+
+  ggplot2::xlab("# cells")
+x_hsc_theme_plot
+```
+
+```{r x_str_base_plot}
+
+df_str <- as.data.frame(colData(sce_str)[
+  colnames(colData(sce_str)) %in% c("species_pub", "celltypes")])
+table_str <- table(sce_str$celltypes, sce_str$species_pub)
+table_str
+
+df_str$species_pub <- factor(df_str$species_pub, levels = names(col_spc_pub))
+df_str$celltypes <- factor(df_str$celltypes, levels = rev(names(col_cts_str)))
+
+x_str_base_plot <- ggplot2::ggplot(
+  df_str, 
+  aes(y = celltypes,
+      fill = species_pub))+
+  ggplot2::geom_bar()
+```
+
+```{r x_str_theme_plot}
+x_str_theme_plot <- x_str_base_plot+
+  theme_all_supp+
+  ggplot2::xlab("# cells")+
+  ggplot2::scale_fill_manual("Species", values = col_spc_pub)+
+  ggplot2::scale_x_continuous(
+    limits = c(0, 10000),
+    breaks = c(0, 4000, 8000),
+    labels = c(0, "", 8000))+
+  ggplot2::theme(
+    axis.title.y = element_blank(),
+    axis.text.y = element_blank(),
+    axis.text.x = element_text(
+      angle = 0,
+      vjust = 0.5,
+      hjust = 0.5,
+      size = axis_text_size,
+      color = axis_text_color,
+      face = axis_text_face),
+    axis.title.x = element_text(
+      size = axis_title_size
+    ),
+    legend.position = "none")
+x_str_theme_plot
+```
+
+```{r x_legend, fig.width = 2, fig.height = 2}
+x_legend_base_plot <- ggplot2::ggplot(
+  df_str, 
+  aes(y = celltypes,
+      fill = species_pub))+
+  ggplot2::geom_bar()+
+  ggplot2::scale_fill_manual("Species", values = col_spc_pub)+
+  ggplot2::theme(
+    legend.title = element_text(
+      size = legend_title_size,
+      face = legend_title_face,
+      color = legend_title_color),
+    legend.text = element_text(
+      size = legend_text_size,
+      face = legend_text_face,
+      color = legend_text_color
+    ))
+
+x_theme_legend <- ggpubr::get_legend(x_legend_base_plot)
+x_legend <- ggpubr::ggarrange(x_theme_legend)
+
+x_legend
+```
+
 #### ASSEMBLE
 
-```{r dp_theme_plot2, fig.width = 16, fig.height = 6}
+```{r dp_theme_plot2, fig.width = 16.5, fig.height = 6}
 dp_theme_plot2 <- ggpubr::ggarrange(
   dp_theme_plot_top_left + theme(
-    plot.margin = margin(t = 10, r = 5, b = 20, l = 60, unit = "pt")), 
+    plot.margin = margin(t = 10, r = 0, b = 20, l = 62, unit = "pt")), 
+  NULL,
   dp_theme_plot_top_right + theme(
-    plot.margin = margin(t = 5, r = 5, b = 20, l = 120, unit = "pt")),
-  dp_theme_plot_bottom_left,
-  dp_theme_plot_bottom_right,
+    plot.margin = margin(t = 14, r = 0, b = 20, l = 157, unit = "pt")),
+  NULL,
+  dp_theme_plot_bottom_left + theme(
+    plot.margin = margin(t = 5, r = 0, b = 47, l = 5, unit = "pt")),
+  x_hsc_theme_plot+ theme(
+    plot.margin = margin(t = 3, r = 3, b = 4, l = 2, unit = "pt")),
+  dp_theme_plot_bottom_right + theme(
+    plot.margin = margin(t = 5, r = 0, b = 47, l = 5, unit = "pt")),
+  x_str_theme_plot+ theme(
+    plot.margin = margin(t = 3, r = 3, b = 4, l = 2, unit = "pt")),
   heights = c(1.1,1.8),
-  widths = c(1, 1.15))
+  widths = c(1, 0.16, 1.09, 0.16),
+  nrow = 2,
+  ncol = 4
+  )
 
 dp_theme_plot2
 ```
 
-```{r dp_theme_legends, fig.width = 6, fig.height = 5}
+```{r dp_theme_legends, fig.width = 6, fig.height = 7}
 dp_theme_legends <- ggpubr::ggarrange(
-  nrow = 3,
+  nrow = 4,
   dp_legend_left,
   dp_legend_middle,
-  dp_legend_right
+  dp_legend_right,
+  x_legend
   )
 
 dp_theme_legends
@@ -1072,19 +1192,15 @@ dp_theme_legends
 #### EXPORT
 
 ```{r export_dp}
-if(export){
-  pdf(output_pdf_dotplot, width = 15.5, height = 6)
-  dp_theme_plot2
-  dev.off()
-}
+pdf(output_pdf_dotplot, width = 16.5, height = 6)
+dp_theme_plot2
+dev.off()
 ```
 
 ```{r export_dp_legend}
-if(export){
-  pdf(output_pdf_dotplot_legend, width = 6, height = 5)
-  dp_theme_legends
-  dev.off()
-}
+pdf(output_pdf_dotplot_legend, width = 6, height = 6) 
+dp_theme_legends
+dev.off()
 ```
 
 # UTILS

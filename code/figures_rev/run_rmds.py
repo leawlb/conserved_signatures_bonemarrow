@@ -40,7 +40,7 @@ rule all:
 rule run_fig_1:
     resources:
         mem_mb=80000,
-        queues="medium-debian"
+        queues="medium"
     output:
         OUTPUT_PATH + "/figure_1.html"
     params:

@@ -7,7 +7,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-This Rmd generates the Figure 2f-style stacked heatmaps for known age-associated genes (**Spp1**, **Vwf**, **Clu**, **B2m**, **Selp**, **Il6st**), showing mean expression across **species x age** conditions and **cell types**, with tiles outlined when the gene is a conserved signature gene for that cell type.
+This Rmd generates the Figure 2f-style stacked heatmaps for known age-associated genes (**Vwf**, **Clu**, **Selp**), showing mean expression across **species x age** conditions and **cell types**, with tiles outlined when the gene is a conserved signature gene for that cell type.
 
 ## Load packages
 
@@ -46,7 +46,7 @@ source("../figures/determine_params.R")
 colors_z_score_ct <- c("steelblue3", "white", "red3")
 ```
 
-## Figure 2f: stacked gene heatmaps across species/age and cell types
+## Stacked gene heatmaps across species/age and cell types
 
 ### Parameters
 

@@ -83,7 +83,7 @@ pdf(
     base_path,
     "manuscript1_rev/pdfs/mouse_lemur_AUCell_weights_all.pdf"
   ),
-  height = 7,
+  height = 5,
   width  = 7
 )
 
@@ -93,13 +93,15 @@ for (feat in celltypes_full) {
     features  = feat,
     reduction = "umap_harmony",
     raster    = FALSE,
-    order     = TRUE
+    order     = TRUE,
+    min.cutoff = 0,
+    max.cutoff = 0.55
   ) +
     ggplot2::ggtitle(feat) &
     NoAxes()
 
   ## rasterize first layer (points) at high dpi
-  p$layers[[1]] <- ggrastr::rasterise(p$layers[[1]], dpi = 500)
+  p$layers[[1]] <- ggrastr::rasterise(p$layers[[1]], dpi = 700)
 
   print(p)
 }
@@ -117,7 +119,7 @@ DimPlot(
 ) & NoAxes() & NoLegend()
 ```
 
-## HSC re-embedding with Harmony
+<!-- ## HSC re-embedding with Harmony
 
 ```{r subset_hsc}
 ## 21 = HSCs according to original clustering
@@ -173,7 +175,8 @@ FeaturePlot(
 ) & NoAxes()
 
 dev.off()
-```
+``` 
+-->
 
 ## Stromal / EC re-embedding with Harmony
 
@@ -228,21 +231,23 @@ celltypes_stromal <- c(
 
 ```{r pdf_stromal_feature, eval=TRUE}
 pdf(
-  file   = file.path(
+  file = file.path(
     base_path,
     "manuscript1_rev/pdfs/mouse_lemur_AUCell_stromal.pdf"
   ),
-  height = 4,
-  width  = 4
+  height = 3,
+  width = 4
 )
 
 for (feat in celltypes_stromal) {
   p <- FeaturePlot(
     stromal,
-    features  = feat,
+    features = feat,
     reduction = "umap_harmony",
-    raster    = FALSE,
-    order     = TRUE
+    raster = FALSE,
+    order = TRUE,
+    min.cutoff = 0,
+    max.cutoff = 0.55
   ) +
     ggplot2::ggtitle(feat) &
     NoAxes()

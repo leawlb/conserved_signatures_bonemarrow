@@ -44,7 +44,7 @@ conserved_signature[["L6 IT Car3"]] <- NULL
 # AUCell
 # ----------------------------
 
-expr <- LayerData(mouse[["RNA"]])
+expr <- LayerData(mouse[["SCT"]])
 gene_sets_mouse <- lapply(conserved_signature, function(g) intersect(g, rownames(expr)))
 
 rankings <- AUCell_buildRankings(expr, 
@@ -98,12 +98,13 @@ violin <- ggplot(
   )
 
 
-pdf(out_pdf, width = 7, height = 6)
-  print(
-    DimPlot(mouse, 
+pdf(out_pdf, width = 5, height = 4)
+    p <- DimPlot(mouse, 
       group.by = "subclass_label", 
-      reduction = "umap") & NoAxes()
-  )
+      reduction = "umap") &
+      NoAxes()
+    p$layers[[1]] <- ggrastr::rasterise(p$layers[[1]], dpi = 700)
+  print(p)
 for (feat in colnames(auc_mat)) {
   p <- FeaturePlot(
     mouse,
@@ -118,6 +119,6 @@ for (feat in colnames(auc_mat)) {
   p$layers[[1]] <- ggrastr::rasterise(p$layers[[1]], dpi = 500)
   print(p)
 }
-print(violin)
+# print(violin)
 dev.off()
 

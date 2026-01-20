@@ -21,6 +21,7 @@ set.seed(37)
 ```{r libraries}
 library(tidyverse, quietly = TRUE)
 library(Seurat, quietly = TRUE)
+library(ggpubr, quietly = TRUE)
 ```
 
 ```{r paths}
@@ -143,7 +144,7 @@ plot_nDEG <- ggplot(
 ) +
   geom_vline(
     xintercept = -log(0.05),
-    color      = "grey80"
+    color = "grey80"
   ) +
   geom_line(
     aes(y = n_nDEGs),
@@ -154,26 +155,17 @@ plot_nDEG <- ggplot(
     linetype = "solid"
   ) +
   scale_y_log10(
-    name    = "Total signature genes (solid),\nTotal nDEGs (dashed)"
+    name = "Total signature genes (solid),\nTotal nDEGs (dashed)"
   ) +
-  scale_color_manual(values = col_cts_hsc) +
+  scale_color_manual(values = col_cts_hsc, 
+                    guide = "none") +
   labs(
-    x     = "-log(padj) nDEG",
+    x = "-log(padj) nDEG",
     color = NULL
   ) +
   theme_all
 
 plot_nDEG
-```
-
-```{r export_ndge_pdf}
-pdf(
-  file   = file.path(base_path, "manuscript1_rev/pdfs/sig_threshold_DEGs.pdf"),
-  height = 7,
-  width  = 7
-)
-print(plot_nDEG)
-dev.off()
 ```
 
 ---
@@ -350,12 +342,21 @@ plot_markers <- ggplot(
 plot_markers
 ```
 
-```{r export_markers_pdf}
-pdf(
-  file   = file.path(base_path, "manuscript1_rev/pdfs/sig_threshold_markers.pdf"),
-  height = 7,
-  width  = 7
+## Output everything together
+```{r export_pdf}
+thresholds_plot <- ggpubr::ggarrange(
+  plot_nDEG,
+  plot_markers,
+  ncol = 2,
+  widths = c(1, 1.6)
 )
-print(plot_markers)
+
+pdf(
+  file = file.path(base_path, "manuscript1_rev/pdfs/threshold.pdf"),
+  height = 5,
+  width = 10
+)
+thresholds_plot
 dev.off()
 ```
+

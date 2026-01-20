@@ -9,6 +9,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 This Rmd generates the Figure 2f-style stacked heatmaps for known age-associated genes (**Spp1**, **Vwf**, **Clu**, **B2m**, **Selp**, **Il6st**), showing mean expression across **species x age** conditions and **cell types**, with tiles outlined when the gene is a conserved signature gene for that cell type.
 
+<<<<<<< HEAD
+=======
+To substitute different genes, edit the `genes_to_plot` vector.
+
+>>>>>>> 6859b4b (plot known age-associated genes by species, cell type, and age)
 ## Load packages
 
 ```{r load_packages, message=FALSE}
@@ -27,22 +32,41 @@ base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
 ```
 
 ```{r load_objects}
+<<<<<<< HEAD
+=======
+# fully annotated SCE objects
+>>>>>>> 6859b4b (plot known age-associated genes by species, cell type, and age)
 sce_hsc <- base::readRDS(base::paste0(
   base_path, 
   "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10"))
 
+<<<<<<< HEAD
+=======
+# list of gene sets for HSPCs (signature genes, conserved markers, etc.)
+>>>>>>> 6859b4b (plot known age-associated genes by species, cell type, and age)
 geneset_list_hsc <- base::readRDS(base::paste0(
   base_path, 
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"))
 
+<<<<<<< HEAD
+=======
+# colors + theme
+>>>>>>> 6859b4b (plot known age-associated genes by species, cell type, and age)
 colors_path <- base::paste0(
   base_path, 
   "/metadata/colors/colors.txt")
 
 source("../source/colors.R")
 
+<<<<<<< HEAD
 source("../figures/determine_params.R")
 
+=======
+# global params (defines theme_all and other figure-wide params)
+source("../figures/determine_params.R")
+
+# z-score palette used in the original script
+>>>>>>> 6859b4b (plot known age-associated genes by species, cell type, and age)
 colors_z_score_ct <- c("steelblue3", "white", "red3")
 ```
 
@@ -134,6 +158,10 @@ one_gene_heatmap <- function(gene_name, show_y = FALSE, show_x = FALSE) {
     ggplot2::labs(x = NULL, y = NULL, title = gene_name) +
     ggplot2::theme_classic()
 
+<<<<<<< HEAD
+=======
+  # apply your global theme
+>>>>>>> 6859b4b (plot known age-associated genes by species, cell type, and age)
   p <- p + theme_all
 
   # y-axis behavior
@@ -143,7 +171,11 @@ one_gene_heatmap <- function(gene_name, show_y = FALSE, show_x = FALSE) {
       axis.title.y = ggplot2::element_blank()
     )
 
+<<<<<<< HEAD
   # x-axis behavior
+=======
+  # x-axis behavior (THIS is the key fix)
+>>>>>>> 6859b4b (plot known age-associated genes by species, cell type, and age)
   if (show_x) {
     p <- p +
       ggplot2::theme(
@@ -205,8 +237,13 @@ legend_cond_theme
 ```{r export_paths}
 output_pdf_heatmap_conds_stacked_plot <- base::paste0(
   base_path, "/manuscript1_rev/pdfs/figure_s3_known_age.pdf")
+<<<<<<< HEAD
 output_pdf_heatmap_conds_stacked_legend <- base::paste0(
   base_path, "/manuscript1_rev/pdfs/figure_s3_known_age_legend.pdf")
+=======
+# output_pdf_heatmap_conds_stacked_legend <- base::paste0(
+#   base_path, "/manuscript1_rev/pdfs/figure_s3_known_age_legend.pdf")
+>>>>>>> 6859b4b (plot known age-associated genes by species, cell type, and age)
 ```
 
 ```{r export_pdf}
@@ -214,7 +251,13 @@ pdf(output_pdf_heatmap_conds_stacked_plot, width = 6, height = 10)
 heatmap_conds_stacked_plot
 dev.off()
 
+<<<<<<< HEAD
 pdf(output_pdf_heatmap_conds_stacked_legend, width = 3, height = 1)
 legend_cond_theme
 dev.off()
+=======
+# pdf(output_pdf_heatmap_conds_stacked_legend, width = 3, height = 1)
+# legend_cond_theme
+# dev.off()
+>>>>>>> 6859b4b (plot known age-associated genes by species, cell type, and age)
 ```

@@ -87,21 +87,23 @@ sce_mcar_hsc <- base::readRDS(base::paste0(
   base_path, 
   "/scRNAseq/main_analysis/sce_objects/02_sce_anno/02_clst/custom/sce_mcar_hsc_custom.rds"))
 
+# using the unified labels now to save space but still name the slot
+# custom label for downstream compatibility
 sce_hsc_all_cells$custom_label <- vector(length = ncol(sce_hsc_all_cells))
 
-sce_mmus_hsc$custom_label <- unfactor(sce_mmus_hsc$custom_label)
-sce_mcas_hsc$custom_label <- unfactor(sce_mcas_hsc$custom_label)
-sce_mspr_hsc$custom_label <- unfactor(sce_mspr_hsc$custom_label)
-sce_mcar_hsc$custom_label <- unfactor(sce_mcar_hsc$custom_label)
+sce_mmus_hsc$custom_label_unif <- unfactor(sce_mmus_hsc$custom_label_unif)
+sce_mcas_hsc$custom_label_unif <- unfactor(sce_mcas_hsc$custom_label_unif)
+sce_mspr_hsc$custom_label_unif <- unfactor(sce_mspr_hsc$custom_label_unif)
+sce_mcar_hsc$custom_label_unif <- unfactor(sce_mcar_hsc$custom_label_unif)
 
 sce_hsc_all_cells$custom_label[match(
-  colnames(sce_mmus_hsc), colnames(sce_hsc_all_cells))] <- sce_mmus_hsc$custom_label
+  colnames(sce_mmus_hsc), colnames(sce_hsc_all_cells))] <- sce_mmus_hsc$custom_label_unif
 sce_hsc_all_cells$custom_label[match(
-  colnames(sce_mcas_hsc), colnames(sce_hsc_all_cells))] <- sce_mcas_hsc$custom_label
+  colnames(sce_mcas_hsc), colnames(sce_hsc_all_cells))] <- sce_mcas_hsc$custom_label_unif
 sce_hsc_all_cells$custom_label[match(
-  colnames(sce_mspr_hsc), colnames(sce_hsc_all_cells))] <- sce_mspr_hsc$custom_label
+  colnames(sce_mspr_hsc), colnames(sce_hsc_all_cells))] <- sce_mspr_hsc$custom_label_unif
 sce_hsc_all_cells$custom_label[match(
-  colnames(sce_mcar_hsc), colnames(sce_hsc_all_cells))] <- sce_mcar_hsc$custom_label
+  colnames(sce_mcar_hsc), colnames(sce_hsc_all_cells))] <- sce_mcar_hsc$custom_label_unif
 
 gc()
 ```
@@ -151,19 +153,21 @@ sce_hsc_all_cells$species_pub <- factor(
 
 sce_hsc_all_cells$custom_label <- factor(
   sce_hsc_all_cells$custom_label,
-  levels = factors_custom_hsc
+  levels = factors_custom_hsc_unif
 )
 ```
 
 ```{r control_cols}
 # make sure the color vector fits the label names 
 # the factors must be right because they have been controlled in 02/01/custom
-col_custom_hsc[!names(col_custom_hsc) %in% c(sce_hsc_all_cells$custom_label)]
+col_custom_hsc_unif[!names(col_custom_hsc_unif) %in% c(sce_hsc_all_cells$custom_label)]
 unique(sce_hsc_all_cells$custom_label[!sce_hsc_all_cells$custom_label %in% 
-  names(col_custom_hsc)])
+  names(col_custom_hsc_unif)])
 
-stopifnot(names(col_custom_hsc) %in% c(sce_hsc_all_cells$custom_label))
-stopifnot(c(sce_hsc_all_cells$custom_label) %in% names(col_custom_hsc))
+table(is.na(sce_hsc_all_cells$custom_label))
+
+stopifnot(names(col_custom_hsc_unif) %in% c(sce_hsc_all_cells$custom_label))
+stopifnot(c(sce_hsc_all_cells$custom_label) %in% names(col_custom_hsc_unif))
 ```
 
 ## Other prep
@@ -180,7 +184,14 @@ source("../figures/determine_params.R")
 
 # local params
 legend_text_size_allu <- 14 # seems closest to 6pt font size at the end
-geom_repel_size <- 4.6 # seems closest to 6pt font size at the end
+geom_repel_size <- 4.9 # seems closest to 6pt font size at the end
+
+# also adjust the width of the geoms for the alluvial plot to make it slim
+gap <-  0.11 
+w_alluvial <- 0.025
+w_stratum <- 0.025
+nudge <- -0.25
+# decided to use the same params for all plots so that they align hopefully
 ```
 
 # Base Plots 
@@ -249,12 +260,16 @@ mmus_df_hsc <- mat_mmus_hsc %>%
 
 mmus_df_hsc$custom_anno <- factor(
   mmus_df_hsc$custom_anno, 
-  levels = factors_custom_hsc)
+  levels = factors_custom_hsc_unif)
 
 mmus_df_hsc <- mmus_df_hsc %>%
   dplyr::mutate(
     original_anno_space = fct_inorder(paste0(" ", original_anno)))
-```
+
+# the  " " is added to avoid confusing ggalluvium with "HSC" in one
+# alluvium side and "HSC" also in the other alluvium side
+# by adding the space, the names and factors are not identical anymore
+``` 
 
 ### MCAS
 
@@ -271,7 +286,7 @@ mcas_df_hsc <- mat_mcas_hsc %>%
 
 mcas_df_hsc$custom_anno <- factor(
   mmus_df_hsc$custom_anno, 
-  levels = factors_custom_hsc)
+  levels = factors_custom_hsc_unif)
 
 mcas_df_hsc <- mcas_df_hsc %>%
   dplyr::mutate(
@@ -293,7 +308,7 @@ mspr_df_hsc <- mat_mspr_hsc %>%
 
 mspr_df_hsc$custom_anno <- factor(
   mmus_df_hsc$custom_anno, 
-  levels = factors_custom_hsc)
+  levels = factors_custom_hsc_unif)
 
 mspr_df_hsc <- mspr_df_hsc %>%
   dplyr::mutate(
@@ -315,7 +330,7 @@ mcar_df_hsc <- mat_mcar_hsc %>%
 
 mcar_df_hsc$custom_anno <- factor(
   mmus_df_hsc$custom_anno, 
-  levels = factors_custom_hsc)
+  levels = factors_custom_hsc_unif)
 
 mcar_df_hsc <- mcar_df_hsc %>%
   dplyr::mutate(
@@ -324,10 +339,13 @@ mcar_df_hsc <- mcar_df_hsc %>%
 
 ## Make UMAPs
 
-### MMUS
+### One plot for the cell types for all later
 
-```{r base_plot_hsc_celltypes_mmus_1, fig.width = 4, fig.height = 3}
-base_plot_hsc_celltypes_mmus_1 <- ggplot2::ggplot(
+But can use mmus
+
+```{r base_plot_hsc_celltypes, fig.width = 4, fig.height = 3}
+# this type of plot is not needed after all!
+base_plot_hsc_celltypes <- ggplot2::ggplot(
   hsc_umap[hsc_umap$species == "BL6",], 
   aes(x = V1,
       y = V2,
@@ -338,8 +356,10 @@ base_plot_hsc_celltypes_mmus_1 <- ggplot2::ggplot(
   ggplot2::xlim(c(base::min(hsc_umap$V1)-1, base::max(hsc_umap$V1)+1))+
   ggplot2::ylim(c(base::min(hsc_umap$V2)-1, base::max(hsc_umap$V2)+1))+
   ggplot2::scale_color_manual(values = col_cts_hsc)
-base_plot_hsc_celltypes_mmus_1
+base_plot_hsc_celltypes
 ```
+
+### MMUS
 
 ```{r base_plot_hsc_celltypes_mmus_2, fig.width = 4, fig.height = 3}
 base_plot_hsc_celltypes_mmus_2 <- ggplot2::ggplot(
@@ -352,7 +372,7 @@ base_plot_hsc_celltypes_mmus_2 <- ggplot2::ggplot(
     alpha = umap_point_alpha)+
   ggplot2::xlim(c(base::min(hsc_umap$V1)-1, base::max(hsc_umap$V1)+1))+
   ggplot2::ylim(c(base::min(hsc_umap$V2)-1, base::max(hsc_umap$V2)+1))+
-  ggplot2::scale_color_manual(values = col_custom_hsc)
+  ggplot2::scale_color_manual(values = col_custom_hsc_unif)
 base_plot_hsc_celltypes_mmus_2
 ```
 
@@ -365,26 +385,11 @@ base_plot_hsc_celltypes_mmus_3 <- ggplot2::ggplot(
   ggplot2::geom_point(
     size = umap_point_size,
     alpha = umap_point_alpha)+
-  ggplot2::scale_color_manual(values = col_custom_hsc)
+  ggplot2::scale_color_manual(values = col_custom_hsc_unif)
 base_plot_hsc_celltypes_mmus_3
 ```
 
 ### MCAS
-
-```{r base_plot_hsc_celltypes_mcas_1, fig.height = 3, fig.width = 4}
-base_plot_hsc_celltypes_mcas_1 <- ggplot2::ggplot(
-  hsc_umap[hsc_umap$species == "CAST",], 
-  aes(x = V1,
-      y = V2,
-      color = celltypes))+
-  ggplot2::geom_point(
-    size = umap_point_size,
-    alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(hsc_umap$V1)-1, base::max(hsc_umap$V1)+1))+
-  ggplot2::ylim(c(base::min(hsc_umap$V2)-1, base::max(hsc_umap$V2)+1))+
-  ggplot2::scale_color_manual(values = col_cts_hsc)
-base_plot_hsc_celltypes_mcas_1
-```
 
 ```{r base_plot_hsc_celltypes_mcas_2, fig.height = 3, fig.width = 4}
 base_plot_hsc_celltypes_mcas_2 <- ggplot2::ggplot(
@@ -397,7 +402,7 @@ base_plot_hsc_celltypes_mcas_2 <- ggplot2::ggplot(
     alpha = umap_point_alpha)+
   ggplot2::xlim(c(base::min(hsc_umap$V1)-1, base::max(hsc_umap$V1)+1))+
   ggplot2::ylim(c(base::min(hsc_umap$V2)-1, base::max(hsc_umap$V2)+1))+
-  ggplot2::scale_color_manual(values = col_custom_hsc)
+  ggplot2::scale_color_manual(values = col_custom_hsc_unif)
 base_plot_hsc_celltypes_mcas_2
 ```
 
@@ -410,26 +415,11 @@ base_plot_hsc_celltypes_mcas_3 <- ggplot2::ggplot(
   ggplot2::geom_point(
     size = umap_point_size,
     alpha = umap_point_alpha)+
-  ggplot2::scale_color_manual(values = col_custom_hsc)
+  ggplot2::scale_color_manual(values = col_custom_hsc_unif)
 base_plot_hsc_celltypes_mcas_3
 ```
 
 ### MSPR
-
-```{r base_plot_hsc_celltypes_mspr_1, fig.height = 3, fig.width = 4}
-base_plot_hsc_celltypes_mspr_1 <- ggplot2::ggplot(
-  hsc_umap[hsc_umap$species == "SPRET",], 
-  aes(x = V1,
-      y = V2,
-      color = celltypes))+
-  ggplot2::geom_point(
-    size = umap_point_size,
-    alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(hsc_umap$V1)-1, base::max(hsc_umap$V1)+1))+
-  ggplot2::ylim(c(base::min(hsc_umap$V2)-1, base::max(hsc_umap$V2)+1))+
-  ggplot2::scale_color_manual(values = col_cts_hsc)
-base_plot_hsc_celltypes_mspr_1
-```
 
 ```{r base_plot_hsc_celltypes_mspr_2, fig.height = 3, fig.width = 4}
 base_plot_hsc_celltypes_mspr_2 <- ggplot2::ggplot(
@@ -442,7 +432,7 @@ base_plot_hsc_celltypes_mspr_2 <- ggplot2::ggplot(
     alpha = umap_point_alpha)+
   ggplot2::xlim(c(base::min(hsc_umap$V1)-1, base::max(hsc_umap$V1)+1))+
   ggplot2::ylim(c(base::min(hsc_umap$V2)-1, base::max(hsc_umap$V2)+1))+
-  ggplot2::scale_color_manual(values = col_custom_hsc)
+  ggplot2::scale_color_manual(values = col_custom_hsc_unif)
 base_plot_hsc_celltypes_mspr_2
 ```
 
@@ -455,26 +445,11 @@ base_plot_hsc_celltypes_mspr_3 <- ggplot2::ggplot(
   ggplot2::geom_point(
     size = umap_point_size,
     alpha = umap_point_alpha)+
-  ggplot2::scale_color_manual(values = col_custom_hsc)
+  ggplot2::scale_color_manual(values = col_custom_hsc_unif)
 base_plot_hsc_celltypes_mspr_3
 ```
 
 ### MCAR
-
-```{r base_plot_hsc_celltypes_mcar_1, fig.height = 3, fig.width = 4}
-base_plot_hsc_celltypes_mcar_1 <- ggplot2::ggplot(
-  hsc_umap[hsc_umap$species == "CAROLI",], 
-  aes(x = V1,
-      y = V2,
-      color = celltypes))+
-  ggplot2::geom_point(
-    size = umap_point_size,
-    alpha = umap_point_alpha)+
-  ggplot2::xlim(c(base::min(hsc_umap$V1)-1, base::max(hsc_umap$V1)+1))+
-  ggplot2::ylim(c(base::min(hsc_umap$V2)-1, base::max(hsc_umap$V2)+1))+
-  ggplot2::scale_color_manual(values = col_cts_hsc)
-base_plot_hsc_celltypes_mcar_1
-```
 
 ```{r base_plot_hsc_celltypes_mcar_2, fig.height = 3, fig.width = 4}
 base_plot_hsc_celltypes_mcar_2 <- ggplot2::ggplot(
@@ -487,7 +462,7 @@ base_plot_hsc_celltypes_mcar_2 <- ggplot2::ggplot(
     alpha = umap_point_alpha)+
   ggplot2::xlim(c(base::min(hsc_umap$V1)-1, base::max(hsc_umap$V1)+1))+
   ggplot2::ylim(c(base::min(hsc_umap$V2)-1, base::max(hsc_umap$V2)+1))+
-  ggplot2::scale_color_manual(values = col_custom_hsc)
+  ggplot2::scale_color_manual(values = col_custom_hsc_unif)
 base_plot_hsc_celltypes_mcar_2
 ```
 
@@ -500,7 +475,7 @@ base_plot_hsc_celltypes_mcar_3 <- ggplot2::ggplot(
   ggplot2::geom_point(
     size = umap_point_size,
     alpha = umap_point_alpha)+
-  ggplot2::scale_color_manual(values = col_custom_hsc)
+  ggplot2::scale_color_manual(values = col_custom_hsc_unif)
 base_plot_hsc_celltypes_mcar_3
 ```
 
@@ -517,7 +492,11 @@ mmus_df_hsc2 <- mmus_df_hsc %>%
 table(is.na(match(mmus_df_hsc2$original_anno_space, mmus_df_hsc2$custom_anno)))
 table(is.na(match(mmus_df_hsc2$custom_anno, mmus_df_hsc2$original_anno_space)))
 
+table(is.na(mmus_df_hsc2$custom_anno))
+unique(mmus_df_hsc2$custom_anno)
+
 mmus_df_hsc2$fill_by <- mmus_df_hsc2$custom_anno
+unique(mmus_df_hsc2$fill_by)
 
 # convert wide to lodes form, this gives me more control
 mmus_lodes <- ggalluvial::to_lodes_form(
@@ -526,23 +505,20 @@ mmus_lodes <- ggalluvial::to_lodes_form(
   id   = "flow_id") %>% 
   dplyr::select(!original_anno) 
 
-# x = key variable, indicating to which axis a value corresponds, so each type of annotation
-# stratum, = value taking by the axis variable indicated by x, so each cell type
+# x = key variable, indicating to which axis a value corresponds,
+# so each type of annotation
+# stratum, = value taking by the axis variable indicated by x, 
+# so each cell type
 # alluvium = indexing scheme that links rows, in this case the flow ID
 
 is_lodes_form(mmus_lodes, key = x, value = stratum, id = flow_id)
 
 # manually set numeric x positions to bring the axes close together
-gap <- 0.12  
 mmus_lodes <- mmus_lodes %>%
   dplyr::mutate(x = if_else(x == "custom_anno", 1, 1 + gap))
-
-# also adjust the width of the geoms for later
-w_alluvial <- 0.025
-w_stratum <- 0.025
 ```
 
-```{r base_allu_hsc_mmus_new, fig.width = 3, fig.height = 3}
+```{r base_allu_hsc_mmus_new, fig.width = 4.7, fig.height = 2.5}
 
 base_allu_hsc_mmus <- ggplot(
   mmus_lodes,
@@ -570,14 +546,14 @@ base_allu_hsc_mmus <- ggplot(
     aes(label = after_stat(stratum)),
     size = geom_repel_size,
     color = axis_text_color,
-    nudge_x = -0.08,
+    nudge_x = nudge,
     direction = "y",
     box.padding = 0.1,
     hjust = 1
   )+
   ggplot2::theme_void() +
   ggplot2::theme(legend.position = "none") +
-  ggplot2::scale_fill_manual(values = col_custom_hsc) +
+  ggplot2::scale_fill_manual(values = col_custom_hsc_unif) +
   ggplot2::scale_x_continuous(
     breaks = c(1, 1 + gap),
     labels = c("", ""),
@@ -585,128 +561,275 @@ base_allu_hsc_mmus <- ggplot(
   )+
   ggplot2::coord_cartesian(clip = "off")
 base_allu_hsc_mmus
-
-knitr::knit_exit()
 ```
 
 ### MCAS
 
-```{r base_allu_hsc_mcas, fig.height = 3, fig.width = 5}
-base_allu_hsc_mcas <- ggplot2::ggplot(
-  data = mcas_df_hsc,
+```{r pre_plot_prep_mcas}
+mcas_df_hsc2 <- mcas_df_hsc %>%
+  dplyr::mutate(flow_id = row_number())
+
+# there are no overlapping names between custom anno and original_anno_space
+# specifically because I added the space
+table(is.na(match(mcas_df_hsc2$original_anno_space, mcas_df_hsc2$custom_anno)))
+table(is.na(match(mcas_df_hsc2$custom_anno, mcas_df_hsc2$original_anno_space)))
+
+mcas_df_hsc2$fill_by <- mcas_df_hsc2$custom_anno
+
+# convert wide to lodes form, this gives me more control
+mcas_lodes <- ggalluvial::to_lodes_form(
+  mcas_df_hsc2,
+  axes = c("custom_anno", "original_anno_space"),
+  id   = "flow_id") %>% 
+  dplyr::select(!original_anno) 
+
+# x = key variable, indicating to which axis a value corresponds,
+# so each type of annotation
+# stratum, = value taking by the axis variable indicated by x, 
+# so each cell type
+# alluvium = indexing scheme that links rows, in this case the flow ID
+
+is_lodes_form(mcas_lodes, key = x, value = stratum, id = flow_id)
+
+# manually set numeric x positions to bring the axes close together
+mcas_lodes <- mcas_lodes %>%
+  dplyr::mutate(x = if_else(x == "custom_anno", 1, 1 + gap))
+```
+
+```{r base_allu_hsc_mcas, fig.width = 4.7, fig.height = 2.5}
+
+base_allu_hsc_mcas <- ggplot(
+  mcas_lodes,
   aes(
-    axis1 = custom_anno,
-    axis2 = original_anno_space, 
-    y = Freq)
-    )+
+    x = x,
+    stratum  = stratum,
+    alluvium = flow_id,
+    y = Freq
+    )
+  )+
   ggalluvial::geom_alluvium(
-    aes(fill = custom_anno),
-    width = 0.05
-    )+
+    aes(fill = fill_by),
+    width = w_alluvial
+  )+
   ggalluvial::geom_stratum(
-    fill = "black",
+    fill  = "black",
     alpha = 0.2,
     color = "black",
-    size = 0.2,
-    width = 0.05
-    )+
+    size  = 0.2,
+    width = w_stratum
+  )+
   ggrepel::geom_text_repel(
+    data = mcas_lodes %>% filter(x == "1"),
     stat = "stratum",
-    aes(
-      x = after_stat(x),
-      label = after_stat(stratum),
-      hjust = 0),
-    nudge_x = -0.7,      
-    direction = "y",         
-    box.padding = 0.1  
-    )+
-  ggplot2::theme_void()+
-  ggplot2::theme(legend.position = "none")+
-  ggplot2::scale_fill_manual(values = col_custom_hsc)
+    aes(label = after_stat(stratum)),
+    size = geom_repel_size,
+    color = axis_text_color,
+    nudge_x = nudge,
+    direction = "y",
+    box.padding = 0.1,
+    hjust = 1
+  )+
+  ggplot2::theme_void() +
+  ggplot2::theme(legend.position = "none") +
+  ggplot2::scale_fill_manual(values = col_custom_hsc_unif) +
+  ggplot2::scale_x_continuous(
+    breaks = c(1, 1 + gap),
+    labels = c("", ""),
+    expand = c(0, 0)
+  )+
+  ggplot2::coord_cartesian(clip = "off")
 base_allu_hsc_mcas
 ```
 
 ### MSPR
 
-```{r base_allu_hsc_mspr, fig.height = 3, fig.width = 5}
-base_allu_hsc_mspr <- ggplot2::ggplot(
-  data = mspr_df_hsc,
+```{r pre_plot_prep_mspr}
+mspr_df_hsc2 <- mspr_df_hsc %>%
+  dplyr::mutate(flow_id = row_number())
+
+# there are no overlapping names between custom anno and original_anno_space
+# specifically because I added the space
+table(is.na(match(mspr_df_hsc2$original_anno_space, mspr_df_hsc2$custom_anno)))
+table(is.na(match(mspr_df_hsc2$custom_anno, mspr_df_hsc2$original_anno_space)))
+
+mspr_df_hsc2$fill_by <- mspr_df_hsc2$custom_anno
+
+# convert wide to lodes form, this gives me more control
+mspr_lodes <- ggalluvial::to_lodes_form(
+  mspr_df_hsc2,
+  axes = c("custom_anno", "original_anno_space"),
+  id   = "flow_id") %>% 
+  dplyr::select(!original_anno) 
+
+# x = key variable, indicating to which axis a value corresponds,
+# so each type of annotation
+# stratum, = value taking by the axis variable indicated by x, 
+# so each cell type
+# alluvium = indexing scheme that links rows, in this case the flow ID
+
+is_lodes_form(mspr_lodes, key = x, value = stratum, id = flow_id)
+
+# manually set numeric x positions to bring the axes close together
+mspr_lodes <- mspr_lodes %>%
+  dplyr::mutate(x = if_else(x == "custom_anno", 1, 1 + gap))
+```
+
+```{r base_allu_hsc_mspr, fig.width = 4.7, fig.height = 2.5}
+
+base_allu_hsc_mspr <- ggplot(
+  mspr_lodes,
   aes(
-    axis1 = custom_anno,
-    axis2 = original_anno_space, 
-    y = Freq)
-    )+
+    x = x,
+    stratum  = stratum,
+    alluvium = flow_id,
+    y = Freq
+    )
+  )+
   ggalluvial::geom_alluvium(
-    aes(fill = custom_anno),
-    width = 0.05
-    )+
+    aes(fill = fill_by),
+    width = w_alluvial
+  )+
   ggalluvial::geom_stratum(
-    fill = "black",
+    fill  = "black",
     alpha = 0.2,
     color = "black",
-    size = 0.2,
-    width = 0.05
-    )+
+    size  = 0.2,
+    width = w_stratum
+  )+
   ggrepel::geom_text_repel(
+    data = mspr_lodes %>% filter(x == "1"),
     stat = "stratum",
-    aes(
-      x = after_stat(x),
-      label = after_stat(stratum),
-      hjust = 0),
-    nudge_x = -0.7,      
-    direction = "y",         
-    box.padding = 0.1 
-    )+
-  ggplot2::theme_void()+
-  ggplot2::theme(legend.position = "none")+
-  ggplot2::scale_fill_manual(values = col_custom_hsc)
+    aes(label = after_stat(stratum)),
+    size = geom_repel_size,
+    color = axis_text_color,
+    nudge_x = nudge,
+    direction = "y",
+    box.padding = 0.1,
+    hjust = 1
+  )+
+  ggplot2::theme_void() +
+  ggplot2::theme(legend.position = "none") +
+  ggplot2::scale_fill_manual(values = col_custom_hsc_unif) +
+  ggplot2::scale_x_continuous(
+    breaks = c(1, 1 + gap),
+    labels = c("", ""),
+    expand = c(0, 0)
+  )+
+  ggplot2::coord_cartesian(clip = "off")
 base_allu_hsc_mspr
 ```
 
 ### MCAR
 
-```{r base_allu_hsc_mcar, fig.height = 3, fig.width = 5}
-base_allu_hsc_mcar <- ggplot2::ggplot(
-  data = mcar_df_hsc,
+```{r pre_plot_prep_mcar}
+mcar_df_hsc2 <- mcar_df_hsc %>%
+  dplyr::mutate(flow_id = row_number())
+
+# there are no overlapping names between custom anno and original_anno_space
+# specifically because I added the space
+table(is.na(match(mcar_df_hsc2$original_anno_space, mcar_df_hsc2$custom_anno)))
+table(is.na(match(mcar_df_hsc2$custom_anno, mcar_df_hsc2$original_anno_space)))
+
+mcar_df_hsc2$fill_by <- mcar_df_hsc2$custom_anno
+
+# convert wide to lodes form, this gives me more control
+mcar_lodes <- ggalluvial::to_lodes_form(
+  mcar_df_hsc2,
+  axes = c("custom_anno", "original_anno_space"),
+  id   = "flow_id") %>% 
+  dplyr::select(!original_anno) 
+
+# x = key variable, indicating to which axis a value corresponds,
+# so each type of annotation
+# stratum, = value taking by the axis variable indicated by x, 
+# so each cell type
+# alluvium = indexing scheme that links rows, in this case the flow ID
+
+is_lodes_form(mcar_lodes, key = x, value = stratum, id = flow_id)
+
+# manually set numeric x positions to bring the axes close together
+mcar_lodes <- mcar_lodes %>%
+  dplyr::mutate(x = if_else(x == "custom_anno", 1, 1 + gap))
+```
+
+```{r base_allu_hsc_mcar, fig.width = 4.7, fig.height = 2.5}
+
+base_allu_hsc_mcar <- ggplot(
+  mcar_lodes,
   aes(
-    axis1 = custom_anno,
-    axis2 = original_anno_space, 
-    y = Freq)
-    )+
+    x = x,
+    stratum  = stratum,
+    alluvium = flow_id,
+    y = Freq
+    )
+  )+
   ggalluvial::geom_alluvium(
-    aes(fill = custom_anno),
-    width = 0.05
-    )+
+    aes(fill = fill_by),
+    width = w_alluvial
+  )+
   ggalluvial::geom_stratum(
-    fill = "black",
+    fill  = "black",
     alpha = 0.2,
     color = "black",
-    size = 0.2,
-    width = 0.05
-    )+
+    size  = 0.2,
+    width = w_stratum
+  )+
   ggrepel::geom_text_repel(
+    data = mcar_lodes %>% filter(x == "1"),
     stat = "stratum",
-    aes(
-      x = after_stat(x),
-      label = after_stat(stratum),
-      hjust = 0),
-    nudge_x = -0.7,      
-    direction = "y",         
-    box.padding = 0.2   
-    )+
-  ggplot2::theme_void()+
-  ggplot2::theme(legend.position = "none")+
-  ggplot2::scale_fill_manual(values = col_custom_hsc)
+    aes(label = after_stat(stratum)),
+    size = geom_repel_size,
+    color = axis_text_color,
+    nudge_x = nudge,
+    direction = "y",
+    box.padding = 0.1,
+    hjust = 1
+  )+
+  ggplot2::theme_void() +
+  ggplot2::theme(legend.position = "none") +
+  ggplot2::scale_fill_manual(values = col_custom_hsc_unif) +
+  ggplot2::scale_x_continuous(
+    breaks = c(1, 1 + gap),
+    labels = c("", ""),
+    expand = c(0, 0)
+  )+
+  ggplot2::coord_cartesian(clip = "off")
 base_allu_hsc_mcar
 ```
 
 # Build
 
+## List of cell types for all plots
+
+```{r celltypes_legend, fig.width = 1, fig.height = 3} 
+
+# this legend can be used for all species
+celltypes_legend_plot <- base_plot_hsc_celltypes + 
+  theme_all+
+  ggplot2::geom_point(size = 3)+
+  ggplot2::theme(
+    legend.title = element_blank(),
+    legend.text = element_text(
+      face = legend_text_face,
+      color = legend_text_color,
+      size = legend_text_size_allu
+    ),
+    legend.spacing.y = unit(0.08, 'cm'),
+    legend.key.size = unit(0.42, "cm"))
+
+celltypes_legend_theme <- ggpubr::get_legend(celltypes_legend_plot)
+celltypes_legend <- ggpubr::ggarrange(celltypes_legend_theme)
+
+celltypes_legend
+```
+
 ## A plot MMUS
 
-```{r a_mmus_plot_1, fig.width = 3, fig.height = 3} 
+UMAP in species-specific space
+ 
+```{r a_mmus_plot_4, fig.width = 3, fig.height = 3} 
 
-a_mmus_plot_1 <- base_plot_hsc_celltypes_mmus_1+
+a_mmus_plot_4 <- base_plot_hsc_celltypes_mmus_3+
   ggplot2::theme_void()+
   ggplot2::theme(legend.position = "none",
     panel.border = element_rect(
@@ -716,52 +839,10 @@ a_mmus_plot_1 <- base_plot_hsc_celltypes_mmus_1+
       linetype = 1
     ))
 
-a_mmus_plot_1
+a_mmus_plot_4
 ```
 
-```{r a_mmus_legend_1, fig.width = 1, fig.height = 3} 
-
-# this legend can be used for all species
-a_mmus_legend_1_plot <- base_plot_hsc_celltypes_mmus_1 + 
-  theme_all+
-  ggplot2::geom_point(size = 3)+
-  ggplot2::theme(
-    legend.text = element_blank(),
-    legend.title = element_blank())
-
-a_mmus_legend_1 <- ggpubr::get_legend(a_mmus_legend_1_plot)
-a_mmus_legend_1 <- ggpubr::ggarrange(a_mmus_legend_1)
-
-a_mmus_legend_1
-```
-
-```{r a_mmus_plot_2, fig.width = 4, fig.height = 3} 
-
-a_mmus_plot_2 <- base_allu_hsc_mmus+
-  ggplot2::theme(
-    legend.position = "none",
-    plot.background = element_blank())
-
-a_mmus_plot_2
-```
-
-```{r a_mmus_legend_2, fig.width = 5, fig.height = 3} 
-
-# this legend can be used for all species
-a_mmus_legend_2_plot <- base_plot_hsc_celltypes_mmus_2 + 
-  theme_all+
-  ggplot2::geom_point(size = 3)+
-  ggplot2::theme(
-    legend.text = element_text(size = legend_text_size_allu),
-    legend.spacing.y = unit(0.08, 'cm'),
-    legend.key.size = unit(0.42, "cm"),
-    legend.title = element_blank())
-
-a_mmus_legend_2_temp <- ggpubr::get_legend(a_mmus_legend_2_plot)
-a_mmus_legend_2 <- ggpubr::ggarrange(a_mmus_legend_2_temp)
-
-a_mmus_legend_2
-```
+UMAP in merged space
 
 ```{r a_mmus_plot_3, fig.width = 3, fig.height = 3} 
 
@@ -778,81 +859,33 @@ a_mmus_plot_3 <- base_plot_hsc_celltypes_mmus_2+
 a_mmus_plot_3
 ```
 
-```{r a_mmus_plot_4, fig.width = 3, fig.height = 3} 
+alluvial plot
 
-a_mmus_plot_4 <- base_plot_hsc_celltypes_mmus_3+
-  ggplot2::theme_void()+
-  ggplot2::theme(legend.position = "none",
-    panel.border = element_rect(
-      fill = NA,
-      color = "grey30",
-      linewidth = 1,
-      linetype = 1
-    ))
+```{r a_mmus_plot_2, fig.width = 4, fig.height = 3} 
 
-a_mmus_plot_4
+a_mmus_plot_2 <- base_allu_hsc_mmus+
+  ggplot2::theme(
+    legend.position = "none",
+    plot.background = element_blank())
+
+a_mmus_plot_2
 ```
 
-```{r arrange_a, fig.width = 16, fig.height = 3.5}
+```{r arrange_a, fig.width = 9.5, fig.height = 2.5}
 
 plot_a <- ggpubr::ggarrange(
-  a_mmus_plot_1,
-  a_mmus_legend_1,
+  a_mmus_plot_3+ggplot2::theme(plot.margin = margin(t = 0, r = 0, b = 40, l = 0, unit = "pt")),
+  a_mmus_plot_4+ggplot2::theme(plot.margin = margin(t = 0, r = 0, b = 40, l = 0, unit = "pt")),
   a_mmus_plot_2,
-  a_mmus_legend_2,
-  a_mmus_plot_3,
-  a_mmus_plot_4,
+  celltypes_legend,
   nrow = 1,
-  widths = c(3, 0.2, 4, 2.8, 3, 3)
+  widths = c(1.75, 1.75, 4.7, 1.5)
 )
 
 plot_a
 ```
 
 ## B plot MCAS
-
-```{r b_mcas_plot_1, fig.width = 3, fig.height = 3} 
-
-b_mcas_plot_1 <- base_plot_hsc_celltypes_mcas_1+
-  ggplot2::theme_void()+
-  ggplot2::theme(legend.position = "none",
-    panel.border = element_rect(
-      fill = NA,
-      color = "grey30",
-      linewidth = 1,
-      linetype = 1
-    ))
-
-b_mcas_plot_1
-```
-
-```{r b_mcas_plot_2, fig.width = 4, fig.height = 3.5} 
-
-b_mcas_plot_2 <- base_allu_hsc_mcas+
-  ggplot2::theme(
-    legend.position = "none",
-    plot.background = element_blank())
-
-b_mcas_plot_2
-```
-
-```{r b_mcas_legend_2, fig.width = 4, fig.height = 2} 
-
-# this legend can be used for all species
-b_mcas_legend_2_plot <- base_plot_hsc_celltypes_mcas_2 + 
-  theme_all+
-  ggplot2::geom_point(size = 3)+
-  ggplot2::theme(
-    legend.text = element_text(size = legend_text_size_allu),
-    legend.spacing.y = unit(0.08, 'cm'),
-    legend.key.size = unit(0.42, "cm"),
-    legend.title = element_blank())
-
-b_mcas_legend_2 <- ggpubr::get_legend(b_mcas_legend_2_plot)
-b_mcas_legend_2 <- ggpubr::ggarrange(b_mcas_legend_2)
-
-b_mcas_legend_2
-```
 
 ```{r b_mcas_plot_3, fig.width = 3, fig.height = 3} 
 
@@ -884,66 +917,31 @@ b_mcas_plot_4 <- base_plot_hsc_celltypes_mcas_3+
 b_mcas_plot_4
 ```
 
-```{r arrange_b, fig.width = 16, fig.height = 3.5}
+```{r b_mcas_plot_2, fig.width = 3, fig.height = 3} 
+
+b_mcas_plot_2 <- base_allu_hsc_mcas+
+  ggplot2::theme(
+    legend.position = "none",
+    plot.background = element_blank())
+
+b_mcas_plot_2
+```
+
+```{r arrange_b, fig.width = 9.5, fig.height = 2.5}
 
 plot_b <- ggpubr::ggarrange(
-  b_mcas_plot_1,
-  a_mmus_legend_1,
+  b_mcas_plot_3+ggplot2::theme(plot.margin = margin(t = 0, r = 0, b = 40, l = 0, unit = "pt")),
+  b_mcas_plot_4+ggplot2::theme(plot.margin = margin(t = 0, r = 0, b = 40, l = 0, unit = "pt")),
   b_mcas_plot_2,
-  b_mcas_legend_2,
-  b_mcas_plot_3,
-  b_mcas_plot_4,
+  celltypes_legend,
   nrow = 1,
-  widths = c(2.5, 0.2, 4, 4.3, 2.5, 2.5)
+  widths = c(1.75, 1.75, 4.7, 1.5)
 )
 
 plot_b
 ```
 
 ## C plot MSPR
-
-```{r c_mspr_plot_1, fig.width = 3, fig.height = 3} 
-
-c_mspr_plot_1 <- base_plot_hsc_celltypes_mspr_1+
-  ggplot2::theme_void()+
-  ggplot2::theme(legend.position = "none",
-    panel.border = element_rect(
-      fill = NA,
-      color = "grey30",
-      linewidth = 1,
-      linetype = 1
-    ))
-
-c_mspr_plot_1
-```
-
-```{r c_mspr_plot_2, fig.width = 4, fig.height = 3} 
-
-c_mspr_plot_2 <- base_allu_hsc_mspr+
-  ggplot2::theme(
-    legend.position = "none",
-    plot.background = element_blank())
-
-c_mspr_plot_2
-```
-
-```{r c_mspr_legend_2, fig.width = 4, fig.height = 2} 
-
-# this legend can be used for all species
-c_mspr_legend_2_plot <- base_plot_hsc_celltypes_mspr_2 + 
-  theme_all+
-  ggplot2::geom_point(size = 3)+
-  ggplot2::theme(
-    legend.text = element_text(size = legend_text_size_allu),
-    legend.spacing.y = unit(0.08, 'cm'),
-    legend.key.size = unit(0.42, "cm"),
-    legend.title = element_blank())
-
-c_mspr_legend_2 <- ggpubr::get_legend(c_mspr_legend_2_plot)
-c_mspr_legend_2 <- ggpubr::ggarrange(c_mspr_legend_2)
-
-c_mspr_legend_2
-```
 
 ```{r c_mspr_plot_3, fig.width = 3, fig.height = 3} 
 
@@ -975,38 +973,32 @@ c_mspr_plot_4 <- base_plot_hsc_celltypes_mspr_3+
 c_mspr_plot_4
 ```
 
-```{r arrange_c, fig.width = 16, fig.height = 3.5}
+```{r c_mspr_plot_2, fig.width = 4, fig.height = 3} 
+
+c_mspr_plot_2 <- base_allu_hsc_mspr+
+  ggplot2::theme(
+    legend.position = "none",
+    plot.background = element_blank())
+
+c_mspr_plot_2
+```
+
+```{r arrange_c, fig.width = 9.5, fig.height = 2.5}
 
 plot_c <- ggpubr::ggarrange(
-  c_mspr_plot_1,
-  a_mmus_legend_1,
+
+  c_mspr_plot_3+ggplot2::theme(plot.margin = margin(t = 0, r = 0, b = 40, l = 0, unit = "pt")),
+  c_mspr_plot_4+ggplot2::theme(plot.margin = margin(t = 0, r = 0, b = 40, l = 0, unit = "pt")),
   c_mspr_plot_2,
-  c_mspr_legend_2,
-  c_mspr_plot_3,
-  c_mspr_plot_4,
+  celltypes_legend,
   nrow = 1,
-  widths = c(2.5, 0.2, 4, 4.3, 2.5, 2.5)
+  widths = c(1.75, 1.75, 4.7, 1.5)
 )
 
 plot_c
 ```
 
 ## D plot MCAR
-
-```{r d_mcar_plot_1, fig.width = 3, fig.height = 3} 
-
-d_mcar_plot_1 <- base_plot_hsc_celltypes_mcar_1+
-  ggplot2::theme_void()+
-  ggplot2::theme(legend.position = "none",
-    panel.border = element_rect(
-      fill = NA,
-      color = "grey30",
-      linewidth = 1,
-      linetype = 1
-    ))
-
-d_mcar_plot_1
-```
 
 ```{r d_mcar_plot_2, fig.width = 4, fig.height = 3} 
 
@@ -1016,24 +1008,6 @@ d_mcar_plot_2 <- base_allu_hsc_mcar+
     plot.background = element_blank())
 
 d_mcar_plot_2
-```
-
-```{r d_mcar_legend_2, fig.width = 4, fig.height = 2} 
-
-# this legend can be used for all species
-d_mcar_legend_2_plot <- base_plot_hsc_celltypes_mcar_2 + 
-  theme_all+
-  ggplot2::geom_point(size = 3)+
-  ggplot2::theme(
-    legend.text = element_text(size = legend_text_size_allu),
-    legend.spacing.y = unit(0.08, 'cm'),
-    legend.key.size = unit(0.42, "cm"),
-    legend.title = element_blank())
-
-d_mcar_legend_2 <- ggpubr::get_legend(d_mcar_legend_2_plot)
-d_mcar_legend_2 <- ggpubr::ggarrange(d_mcar_legend_2)
-
-d_mcar_legend_2
 ```
 
 ```{r d_mcar_plot_3, fig.width = 3, fig.height = 3} 
@@ -1067,17 +1041,15 @@ d_mcar_plot_4 <- base_plot_hsc_celltypes_mcar_3+
 d_mcar_plot_4
 ```
 
-```{r arrange_d, fig.width = 16, fig.height = 3.5}
+```{r arrange_d, fig.width = 9.5, fig.height = 2.5}
 
 plot_d <- ggpubr::ggarrange(
-  d_mcar_plot_1,
-  a_mmus_legend_1,
+  d_mcar_plot_3+ggplot2::theme(plot.margin = margin(t = 0, r = 0, b = 40, l = 0, unit = "pt")),
+  d_mcar_plot_4+ggplot2::theme(plot.margin = margin(t = 0, r = 0, b = 40, l = 0, unit = "pt")),
   d_mcar_plot_2,
-  d_mcar_legend_2,
-  d_mcar_plot_3,
-  d_mcar_plot_4,
+  celltypes_legend,
   nrow = 1,
-  widths = c(2.5, 0.2, 4, 4.3, 2.5, 2.5)
+  widths = c(1.75, 1.75, 4.5, 1.5)
 )
 
 plot_d

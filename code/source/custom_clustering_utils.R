@@ -191,9 +191,9 @@ col_custom_hsc_unif <- c(
   "Late lymphoid prog" = "#faf24fff", # mcar
   "Late/Cycling lymphoid prog" = "#ffff75ff", # mspr
   "BM prog" = "#ab00fbff", # mmus, mcas, mspr, mcar
-  "Mk/E/BM (more Mk/BM) prog" = "#6e468bff", # mcar
-  "Mk/E/BM (more Ery) prog" = "#9d81fbff", # mcar
-  "Early Mk progeprognitor" = "#8d0153ff", # mspr
+  "Mk/Ery/BM (more Mk/BM) prog" = "#6e468bff", # mcar
+  "Mk/Ery/BM (more Ery) prog" = "#9d81fbff", # mcar
+  "Early Mk prog" = "#8d0153ff", # mspr
   "Mk/Ery (more Mk) prog" = "#8e3268ff", # mmus 
   "Mk/Ery prog" = "#d857a2ff", # mcas
   "Early ery/BM prog" = "#993a8eff", # mspr
@@ -214,10 +214,7 @@ col_custom_hsc_unif <- c(
   "Late neutro prog" = "#6cfff5ff", # mmus 
   "Late immune, mixed" = "#37ded3ff", # mmus, mcas, mspr
   "Late neutro/ery, mixed" = "#03b0a5ff", # mcas
-  "Low quality" = "#4adf6dff", # mcar
-  "Low quality, early" = "#208c39ff", # mspr
-  "Low quality, neutro" = "#75811bff", # mspr
-  "Low quality, ery" = "#99b835ff" # mspr
+  "Low quality" = "#4adf6dff" # mcar mspr
 )
 
 #------------------------------------------------------------------------------

@@ -160,11 +160,11 @@ col_custom_hsc <- c(
   "Cycling MPP" = "#c2ac89ff", # mcar
   "Cycling, mostly myeloid" = "#98877dff", # mspr
   "Cycling granu/mono prog" = "#dfdcd6ff", # mcar
-  "Cycling ery" = "#c3a4b0ff", # mspr
+  "Cycling ery prog" = "#c3a4b0ff", # mspr
   # separate cells that would be removed
   "Antigen-presenting" = "#4c64fbff", # mcar
   "Mono/antigen-presenting" = "#93a0f7ff", # mspr
-  "Late neutro" = "#6cfff5ff", # mmus 
+  "Late neutro prog" = "#6cfff5ff", # mmus 
   "Late immune, mixed" = "#37ded3ff", # mmus, mcas, mspr
   "Late neutro/ery, mixed" = "#03b0a5ff", # mcas
   "Low quality" = "#4adf6dff", # mcar
@@ -207,11 +207,11 @@ col_custom_hsc_unif <- c(
   "Cycling MPP" = "#c2ac89ff", # mcar
   "Cycling, mostly myeloid" = "#98877dff", # mspr
   "Cycling granu/mono prog" = "#dfdcd6ff", # mcar
-  "Cycling ery" = "#c3a4b0ff", # mspr
+  "Cycling ery prog" = "#c3a4b0ff", # mspr
   # separate cells that would be removed
   "Antigen-presenting" = "#4c64fbff", # mcar
   "Mono/antigen-presenting" = "#93a0f7ff", # mspr
-  "Late neutro" = "#6cfff5ff", # mmus 
+  "Late neutro prog" = "#6cfff5ff", # mmus 
   "Late immune, mixed" = "#37ded3ff", # mmus, mcas, mspr
   "Late neutro/ery, mixed" = "#03b0a5ff", # mcas
   "Low quality" = "#4adf6dff", # mcar

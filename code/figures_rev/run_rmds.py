@@ -19,6 +19,7 @@ targets = []
 targets = targets + [OUTPUT_PATH + "/figure_1.html"]
 
 targets = targets + [OUTPUT_PATH + "/figure_s2.html"]
+targets = targets + [OUTPUT_PATH + "/figure_s2_alluvial.html"]
 
 """
 targets = targets + [OUTPUT_PATH + "/figure_s3.html"]
@@ -64,20 +65,20 @@ rule run_fig_s2:
     script:
         "figure_s2.Rmd"
 
-"""
-rule run_fig_s3:
+
+rule run_fig_s2_alluvial:
     resources:
         mem_mb=80000,
         queues="medium"
     output:
-        OUTPUT_PATH + "/figure_s3.html"
+        OUTPUT_PATH + "/figure_s2_alluvial.html"
     params:
         base_path = BASE_PATH
     conda:
         "../envs/ggalluvial.yml"
     threads: 4
     script:
-        "figure_s3.Rmd"
+        "figure_s2_alluvial.Rmd"
 """
 
 rule run_fig_s3_heatmaps:
@@ -141,3 +142,5 @@ rule run_fig_batchcorrection:
     threads: 4
     script:
         "figure_batch_correction.Rmd"
+
+"""

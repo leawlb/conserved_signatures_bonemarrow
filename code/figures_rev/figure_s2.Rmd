@@ -544,12 +544,13 @@ colnames(umap_df_sce_hsc_stem)[2] <- "UMAP2"
 ```{r b_prep_hsc_anno}
 
 # final annotation, last umap of the plot
-# contaminating cells have been removed
+# but still containing the contaminating cells
+
 umap_df_sce_hsc_anno <- base::as.data.frame(
   SingleCellExperiment::reducedDim(
-    sce_hsc_anno, type = "UMAP"))
-umap_df_sce_hsc_anno$celltypes <- sce_hsc_anno$celltypes 
-umap_df_sce_hsc_anno$species_pub <- sce_hsc_anno$species_pub 
+    sce_hsc_all_cells, type = "UMAP"))
+umap_df_sce_hsc_anno$celltypes <- sce_hsc_all_cells$celltypes 
+umap_df_sce_hsc_anno$species_pub <- sce_hsc_all_cells$species_pub 
 
 colnames(umap_df_sce_hsc_anno)[1] <- "UMAP1"
 colnames(umap_df_sce_hsc_anno)[2] <- "UMAP2"
@@ -1082,13 +1083,13 @@ c_orig_hsc_heatmap
 
 ##### Combine
 
-```{r c_combine_hsc, fig.height = 6.1, fig.width = 5.9}
+```{r c_combine_hsc, fig.height = 6.1, fig.width = 6.5}
 
 c_combine_hsc <- ggpubr::ggarrange(
   c_custom_hsc_heatmap,
   c_orig_hsc_heatmap,
   nrow = 1,
-  widths = c(3,2),
+  widths = c(3,2.1),
   align = c("h")
 )
 
@@ -1098,7 +1099,7 @@ c_combine_hsc
 ##### Export
 
 ```{r export_c_combine_hsc}
-pdf(output_pdf_c_combined_hsc, width = 5.9, height = 6.1)
+pdf(output_pdf_c_combined_hsc, width = 6.9, height = 6.1)
 c_combine_hsc
 dev.off()
 ```
@@ -1510,13 +1511,13 @@ d_heatmap_orig <- d_base_heatmap_orig_all+
 d_heatmap_orig
 ```
 
-```{r d_combine_str, fig.height = 6.9, fig.width = 7}
+```{r d_combine_str, fig.height = 6.9, fig.width = 8}
 
 d_combine_str <- ggpubr::ggarrange(
   d_custom_heatmap,
   d_heatmap_orig,
   nrow = 1,
-  widths = c(3,2.2),
+  widths = c(3,2.3),
   align = c("h")
 )
 
@@ -1526,7 +1527,7 @@ d_combine_str
 ##### Export
 
 ```{r output_pdf_d_combined_str}
-pdf(output_pdf_d_combined_str, width = 7, height = 6.9)
+pdf(output_pdf_d_combined_str, width = 8.2, height = 6.9)
 d_combine_str
 dev.off()
 ```

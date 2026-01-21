@@ -1065,6 +1065,7 @@ x_hsc_theme_plot <- x_hsc_base_plot+
     limits = c(0, 25000),
     breaks = c(0, 10000, 20000),
     labels = c(0, "", 20000))+
+  theme_all+
   ggplot2::theme(
     axis.text.y = element_blank(),
     axis.title.y = element_blank(),
@@ -1109,6 +1110,7 @@ x_str_theme_plot <- x_str_base_plot+
     limits = c(0, 10000),
     breaks = c(0, 4000, 8000),
     labels = c(0, "", 8000))+
+  theme_all+
   ggplot2::theme(
     axis.title.y = element_blank(),
     axis.text.y = element_blank(),
@@ -1133,6 +1135,7 @@ x_legend_base_plot <- ggplot2::ggplot(
       fill = species_pub))+
   ggplot2::geom_bar()+
   ggplot2::scale_fill_manual("Species", values = col_spc_pub)+
+  theme_all+
   ggplot2::theme(
     legend.title = element_text(
       size = legend_title_size,

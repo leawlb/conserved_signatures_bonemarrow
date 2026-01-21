@@ -386,7 +386,7 @@ col_custom_hsc_unif <- c(
 # for figure s3
 # names related to merged clustering
 # all sources in supp table 1 of corresponding publication
-marker_genes_list_hsc_figs3 <- list(
+marker_genes_list_hsc_figs2 <- list(
     "HSC_by_spec" = c(
       "Slamf1", # generally weak
       "Ly6a", # strong in BL6
@@ -397,29 +397,23 @@ marker_genes_list_hsc_figs3 <- list(
       "Aldh1a1", # strong in spret
       "Alcam",
       "Mllt3", # strong in caroli
-      "Gng11",
-      "Cited2"
+      "Gng11"
     ),
     "HSC_shared" = c(
       "Mpl",
       "Mmrn1",
       "Mecom",
       "Cdkn1c", 
-      "Txnip",
       "Lmo2",
       "Meis1",
       "Hlf", 
       "Hoxa9",
-      "Angpt1", 
       "Msi2"
     ),
     "MPP" = c( 
       "Adgrl4", 
       "Cd34", 
-      "Sox4",    
       "Flt3",
-      "Cd48", 
-      "Sell",
       "Cdk4"
     ),
     "Cell_cycle_entry" = c(
@@ -429,8 +423,8 @@ marker_genes_list_hsc_figs3 <- list(
       "Mcm6"
     ),
     "Myeloid_general" = c( # as negative markers for these populations
-      "Spi1", 
-      "Cebpa")
+      "Spi1"
+    )
   )
 
 #------------------------------------------------------------------------------
@@ -1033,9 +1027,8 @@ marker_genes_list_str <- list(
   )
 
 # sorted by literature but also by expression in our dataset
-marker_genes_list_str_figs3 <- list(
+marker_genes_list_str_figs2 <- list(
     "Niche" = c( # classic niche 
-      "Cxcl14", 
       "Ebf3", 
       "Cxcl12", 
       "Kitl" 
@@ -1043,8 +1036,7 @@ marker_genes_list_str_figs3 <- list(
     "Adipo_CAR" = c(
       "Adipoq",
       "Lepr", 
-      "Lpl",
-      "Pappa" 
+      "Lpl"
       ),
     "Osteo_CAR" = c( 
       "Limch1", 
@@ -1074,7 +1066,6 @@ marker_genes_list_str_figs3 <- list(
       "Runx2", # osteo-diff, also expressed in CARs, terminally diff chondros
       "Sp7", # osteo diff, also in osteo-chondro progenitors 
       "Pth1r",
-      "Ptgis", 
       "Postn",
       "Aspn", 
       "Lum",  
@@ -1082,26 +1073,22 @@ marker_genes_list_str_figs3 <- list(
       "Gsn", 
       "Apod", # fibro-chondro-biased
       "Comp", # chondro-biased expression
-      "Prelp", 
       "Mgp"     
     ), 
     "Chondro" = c(
       "Fmod",
       "Chad", 
-      "Crispld1",
       "Sox9",
       "Acan"
       ),
     "Articular_cartilage_synovial_fibro" = c(  
       "Htra4",
-      "Prg4",
-      "Creb5" 
+      "Prg4"
       ),   
     "Fibro" = c(
       "Dpt",
       "Clec3b", 
-      "Cd34", 
-      "Thy1"
+      "Cd34"
       )
   )
 

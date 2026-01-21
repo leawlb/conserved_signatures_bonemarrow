@@ -23,7 +23,7 @@ set.seed(37)
 library(tidyverse, quietly = TRUE)
 library(SingleCellExperiment, quietly = TRUE)
 library(ggpubr, quietly = TRUE)
-library(ggalluvial, quietly = TRUE)
+library(scuttle, quietly = TRUE)
 ```
 
 ```{r base_path}
@@ -126,8 +126,53 @@ sce_mcar_str <- base::readRDS(base::paste0(
 source("../figures/determine_params.R")
 
 # local params
-legend_text_size_allu <- 14
+#legend_text_size_allu <- 13
 umap_point_size <- 0.4
+heatmap_text_size <- 14
+colors_z_score_ct <- c("steelblue3", "white", "red3")
+
+
+# cell types to be depicted in the heatmaps
+# keeping the stem compartment for comparisons
+cts_keep_hsc <- c(
+  "HSC",
+  "Early MPP",
+  "Activated MPP",
+  "Early MPP cells 1",
+  "Early MPP cells 2",
+  "HSC/Early Mk",
+  "MPP cells 1",
+  "MPP cells 2",
+  "Activated MPP cells 1",
+  "Activated MPP cells 2",
+  "Late MPP",
+  "MPP cells"
+)
+# it looks like a lot but each species has different names
+
+cts_keep_hsc[!cts_keep_hsc %in% factors_custom_hsc]
+cts_keep_hsc[!cts_keep_hsc %in% names(col_cts_hsc)]
+
+# keeping possible CAR and osteo populations
+cts_keep_str <- c(
+  "Adipo/CAR",
+  "Adipo CAR", 
+  "Osteo",
+  "Adipo/Osteo CAR",
+  "Balanced mesenchymal",
+  "Early chondro",
+  "Late chondro and Osteo",
+  "Late chondro", 
+  "Articular/synovial-like",
+  "Fibro/Chondro (more Fibro)",
+  "Fibro",
+  "Chondrocyte",
+  "Fibro/Chondro",
+  "Fibroblast"
+)
+
+cts_keep_str[!cts_keep_str %in% factors_custom_str]
+cts_keep_str[!cts_keep_str %in% names(col_cts_str)]
 ```
 
 ## Prep 
@@ -146,7 +191,7 @@ sce_hsc_all_cells <- sce_hsc_all_cells[,base::sample(
 dim(sce_hsc_all_cells)
 ```
 
-Also for the BL6 custom object
+Also for the BL6 custom object.
 
 ```{r rand_barc_hsc_anno}
 # randomize the barcodes for nicer visualisation
@@ -360,7 +405,7 @@ a_umap_1 <- ggplot2::ggplot(
     y = UMAP2,
     color = species_pub
   ))+
-  geom_point(size = umap_point_size.8)+
+  geom_point(size = umap_point_size)+
   scale_color_manual(values = col_spc_pub)+
   theme_void()+
   theme(legend.position = "none")
@@ -518,3 +563,868 @@ b_umap_4 <- ggplot2::ggplot(
 b_umap_4
 ```
 
+## Gene expression heatmaps C and D
+
+### Prep data
+
+Make appropriate dataframes.
+
+The log-expression levels will be averaged per cell type and scaled in 
+some way.
+How exactly to scale each of the five datasets (merged + four species
+datasets) was difficult to decide.
+However, for simplicity, both different annotations (merged + custom)
+will be treated the same way: averaging gene expression per cell type 
+as is, then scaling across all cells ( = all cell types and all species).
+
+I think this is the most simple and best options for the comparison we want
+to make if we very clearly  explain and state it.
+
+I am using the logcounts based on the merged batch-normalisation for both the
+orig clustering and the custom clusterings by using sce_hsc_all_cells as 
+basis.
+I think that is better comparable.
+So by using the the merged batch-normalized logcounts, then even if a cell has 
+two different labels in both, it has still the same expression levels.
+That seems fair.
+Although the logcounts are averaged and then scaled anyways.
+
+#### HSCs
+
+##### Aggregate by type of clustering
+
+All cells from all cell types.
+
+```{r aggregate_orig}
+
+sce_hsc_all_cells_orig <- sce_hsc_all_cells
+
+# put info to be separated into one column
+sce_hsc_all_cells_orig$cluster_species <- base::paste0(
+  sce_hsc_all_cells_orig$celltypes,
+  "_",
+  sce_hsc_all_cells_orig$species_pub  
+)
+
+# aggregate to get mean logcounts per species and cell type
+sce_agg_orig <- scuttle::aggregateAcrossCells(
+  sce_hsc_all_cells_orig,
+  id=colData(sce_hsc_all_cells_orig)[,c("cluster_species")], 
+  statistics = "mean", 
+  use.assay.type = "logcounts") # batch-normalized (not corrected)
+
+# turn into df formatted for visualisation
+agg_orig_df <- logcounts(sce_agg_orig) %>%
+  as.matrix() %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = "genes") %>%
+  tidyr::pivot_longer(
+    cols = unique(sce_agg_orig$cluster_species),
+    names_to = "cluster_species",
+    values_to = "avg_logcounts")
+
+# add info on which clustering these values are from
+agg_orig_df$clustering <- "original"
+
+# separate cell type and species again
+agg_orig_df <- agg_orig_df %>%
+  tidyr::separate(
+    col = cluster_species, 
+    into = c("cluster", "species"),
+    sep = "_",
+    remove = FALSE)
+
+# factor species
+agg_orig_df$species <- factor(
+  agg_orig_df$species,
+  levels = names(col_spc_pub))
+```
+
+```{r aggregate_cust}
+
+sce_hsc_all_cells_cust <- sce_hsc_all_cells
+
+# put info to be separated into one column
+sce_hsc_all_cells_cust$cluster_species <- base::paste0(
+  sce_hsc_all_cells_cust$custom_label,
+  "_",
+  sce_hsc_all_cells_cust$species_pub  
+)
+
+# aggregate to get mean logcounts per species and cell type
+sce_agg_cust <- scuttle::aggregateAcrossCells(
+  sce_hsc_all_cells_cust,
+  id=colData(sce_hsc_all_cells_cust)[,c("cluster_species")], 
+  statistics = "mean", 
+  use.assay.type = "logcounts") # batch-normalized (not corrected)
+
+# turn into df formatted for visualisation
+agg_cust_df <- logcounts(sce_agg_cust) %>%
+  as.matrix() %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = "genes") %>%
+  tidyr::pivot_longer(
+    cols = unique(sce_agg_cust$cluster_species),
+    names_to = "cluster_species",
+    values_to = "avg_logcounts")
+
+# add info on which clustering these values are from
+agg_cust_df$clustering <- "custom"
+
+# separate cell type and species again
+agg_cust_df <- agg_cust_df %>%
+  tidyr::separate(
+    col = cluster_species, 
+    into = c("cluster", "species"),
+    sep = "_",
+    remove = FALSE)
+```
+
+##### Subset to required genes and scale
+
+Scale within each clustering.
+
+```{r scale_function}
+scale_expression <- function(expression_df){
+
+  for(gene in unique(expression_df$genes)){
+    expr_vector_g <- expression_df[
+      expression_df$genes == gene,]$avg_logcounts
+
+    # calculate z score per gene
+    z_score_g <- (expr_vector_g - base::mean(expr_vector_g))/
+      stats::sd(expr_vector_g)
+    expression_df$zscore_gene[expression_df$genes == gene] <- z_score_g
+  }
+  return(expression_df)
+}
+```
+
+```{r determine_genes}
+# stem and MPP genes from the utils source .R script
+marker_genes <- unlist(marker_genes_list_hsc_figs2)
+```
+
+```{r scale_orig}
+
+# only keep genes for visualisation
+agg_orig_df_genes <- agg_orig_df %>%
+  dplyr::filter(genes %in% marker_genes)
+
+# factorise for nicer plot
+agg_orig_df_genes$genes <- factor(
+  agg_orig_df_genes$genes,
+  levels = rev(marker_genes))
+
+agg_orig_df_genes$cluster <- factor(
+  agg_orig_df_genes$cluster,
+  levels = levels(sce_hsc_all_cells$celltypes))
+
+# scale expression per gene using z-scores
+agg_orig_df_genes$zscore_gene <- vector(
+  length = nrow(agg_orig_df_genes), 
+  mode = "numeric")
+
+agg_orig_df_vis <- scale_expression(agg_orig_df_genes)
+```
+
+```{r scale_cust}
+
+# only keep genes for visualisation
+agg_cust_df_genes <- agg_cust_df %>%
+  dplyr::filter(genes %in% marker_genes)
+
+# factorise for nicer plot
+agg_cust_df_genes$genes <- factor(
+  agg_cust_df_genes$genes,
+  levels = rev(marker_genes))
+
+agg_cust_df_genes$cluster <- factor(
+  agg_cust_df_genes$cluster,
+  levels = levels(sce_hsc_all_cells$custom_label))
+
+# scale expression per gene using z-scores
+agg_cust_df_genes$zscore_gene <- vector(
+  length = nrow(agg_cust_df_genes), 
+  mode = "numeric")
+```
+
+```{r scale_cust_across}
+
+agg_cust_df_genes <- scale_expression(agg_cust_df_genes)
+
+agg_cust_df_mmus <- agg_cust_df_genes %>% 
+  dplyr::filter(species == "BL6")
+agg_cust_df_mcas <- agg_cust_df_genes %>% 
+  dplyr::filter(species == "CAST")
+agg_cust_df_mspr <- agg_cust_df_genes %>% 
+  dplyr::filter(species == "SPRET")
+agg_cust_df_mcar <- agg_cust_df_genes %>% 
+  dplyr::filter(species == "CAROLI")
+```
+
+##### Subset to the required cell types
+
+After scaling.
+
+```{r subset_ct_keep}
+agg_cust_df_mmus <- agg_cust_df_mmus[agg_cust_df_mmus$cluster %in% cts_keep_hsc,]
+agg_cust_df_mcas <- agg_cust_df_mcas[agg_cust_df_mcas$cluster %in% cts_keep_hsc,]
+agg_cust_df_mspr <- agg_cust_df_mspr[agg_cust_df_mspr$cluster %in% cts_keep_hsc,]
+agg_cust_df_mcar <- agg_cust_df_mcar[agg_cust_df_mcar$cluster %in% cts_keep_hsc,]
+
+agg_orig_df_vis <- agg_orig_df_vis[agg_orig_df_vis$cluster %in% cts_keep_hsc,]
+```
+
+#### Plot
+
+##### Species-specific custom
+
+Now four separate heatmaps per species-specific custom clustering.
+
+```{r c_base_heatmap_cust_mmus, fig.height = 6, fig.width = 3}
+
+c_base_heatmap_cust_mmus <- ggplot2::ggplot(
+  agg_cust_df_mmus,
+  aes(
+    x = cluster,
+    y = genes,
+    fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene\nacross all cell types", 
+    colours = colors_z_score_ct,
+    breaks = c(-7, -3.5, 0, 3.5, 7), 
+    limits = c(-7, 7))+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))
+c_base_heatmap_cust_mmus
+```
+
+```{r c_theme_heatmap_cust_mmus, fig.height = 6, fig.width = 2}
+c_theme_heatmap_cust_mmus <- c_base_heatmap_cust_mmus+
+  theme_all+
+  ggplot2::theme(
+    axis.text.x = element_text(
+      angle = 270,
+      size = heatmap_text_size,
+      hjust = 0,
+      vjust = 0.5
+    ),
+    axis.text.y = element_text(
+      size = heatmap_text_size,
+      hjust = 1,
+      vjust = 0.5
+    ),
+    strip.background = element_blank(),
+    axis.line = element_blank(),
+    strip.text = element_blank(),
+    axis.title = element_blank(),
+    legend.position = "none")
+c_theme_heatmap_cust_mmus
+```
+
+```{r c_base_heatmap_cust_mcas, fig.height = 6, fig.width = 3}
+
+c_base_heatmap_cust_mcas <- ggplot2::ggplot(
+  agg_cust_df_mcas,
+  aes(
+    x = cluster,
+    y = genes,
+    fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene\nacross all cell types", 
+    colours = colors_z_score_ct,
+    breaks = c(-7, -3.5, 0, 3.5, 7), 
+    limits = c(-7, 7))+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))
+c_base_heatmap_cust_mcas
+```
+
+```{r c_theme_heatmap_cust_mcas, fig.height = 6, fig.width = 2}
+c_theme_heatmap_cust_mcas <- c_base_heatmap_cust_mcas+
+  theme_all+
+  ggplot2::theme(
+    axis.text.x = element_text(
+      angle = 270,
+      size = heatmap_text_size,
+      hjust = 0,
+      vjust = 0.5
+    ),
+    axis.ticks.y = element_blank(),
+    axis.text.y = element_blank(),
+    axis.line = element_blank(),
+    strip.background = element_blank(),
+    strip.text = element_blank(),
+    axis.title = element_blank(),
+    legend.position = "none")
+c_theme_heatmap_cust_mcas
+```
+
+```{r c_base_heatmap_cust_mspr, fig.height = 6, fig.width = 3}
+
+c_base_heatmap_cust_mspr <- ggplot2::ggplot(
+  agg_cust_df_mspr,
+  aes(
+    x = cluster,
+    y = genes,
+    fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene\nacross all cell types", 
+    colours = colors_z_score_ct,
+    breaks = c(-7, -3.5, 0, 3.5, 7), 
+    limits = c(-7, 7))+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))
+c_base_heatmap_cust_mspr
+```
+
+```{r c_theme_heatmap_cust_mspr, fig.height = 6, fig.width = 2}
+c_theme_heatmap_cust_mspr <- c_base_heatmap_cust_mspr+
+  theme_all+
+  ggplot2::theme(
+    axis.text.x = element_text(
+      angle = 270,
+      size = heatmap_text_size,
+      hjust = 0,
+      vjust = 0.5
+    ),
+    axis.ticks.y = element_blank(),
+    axis.text.y = element_blank(),
+    axis.line = element_blank(),
+    strip.background = element_blank(),
+    strip.text = element_blank(),
+    axis.title = element_blank(),
+    legend.position = "none")
+c_theme_heatmap_cust_mspr
+```
+
+```{r c_base_heatmap_cust_mcar, fig.height = 6, fig.width = 3}
+
+c_base_heatmap_cust_mcar <- ggplot2::ggplot(
+  agg_cust_df_mcar,
+  aes(
+    x = cluster,
+    y = genes,
+    fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene\nacross all cell types", 
+    colours = colors_z_score_ct,
+    breaks = c(-7, -3.5, 0, 3.5, 7), 
+    limits = c(-7, 7))+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))
+c_base_heatmap_cust_mcar
+```
+
+```{r c_theme_heatmap_cust_mcar, fig.height = 6, fig.width = 2}
+c_theme_heatmap_cust_mcar <- c_base_heatmap_cust_mcar+
+  theme_all+
+  ggplot2::theme(
+    axis.text.x = element_text(
+      angle = 270,
+      size = heatmap_text_size,
+      hjust = 0,
+      vjust = 0.5
+    ),
+    axis.ticks.y = element_blank(),
+    axis.line = element_blank(),
+    axis.text.y = element_blank(),
+    strip.background = element_blank(),
+    strip.text = element_blank(),
+    axis.title = element_blank(),
+    legend.position = "none")
+c_theme_heatmap_cust_mcar
+```
+
+Build the species-specific heatmaps together
+
+```{r c_custom_hsc_heatmap, fig.height = 6, fig.width = 3.4}
+
+c_custom_hsc_heatmap <- ggpubr::ggarrange(
+  c_theme_heatmap_cust_mmus+ggplot2::theme(plot.margin = margin(0.1,0.1,0.4,0.1)),
+  c_theme_heatmap_cust_mcas+ggplot2::theme(plot.margin = margin(0,0.1,0.4,0.1)),
+  c_theme_heatmap_cust_mspr+ggplot2::theme(plot.margin = margin(0,0.1,0.4,0.1)),
+  c_theme_heatmap_cust_mcar+ggplot2::theme(plot.margin = margin(0,0.1,0.1,0.1)),
+  nrow = 1,
+  widths = c(7.6, 6, 3, 2),
+  align = c("h")
+)
+
+c_custom_hsc_heatmap
+```
+
+##### Original
+
+Shared orig expression heatmap separated by species.
+
+```{r c_base_heatmap_orig_all, fig.height = 6, fig.width = 5}
+
+c_base_heatmap_orig_all <- ggplot2::ggplot(
+  agg_orig_df_vis,
+  aes(
+    x = cluster,
+    y = genes,
+    fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene\nacross all cell types", 
+    colours = colors_z_score_ct,
+    breaks = c(-7, -3.5, 0, 3.5, 7), 
+    limits = c(-7, 7))+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))+
+  ggplot2::facet_grid(cols = vars(agg_orig_df_vis$species))
+c_base_heatmap_orig_all
+```
+
+```{r c_orig_hsc_heatmap, fig.height = 6, fig.width = 2.4}
+c_orig_hsc_heatmap <- c_base_heatmap_orig_all+
+  theme_all+
+  ggplot2::theme(
+    axis.text.x = element_text(
+      angle = 270,
+      size = heatmap_text_size,
+      hjust = 0,
+      vjust = 0.5
+    ),
+    axis.text.y = element_blank(),
+    strip.background = element_blank(),
+    strip.text = element_blank(),
+    axis.line = element_blank(),
+    axis.title = element_blank(),
+    legend.position = "none")
+c_orig_hsc_heatmap
+```
+
+```{r c_combine_hsc, fig.height = 6, fig.width = 6}
+
+c_combine_hsc <- ggpubr::ggarrange(
+  c_custom_hsc_heatmap,
+  c_orig_hsc_heatmap
+  nrow = 1,
+  widths = c(3,2),
+  align = c("h")
+)
+
+c_combine_hsc
+```
+
+#### STR
+
+##### Aggregate by type of clustering
+
+```{r aggregate_orig_str}
+
+sce_str_all_cells_orig <- sce_str_all_cells
+
+# put info to be separated into one column
+sce_str_all_cells_orig$cluster_species <- base::paste0(
+  sce_str_all_cells_orig$celltypes,
+  "_",
+  sce_str_all_cells_orig$species_pub  
+)
+
+# aggregate to get mean logcounts per species and cell type
+sce_agg_orig <- scuttle::aggregateAcrossCells(
+  sce_str_all_cells_orig,
+  id=colData(sce_str_all_cells_orig)[,c("cluster_species")], 
+  statistics = "mean", 
+  use.assay.type = "logcounts") # batch-normalized (not corrected)
+
+# turn into df formatted for visualisation
+agg_orig_df <- logcounts(sce_agg_orig) %>%
+  as.matrix() %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = "genes") %>%
+  tidyr::pivot_longer(
+    cols = unique(sce_agg_orig$cluster_species),
+    names_to = "cluster_species",
+    values_to = "avg_logcounts")
+
+# add info on which clustering these values are from
+agg_orig_df$clustering <- "original"
+
+# separate cell type and species again
+agg_orig_df <- agg_orig_df %>%
+  tidyr::separate(
+    col = cluster_species, 
+    into = c("cluster", "species"),
+    sep = "_",
+    remove = FALSE)
+
+# factor species
+agg_orig_df$species <- factor(
+  agg_orig_df$species,
+  levels = names(col_spc_pub))
+
+head(agg_orig_df)
+```
+
+```{r aggregate_cust_str}
+
+sce_str_all_cells_cust <- sce_str_all_cells
+
+# put info to be separated into one column
+sce_str_all_cells_cust$cluster_species <- base::paste0(
+  sce_str_all_cells_cust$custom_label,
+  "_",
+  sce_str_all_cells_cust$species_pub  
+)
+
+# aggregate to get mean logcounts per species and cell type
+sce_agg_cust <- scuttle::aggregateAcrossCells(
+  sce_str_all_cells_cust,
+  id=colData(sce_str_all_cells_cust)[,c("cluster_species")], 
+  statistics = "mean", 
+  use.assay.type = "logcounts") # batch-normalized (not corrected)
+
+# turn into df formatted for visualisation
+agg_cust_df <- logcounts(sce_agg_cust) %>%
+  as.matrix() %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = "genes") %>%
+  tidyr::pivot_longer(
+    cols = unique(sce_agg_cust$cluster_species),
+    names_to = "cluster_species",
+    values_to = "avg_logcounts")
+
+# add info on which clustering these values are from
+agg_cust_df$clustering <- "custom"
+
+# separate cell type and species again
+agg_cust_df <- agg_cust_df %>%
+  tidyr::separate(
+    col = cluster_species, 
+    into = c("cluster", "species"),
+    sep = "_",
+    remove = FALSE)
+
+head(agg_cust_df)
+```
+
+##### Subset to required genes and scale
+
+```{r scale_function_str}
+scale_expression <- function(expression_df){
+
+  for(gene in unique(expression_df$genes)){
+    expr_vector_g <- expression_df[
+      expression_df$genes == gene,]$avg_logcounts
+
+    # calculate z score per gene
+    z_score_g <- (expr_vector_g - base::mean(expr_vector_g))/
+      stats::sd(expr_vector_g)
+    expression_df$zscore_gene[expression_df$genes == gene] <- z_score_g
+  }
+  return(expression_df)
+}
+```
+
+```{r determine_genes_str}
+# stem and MPP genes from the utils source .R script
+marker_genes <- unlist(marker_genes_list_str_figs2)
+```
+
+```{r scale_orig_str}
+
+# only keep genes for visualisation
+agg_orig_df_genes <- agg_orig_df %>%
+  dplyr::filter(genes %in% marker_genes)
+
+# factorise for nicer plot
+agg_orig_df_genes$genes <- factor(
+  agg_orig_df_genes$genes,
+  levels = rev(marker_genes))
+
+agg_orig_df_genes$cluster <- factor(
+  agg_orig_df_genes$cluster,
+  levels = levels(sce_str_all_cells$celltypes))
+
+# scale expression per gene using z-scores
+agg_orig_df_genes$zscore_gene <- vector(
+  length = nrow(agg_orig_df_genes), 
+  mode = "numeric")
+
+agg_orig_df_vis <- scale_expression(agg_orig_df_genes)
+```
+
+```{r scale_cust_str}
+
+# only keep genes for visualisation
+agg_cust_df_genes <- agg_cust_df %>%
+  dplyr::filter(genes %in% marker_genes)
+
+# factorise for nicer plot
+agg_cust_df_genes$genes <- factor(
+  agg_cust_df_genes$genes,
+  levels = rev(marker_genes))
+
+agg_cust_df_genes$cluster <- factor(
+  agg_cust_df_genes$cluster,
+  levels = levels(sce_str_all_cells$custom_label))
+
+# scale expression per gene using z-scores
+agg_cust_df_genes$zscore_gene <- vector(
+  length = nrow(agg_cust_df_genes), 
+  mode = "numeric")
+```
+
+```{r scale_cust_across_str}
+
+agg_cust_df_genes <- scale_expression(agg_cust_df_genes)
+
+agg_cust_df_mmus <- agg_cust_df_genes %>% 
+  dplyr::filter(species == "BL6")
+agg_cust_df_mcas <- agg_cust_df_genes %>% 
+  dplyr::filter(species == "CAST")
+agg_cust_df_mspr <- agg_cust_df_genes %>% 
+  dplyr::filter(species == "SPRET")
+agg_cust_df_mcar <- agg_cust_df_genes %>% 
+  dplyr::filter(species == "CAROLI")
+```
+
+##### Subset to the required cell types
+
+After scaling.
+
+```{r subset_ct_keep_str}
+agg_cust_df_mmus <- agg_cust_df_mmus[agg_cust_df_mmus$cluster %in% cts_keep_str,]
+agg_cust_df_mcas <- agg_cust_df_mcas[agg_cust_df_mcas$cluster %in% cts_keep_str,]
+agg_cust_df_mspr <- agg_cust_df_mspr[agg_cust_df_mspr$cluster %in% cts_keep_str,]
+agg_cust_df_mcar <- agg_cust_df_mcar[agg_cust_df_mcar$cluster %in% cts_keep_str,]
+
+agg_orig_df_vis <- agg_orig_df_vis[agg_orig_df_vis$cluster %in% cts_keep_str,]
+```
+
+### Plot
+
+#### Custom species-specific
+
+Four separate heatmaps per species-specific custom clustering.
+
+```{r d_base_heatmap_cust_mmus, fig.height = 6, fig.width = 3}
+
+d_base_heatmap_cust_mmus <- ggplot2::ggplot(
+  agg_cust_df_mmus,
+  aes(
+    x = cluster,
+    y = genes,
+    fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene\nacross all cell types", 
+    colours = colors_z_score_ct,
+    breaks = c(-9, -4.5, 0, 4.5, 9), 
+    limits = c(-9, 9))+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))
+d_base_heatmap_cust_mmus
+```
+
+```{r d_theme_heatmap_cust_mmus, fig.height = 6, fig.width = 2}
+d_theme_heatmap_cust_mmus <- d_base_heatmap_cust_mmus+
+  theme_all+
+  ggplot2::theme(
+    axis.text.x = element_text(
+      angle = 270,
+      size = heatmap_text_size,
+      hjust = 0,
+      vjust = 0.5
+    ),
+    axis.text.y = element_text(
+      size = heatmap_text_size,
+      hjust = 1,
+      vjust = 0.5
+    ),
+    strip.background = element_blank(),
+    axis.line = element_blank(),
+    strip.text = element_blank(),
+    axis.title = element_blank(),
+    legend.position = "none")
+d_theme_heatmap_cust_mmus
+```
+```{r d_base_heatmap_cust_mcas, fig.height = 6, fig.width = 3}
+
+d_base_heatmap_cust_mcas <- ggplot2::ggplot(
+  agg_cust_df_mcas,
+  aes(
+    x = cluster,
+    y = genes,
+    fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene\nacross all cell types", 
+    colours = colors_z_score_ct,
+    breaks = c(-9, -4.5, 0, 4.5, 9), 
+    limits = c(-9, 9))+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))
+d_base_heatmap_cust_mcas
+```
+
+```{r d_theme_heatmap_cust_mcas, fig.height = 6, fig.width = 2}
+d_theme_heatmap_cust_mcas <- d_base_heatmap_cust_mcas+
+  theme_all+
+  ggplot2::theme(
+    axis.text.x = element_text(
+      angle = 270,
+      size = heatmap_text_size,
+      hjust = 0,
+      vjust = 0.5
+    ),
+    axis.ticks.y = element_blank(),
+    axis.text.y = element_blank(),
+    axis.line = element_blank(),
+    strip.background = element_blank(),
+    strip.text = element_blank(),
+    axis.title = element_blank(),
+    legend.position = "none")
+d_theme_heatmap_cust_mcas
+```
+
+```{r d_base_heatmap_cust_mspr, fig.height = 6, fig.width = 3}
+
+d_base_heatmap_cust_mspr <- ggplot2::ggplot(
+  agg_cust_df_mspr,
+  aes(
+    x = cluster,
+    y = genes,
+    fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene\nacross all cell types", 
+    colours = colors_z_score_ct,
+    breaks = c(-9, -4.5, 0, 4.5, 9), 
+    limits = c(-9, 9))+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))
+d_base_heatmap_cust_mspr
+```
+
+```{r d_theme_heatmap_cust_mspr, fig.height = 10, fig.width = 3}
+d_theme_heatmap_cust_mspr <- d_base_heatmap_cust_mspr+
+  theme_all+
+  ggplot2::theme(
+    axis.text.x = element_text(
+      angle = 270,
+      size = heatmap_text_size,
+      hjust = 0,
+      vjust = 0.5
+    ),
+    axis.ticks.y = element_blank(),
+    axis.text.y = element_blank(),
+    axis.line = element_blank(),
+    strip.background = element_blank(),
+    strip.text = element_blank(),
+    axis.title = element_blank(),
+    legend.position = "none")
+d_theme_heatmap_cust_mspr
+```
+
+```{r d_base_heatmap_cust_mcar, fig.height = 6, fig.width = 3}
+
+d_base_heatmap_cust_mcar <- ggplot2::ggplot(
+  agg_cust_df_mcar,
+  aes(
+    x = cluster,
+    y = genes,
+    fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene\nacross all cell types", 
+    colours = colors_z_score_ct,
+    breaks = c(-9, -4.5, 0, 4.5, 9), 
+    limits = c(-9, 9))+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))
+d_base_heatmap_cust_mcar
+```
+
+```{r d_theme_heatmap_cust_mcar, fig.height = 6, fig.width = 2}
+d_theme_heatmap_cust_mcar <- d_base_heatmap_cust_mcar+
+  theme_all+
+  ggplot2::theme(
+    axis.text.x = element_text(
+      angle = 270,
+      size = heatmap_text_size,
+      hjust = 0,
+      vjust = 0.5
+    ),
+    axis.ticks.y = element_blank(),
+    axis.line = element_blank(),
+    axis.text.y = element_blank(),
+    strip.background = element_blank(),
+    strip.text = element_blank(),
+    axis.title = element_blank(),
+    legend.position = "none")
+d_theme_heatmap_cust_mcar
+```
+
+Build the species-specific heatmaps together
+
+```{r d_custom_heatmap, fig.height = 6.7, fig.width = 4}
+
+d_custom_heatmap <- ggpubr::ggarrange(
+  d_theme_heatmap_cust_mmus+ggplot2::theme(plot.margin = margin(0.1,0.1,0.3,0.1)),
+  d_theme_heatmap_cust_mcas+ggplot2::theme(plot.margin = margin(0,0.1,0.3,0.1)),
+  d_theme_heatmap_cust_mspr+ggplot2::theme(plot.margin = margin(0,0.1,0.3,0.1)),
+  d_theme_heatmap_cust_mcar+ggplot2::theme(plot.margin = margin(0,0.1,0.1,0.1)),
+  nrow = 1,
+  widths = c(8.2, 5, 6, 5),
+  align = c("h")
+)
+
+d_custom_heatmap
+
+```
+
+#### Original merged
+
+A shared orig expression heatmap separated by species.
+
+```{r d_base_heatmap_orig_all, fig.height = 6, fig.width = 5}
+
+d_base_heatmap_orig_all <- ggplot2::ggplot(
+  agg_orig_df_vis,
+  aes(
+    x = cluster,
+    y = genes,
+    fill = zscore_gene))+
+  ggplot2::geom_tile()+
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene\nacross all cell types", 
+    colours = colors_z_score_ct,
+    breaks = c(-9, -4.5, 0, 4.5, 9), 
+    limits = c(-9, 9))+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))+
+  ggplot2::facet_grid(cols = vars(agg_orig_df_vis$species))
+d_base_heatmap_orig_all
+```
+
+```{r d_heatmap_orig, fig.height = 7, fig.width = 3.1}
+d_heatmap_orig <- d_base_heatmap_orig_all+
+  theme_all+
+  ggplot2::theme(
+    axis.text.x = element_text(
+      angle = 270,
+      size = heatmap_text_size,
+      hjust = 0,
+      vjust = 0.5
+    ),
+    axis.text.y = element_blank(),
+    strip.background = element_blank(),
+    strip.text = element_blank(),
+    axis.line = element_blank(),
+    axis.title = element_blank(),
+    legend.position = "none")
+d_heatmap_orig
+```
+
+```{r d_combine_str, fig.height = 6.7, fig.width = 6}
+
+d_combine_str <- ggpubr::ggarrange(
+  d_custom_str_heatmap,
+  d_orig_str_heatmap
+  nrow = 1,
+  widths = c(3,2),
+  align = c("h")
+)
+
+d_combine_str
+```

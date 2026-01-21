@@ -175,6 +175,44 @@ cts_keep_str[!cts_keep_str %in% factors_custom_str]
 cts_keep_str[!cts_keep_str %in% names(col_cts_str)]
 ```
 
+####  Output paths
+
+```{r pdf_output}
+# define output paths for pdf export
+
+output_pdf_a_umap_1 <- base::paste0(
+  base_path,
+  "/manuscript1_rev/figures2/figures2_a_umap_1.pdf")
+output_pdf_a_umap_2 <- base::paste0(
+  base_path,
+  "/manuscript1_rev/figures2/figures2_a_umap_2.pdf")
+output_pdf_a_umap_3 <- base::paste0(
+  base_path,
+  "/manuscript1_rev/figures2/figures2_a_umap_3.pdf")
+
+output_pdf_b_umap_1 <- base::paste0(
+  base_path,
+  "/manuscript1_rev/figures2/figures2_b_umap_1.pdf")
+output_pdf_b_umap_2 <- base::paste0(
+  base_path,
+  "/manuscript1_rev/figures2/figures2_b_umap_2.pdf")
+output_pdf_b_umap_3 <- base::paste0(
+  base_path,
+  "/manuscript1_rev/figures2/figures2_b_umap_3.pdf")
+output_pdf_b_umap_4 <- base::paste0(
+  base_path,
+  "/manuscript1_rev/figures2/figures2_b_umap_4.pdf")
+
+output_pdf_c_combined_hsc <- base::paste0(
+  base_path,
+  "/manuscript1_rev/figures2/figures2_c_combined_hsc.pdf")
+
+output_pdf_d_combined_str <- base::paste0(
+  base_path,
+  "/manuscript1_rev/figures2/figures2_d_combined_str.pdf")
+```
+
+
 ## Prep 
 
 ### Randomize barcodes
@@ -445,6 +483,26 @@ a_umap_3 <- ggplot2::ggplot(
 a_umap_3
 ```
 
+#### EXPORT
+
+```{r export_a_umap_1}
+pdf(output_pdf_a_umap_1, width = 1.5, height = 1.5)
+a_umap_1
+dev.off()
+```
+
+```{r export_a_umap_2}
+pdf(output_pdf_a_umap_2, width = 1.5, height = 1.5)
+a_umap_2
+dev.off()
+```
+
+```{r export_a_umap_3}
+pdf(output_pdf_a_umap_3, width = 1.5, height = 1.5)
+a_umap_3
+dev.off()
+```
+
 ## Schematic B
 
 This is a schematic for the merged annotation including sub-clustering
@@ -561,6 +619,32 @@ b_umap_4 <- ggplot2::ggplot(
   theme(legend.position = "none")
 
 b_umap_4
+```
+
+#### EXPORT
+
+```{r export_b_umap_1}
+pdf(output_pdf_b_umap_1, width = 1.5, height = 1.5)
+b_umap_1
+dev.off()
+```
+
+```{r export_b_umap_2}
+pdf(output_pdf_b_umap_2, width = 1.5, height = 1.5)
+b_umap_2
+dev.off()
+```
+
+```{r export_b_umap_3}
+pdf(output_pdf_b_umap_3, width = 2.15, height = 2.78)
+b_umap_3
+dev.off()
+```
+
+```{r export_b_umap_4}
+pdf(output_pdf_b_umap_4, width = 1.5, height = 1.5)
+b_umap_4
+dev.off()
 ```
 
 ## Gene expression heatmaps C and D
@@ -947,7 +1031,7 @@ c_custom_hsc_heatmap <- ggpubr::ggarrange(
   c_theme_heatmap_cust_mspr+ggplot2::theme(plot.margin = margin(0,0.1,0.4,0.1)),
   c_theme_heatmap_cust_mcar+ggplot2::theme(plot.margin = margin(0,0.1,0.1,0.1)),
   nrow = 1,
-  widths = c(7.6, 6, 3, 2),
+  widths = c(8, 6, 3, 2),
   align = c("h")
 )
 
@@ -996,17 +1080,27 @@ c_orig_hsc_heatmap <- c_base_heatmap_orig_all+
 c_orig_hsc_heatmap
 ```
 
-```{r c_combine_hsc, fig.height = 6, fig.width = 6}
+##### Combine
+
+```{r c_combine_hsc, fig.height = 6.1, fig.width = 5.9}
 
 c_combine_hsc <- ggpubr::ggarrange(
   c_custom_hsc_heatmap,
-  c_orig_hsc_heatmap
+  c_orig_hsc_heatmap,
   nrow = 1,
   widths = c(3,2),
   align = c("h")
 )
 
 c_combine_hsc
+```
+
+##### Export
+
+```{r export_c_combine_hsc}
+pdf(output_pdf_c_combined_hsc, width = 5.9, height = 6.1)
+c_combine_hsc
+dev.off()
 ```
 
 #### STR
@@ -1358,7 +1452,7 @@ d_theme_heatmap_cust_mcar
 
 Build the species-specific heatmaps together
 
-```{r d_custom_heatmap, fig.height = 6.7, fig.width = 4}
+```{r d_custom_heatmap, fig.height = 6.9, fig.width = 4}
 
 d_custom_heatmap <- ggpubr::ggarrange(
   d_theme_heatmap_cust_mmus+ggplot2::theme(plot.margin = margin(0.1,0.1,0.3,0.1)),
@@ -1366,7 +1460,7 @@ d_custom_heatmap <- ggpubr::ggarrange(
   d_theme_heatmap_cust_mspr+ggplot2::theme(plot.margin = margin(0,0.1,0.3,0.1)),
   d_theme_heatmap_cust_mcar+ggplot2::theme(plot.margin = margin(0,0.1,0.1,0.1)),
   nrow = 1,
-  widths = c(8.2, 5, 6, 5),
+  widths = c(9, 5, 6, 5),
   align = c("h")
 )
 
@@ -1416,15 +1510,23 @@ d_heatmap_orig <- d_base_heatmap_orig_all+
 d_heatmap_orig
 ```
 
-```{r d_combine_str, fig.height = 6.7, fig.width = 6}
+```{r d_combine_str, fig.height = 6.9, fig.width = 7}
 
 d_combine_str <- ggpubr::ggarrange(
-  d_custom_str_heatmap,
-  d_orig_str_heatmap
+  d_custom_heatmap,
+  d_heatmap_orig,
   nrow = 1,
-  widths = c(3,2),
+  widths = c(3,2.2),
   align = c("h")
 )
 
 d_combine_str
+```
+
+##### Export
+
+```{r output_pdf_d_combined_str}
+pdf(output_pdf_d_combined_str, width = 7, height = 6.9)
+d_combine_str
+dev.off()
 ```

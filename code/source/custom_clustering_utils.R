@@ -408,7 +408,6 @@ marker_genes_list_hsc_figs2 <- list(
       "Msi2"
     ),
     "MPP" = c( 
-      "Adgrl4", 
       "Cd34", 
       "Flt3",
       "Cdk4"
@@ -419,8 +418,9 @@ marker_genes_list_hsc_figs2 <- list(
       "Hells",
       "Mcm6"
     ),
-    "Myeloid_general" = c( # as negative markers for these populations
-      "Spi1"
+    "negative_general" = c( # as negative markers for these populations
+      "Spi1",
+      "Pf4"
     )
   )
 
@@ -756,28 +756,26 @@ col_custom_str_unif <- c(
   "Mono/Macro" = "#ff5900ff", # mcas
   "Early Neutro" = "#cf7f1dff", # mcar
   "Neutro" = "#fdc98aff", # mcas, mcar
-  "Mature neutro" = "#8e775aff", # mcar
-
-
+  "Mature Neutro" = "#986f3dff", # mcar
+  
   "Eosinophil" = "#ae2c42ff", # mcar
   "Eo/Baso/Mast" = "#aa2e32ff", # mspr
   "Baso/Mast"  = "#ff0008ff", # mcas, mcar
 
   "Nk/TC" = "#d0716cff", # mcas
 
-  "BC lineage" = "#deec1cff", # mcas
+  "BC lineage" = "#f3d112ff", # mcas
 
   "Low qu adipo CAR" = "#acdfe0ff",  # mmus, mspr
   "Low qu osteo-chondro" = "#9ab8a3ff",  # mspr
 
-  "Mature immune mix" = "#7b7660ff", # mcas, mcar
-  "Antigen-presenting" = "#8b7467ff",  # mcar
-  "Antigen-presenting" = "#4f4139ff", # mcas
+  "Mature immune mix" = "#8f7d34ff", # mcas, mcar
+  "Antigen-presenting" = "#805840ff",  # mcar
 
   "Mix lymphatic EC/immune" = "#716757ff", # mmus
-  "Mix skeletal muscle/immune" = "grey50", # mspr
-  "Skeletal muscle" = "grey60",  # mcas
-  "Low qu skeletal muscle" =  "grey80" # mmus
+  "Mix skeletal muscle/immune" = "#57394cff", # mspr
+  "Skeletal muscle" = "#7f6575ff",  # mcas
+  "Low qu skeletal muscle" =  "#612f4eff" # mmus
 )
 
 #------------------------------------------------------------------------------
@@ -1026,7 +1024,6 @@ marker_genes_list_str <- list(
 # sorted by literature but also by expression in our dataset
 marker_genes_list_str_figs2 <- list(
     "Niche" = c( # classic niche 
-      "Ebf3", 
       "Cxcl12", 
       "Kitl" 
       ),
@@ -1043,8 +1040,7 @@ marker_genes_list_str_figs2 <- list(
       "Spp1", 
       "Mmp13",
       "Bglap", 
-      "Alpl",
-      "Ibsp"
+      "Alpl"
       ),
     "Early_mixed_expression" = c( 
       # These are genes that are expressed in some sort of early multi-lineage
@@ -1067,8 +1063,6 @@ marker_genes_list_str_figs2 <- list(
       "Aspn", 
       "Lum",  
       "Dcn",
-      "Gsn", 
-      "Apod", # fibro-chondro-biased
       "Comp", # chondro-biased expression
       "Mgp"     
     ), 

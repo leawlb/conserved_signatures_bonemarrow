@@ -203,13 +203,23 @@ output_pdf_b_umap_4 <- base::paste0(
   base_path,
   "/manuscript1_rev/figures2/figures2_b_umap_4.pdf")
 
+output_pdf_b_umap_3_legend<- base::paste0(
+  base_path,
+  "/manuscript1_rev/figures2/figures2_b_umap_3_legend.pdf")
+
 output_pdf_c_combined_hsc <- base::paste0(
   base_path,
   "/manuscript1_rev/figures2/figures2_c_combined_hsc.pdf")
+output_pdf_c_combined_hsc_legend <- base::paste0(
+  base_path,
+  "/manuscript1_rev/figures2/figures2_c_combined_hsc_legend.pdf")
 
 output_pdf_d_combined_str <- base::paste0(
   base_path,
   "/manuscript1_rev/figures2/figures2_d_combined_str.pdf")
+output_pdf_d_combined_str_legend <- base::paste0(
+  base_path,
+  "/manuscript1_rev/figures2/figures2_d_combined_str_legend.pdf")
 ```
 
 
@@ -622,6 +632,41 @@ b_umap_4 <- ggplot2::ggplot(
 b_umap_4
 ```
 
+#### Mecom legend
+
+##### Legend STR
+
+```{r b_legend_mecom, fig.width = 4, fig.height = 3}
+legend_plot_mecom <- ggplot2::ggplot(
+  umap_df_sce_hsc_stem,
+  aes(
+    x = UMAP1,
+    y = UMAP2,
+    color = expression
+  ))+
+  geom_point()+
+  scale_color_gradientn(colours = mycolors_to_max)+
+  theme_all+
+  ggplot2::theme(
+    legend.text = element_text(
+      size = heatmap_text_size,
+      color = legend_text_color
+    ),
+    legend.title = element_text(
+      size = heatmap_text_size,
+      color = legend_text_color
+    ),
+    legend.position = "bottom"
+  )
+
+legend_plot_mecom
+
+legend_mecom <- ggpubr::get_legend(legend_plot_mecom)
+b_umap_3_legend <- ggpubr::ggarrange(legend_mecom)
+
+b_umap_3_legend
+```
+
 #### EXPORT
 
 ```{r export_b_umap_1}
@@ -639,6 +684,12 @@ dev.off()
 ```{r export_b_umap_3}
 pdf(output_pdf_b_umap_3, width = 2.15, height = 2.78)
 b_umap_3
+dev.off()
+```
+
+```{r export_b_umap_3_legend}
+pdf(output_pdf_b_umap_3_legend, width = 4, height = 2)
+b_umap_3_legend
 dev.off()
 ```
 
@@ -1096,11 +1147,40 @@ c_combine_hsc <- ggpubr::ggarrange(
 c_combine_hsc
 ```
 
+##### Legend HSC
+
+```{r c_combine_hsc_legend, fig.width = 3, fig.height = 3}
+legend_plot_hsc <- c_base_heatmap_orig_all+
+  theme_all+
+  ggplot2::theme(
+    legend.text = element_text(
+      size = heatmap_text_size,
+      color = legend_text_color
+    ),
+    legend.title = element_text(
+      size = heatmap_text_size,
+      color = legend_text_color
+    ),
+    legend.position = "bottom"
+  )
+
+legend_hsc <- ggpubr::get_legend(legend_plot_hsc)
+c_combine_hsc_legend <- ggpubr::ggarrange(legend_hsc)
+
+c_combine_hsc_legend
+```
+
 ##### Export
 
 ```{r export_c_combine_hsc}
 pdf(output_pdf_c_combined_hsc, width = 6.9, height = 6.1)
 c_combine_hsc
+dev.off()
+```
+
+```{r export_c_combine_hsc_legend}
+pdf(output_pdf_c_combined_hsc_legend, width = 4, height = 1.2)
+c_combine_hsc_legend
 dev.off()
 ```
 
@@ -1453,7 +1533,7 @@ d_theme_heatmap_cust_mcar
 
 Build the species-specific heatmaps together
 
-```{r d_custom_heatmap, fig.height = 6.9, fig.width = 4}
+```{r d_custom_heatmap, fig.height = 6.8, fig.width = 4}
 
 d_custom_heatmap <- ggpubr::ggarrange(
   d_theme_heatmap_cust_mmus+ggplot2::theme(plot.margin = margin(0.1,0.1,0.3,0.1)),
@@ -1492,7 +1572,7 @@ d_base_heatmap_orig_all <- ggplot2::ggplot(
 d_base_heatmap_orig_all
 ```
 
-```{r d_heatmap_orig, fig.height = 7, fig.width = 3.1}
+```{r d_heatmap_orig, fig.height = 6.8, fig.width = 3.1}
 d_heatmap_orig <- d_base_heatmap_orig_all+
   theme_all+
   ggplot2::theme(
@@ -1524,10 +1604,39 @@ d_combine_str <- ggpubr::ggarrange(
 d_combine_str
 ```
 
+##### Legend STR
+
+```{r d_combine_str_legend, fig.width = 3, fig.height = 3}
+legend_plot_str <- d_base_heatmap_orig_all+
+  theme_all+
+  ggplot2::theme(
+    legend.text = element_text(
+      size = heatmap_text_size,
+      color = legend_text_color
+    ),
+    legend.title = element_text(
+      size = heatmap_text_size,
+      color = legend_text_color
+    ),
+    legend.position = "bottom"
+  )
+
+legend_str <- ggpubr::get_legend(legend_plot_str)
+d_combine_str_legend <- ggpubr::ggarrange(legend_str)
+
+d_combine_str_legend
+```
+
 ##### Export
 
 ```{r output_pdf_d_combined_str}
-pdf(output_pdf_d_combined_str, width = 8.2, height = 6.9)
+pdf(output_pdf_d_combined_str, width = 8.2, height = 6.8)
 d_combine_str
+dev.off()
+```
+
+```{r output_pdf_d_combined_str_legend}
+pdf(output_pdf_d_combined_str_legend, width = 1.2, height = 4)
+d_combine_str_legend
 dev.off()
 ```

@@ -19,7 +19,10 @@ targets = []
 targets = targets + [OUTPUT_PATH + "/figure_1.html"]
 
 targets = targets + [OUTPUT_PATH + "/figure_s2.html"]
-targets = targets + [OUTPUT_PATH + "/figure_s2_alluvial.html"]
+targets = targets + [OUTPUT_PATH + "/figure_s2_alluvial_hsc.html"]
+targets = targets + [OUTPUT_PATH + "/figure_s2_alluvial_str.html"]
+
+targets = targets + [OUTPUT_PATH + "/figure_s4.html"]
 
 """
 targets = targets + [OUTPUT_PATH + "/figure_s3.html"]
@@ -66,19 +69,46 @@ rule run_fig_s2:
         "figure_s2.Rmd"
 
 
-rule run_fig_s2_alluvial:
+rule run_fig_s2_alluvial_hsc:
     resources:
         mem_mb=80000,
         queues="medium"
     output:
-        OUTPUT_PATH + "/figure_s2_alluvial.html"
+        OUTPUT_PATH + "/figure_s2_alluvial_hsc.html"
     params:
         base_path = BASE_PATH
     conda:
         "../envs/ggalluvial.yml"
     threads: 4
     script:
-        "figure_s2_alluvial.Rmd"
+        "figure_s2_alluvial_hsc.Rmd"
+
+rule run_fig_s2_alluvial_str:
+    resources:
+        mem_mb=80000,
+        queues="medium"
+    output:
+        OUTPUT_PATH + "/figure_s2_alluvial_str.html"
+    params:
+        base_path = BASE_PATH
+    conda:
+        "../envs/ggalluvial.yml"
+    threads: 4
+    script:
+        "figure_s2_alluvial_str.Rmd"
+
+rule run_fig_s4:
+    resources:
+        mem_mb=120000,
+        queues="medium"
+    output:
+        OUTPUT_PATH + "/figure_s4.html"
+    params:
+        base_path = BASE_PATH
+    threads: 4
+    script:
+        "figure_s4.Rmd"
+
 """
 
 rule run_fig_s3_heatmaps:

@@ -28,8 +28,10 @@ library(ggpubr, quietly = TRUE)
 base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
 ```
 
-```{r load_manual}
-# list of score dfs from hscs
+For A, the score optimization plots.
+
+```{r load_score_opti_plot_hsc}
+# list of score dfs from hscs for score optimization plot
 score_df_list_hsc <-  base::readRDS(base::paste0(
   base_path, 
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/04_rcls/score_df_reso_hsc"))
@@ -41,6 +43,8 @@ for(res in names(score_df_list_hsc)){
   }
 }
 ```
+
+For finding the correct other dataset resolutions.
 
 ```{r load_manual_res}
 # data frame containing the correct resolutions for other datasets as visually determined
@@ -58,7 +62,9 @@ resolution_df <- utils::read.csv(file = resolution_df_path,
 print(resolution_df)
 ```
 
-```{r load_manual_other1}
+Also for the optimization plots, maybe not necessary.
+
+```{r load_score_opti_other1}
 #### OTHER MOUSE DATASET 1 (HSPC)
 
 dataset_o1 <- "mus_tm_bonemarrow"
@@ -69,7 +75,9 @@ score_df_list_o1 <-base::readRDS(base::paste0(
 
 ```
 
-```{r load_manual_other2}
+Also for the optimization plots, maybe not necessary.
+
+```{r load_score_opti_other2}
 #### OTHER MOUSE DATASET 2 (HSPC)
 
 dataset_o2 <- "mus_weinreb_hspc"
@@ -80,12 +88,39 @@ score_df_list_o2 <-base::readRDS(base::paste0(
 
 ```
 
-```{r corr_pval_df}
+For the pval plot.
+
+```{r load_corr_pval_df}
 # corrected p values (can only load after all p values have been calculated and corrected)
+
+# for plot of all corrected HSPC p values
 corr_pval_df <-  readRDS(base::paste0(
   base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/09_crpv/all_corrected_pval"))
 ```
+
+For the heatmap comparison.
+
+```{r load_heatmaps}
+# after manual custom clustering
+mus_weinreb_hspc_custom <- readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/03_custom_clustering/mus_weinreb_hspc.Rds"))
+
+# after signature reclustering
+seu_mus_weinreb_hspc_recl_list <- base::readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_mus_weinreb_hspc_list"))
+
+res_mus_weinreb_hspc <- resolution_df %>%
+  dplyr::filter(dataset == "mus_weinreb_hspc") %>%
+  dplyr::filter(conservation_level == "conserved_signature") %>%
+  dplyr::pull()
+
+seu_mus_weinreb_hspc_sign <- seu_mus_weinreb_hspc_recl_list$seu_sign[[res_mus_weinreb_hspc]]
+```
+
+source
 
 ```{r source}
 colors_path <- base::paste0(
@@ -109,6 +144,14 @@ output_pdf_a_legend <- base::paste0(
 output_pdf_b_pval <- base::paste0(
   base_path,
   "/manuscript1_rev/figures4/b_pval_plot.pdf")
+
+output_pdf_c_heatmaps <- base::paste0(
+  base_path,
+  "/manuscript1_rev/figures4/c_heatmaps.pdf")
+
+output_pdf_c_heatmaps_legend <- base::paste0(
+  base_path,
+  "/manuscript1_rev/figures4/c_heatmaps_legend.pdf")
 ```
 
 ```{r params}
@@ -119,6 +162,8 @@ col_vec1 <- col_score1
 col_vec2 <- col_score2
 
 point_plot_size <- 4
+
+supplementary_text_size = 14
 
 color_significance <- c("pval adj. >= 0.05" = "grey70",
                         "pval adj. < 0.05" = "black",
@@ -174,8 +219,8 @@ vis_clustering_scores <- function(score_df_list, max){
     ggplot2::geom_point()+
     theme_all_supp+
     ggplot2::ylim(c(0, max))+
-    ggplot2::scale_color_manual("score", values = c(col_vec1, col_vec2))+
-    ggplot2::ggtitle(title)
+    ggplot2::scale_color_manual("score", values = c(col_vec1, col_vec2))#+
+    #ggplot2::ggtitle(title)
 
   return(plot1)
   
@@ -185,15 +230,37 @@ vis_clustering_scores <- function(score_df_list, max){
 
 # A Dotplot different scores and nr of clusters
 
-```{r hscs, fig.width = 16, fig.height = 3}
+```{r hscs, fig.width = 16.5, fig.height = 3}
 max_hsc <- 5
 
 plot_list_hsc <- lapply(score_df_list_hsc_new, vis_clustering_scores, max = max_hsc)
 
 plot_hsc <- ggpubr::ggarrange(
-  plot_list_hsc[[1]]+theme(legend.position = "none")+geom_vline(xintercept = 0.65, color = "orangered"),
-  plot_list_hsc[[2]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.45, color = "orangered"),
-  plot_list_hsc[[3]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.65, color = "orangered"),
+  plot_list_hsc[[1]]+
+    theme_all+
+    ggplot2::theme(
+      legend.position = "none",
+      axis.text.x = element_text(
+        size = supplementary_text_size),
+      axis.title = element_text(
+        size = supplementary_text_size))+
+    ggplot2::geom_vline(xintercept = 0.65, color = "orangered"),
+  plot_list_hsc[[2]]+
+    ggplot2::theme(
+      legend.position = "none",
+      axis.text.x = element_text(
+        size = supplementary_text_size),
+      axis.title = element_text(
+        size = supplementary_text_size))+
+      ggplot2::geom_vline(xintercept = 0.45, color = "orangered"),
+  plot_list_hsc[[3]]+
+    ggplot2::theme(
+      legend.position = "none",
+      axis.text.x = element_text(
+        size = supplementary_text_size),
+      axis.title = element_text(
+        size = supplementary_text_size))+
+      ggplot2::geom_vline(xintercept = 0.65, color = "orangered"),
   NULL,
   nrow = 1,
   align = "h",
@@ -203,19 +270,51 @@ plot_hsc <- ggpubr::ggarrange(
 plot_hsc
 ```
 
-Not sure about these two but let's keep them for now.
+Not sure about these two but let's keep the code for now.
 
-```{r other1, fig.width = 16, fig.height = 3}
+```{r other1, fig.width = 16, fig.height = 3, eval = FALSE}
 # run the function, get max
 max_o1 <- 3
 plot_list_o1 <- lapply(score_df_list_o1, vis_clustering_scores, max = max_o1)
 resolution_df[resolution_df$dataset == dataset_o1,]
 
 plot_o1 <- ggpubr::ggarrange(
-  plot_list_o1[[1]]+theme(legend.position = "none")+geom_vline(xintercept = 0.65, color = "orangered"),
-  plot_list_o1[[2]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.5, color = "orangered"),
-  plot_list_o1[[3]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.4, color = "orangered"),
-  plot_list_o1[[4]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.65, color = "orangered"),
+  plot_list_o1[[1]]+
+    theme_all+
+    ggplot2::theme(
+      legend.position = "none",
+      axis.text.x = element_text(
+        size = supplementary_text_size),
+      axis.title = element_text(
+        size = supplementary_text_size))+
+    ggplot2::geom_vline(xintercept = 0.65, color = "orangered"),
+  plot_list_o1[[2]]+
+    theme_all+
+    ggplot2::theme(
+      legend.position = "none",
+      axis.text.x = element_text(
+        size = supplementary_text_size),
+      axis.title = element_text(
+        size = supplementary_text_size))+
+    ggplot2::geom_vline(xintercept = 0.5, color = "orangered"),
+  plot_list_o1[[3]]+
+    theme_all+
+    ggplot2::theme(
+      legend.position = "none",
+      axis.text.x = element_text(
+        size = supplementary_text_size),
+      axis.title = element_text(
+        size = supplementary_text_size))+
+    ggplot2::geom_vline(xintercept = 0.4, color = "orangered"),
+  plot_list_o1[[4]]+
+    theme_all+
+    ggplot2::theme(
+      legend.position = "none",
+      axis.text.x = element_text(
+        size = supplementary_text_size),
+      axis.title = element_text(
+        size = supplementary_text_size))+
+    ggplot2::geom_vline(xintercept = 0.65, color = "orangered"),
   nrow = 1,
   align = "h",
   widths = c(1, 1, 1, 1)
@@ -225,20 +324,52 @@ dataset_o1
 plot_o1
 ```
 
-```{r other2, fig.width = 16, fig.height = 3}
+```{r other2, fig.width = 12, fig.height = 3, eval = FALSE}
 # run the function, get max
 max_o2 <- 5
 plot_list_o2 <- lapply(score_df_list_o2, vis_clustering_scores, max = max_o2)
 resolution_df[resolution_df$dataset == dataset_o2,]
 
 plot_o2 <- ggpubr::ggarrange(
-  plot_list_o2[[1]]+theme(legend.position = "none")+geom_vline(xintercept = 0.55, color = "orangered"),
-  plot_list_o2[[2]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.5, color = "orangered"),
-  plot_list_o2[[3]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.6, color = "orangered"),
-  plot_list_o2[[4]]+theme(legend.position = "none", axis.title.y = element_blank())+geom_vline(xintercept = 0.55, color = "orangered"),
+  plot_list_o2[[1]]+
+    theme_all+
+    ggplot2::theme(
+      legend.position = "none",
+      axis.text.x = element_text(
+        size = supplementary_text_size),
+      axis.title = element_text(
+        size = supplementary_text_size))+
+    ggplot2::geom_vline(xintercept = 0.55, color = "orangered"),
+  plot_list_o2[[2]]+
+    theme_all+
+    ggplot2::theme(
+      legend.position = "none",
+      axis.text.x = element_text(
+        size = supplementary_text_size),
+      axis.title = element_text(
+        size = supplementary_text_size))+
+    ggplot2::+geom_vline(xintercept = 0.5, color = "orangered"),
+  plot_list_o2[[3]]+
+    theme_all+
+    ggplot2::theme(
+      legend.position = "none",
+      axis.text.x = element_text(
+        size = supplementary_text_size),
+      axis.title = element_text(
+        size = supplementary_text_size))+
+    ggplot2::geom_vline(xintercept = 0.6, color = "orangered"),
+  plot_list_o2[[4]]+
+    theme_all+
+    ggplot2::theme(
+      legend.position = "none",
+      axis.text.x = element_text(
+        size = supplementary_text_size),
+      axis.title = element_text(
+        size = supplementary_text_size))+
+    ggplot2::geom_vline(xintercept = 0.55, color = "orangered"),
   nrow = 1,
   align = "h",
-  widths = c(1, 1, 1, 1)
+  widths = c(1, 1, 1)
 )
 
 dataset_o2
@@ -246,7 +377,7 @@ plot_o2
 ```
 
 ```{r pval_plot_export}
-pdf(output_pdf_a_plot, width = 12, height = 3)
+pdf(output_pdf_a_plot, width = 12, height = 2.5)
 plot_hsc
 dev.off()
 ```
@@ -254,8 +385,17 @@ dev.off()
 #### Legend
 
 ```{r, fig.width = 4, fig.height = 2}
-legend_plot <- plot_list_o1[[1]]
-legend <- ggpubr::get_legend(legend_plot)
+legend_plot <- plot_list_hsc[[1]]
+legend <- ggpubr::get_legend(legend_plot+
+  theme(,
+    legend.text = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color
+    ),
+    legend.title = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color
+    )))
 legend <- ggpubr::ggarrange(legend)
 legend # change in affinity
 ```
@@ -368,13 +508,29 @@ b_pval_plot <- ggplot2::ggplot(
     strip.placement = "outside",
     strip.background.y = element_blank(),
     panel.spacing = unit(2, "cm"),
+    axis.text = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color
+    ),
+    legend.text = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color
+    ),
+    legend.title = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color
+    ),
     strip.text.y.left = element_text(
       angle = 0,
       face= "bold",
       color = "black",
-      size = 16,
+      size = supplementary_text_size,
       hjust = 0,
       vjust = 0.5
+    ),
+    strip.text.x.top = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color
     ),
     axis.title = element_blank()
   )+
@@ -389,5 +545,194 @@ b_pval_plot
 dev.off()
 ```
 
+# C Heatmaps 
 
+Custom clustering and annotation using 2000 hvgs of Weinreb et al.
+compared to orig and signature based clusterings.
 
+```{r make_heatmaps_function}
+
+# function for plotting
+make_heatmaps <- function(colname1, colname2, seu){
+
+  mat <- base::table(
+    seu@meta.data[,which(colnames(seu@meta.data) == colname1)], 
+    seu@meta.data[,which(colnames(seu@meta.data) == colname2)])
+
+  for(i in 1:ncol(mat)){
+    mat[,i] <- mat[,i]/base::sum(mat[,i])
+  }
+
+  plot_df <- base::as.data.frame(mat)
+
+  plot_df$Var1 <- factor(
+    plot_df$Var1,
+    levels = levels(seu@meta.data[,which(colnames(seu@meta.data) == colname1)]))
+  
+  plot_df$Var2 <- factor(
+    plot_df$Var2,
+    levels = rev(levels(seu@meta.data[,which(colnames(seu@meta.data) == colname2)])))
+
+  base_heatmap_return <- ggplot2::ggplot(
+    plot_df, 
+    aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+    ggplot2::geom_tile()+
+    theme_all+
+    ggplot2::theme(
+      axis.text.x = element_text(
+        angle = 90
+      ),
+      axis.ticks.y = element_blank())+
+    ggplot2::scale_fill_gradientn(
+      colors = mycolors_to1,
+      limits = c(0, 1),
+      breaks = c(0, 0.5, 1))+
+    xlab(colname1)+
+    ylab(colname2)
+  
+
+  return(base_heatmap_return)
+}
+```
+
+```{r prep_mus_weinreb_hspc_custom}
+
+mus_weinreb_hspc_custom$sign_clusters <- seu_mus_weinreb_hspc_sign$seurat_clusters
+
+# order the unnames seurat_clusters for nicer visualisation
+mus_weinreb_hspc_custom$sign_clusters <- factor(
+  mus_weinreb_hspc_custom$sign_clusters,
+  levels = c(
+    3, 4, 8, 6, 9, 7, 2, 5, 11, 0, 1, 10
+  )
+)
+```
+
+custom_label = cell types after custom manual annotation.
+cell_type = original annotation from publication.
+seurat_clusters/sign_clusters = clusters, not annotated. Name changed for clarity
+
+## sign vs orig
+
+```{r sign_vs_orig_plot, fig.widht = 4, fig.height = 5}
+sign_vs_orig_plot <- make_heatmaps(
+  mus_weinreb_hspc_custom, 
+  colname1 = "cell_type",
+  colname2 = "sign_clusters")+
+  ggplot2::xlab("Original annotation")+
+  ggplot2::ylab("Reclustered with signature genes")+
+  ggplot2::theme(
+    axis.text = element_text(
+      color = axis_text_color,
+      size = supplementary_text_size,
+      hjust = 1,
+      vjust = 0.5
+    ),
+    axis.title = element_text(
+      color = axis_text_color,
+      size = supplementary_text_size
+    )
+  )
+
+sign_vs_orig_plot
+```
+
+```{r cust_vs_orig_plot, fig.widht = 5, fig.height = 5}
+cust_vs_orig_plot <- make_heatmaps(
+  mus_weinreb_hspc_custom, 
+  colname1 = "cell_type",
+  colname2 = "custom_label")+
+  ggplot2::xlab("Original annotation")+
+  ggplot2::ylab("Manual reclustering and annotation")+
+  ggplot2::theme(
+    axis.text = element_text(
+      color = axis_text_color,
+      size = supplementary_text_size,
+      hjust = 1,
+      vjust = 0.5
+    ),
+    axis.title = element_text(
+      color = axis_text_color,
+      size = supplementary_text_size
+    )
+  )
+
+cust_vs_orig_plot
+```
+
+```{r cust_vs_sign_plot, fig.width = 5, fig.height = 5}
+
+cust_vs_sign_plot <- make_heatmaps(
+  mus_weinreb_hspc_custom, 
+  colname1 = "sign_clusters",
+  colname2 = "custom_label")+
+  ggplot2::ylab("Manual reclustering and annotation")+
+  ggplot2::xlab("Original annotation")+
+  ggplot2::theme(
+    axis.text.y = element_text(
+      color = axis_text_color,
+      size = supplementary_text_size,
+      hjust = 1,
+      vjust = 0.5
+    ),
+    axis.text.x = element_text(
+      color = axis_text_color,
+      size = supplementary_text_size,
+      hjust = 1,
+      vjust = 0.5,
+      angle = 0
+    ),
+    axis.title = element_text(
+      color = axis_text_color,
+      size = supplementary_text_size
+    )
+  )
+
+cust_vs_sign_plot
+```
+
+```{r heatmap_expr_legend}
+heatmap_expr_legend_theme <- ggpubr::get_legend(cust_vs_sign_plot + 
+  theme_all + 
+  ggplot2::theme(
+    legend.text = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color
+    ),
+    legend.title = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color
+    )))
+heatmap_expr_legend <- ggpubr::ggarrange(heatmap_expr_legend_theme)
+heatmap_expr_legend
+```
+
+```{r heatmaps_combine, fig.height = 12, fig.width = 10}
+
+heatmaps_combine <- ggarrange(
+  cust_vs_orig_plot + ggplot2::theme(legend.position = "none"),
+  cust_vs_sign_plot + ggplot2::theme(legend.position = "none"),
+  sign_vs_orig_plot + ggplot2::theme(legend.position = "none"),
+  nrow = 2,
+  ncol = 2,
+  align = "hv",
+  widths = c(1, 1.3),
+  heights = c(1, 1)
+)
+
+heatmaps_combine
+```
+
+```{r export_pdf_c_heatmaps}
+pdf(output_pdf_c_heatmaps, width = 10.5, height = 10)
+heatmaps_combine
+dev.off()
+```
+
+```{r export_pdf_c_heatmaps_legend}
+pdf(output_pdf_c_heatmaps_legend, width = 3, height = 3)
+heatmap_expr_legend
+dev.off()
+```

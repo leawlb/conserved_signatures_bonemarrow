@@ -73,7 +73,7 @@ rule custom_ts_bonemarrow:
         OUTPUT_REP + "/custom_ts_bonemarrow.html"
     resources:
         mem_mb = 50000,
-        queue = "medium-debian"
+        queue = "medium"
     threads: 10
     params:
         plotting = "../../source/plotting.R",
@@ -92,7 +92,7 @@ rule custom_mus_weinreb_hspc:
         OUTPUT_REP + "/custom_mus_weinreb_hspc.html"
     resources:
         mem_mb = 50000,
-        queue = "long-debian"
+        queue = "long"
     threads: 10
     params:
         plotting = "../../source/plotting.R",
@@ -111,7 +111,7 @@ rule custom_ts_all_stromal:
         OUTPUT_REP + "/custom_ts_all_stromal.html"
     resources:
         mem_mb = 50000,
-        queue = "medium-debian"
+        queue = "medium"
     threads: 10
     params:
         plotting = "../../source/plotting.R",

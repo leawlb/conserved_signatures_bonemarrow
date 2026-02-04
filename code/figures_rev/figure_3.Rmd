@@ -414,7 +414,7 @@ logcounts_df_ec$genes <- factor(logcounts_df_ec$genes, levels = c(
 ))
 ```
 
-```{r vioplot_ec_base, fig.height = 2, fig.width = 4}
+```{r vioplot_ec_base, fig.height = 2, fig.width = 5}
 vioplot_ec_base <- logcounts_df_ec %>%
   ggplot2::ggplot(
     aes(
@@ -428,7 +428,7 @@ vioplot_ec_base <- logcounts_df_ec %>%
 vioplot_ec_theme <- vioplot_ec_base+
     ggplot2::scale_y_continuous(
       limits = c(0, 6),
-      breaks = c(0, 6)
+      breaks = c(0,56)
     )+
     theme_all+
     ggplot2::theme(
@@ -483,7 +483,7 @@ logcounts_df_mes$genes <- factor(logcounts_df_mes$genes, levels = c(
 ))
 ```
 
-```{r vioplot_mes_base, fig.height = 4.5, fig.width = 4}
+```{r vioplot_mes_base, fig.height = 4.5, fig.width = 5}
 vioplot_mes_base <- logcounts_df_mes %>%
   ggplot2::ggplot(
     aes(
@@ -496,8 +496,8 @@ vioplot_mes_base <- logcounts_df_mes %>%
       
 vioplot_mes_theme <- vioplot_mes_base+
     ggplot2::scale_y_continuous(
-      limits = c(0, 6),
-      breaks = c(0, 5)
+      limits = c(0, 4),
+      breaks = c(0, 3)
     )+
     theme_all+
     ggplot2::theme(

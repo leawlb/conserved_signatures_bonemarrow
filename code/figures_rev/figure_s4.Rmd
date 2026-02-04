@@ -264,7 +264,7 @@ plot_hsc <- ggpubr::ggarrange(
   NULL,
   nrow = 1,
   align = "h",
-  widths = c(1, 1, 1, 1)
+  widths = c(1.05, 1, 1, 1)
 )
 
 plot_hsc
@@ -272,7 +272,7 @@ plot_hsc
 
 Not sure about these two but let's keep the code for now.
 
-```{r other1, fig.width = 16, fig.height = 3, eval = FALSE}
+```{r other1, fig.width = 16, fig.height = 2.5}
 # run the function, get max
 max_o1 <- 3
 plot_list_o1 <- lapply(score_df_list_o1, vis_clustering_scores, max = max_o1)
@@ -283,40 +283,36 @@ plot_o1 <- ggpubr::ggarrange(
     theme_all+
     ggplot2::theme(
       legend.position = "none",
-      axis.text.x = element_text(
+      axis.text.x = element_blank(),
+      axis.title.x = element_blank(),
+      axis.text.y = element_text(
         size = supplementary_text_size),
-      axis.title = element_text(
+      axis.title.y = element_text(
         size = supplementary_text_size))+
     ggplot2::geom_vline(xintercept = 0.65, color = "orangered"),
   plot_list_o1[[2]]+
     theme_all+
     ggplot2::theme(
       legend.position = "none",
-      axis.text.x = element_text(
-        size = supplementary_text_size),
-      axis.title = element_text(
-        size = supplementary_text_size))+
+      axis.text = element_blank(),
+      axis.title = element_blank())+
     ggplot2::geom_vline(xintercept = 0.5, color = "orangered"),
   plot_list_o1[[3]]+
     theme_all+
     ggplot2::theme(
       legend.position = "none",
-      axis.text.x = element_text(
-        size = supplementary_text_size),
-      axis.title = element_text(
-        size = supplementary_text_size))+
+      axis.text = element_blank(),
+      axis.title = element_blank())+
     ggplot2::geom_vline(xintercept = 0.4, color = "orangered"),
   plot_list_o1[[4]]+
     theme_all+
     ggplot2::theme(
       legend.position = "none",
-      axis.text.x = element_text(
-        size = supplementary_text_size),
-      axis.title = element_text(
-        size = supplementary_text_size))+
+      axis.text = element_blank(),
+      axis.title = element_blank())+
     ggplot2::geom_vline(xintercept = 0.65, color = "orangered"),
   nrow = 1,
-  align = "h",
+  align = "hv",
   widths = c(1, 1, 1, 1)
 )
 
@@ -324,7 +320,7 @@ dataset_o1
 plot_o1
 ```
 
-```{r other2, fig.width = 12, fig.height = 3, eval = FALSE}
+```{r other2, fig.width = 12, fig.height = 2.5}
 # run the function, get max
 max_o2 <- 5
 plot_list_o2 <- lapply(score_df_list_o2, vis_clustering_scores, max = max_o2)
@@ -335,7 +331,7 @@ plot_o2 <- ggpubr::ggarrange(
     theme_all+
     ggplot2::theme(
       legend.position = "none",
-      axis.text.x = element_text(
+      axis.text = element_text(
         size = supplementary_text_size),
       axis.title = element_text(
         size = supplementary_text_size))+
@@ -344,15 +340,19 @@ plot_o2 <- ggpubr::ggarrange(
     theme_all+
     ggplot2::theme(
       legend.position = "none",
+      axis.text.y = element_blank(),
+      axis.title.y = element_blank(),
       axis.text.x = element_text(
         size = supplementary_text_size),
-      axis.title = element_text(
+      axis.title.x = element_text(
         size = supplementary_text_size))+
-    ggplot2::+geom_vline(xintercept = 0.5, color = "orangered"),
+    ggplot2::geom_vline(xintercept = 0.5, color = "orangered"),
   plot_list_o2[[3]]+
     theme_all+
     ggplot2::theme(
       legend.position = "none",
+      axis.text.y = element_blank(),
+      axis.title.y = element_blank(),
       axis.text.x = element_text(
         size = supplementary_text_size),
       axis.title = element_text(
@@ -362,23 +362,38 @@ plot_o2 <- ggpubr::ggarrange(
     theme_all+
     ggplot2::theme(
       legend.position = "none",
+      axis.text.y = element_blank(),
+      axis.title.y = element_blank(),
       axis.text.x = element_text(
         size = supplementary_text_size),
       axis.title = element_text(
         size = supplementary_text_size))+
     ggplot2::geom_vline(xintercept = 0.55, color = "orangered"),
   nrow = 1,
-  align = "h",
-  widths = c(1, 1, 1)
+  align = "hv",
+  widths = c(1, 1, 1, 1)
 )
 
 dataset_o2
 plot_o2
 ```
 
-```{r pval_plot_export}
-pdf(output_pdf_a_plot, width = 12, height = 2.5)
-plot_hsc
+```{r datasets_others_plot, fig.width = 13.5, fig.height = 3}
+datasets_others_plot <- ggpubr::ggarrange(
+  plot_o1,
+  plot_o2,
+  nrow = 2,
+  ncol = 1,
+  align = "hv",
+  heights = c(1, 1.34)
+)
+
+datasets_others_plot
+```
+
+```{r a_plot_export}
+pdf(output_pdf_a_plot, width = 13.5, height = 3)
+datasets_others_plot
 dev.off()
 ```
 
@@ -709,7 +724,7 @@ heatmap_expr_legend <- ggpubr::ggarrange(heatmap_expr_legend_theme)
 heatmap_expr_legend
 ```
 
-```{r heatmaps_combine, fig.height = 12, fig.width = 10}
+```{r heatmaps_combine, fig.height = 12, fig.width = 9}
 
 heatmaps_combine <- ggarrange(
   cust_vs_orig_plot + ggplot2::theme(legend.position = "none"),
@@ -726,7 +741,7 @@ heatmaps_combine
 ```
 
 ```{r export_pdf_c_heatmaps}
-pdf(output_pdf_c_heatmaps, width = 10.5, height = 10)
+pdf(output_pdf_c_heatmaps, width = 10.5, height = 9)
 heatmaps_combine
 dev.off()
 ```

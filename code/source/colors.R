@@ -25,6 +25,9 @@ names(mycolors_to100) <- c(1:100)
 mycolors_to_max <- grDevices::colorRampPalette(c("grey80", "#073A91"))(100)
 names(mycolors_to_max) <- c(1:100)/100
 
+mycolors_to_max_light <- grDevices::colorRampPalette(c("grey92", "#073A91"))(100)
+names(mycolors_to_max_light) <- c(1:100)/100
+
 # used for visualising QC (sum and detected)
 color_vector_sum <- c("black", "darkorange4", "darkorange3", "darkorange1",
                       "orange", "orange", "gold1", "gold",

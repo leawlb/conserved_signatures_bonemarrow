@@ -17,6 +17,9 @@ BASE_PATH = "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
 targets = []
 
 targets = targets + [OUTPUT_PATH + "/figure_1.html"]
+targets = targets + [OUTPUT_PATH + "/figure_2.html"]
+targets = targets + [OUTPUT_PATH + "/figure_3.html"]
+targets = targets + [OUTPUT_PATH + "/figure_4.html"]
 
 targets = targets + [OUTPUT_PATH + "/figure_s2.html"]
 targets = targets + [OUTPUT_PATH + "/figure_s2_alluvial_hsc.html"]
@@ -55,6 +58,47 @@ rule run_fig_1:
     threads: 4
     script:
         "figure_1.Rmd"
+
+rule run_fig_2:
+    resources:
+        mem_mb=80000,
+        queues="medium"
+    output:
+        OUTPUT_PATH + "/figure_2.html"
+    params:
+        base_path = BASE_PATH
+    threads: 4
+    conda:
+        "../envs/ggpattern.yml"
+    script:
+        "figure_2.Rmd"
+
+
+rule run_fig_3:
+    resources:
+        mem_mb=40000,
+        queues="medium"
+    output:
+        OUTPUT_PATH + "/figure_3.html"
+    params:
+        base_path = BASE_PATH
+    threads: 4
+    script:
+        "figure_3.Rmd"
+
+rule run_fig_4:
+    resources:
+        mem_mb=80000,
+        queues="medium"
+    output:
+        OUTPUT_PATH + "/figure_4.html"
+    params:
+        base_path = BASE_PATH
+    threads: 4
+    conda:
+        "../envs/ggpattern.yml"
+    script:
+        "figure_4.Rmd"
 
 rule run_fig_s2:
     resources:

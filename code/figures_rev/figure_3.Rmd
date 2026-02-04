@@ -428,7 +428,7 @@ vioplot_ec_base <- logcounts_df_ec %>%
 vioplot_ec_theme <- vioplot_ec_base+
     ggplot2::scale_y_continuous(
       limits = c(0, 6),
-      breaks = c(0,56)
+      breaks = c(0, 5)
     )+
     theme_all+
     ggplot2::theme(

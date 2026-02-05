@@ -1,0 +1,371 @@
+---
+title: "Supplemental Figure 6"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Generate Supplemental Figure 6, corresponding for Figure 4
+
+#### Load objects
+
+```{r seed, message = FALSE}
+RNGkind("L'Ecuyer-CMRG") 
+set.seed(37)
+```
+
+```{r load_packages, message = FALSE}
+library(SingleCellExperiment, quietly = TRUE)
+library(ggpubr, quietly = TRUE)
+library(tidyverse, quietly = TRUE)
+```
+
+```{r base_path}
+base_path <- snakemake@params[["base_path"]]
+#base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+#setwd("repositories/Interspecies_BM_phd/code/figures_rev")
+```
+
+```{r load_other2}
+#-------------------------------------------------------------------------------
+#### OTHER MOUSE DATASET 2 (HSPC)
+#### Tabula sapiens HSCs and Progs (fetal)
+
+dataset_o2 <- "ts_hscs_progenitors"
+
+# original seurat dataset
+#seu_orig_o2 <- base::readRDS(base::paste0(
+#  base_path,
+#  "/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_hscs_progenitors"))
+
+# list of seurat objects with reclustering vectors for each gene set+ resolution
+#seu_hsc_recl_list_o2 <- base::readRDS(base::paste0(
+#  base_path,
+#  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/#reclustered_ts_hscs_progenitors_list"))
+```
+
+```{r load_other1}
+#-------------------------------------------------------------------------------
+#### OTHER MOUSE DATASET 1 (HSPC)
+#### TABULA SAPIENS BONE MARROW
+
+dataset_o1 <- "ts_bone_marrow"
+
+# load the reclustered and blindly annotated dataset
+# this also contains custom clustering but let's ignore that for here
+
+#seu_orig_o1 <-  base::readRDS(base::paste0(
+#  base_path,
+#  "/metadata/scRNAseq/03_sce_analysis/reclustering_bm/prepared/ts_bone_marrow"))
+
+# list of seurat objects with reclustering vectors for each gene set+ resolution
+#seu_hsc_recl_list_o1 <- base::readRDS(base::paste0( 
+#  base_path,
+#  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/#reclustered_ts_bone_marrow_list"))
+
+# list of dataframes of re-clustering scores for each gene set and resolution
+#score_df_hsc_list_o1 <- base::readRDS(base::paste0(
+#  base_path,
+#  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls
+# score_df_ts_bone_marrow_list"))
+```
+
+```{r selected_seu_o1, eval = FALSE, include = FALSE}
+
+resolution_df_o1 <- resolution_df[resolution_df$dataset == dataset_o1,]
+
+selected_seu_list_o1 <- lapply(seu_hsc_recl_list_o1, function(seu_list){
+
+  conslev_curr <- seu_list[[1]]@misc$used_genes
+
+  resdf_temp <- resolution_df_o1[
+    resolution_df_o1$conservation_level == conslev_curr,]
+  res_curr <- resdf_temp$resolution
+
+  seu_return <- seu_list[[res_curr]]
+  return(seu_return)
+
+})
+
+rm(seu_hsc_recl_list_o1)
+gc()
+```
+
+
+```{r selected_seu_o2, eval = FALSE, include = FALSE}
+
+resolution_df_o2 <- resolution_df[resolution_df$dataset == dataset_o2,]
+
+selected_seu_list_o2 <- lapply(seu_hsc_recl_list_o2, function(seu_list){
+  
+  conslev_curr <- seu_list[[1]]@misc$used_genes
+  
+  resdf_temp <- resolution_df_o2[
+    resolution_df_o2$conservation_level == conslev_curr,]
+  res_curr <- resdf_temp$resolution
+  
+  seu_return <- seu_list[[res_curr]]
+  return(seu_return)
+  
+})
+
+rm(seu_hsc_recl_list_o2)
+gc()
+```
+
+```{r load}
+
+
+# list of gene sets for HSPCs (conserved signature, conserved markers, etc.)
+#geneset_list_hsc <-base::readRDS(base::paste0(
+#  base_path,
+#  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"))
+
+# data frame containing the correct resolutions for other datasets as visually determined
+#resolution_df_path <- base::paste0(
+#  base_path,
+#  "/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt")
+
+#resolution_df <- utils::read.csv(file = resolution_df_path, 
+#                               header = TRUE, 
+#                               sep = ";", 
+#                               check.names=FALSE, 
+#                               stringsAsFactors=FALSE, 
+#                               as.is=TRUE, 
+#                               colClasses = "character")
+
+# data frame containing the correct resolutions for other datasets as visually determined
+resolution_df_path <- base::paste0(
+  base_path,
+  "/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt")
+
+resolution_df <- utils::read.csv(file = resolution_df_path, 
+                               header = TRUE, 
+                               sep = ";", 
+                               check.names=FALSE, 
+                               stringsAsFactors=FALSE, 
+                               as.is=TRUE, 
+                               colClasses = "character")
+
+# corrected p values (can only load after all p values have been calculated and corrected)
+corr_pval_df <-  readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/09_crpv/all_corrected_pval"))
+
+#ensembl_sign <- readRDS(base::paste0(
+#  base_path,
+#  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/02_endf/ensembl_sign_hsc"))
+
+
+colors_path <- base::paste0(
+  base_path,
+  "/metadata/colors/colors.txt")
+
+source("../source/colors.R")
+source("../source/plotting.R")
+source("determine_params.R")
+
+color_significance <- c("pval adj. >= 0.05" = "grey70",
+                        "pval adj. < 0.05" = "black",
+                        "pval adj. = 0" = "blue")
+```
+
+```{r export_path}
+output_pdf_pval <- base::paste0(
+   base_path, "/manuscript1/supp_figure6/supp_figure6_pvals.pdf")
+
+output_pdf_suppl_umaps_o1 <- base::paste0(
+  base_path, "/manuscript1/supp_figure6/supp_figure6_umaps_o1.pdf")
+output_pdf_suppl_umaps_o2 <- base::paste0(
+  base_path, "/manuscript1/supp_figure6/supp_figure6_umaps_o2.pdf")
+
+```
+
+# Prep
+
+construct a data frame containing p values
+
+```{r pval_df}
+# subset to required datasets
+corr_pval_df_hsc <- corr_pval_df[corr_pval_df$condition %in% c(
+  "hsc",
+  "mus_weinreb_hspc",
+  "mus_tm_bonemarrow",
+  "ts_hscs_progenitors",
+  "ts_bone_marrow"
+),]
+
+# make it pretty
+corr_pval_df_hsc$condition_long <- vector(length = nrow(corr_pval_df_hsc))
+corr_pval_df_hsc$condition_long[
+  corr_pval_df_hsc$condition == "hsc"] <- "our HSPCs"
+corr_pval_df_hsc$condition_long[
+  corr_pval_df_hsc$condition == "mus_weinreb_hspc"] <- "Weinreb et al."
+corr_pval_df_hsc$condition_long[
+  corr_pval_df_hsc$condition == "mus_tm_bonemarrow"] <- "tabula muris"
+corr_pval_df_hsc$condition_long[
+  corr_pval_df_hsc$condition == "ts_hscs_progenitors"] <- "tabula sapiens fetal"
+corr_pval_df_hsc$condition_long[
+  corr_pval_df_hsc$condition == "ts_bone_marrow"] <- "tabula sapiens adult"
+
+corr_pval_df_hsc$condition_long <- factor(
+  corr_pval_df_hsc$condition_long, levels = rev(c(
+    "our HSPCs",
+    "tabula muris",
+    "Weinreb et al.",
+    "tabula sapiens fetal",
+    "tabula sapiens adult")))
+
+corr_pval_df_hsc$score_long <- vector(length = nrow(corr_pval_df_hsc))
+corr_pval_df_hsc$score_long[
+  corr_pval_df_hsc$type == "adjusted_rand_index"] <- "Adjusted\nRand index"
+corr_pval_df_hsc$score_long[
+  corr_pval_df_hsc$type == "variation_information"] <- "Variation\nof Information"
+corr_pval_df_hsc$score_long[
+  corr_pval_df_hsc$type == "mean_prop_cells_cluster"] <- "Mean\nProportion"
+
+corr_pval_df_hsc$score_long <- factor(
+  corr_pval_df_hsc$score_long, levels = c(
+    "Adjusted\nRand index",
+    "Variation\nof Information",
+    "Mean\nProportion"))
+
+corr_pval_df_hsc$color_id <- vector(length = nrow(corr_pval_df_hsc))
+corr_pval_df_hsc$color_id[corr_pval_df_hsc$pval_corrected < 0.05] <- "pval adj. < 0.05"
+corr_pval_df_hsc$color_id[corr_pval_df_hsc$pval_corrected == 0] <- "pval adj. = 0"
+corr_pval_df_hsc$color_id[corr_pval_df_hsc$pval_corrected >= 0.05] <- "pval adj. >= 0.05"
+
+corr_pval_df_hsc$comparison_long <- vector(length = nrow(corr_pval_df_hsc))
+corr_pval_df_hsc$comparison_long[
+  corr_pval_df_hsc$comparison == "sign-vs-rand"] <- "signature vs.\nrandom genes"
+corr_pval_df_hsc$comparison_long[
+  corr_pval_df_hsc$comparison == "mark-vs-rand"] <- "conserved markers vs.\nrandom genes"
+corr_pval_df_hsc$comparison_long[
+  corr_pval_df_hsc$comparison == "mmms-vs-rand"] <- "BL6-only markers vs.\nrandom genes"
+corr_pval_df_hsc$comparison_long[
+  corr_pval_df_hsc$comparison == "mark-vs-signrand"] <- "conserved markers vs.\nsignature + random genes"
+corr_pval_df_hsc$comparison_long[
+  corr_pval_df_hsc$comparison == "mmms-vs-signrand"] <- "BL6-only markers vs.\nsignature + random genes"
+
+corr_pval_df_hsc$comparison_long <- factor(
+  corr_pval_df_hsc$comparison_long, levels = c(
+    "signature vs.\nrandom genes",
+    "conserved markers vs.\nrandom genes",
+    "BL6-only markers vs.\nrandom genes",
+    "conserved markers vs.\nsignature + random genes",
+    "BL6-only markers vs.\nsignature + random genes"))
+
+corr_pval_df_hsc$color_id <- factor(
+  corr_pval_df_hsc$color_id, levels = rev(c(
+    "pval adj. >= 0.05",
+    "pval adj. < 0.05",
+    "pval adj. = 0")))
+
+head(corr_pval_df_hsc)
+```
+
+```{r pval_plot, fig.width = 12, fig.height = 10}
+pval_plot <- ggplot2::ggplot(
+  corr_pval_df_hsc,
+  ggplot2::aes(y = condition_long,
+               x = score_long,
+               fill = color_id,
+               size = 10^-pval_corrected))+
+  ggplot2::geom_point(alpha = 1, colour="black", pch=21)+
+  ggplot2::facet_grid(
+    rows = vars(corr_pval_df_hsc$comparison_long), switch = "y")+
+  theme_all_supp+
+  ggplot2::theme(
+    strip.placement = "outside",
+    strip.background.y = element_blank(),
+    panel.spacing = unit(2, "cm"),
+    strip.text.y.left = element_text(
+      angle = 0,
+      face= "bold",
+      color = "black",
+      size = 16,
+      hjust = 0,
+      vjust = 0.5
+    ),
+    axis.title = element_blank()
+  )+
+  ggplot2::scale_x_discrete(position = "top")+
+  scale_fill_manual("Significance", values = color_significance)
+pval_plot
+```
+
+
+```{r pval_plot_export}
+pdf(output_pdf_pval, width = 12, height = 10)
+pval_plot
+dev.off()
+```
+
+
+
+
+
+#### TEMP
+
+#### Supplementary plots
+
+Print some supplementary plots here so they are based on the same
+manual annotation as the main plots.
+
+```{r suppl_plots_o1}
+plot_suppl_a1 <- DimPlot(seu_sign_o1, dims = c(1,2), 
+                         group.by = "annotated_reclustered")
+plot_suppl_a2 <- DimPlot(seu_sign_o1, dims = c(1,2), 
+                         group.by = "cell_type")
+plot_suppl_a3 <- DimPlot(seu_sign_o1, dims = c(1,2), 
+                         group.by = "assay")
+```
+
+```{r suppl_plots_o1_assemble, fig.width = 16, fig.height = 3.5}
+suppl_plot <- ggpubr::ggarrange(
+  plot_suppl_a1,
+  plot_suppl_a2,
+  plot_suppl_a3,
+  nrow = 1,
+  align = "hv"
+)
+suppl_plot
+```
+
+```{r nsuppl_plots_o1_export, suppl_plot_export_o1}
+pdf(output_pdf_suppl_umaps_o1, width = 16, height = 3.5)
+suppl_plot
+dev.off()
+```
+
+
+
+#### Supplementary Plots
+
+```{r supp_plots_02}
+plot_suppl_b1 <- DimPlot(seu_sign_o2, dims = c(1,2),
+                         group.by = "annotated_reclustered")
+plot_suppl_b2 <- DimPlot(seu_sign_o2, dims = c(1,2), 
+                         group.by = "cell_type")
+plot_suppl_b3 <- DimPlot(seu_sign_o2, dims = c(1,2),
+                         group.by = "assay")
+```
+
+```{r supp_plots_02_assemble, fig.width = 16, fig.height = 3.5}
+suppl_plot_b <- ggpubr::ggarrange(
+  plot_suppl_b1,
+  plot_suppl_b2,
+  plot_suppl_b3,
+  nrow = 1,
+  align = "hv"
+)
+suppl_plot_b
+```
+
+```{r suppl_plot_export_o2}
+pdf(output_pdf_suppl_umaps_o2, width = 16, height = 3.5)
+suppl_plot_b
+dev.off()
+```

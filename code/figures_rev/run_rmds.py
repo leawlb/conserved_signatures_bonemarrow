@@ -20,6 +20,7 @@ targets = targets + [OUTPUT_PATH + "/figure_1.html"]
 targets = targets + [OUTPUT_PATH + "/figure_2.html"]
 targets = targets + [OUTPUT_PATH + "/figure_3.html"]
 targets = targets + [OUTPUT_PATH + "/figure_4.html"]
+targets = targets + [OUTPUT_PATH + "/figure_5.html"]
 
 targets = targets + [OUTPUT_PATH + "/figure_s2.html"]
 targets = targets + [OUTPUT_PATH + "/figure_s2_alluvial_hsc.html"]
@@ -73,7 +74,6 @@ rule run_fig_2:
     script:
         "figure_2.Rmd"
 
-
 rule run_fig_3:
     resources:
         mem_mb=40000,
@@ -99,6 +99,19 @@ rule run_fig_4:
         "../envs/ggpattern.yml"
     script:
         "figure_4.Rmd"
+
+rule run_fig_5:
+    resources:
+        mem_mb=80000,
+        queues="medium"
+    output:
+        OUTPUT_PATH + "/figure_5.html"
+    params:
+        base_path = BASE_PATH
+    threads: 4
+    script:
+        "figure_5.Rmd"
+
 
 rule run_fig_s2:
     resources:

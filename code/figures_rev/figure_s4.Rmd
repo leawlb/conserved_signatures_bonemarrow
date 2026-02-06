@@ -656,6 +656,8 @@ sign_vs_orig_plot <- make_heatmaps(
 sign_vs_orig_plot
 ```
 
+## cust vs orig
+
 ```{r cust_vs_orig_plot, fig.widht = 5, fig.height = 5}
 cust_vs_orig_plot <- make_heatmaps(
   mus_weinreb_hspc_custom, 
@@ -678,6 +680,8 @@ cust_vs_orig_plot <- make_heatmaps(
 
 cust_vs_orig_plot
 ```
+
+## cust vs sign
 
 ```{r cust_vs_sign_plot, fig.width = 5, fig.height = 5}
 

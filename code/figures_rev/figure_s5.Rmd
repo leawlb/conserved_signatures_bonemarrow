@@ -84,9 +84,17 @@ supplementary_text_size = 14
 
 output_pdf_batch_umaps_o1 <- base::paste0(
   base_path, "/manuscript1_rev/figures5/batch_umaps_o1.pdf")
+output_pdf_batch_umaps_legend1_o1 <- base::paste0(
+  base_path, "/manuscript1_rev/figures5/batch_umaps_legend1_o1.pdf")
+output_pdf_batch_umaps_legend2_o1 <- base::paste0(
+  base_path, "/manuscript1_rev/figures5/batch_umaps_legend2_o1.pdf")
+
 output_pdf_batch_umaps_o2 <- base::paste0(
   base_path, "/manuscript1_rev/figures5/batch_umaps_o2.pdf")
-
+output_pdf_batch_umaps_legend1_o2 <- base::paste0(
+  base_path, "/manuscript1_rev/figures5/batch_umaps_legend1_o2.pdf")
+output_pdf_batch_umaps_legend2_o2 <- base::paste0(
+  base_path, "/manuscript1_rev/figures5/batch_umaps_legend2_o2.pdf")
 ```
 
 # Batch UMAPs
@@ -276,7 +284,8 @@ a_umap_all_together_o1 <- Seurat::DimPlot(
   seu_all_o1, 
   dims = c(1,2), 
   group.by = "batchc_sign_labels")+
-  theme_umaps_supp
+  theme_umaps_supp+ 
+  ggplot2::theme(legend.position = "none")
 a_umap_all_together_o1
 ```
 
@@ -321,6 +330,26 @@ chosen_umap_o1_a_legend
 chosen_umap_o1_b_legend_theme <- ggpubr::get_legend(chosen_umap_o1_b)
 chosen_umap_o1_b_legend <- ggpubr::ggarrange(chosen_umap_o1_b_legend_theme)
 chosen_umap_o1_b_legend
+```
+
+#### Export
+
+```{r output_pdf_batch_umaps_o1}
+pdf(output_pdf_batch_umaps_o1, width = 6, height = 6)
+chosen_batch_umap_o1
+dev.off()
+```
+
+```{r output_pdf_batch_umaps_legend1_o1}
+pdf(output_pdf_batch_umaps_legend1_o1, width = 4, height = 4)
+chosen_umap_o1_a_legend
+dev.off()
+```
+
+```{r output_pdf_batch_umaps_legend2_o1}
+pdf(output_pdf_batch_umaps_legend2_o1, width = 4, height = 4)
+chosen_umap_o1_b_legend
+dev.off()
 ```
 
 ## Dataset 2
@@ -448,7 +477,8 @@ a_umap_all_together_o2 <- Seurat::DimPlot(
   seu_all_o2, 
   dims = c(1,2), 
   group.by = "batchc_sign_labels")+
-  theme_umaps_supp
+  theme_umaps_supp+ 
+  ggplot2::theme(legend.position = "none")
 a_umap_all_together_o2
 ```
 
@@ -494,3 +524,23 @@ chosen_umap_o2_b_legend_theme <- ggpubr::get_legend(chosen_umap_o2_b)
 chosen_umap_o2_b_legend <- ggpubr::ggarrange(chosen_umap_o2_b_legend_theme)
 chosen_umap_o2_b_legend
 ```
+
+```{r output_pdf_batch_umaps_o2}
+pdf(output_pdf_batch_umaps_o2, width = 6, height = 6)
+chosen_batch_umap_o2
+dev.off()
+```
+
+```{r output_pdf_batch_umaps_legend1_o2}
+pdf(output_pdf_batch_umaps_legend1_o2, width = 4, height = 4)
+chosen_umap_o2_a_legend
+dev.off()
+```
+
+```{r output_pdf_batch_umaps_legend2_o2}
+pdf(output_pdf_batch_umaps_legend2_o2, width = 4, height = 4)
+chosen_umap_o2_b_legend
+dev.off()
+```
+
+###

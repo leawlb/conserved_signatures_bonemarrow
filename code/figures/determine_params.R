@@ -136,7 +136,7 @@ col_anno_ts_bone_marrow <- c(
   "Cycling Myeloid" = "#ba9687ff",
   "Cycling Myeloid prog" = "#ba9687ff",
   "batch, Smart-Seq2" = "#4f4cfdff",
-  "Mk/Ery1 10xV1" = "#923c6fff",
-  "Mk/Ery2 10xV2" = "#ff77c6ff",
+  "Mk/Ery1 10xV1" = "#892e64ff",
+  "Mk/Ery2 10xV2" = "#ff94d3ff",
   "Mk/Ery" = "#d857a2ff"
 )

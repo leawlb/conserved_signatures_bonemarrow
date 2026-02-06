@@ -172,7 +172,6 @@ sign_df_o2$Var2 <- factor(
   levels = rev(levels(seu_blind_anno_o2$annotated_reclustered)))
 
 # for nicer visualisation/unified naming scheme
-# remember to also do this for the supplementary plot
 sign_df_o2$Var1 <- unfactor(sign_df_o2$Var1)
 sign_df_o2$Var1[
   sign_df_o2$Var1 == "hematopoietic stem cell"] <- "HSC"

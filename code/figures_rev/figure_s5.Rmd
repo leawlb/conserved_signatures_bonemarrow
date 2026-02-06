@@ -95,6 +95,13 @@ output_pdf_batch_umaps_legend1_o2 <- base::paste0(
   base_path, "/manuscript1_rev/figures5/batch_umaps_legend1_o2.pdf")
 output_pdf_batch_umaps_legend2_o2 <- base::paste0(
   base_path, "/manuscript1_rev/figures5/batch_umaps_legend2_o2.pdf")
+
+output_pdf_batch_heatmaps_o1 <- base::paste0(
+  base_path, "/manuscript1_rev/figures5/batch_heatmaps_o1.pdf")
+output_pdf_batch_heatmaps_o2 <- base::paste0(
+  base_path, "/manuscript1_rev/figures5/batch_heatmaps_o2.pdf")
+output_pdf_batch_heatmaps_legend <- base::paste0(
+  base_path, "/manuscript1_rev/figures5/batch_heatmaps_legend.pdf")
 ```
 
 # Batch UMAPs
@@ -118,6 +125,11 @@ theme_umaps_supp <- ggplot2::theme(
       face = axis_text_face
     ),
     strip.text = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color,
+      face = axis_text_face
+    ),
+    legend.title = element_text(
       size = supplementary_text_size,
       color = axis_text_color,
       face = axis_text_face
@@ -543,4 +555,346 @@ chosen_umap_o2_b_legend
 dev.off()
 ```
 
-###
+# Heatmaps Batch correction
+
+## Other Dataset 1
+
+```{r mat_ct_bc_o1_anno}
+
+mat_ct_bc_o1_anno <- base::table(
+  seu_all_o1$cell_type, 
+  seu_all_o1$batchc_sign_labels)
+
+for(i in 1:ncol(mat_ct_bc_o1_anno)){
+  mat_ct_bc_o1_anno[,i] <- mat_ct_bc_o1_anno[,i]/base::sum(mat_ct_bc_o1_anno[,i])
+}
+ct_bc_df_o1_anno <- base::as.data.frame(mat_ct_bc_o1_anno)
+
+ct_bc_df_o1_anno$Var2 <- factor(
+  ct_bc_df_o1_anno$Var2,
+  levels = rev(levels(seu_all_o1$batchc_sign_labels)))
+
+levels(ct_bc_df_o1_anno$Var1)
+
+# for nicer visualisation/unified cell type naming scheme
+ct_bc_df_o1_anno$Var1 <- unfactor(ct_bc_df_o1_anno$Var1)
+ct_bc_df_o1_anno$Var1[
+  ct_bc_df_o1_anno$Var1 == "hematopoietic stem cell"] <- "HSC"
+ct_bc_df_o1_anno$Var1[
+  ct_bc_df_o1_anno$Var1 == "common myeloid progenitor"] <- "common myeloid prog"
+ct_bc_df_o1_anno$Var1[
+  ct_bc_df_o1_anno$Var1 == "erythroid progenitor cell"] <- "erythroid prog"
+
+ct_bc_df_o1_anno$Var1 <- factor(
+  ct_bc_df_o1_anno$Var1,
+  levels = base::c("HSC", 
+                   "common myeloid prog",
+                   "erythroid prog",
+                   "granulocyte"
+                   ))
+```
+
+```{r ct_bc_base_plot_o1}
+ct_bc_base_plot_o1 <- ggplot2::ggplot(
+  ct_bc_df_o1_anno, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+ct_bc_base_plot_o1
+```
+
+```{r ct_bc_theme_plot_o1, fig.height = 4.5, fig.width = 3.5}
+ct_bc_theme_plot_o1 <- ct_bc_base_plot_o1+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.title = element_blank(),
+    axis.text.y  = element_text(
+      size = supplementary_text_size,
+      vjust = 0.5,
+      hjust = 0),
+    axis.text.x.top = element_text(
+      size = supplementary_text_size,
+      angle = 90,
+      vjust = 0.5,
+      hjust = 0))+
+  ggplot2::scale_fill_gradientn(
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  #ggplot2::ylab("Reclustered + re-annotated")+
+  ggplot2::scale_y_discrete(position = "right")+
+  ggplot2::scale_x_discrete(position = "top") 
+ct_bc_theme_plot_o1
+```
+
+```{r mat_sign_bc_o1_anno}
+
+mat_sign_bc_o1_anno <- base::table(
+  seu_all_o1$signature_label, 
+  seu_all_o1$batchc_sign_labels)
+
+for(i in 1:ncol(mat_sign_bc_o1_anno)){
+  mat_sign_bc_o1_anno[,i] <- mat_sign_bc_o1_anno[,i]/base::sum(mat_sign_bc_o1_anno[,i])
+}
+sign_bc_df_o1_anno <- base::as.data.frame(mat_sign_bc_o1_anno)
+
+sign_bc_df_o1_anno$Var2 <- factor(
+  sign_bc_df_o1_anno$Var2,
+  levels = rev(levels(seu_all_o1$batchc_sign_labels)))
+
+levels(sign_bc_df_o1_anno$Var1)
+```
+
+```{r sign_bc_base_plot_o1}
+sign_bc_base_plot_o1 <- ggplot2::ggplot(
+  sign_bc_df_o1_anno, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+sign_bc_base_plot_o1
+```
+
+```{r sign_bc_theme_plot_o1, fig.height = 4.5, fig.width = 4.5}
+sign_bc_theme_plot_o1 <- sign_bc_base_plot_o1+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.title = element_blank(),
+    axis.text.y  = element_text(
+      size = supplementary_text_size,
+      vjust = 0.5,
+      hjust = 0),
+    axis.text.x.top = element_text(
+      size = supplementary_text_size,
+      angle = 90,
+      vjust = 0.5,
+      hjust = 0))+
+  ggplot2::scale_fill_gradientn(
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  #ggplot2::ylab("Reclustered + re-annotated")+
+  ggplot2::scale_y_discrete(position = "right")+
+  ggplot2::scale_x_discrete(position = "top") 
+sign_bc_theme_plot_o1
+```
+
+#### Combine
+
+```{r heatmap_o1, fig.height = 4, fig.width = 6.3}
+
+heatmap_o1 <- ggpubr::ggarrange(
+  ct_bc_theme_plot_o1 + 
+    ggplot2::theme(axis.text.y = element_blank())+
+    ggplot2::theme(plot.margin = margin(0.1, 0.1, 0.1, 0.1)),
+  sign_bc_theme_plot_o1+
+    ggplot2::theme(plot.margin = margin(8.4, 0.1, 0.1, 7)),
+  nrow = 1,
+  widths = c(1.3, 4.5)
+)
+
+heatmap_o1
+```
+
+## Other Dataset 2
+
+```{r mat_ct_bc_o2_anno}
+
+mat_ct_bc_o2_anno <- base::table(
+  seu_all_o2$cell_type, 
+  seu_all_o2$batchc_sign_labels)
+
+for(i in 1:ncol(mat_ct_bc_o2_anno)){
+  mat_ct_bc_o2_anno[,i] <- mat_ct_bc_o2_anno[,i]/base::sum(mat_ct_bc_o2_anno[,i])
+}
+ct_bc_df_o2_anno <- base::as.data.frame(mat_ct_bc_o2_anno)
+
+ct_bc_df_o2_anno$Var2 <- factor(
+  ct_bc_df_o2_anno$Var2,
+  levels = rev(levels(seu_all_o2$batchc_sign_labels)))
+
+levels(ct_bc_df_o2_anno$Var1)
+
+# for nicer visualisation/unified naming scheme
+# remember to also do this for the supplementary plot
+ct_bc_df_o2_anno$Var1 <- unfactor(ct_bc_df_o2_anno$Var1)
+ct_bc_df_o2_anno$Var1[
+  ct_bc_df_o2_anno$Var1 == "hematopoietic stem cell"] <- "HSC"
+ct_bc_df_o2_anno$Var1[
+  ct_bc_df_o2_anno$Var1 == "hematopoietic multipotent progenitor cell"] <- "hematopoietic MPP"
+ct_bc_df_o2_anno$Var1[
+  ct_bc_df_o2_anno$Var1 == "common myeloid progenitor"] <- "common myeloid prog"
+ct_bc_df_o2_anno$Var1[
+  ct_bc_df_o2_anno$Var1 == "granulocyte monocyte progenitor cell"] <- "granu-mono prog"
+ct_bc_df_o2_anno$Var1[
+  ct_bc_df_o2_anno$Var1 == "early lymphoid progenitor"] <- "early lymphoid prog"
+ct_bc_df_o2_anno$Var1[
+  ct_bc_df_o2_anno$Var1 == "megakaryocyte-erythroid progenitor cell"] <- "mk-ery prog"
+
+ct_bc_df_o2_anno$Var1 <- factor(
+  ct_bc_df_o2_anno$Var1,
+  levels = base::c(
+    "HSC",
+    "hematopoietic MPP",
+    "common myeloid prog",
+    "granu-mono prog",
+    "promonocyte",
+    "promyelocyte",
+    "early lymphoid prog",
+    "mk-ery prog"
+  ))
+```
+
+```{r ct_bc_base_plot_o2}
+ct_bc_base_plot_o2 <- ggplot2::ggplot(
+  ct_bc_df_o2_anno, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+ct_bc_base_plot_o2
+```
+
+```{r ct_bc_theme_plot_o2, fig.height = 4.5, fig.width = 3.5}
+ct_bc_theme_plot_o2 <- ct_bc_base_plot_o2+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.title = element_blank(),
+    axis.text.y  = element_text(
+      size = supplementary_text_size,
+      vjust = 0.5,
+      hjust = 0),
+    axis.text.x.top = element_text(
+      size = supplementary_text_size,
+      angle = 90,
+      vjust = 0.5,
+      hjust = 0))+
+  ggplot2::scale_fill_gradientn(
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  #ggplot2::ylab("Reclustered + re-annotated")+
+  ggplot2::scale_y_discrete(position = "right")+
+  ggplot2::scale_x_discrete(position = "top") 
+ct_bc_theme_plot_o2
+```
+
+```{r mat_sign_bc_o2_anno}
+
+mat_sign_bc_o2_anno <- base::table(
+  seu_all_o2$signature_label, 
+  seu_all_o2$batchc_sign_labels)
+
+for(i in 1:ncol(mat_sign_bc_o2_anno)){
+  mat_sign_bc_o2_anno[,i] <- mat_sign_bc_o2_anno[,i]/base::sum(mat_sign_bc_o2_anno[,i])
+}
+sign_bc_df_o2_anno <- base::as.data.frame(mat_sign_bc_o2_anno)
+
+sign_bc_df_o2_anno$Var2 <- factor(
+  sign_bc_df_o2_anno$Var2,
+  levels = rev(levels(seu_all_o2$batchc_sign_labels)))
+
+levels(sign_bc_df_o2_anno$Var1)
+```
+
+```{r sign_bc_base_plot_o2}
+sign_bc_base_plot_o2 <- ggplot2::ggplot(
+  sign_bc_df_o2_anno, 
+  aes(x = Var1, 
+      y = Var2,
+      fill = Freq))+
+  ggplot2::geom_tile()
+sign_bc_base_plot_o2
+```
+
+```{r sign_bc_theme_plot_o2, fig.height = 4.5, fig.width = 4.5}
+sign_bc_theme_plot_o2 <- sign_bc_base_plot_o2+
+  theme_all+
+  ggplot2::theme(
+    legend.position = "none",
+    axis.title = element_blank(),
+    axis.text.y  = element_text(
+      size = supplementary_text_size,
+      vjust = 0.5,
+      hjust = 0),
+    axis.text.x.top = element_text(
+      size = supplementary_text_size,
+      angle = 90,
+      vjust = 0.5,
+      hjust = 0))+
+  ggplot2::scale_fill_gradientn(
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))+
+  #ggplot2::ylab("Reclustered + re-annotated")+
+  ggplot2::scale_y_discrete(position = "right")+
+  ggplot2::scale_x_discrete(position = "top") 
+sign_bc_theme_plot_o2
+```
+
+#### Combine
+
+```{r heatmap_o2, fig.height = 4, fig.width = 6.4}
+
+heatmap_o2 <- ggpubr::ggarrange(
+  ct_bc_theme_plot_o2 + 
+    ggplot2::theme(axis.text.y = element_blank())+
+    ggplot2::theme(plot.margin = margin(6.4, 0.1, 0.1, 0.1)),
+  sign_bc_theme_plot_o2+
+    ggplot2::theme(plot.margin = margin(0.1, 0.1, 0.1, 7)),
+  nrow = 1,
+  widths = c(2.1, 4.4)
+)
+
+heatmap_o2
+```
+
+#### Legend
+
+```{r legend, fig.width = 4.5, fig.height = 1.5}
+legend_theme_plot <- sign_bc_base_plot_o2+
+  ggplot2::theme(
+    legend.text = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color,
+      face = axis_text_face
+      ),
+    legend.title = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color,
+      face = axis_text_face
+      ),
+    legend.position = "bottom")+
+  ggplot2::scale_fill_gradientn(
+    "Proportion of cells per row",
+    colors = mycolors_to1,
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1))
+
+heatmap_legend_theme <- ggpubr::get_legend(legend_theme_plot)
+heatmap_legend <- ggpubr::ggarrange(heatmap_legend_theme)
+heatmap_legend
+```
+
+
+```{r output_pdf_batch_heatmaps_o1}
+pdf(output_pdf_batch_heatmaps_o1, width = 6.3, height = 4)
+chosen_batch_umap_o2
+dev.off()
+```
+
+```{r output_pdf_batch_heatmaps_o2}
+pdf(output_pdf_batch_heatmaps_o2, width = 6.4, height = 4)
+heatmap_o2
+dev.off()
+```
+
+```{r output_pdf_batch_heatmaps_legend}
+pdf(output_pdf_batch_heatmaps_legend, width = 5, height = 1.5)
+heatmap_legend
+dev.off()
+```

@@ -675,14 +675,14 @@ seu_ts_bone_marrow$custom_label <- factor(
   levels = c(
     "HSC, female-biased",
     "HSC, male-biased",
-    "Antigen-presenting and lymphoid",
     "Early Mk prog",
     "Ery prog, female-biased",
     "Ery prog, male-biased",
     "Late ery prog, male-biased",
     "Early granu prog",
+    "Neutro prog, male-biased",
     "Neutro prog",
-    "Neutro prog, male-biased"
+     "Antigen-presenting and lymphoid"
   ))
 
 stopifnot(!is.na(seu_ts_bone_marrow$custom_label))

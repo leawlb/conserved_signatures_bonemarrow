@@ -234,7 +234,7 @@ sign_theme_plot_o2 <- sign_base_plot_o2+
 sign_theme_plot_o2
 ```
 
-```{r}
+```{r legend}
 legend_theme_plot <- sign_base_plot_o2+
   theme_all+
   ggplot2::theme(legend.position = "bottom")+

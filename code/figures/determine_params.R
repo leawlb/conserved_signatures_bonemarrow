@@ -97,3 +97,46 @@ theme_all_supp <- ggplot2::theme_classic()+
       color = legend_title_color),
     axis.ticks = element_line(
       color = axis_ticks_color))
+
+
+
+# determine some colors here ONLY for supplementary figures! so it
+# fits best to this figure-specific source file.
+# regarding the diffently reclustered other datasets for figure S5.
+# it doesn't fit into source/custom_clustering_utils.R because that 
+# is only for our own datas
+# but the same or similar colors will be used.
+
+col_anno_ts_bone_marrow <- c(
+  "HSC" = "#4a0805ff",
+  "HSC1 10xV1" = "#280604ff",
+  "HSC2 10xV2" = "#a36363ff",
+  "HSC3" = "#80201bff",
+  "Cycling Early 10xV1" =  "#958584ff",
+  "Cycling 10xV2" =  "#dfdcd6ff",
+  "Cycling" =  "#b5b5b5ff",
+  "Mk prog" = "#8e3268ff", 
+  "Mk/Ery prog" = "#d857a2ff", 
+  "Early Ery prog" = "#d195abff", 
+  "Ery prog" = "#f4bde6ff",
+  "Late Ery prog" = "#6e468bff",
+  "Baso/Eo/Mast/Granu prog" = "#ff0008ff", 
+  "Early Myeloid" = "#633c16ff", 
+  "Early Myeloid prog" = "#633c16ff", 
+  "Myeloid prog" = "#ff9e02ff", 
+  "Mono prog" = "#ff5900ff", 
+  "Granu/Mono prog" = "#df8a02ff", 
+  "Early Granu/Mono prog" = "#937039ff", 
+  "Mono/Dendritic prog" = "#ff5900ff",
+  "Granu prog" = "#feb168ff",
+  "More Granu prog" = "#f3cba5ff",
+  "More Mono prog" = "#ca3504ff",
+  "Lymphoid prog" = "#e1d337ff", 
+  "Lymphoid MPP" = "#978c1aff",
+  "Cycling Myeloid" = "#ba9687ff",
+  "Cycling Myeloid prog" = "#ba9687ff",
+  "batch, Smart-Seq2" = "#4f4cfdff",
+  "Mk/Ery1 10xV1" = "#923c6fff",
+  "Mk/Ery2 10xV2" = "#ff77c6ff",
+  "Mk/Ery" = "#d857a2ff"
+)

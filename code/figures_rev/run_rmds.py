@@ -25,8 +25,8 @@ targets = targets + [OUTPUT_PATH + "/figure_5.html"]
 targets = targets + [OUTPUT_PATH + "/figure_s2.html"]
 targets = targets + [OUTPUT_PATH + "/figure_s2_alluvial_hsc.html"]
 targets = targets + [OUTPUT_PATH + "/figure_s2_alluvial_str.html"]
-
 targets = targets + [OUTPUT_PATH + "/figure_s4.html"]
+targets = targets + [OUTPUT_PATH + "/figure_s5.html"]
 
 """
 targets = targets + [OUTPUT_PATH + "/figure_s3.html"]
@@ -103,7 +103,7 @@ rule run_fig_4:
 rule run_fig_5:
     resources:
         mem_mb=80000,
-        queues="medium"
+        queues="short"
     output:
         OUTPUT_PATH + "/figure_5.html"
     params:
@@ -165,6 +165,22 @@ rule run_fig_s4:
     threads: 4
     script:
         "figure_s4.Rmd"
+
+rule run_fig_s5:
+    resources:
+        mem_mb=50000,
+        queues="medium"
+    output:
+        OUTPUT_PATH + "/figure_s5.html"
+    params:
+        base_path = BASE_PATH
+    threads: 4
+    script:
+        "figure_s5.Rmd"
+
+
+
+
 
 """
 

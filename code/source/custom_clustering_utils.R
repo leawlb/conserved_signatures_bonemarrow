@@ -147,7 +147,7 @@ col_custom_hsc <- c(
   "Mk/Ery prog" = "#d857a2ff", # mcas
   "Early ery/BM prog 1" = "#993a8eff", # mspr
   "Early ery/BM prog 2" = "#d857c9ff", # mspr
-  "Early ery prog" = "#f4538eff", # mmus mcar
+  "Early ery prog" = "#c8869eff", # mmus mcar
   "Ery prog" = "#f989b2ff", # mmus, mcas, mspr
   "Ery prog 1" = "#b32e5fff", # mcar
   "Ery prog 2" = "#ff9bc0ff", # mcar

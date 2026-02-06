@@ -62,7 +62,7 @@ rule blind_ts_bonemarrow:
         OUTPUT_REP + "/blind_anno_ts_bonemarrow.html"
     resources:
         mem_mb = 50000,
-        queue = "medium-debian"
+        queue = "medium"
     threads: 10
     script:
         "04_blind_annotation/blind_anno_ts_bonemarrow.Rmd"
@@ -76,7 +76,7 @@ rule blind_ts_hscs_progenitors:
         OUTPUT_REP + "/blind_anno_ts_hscs_progenitors.html"
     resources:
         mem_mb = 50000,
-        queue = "medium-debian"
+        queue = "medium"
     threads: 10
     script:
         "04_blind_annotation/blind_anno_ts_hscs_progenitors.Rmd"
@@ -90,7 +90,7 @@ rule blind_mus_tik_stromal:
         OUTPUT_REP + "/blind_anno_mus_tik_stromal.html"
     resources:
         mem_mb = 50000,
-        queue = "medium-debian"
+        queue = "medium"
     threads: 10
     script:
         "04_blind_annotation/blind_anno_mus_tik_stromal.Rmd"
@@ -104,7 +104,7 @@ rule blind_li_all_stromal:
         OUTPUT_REP + "/blind_anno_li_all_stromal.html"
     resources:
         mem_mb = 50000,
-        queue = "medium-debian"
+        queue = "medium"
     threads: 10
     script:
         "04_blind_annotation/blind_anno_li_all_stromal.Rmd"

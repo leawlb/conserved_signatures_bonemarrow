@@ -73,7 +73,7 @@ rule batchcorrection_ts_bonemarrow:
         OUTPUT_REP + "/bc_ts_bonemarrow.html"
     resources:
         mem_mb = 50000,
-        queue = "medium-debian"
+        queue = "medium"
     threads: 10
     params:
         plotting = "../../source/plotting.R",
@@ -91,7 +91,7 @@ rule batchcorrection_ts_hscs_progenitors:
         OUTPUT_REP + "/bc_ts_hscs_progenitors.html"
     resources:
         mem_mb = 50000,
-        queue = "medium-debian"
+        queue = "medium"
     threads: 10
     params:
         plotting = "../../source/plotting.R",

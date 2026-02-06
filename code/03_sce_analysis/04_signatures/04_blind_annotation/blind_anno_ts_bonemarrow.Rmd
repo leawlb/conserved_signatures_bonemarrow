@@ -381,8 +381,8 @@ seu_sign_o1$annotated_reclustered <- factor(
     "Ery prog",
     "Late Ery prog",
     "Myeloid prog",
-    "Mono prog",
     "Cycling Myeloid prog",
+    "Mono prog",
     "batch, Smart-Seq2"))
 
 print(sort(levels(seu_sign_o1$annotated_reclustered)))

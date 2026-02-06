@@ -539,10 +539,10 @@ combined_ts_bone_marrow$batchc_sign_labels <- factor(
     "Mk/Ery prog",
     "Early Ery prog",
     "Late Ery prog",
-    "Baso/Eo/Mast/Granu prog",
     "Early Myeloid prog",
+    "Cycling Myeloid",
     "Granu/Mono prog",
-    "Cycling Myeloid"
+    "Baso/Eo/Mast/Granu prog",
    ))
 
 stopifnot(!is.na(combined_ts_bone_marrow$batchc_sign_labels))

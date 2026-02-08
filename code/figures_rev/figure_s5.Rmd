@@ -68,6 +68,34 @@ seu_blind_anno_o2 <- readRDS(base::paste0(
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/04_blind_annotation/ts_hscs_progenitors.Rds"))
 ```
 
+```{r load_for_threshold_o1}
+
+# scores recalculated after sliding thresholds by p
+scores_by_p_o1 <- readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_thresholds/ts_bone_marrow_scores_by_p.rds"))
+
+# scores recalculated after sliding thresholds by t 
+scores_by_t_o1 <- readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_thresholds/ts_bone_marrow_scores_by_t.rds"))
+
+```
+
+```{r load_for_threshold_o2}
+
+# scores recalculated after sliding thresholds by p
+scores_by_p_o2 <- readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_thresholds/ts_hscs_progenitors_scores_by_p.rds"))
+
+# scores recalculated after sliding thresholds by t 
+scores_by_t_o2 <- readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_thresholds/ts_hscs_progenitors_scores_by_t.rds"))
+
+```
+
 ```{r source}
 colors_path <- base::paste0(
   base_path,
@@ -78,6 +106,15 @@ source("../source/plotting.R")
 source("../figures/determine_params.R")
 
 supplementary_text_size = 14
+
+col_scores <- c(
+  col_score1, 
+  col_score2,
+  col_cl_per_ct,
+  "nr_celltypes" = "grey50")
+
+threshold_used_p <- "0.05"
+threshold_used_t <- "0.25"
 ```
 
 ```{r export_path}
@@ -1045,4 +1082,182 @@ cust_heatmap_o1
 pdf(output_pdf_cust_heatmaps_o1, width = 6.8, height = 4)
 cust_heatmap_o1
 dev.off()
+```
+
+
+# Threshold sliding
+
+Now including reclustering of datasets using signature genes obtained from sliding
+thresholds on nDGE and marker gene analysis.
+
+From the report in 03/04/05
+
+## Other dataset 1
+
+### by p
+
+```{r prep_df_by_p}
+score_df_all_by_p <- dplyr::bind_rows(scores_by_p_o1)
+head(score_df_all_by_p)
+
+print(threshold_used_p)
+
+score_df_all_by_p$threshold_used <- -log10(as.numeric(
+  score_df_all_by_p$threshold_used))
+threshold_by_p_plot <- -log10(as.numeric(threshold_used_p))
+xtitle_by_p <- "-log10 (padj) nDEG"
+
+score_df_all_by_p[score_df_all_by_p$threshold_used == threshold_used_p,]
+```
+
+```{r threshold_by_p_base}
+threshold_by_p_base <- ggplot2::ggplot(
+  score_df_all_by_p[score_df_all_by_p$type %in% c(
+    "adjusted_rand_index",
+    "mean_prop_cells_cluster",
+    "variation_information",
+    "mean_cluster_purity"
+  ),],
+  aes(
+    x = threshold_used,
+    y = value,
+    color = type))+
+  ggplot2::geom_point(size = 2.6)+
+  ggplot2::geom_vline(xintercept = threshold_by_p_plot, color = "orangered")+
+  ggplot2::scale_color_manual("score", values = col_scores)
+threshold_by_p_base
+```
+
+```{r threshold_by_p_theme}
+threshold_by_p_theme <- threshold_by_p_base+
+  theme_classic()+
+  theme_umaps_supp+
+  ggplot2::xlab(xtitle_by_p)
+threshold_by_p_theme
+```
+
+### By t
+
+```{r prep_df_by_t}
+score_df_all_by_t <- dplyr::bind_rows(scores_by_t_o1)
+head(score_df_all_by_t)
+
+print(threshold_used_t)
+
+score_df_all_by_t$threshold_used <- as.numeric(score_df_all_by_t$threshold_used)
+threshold_by_t_plot <- as.numeric(threshold_used_t)
+xtitle_by_t <- "log2FC FindMarkers"
+
+score_df_all_by_t[score_df_all_by_t$threshold_used == threshold_used_t,]
+```
+
+```{r threshold_by_t_base}
+threshold_by_t_base <- ggplot2::ggplot(
+  score_df_all_by_t[score_df_all_by_t$type %in% c(
+    "adjusted_rand_index",
+    "mean_prop_cells_cluster",
+    "variation_information",
+    "mean_cluster_purity"
+  ),],
+  aes(
+    x = threshold_used,
+    y = value,
+    color = type))+
+  ggplot2::geom_point(size = 2.6)+
+  ggplot2::geom_vline(xintercept = threshold_by_t_plot, color = "orangered")+
+  ggplot2::scale_color_manual("score", values = col_scores)
+threshold_by_t_base
+```
+
+```{r threshold_by_t_theme}
+threshold_by_t_theme <- threshold_by_t_base+
+  theme_classic()+
+  theme_umaps_supp+
+  ggplot2::xlab(xtitle_by_t)
+threshold_by_t_theme
+```
+
+## Other dataset 2
+
+### by p
+
+```{r prep_df_by_p_o2}
+score_df_all_by_p <- dplyr::bind_rows(scores_by_p_o2)
+head(score_df_all_by_p)
+
+print(threshold_used_p)
+
+score_df_all_by_p$threshold_used <- -log10(as.numeric(
+  score_df_all_by_p$threshold_used))
+threshold_by_p_plot <- -log10(as.numeric(threshold_used_p))
+xtitle_by_p <- "-log10 (padj) nDEG"
+
+#score_df_all_by_p[score_df_all_by_p$threshold_used == threshold_used_p,]
+```
+
+```{r threshold_by_p_base_o2}
+threshold_by_p_base_o2 <- ggplot2::ggplot(
+  score_df_all_by_p[score_df_all_by_p$type %in% c(
+    "adjusted_rand_index",
+    "mean_prop_cells_cluster",
+    "variation_information",
+    "mean_cluster_purity"
+  ),],
+  aes(
+    x = threshold_used,
+    y = value,
+    color = type))+
+  ggplot2::geom_point(size = 2.6)+
+  ggplot2::geom_vline(xintercept = threshold_by_p_plot, color = "orangered")+
+  ggplot2::scale_color_manual("score", values = col_scores)
+threshold_by_p_base_o2
+```
+
+```{r threshold_by_p_theme_o2}
+threshold_by_p_theme_o2 <- threshold_by_p_base_o2+
+  theme_classic()+
+  theme_umaps_supp+
+  ggplot2::xlab(xtitle_by_p)
+threshold_by_p_theme_o2
+```
+
+### By t
+
+```{r prep_df_by_t}
+score_df_all_by_t <- dplyr::bind_rows(scores_by_t_o2)
+head(score_df_all_by_t)
+
+print(threshold_used_t)
+
+score_df_all_by_t$threshold_used <- as.numeric(score_df_all_by_t$threshold_used)
+threshold_by_t_plot <- as.numeric(threshold_used_t)
+xtitle_by_t <- "log2FC FindMarkers"
+
+score_df_all_by_t[score_df_all_by_t$threshold_used == threshold_used_t,]
+```
+
+```{r threshold_by_t_base_o2}
+threshold_by_t_base_o2 <- ggplot2::ggplot(
+  score_df_all_by_t[score_df_all_by_t$type %in% c(
+    "adjusted_rand_index",
+    "mean_prop_cells_cluster",
+    "variation_information",
+    "mean_cluster_purity"
+  ),],
+  aes(
+    x = threshold_used,
+    y = value,
+    color = type))+
+  ggplot2::geom_point(size = 2.6)+
+  ggplot2::geom_vline(xintercept = threshold_by_t_plot, color = "orangered")+
+  ggplot2::scale_color_manual("score", values = col_scores)
+threshold_by_t_base_o2
+```
+
+```{r threshold_by_t_theme_o2}
+threshold_by_t_theme_o2 <- threshold_by_t_base_o2+
+  theme_classic()+
+  theme_umaps_supp+
+  ggplot2::xlab(xtitle_by_t)
+threshold_by_t_theme_o2
 ```

@@ -142,6 +142,13 @@ output_pdf_batch_heatmaps_legend <- base::paste0(
 
 output_pdf_cust_heatmaps_o1 <- base::paste0(
   base_path, "/manuscript1_rev/figures5/cust_heatmaps_o1.pdf")
+
+output_pdf_threshold_plots <- base::paste0(
+  base_path, "/manuscript1_rev/figures5/threshold_plot.pdf")
+output_pdf_threshold_legend <- base::paste0(
+  base_path, "/manuscript1_rev/figures5/threshold_legend.pdf")
+
+
 ```
 
 # Batch UMAPs
@@ -1096,23 +1103,23 @@ From the report in 03/04/05
 
 ### by p
 
-```{r prep_df_by_p}
-score_df_all_by_p <- dplyr::bind_rows(scores_by_p_o1)
-head(score_df_all_by_p)
+```{r prep_df_by_p_o1}
+score_df_all_by_p_o1 <- dplyr::bind_rows(scores_by_p_o1)
+head(score_df_all_by_p_o1)
 
 print(threshold_used_p)
 
-score_df_all_by_p$threshold_used <- -log10(as.numeric(
-  score_df_all_by_p$threshold_used))
+score_df_all_by_p_o1$threshold_used <- -log10(as.numeric(
+  score_df_all_by_p_o1$threshold_used))
 threshold_by_p_plot <- -log10(as.numeric(threshold_used_p))
 xtitle_by_p <- "-log10 (padj) nDEG"
 
-score_df_all_by_p[score_df_all_by_p$threshold_used == threshold_used_p,]
+score_df_all_by_p_o1[score_df_all_by_p_o1$threshold_used == threshold_by_p_plot,]
 ```
 
-```{r threshold_by_p_base}
-threshold_by_p_base <- ggplot2::ggplot(
-  score_df_all_by_p[score_df_all_by_p$type %in% c(
+```{r threshold_by_p_base_o1}
+threshold_by_p_base_o1 <- ggplot2::ggplot(
+  score_df_all_by_p_o1[score_df_all_by_p_o1$type %in% c(
     "adjusted_rand_index",
     "mean_prop_cells_cluster",
     "variation_information",
@@ -1124,36 +1131,59 @@ threshold_by_p_base <- ggplot2::ggplot(
     color = type))+
   ggplot2::geom_point(size = 2.6)+
   ggplot2::geom_vline(xintercept = threshold_by_p_plot, color = "orangered")+
-  ggplot2::scale_color_manual("score", values = col_scores)
-threshold_by_p_base
+  ggplot2::scale_color_manual("score", values = col_scores)+
+  ggplot2::scale_y_continuous(
+    limits = c(0, 3.5),
+    breaks = c(0, 1, 2, 3))
+threshold_by_p_base_o1
 ```
 
-```{r threshold_by_p_theme}
-threshold_by_p_theme <- threshold_by_p_base+
-  theme_classic()+
-  theme_umaps_supp+
+```{r threshold_by_p_theme_o1}
+threshold_by_p_theme_o1 <- threshold_by_p_base_o1+
+  theme_all+
+  ggplot2::theme(
+    axis.text = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color
+    ),
+    axis.title = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color
+    ),
+    legend.title = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color
+    ),
+    legend.text = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color
+    ),
+    panel.grid.major = element_line(
+      color = "grey80", 
+      linewidth = 0.5),
+    panel.grid.minor = element_blank())+
   ggplot2::xlab(xtitle_by_p)
-threshold_by_p_theme
+threshold_by_p_theme_o1
 ```
 
 ### By t
 
-```{r prep_df_by_t}
-score_df_all_by_t <- dplyr::bind_rows(scores_by_t_o1)
-head(score_df_all_by_t)
+```{r prep_df_by_t_o1}
+score_df_all_by_t_o1 <- dplyr::bind_rows(scores_by_t_o1)
+head(score_df_all_by_t_o1)
 
 print(threshold_used_t)
 
-score_df_all_by_t$threshold_used <- as.numeric(score_df_all_by_t$threshold_used)
+score_df_all_by_t_o1$threshold_used <- as.numeric(score_df_all_by_t_o1$threshold_used)
 threshold_by_t_plot <- as.numeric(threshold_used_t)
 xtitle_by_t <- "log2FC FindMarkers"
 
-score_df_all_by_t[score_df_all_by_t$threshold_used == threshold_used_t,]
+score_df_all_by_t_o1[score_df_all_by_t_o1$threshold_used == threshold_by_t_plot,]
 ```
 
-```{r threshold_by_t_base}
-threshold_by_t_base <- ggplot2::ggplot(
-  score_df_all_by_t[score_df_all_by_t$type %in% c(
+```{r threshold_by_t_base_o1}
+threshold_by_t_base_o1 <- ggplot2::ggplot(
+  score_df_all_by_t_o1[score_df_all_by_t_o1$type %in% c(
     "adjusted_rand_index",
     "mean_prop_cells_cluster",
     "variation_information",
@@ -1165,16 +1195,39 @@ threshold_by_t_base <- ggplot2::ggplot(
     color = type))+
   ggplot2::geom_point(size = 2.6)+
   ggplot2::geom_vline(xintercept = threshold_by_t_plot, color = "orangered")+
-  ggplot2::scale_color_manual("score", values = col_scores)
-threshold_by_t_base
+  ggplot2::scale_color_manual("score", values = col_scores)+
+  ggplot2::scale_y_continuous(
+    limits = c(0, 5.5),
+    breaks = c(0, 1, 2, 3, 4, 5))
+threshold_by_t_base_o1
 ```
 
-```{r threshold_by_t_theme}
-threshold_by_t_theme <- threshold_by_t_base+
-  theme_classic()+
-  theme_umaps_supp+
+```{r threshold_by_t_theme_o1}
+threshold_by_t_theme_o1 <- threshold_by_t_base_o1+
+  theme_all+
+  ggplot2::theme(
+    axis.text = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color
+    ),
+    axis.title = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color
+    ),
+    legend.title = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color
+    ),
+    legend.text = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color
+    ),
+    panel.grid.major = element_line(
+      color = "grey80", 
+      linewidth = 0.5),
+    panel.grid.minor = element_blank())+
   ggplot2::xlab(xtitle_by_t)
-threshold_by_t_theme
+threshold_by_t_theme_o1
 ```
 
 ## Other dataset 2
@@ -1192,7 +1245,7 @@ score_df_all_by_p$threshold_used <- -log10(as.numeric(
 threshold_by_p_plot <- -log10(as.numeric(threshold_used_p))
 xtitle_by_p <- "-log10 (padj) nDEG"
 
-#score_df_all_by_p[score_df_all_by_p$threshold_used == threshold_used_p,]
+score_df_all_by_p[score_df_all_by_p$threshold_used == threshold_by_p_plot,]
 ```
 
 ```{r threshold_by_p_base_o2}
@@ -1209,14 +1262,37 @@ threshold_by_p_base_o2 <- ggplot2::ggplot(
     color = type))+
   ggplot2::geom_point(size = 2.6)+
   ggplot2::geom_vline(xintercept = threshold_by_p_plot, color = "orangered")+
-  ggplot2::scale_color_manual("score", values = col_scores)
+  ggplot2::scale_color_manual("score", values = col_scores)+
+  ggplot2::scale_y_continuous(
+    limits = c(0, 3.5),
+    breaks = c(0, 1, 2, 3))
 threshold_by_p_base_o2
 ```
 
 ```{r threshold_by_p_theme_o2}
 threshold_by_p_theme_o2 <- threshold_by_p_base_o2+
-  theme_classic()+
-  theme_umaps_supp+
+  theme_all+
+  ggplot2::theme(
+    axis.text = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color
+    ),
+    axis.title = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color
+    ),
+    legend.title = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color
+    ),
+    legend.text = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color
+    ),
+    panel.grid.major = element_line(
+      color = "grey80", 
+      linewidth = 0.5),
+    panel.grid.minor = element_blank())+
   ggplot2::xlab(xtitle_by_p)
 threshold_by_p_theme_o2
 ```
@@ -1250,14 +1326,68 @@ threshold_by_t_base_o2 <- ggplot2::ggplot(
     color = type))+
   ggplot2::geom_point(size = 2.6)+
   ggplot2::geom_vline(xintercept = threshold_by_t_plot, color = "orangered")+
-  ggplot2::scale_color_manual("score", values = col_scores)
+  ggplot2::scale_color_manual("score", values = col_scores)+
+  ggplot2::scale_y_continuous(
+    limits = c(0, 5.5),
+    breaks = c(0, 1, 2, 3, 4, 5))
 threshold_by_t_base_o2
 ```
 
 ```{r threshold_by_t_theme_o2}
 threshold_by_t_theme_o2 <- threshold_by_t_base_o2+
-  theme_classic()+
-  theme_umaps_supp+
+  theme_all+
+  ggplot2::theme(
+    axis.text = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color
+    ),
+    axis.title = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color
+    ),
+    legend.title = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color
+    ),
+    legend.text = element_text(
+      size = supplementary_text_size,
+      color = axis_text_color
+    ),
+    panel.grid.major = element_line(
+      color = "grey80", 
+      linewidth = 0.5),
+    panel.grid.minor = element_blank())+
   ggplot2::xlab(xtitle_by_t)
 threshold_by_t_theme_o2
+```
+
+```{r combine_tresholds, fig.height = 2.5, fig.width = 14}
+
+threshold_plots <- ggpubr::ggarrange(
+  threshold_by_t_theme_o1+theme(legend.position = "none"),
+  threshold_by_t_theme_o2+theme(legend.position = "none"),  threshold_by_p_theme_o1+theme(legend.position = "none"),
+  threshold_by_p_theme_o2+theme(legend.position = "none"),
+  nrow = 1,
+  align = "hv"
+)
+threshold_plots
+```
+
+```{r threshold_legend, fig.width = 4, fig.height = 3}
+
+threshold_legend_theme <- ggpubr::get_legend(threshold_by_p_theme_o2)
+threshold_legend <- ggpubr::ggarrange(threshold_legend_theme)
+threshold_legend
+```
+
+```{r export_thresholds}
+pdf(output_pdf_threshold_plots, width = 14, height = 3)
+threshold_plots
+dev.off()
+```
+
+```{r export_threshold_legend}
+pdf(output_pdf_threshold_legend, width = 4, height = 3)
+threshold_legend
+dev.off()
 ```

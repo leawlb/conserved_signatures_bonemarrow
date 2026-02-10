@@ -249,11 +249,17 @@ list_genes_fibro <- c(
   "Cygb",
   "Dpt",
   "Ltbp4",
-  "Spry2"
+  "Spry2",
   #"Lama2",
   #"Lamb2",
   #"Abi3bp",
-  #"Clec3b"
+  #"Clec3b",
+
+  # negative markers
+  "Runx2",
+  #"Cfh",
+  "Col8a1"
+
 )
 
 # umaps
@@ -331,7 +337,7 @@ vioplot_fibro
 # - Cd34
 # - Pdgfra
 # - Col5a3 fibroblast subset
-# - Col14a1 fibroblast subset
+# - Runx2 negative marker 
 
 
 # violin small
@@ -340,9 +346,12 @@ list_genes_fibro_small <- c(
   "Ntrk2",
   "Ly6a",
   "Cd34",
-  "Pdgfra",
+  #"Pdgfra",
   "Col5a3",
-  "Col14a1"
+  "Col14a1",
+
+  # negative markers
+  "Runx2"
 )
 
 lapply(as.list(list_genes_fibro_small), function(gene){
@@ -435,8 +444,16 @@ list_genes_osteo <- c(
   #"Cfh",
   #"Fgfr1",
   #"Col1a1",
-  "Runx2"
-  #"Col8a1"
+  "Runx2",
+  #"Col8a1",
+
+  # negative
+  "Pdgfra",
+  "Rarres2",
+  "Fbn1",
+  "Fstl1",
+  "Angpt1"
+
 )
 
 # umaps
@@ -515,6 +532,7 @@ vioplot_osteo
 # - Ptprz1 major osteo marker
 # - Bglap major osteo marker
 # - Spp1 or Mmp13 major osteo markers
+# - Rarres2, Pdgfra, Fbn1 as negative marker, depending on source situation
 
 
 # violin small
@@ -525,7 +543,13 @@ list_genes_osteo_small <- c(
   "Omd", 
   "Ptprz1", 
   "Bglap", 
-  "Spp1" 
+  "Spp1",
+
+  # negative marker
+  "Pdgfra",
+  "Rarres2",
+  "Fbn1"
+
 )
 
 lapply(as.list(list_genes_osteo_small), function(gene){
@@ -615,11 +639,18 @@ list_genes_adipo <- c(
   "Cxcl12",
   "Gas6", 
   "Angpt1",
-  "Bmp4"
+  "Bmp4",
   #"Cfh",
   #"Fbn1", 
   #"Rarres2", 
-  #"Runx2"
+  #"Runx2",
+
+  # negative marker
+  "Col5a1",
+  "Dcn",
+  "Fgfr1",
+  "Col6a3",
+  "Col1a1"
 
 )
 
@@ -698,7 +729,9 @@ vioplot_adipo
 # - Adipoq
 # - Cxcl12 
 # - Kitl
-# - Esm1 if I can find sources, the rest is self-explanatory
+# - Esm1 has been observed co-expressed with Lepr and other adipo CAR markers
+
+# - Col6a3 or Dcn as negative marker, depending on source situation
 
 
 list_genes_adipo_short <- c(
@@ -709,7 +742,11 @@ list_genes_adipo_short <- c(
   "Lepr",
   "Esm1",
   "Kitl",
-  "Cxcl12"
+  "Cxcl12",
+
+  "Col6a3",
+  "Dcn"
+
 )
 
 # umaps

@@ -7,6 +7,8 @@ source("repositories/Interspecies_BM_phd/code/source/colors.R")
 sce_str <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str.rds")
 sce_str_mmus <- sce_str[,sce_str$Species_ID == "mmus"]
 
+library(scater)
+library(scran)
 
 #------------------------------------------------------------------------------
 # SEC
@@ -592,3 +594,190 @@ vioplot_osteo <- logcounts_df_osteo %>%
 
 vioplot_osteo
 
+
+#------------------------------------------------------------------------------
+# Adipo-CAR (S1pr3)
+
+list_genes_adipo <- c(
+  "S1pr3",
+
+  # positive markers
+  "Adipoq",
+  "Esm1",
+  "Cxcl14", # also in Ntrk2+ cells
+  "Kitl",
+  "Lepr",
+  "Vcam1",
+  "Ptx3",
+  "Isg15",
+
+  # highest but not exclusive or not exclusive enough
+  "Cxcl12",
+  "Gas6", 
+  "Angpt1",
+  "Bmp4"
+  #"Cfh",
+  #"Fbn1", 
+  #"Rarres2", 
+  #"Runx2"
+
+)
+
+# umaps
+
+lapply(as.list(list_genes_adipo), function(gene){
+  umap_gene(sce_str_mmus, gene)
+})
+
+# violin
+
+sce_adipo <- sce_str_mmus[rownames(sce_str_mmus) %in% c(
+  list_genes_adipo
+),]
+
+# make a df for visualisation
+logcounts_df_adipo <- logcounts(sce_adipo) %>%
+  as.matrix() %>%
+  as.data.frame() %>% 
+  tibble::rownames_to_column(var = "genes") %>%
+  tidyr::pivot_longer(
+    cols = colnames(sce_adipo),
+    names_to = "cell",
+    values_to = "logcounts")
+
+# add cluster info
+logcounts_df_adipo$celltypes <- sce_adipo$celltypes[
+  match(
+    logcounts_df_adipo$cell,
+    rownames(colData(sce_adipo)))]
+
+logcounts_df_adipo$genes <- factor(
+  logcounts_df_adipo$genes, 
+  levels = c(list_genes_adipo))
+
+vioplot_adipo <- logcounts_df_adipo %>%
+  ggplot2::ggplot(
+    aes(
+      x = celltypes,
+      y = logcounts,
+      color = celltypes))+
+    ggplot2::geom_violin(
+      scale = "width",
+      draw_quantiles = c(0.25, 0.5, 0.75))+
+    #ggplot2::scale_y_continuous(
+    #  limits = c(0, 6),
+    #  breaks = c(0, 5)
+    #)+
+    theme_all+
+    ggplot2::theme(
+      axis.text.x = element_text(
+        angle = 90, 
+        hjust = 0.5,
+        vjust = 0,
+        color = axis_text_color,
+        size = axis_text_size,
+        face = axis_text_face),
+      strip.text.y.right = element_text(
+        angle = 0, 
+        hjust = 0,
+        vjust = 0.5,
+        color = axis_text_color,
+        size = axis_text_size,
+        face = axis_text_face
+      ),
+      strip.background = element_blank(),
+      axis.title.x = element_blank(),
+      legend.position = "none")+
+    ggplot2::facet_grid(rows = vars(genes))+
+    ggplot2::scale_color_manual("Cell types", values = col_cts_str)
+
+vioplot_adipo
+
+# I'd like to go with
+# - Lepr
+# - Adipoq
+# - Cxcl12 
+# - Kitl
+# - Esm1 if I can find sources, the rest is self-explanatory
+
+
+list_genes_adipo_short <- c(
+  "S1pr3",
+
+  # positive markers
+  "Adipoq",
+  "Lepr",
+  "Esm1",
+  "Kitl",
+  "Cxcl12"
+)
+
+# umaps
+
+lapply(as.list(list_genes_adipo_short), function(gene){
+  umap_gene(sce_str_mmus, gene)
+})
+
+# violin
+
+sce_adipo <- sce_str_mmus[rownames(sce_str_mmus) %in% c(
+  list_genes_adipo_short
+),]
+
+# make a df for visualisation
+logcounts_df_adipo <- logcounts(sce_adipo) %>%
+  as.matrix() %>%
+  as.data.frame() %>% 
+  tibble::rownames_to_column(var = "genes") %>%
+  tidyr::pivot_longer(
+    cols = colnames(sce_adipo),
+    names_to = "cell",
+    values_to = "logcounts")
+
+# add cluster info
+logcounts_df_adipo$celltypes <- sce_adipo$celltypes[
+  match(
+    logcounts_df_adipo$cell,
+    rownames(colData(sce_adipo)))]
+
+logcounts_df_adipo$genes <- factor(
+  logcounts_df_adipo$genes, 
+  levels = c(list_genes_adipo_short))
+
+vioplot_adipo <- logcounts_df_adipo %>%
+  ggplot2::ggplot(
+    aes(
+      x = celltypes,
+      y = logcounts,
+      color = celltypes))+
+    ggplot2::geom_violin(
+      scale = "width",
+      draw_quantiles = c(0.25, 0.5, 0.75))+
+    #ggplot2::scale_y_continuous(
+    #  limits = c(0, 6),
+    #  breaks = c(0, 5)
+    #)+
+    theme_all+
+    ggplot2::theme(
+      axis.text.x = element_text(
+        angle = 90, 
+        hjust = 0.5,
+        vjust = 0,
+        color = axis_text_color,
+        size = axis_text_size,
+        face = axis_text_face),
+      strip.text.y.right = element_text(
+        angle = 0, 
+        hjust = 0,
+        vjust = 0.5,
+        color = axis_text_color,
+        size = axis_text_size,
+        face = axis_text_face
+      ),
+      strip.background = element_blank(),
+      axis.title.x = element_blank(),
+      legend.position = "none")+
+    ggplot2::facet_grid(rows = vars(genes))+
+    ggplot2::scale_color_manual("Cell types", values = col_cts_str)
+
+vioplot_adipo

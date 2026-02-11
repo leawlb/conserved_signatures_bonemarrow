@@ -142,6 +142,12 @@ output_pdf_batch_heatmaps_legend <- base::paste0(
 
 output_pdf_cust_heatmaps_o1 <- base::paste0(
   base_path, "/manuscript1_rev/figures5/cust_heatmaps_o1.pdf")
+output_pdf_custom_batch_umaps_o1 <- base::paste0(
+  base_path, "/manuscript1_rev/figures5/custom_umap_o1.pdf")
+output_pdf_custom_batch_umaps_o1_legenda <- base::paste0(
+  base_path, "/manuscript1_rev/figures5/custom_umap_o1_legenda.pdf")
+output_pdf_custom_batch_umaps_o1_legendb <- base::paste0(
+  base_path, "/manuscript1_rev/figures5/custom_umap_o1_legendb.pdf")
 
 output_pdf_threshold_plots <- base::paste0(
   base_path, "/manuscript1_rev/figures5/threshold_plot.pdf")
@@ -929,7 +935,7 @@ heatmap_legend
 
 ```{r output_pdf_batch_heatmaps_o1}
 pdf(output_pdf_batch_heatmaps_o1, width = 6.3, height = 4)
-chosen_batch_umap_o2
+heatmap_o1
 dev.off()
 ```
 
@@ -1091,6 +1097,66 @@ cust_heatmap_o1
 dev.off()
 ```
 
+### The selected UMAP for this batch
+
+```{r, custom_batch_umap_o1, fig.width = 5, fig.height = 6}
+
+# col_anno_ts_bone_marrow from determine_params.R
+
+custom_umap_o1_a <- a_umap_batch_o1_signature_label_sex+
+  ggplot2::scale_color_manual(
+    "Reclustered and annotated\nwith signature genes",
+    values = col_anno_ts_bone_marrow[names(col_anno_ts_bone_marrow) %in% 
+      seu_all_o1$signature_label])
+custom_umap_o1_b <- a_umap_batch_o1_custom_label_sex+
+  ggplot2::scale_color_manual(
+    "Reclustered,\nannotated\nwith 2000 HVGs",
+    values = col_anno_ts_bone_marrow[names(col_anno_ts_bone_marrow) %in% 
+      seu_all_o1$custom_label])  
+
+custom_batch_umap_o1 <- ggpubr::ggarrange(
+  custom_umap_o1_a + ggplot2::theme(legend.position = "none"),
+  custom_umap_o1_b + ggplot2::theme(
+    legend.position = "none",
+    strip.text.x = element_blank(),
+    axis.title = element_blank()),
+  ncol = 1,
+  align = "hv"
+)
+custom_batch_umap_o1
+```
+
+```{r custom_umap_o1_a_legend, fig.width = 3, fig.height = 5}
+
+custom_umap_o1_a_legend_theme <- ggpubr::get_legend(custom_umap_o1_a)
+custom_umap_o1_a_legend <- ggpubr::ggarrange(custom_umap_o1_a_legend_theme)
+custom_umap_o1_a_legend
+```
+
+```{r custom_umap_o1_b_legend, fig.width = 3, fig.height = 5}
+
+custom_umap_o1_b_legend_theme <- ggpubr::get_legend(custom_umap_o1_b)
+custom_umap_o1_b_legend <- ggpubr::ggarrange(custom_umap_o1_b_legend_theme)
+custom_umap_o1_b_legend
+```
+
+```{r output_pdf_custom_batch_umaps_o1}
+pdf(output_pdf_custom_batch_umaps_o1, width = 5, height = 6)
+chosen_batch_umap_o2
+dev.off()
+```
+
+```{r output_pdf_custom_batch_umaps_o1_legenda}
+pdf(output_pdf_custom_batch_umaps_o1_legenda, width = 4, height = 4)
+custom_umap_o1_a_legend
+dev.off()
+```
+
+```{r output_pdf_custom_batch_umaps_o1_legendb}
+pdf(output_pdf_custom_batch_umaps_o1_legendb, width = 4, height = 4)
+custom_umap_o1_b_legend
+dev.off()
+```
 
 # Threshold sliding
 

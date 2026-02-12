@@ -30,12 +30,7 @@ targets = targets + [OUTPUT_PATH + "/figure_s5.html"]
 
 """
 targets = targets + [OUTPUT_PATH + "/figure_s3.html"]
-targets = targets + [OUTPUT_PATH + "/figure_s4.html"]
 
-targets = targets + [OUTPUT_PATH + "/figure_s3_heatmaps.html"]
-targets = targets + [OUTPUT_PATH + "/figure_s4_heatmaps.html"]
-targets = targets + [OUTPUT_PATH + "/figure_all_reclusterings_overview.html"]
-targets = targets + [OUTPUT_PATH + "/figure_batch_correction.html"]
 """
 
 #-------------------------------------------------------------------------------
@@ -177,73 +172,3 @@ rule run_fig_s5:
     threads: 4
     script:
         "figure_s5.Rmd"
-
-
-
-
-
-"""
-
-rule run_fig_s3_heatmaps:
-    resources:
-        mem_mb=80000,
-        queues="medium-debian"
-    params:
-        base_path = BASE_PATH
-    output:
-        OUTPUT_PATH + "/figure_s3_heatmaps.html"
-    threads: 4
-    script:
-        "figure_s3_heatmaps.Rmd"
-
-rule run_fig_s4:
-    resources:
-        mem_mb=80000,
-        queues="medium-debian"
-    output:
-        OUTPUT_PATH + "/figure_s4.html"
-    params:
-         base_path = BASE_PATH
-    conda:
-        "../envs/ggalluvial.yml"
-    threads: 4
-    script:
-        "figure_s4.Rmd"
-
-rule run_fig_s4_heatmaps:
-    resources:
-        mem_mb=80000,
-        queues="medium-debian"
-    output:
-        OUTPUT_PATH + "/figure_s4_heatmaps.html"
-    params:
-         base_path = BASE_PATH
-    threads: 4
-    script:
-        "figure_s4_heatmaps.Rmd"
-
-rule run_fig_overview:
-    resources:
-        mem_mb=80000,
-        queues="medium-debian"
-    output:
-        OUTPUT_PATH + "/figure_all_reclusterings_overview.html"
-    params:
-         base_path = BASE_PATH
-    threads: 4
-    script:
-        "figure_all_reclusterings_overview.Rmd"
-
-rule run_fig_batchcorrection:
-    resources:
-        mem_mb=80000,
-        queues="medium-debian"
-    output:
-        OUTPUT_PATH + "/figure_batch_correction.html"
-    params:
-         base_path = BASE_PATH
-    threads: 4
-    script:
-        "figure_batch_correction.Rmd"
-
-"""

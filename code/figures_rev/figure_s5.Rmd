@@ -1142,7 +1142,7 @@ custom_umap_o1_b_legend
 
 ```{r output_pdf_custom_batch_umaps_o1}
 pdf(output_pdf_custom_batch_umaps_o1, width = 5, height = 6)
-chosen_batch_umap_o2
+custom_batch_umap_o1
 dev.off()
 ```
 
@@ -1431,7 +1431,8 @@ threshold_by_t_theme_o2
 
 threshold_plots <- ggpubr::ggarrange(
   threshold_by_t_theme_o1+theme(legend.position = "none"),
-  threshold_by_t_theme_o2+theme(legend.position = "none"),  threshold_by_p_theme_o1+theme(legend.position = "none"),
+  threshold_by_t_theme_o2+theme(legend.position = "none"),  
+  threshold_by_p_theme_o1+theme(legend.position = "none"),
   threshold_by_p_theme_o2+theme(legend.position = "none"),
   nrow = 1,
   align = "hv"

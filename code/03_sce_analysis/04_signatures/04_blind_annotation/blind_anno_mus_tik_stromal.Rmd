@@ -169,12 +169,20 @@ for(ct in names(geneset_list_str)){
 ```{r umap_others_2}
 DimPlot(seu_sign_o2, dims = c(1,2), group.by = "seurat_clusters")
 DimPlot(seu_sign_o2, dims = c(1,2), group.by = "batch")
-# 4 = non-pbs
 # 0 = pbs
-# 7 = pbs
-
+# 1 = non-pbs
 # 2 = non-pbs
-# 3 = pbs
+# 3 = both
+# 4 = non-pbs
+# 5 = both
+# 6 = both
+# 7 = both
+# 8 = both
+# 9 = pbs
+# 10 = both
+# 11 = pbs
+# 12 = both
+# 13 = both
 
 seu_sign_o2$annotated_reclustered <- vector(length = ncol(seu_sign_o2))
 ```
@@ -333,7 +341,7 @@ signature_df[signature_df$genes %in% SOI,]
 # this is classic for some sort of mixed fibro/chondro possible
 # transitory or progenitor population 
 seu_sign_o2$annotated_reclustered[
-  seu_sign_o2$seurat_clusters == nr] <- "Fibro-Chondro"
+  seu_sign_o2$seurat_clusters == nr] <- "Fibro-Chondro, pbs"
 ```
 
 ```{r others2_cluster9}
@@ -385,7 +393,7 @@ signature_df[signature_df$genes %in% SOI,]
 
 # adipo- or niche related expression
 seu_sign_o2$annotated_reclustered[
-  seu_sign_o2$seurat_clusters == nr] <- "Adipo/CAR2"
+  seu_sign_o2$seurat_clusters == nr] <- "Adipo/CAR2, pbs"
 ```
 
 ```{r others2_cluster8}
@@ -628,7 +636,7 @@ SOI <-  c("Fabp4", "Ier3", "Cd36", "Lrg1", "Srgn", "Cldn5", "Fam167b", "Vcam1")
 signature_df[signature_df$genes %in% SOI,]
 
 seu_sign_o2$annotated_reclustered[
-  seu_sign_o2$seurat_clusters == nr] <- "Ven EC2, pbs"
+  seu_sign_o2$seurat_clusters == nr] <- "Ven EC2"
 ```
 
 ```{r factor}
@@ -636,21 +644,27 @@ seu_sign_o2$annotated_reclustered <- factor(
   seu_sign_o2$annotated_reclustered,
   levels = c(
     "Adipo/CAR1, pbs",
-    "Adipo/CAR2",
+    "Adipo/CAR2, pbs",
     "Adipo/CAR3, non-pbs",
     "Osteo/CAR",
     "Osteo-Chondro",
-    "Fibro-Chondro",
+    "Fibro-Chondro, pbs",
     "Chondro",
     "Osteo1",
     "Osteo2",
     "Osteo3",
     "Art/Cap-EC",
     "Ven EC1, non-pbs",
-    "Ven EC2, pbs",
+    "Ven EC2",
     "Ven EC3, non-pbs"
 ))
 stopifnot(!is.na(seu_sign_o2$annotated_reclustered))
+```
+
+```{r one_more_plot}
+Seurat::DimPlot(seu_sign_o2, reduction = "umap", group.by = "annotated_reclustered")+
+  ggplot2::facet_wrap(
+    facets = vars(seu_sign_o2@meta.data$batch), ncol = 2)
 ```
 
 ## Add clusters from the signature-based re-clustering

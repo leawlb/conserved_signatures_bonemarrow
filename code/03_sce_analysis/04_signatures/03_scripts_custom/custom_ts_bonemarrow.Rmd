@@ -645,7 +645,7 @@ seu_ts_bone_marrow$custom_label[
 
 # myeloid
 seu_ts_bone_marrow$custom_label[
-  seu_ts_bone_marrow$clusters == "cluster-3"] <- "Early granu prog"
+  seu_ts_bone_marrow$clusters == "cluster-3"] <- "Early granu prog, male-biased"
 
 seu_ts_bone_marrow$custom_label[
   seu_ts_bone_marrow$clusters == "cluster-1"] <- "Neutro prog"
@@ -679,7 +679,7 @@ seu_ts_bone_marrow$custom_label <- factor(
     "Ery prog, female-biased",
     "Ery prog, male-biased",
     "Late ery prog, male-biased",
-    "Early granu prog",
+    "Early granu prog, male-biased",
     "Neutro prog, male-biased",
     "Neutro prog",
      "Antigen-presenting and lymphoid"
@@ -716,7 +716,7 @@ seu_ts_bone_marrow$custom_label_unif <- factor(
   seu_ts_bone_marrow$custom_label_unif,
   levels = c(
     "HSC",
-    "Early granu prog",
+    "Early granu prog, male-biased",
     "Neutro prog",
     "Antigen-presenting and lymphoid",
     "Early Mk prog",

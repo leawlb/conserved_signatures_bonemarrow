@@ -186,10 +186,27 @@ color_significance <- c("pval adj. >= 0.05" = "grey70",
                         "pval adj. = 0" = "blue")
 ```
 
-```{r export_paths, eval = FALSE}
-output_pdf_pval <- base::paste0(
-   base_path, "/manuscript1/supp_figure6/supp_figure6_pvals.pdf")
+```{r export_paths}
 
+output_pdf_combine_heatmap_o1 <- base::paste0(
+   base_path, "/manuscript1_rev/figures6/combined_sign_heatmap_o1.pdf")
+output_pdf_combine_heatmap_o2 <- base::paste0(
+   base_path, "/manuscript1_rev/figures6/combined_sign_heatmap_o2.pdf")
+
+output_pval_plot <- base::paste0(
+   base_path, "/manuscript1_rev/figures6/pval_plot.pdf")
+
+output_pdf_combine_custom_heatmap_o2 <- base::paste0(
+   base_path, "/manuscript1_rev/figures6/custom_heatmap_o2.pdf")
+
+output_pdf_batch_umaps_o3 <- base::paste0(
+   base_path, "/manuscript1_rev/figures6/batch_umaps_o3.pdf")
+
+output_pdf_umap_cell_type_o3_legend <- base::paste0(
+   base_path, "/manuscript1_rev/figures6/batch_umaps_o3_legend_cell_type.pdf")
+
+output_pdf_umap_blind_anno_o3_legend <- base::paste0(
+  base_path, "/manuscript1_rev/figures6/batch_umaps_o3_legend_blind_anno.pdf")
 ```
 
 # Prep
@@ -294,17 +311,23 @@ mmms_heatmap_theme_o1 <- mmms_heatmap_base_o1+
 mmms_heatmap_theme_o1
 ```
 
-```{r combine_heatmap_o1, fig.height = 7, fig.width = 3}
+```{r combine_heatmap_o1, fig.height = 6, fig.width = 3}
 
 combine_heatmap_o1 <- ggpubr::ggarrange(
   mmms_heatmap_theme_o1+ggplot2::theme(legend.position = "none"),
   sign_heatmap_theme_o1+ggplot2::theme(legend.position = "none"),
   align = "v",
   ncol = 1,
-  heights = c(1, 2.5)
+  heights = c(1, 4)
 )
 
 combine_heatmap_o1
+```
+
+```{r output_pdf_combine_heatmap_o1}
+pdf(output_pdf_combine_heatmap_o1, width = 3, height = 6)
+combine_heatmap_o1
+dev.off()
 ```
 
 ## Dataset Others 2
@@ -363,17 +386,23 @@ mmms_heatmap_theme_o2 <- mmms_heatmap_base_o2+
 mmms_heatmap_theme_o2
 ```
 
-```{r combine_heatmap_o2, fig.height = 7, fig.width = 2}
+```{r combine_heatmap_o2, fig.height = 6, fig.width = 2}
 
 combine_heatmap_o2 <- ggpubr::ggarrange(
   mmms_heatmap_theme_o2+ggplot2::theme(legend.position = "none"),
   sign_heatmap_theme_o2+ggplot2::theme(legend.position = "none"),
   align = "v",
   ncol = 1,
-  heights = c(1, 2.6)
+  heights = c(1, 4)
 )
 
 combine_heatmap_o2
+```
+
+```{r output_pdf_combine_heatmap_o2}
+pdf(output_pdf_combine_heatmap_o2, width = 1.7, height = 6)
+combine_heatmap_o2
+dev.off()
 ```
 
 # P val plot
@@ -459,7 +488,7 @@ corr_pval_df_str$color_id <- factor(
 head(corr_pval_df_str)
 ```
 
-```{r pval_plot, fig.width = 10, fig.height = 10}
+```{r pval_plot, fig.width = 11, fig.height = 10}
 pval_plot <- ggplot2::ggplot(
   corr_pval_df_str,
   ggplot2::aes(y = condition_long,
@@ -489,8 +518,9 @@ pval_plot <- ggplot2::ggplot(
 pval_plot
 ```
 
-```{r output_pval_plot, eval = FALSE, include = FALSE}
-pdf(output_pval_plot, width = 10, height = 10)
+```{r output_pval_plot}
+# already includes the legend
+pdf(output_pval_plot, width = 11, height = 10)
 pval_plot
 dev.off()
 ```
@@ -520,9 +550,17 @@ custom_heatmap_theme_o2 <- custom_heatmap_base_o2+
       hjust = 1, 
       vjust = 0.5
     ),
-    axis.title = element_blank()
+    axis.title = element_blank(),
+    legend.position = "none"
   )
 custom_heatmap_theme_o2
+```
+
+```{r output_pdf_combine_custom_heatmap_o2}
+# already includes the legend
+pdf(output_pdf_combine_custom_heatmap_o2, width = 5, height = 6)
+custom_heatmap_theme_o2
+dev.off()
 ```
 
 # Batch effects
@@ -558,7 +596,7 @@ theme_umaps_supp <- ggplot2::theme(
   )
 ```
 
-```{r umap_batch_o3_cell_type, fig.width = 8, fig.height = 2.5, eval = FALSE}
+```{r umap_batch_o3_cell_type, fig.width = 8, fig.height = 2.5}
 # tikhonova et al
 
 seu_recl_o3 <- selected_seu_list_o3$seu_sign
@@ -616,7 +654,7 @@ umap_batch_o3_blind_anno <- Seurat::DimPlot(
 umap_batch_o3_blind_anno
 ```
 
-```{r, batch_umaps_o3, fig.width = 10, fig.height = 2.5}
+```{r, batch_umaps_o3, fig.width = 12, fig.height = 5}
 
 umap_cell_type <- umap_batch_o3_cell_type+
   ggplot2::scale_color_manual(
@@ -629,7 +667,7 @@ umap_blind_anno <- umap_batch_o3_blind_anno+
     values = col_anno_mus_tik_stromal[names(col_anno_mus_tik_stromal) %in% 
       seu_blind_anno_o3$annotated_reclustered])  
 
-chosen_batch_umap_o1 <- ggpubr::ggarrange(
+chosen_batch_umap_o3 <- ggpubr::ggarrange(
   umap_cell_type + ggplot2::theme(legend.position = "none"),
   umap_blind_anno + ggplot2::theme(
     legend.position = "none",
@@ -638,16 +676,7 @@ chosen_batch_umap_o1 <- ggpubr::ggarrange(
   ncol = 2,
   align = "hv"
 )
-chosen_batch_umap_o1
-```
-
-```{r umap_blind_anno_along, fig.width = 5, fig.height = 4}
-umap_blind_anno <- umap_batch_o3_blind_anno+
-  ggplot2::scale_color_manual(
-    "",
-    values = col_anno_mus_tik_stromal[names(col_anno_mus_tik_stromal) %in% 
-      seu_blind_anno_o3$annotated_reclustered])  
-umap_blind_anno
+chosen_batch_umap_o3
 ```
 
 ```{r umap_batch_o3_all, fig.width = 3, fig.height = 3}
@@ -659,4 +688,36 @@ umap_batch_o3_all <- Seurat::DimPlot(
   theme_umaps_supp+
   ggplot2::theme(legend.position = "none")
 umap_batch_o3_all
+```
+
+```{r umap_cell_type_o3_legend_theme, fig.width = 3, fig.height = 3}
+
+umap_cell_type_o3_legend_theme <- ggpubr::get_legend(umap_cell_type)
+umap_cell_type_o3_legend <- ggpubr::ggarrange(umap_cell_type_o3_legend_theme)
+umap_cell_type_o3_legend
+```
+
+```{r umap_blind_anno_o3_legend_theme, fig.width = 3, fig.height = 3}
+
+umap_blind_anno_o3_legend_theme <- ggpubr::get_legend(umap_blind_anno)
+umap_blind_anno_o3_legend <- ggpubr::ggarrange(umap_blind_anno_o3_legend_theme)
+umap_blind_anno_o3_legend
+```
+
+```{r output_pdf_batch_umaps_o3}
+pdf(output_pdf_batch_umaps_o3, width = 12, height = 3)
+chosen_batch_umap_o3
+dev.off()
+```
+
+```{r output_pdf_umap_cell_type_o3_legend}
+pdf(output_pdf_umap_cell_type_o3_legend, width = 3, height = 3)
+umap_cell_type_o3_legend
+dev.off()
+```
+
+```{r output_pdf_umap_blind_anno_o3_legend}
+pdf(output_pdf_umap_blind_anno_o3_legend, width = 3, height = 3)
+umap_blind_anno_o3_legend
+dev.off()
 ```

@@ -7,15 +7,16 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Generate Supplemental Figure 5, corresponding for Figure 5.
+Generate Supplemental Figure 5, corresponding for Figure 5: HSPC 
+human datasets supplementary.
 
 This is a big supplementary figure supporting the blidn re-annotation of
 human HSPC datasets and also contains info on the batch correction. 
 Need to think carefully how to structure the text here so let's not do 
 the figure toooo perfectly at first.
 
-Instead of ordering by ABC I will order by type of plot as ABC order
-may change later.
+Instead of ordering by alphabet I will order by type of plot as ABC plot
+part order may change later.
 
 The corr_pval plot has instead been added to figure S4. 
 

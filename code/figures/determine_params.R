@@ -132,7 +132,7 @@ col_anno_ts_bone_marrow <- c(
   "Myeloid prog" = "#ff9e02ff", 
   "Mono prog" = "#ff5900ff", 
   "Granu/Mono prog" = "#df8a02ff", 
-  "Early granu prog" = "#bb904aff", 
+  "Early granu prog, male-biased" = "#bb904aff", 
   "Early Granu/Mono prog" = "#937039ff", 
   "Mono/Dendritic prog" = "#ff5900ff",
   "Granu prog" = "#feb168ff",
@@ -149,4 +149,31 @@ col_anno_ts_bone_marrow <- c(
   "Mk/Ery2 10xV2" = "#ff94d3ff",
   "Mk/Ery" = "#d857a2ff",
   "Antigen-presenting and lymphoid" = "#c3dd1eff"
+)
+
+col_anno_mus_tik_stromal <- c(
+  "P1 adipogenesis1" = "#0f6f65ff",
+  "P2 adipogenesis2" = "#1dcab9ff",
+  "P3 osteo early" = "#95e9e9ff",
+  "P4 osteo later" = "#74b2a8ff",
+  "O1 osteo, Col16a" = "#56736fff",
+  "O2 osteo-chondro" = "#92ff16ff",
+  "O3 osteoblasts" = "#477e62ff",
+  "V1 arterial" = "#4796e4ff",
+  "V2 sinusoidal" = "#472a99ff",
+
+  "Adipo/CAR1, pbs" = "#004133ff",
+  "Adipo/CAR2, pbs"  = "#009f7dff",
+  "Adipo/CAR3, non-pbs"  = "#00ffc3ff",
+  "Osteo/CAR" = "#69cebdff",
+  "Osteo-Chondro, pbs" = "#92ff16ff",
+  "Fibro-Chondro" = "#a7de8cff",
+  "Chondro" = "#55a646ff",
+  "Osteo1" = "#1bf4fcff",
+  "Osteo2" = "#76afb0ff",
+  "Osteo3" = "#628182ff",
+  "Art/Cap-EC" = "#4793ffff",
+  "Ven EC1, non-pbs" = "#4a11e7ff",
+  "Ven EC2" = "#8f6bf5ff",
+  "Ven EC3, non-pbs" = "#b8add5ff"
 )

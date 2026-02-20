@@ -1,5 +1,5 @@
 ---
-title: "Threshold sensitivity of nDEGs and conserved markers"
+title: "Threshold sensitivity of nDEGs and conserved markers — visualization"
 date: '2025-12-11'
 output: html_document
 ---
@@ -13,20 +13,19 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r seed}
-RNGkind("L'Ecuyer-CMRG")
-set.seed(37)
-```
-
 ```{r libraries}
 library(tidyverse, quietly = TRUE)
-library(Seurat, quietly = TRUE)
 library(ggpubr, quietly = TRUE)
 ```
 
 ```{r paths}
 base_path    <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
 project_path <- "/omics/groups/OE0433/internal/veronica/github/Interspecies_BM_phd"
+
+out_dir <- file.path(
+  base_path,
+  "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_thresholds"
+)
 ```
 
 ```{r source}
@@ -40,102 +39,14 @@ source(file.path(project_path, "code/source/plotting.R"))
 source(file.path(project_path, "code/figures/determine_params.R"))
 ```
 
----
+# Load precomputed results
 
-# Load input objects
-
-```{r load_objects}
-load(file.path(
-  base_path,
-  "scRNAseq/main_analysis/sce_objects/03_sce_analysis/03_marker_conservation/cons_markers_hsc.RData"
-))
-
-hsc_nDGEs <- readRDS(file.path(
-  base_path,
-  "scRNAseq/main_analysis/sce_objects/03_sce_analysis/02_DESeq2_crossspecies/05_nres/PC_0.05_FC_1.5/res_hsc_celltype_dfs"
-))
-
-hsc_sig <- read.delim(
-  file.path(
-    base_path,
-    "manuscript1/hsc_signature_table.csv"
-  ),
-  sep = ";"
-)
+```{r load_results}
+nDEG_df <- readRDS(file.path(out_dir, "nDEG_df.rds"))
+common_marker_stats_df <- readRDS(file.path(out_dir, "common_marker_stats_df.rds"))
 ```
 
----
-
-# Modify adjusted p-value threshold of nDEGs
-
-## Compute counts & signature overlaps across p-value thresholds
-
-```{r ndge_thresholds}
-p_try <- c(
-  0.000001, 0.00001, 0.0001, 0.0005,
-  0.001, 0.005, 0.01, 0.05,
-  0.1, 0.2, 0.5, 1, 1.1
-)
-
-p_chr <- as.character(p_try)
-
-# one vector of unique signature genes per p threshold (across all cell types)
-signature_genes_by_p <- setNames(vector("list", length(p_chr)), p_chr)
-
-res_list <- list()
-i <- 1L
-
-for (ct in names(hsc_nDGEs)) {
-
-  # expected "signature" genes for this cell type from conservation object
-  expected <- rownames(
-    markers_conservation_hsc[[ct]][
-      complete.cases(markers_conservation_hsc[[ct]]),
-    ]
-  )
-
-  for (p in p_try) {
-
-    genes_p <- hsc_nDGEs[[ct]] %>%
-      dplyr::filter(padj < p) %>%
-      dplyr::group_by(gene) %>%
-      dplyr::filter(dplyr::n() == 12) %>%   # 12 pairwise contrasts
-      dplyr::pull(gene) %>%
-      unique()
-
-    overlap_genes <- intersect(expected, genes_p)
-
-    res_list[[i]] <- tibble::tibble(
-      celltype            = ct,
-      padj                = p,
-      n_nDEGs             = length(genes_p),
-      n_signature_genes   = length(overlap_genes)
-    )
-    i <- i + 1L
-
-    key <- as.character(p)
-    signature_genes_by_p[[key]] <- union(
-      signature_genes_by_p[[key]],
-      overlap_genes
-    )
-  }
-}
-
-nDEG_df <- dplyr::bind_rows(res_list)
-```
-
-```{r save_ndge}
-saveRDS(
-  nDEG_df,
-  file.path(base_path, "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_thresholds/nDEG_df.rds")
-)
-saveRDS(
-  signature_genes_by_p,
-  file.path(base_path, "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_thresholds/signature_genes_by_p.rds")
-)
-```
-
-## Plot: nDEGs vs signature genes over p-value threshold
+# Plot: nDEGs vs signature genes over p-value threshold
 
 ```{r plot_ndge, fig.width=6, fig.height=5}
 plot_nDEG <- ggplot(
@@ -157,7 +68,7 @@ plot_nDEG <- ggplot(
   scale_y_log10(
     name = "Total signature genes (solid),\nTotal nDEGs (dashed)"
   ) +
-  scale_color_manual(values = col_cts_hsc, 
+  scale_color_manual(values = col_cts_hsc,
                     guide = "none") +
   labs(
     x = "-log(padj) nDEG",
@@ -168,149 +79,7 @@ plot_nDEG <- ggplot(
 plot_nDEG
 ```
 
----
-
-# Modify log2FC threshold of conserved markers
-
-## Load HSC object and prepare Seurat object
-
-```{r load_hsc_sce}
-sce_hsc <- readRDS(file.path(
-  base_path,
-  "scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10"
-))
-
-metadata <- sce_hsc@colData@listData %>%
-  as.data.frame() %>%
-  dplyr::select(-Sample)
-
-rownames(metadata) <- paste(metadata$Barcode, metadata$Object_ID, sep = "_")
-
-cleaner_data <- Seurat::CreateSeuratObject(
-  counts    = sce_hsc@assays@data@listData[["logcounts"]],
-  meta.data = metadata
-)
-
-species    <- sort(unique(metadata$Species_ID))
-cell_types <- sort(unique(metadata$celltypes))
-```
-
-## nDEG signature genes per cell type
-
-```{r ndge_by_ct}
-ndge_genes_by_ct <- setNames(
-  lapply(cell_types, function(ct) {
-    x <- hsc_nDGEs[[ct]]
-    if (is.null(x)) return(character(0))
-
-    x %>%
-      dplyr::filter(padj < 0.05) %>%
-      dplyr::count(gene) %>%
-      dplyr::filter(n == 12) %>%
-      dplyr::pull(gene) %>%
-      unique()
-  }),
-  cell_types
-)
-```
-
-## Compute conserved markers across log2FC thresholds
-
-```{r marker_thresholds}
-t_try  <- c(0.02, 0.04, 0.06, 0.08, 0.1,
-            0.15, 0.2, 0.25, 0.3, 0.4,
-            0.5, 0.7, 1)
-
-t_chr <- as.character(t_try)
-
-markers_all_thresholds <- setNames(vector("list", length(t_chr)), t_chr)
-common_marker_stats    <- setNames(vector("list", length(t_chr)), t_chr)
-signature_genes_by_t   <- setNames(vector("list", length(t_chr)), t_chr)
-
-for (t in t_try) {
-  message("logfc.threshold = ", t)
-  t_name <- as.character(t)
-
-  markers_list <- list()
-
-  for (s in species) {
-    species_subset <- subset(cleaner_data, subset = Species_ID == s)
-
-    for (ct in cell_types) {
-      cells <- metadata %>%
-        dplyr::filter(Species_ID == s, celltypes == ct) %>%
-        rownames()
-
-      cells_in_obj <- intersect(colnames(species_subset), cells)
-      if (length(cells_in_obj) < 3L) next
-
-      markers <- Seurat::FindMarkers(
-        object          = species_subset,
-        ident.1         = cells_in_obj,
-        only.pos        = TRUE,
-        logfc.threshold = t,
-        min.pct         = 0.1
-      )
-
-      if (nrow(markers) == 0L) next
-
-      markers_list[[paste(s, ct, sep = "_")]] <- markers
-    }
-  }
-
-  markers_all_thresholds[[t_name]] <- markers_list
-
-  stats_t <- dplyr::bind_rows(lapply(cell_types, function(ct) {
-
-    genes_by_species <- lapply(species, function(s) {
-      key <- paste(s, ct, sep = "_")
-      if (is.null(markers_list[[key]])) {
-        character(0)
-      } else {
-        rownames(markers_list[[key]])
-      }
-    })
-
-    if (any(lengths(genes_by_species) == 0L)) {
-      common_genes <- character(0)
-    } else {
-      common_genes <- Reduce(intersect, genes_by_species)
-    }
-
-    overlap <- intersect(common_genes, ndge_genes_by_ct[[ct]])
-
-    tibble::tibble(
-      celltype                     = ct,
-      logfc_threshold              = t,
-      n_common_markers_all_species = length(common_genes),
-      n_signature_genes            = length(overlap),
-      signature_genes              = list(overlap)
-    )
-  }))
-
-  common_marker_stats[[t_name]]  <- dplyr::select(stats_t, -signature_genes)
-  signature_genes_by_t[[t_name]] <- unique(unlist(stats_t$signature_genes))
-}
-
-common_marker_stats_df <- dplyr::bind_rows(common_marker_stats)
-```
-
-```{r save_marker_results}
-saveRDS(
-  markers_all_thresholds,
-  file.path(base_path, "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_thresholds/markers_all_thresholds.rds")
-)
-saveRDS(
-  common_marker_stats_df,
-  file.path(base_path, "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_thresholds/common_marker_stats_df.rds")
-)
-saveRDS(
-  signature_genes_by_t,
-  file.path(base_path, "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_thresholds/signature_genes_by_t.rds")
-)
-```
-
-## Plot: common markers vs signature genes over log2FC threshold
+# Plot: common markers vs signature genes over log2FC threshold
 
 ```{r plot_markers, fig.width=6, fig.height=5}
 plot_markers <- ggplot(
@@ -342,7 +111,8 @@ plot_markers <- ggplot(
 plot_markers
 ```
 
-## Output everything together
+# Output everything together
+
 ```{r export_pdf}
 thresholds_plot <- ggpubr::ggarrange(
   plot_nDEG,
@@ -359,4 +129,3 @@ pdf(
 thresholds_plot
 dev.off()
 ```
-

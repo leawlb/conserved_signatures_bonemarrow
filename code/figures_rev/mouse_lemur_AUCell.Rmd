@@ -113,10 +113,44 @@ dev.off()
 DimPlot(
   mouse_lemur_harmony,
   reduction = "umap_harmony",
-  label     = TRUE,
-  repel     = TRUE,
-  raster    = FALSE
-) & NoAxes() & NoLegend()
+  label = TRUE,
+  repel = TRUE,
+  raster = FALSE
+) &
+  NoAxes() &
+  NoLegend()
+
+# DimPlot(
+#   mouse_lemur_harmony,
+#   reduction = "umap_harmony",
+#   group.by = "cell_ontology_class_v1",
+#   label = FALSE,
+#   repel = TRUE,
+#   raster = FALSE
+# ) +
+#   NoAxes()
+
+p <- DimPlot(
+  mouse_lemur_harmony,
+  reduction = "umap_harmony",
+  group.by = "compartment_v1",
+  label = FALSE,
+  raster = FALSE
+) +
+  NoAxes()
+p$layers[[1]] <- ggrastr::rasterise(p$layers[[1]], dpi = 700)
+
+
+pdf(
+  file = file.path(
+    base_path,
+    "manuscript1_rev/pdfs/mouse_lemur_reference_annotation.pdf"
+  ),
+  height = 5,
+  width = 8
+)
+print(p)
+dev.off()
 ```
 
 <!-- ## HSC re-embedding with Harmony

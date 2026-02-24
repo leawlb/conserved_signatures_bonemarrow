@@ -692,3 +692,79 @@ pdf(
 print(ts_str_dot)
 dev.off()
 ```
+
+
+# Additional analysis: Weinreb with original annotation
+```{r}
+weinreb_hspc$custom_label_unif <- weinreb_hspc$cell_type
+
+weinreb_markers_2 <- analyze_seurat_vs_signatures(
+  seurat_obj = weinreb_hspc,
+  signatures = hsc_sig,
+  ortholog_df = NULL
+)
+
+custom_markers_by_ct <- weinreb_markers_2$custom_markers_by_ct
+per_signature <- weinreb_markers_2$per_signature
+signature_genes_mapped <- weinreb_markers_2$signature_genes_mapped
+
+custom_order <- names(custom_markers_by_ct)
+# use whatever signature order you want; example assumes col_cts_hsc exists
+signature_order <- rev(names(col_cts_hsc))
+
+pairwise_overlap_weinreb_2 <- tidyr::crossing(
+  custom_label_unif = custom_order,
+  celltype = signature_order
+) %>%
+  dplyr::mutate(
+    n_overlap = purrr::map2_int(
+      custom_label_unif,
+      celltype,
+      ~ length(intersect(
+        custom_markers_by_ct[[.x]],
+        signature_genes_mapped[[.y]]
+      ))
+    )
+  ) %>%
+  dplyr::left_join(
+    per_signature %>% dplyr::select(celltype, n_sig_detectable),
+    by = "celltype"
+  ) %>%
+  dplyr::mutate(
+    prop_of_sig_detectable = dplyr::if_else(
+      n_sig_detectable > 0,
+      n_overlap / n_sig_detectable,
+      NA_real_
+    ),
+    custom_label_unif = factor(custom_label_unif, levels = custom_order),
+    celltype = factor(celltype, levels = signature_order)
+  )
+
+weinreb_dot_2 <- pairwise_overlap_weinreb_2 %>%
+  ggplot(aes(x = custom_label_unif, y = celltype)) +
+  geom_point(aes(size = n_overlap, color = prop_of_sig_detectable)) +
+  scale_size_continuous(name = "# overlapping genes", range = c(5, 9)) +
+  scale_color_gradient(
+    name = "Frac. recovered\nsignature genes",
+    low = "white",
+    high = "blue"
+  ) +
+  labs(
+    x = NULL,
+    y = NULL,
+    title = "Mouse Weinreb HSPC"
+  ) +
+  theme_all +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+pdf(
+  file = file.path(
+    base_path,
+    "manuscript1_rev/pdfs/reclaiming_sigs_weinreb_2.pdf"
+  ),
+  height = 8,
+  width = 8
+)
+print(weinreb_dot_2)
+dev.off()
+```

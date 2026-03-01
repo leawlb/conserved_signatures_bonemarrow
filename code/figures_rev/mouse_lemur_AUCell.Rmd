@@ -83,7 +83,7 @@ pdf(
     base_path,
     "manuscript1_rev/pdfs/mouse_lemur_AUCell_weights_all.pdf"
   ),
-  height = 7,
+  height = 5,
   width  = 7
 )
 
@@ -93,13 +93,15 @@ for (feat in celltypes_full) {
     features  = feat,
     reduction = "umap_harmony",
     raster    = FALSE,
-    order     = TRUE
+    order     = TRUE,
+    min.cutoff = 0,
+    max.cutoff = 0.55
   ) +
     ggplot2::ggtitle(feat) &
     NoAxes()
 
   ## rasterize first layer (points) at high dpi
-  p$layers[[1]] <- ggrastr::rasterise(p$layers[[1]], dpi = 500)
+  p$layers[[1]] <- ggrastr::rasterise(p$layers[[1]], dpi = 700)
 
   print(p)
 }
@@ -111,13 +113,47 @@ dev.off()
 DimPlot(
   mouse_lemur_harmony,
   reduction = "umap_harmony",
-  label     = TRUE,
-  repel     = TRUE,
-  raster    = FALSE
-) & NoAxes() & NoLegend()
+  label = TRUE,
+  repel = TRUE,
+  raster = FALSE
+) &
+  NoAxes() &
+  NoLegend()
+
+# DimPlot(
+#   mouse_lemur_harmony,
+#   reduction = "umap_harmony",
+#   group.by = "cell_ontology_class_v1",
+#   label = FALSE,
+#   repel = TRUE,
+#   raster = FALSE
+# ) +
+#   NoAxes()
+
+p <- DimPlot(
+  mouse_lemur_harmony,
+  reduction = "umap_harmony",
+  group.by = "compartment_v1",
+  label = FALSE,
+  raster = FALSE
+) +
+  NoAxes()
+p$layers[[1]] <- ggrastr::rasterise(p$layers[[1]], dpi = 700)
+
+
+pdf(
+  file = file.path(
+    base_path,
+    "manuscript1_rev/pdfs/mouse_lemur_reference_annotation.pdf"
+  ),
+  height = 5,
+  width = 8
+)
+print(p)
+dev.off()
 ```
 
-## HSC re-embedding with Harmony
+<!-- ## HSC re-embedding with Harmony
 
 ```{r subset_hsc}
 ## 21 = HSCs according to original clustering
@@ -173,7 +209,8 @@ FeaturePlot(
 ) & NoAxes()
 
 dev.off()
-```
+``` 
+-->
 
 ## Stromal / EC re-embedding with Harmony
 
@@ -228,21 +265,23 @@ celltypes_stromal <- c(
 
 ```{r pdf_stromal_feature, eval=TRUE}
 pdf(
-  file   = file.path(
+  file = file.path(
     base_path,
     "manuscript1_rev/pdfs/mouse_lemur_AUCell_stromal.pdf"
   ),
-  height = 4,
-  width  = 4
+  height = 3,
+  width = 4
 )
 
 for (feat in celltypes_stromal) {
   p <- FeaturePlot(
     stromal,
-    features  = feat,
+    features = feat,
     reduction = "umap_harmony",
-    raster    = FALSE,
-    order     = TRUE
+    raster = FALSE,
+    order = TRUE,
+    min.cutoff = 0,
+    max.cutoff = 0.55
   ) +
     ggplot2::ggtitle(feat) &
     NoAxes()

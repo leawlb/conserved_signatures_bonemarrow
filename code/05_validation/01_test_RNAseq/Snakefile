@@ -68,5 +68,11 @@ rule all:
 # 01: generate symbolic link with useful name in output directory 
 include: "rules/01_link_files.smk"
 
-# 02: fastQC before cutadapt etc. on the raw fastq files
+# 02: fastQC .htmls before actual on the raw fastq files
 include: "rules/02_fastqc.smk"
+
+# 03: umitools_extract to extract the UMIs
+#include: "rules/03_umi_tools_extract.smk"
+
+# 04: cutadapt: cut adapter sequences etc. from the reads to allow alignment
+#include: "rules/04_cutadapt.smk"

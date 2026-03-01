@@ -153,3 +153,23 @@ run_pval_correction: False
 run_age_comparison: False 
 
 run_custom_reports: False
+
+# snakemake rule configuation
+# for bulk RNAseq analysis
+
+# for umi_tools_extract:
+#umi_tools_extract:
+# extra: >-
+#    --bc-pattern=<TODO: FILL PATTERN> "
+#    --bc-pattern2=<TODO: FILL PATTERN> " # only if there are UMIs on read 2
+     # check if there is an umi on read 2
+
+# for cutadapt:
+#cutadapt:
+#  extra: >-
+#    -a <TODO: FILL PATTERN>
+#    -A <TODO: FILL PATTERN>
+#    -g # for additional reads that are not "adapters" but still need removal
+#    -q 10 # quality cut-off, trim low-quality ends from reads
+#    --minimum-length 20
+#TODO: FILL IN CORRECT ADAPTER SEQUENCES AND POTENTIAL ADDITIONAL SENTENCES

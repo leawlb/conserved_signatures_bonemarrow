@@ -5,27 +5,36 @@
 # - base
 # TO APPROPRIATE PATHS
 
-# INPUT # 
+#-------------------------------------------------------------------------------
+
+### INPUT ### 
 
 # all base files generated previously/elsewhere
 # store where required; add full paths here
+
+# scRNAseq
 table: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/00_alignment/metadata.csv"
 cellranger_output: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/00_cellranger_output" 
 fourgenomes_output: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/fourgenomes/sce_objects/00_cellranger_output" 
 
+# bulk RNAseq
+table_bulk: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/bulk_RNAseq/liver_test/raw_from_paul/Liver_F0/260214_VH00693_288_AAHTVLYM5_meta.tsv"
+fastq_input: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/bulk_RNAseq/liver_test/raw_from_paul/Liver_F0"
 
-# BASE #
+#-------------------------------------------------------------------------------
+
+
+### OUTPUT ###
 
 # the general directory that should contain all output data 
 # all downstream output paths build on "base"
 base: "/omics/odcf/analysis/OE0538_projects/DO-0008"
 
-
-# OUTPUT # 
-
 scRNAseq_data_paths:
   main: "/data/scRNAseq/main_analysis"
 
+bulk_rnaseq_data_paths: 
+  "/data/bulk_rnaseq"
 
 # METADATA # 
 

@@ -1,0 +1,67 @@
+#!/bin/python 
+
+import pandas as pd
+import os
+import re
+
+#-------------------------------------------------------------------------------
+
+FASTQ_INPUT_DIR = config["fastq_input"]
+
+OUTPUT_BASE = config["base"] + config["bulk_rnaseq_data_paths"]
+OUTPUT_DAT = OUTPUT_BASE + "/bulk_rnaseq_test"
+
+#-------------------------------------------------------------------------------
+
+# extract sample name from DKFZ-style metadata sheet by current fastq file name
+
+# load metadata table 
+# note this is NOT the same metadata table as for scRNAseq analysis
+metadata_bulk = pd.read_csv(config["table_bulk"], sep = '\\t', engine='python')
+metadata_bulk.head()
+
+# remove rows with Nan in the Sample name
+metadata_bulk = metadata_bulk.dropna(axis=0, subset=["SAMPLE_NAME"])
+
+# function to extract the required variables
+def get_unique_list(metadata, column):
+    return metadata[column].dropna().drop_duplicates().tolist()
+
+# get variables from required function to be used for target definition
+sample_name = get_unique_list(metadata = metadata_bulk, column = "SAMPLE_NAME")
+fastq_name = get_unique_list(metadata = metadata_bulk, column = "FASTQ_FILE")
+
+print(sample_name)
+print(fastq_name)
+
+# add a column containing sample_name+read
+metadata_bulk["SAMPLE_NAME_R"] = metadata_bulk["SAMPLE_NAME"] + "_R" + metadata_bulk["READ"].apply(str)
+sample_name_r = get_unique_list(metadata = metadata_bulk, column = "SAMPLE_NAME_R")
+print(sample_name_r)
+
+# add column containing the fast1 file name without read = name of directory
+#metadata_bulk["FASTQ_FOLDER"] = metadata_bulk["FASTQ_FILE"].str.replace(r"_R[12]\.fastq\.gz$", "", regex=True)
+#fastq_folder_name = get_unique_list(metadata = metadata_bulk, column = "FASTQ_FOLDER")
+#print(fastq_folder_name)
+
+
+#-------------------------------------------------------------------------------
+
+targets = []
+
+for snr in sample_name_r:
+    for sn in sample_name:
+        if sn in snr:
+            targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/" + snr + ".fastq.gz"]
+
+#print(targets)
+
+localrules: all, link_files
+rule all: 
+    input:
+        targets
+        
+#-------------------------------------------------------------------------------
+
+# generate symbolic link in output directory to the raw data storage
+include: "rules/01_link_files.smk"

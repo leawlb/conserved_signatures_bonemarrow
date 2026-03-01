@@ -1,6 +1,8 @@
 
+# generate useful symbolic links for each fastq file
+
 # specific for DKFZ-type output and folder structure
-# using the DKFZ metadata_tsv
+# using the DKFZ metadata tsv
 # check regex when implementing on new files
 
 rule link_files:

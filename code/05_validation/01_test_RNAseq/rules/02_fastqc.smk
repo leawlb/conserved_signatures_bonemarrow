@@ -1,6 +1,8 @@
 
-# snakemake wrapper 
 # FASTQC for generating a QC html for each fastq file
+
+# intended as an overview of the quality BEFORE any pre-processing
+# using this snakemake wrapper:
 # https://github.com/s-andrews/FastQC
 
 rule fastqc:

@@ -169,7 +169,7 @@ supplementary_text_size = 14
 
 color_significance <- c("pval adj. >= 0.05" = "grey70",
                         "pval adj. < 0.05" = "black",
-                        "pval adj. = 0" = "blue")
+                        "pval adj. = 0" = "#FF6347")
 ```
 
 Functions

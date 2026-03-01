@@ -39,7 +39,7 @@ metadata_bulk["SAMPLE_NAME_R"] = metadata_bulk["SAMPLE_NAME"] + "_R" + metadata_
 sample_name_r = get_unique_list(metadata = metadata_bulk, column = "SAMPLE_NAME_R")
 print(sample_name_r)
 
-# add column containing the fast1 file name without read = name of directory
+# add column containing the fastq file name without read = name of directory
 #metadata_bulk["FASTQ_FOLDER"] = metadata_bulk["FASTQ_FILE"].str.replace(r"_R[12]\.fastq\.gz$", "", regex=True)
 #fastq_folder_name = get_unique_list(metadata = metadata_bulk, column = "FASTQ_FOLDER")
 #print(fastq_folder_name)
@@ -53,6 +53,8 @@ for snr in sample_name_r:
     for sn in sample_name:
         if sn in snr:
             targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/" + snr + ".fastq.gz"]
+            targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/02_prepro_qc/" + snr + ".html"]
+            targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/02_prepro_qc/" + snr + "_fastqc.zip"]
 
 #print(targets)
 
@@ -63,5 +65,8 @@ rule all:
         
 #-------------------------------------------------------------------------------
 
-# generate symbolic link in output directory to the raw data storage
+# 01: generate symbolic link with useful name in output directory 
 include: "rules/01_link_files.smk"
+
+# 02: fastQC before cutadapt etc. on the raw fastq files
+include: "rules/02_fastqc.smk"

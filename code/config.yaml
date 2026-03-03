@@ -21,6 +21,9 @@ fourgenomes_output: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/
 table_bulk: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/bulk_RNAseq/liver_test/raw_from_paul/Liver_F0/260214_VH00693_288_AAHTVLYM5_meta.tsv"
 fastq_input: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/bulk_RNAseq/liver_test/raw_from_paul/Liver_F0"
 
+mm10genome:  "/omics/odcf/analysis/OE0538_projects/DO-0008/data_freeze/02_species_genomes/fourgenomes/mmus"
+star_path: "/software/STAR/2.7.11b-GCC-14.1.0/bin/STAR"
+
 #-------------------------------------------------------------------------------
 
 

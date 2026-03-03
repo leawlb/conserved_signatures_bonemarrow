@@ -50,9 +50,13 @@ for snr in sample_name_r:
             targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/02_prepro_qc/" + snr + ".html"]
             targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/02_prepro_qc/" + snr + "_fastqc.zip"]
 
+targets = targets + [OUTPUT_BASE + "/genome/fasta/Mus_musculus.GRCm39.dna.primary_assembly.fa"]
+targets = targets + [OUTPUT_BASE + "/genome/gtf/Mus_musculus.GRCm39.115.gtf"]
+targets = targets + [OUTPUT_BASE + "/genome/star"]
+
 #print(targets)
 
-localrules: all, link_files
+localrules: all, link_files, download_genome
 rule all: 
     input:
         targets
@@ -76,4 +80,6 @@ include: "rules/02_fastqc.smk"
 #include: "rules/05_fastqc_prepped.smk"
 
 # 06: alignment to reference genome using STAR
-#include: "rules/06_alignment.smk"
+#     also includes rules for downloading ensembl release 115 mmus genome
+#     and for generating a genome index 
+include: "rules/06_alignment.smk"

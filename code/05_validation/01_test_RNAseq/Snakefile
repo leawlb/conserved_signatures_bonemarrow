@@ -39,12 +39,6 @@ metadata_bulk["SAMPLE_NAME_R"] = metadata_bulk["SAMPLE_NAME"] + "_R" + metadata_
 sample_name_r = get_unique_list(metadata = metadata_bulk, column = "SAMPLE_NAME_R")
 print(sample_name_r)
 
-# add column containing the fastq file name without read = name of directory
-#metadata_bulk["FASTQ_FOLDER"] = metadata_bulk["FASTQ_FILE"].str.replace(r"_R[12]\.fastq\.gz$", "", regex=True)
-#fastq_folder_name = get_unique_list(metadata = metadata_bulk, column = "FASTQ_FOLDER")
-#print(fastq_folder_name)
-
-
 #-------------------------------------------------------------------------------
 
 targets = []
@@ -68,11 +62,18 @@ rule all:
 # 01: generate symbolic link with useful name in output directory 
 include: "rules/01_link_files.smk"
 
-# 02: fastQC .htmls before actual on the raw fastq files
+# 02: FastQC .htmls before actual processing, on raw fastq files
 include: "rules/02_fastqc.smk"
 
-# 03: umitools_extract to extract the UMIs
+# 03: umi_tools to extract the UMIs
 #include: "rules/03_umi_tools_extract.smk"
+# I might need to add a whitelist for barcodes, let's see
 
-# 04: cutadapt: cut adapter sequences etc. from the reads to allow alignment
+# 04: cutadapt to cut adapter sequences etc. from the reads to allow alignment
 #include: "rules/04_cutadapt.smk"
+
+# 05: FastQC after pre-processing steps on individual fastq files
+#include: "rules/05_fastqc_prepped.smk"
+
+# 06: alignment to reference genome using STAR
+#include: "rules/06_alignment.smk"

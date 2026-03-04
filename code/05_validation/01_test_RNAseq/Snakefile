@@ -50,6 +50,13 @@ for snr in sample_name_r:
             targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/02_prepro_qc/" + snr + ".html"]
             targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/02_prepro_qc/" + snr + "_fastqc.zip"]
 
+for sn in sample_name:
+    targets = targets + [OUTPUT_BASE + "/alignment/star/pe/" + sn + "/pe_aligned.sam"]
+    targets = targets + [OUTPUT_BASE + "/alignment/logs/star/pe/" + sn + "/Log.out"]
+    targets = targets + [OUTPUT_BASE + "/alignment/star/pe/" + sn + "/SJ.out.tab"]
+    targets = targets + [OUTPUT_BASE + "/alignment/star/pe/" + sn + "/unmapped.fastq.gz"]
+ 
+
 targets = targets + [OUTPUT_BASE + "/genome/fasta/Mus_musculus.GRCm39.dna.primary_assembly.fa"]
 targets = targets + [OUTPUT_BASE + "/genome/gtf/Mus_musculus.GRCm39.115.gtf"]
 targets = targets + [OUTPUT_BASE + "/genome/star"]
@@ -83,3 +90,4 @@ include: "rules/02_fastqc.smk"
 #     also includes rules for downloading ensembl release 115 mmus genome
 #     and for generating a genome index 
 include: "rules/06_alignment.smk"
+# TODO: at the moment with input raw files for pipeline testing

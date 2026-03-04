@@ -7,6 +7,8 @@
 # STAR documentation
 # https://raw.githubusercontent.com/alexdobin/STAR/master/doc/STARmanual.pdf
 
+#-------------------------------------------------------------------------------
+
 # first, generate STAR genome index
 # I will download the current mus musculus genome from ensembl, release 115
 # even though it is not the same used for scRNAseq alignment
@@ -38,7 +40,6 @@ rule download_genome:
         """
 
 # sjdbOverhang should be number of reads -1, so 50bp -1 = 49
-
 rule generate_star_index:
     input:
         fasta = rules.download_genome.output.fasta,
@@ -55,7 +56,7 @@ rule generate_star_index:
     shell:
         r"""
 
-        mkdir -p {output.index_dir};
+        mkdir -p {output.index_dir}
 
         STAR \
             --runThreadN {threads} \
@@ -67,3 +68,30 @@ rule generate_star_index:
         
         """
 
+#-------------------------------------------------------------------------------
+
+rule star_pe_multi:
+    input:
+        # atm, the non-preprocessed fastqs will serve as input for testing
+        # because umi_tools and cutadapt are just skeletons for pipeline build
+        # and will be adjusted to the actual data to be analysed later
+        fq1 = [OUTPUT_BASE + "/reads/{sample}/{sample}_R1.fastq.gz"], # TODO: CHANGE LATER
+        fq2 = [OUTPUT_BASE + "/reads/{sample}/{sample}_R2.fastq.gz"], # TODO: CHANGE LATER
+        idx = rules.generate_star_index.output.index_dir # directory
+    output:
+        aln = OUTPUT_BASE + "/alignment/star/pe/{sample}/pe_aligned.sam",
+        log = OUTPUT_BASE + "/alignment/logs/star/pe/{sample}/Log.out",
+        sj = OUTPUT_BASE + "/alignment/star/pe/{sample}/SJ.out.tab",
+        unmapped = [OUTPUT_BASE + "/alignment/star/pe/{sample}/unmapped.fastq.gz"],
+    log:
+        "logs/06_aligment/pe/{sample}.log",
+    params:
+        # optional parameters
+        extra="",
+        queue = "long",
+        mem_mb = 40000
+    threads: 8
+    envmodules:
+        "STAR/2.7.11b-GCC-14.1.0"
+    wrapper:
+        "v3.5.3/bio/star/align"

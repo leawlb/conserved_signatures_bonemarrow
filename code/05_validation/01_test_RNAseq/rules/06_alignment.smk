@@ -37,6 +37,8 @@ rule download_genome:
 
         """
 
+# sjdbOverhang should be number of reads -1, so 50bp -1 = 49
+
 rule generate_star_index:
     input:
         fasta = rules.download_genome.output.fasta,
@@ -46,21 +48,22 @@ rule generate_star_index:
     threads:
         12
     params:
-        STAR_PATH = config["star_path"],
         queue = "medium",
         mem_mb = 40000
+    envmodules:
+        "STAR/2.7.11b-GCC-14.1.0"
     shell:
         r"""
+
         mkdir -p {output.index_dir};
 
-        "{params.STAR_PATH}" \ 
+        STAR \
             --runThreadN {threads} \
             --runMode genomeGenerate \
             --genomeDir {output.index_dir} \
             --genomeFastaFiles {input.fasta} \
             --sjdbGTFfile {input.gtf} \
-            --sjdbOverhang 49 
+            --sjdbOverhang 49
+        
         """
 
-# invoke star using the absolute path to work around module problems
-# sjdbOverhang should be number of reads -1, so 50bp -1 = 49

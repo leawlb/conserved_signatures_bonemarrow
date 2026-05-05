@@ -25,8 +25,7 @@ rule umi_tools_extract:
     threads:
         1
     params:
-        queue = "short",
-        # additional options including the UMI barcode info is stored here:
+        queue = "medium",
         extra = config["umi_tools_extract"]["extra"] 
     conda:
         "../../../envs/umi_tools5.yaml"
@@ -36,10 +35,24 @@ rule umi_tools_extract:
         "umi_tools extract "
         "--extract-method=string "
         "{params.extra} "
-        "--read2-in={input.fastq2} "
-        "--read2-out={output.fastq2} "
+        "--read2-in={input.fastq1} "
+        "--read2-out={output.fastq1} "
         "-L {log} "
-        "{input.fastq1} > {output.fastq1} "
+        "-I {input.fastq2} "
+        "-S {output.fastq2} "
 
+### explanation of option choices (see also config for extra parameters) ### 
+# "Trim 8 nt UMIs + 3 nt UMI linker + 3 nt from the SMART UMI Adapter from Read2 prior to mapping" 
+# according to SMART-Seq® Total RNA Library Prep with ZapR Depletion (with UMIs) User Manual
+
+# --bc-pattern:
+# NNNNNNNN will be added to the sequence name (that is the UMI)
+# XXXXXX will be kept in the read, then I will trim it downstream using cutadapt
+
+# UMI is on read 2 only; it is recommended to swap the input and output files from R1 to R2
+# - https://github.com/CGATOxford/UMI-tools/issues/331
+# - https://github.com/CGATOxford/UMI-tools/issues/522
+# there is a --read2-only option but it's not available for this version of umi_tools
+# otherwise, umi_tools also expects both -bc-pattern and bc-pattern2
 
 

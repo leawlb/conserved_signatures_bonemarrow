@@ -51,6 +51,8 @@ for snr in sample_name_r:
             #targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/" + snr + ".fastq.gz"]
             targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/02_prepro_qc/" + snr + ".html"]
             targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/02_prepro_qc/" + snr + "_fastqc.zip"]
+            #targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/05_fastqc_prepped/" + snr + "_fastqc.zip"]
+            #targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/05_fastqc_prepped/" + snr + ".html"]
 
 # sample-level (-ish) processing
 for sn in sample_name:

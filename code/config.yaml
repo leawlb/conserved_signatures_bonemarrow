@@ -163,12 +163,7 @@ run_custom_reports: False
 # for umi_tools_extract:
 umi_tools_extract:
   extra: >-
-    --bc-pattern2=NNNNNNNNXXXXXX
-
-# "Trim 8 nt UMIs + 3 nt UMI linker + 3 nt from the SMART UMI Adapter 
-# from Read2 prior to mapping" according to protocol
-# NNNNNNNN will be added to the sequence name
-# XXXXXX will be kept in the read, then I will trim it downstream using cutadapt
+    --bc-pattern=NNNNNNNNXXXXXX
 
 # for cutadapt:
 cutadapt:
@@ -178,24 +173,3 @@ cutadapt:
     -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT 
     --nextseq-trim 20
     --minimum-length 10
-
-### UMI linker: -U 6
-# from the SMART-Seq® Total RNA Library Prep with ZapR Depletion (withUMIs) User Manual
-# remove 6 bases from the beginning of Read 2, which are the linker and remaining Smart adapter 
-
-### read length is longer than insert size: trimming the 3' end of reads containing the rest of the adapter sequence
-### -a and -A
-# https://knowledge.illumina.com/library-preparation/general/library-preparation-general-reference_material-list/000001314
-# Truseq adapters: https://dnatech.ucdavis.edu/sites/g/files/dgvnsk15531/files/inline-files/illumina-adapter-sequences_1000000002694-00.pdf
-# mentioned also in cutadapt: https://cutadapt.readthedocs.io/en/stable/guide.html#truseq
-# cutadapt will also remove the sequence following the adapters
-
-### low quality ends: -q N
-# trims low quality below quality N
-# because the quality according to fastQC remains high, no quality trimming for now
-
-### low quality ends including the detection of "high-quality Gs" from what was actually dark circles on the machine
-### --nextseq-trim N
-
-### poly-A
-# no strong indication in fastQC of a lot of TTT or AAA so far, so also no poly-A trimming for now

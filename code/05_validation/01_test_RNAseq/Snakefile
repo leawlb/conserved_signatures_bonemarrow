@@ -17,11 +17,12 @@ OUTPUT_DAT = OUTPUT_BASE + "/bulk_rnaseq_test"
 
 # load metadata table 
 # note this is NOT the same metadata table as for scRNAseq analysis
-metadata_bulk = pd.read_csv(config["table_bulk"], sep = '\\t', engine='python')
-metadata_bulk.head()
+#TEST!
+metadata_bulk = pd.read_csv(config["table_bulk"], sep = ';', engine='python')
+print(metadata_bulk.head())
 
 # remove rows with Nan in the Sample name
-metadata_bulk = metadata_bulk.dropna(axis=0, subset=["SAMPLE_NAME"])
+# metadata_bulk = metadata_bulk.dropna(axis=0, subset=["SAMPLE_NAME"])
 
 # function to extract the required variables
 def get_unique_list(metadata, column):
@@ -34,7 +35,7 @@ fastq_name = get_unique_list(metadata = metadata_bulk, column = "FASTQ_FILE")
 print(sample_name)
 print(fastq_name)
 
-# add a column containing sample_name+read
+# add a column containing sample_name+read for single file processing vs sample-level processing
 metadata_bulk["SAMPLE_NAME_R"] = metadata_bulk["SAMPLE_NAME"] + "_R" + metadata_bulk["READ"].apply(str)
 sample_name_r = get_unique_list(metadata = metadata_bulk, column = "SAMPLE_NAME_R")
 print(sample_name_r)
@@ -43,20 +44,27 @@ print(sample_name_r)
 
 targets = []
 
+# single file processing
 for snr in sample_name_r:
     for sn in sample_name:
         if sn in snr:
-            targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/" + snr + ".fastq.gz"]
+            #targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/" + snr + ".fastq.gz"]
             targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/02_prepro_qc/" + snr + ".html"]
             targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/02_prepro_qc/" + snr + "_fastqc.zip"]
 
+# sample-level (-ish) processing
 for sn in sample_name:
-    targets = targets + [OUTPUT_BASE + "/alignment/star/pe/" + sn + "/pe_aligned.sam"]
-    targets = targets + [OUTPUT_BASE + "/alignment/logs/star/pe/" + sn + "/Log.out"]
-    targets = targets + [OUTPUT_BASE + "/alignment/star/pe/" + sn + "/SJ.out.tab"]
-    targets = targets + [OUTPUT_BASE + "/alignment/star/pe/" + sn + "/unmapped.fastq.gz"]
- 
+    targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/03_umis_extracted/" + sn + "_umiextracted_R1.fastq.gz"]
+    targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/03_umis_extracted/" + sn + "_umiextracted_R2.fastq.gz"]
+    targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/04_trimmed/" + sn + "_trimmed_R1.fastq.gz"]
+    targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/04_trimmed/" + sn + "_trimmed_R2.fastq.gz"]
+    targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/04_trimmed/qc/cutadapt/" + sn + ".txt"]
 
+#    targets = targets + [OUTPUT_BASE + "/alignment/star/pe/" + sn + "/pe_aligned.sam"]
+#    targets = targets + [OUTPUT_BASE + "/alignment/logs/star/pe/" + sn + "/Log.out"]
+#    targets = targets + [OUTPUT_BASE + "/alignment/star/pe/" + sn + "/SJ.out.tab"]
+#    targets = targets + [OUTPUT_BASE + "/alignment/star/pe/" + sn + "/unmapped.fastq.gz"]
+ 
 targets = targets + [OUTPUT_BASE + "/genome/fasta/Mus_musculus.GRCm39.dna.primary_assembly.fa"]
 targets = targets + [OUTPUT_BASE + "/genome/gtf/Mus_musculus.GRCm39.115.gtf"]
 targets = targets + [OUTPUT_BASE + "/genome/star"]
@@ -71,17 +79,19 @@ rule all:
 #-------------------------------------------------------------------------------
 
 # 01: generate symbolic link with useful name in output directory 
-include: "rules/01_link_files.smk"
+#TODO: adjust once I have the correct metadata. Before that, adjusting the symlink script 
+# makes no sense. For testing I just copy pasted and renamed the R1 and R2 fastqs for one test sample.
+# It just has to fit to the output structure I have established for downstream processing
+#include: "rules/01_link_files.smk"
 
 # 02: FastQC .htmls before actual processing, on raw fastq files
 include: "rules/02_fastqc.smk"
 
 # 03: umi_tools to extract the UMIs
-#include: "rules/03_umi_tools_extract.smk"
-# I might need to add a whitelist for barcodes, let's see
+include: "rules/03_umi_tools_extract.smk"
 
-# 04: cutadapt to cut adapter sequences etc. from the reads to allow alignment
-#include: "rules/04_cutadapt.smk"
+# 04: cutadapt to cut adapter sequences etc. from the reads before alignment
+include: "rules/04_cutadapt.smk"
 
 # 05: FastQC after pre-processing steps on individual fastq files
 #include: "rules/05_fastqc_prepped.smk"
@@ -89,5 +99,4 @@ include: "rules/02_fastqc.smk"
 # 06: alignment to reference genome using STAR
 #     also includes rules for downloading ensembl release 115 mmus genome
 #     and for generating a genome index 
-include: "rules/06_alignment.smk"
-# TODO: at the moment with input raw files for pipeline testing
+#include: "rules/06_alignment.smk"

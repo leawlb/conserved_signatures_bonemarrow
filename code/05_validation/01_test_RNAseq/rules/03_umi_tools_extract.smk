@@ -9,14 +9,17 @@
 # nf-core/rnaseq also does umi extraction first
 # https://github.com/shahcompbio/bulk-illumina-rnaseq.git
 
-rule: umi_tools_extract:
+rule umi_tools_extract:
     input:
         # raw files (symlinks)
-        fastq1 = OUTPUT_BASE + "/reads/{sample_folder_name}/{sample}_R1.fastq.gz"
-        fastq2 = OUTPUT_BASE + "/reads/{sample_folder_name}/{sample}_R2.fastq.gz"
+        #fastq1 = OUTPUT_BASE + "/reads/{sample_folder_name}/{sample}_R1.fastq.gz",
+        #fastq2 = OUTPUT_BASE + "/reads/{sample_folder_name}/{sample}_R2.fastq.gz"
+        # FOR TESTING
+        fastq1 = OUTPUT_BASE + "/raw_msc_test/{sample_folder_name}/{sample}_R1.fastq.gz",
+        fastq2 = OUTPUT_BASE + "/raw_msc_test/{sample_folder_name}/{sample}_R2.fastq.gz"
     output: 
-        fastq1 = OUTPUT_BASE + "/reads/{sample_folder_name}/03_umis_extracted/{sample}_R1.fastq.gz"
-        fastq2 = OUTPUT_BASE + "/reads/{sample_folder_name}/03_umis_extracted/{sample}_R2.fastq.gz"
+        fastq1 = OUTPUT_BASE + "/reads/{sample_folder_name}/03_umis_extracted/{sample}_umiextracted_R1.fastq.gz",
+        fastq2 = OUTPUT_BASE + "/reads/{sample_folder_name}/03_umis_extracted/{sample}_umiextracted_R2.fastq.gz"
     log:
         "logs/03_umi_tools_extract/{sample_folder_name}/{sample}.log"
     threads:
@@ -24,9 +27,11 @@ rule: umi_tools_extract:
     params:
         queue = "short",
         # additional options including the UMI barcode info is stored here:
-        config["umi_tools_extract"]["extra"] 
+        extra = config["umi_tools_extract"]["extra"] 
     conda:
-        "../../envs/umi_tools.yaml"
+        "../../../envs/umi_tools5.yaml"
+    resources:
+        mem_mb = 2000
     shell:
         "umi_tools extract "
         "--extract-method=string "
@@ -35,3 +40,6 @@ rule: umi_tools_extract:
         "--read2-out={output.fastq2} "
         "-L {log} "
         "{input.fastq1} > {output.fastq1} "
+
+
+

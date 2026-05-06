@@ -80,7 +80,9 @@ rule star_pe_multi:
         sj = OUTPUT_BASE + "/alignment/{sample_folder_name}/star/pe/{sample}_SJ.out.tab",
         unmapped = [OUTPUT_BASE + "/alignment/{sample_folder_name}/star/pe/{sample}_unmapped_1.fastq.gz",
                     OUTPUT_BASE + "/alignment/{sample_folder_name}/star/pe/{sample}_unmapped_2.fastq.gz"],
-        log = OUTPUT_BASE + "/alignment/logs/{sample_folder_name}/star/pe/{sample}_Log.out"
+        log = OUTPUT_BASE + "/alignment/logs/{sample_folder_name}/star/pe/{sample}_Log.out",
+        log_progress = OUTPUT_BASE + "/alignment/logs/{sample_folder_name}/star/pe/{sample}_Log.progress.out",
+        log_final = OUTPUT_BASE + "/alignment/logs/{sample_folder_name}/star/pe/{sample}_Log.final.out" 
     log:
         "logs/06_alignment/{sample_folder_name}/{sample}_alignment.log",
     params:

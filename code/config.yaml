@@ -18,8 +18,8 @@ cellranger_output: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/m
 fourgenomes_output: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/fourgenomes/sce_objects/00_cellranger_output" 
 
 # bulk RNAseq
-#TODO: CHANGE FROM TEST
 table_bulk: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/bulk_rnaseq/raw_msc_test/metadata_test.csv"
+#table_bulk: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/bulk_rnaseq/metadata_sheet_bulk.csv"
 fastq_input: "/omics/odcf/analysis/OE0538_projects/DO-0008/data/bulk_rnaseq/raw_msc_test"
 
 #mm10genome:  "/omics/odcf/analysis/OE0538_projects/DO-0008/data_freeze/02_species_genomes/fourgenomes/mmus"

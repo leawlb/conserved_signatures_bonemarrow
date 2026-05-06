@@ -14,12 +14,11 @@ OUTPUT_DAT = OUTPUT_BASE + "/bulk_rnaseq_test"
 #-------------------------------------------------------------------------------
 
 # extract sample name from DKFZ-style metadata sheet by current fastq file name
-# the sheet should be pre-filtered for only required samples
+# the sheet is pre-filtered to only required samples
 
-# load metadata table 
-# note this is NOT the same metadata table as for scRNAseq analysis
-#TEST!
-metadata_bulk = pd.read_csv(config["table_bulk"], sep = ';', engine='python')
+# load metadata table filtered for bulk RNAseq samples, only
+#metadata_bulk = pd.read_csv(config["table_bulk"], sep = ',', engine = 'python')
+metadata_bulk = pd.read_csv(config["table_bulk"], sep = ';', engine = 'python')
 print(metadata_bulk.head())
 
 # extract the required variables
@@ -47,25 +46,28 @@ for snr in sample_name_r:
     for sn in sample_name:
         if sn in snr:
             #targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/" + snr + ".fastq.gz"]
-            targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/02_prepro_qc/" + snr + ".html"]
-            targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/02_prepro_qc/" + snr + "_fastqc.zip"]
+            targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/02_prepro_qc/" + snr + "_raw.html"]
+            targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/02_prepro_qc/" + snr + "_raw_fastqc.zip"]
             targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/05_fastqc_prepped/" + snr + "_prepped_fastqc.zip"]
             targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/05_fastqc_prepped/" + snr + "_prepped.html"]
 
 # sample-level (-ish) processing
 for sn in sample_name:
+    # umi extraction, adapter trimming
     targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/03_umis_extracted/" + sn + "_umiextracted_R1.fastq.gz"]
     targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/03_umis_extracted/" + sn + "_umiextracted_R2.fastq.gz"]
     targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/04_trimmed/" + sn + "_trimmed_R1.fastq.gz"]
     targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/04_trimmed/" + sn + "_trimmed_R2.fastq.gz"]
     targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/04_trimmed/qc/cutadapt/" + sn + ".txt"]
 
+    # alignment with STAR
     targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/star/pe/" + sn + "_pe_aligned.sam"]
     targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/star/pe/" + sn + "_SJ.out.tab"]
     targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/star/pe/" + sn + "_unmapped_1.fastq.gz"]
     targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/star/pe/" + sn + "_unmapped_2.fastq.gz"]
     targets = targets + [OUTPUT_BASE + "/alignment/logs/" + sn + "/star/pe/" + sn + "_Log.out"]
  
+    # deduplucation of aligned files, duplicate removal etc. 
     targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/07_umi_tools_dedup/" + sn + "_sorted_aligned.bam"]
     targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/07_umi_tools_dedup/" + sn + "_sorted_aligned.bam.bai"]
 
@@ -76,7 +78,7 @@ targets = targets + [OUTPUT_BASE + "/genome/star"]
 
 #print(targets)
 
-localrules: all, link_files, download_genome, generate_sam
+localrules: all, link_files, download_genome
 rule all: 
     input:
         targets

@@ -13,14 +13,14 @@
     
 rule cutadapt:
     input:
-        [OUTPUT_BASE + "/reads/{sample_folder_name}/03_umis_extracted/{sample}_umiextracted_R1.fastq.gz",
-         OUTPUT_BASE + "/reads/{sample_folder_name}/03_umis_extracted/{sample}_umiextracted_R2.fastq.gz"]
+        [OUTPUT_BASE + "/reads/{sample_folder_name}/03_umis_extracted/03_{sample}_umiextracted_R1.fastq.gz",
+         OUTPUT_BASE + "/reads/{sample_folder_name}/03_umis_extracted/03_{sample}_umiextracted_R2.fastq.gz"]
     output:
-        fastq1 = OUTPUT_BASE + "/reads/{sample_folder_name}/04_trimmed/{sample}_trimmed_R1.fastq.gz",
-        fastq2 = OUTPUT_BASE + "/reads/{sample_folder_name}/04_trimmed/{sample}_trimmed_R2.fastq.gz",
+        fastq1 = OUTPUT_BASE + "/reads/{sample_folder_name}/04_trimmed/04_{sample}_trimmed_R1.fastq.gz",
+        fastq2 = OUTPUT_BASE + "/reads/{sample_folder_name}/04_trimmed/04_{sample}_trimmed_R2.fastq.gz",
         qc =  OUTPUT_BASE + "/reads/{sample_folder_name}/04_trimmed/qc/cutadapt/{sample}.txt"
     log:
-        "logs/04_cutadapt/{sample_folder_name}/{sample}.log"
+        "logs/{sample_folder_name}/04_cutadapt/04_{sample}.log"
     threads:
         6
     params:

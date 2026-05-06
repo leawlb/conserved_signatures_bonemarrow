@@ -17,10 +17,10 @@ rule generate_bam:
         # I use "aligned" for consistency, umi_tools uses "mapped"
         aligned_sam = rules.star_pe_multi.output.aln
     output:
-        aligned_sorted_bam = OUTPUT_BASE + "/alignment/{sample_folder_name}/07_umi_tools_dedup/{sample}_sorted_aligned.bam",
-        aligned_sorted_bam_index = OUTPUT_BASE + "/alignment/{sample_folder_name}/07_umi_tools_dedup/{sample}_sorted_aligned.bam.bai"
+        aligned_sorted_bam = OUTPUT_BASE + "/alignment/{sample_folder_name}/07_umi_tools_dedup/07_{sample}_sorted_aligned.bam",
+        aligned_sorted_bam_index = OUTPUT_BASE + "/alignment/{sample_folder_name}/07_umi_tools_dedup/07_{sample}_sorted_aligned.bam.bai",
     log:
-        "logs/07_umi_tools_dedup/{sample_folder_name}/{sample}_generate_bam.log"   
+        "logs/{sample_folder_name}/07_umi_tools_dedup/07_{sample}_generate_bam.log"   
     threads:
         1
     params:
@@ -37,14 +37,34 @@ rule generate_bam:
         "samtools sort {params.output_dir}/aligned.bam -o {output.aligned_sorted_bam}; "
         "samtools index {output.aligned_sorted_bam} {output.aligned_sorted_bam_index}; "
 
+# get statistics on the dedupped sorted bam file for QC BEFORE dedup
+rule samtools_stats_before:
+    input:
+        aligned_sorted_bam = rules.generate_bam.output.aligned_sorted_bam
+    output:
+        samtools_stats_before = OUTPUT_BASE + "/alignment/{sample_folder_name}/07_umi_tools_dedup/07_{sample}_before_stats.txt"
+    log:
+        "logs/{sample_folder_name}/07_umi_tools_dedup/07_before_{sample}_samtools_stats.log"   
+    threads:
+        1
+    params:
+        queue = "medium",
+    resources:
+        mem_mb = 500
+    envmodules:
+        "SAMtools/1.20-GCC-14.1.0"
+    shell:
+        "set -euo pipefail; "
+        "samtools stats {input.aligned_sorted_bam} > {output.samtools_stats_before} "
+
 # use umi_tools dedup function to deduplicate the bam file
 rule umi_tools_dedup:
     input:
         aligned_sorted_bam = rules.generate_bam.output.aligned_sorted_bam
     output: 
-        dedup_bam = OUTPUT_BASE + "/alignment/{sample_folder_name}/07_umi_tools_dedup/{sample}_dedup.bam",
+        dedup_bam = OUTPUT_BASE + "/alignment/{sample_folder_name}/07_umi_tools_dedup/07_{sample}_dedup.bam",
     log:
-        "logs/07_umi_tools_dedup/{sample_folder_name}/{sample}_dedup.log"   
+        "logs/{sample_folder_name}/07_umi_tools_dedup/07_{sample}_dedup.log"   
     threads:
         1
     params:
@@ -65,8 +85,8 @@ rule generate_sorted_dedup_bam:
     input:
         dedup_bam = rules.umi_tools_dedup.output.dedup_bam
     output:
-        sorted_dedup_bam = OUTPUT_BASE + "/alignment/{sample_folder_name}/07_umi_tools_dedup/{sample}_sorted_dedup.bam",
-        sorted_dedup_bam_index = OUTPUT_BASE + "/alignment/{sample_folder_name}/07_umi_tools_dedup/{sample}_sorted_dedup.bam.bai"
+        sorted_dedup_bam = OUTPUT_BASE + "/alignment/{sample_folder_name}/07_umi_tools_dedup/07_{sample}_sorted_dedup.bam",
+        sorted_dedup_bam_index = OUTPUT_BASE + "/alignment/{sample_folder_name}/07_umi_tools_dedup/07_{sample}_sorted_dedup.bam.bai"
     log:
         "logs/07_umi_tools_dedup/{sample_folder_name}/{sample}_generate_bam.log"   
     threads:
@@ -83,14 +103,14 @@ rule generate_sorted_dedup_bam:
         "samtools sort {input.dedup_bam} -o {output.sorted_dedup_bam}; "
         "samtools index {output.sorted_dedup_bam} {output.sorted_dedup_bam_index}; "
 
-# get statistics on the dedupped sorted bam file for QC
-rule samtools_stats: 
+# get statistics on the dedupped sorted bam file for QC AFTER dedup
+rule samtools_stats_dedup: 
     input:
         sorted_dedup_bam = rules.generate_sorted_dedup_bam.output.sorted_dedup_bam
     output:
-        samtools_stats = OUTPUT_BASE + "/alignment/{sample_folder_name}/07_umi_tools_dedup/{sample}_dedup_stats.txt"
+        samtools_stats_after = OUTPUT_BASE + "/alignment/{sample_folder_name}/07_umi_tools_dedup/07_{sample}_dedup_stats.txt"
     log:
-        "logs/07_umi_tools_dedup/{sample_folder_name}/{sample}_samtools_stats.log"   
+        "logs/{sample_folder_name}/07_umi_tools_dedup/07_dedup_{sample}_samtools_stats.log"   
     threads:
         1
     params:
@@ -101,4 +121,4 @@ rule samtools_stats:
         "SAMtools/1.20-GCC-14.1.0"
     shell:
         "set -euo pipefail; "
-        "samtools stats {input.sorted_dedup_bam} > {output.samtools_stats} "
+        "samtools stats {input.sorted_dedup_bam} > {output.samtools_stats_after} "

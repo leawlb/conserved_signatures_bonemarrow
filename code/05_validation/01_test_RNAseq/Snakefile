@@ -46,38 +46,43 @@ for snr in sample_name_r:
     for sn in sample_name:
         if sn in snr:
             #targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/" + snr + ".fastq.gz"]
-            targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/02_prepro_qc/" + snr + "_raw.html"]
-            targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/02_prepro_qc/" + snr + "_raw_fastqc.zip"]
-            targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/05_fastqc_prepped/" + snr + "_prepped_fastqc.zip"]
-            targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/05_fastqc_prepped/" + snr + "_prepped.html"]
+            targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/02_prepro_qc/02_" + snr + "_raw.html"]
+            targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/02_prepro_qc/02_" + snr + "_raw_fastqc.zip"]
+            targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/05_fastqc_prepped/05_" + snr + "_prepped_fastqc.zip"]
+            targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/05_fastqc_prepped/05_" + snr + "_prepped.html"]
 
 # sample-level (-ish) processing
 for sn in sample_name:
     # umi extraction, adapter trimming
-    targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/03_umis_extracted/" + sn + "_umiextracted_R1.fastq.gz"]
-    targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/03_umis_extracted/" + sn + "_umiextracted_R2.fastq.gz"]
-    targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/04_trimmed/" + sn + "_trimmed_R1.fastq.gz"]
-    targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/04_trimmed/" + sn + "_trimmed_R2.fastq.gz"]
+    targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/03_umis_extracted/03_" + sn + "_umiextracted_R1.fastq.gz"]
+    targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/03_umis_extracted/03_" + sn + "_umiextracted_R2.fastq.gz"]
+    targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/04_trimmed/04_" + sn + "_trimmed_R1.fastq.gz"]
+    targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/04_trimmed/04_" + sn + "_trimmed_R2.fastq.gz"]
     targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/04_trimmed/qc/cutadapt/" + sn + ".txt"]
 
     # alignment with STAR
-    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/star/pe/" + sn + "_pe_aligned.sam"]
-    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/star/pe/" + sn + "_SJ.out.tab"]
-    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/star/pe/" + sn + "_unmapped_1.fastq.gz"]
-    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/star/pe/" + sn + "_unmapped_2.fastq.gz"]
-    targets = targets + [OUTPUT_BASE + "/alignment/logs/" + sn + "/star/pe/" + sn + "_Log.out"]
+    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/star/pe/06_" + sn + "_pe_aligned.sam"]
+    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/star/pe/06_" + sn + "_SJ.out.tab"]
+    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/star/pe/06_" + sn + "_unmapped_1.fastq.gz"]
+    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/star/pe/06_" + sn + "_unmapped_2.fastq.gz"]
+    targets = targets + [OUTPUT_BASE + "/alignment/logs/" + sn + "/star/pe/06_" + sn + "_Log.out"]
  
     # deduplucation of aligned files, samtools, etc.  
-    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/07_umi_tools_dedup/" + sn + "_sorted_aligned.bam"]
-    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/07_umi_tools_dedup/" + sn + "_sorted_aligned.bam.bai"]
-    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/07_umi_tools_dedup/" + sn + "_sorted_dedup.bam"]
-    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/07_umi_tools_dedup/" + sn + "_sorted_dedup.bam.bai"]
-    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/07_umi_tools_dedup/" + sn + "_dedup_stats.txt"]
+    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/07_umi_tools_dedup/07_" + sn + "_sorted_aligned.bam"]
+    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/07_umi_tools_dedup/07_" + sn + "_sorted_aligned.bam.bai"]
+    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/07_umi_tools_dedup/07_" + sn + "_sorted_dedup.bam"]
+    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/07_umi_tools_dedup/07_" + sn + "_sorted_dedup.bam.bai"]
+    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/07_umi_tools_dedup/07_" + sn + "_before_stats.txt"]
+    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/07_umi_tools_dedup/07_" + sn + "_dedup_stats.txt"]
 
 # ref genome
 targets = targets + [OUTPUT_BASE + "/genome/fasta/Mus_musculus.GRCm39.dna.primary_assembly.fa"]
 targets = targets + [OUTPUT_BASE + "/genome/gtf/Mus_musculus.GRCm39.115.gtf"]
 targets = targets + [OUTPUT_BASE + "/genome/star"]
+
+# multiQC
+targets = targets + [OUTPUT_BASE + "/qc/multi_qc_all/multiqc.html"]
+targets = targets + [OUTPUT_BASE + "/qc/multi_qc_all/multiqc_data.zip"]
 
 #print(targets)
 
@@ -115,4 +120,5 @@ include: "rules/06_alignment.smk"
 #     also includes rules to perform samtools operations
 include: "rules/07_umi_tools_dedup.smk"
 
-# 08: multiQC
+# 08: multiQC to evaluate all QC files together 
+include: "rules/08_multiqc.smk"

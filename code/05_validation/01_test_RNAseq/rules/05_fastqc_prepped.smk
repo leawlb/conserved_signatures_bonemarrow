@@ -26,13 +26,13 @@ rule fastqc_prepped:
     input:
         cutadapt_output_fastq
     output:
-        html = OUTPUT_BASE + "/reads/{sample_folder_name}/05_fastqc_prepped/{sample}_{read}_prepped.html",
-        zip = OUTPUT_BASE + "/reads/{sample_folder_name}/05_fastqc_prepped/{sample}_{read}_prepped_fastqc.zip" # the suffix _fastqc.zip is necessary for multiqc to find the file. If not using multiqc, you are free to choose an arbitrary filename
+        html = OUTPUT_BASE + "/reads/{sample_folder_name}/05_fastqc_prepped/05_{sample}_{read}_prepped.html",
+        zip = OUTPUT_BASE + "/reads/{sample_folder_name}/05_fastqc_prepped/05_{sample}_{read}_prepped_fastqc.zip" # the suffix _fastqc.zip is necessary for multiqc to find the file. If not using multiqc, you are free to choose an arbitrary filename
     params:
         extra = "--quiet ",
         queue = "short"  
     log:
-        "logs/05_fastqc_prepped/{sample_folder_name}/{sample}_{read}.log"
+        "logs/{sample_folder_name}/05_fastqc_prepped/05_{sample}_{read}.log"
     threads: 1
     resources:
         mem_mb = 1024

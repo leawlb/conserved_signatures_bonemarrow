@@ -18,10 +18,10 @@ rule umi_tools_extract:
         fastq1 = OUTPUT_BASE + "/raw_msc_test/{sample_folder_name}/{sample}_R1.fastq.gz",
         fastq2 = OUTPUT_BASE + "/raw_msc_test/{sample_folder_name}/{sample}_R2.fastq.gz"
     output: 
-        fastq1 = OUTPUT_BASE + "/reads/{sample_folder_name}/03_umis_extracted/{sample}_umiextracted_R1.fastq.gz",
-        fastq2 = OUTPUT_BASE + "/reads/{sample_folder_name}/03_umis_extracted/{sample}_umiextracted_R2.fastq.gz"
+        fastq1 = OUTPUT_BASE + "/reads/{sample_folder_name}/03_umis_extracted/03_{sample}_umiextracted_R1.fastq.gz",
+        fastq2 = OUTPUT_BASE + "/reads/{sample_folder_name}/03_umis_extracted/03_{sample}_umiextracted_R2.fastq.gz"
     log:
-        "logs/03_umi_tools_extract/{sample_folder_name}/{sample}.log"
+        "logs/{sample_folder_name}/03_umi_tools_extract/03_{sample}.log"
     threads:
         1
     params:

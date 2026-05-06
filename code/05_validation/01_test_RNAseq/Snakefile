@@ -72,6 +72,7 @@ for sn in sample_name:
     targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/07_umi_tools_dedup/" + sn + "_sorted_aligned.bam.bai"]
     targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/07_umi_tools_dedup/" + sn + "_sorted_dedup.bam"]
     targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/07_umi_tools_dedup/" + sn + "_sorted_dedup.bam.bai"]
+    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/07_umi_tools_dedup/" + sn + "_dedup_stats.txt"]
 
 # ref genome
 targets = targets + [OUTPUT_BASE + "/genome/fasta/Mus_musculus.GRCm39.dna.primary_assembly.fa"]
@@ -113,3 +114,5 @@ include: "rules/06_alignment.smk"
 # 07: umitools dedup: deduplicates identical reads with the same UMIs
 #     also includes rules to perform samtools operations
 include: "rules/07_umi_tools_dedup.smk"
+
+# 08: multiQC

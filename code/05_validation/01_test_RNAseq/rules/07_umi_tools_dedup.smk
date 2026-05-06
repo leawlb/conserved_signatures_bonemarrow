@@ -58,6 +58,9 @@ rule umi_tools_dedup:
         "umi_tools dedup -I {input.aligned_sorted_bam} --log={log} --paired --output-stats={params.output_dir}/deduplicated --stdout {output.dedup_bam} "
 
 # from dedup output, generate sorted and indexed .bam for downstream processing
+# this rule also generates some QC outputs in the directory but that are not
+# explicitly stated in output
+# this takes ~30 - 40 minutes
 rule generate_sorted_dedup_bam:
     input:
         dedup_bam = rules.umi_tools_dedup.output.dedup_bam
@@ -80,23 +83,22 @@ rule generate_sorted_dedup_bam:
         "samtools sort {input.dedup_bam} -o {output.sorted_dedup_bam}; "
         "samtools index {output.sorted_dedup_bam} {output.sorted_dedup_bam_index}; "
 
-"""
+# get statistics on the dedupped sorted bam file for QC
 rule samtools_stats: 
     input:
         sorted_dedup_bam = rules.generate_sorted_dedup_bam.output.sorted_dedup_bam
     output:
         samtools_stats = OUTPUT_BASE + "/alignment/{sample_folder_name}/07_umi_tools_dedup/{sample}_dedup_stats.txt"
     log:
-        "logs/07_umi_tools_dedup/{sample_folder_name}/{sample}_generate_bam.log"   
+        "logs/07_umi_tools_dedup/{sample_folder_name}/{sample}_samtools_stats.log"   
     threads:
         1
     params:
         queue = "medium",
+    resources:
+        mem_mb = 500
     envmodules:
         "SAMtools/1.20-GCC-14.1.0"
     shell:
         "set -euo pipefail; "
         "samtools stats {input.sorted_dedup_bam} > {output.samtools_stats} "
-
-
-"""

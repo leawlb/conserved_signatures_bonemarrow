@@ -69,7 +69,6 @@ rule generate_star_index:
         """
 
 #-------------------------------------------------------------------------------
-fastq1 = OUTPUT_BASE + "/reads/{sample_folder_name}/04_trimmed/{sample}_trimmed_R1.fastq.gz",
 
 rule star_pe_multi:
     input:
@@ -77,13 +76,13 @@ rule star_pe_multi:
         fq2 = rules.cutadapt.output.fastq2,
         idx = rules.generate_star_index.output.index_dir # directory
     output:
-        aln = OUTPUT_BASE + "/alignment/star/pe/{sample_folder_name}/{sample}_pe_aligned.sam",
-        sj = OUTPUT_BASE + "/alignment/star/pe/{sample_folder_name}/{sample}_SJ.out.tab",
-        unmapped = [OUTPUT_BASE + "/alignment/star/pe/{sample_folder_name}/{sample}_unmapped_1.fastq.gz",
-                    OUTPUT_BASE + "/alignment/star/pe/{sample_folder_name}/{sample}_unmapped_2.fastq.gz"],
-        log = OUTPUT_BASE + "/alignment/logs/star/pe/{sample_folder_name}/{sample}_Log.out"
+        aln = OUTPUT_BASE + "/alignment/{sample_folder_name}/star/pe/{sample}_pe_aligned.sam",
+        sj = OUTPUT_BASE + "/alignment/{sample_folder_name}/star/pe/{sample}_SJ.out.tab",
+        unmapped = [OUTPUT_BASE + "/alignment/{sample_folder_name}/star/pe/{sample}_unmapped_1.fastq.gz",
+                    OUTPUT_BASE + "/alignment/{sample_folder_name}/star/pe/{sample}_unmapped_2.fastq.gz"],
+        log = OUTPUT_BASE + "/alignment/logs/{sample_folder_name}/star/pe/{sample}_Log.out"
     log:
-        "logs/06_alignment/pe/{sample_folder_name}/{sample}_alignment.log",
+        "logs/06_alignment/{sample_folder_name}/{sample}_alignment.log",
     params:
         # optional parameters
         extra = "",

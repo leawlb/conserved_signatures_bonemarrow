@@ -60,12 +60,15 @@ for sn in sample_name:
     targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/04_trimmed/" + sn + "_trimmed_R2.fastq.gz"]
     targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/04_trimmed/qc/cutadapt/" + sn + ".txt"]
 
-    targets = targets + [OUTPUT_BASE + "/alignment/star/pe/" + sn + "/" + sn + "_pe_aligned.sam"]
-    targets = targets + [OUTPUT_BASE + "/alignment/star/pe/" + sn + "/" + sn + "_SJ.out.tab"]
-    targets = targets + [OUTPUT_BASE + "/alignment/star/pe/" + sn + "/" + sn + "_unmapped_1.fastq.gz"]
-    targets = targets + [OUTPUT_BASE + "/alignment/star/pe/" + sn + "/" + sn + "_unmapped_2.fastq.gz"]
-    targets = targets + [OUTPUT_BASE + "/alignment/logs/star/pe/" + sn + "/" + sn + "_Log.out"]
+    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/star/pe/" + sn + "_pe_aligned.sam"]
+    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/star/pe/" + sn + "_SJ.out.tab"]
+    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/star/pe/" + sn + "_unmapped_1.fastq.gz"]
+    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/star/pe/" + sn + "_unmapped_2.fastq.gz"]
+    targets = targets + [OUTPUT_BASE + "/alignment/logs/" + sn + "/star/pe/" + sn + "_Log.out"]
  
+    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/07_umi_tools_dedup/" + sn + "_sorted_aligned.bam"]
+    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/07_umi_tools_dedup/" + sn + "_sorted_aligned.bam.bai"]
+
 # ref genome
 targets = targets + [OUTPUT_BASE + "/genome/fasta/Mus_musculus.GRCm39.dna.primary_assembly.fa"]
 targets = targets + [OUTPUT_BASE + "/genome/gtf/Mus_musculus.GRCm39.115.gtf"]
@@ -73,7 +76,7 @@ targets = targets + [OUTPUT_BASE + "/genome/star"]
 
 #print(targets)
 
-localrules: all, link_files, download_genome
+localrules: all, link_files, download_genome, generate_sam
 rule all: 
     input:
         targets
@@ -103,4 +106,5 @@ include: "rules/05_fastqc_prepped.smk"
 #     and for generating a genome index 
 include: "rules/06_alignment.smk"
 
-# 07: umitools dedup: deduplicated identical reads with the same UMIs
+# 07: umitools dedup: deduplicates identical reads with the same UMIs
+include: "rules/07_umi_tools_dedup.smk"

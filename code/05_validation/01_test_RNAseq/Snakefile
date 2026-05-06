@@ -67,9 +67,11 @@ for sn in sample_name:
     targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/star/pe/" + sn + "_unmapped_2.fastq.gz"]
     targets = targets + [OUTPUT_BASE + "/alignment/logs/" + sn + "/star/pe/" + sn + "_Log.out"]
  
-    # deduplucation of aligned files, duplicate removal etc. 
+    # deduplucation of aligned files, samtools, etc.  
     targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/07_umi_tools_dedup/" + sn + "_sorted_aligned.bam"]
     targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/07_umi_tools_dedup/" + sn + "_sorted_aligned.bam.bai"]
+    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/07_umi_tools_dedup/" + sn + "_sorted_dedup.bam"]
+    targets = targets + [OUTPUT_BASE + "/alignment/" + sn + "/07_umi_tools_dedup/" + sn + "_sorted_dedup.bam.bai"]
 
 # ref genome
 targets = targets + [OUTPUT_BASE + "/genome/fasta/Mus_musculus.GRCm39.dna.primary_assembly.fa"]
@@ -109,4 +111,5 @@ include: "rules/05_fastqc_prepped.smk"
 include: "rules/06_alignment.smk"
 
 # 07: umitools dedup: deduplicates identical reads with the same UMIs
+#     also includes rules to perform samtools operations
 include: "rules/07_umi_tools_dedup.smk"

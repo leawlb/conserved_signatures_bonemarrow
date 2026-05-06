@@ -69,26 +69,26 @@ rule generate_star_index:
         """
 
 #-------------------------------------------------------------------------------
+fastq1 = OUTPUT_BASE + "/reads/{sample_folder_name}/04_trimmed/{sample}_trimmed_R1.fastq.gz",
 
 rule star_pe_multi:
     input:
-        # atm, the non-preprocessed fastqs will serve as input for testing
-        # because umi_tools and cutadapt are just skeletons for pipeline build
-        # and will be adjusted to the actual data to be analysed later
-        fq1 = [OUTPUT_BASE + "/reads/{sample}/{sample}_R1.fastq.gz"], # TODO: CHANGE LATER
-        fq2 = [OUTPUT_BASE + "/reads/{sample}/{sample}_R2.fastq.gz"], # TODO: CHANGE LATER
+        fq1 = rules.cutadapt.output.fastq1,
+        fq2 = rules.cutadapt.output.fastq2,
         idx = rules.generate_star_index.output.index_dir # directory
     output:
-        aln = OUTPUT_BASE + "/alignment/star/pe/{sample}/pe_aligned.sam",
-        log = OUTPUT_BASE + "/alignment/logs/star/pe/{sample}/Log.out",
-        sj = OUTPUT_BASE + "/alignment/star/pe/{sample}/SJ.out.tab",
-        unmapped = [OUTPUT_BASE + "/alignment/star/pe/{sample}/unmapped.fastq.gz"],
+        aln = OUTPUT_BASE + "/alignment/star/pe/{sample_folder_name}/{sample}_pe_aligned.sam",
+        sj = OUTPUT_BASE + "/alignment/star/pe/{sample_folder_name}/{sample}_SJ.out.tab",
+        unmapped = [OUTPUT_BASE + "/alignment/star/pe/{sample_folder_name}/{sample}_unmapped_1.fastq.gz",
+                    OUTPUT_BASE + "/alignment/star/pe/{sample_folder_name}/{sample}_unmapped_2.fastq.gz"],
+        log = OUTPUT_BASE + "/alignment/logs/star/pe/{sample_folder_name}/{sample}_Log.out"
     log:
-        "logs/06_aligment/pe/{sample}.log",
+        "logs/06_alignment/pe/{sample_folder_name}/{sample}_alignment.log",
     params:
         # optional parameters
-        extra="",
-        queue = "long",
+        extra = "",
+        queue = "long"
+    resources:
         mem_mb = 40000
     threads: 8
     envmodules:

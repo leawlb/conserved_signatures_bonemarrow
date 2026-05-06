@@ -14,6 +14,7 @@ OUTPUT_DAT = OUTPUT_BASE + "/bulk_rnaseq_test"
 #-------------------------------------------------------------------------------
 
 # extract sample name from DKFZ-style metadata sheet by current fastq file name
+# the sheet should be pre-filtered for only required samples
 
 # load metadata table 
 # note this is NOT the same metadata table as for scRNAseq analysis
@@ -21,10 +22,7 @@ OUTPUT_DAT = OUTPUT_BASE + "/bulk_rnaseq_test"
 metadata_bulk = pd.read_csv(config["table_bulk"], sep = ';', engine='python')
 print(metadata_bulk.head())
 
-# remove rows with Nan in the Sample name
-# metadata_bulk = metadata_bulk.dropna(axis=0, subset=["SAMPLE_NAME"])
-
-# function to extract the required variables
+# extract the required variables
 def get_unique_list(metadata, column):
     return metadata[column].dropna().drop_duplicates().tolist()
 
@@ -44,15 +42,15 @@ print(sample_name_r)
 
 targets = []
 
-# single file processing
+# single file/read processing
 for snr in sample_name_r:
     for sn in sample_name:
         if sn in snr:
             #targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/" + snr + ".fastq.gz"]
             targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/02_prepro_qc/" + snr + ".html"]
             targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/02_prepro_qc/" + snr + "_fastqc.zip"]
-            #targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/05_fastqc_prepped/" + snr + "_fastqc.zip"]
-            #targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/05_fastqc_prepped/" + snr + ".html"]
+            targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/05_fastqc_prepped/" + snr + "_prepped_fastqc.zip"]
+            targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/05_fastqc_prepped/" + snr + "_prepped.html"]
 
 # sample-level (-ish) processing
 for sn in sample_name:
@@ -62,11 +60,13 @@ for sn in sample_name:
     targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/04_trimmed/" + sn + "_trimmed_R2.fastq.gz"]
     targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/04_trimmed/qc/cutadapt/" + sn + ".txt"]
 
-#    targets = targets + [OUTPUT_BASE + "/alignment/star/pe/" + sn + "/pe_aligned.sam"]
-#    targets = targets + [OUTPUT_BASE + "/alignment/logs/star/pe/" + sn + "/Log.out"]
-#    targets = targets + [OUTPUT_BASE + "/alignment/star/pe/" + sn + "/SJ.out.tab"]
-#    targets = targets + [OUTPUT_BASE + "/alignment/star/pe/" + sn + "/unmapped.fastq.gz"]
+    targets = targets + [OUTPUT_BASE + "/alignment/star/pe/" + sn + "/" + sn + "_pe_aligned.sam"]
+    targets = targets + [OUTPUT_BASE + "/alignment/star/pe/" + sn + "/" + sn + "_SJ.out.tab"]
+    targets = targets + [OUTPUT_BASE + "/alignment/star/pe/" + sn + "/" + sn + "_unmapped_1.fastq.gz"]
+    targets = targets + [OUTPUT_BASE + "/alignment/star/pe/" + sn + "/" + sn + "_unmapped_2.fastq.gz"]
+    targets = targets + [OUTPUT_BASE + "/alignment/logs/star/pe/" + sn + "/" + sn + "_Log.out"]
  
+# ref genome
 targets = targets + [OUTPUT_BASE + "/genome/fasta/Mus_musculus.GRCm39.dna.primary_assembly.fa"]
 targets = targets + [OUTPUT_BASE + "/genome/gtf/Mus_musculus.GRCm39.115.gtf"]
 targets = targets + [OUTPUT_BASE + "/genome/star"]
@@ -89,16 +89,18 @@ rule all:
 # 02: FastQC .htmls before actual processing, on raw fastq files
 include: "rules/02_fastqc.smk"
 
-# 03: umi_tools to extract the UMIs
+# 03: umi_tools to extract the UMIs from read 2
 include: "rules/03_umi_tools_extract.smk"
 
 # 04: cutadapt to cut adapter sequences etc. from the reads before alignment
 include: "rules/04_cutadapt.smk"
 
 # 05: FastQC after pre-processing steps on individual fastq files
-#include: "rules/05_fastqc_prepped.smk"
+include: "rules/05_fastqc_prepped.smk"
 
 # 06: alignment to reference genome using STAR
 #     also includes rules for downloading ensembl release 115 mmus genome
 #     and for generating a genome index 
-#include: "rules/06_alignment.smk"
+include: "rules/06_alignment.smk"
+
+# 07: umitools dedup: deduplicated identical reads with the same UMIs

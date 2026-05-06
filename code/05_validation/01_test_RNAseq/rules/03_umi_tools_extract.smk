@@ -54,5 +54,3 @@ rule umi_tools_extract:
 # - https://github.com/CGATOxford/UMI-tools/issues/522
 # there is a --read2-only option but it's not available for this version of umi_tools
 # otherwise, umi_tools also expects both -bc-pattern and bc-pattern2
-
-

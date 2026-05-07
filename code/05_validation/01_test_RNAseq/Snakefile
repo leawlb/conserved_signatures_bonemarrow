@@ -49,8 +49,8 @@ for snr in sample_name_r:
         if sn in snr:
             targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/01_raw/01_" + snr + "_raw.fastq.gz"]
  
-            #targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/02_prepro_qc/02_" + snr + "_raw.html"]
-            #targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/02_prepro_qc/02_" + snr + "_raw_fastqc.zip"]
+            targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/02_fastqc_raw/02_" + snr + "_raw.html"]
+            targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/02_fastqc_raw/02_" + snr + "_raw_fastqc.zip"]
             #targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/05_fastqc_prepped/05_" + snr + "_prepped_fastqc.zip"]
             #targets = targets + [OUTPUT_BASE + "/reads/" + sn + "/05_fastqc_prepped/05_" + snr + "_prepped.html"]
 
@@ -100,7 +100,7 @@ rule all:
 include: "rules/01_link_files.smk"
 
 # 02: FastQC .htmls before actual processing, on raw fastq files
-#include: "rules/02_fastqc.smk"
+include: "rules/02_fastqc.smk"
 
 # 03: umi_tools to extract the UMIs from read 2
 #include: "rules/03_umi_tools_extract.smk"

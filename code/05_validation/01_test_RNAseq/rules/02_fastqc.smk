@@ -8,17 +8,14 @@
 rule fastqc_raw:
     input:
         # for actual use
-        #rules.link_files.output
-        # for TESTING!! the file should be "renamed"
-        OUTPUT_BASE + "/raw_msc_test/{sample_folder_name}/{sample}_R{read}.fastq.gz"
+        rules.link_files.output
     output:
-        html = OUTPUT_BASE + "/reads/{sample_folder_name}/02_prepro_qc/02_{sample}_R{read}_raw.html",
-        zip = OUTPUT_BASE + "/reads/{sample_folder_name}/02_prepro_qc/02_{sample}_R{read}_raw_fastqc.zip" # the suffix _fastqc.zip is necessary for multiqc to find the file. If not using multiqc, you are free to choose an arbitrary filename
+        html = OUTPUT_BASE + "/reads/{sample_folder_name}/02_fastqc_raw/02_{sample_r}_raw.html",
+        zip = OUTPUT_BASE + "/reads/{sample_folder_name}/02_fastqc_raw/02_{sample_r}_raw_fastqc.zip" 
+        # the suffix _fastqc.zip is necessary for multiqc to find the file. If not using multiqc, you are free to choose an arbitrary filename
     params:
         extra = "--quiet",
-        queue = "short" # for DKFZ LSF cluster queue 
-    log:
-        "logs/{sample_folder_name}/02_fastqc_raw/02_{sample}_R{read}.log"
+        queue = "long" # for DKFZ LSF cluster queue 
     threads: 1
     resources:
         mem_mb = 1024

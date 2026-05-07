@@ -24,7 +24,7 @@ rule cutadapt:
     threads:
         6
     params:
-        queue = "medium",
+        queue = "long",
         # additional options including the 
         # (adapter) read sequences to be removed are stored here:
         extra = config["cutadapt"]["extra"] 

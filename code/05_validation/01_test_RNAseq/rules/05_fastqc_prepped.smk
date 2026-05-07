@@ -30,7 +30,7 @@ rule fastqc_prepped:
         zip = OUTPUT_BASE + "/reads/{sample_folder_name}/05_fastqc_prepped/05_{sample}_{read}_prepped_fastqc.zip" # the suffix _fastqc.zip is necessary for multiqc to find the file. If not using multiqc, you are free to choose an arbitrary filename
     params:
         extra = "--quiet ",
-        queue = "short"  
+        queue = "long"  
     log:
         "logs/{sample_folder_name}/05_fastqc_prepped/05_{sample}_{read}.log"
     threads: 1

@@ -25,7 +25,7 @@ rule umi_tools_extract:
     threads:
         1
     params:
-        queue = "medium",
+        queue = "long",
         extra = config["umi_tools_extract"]["extra"] 
     conda:
         "../../../envs/umi_tools5.yaml"

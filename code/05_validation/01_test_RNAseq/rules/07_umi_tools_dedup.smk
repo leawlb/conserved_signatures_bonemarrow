@@ -62,9 +62,9 @@ rule umi_tools_dedup:
     input:
         aligned_sorted_bam = rules.generate_bam.output.aligned_sorted_bam
     output: 
-        dedup_bam = OUTPUT_BASE + "/alignment/{sample_folder_name}/07_umi_tools_dedup/07_{sample}_dedup.bam",
+        dedup_bam = OUTPUT_BASE + "/alignment/{sample_folder_name}/07_umi_tools_dedup/07_{sample}_dedupped.bam",
     log:
-        "logs/{sample_folder_name}/07_umi_tools_dedup/07_{sample}_dedup.log"   
+        "logs/{sample_folder_name}/07_umi_tools_dedup/07_{sample}_dedupped.log"   
     threads:
         1
     params:

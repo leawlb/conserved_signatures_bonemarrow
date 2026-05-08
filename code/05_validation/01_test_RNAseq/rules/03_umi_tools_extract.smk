@@ -12,11 +12,8 @@
 rule umi_tools_extract:
     input:
         # raw files (symlinks)
-        #fastq1 = OUTPUT_BASE + "/reads/{sample_folder_name}/{sample}_R1.fastq.gz",
-        #fastq2 = OUTPUT_BASE + "/reads/{sample_folder_name}/{sample}_R2.fastq.gz"
-        # FOR TESTING
-        fastq1 = OUTPUT_BASE + "/raw_msc_test/{sample_folder_name}/{sample}_R1.fastq.gz",
-        fastq2 = OUTPUT_BASE + "/raw_msc_test/{sample_folder_name}/{sample}_R2.fastq.gz"
+        fastq1 = OUTPUT_BASE + "/reads/{sample_folder_name}/01_raw/01_{sample}_R1_raw.fastq.gz",
+        fastq2 = OUTPUT_BASE + "/reads/{sample_folder_name}/01_raw/01_{sample}_R2_raw.fastq.gz"
     output: 
         fastq1 = OUTPUT_BASE + "/reads/{sample_folder_name}/03_umis_extracted/03_{sample}_umiextracted_R1.fastq.gz",
         fastq2 = OUTPUT_BASE + "/reads/{sample_folder_name}/03_umis_extracted/03_{sample}_umiextracted_R2.fastq.gz"
@@ -46,7 +43,7 @@ rule umi_tools_extract:
 # according to SMART-Seq® Total RNA Library Prep with ZapR Depletion (with UMIs) User Manual
 
 # --bc-pattern:
-# NNNNNNNN will be added to the sequence name (that is the UMI)
+# NNNNNNNN will be added to the sequence name (that is the UMI) from the start of the read
 # XXXXXX will be kept in the read, then I will trim it downstream using cutadapt
 
 # UMI is on read 2 only; it is recommended to swap the input and output files from R1 to R2

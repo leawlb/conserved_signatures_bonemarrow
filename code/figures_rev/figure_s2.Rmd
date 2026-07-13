@@ -699,7 +699,7 @@ b_umap_4
 dev.off()
 ```
 
-## Gene expression heatmaps C and D
+## Gene expression heatmaps 
 
 ### Prep data
 
@@ -817,8 +817,6 @@ agg_cust_df <- agg_cust_df %>%
 ```
 
 ##### Subset to required genes and scale
-
-Scale within each clustering.
 
 ```{r scale_function}
 scale_expression <- function(expression_df){

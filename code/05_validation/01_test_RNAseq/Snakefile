@@ -41,6 +41,11 @@ print(metadata_bulk.tail())
 
 #-------------------------------------------------------------------------------
 
+ab_targets = ["neo1", "trkb"]
+#ab_targets = ["neo1"]
+
+#-------------------------------------------------------------------------------
+
 targets = []
 
 # single file/read processing
@@ -88,6 +93,22 @@ targets = targets + [OUTPUT_BASE + "/genome/star"]
 targets = targets + [OUTPUT_BASE + "/qc/multi_qc_all/multiqc.html"]
 targets = targets + [OUTPUT_BASE + "/qc/multi_qc_all/multiqc_data.zip"]
 
+# counts
+targets = targets + [OUTPUT_BASE + "/counts/09_feature_counts/09_all_counts.featureCounts"]
+targets = targets + [OUTPUT_BASE + "/counts/09_feature_counts/09_all_counts.featureCounts.summary"]
+targets = targets + [OUTPUT_BASE + "/counts/09_feature_counts/09_all_counts.featureCounts.jcounts"]
+
+# analysis (DESeq2)
+targets = targets + [OUTPUT_BASE + "/counts/10_dds/10_dds.Rds"]
+
+
+for abt in ab_targets:
+    targets = targets + [OUTPUT_BASE + "/counts/11_deseq2/11_vsd_" + abt + ".Rds"]
+    targets = targets + [OUTPUT_BASE + "/counts/11_deseq2/11_rld_" + abt + ".Rds"]
+    targets = targets + [OUTPUT_BASE + "/counts/11_deseq2/11_res_df_" + abt + ".Rds"]
+    targets = targets + [OUTPUT_BASE + "/counts/11_deseq2/11_check_deseq2_qc_" + abt + ".html"]
+    targets = targets + [OUTPUT_BASE + "/counts/11_deseq2/11_figure_ideas_" + abt + ".html"]
+
 #print(targets)
 
 localrules: all, download_genome
@@ -126,3 +147,6 @@ include: "rules/08_multiqc.smk"
 
 # 09: FeatureCounts to get nr of reads per fragment for analysis
 include: "rules/09_featurecounts.smk"
+
+# 10: perform analysis using DESeq2
+include: "rules/10_deseq2.smk"

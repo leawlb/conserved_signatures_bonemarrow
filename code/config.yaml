@@ -173,3 +173,13 @@ cutadapt:
     -A AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT 
     --nextseq-trim 20
     --minimum-length 10
+
+# for featurecounts
+feature_counts:
+  extra: >-
+    -O --fracOverlap 0.2
+    -p 
+    --countReadPairs
+    -t exon 
+    -g gene_id
+    -J

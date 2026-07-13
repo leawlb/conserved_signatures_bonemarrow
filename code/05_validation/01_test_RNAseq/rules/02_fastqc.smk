@@ -3,7 +3,7 @@
 
 # intended as an overview of the quality BEFORE any pre-processing
 # using this snakemake wrapper:
-# https://github.com/s-andrews/FastQC
+# https://snakemake-wrappers.readthedocs.io/en/v5.7.0/wrappers/fastqc.html
 
 rule fastqc_raw:
     input:

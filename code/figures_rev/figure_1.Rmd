@@ -8,7 +8,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Generate Figure 1 
+Generate Figure 1: UMAPs and cell type marker gene expression.
 
 #### Load objects
 

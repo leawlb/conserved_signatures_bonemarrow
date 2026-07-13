@@ -21,13 +21,19 @@ targets = targets + [OUTPUT_PATH + "/figure_2.html"]
 targets = targets + [OUTPUT_PATH + "/figure_3.html"]
 targets = targets + [OUTPUT_PATH + "/figure_4.html"]
 targets = targets + [OUTPUT_PATH + "/figure_5.html"]
+targets = targets + [OUTPUT_PATH + "/figure_6.html"]
 
-targets = targets + [OUTPUT_PATH + "/figure_s2.html"]
-targets = targets + [OUTPUT_PATH + "/figure_s2_alluvial_hsc.html"]
-targets = targets + [OUTPUT_PATH + "/figure_s2_alluvial_str.html"]
-targets = targets + [OUTPUT_PATH + "/figure_s4.html"]
-targets = targets + [OUTPUT_PATH + "/figure_s5.html"]
-targets = targets + [OUTPUT_PATH + "/figure_s6.html"]
+targets = targets + [OUTPUT_PATH + "/figure_s7_facs.html"]
+
+
+#targets = targets + [OUTPUT_PATH + "/figure_s2.html"]
+#targets = targets + [OUTPUT_PATH + "/figure_s2_alluvial_hsc.html"]
+##targets = targets + [OUTPUT_PATH + "/figure_s2_alluvial_str.html"]
+#targets = targets + [OUTPUT_PATH + "/figure_s4.html"]
+#targets = targets + [OUTPUT_PATH + "/figure_s5.html"]
+#targets = targets + [OUTPUT_PATH + "/figure_s6.html"]
+
+#targets = targets + [OUTPUT_PATH + "/figure_s6.html"]
 
 """
 targets = targets + [OUTPUT_PATH + "/figure_s3.html"]
@@ -72,27 +78,27 @@ rule run_fig_2:
 
 rule run_fig_3:
     resources:
-        mem_mb=40000,
+        mem_mb=80000,
         queues="medium"
     output:
         OUTPUT_PATH + "/figure_3.html"
     params:
         base_path = BASE_PATH
     threads: 4
+    conda:
+        "../envs/ggpattern.yml"
     script:
         "figure_3.Rmd"
 
 rule run_fig_4:
     resources:
         mem_mb=80000,
-        queues="medium"
+        queues="short"
     output:
         OUTPUT_PATH + "/figure_4.html"
     params:
         base_path = BASE_PATH
     threads: 4
-    conda:
-        "../envs/ggpattern.yml"
     script:
         "figure_4.Rmd"
 
@@ -107,6 +113,22 @@ rule run_fig_5:
     threads: 4
     script:
         "figure_5.Rmd"
+
+
+rule run_fig_6:
+    resources:
+        mem_mb=80000,
+        queues="short"
+    output:
+        OUTPUT_PATH + "/figure_6.html"
+    params:
+        base_path = BASE_PATH
+    threads: 4
+    conda:
+        "../envs/bulk_figures5.yaml"
+    script:
+        "figure_6.Rmd"
+
 
 
 rule run_fig_s2:
@@ -185,3 +207,18 @@ rule run_fig_s6:
     threads: 4
     script:
         "figure_s6.Rmd"
+
+rule run_fig_s7:
+    resources:
+        mem_mb=40000,
+        queues="short"
+    output:
+        OUTPUT_PATH + "/figure_s7_facs.html"
+    params:
+        base_path = BASE_PATH
+    threads: 1
+    conda:
+        "../envs/bulk_figures5.yaml"
+    script:
+        "figure_s7_facs.Rmd"
+

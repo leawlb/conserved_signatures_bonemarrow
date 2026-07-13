@@ -43,6 +43,7 @@ library(Seurat, quietly = TRUE)
 
 ```{r define_basepath}
 base_path <- snakemake@input[["base_path"]]
+# metadata_path <- paste0(base_path, "/metadata")
 metadata_path <- snakemake@input[["metadata_path"]]
 ```
 

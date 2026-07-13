@@ -8,7 +8,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Generate Figure 2,.
+Generate Figure 2: HSPC signature genes.
 
 Because Figure 2 requires so much data, it is ordered by how big each chunk of 
 data is.

@@ -22,7 +22,7 @@ for sn in sample_name:
 
 # gathering all inputs together, sticking only to possible
 # sample_name sample_name combinations
-input_list  = []
+input_list = []
 for sn in sample_name:
     input_list = input_list + [
         expand(
@@ -60,7 +60,7 @@ input_list = input_list + [["logs/"]]
 #print(input_list)
 # make the list flat, not nested
 flat_list = [x for sublist in input_list for x in sublist]
-print(flat_list)
+#print(flat_list)
 
 # run multi qc supplying a list of files
 rule test_multiqc_file:

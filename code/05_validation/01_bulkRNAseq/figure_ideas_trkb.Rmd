@@ -1,0 +1,1922 @@
+---
+title: "Figure ideas Trkb"
+author: "Lea Wölbert"
+date: '2026-05-11'
+output: html_document
+---
+
+This .Rmd file generates a lot of plots to get a deeper understanding
+of possibly identities of TrkB+ cells and also to test which type of
+plot can nicely show that.
+
+```{r seed}
+set.seed(37)
+```
+
+```{r load,  message = FALSE}
+library(SingleCellExperiment)
+library(tidyverse)
+library(ggpubr)
+library(DESeq2)
+```
+
+```{r load_objects}
+# bulk RNAseq output
+vsd_trkb <- readRDS(snakemake@input[["vsd_trkb"]])
+results_df_trkb <- readRDS(snakemake@input[["results_df_trkb"]])
+
+# corresponding single cell RNAseq data
+sce_str <- readRDS(snakemake@input[["sce_str"]])
+
+#stromal conserved signature gene list
+sign_genes <- readRDS(snakemake@input[["sign_genes"]])
+```
+
+```{r}
+pval_cutoff <- 0.05
+lfc_cutoff <- 0.25
+
+col_mice <- c(
+      "05" = "red4",
+      "06" = "orange3",
+      "07" = "goldenrod2",
+      "08" = "yellow3"
+    )
+
+#source("../../figures/determine_params.R")
+
+# color table
+colors_path <- snakemake@params[["colors_path"]]
+source(snakemake@params[["colors"]])
+source(snakemake@params[["plotting"]])
+```
+
+## Normalised counts
+
+```{r counts_table_trkb}
+
+# get the counts from vsd, transformed only for visualisation
+counts_trkb <- assays(vsd_trkb)[[1]]
+
+counts_long_trkb <- counts_trkb %>% 
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = "gene_name") %>%
+  tidyr::pivot_longer(
+    names_to = "Object_ID", 
+    values_to = "counts", 
+    cols = c(1:ncol(counts_trkb)+1))
+
+ counts_long_trkb <- counts_long_trkb  %>% 
+    tidyr::separate(
+      Object_ID,
+      into = c(
+        "Species_ID", 
+        "Fraction_ID", 
+        "Target_ID", 
+        "Condition_ID", 
+        "Mouse_ID"),
+      sep = "_",
+      remove = FALSE
+  ) 
+```
+
+#### Signature genes
+
+```{r trkb_signature_genes}
+
+# get the significant results
+results_df_trkb_significant <- results_df_trkb %>%
+    filter(padj < pval_cutoff)
+
+# get the Fibro signature genes
+Fibro_sign <- sign_genes$Fibroblast$conserved_signature
+Fibro_sign_005 <- Fibro_sign[which(Fibro_sign %in% 
+  rownames(results_df_trkb_significant))]
+sort(Fibro_sign_005)
+sort(Fibro_sign[!Fibro_sign %in% 
+  rownames(results_df_trkb_significant)])
+table(Fibro_sign %in% rownames(results_df_trkb_significant))
+
+# check how many signature genes were captured by the trkb+ population
+for(i in names(sign_genes)){
+    print(i)
+    print(table(
+        sign_genes[[i]]$conserved_signature %in% 
+            rownames(results_df_trkb_significant)))
+}  
+# Fibro, fibro chondro, and fibro clusters are the only ones where 
+# the majority of signature genes is detected as significant
+```
+
+```{r signature_gene_df}
+
+signature_gene_df <- data.frame()
+
+# make a df with all signature genes per cell type
+for(i in names(sign_genes)){
+    print(i)
+
+    sign_df <- data.frame(
+      "celltype" = rep(
+        i, 
+        length = length(sign_genes[[i]]$conserved_signature)),
+      "genes" = sign_genes[[i]]$conserved_signature)
+    
+    signature_gene_df <- rbind(
+      signature_gene_df,
+      sign_df
+      )
+}  
+
+signature_gene_df <- signature_gene_df %>%
+  dplyr::mutate(
+    is_significant = genes %in% rownames(results_df_trkb_significant))
+
+res_df <- signature_gene_df %>%
+  dplyr::group_by(celltype) %>%
+  dplyr::summarise(
+    n_true  = sum(is_significant == TRUE),
+    n_false = sum(is_significant == FALSE),
+    total_genes = n()
+  ) %>%
+  dplyr::mutate(percentage_significant = n_true/total_genes) 
+
+res_df$celltype <- factor(
+  res_df$celltype,
+  levels = names(col_cts_str)
+)
+
+res_df
+```
+
+```{r plot_percentage, fig.width = 4, fig.height = 4}
+plot_percentage <- ggplot(
+  res_df, 
+  aes(
+    x = celltype,
+    y = percentage_significant))+
+  ggplot2::geom_col()+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))+
+  ggplot2::ylab("proportion signature genes, DE significant")+
+  ggplot2::ylim(c(0,1))
+plot_percentage
+```
+
+```{r test_related_celltypes}
+osteo_sign <- sign_genes$Osteo$conserved_signature
+osteo_sign_005 <- osteo_sign[which(osteo_sign %in% 
+  rownames(results_df_trkb_significant))]
+sort(osteo_sign_005)
+sort(osteo_sign[!osteo_sign %in% rownames(results_df_trkb_significant)])
+
+fibrochondro_sign <- sign_genes$'Fibro/Chondro'$conserved_signature
+fibrochondro_sign_005 <- fibrochondro_sign[which(fibrochondro_sign %in% 
+  rownames(results_df_trkb_significant))]
+sort(fibrochondro_sign_005)
+sort(fibrochondro_sign[!fibrochondro_sign %in% 
+  rownames(results_df_trkb_significant)])
+
+# the overlap of the detected signature genes is not super high
+table(is.na(match(Fibro_sign_005, osteo_sign_005)))
+table(is.na(match(fibrochondro_sign_005, osteo_sign_005)))
+table(is.na(match(fibrochondro_sign_005, Fibro_sign_005)))
+```
+
+#### Gene lists
+
+Compiled a lot of lists of genes from DESeq2 results lists,
+from literature, from PCA loadings, or otherwise 
+possibly interesting genes.
+
+Roughly sorted into categories or ordered, but with any
+marker gene, 100 % exact cell type specificity does not exist.  
+
+I'm trying to get a rough understanding of the Neo1+ cells
+by looking at a lot of genes, not just a handfull.
+
+```{r trkb_genes}
+
+# interesting genes in the DE list from trkb samples
+# and genes I was interested in from literature
+gene_vis_trkb <- unique(c(
+  "Ntrk2",
+  "Cd34",
+  "Col5a3",
+  "Abi3bp",
+  "Abca8a",
+  "Abca8b",
+  "Lama2",
+  "Lamb2",
+  "Egfr",
+  "Fgfr1",
+  "Rarres2",
+  "Ecm1",
+  "S100a10",
+  "S100a6",
+  "Ackr3",
+  "Dpt",
+  "Nes",
+  "Cspg4",
+  "Pdgfrb",
+  "Prg4",
+  "Tnn",
+  "Sox9",
+  "Ptprz1",
+  "Col1a1",
+  "Col1a2",
+  "Alpl",
+  "Vcam1",
+  "Flnc",
+  "Tln2",
+  "Ntrk3",
+
+  "Neo1",
+  "Runx2",
+  "Postn",
+  "Col1a1",
+  "Col1a2",
+  "Col12a1",
+  "Col5a1",
+  "Col5a2",
+
+  "Mxra8",
+  "Sparc",
+  "Tnn",
+  "Dlx5",
+
+  "Pdpn",
+  "Prelp",
+  "Tnxb",
+  "Fbn1",
+  "Vcam1",
+  "Pxdc1",
+  "Bmp4",
+  "Pdgfra",
+  "Pdgfrb",
+  "Pdgfc",
+  "Pappa",
+  "Nrp1",
+  "F13a1",
+  "Lama5",
+  "Itgb8",
+  "Itga8",
+  "Adamts2",
+  "Nr2f2",
+  "Tagln",
+  "Mcam",
+  "Myh11",
+  "Carmn",
+  "Enpep",
+  "Ddr2"
+  ))
+
+
+# significant, from Fibro list, and also somehow known
+# nicer looking fibro genes
+# MUST BE DE except for Ntrk2
+gene_vis_TOP <- unique(c(
+  "Ntrk2", # not significant
+  "Abca8a",
+  "Abca8b",
+  "Egfr",
+  "Anxa5",
+  "Ank2",
+  "Sod3",
+  "Fgfr1",
+  "Lama2",
+  "Lama5",
+  "Lamb2",
+  "Ackr3",
+  "Nes",
+  "Dpt",
+  "Nr2f2",
+  "Fgfr1",
+  "Fbn1",
+  "Col1a1",
+  "Cola12",
+  "Col5a1",
+  "Col5a2",
+  "Col5a3",
+  "Ahnak",
+  "Cd34",
+  "Dpt",
+  "Ackr3",
+  "Zeb2",
+
+  "Pdpn",
+  "Prelp",
+  "Nr2f2",
+
+  "Tagln",
+  "Myh11",
+  "Rgs5"
+))
+
+# list of genes I want to show,
+# can include MSCs, fibro, osteo, other
+final_pick <- unique(c(
+
+  # MSC/Fibro identity, DE significant
+  "Pdgfrb",
+  "Cspg4", 
+  "Dpt",
+  "Fbn1",
+  "Zeb2",
+
+  # fibro/ECM
+  "Col5a1",
+  "Col6a2",
+  "Ddr2",
+  "Cd34",
+  "Prelp",
+
+  # from osteo signature list (shared)
+  "Slit2",
+  "Runx2",
+  "Alpl",
+
+  # Peri
+  "Lama2",
+  "Lama5",
+  "Nr2f2",
+  "Tagln",
+  "Rgs5"
+
+))
+
+# add back Ntrk2 and also add negative controls
+final_pick <- final_pick[final_pick %in% 
+  rownames(results_df_trkb_significant)]
+
+final_pick <- c("Ntrk2", final_pick, c(
+  "Kitl", # Niche
+  "Hoxa10", # Osteo
+  "Pecam1", # EC
+  "Procr" # HSC
+))
+
+trkb_trkb_compare_overlap <- unique(c(
+  
+  # general fibro/MSC markers
+  "Pdgfrb", # DE
+  "Nes",
+  "Cspg4",
+
+  "Col3a1", # not DE
+  "Col6a3",
+  "Sfrp2",
+  "Ccdc80",
+  "Nid2",
+  "Mfap2",
+  "Eln",
+  "Fbln7",
+  "Timp1",
+  "Timp3",
+
+  "Abca8a",
+  "Abca8b",
+  "Egfr",
+  "Anxa5",
+  "Ahnak",
+
+  # trkb+ only
+
+  "Cd34", # from fibro signature list
+  "Rarres2",
+  "Crip1",
+  "Ugdh", # moderately fibro
+  "Lmna",
+  "Sema3c",
+ 
+  "Pdgfc", # not from signature list but somewhow fibro related
+  "Pappa",
+  "Nrp1",
+  "Rarres2",
+  "F13a1",
+  "Enpep",
+  "Lama5",
+  "Lama2",
+  "Lamb2",
+  "Itgb8",
+  "Itga8",
+  "Adamts2",
+  "Adamts7",
+  "Adamts8",
+  "Nr2f2",
+  "Fn1",
+  "Itga11",
+
+  # with SMC flavor
+  "Tagln",
+  "Myh11",
+  "Carmn",
+  "Mcam",
+  "Myod1",
+
+  # with Adipo flavor
+  "Lpl",
+
+  # with chondro flavor
+  "Sox5",
+  "Prg4",
+  
+  # with neuro flavor
+  "Ntrk3",
+  "Ngfr",
+  "Plp",
+  "Mapt",
+
+  # from osteo signature list but only DE in trkb
+  "Gpc1",
+  "Enah",
+  "Col5a1",
+  "Zeb2",
+
+  # trkb+ and trkb+ fibro shared
+
+  "Cdh2",
+  "Col5a1",
+  "Col5a2",
+  "Emilin1",
+  "Mmp13",
+  "Runx2",
+  "Pcolce",
+  "Ptprd",
+  "Mrxa8",
+
+  # not list
+  "Postn",
+  "Ibsp",
+  # trkb+ and trkb+ osteo shared
+  "Ptprz1",
+  "Col1a1",
+  "Sparc",
+  "Pdpn",
+
+  # osteo only but also not sign in trkb+
+  "Ptgis",
+  "Dlx5",
+  "Dcn",
+  "Mef2c",
+
+  # trkb+ only (DE significant)
+  "Sp7",
+  "Spp1",
+  "Satb2",
+  "Blap",
+  "Bglap2",
+  "Pth1r",
+  "Wnt16",
+  "Fzd1",
+  "Fzd8",
+  "Lrp6",
+  "Gli1",
+  "Gli3",
+  "Hoxa10",
+  "Clec11a",
+  "Gja1",
+  "Mmp14",
+  "Mmp2",
+  "Thbs1",
+  "Thbs3",
+  "Smad3",
+  "Smad7",
+  "Smad9",
+  "Tgfbr1",
+  "Cdh11",
+  "Col24a1",
+  "Itgbl1",
+  "Nt5e",
+  "Serpinf1",
+  "Lox",
+  "Loxl3",
+  "P4ha1",
+  "P4ha2",
+  "P3h1",
+  "P3h3",
+
+  # with chondro flavor
+  "Cilp2",
+  
+  # other osteo-ish
+  "Col6a2",
+  "Pgx3",
+  "Osr2",
+
+  # chondro flavor
+  "Chad",
+  "Acan",
+  "Sox9",
+  "Matn3",
+  "Fmod"
+))
+
+trkb_neo_compare_final <- unique(c(
+  # unique trkb fibro genes
+  "Cd34",
+  "Rarres2",
+  "Lama5",
+  "Tagln",
+  "Nr2f2",
+  "Adamts8",
+  "Myh11",
+
+  # shared genes
+  "Ackr3",
+  "Dpt",
+  "Sod3",
+  "Col1a1",
+  "Col5a1",
+  "Col5a2",
+
+  # shared osteo genes that look good in both
+  "Pdpn",
+  "Sdc4",
+  "Slit2",
+  "Mxra8",
+
+  # not so good looking shared osteo genes
+  "Lrp4",
+  "Alpl",
+  "Runx2",
+  "Mmp13",
+
+  # osteo only osteo genes
+  "Satb2",
+  "Mmp14",
+  "Pth1r",
+  "Sp7",
+
+  # osteo only literature osteo genes
+  # DE
+  "Wnt16", 
+  "Nt5e",
+  "Fzd8", 
+  "Spp1",
+  "Smad9",
+  "Hoxa10",
+  "Dact1",
+  "Cdh11"
+))
+
+negative_controls <- unique(c(
+  # Adipo/CAR/Niche
+  "Kitl",
+  "Cxcl14",
+  "Cxcl12",
+  "Lepr",
+  "Adipoq",
+  "Plin1",
+  "Lpl",
+  "Pappa",
+
+  # fibro
+  "Pdgfra",
+  "Lum",
+  "Dcn",
+  "Fn1",
+  "Scara5",
+  "Sema3c",
+
+  # Peri/SMC or muscle
+  "Acta2",
+  "Acta1",
+  "Tnnc2",
+  "Tagln",
+  "Rgs5",
+  "Rgs4",
+  "Myh11",
+  "Steap4",
+
+  # chondro
+  "Acan",
+  "Chad",
+  "Creb5",
+  "Comp",
+  "Fmod",
+  "Mgp",
+  "Sox9",
+
+  # ECs
+  "Pecam1",
+  "Cdh5",
+  "Plvap",
+  "Lyve1",
+  "Ccl21a",
+  "Efnb2",
+  "Emcn",
+  "Flt4",
+  "Prox1",
+  "Rgcc",
+  "Sox17",
+  "Stab2",
+
+  # hematopoietic
+  "Mecom",
+  "Procr",
+  "Meis1",
+  "Mllt3",
+  "Mpl",
+  "Spi1",
+  "Pbx1",
+  "Hoxa9",
+  "Flt3",
+  "Mpo",
+  "Irf8",
+  "Ctsg",
+  "Elane",
+  "S100a8",
+  "S100a9",
+  "Ms4a2",
+  "Ms4a6c",
+  "Dntt",
+  "Cd79b",
+  "Il7r",
+  "Pf4",
+  "Zfpm1",
+  "Klf1",
+  "Epor",
+  "Hba-a1"
+
+))
+
+negative_controls <- negative_controls[!negative_controls %in% 
+  rownames(results_df_trkb_significant)]
+
+gene_list_trkb <- list(
+    gene_vis_trkb,
+    Fibro_sign_005,
+    Fibro_sign,
+    gene_vis_TOP,
+    final_pick,
+    trkb_trkb_compare_overlap,
+    trkb_neo_compare_final,
+    negative_controls
+)
+
+gene_list_trkb_rev <- list(
+    rev(gene_vis_trkb),
+    rev(Fibro_sign_005),
+    rev(Fibro_sign),
+    rev(gene_vis_TOP),
+    rev(final_pick),
+    rev(trkb_trkb_compare_overlap),
+    rev(trkb_neo_compare_final),
+   rev( negative_controls)
+)
+```
+
+#### process for visualisation
+
+```{r counts_long_trkb_genes_list}
+counts_long_trkb_genes_list <- lapply(
+  gene_list_trkb, 
+  function(gene_list){
+  
+  counts_long_trkb_genes <- counts_long_trkb %>%
+    dplyr::filter(gene_name %in% gene_list)
+
+  counts_long_trkb_genes$gene_name <- factor(
+    counts_long_trkb_genes$gene_name,
+    levels = gene_list)
+
+  counts_long_trkb_genes <- counts_long_trkb_genes  %>% 
+    tidyr::separate(
+      Object_ID,
+      into = c(
+        "Species_ID", 
+        "Fraction_ID", 
+        "Target_ID", 
+        "Condition_ID", 
+        "Mouse_ID"),
+      sep = "_",
+      remove = FALSE
+  ) 
+
+  counts_long_trkb_genes <- counts_long_trkb_genes %>%
+    dplyr::group_by(gene_name) %>%
+    dplyr::mutate(scaled = as.numeric(scale(counts))) %>%
+    dplyr::ungroup()
+
+  return(counts_long_trkb_genes)
+})
+```
+
+```{r counts_long_trkb_genes_list_rev}
+counts_long_trkb_genes_list_rev <- lapply(
+  gene_list_trkb_rev, 
+  function(gene_list){
+  
+  counts_long_trkb_genes <- counts_long_trkb %>%
+    dplyr::filter(gene_name %in% gene_list)
+
+  counts_long_trkb_genes$gene_name <- factor(
+    counts_long_trkb_genes$gene_name,
+    levels = gene_list)
+
+  counts_long_trkb_genes <- counts_long_trkb_genes  %>% 
+    tidyr::separate(
+      Object_ID,
+      into = c(
+        "Species_ID", 
+        "Fraction_ID", 
+        "Target_ID", 
+        "Condition_ID", 
+        "Mouse_ID"),
+      sep = "_",
+      remove = FALSE
+  ) 
+
+  counts_long_trkb_genes <- counts_long_trkb_genes %>%
+    dplyr::group_by(gene_name) %>%
+    dplyr::mutate(scaled = as.numeric(scale(counts))) %>%
+    dplyr::ungroup()
+
+  return(counts_long_trkb_genes)
+})
+```
+
+#### bulk heatmaps
+
+```{r plot1a, fig.width = 3, fig.height = 8}
+
+plot1a <- ggplot2::ggplot(
+    counts_long_trkb_genes_list_rev[[1]],
+    aes(  
+      x = Object_ID,
+      y = gene_name,
+      fill = scaled))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::scale_fill_gradient2(
+      low = "blue",
+      mid = "white", 
+      high = "red", 
+      midpoint = 0)+
+    ggplot2::ggtitle("hand-picked")
+plot1a
+```
+
+```{r plot1b, fig.width = 3, fig.height = 11}
+
+plot1b <- ggplot2::ggplot(
+  counts_long_trkb_genes_list_rev[[2]],
+    aes(  
+      x = Object_ID,
+      y = gene_name,
+      fill = scaled))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::scale_fill_gradient2(
+      low = "blue",
+      mid = "white", 
+      high = "red", 
+      midpoint = 0)+
+    ggplot2::ggtitle("Fibro signature genes, DE significant")
+plot1b
+```
+
+```{r plot1c, fig.width = 3, fig.height = 14}
+
+plot1c <- ggplot2::ggplot(
+  counts_long_trkb_genes_list_rev[[3]],
+    aes(  
+      x = Object_ID,
+      y = gene_name,
+      fill = scaled))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::scale_fill_gradient2(
+      low = "blue",
+      mid = "white", 
+      high = "red", 
+      midpoint = 0)+
+    ggplot2::ggtitle("all Fibro signature genes")
+plot1c
+```
+
+```{r plot1_top, fig.width = 3, fig.height = 5}
+
+plot1_top <- ggplot2::ggplot(
+  counts_long_trkb_genes_list_rev[[4]],
+    aes(  
+      x = Object_ID,
+      y = gene_name,
+      fill = scaled))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::scale_fill_gradient2(
+      low = "blue",
+      mid = "white", 
+      high = "red", 
+      midpoint = 0)+
+    ggplot2::ggtitle("Top Fibro genes")
+plot1_top
+```
+
+```{r plot1_final, fig.width = 3, fig.height = 5}
+
+plot1_final <- ggplot2::ggplot(
+  counts_long_trkb_genes_list_rev[[5]],
+    aes(  
+      x = Object_ID,
+      y = gene_name,
+      fill = scaled))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::scale_fill_gradient2(
+      low = "blue",
+      mid = "white", 
+      high = "red", 
+      midpoint = 0)+
+    ggplot2::ggtitle("Top picks")
+plot1_final
+```
+
+```{r plot1_final_overlap, fig.width = 3, fig.height = 15}
+
+plot1_final_overlap <- ggplot2::ggplot(
+  counts_long_trkb_genes_list_rev[[6]],
+    aes(  
+      x = Object_ID,
+      y = gene_name,
+      fill = scaled))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::scale_fill_gradient2(
+      low = "blue",
+      mid = "white", 
+      high = "red", 
+      midpoint = 0)+
+    ggplot2::ggtitle("Osteo overlap")
+plot1_final_overlap
+```
+
+```{r plot1_compare, fig.width = 3, fig.height = 6}
+
+plot1_compare <- ggplot2::ggplot(
+  counts_long_trkb_genes_list_rev[[7]],
+    aes(  
+      x = Object_ID,
+      y = gene_name,
+      fill = scaled))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::scale_fill_gradient2(
+      low = "blue",
+      mid = "white", 
+      high = "red", 
+      midpoint = 0)+
+    ggplot2::ggtitle("trkb compare")
+plot1_compare
+```
+
+```{r plot1_negative, fig.width = 3, fig.height = 5}
+
+plot1_negative <- ggplot2::ggplot(
+  counts_long_trkb_genes_list_rev[[8]],
+    aes(  
+      x = Object_ID,
+      y = gene_name,
+      fill = scaled))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::scale_fill_gradient2(
+      low = "blue",
+      mid = "white", 
+      high = "red", 
+      midpoint = 0)+
+    ggplot2::ggtitle("Negative")
+plot1_negative
+```
+
+#### paired dotplot, expression
+
+```{r plot1_paired_a, fig.width = 14, fig.height = 3}
+plot1_paired_a <- ggplot2::ggplot(
+    counts_long_trkb_genes_list[[1]],
+    aes(  
+      x = Condition_ID,
+      y = counts,
+      color = Mouse_ID,
+      group = Mouse_ID))+
+    ggplot2::geom_point()+  
+    ggplot2::geom_line(alpha = 0.6) +
+    ggplot2::theme_classic()+
+    ggplot2::theme(
+      strip.background = element_blank(),
+      axis.text.x = element_text(angle = 90),
+      strip.text.x = element_text(angle = 90, hjust = 0))+
+    ggplot2::scale_color_manual(values = col_mice)+
+    ggplot2::facet_grid(~gene_name)+
+    ggplot2::ggtitle("hand-picked from literature + DESeq2 list")
+plot1_paired_a
+```
+
+```{r plot1_paired_b, fig.width = 18, fig.height = 3}
+plot1_paired_b <- ggplot2::ggplot(
+    counts_long_trkb_genes_list[[2]],
+    aes(  
+      x = Condition_ID,
+      y = counts,
+      color = Mouse_ID,
+      group = Mouse_ID))+
+    ggplot2::geom_point()+  
+    ggplot2::geom_line(alpha = 0.6) +
+    ggplot2::theme_classic()+
+    ggplot2::theme(
+      strip.background = element_blank(),
+      axis.text.x = element_text(angle = 90),
+      strip.text.x = element_text(angle = 90, hjust = 0))+
+    ggplot2::scale_color_manual(values = col_mice)+
+    ggplot2::facet_grid(~gene_name)+
+    ggplot2::ggtitle("Fibro signature genes, DE significant")
+plot1_paired_b
+```
+
+```{r plot1_paired_c, fig.width = 22, fig.height = 3}
+plot1_paired_c <- ggplot2::ggplot(
+    counts_long_trkb_genes_list[[3]],
+    aes(  
+      x = Condition_ID,
+      y = counts,
+      color = Mouse_ID,
+      group = Mouse_ID))+
+    ggplot2::geom_point()+  
+    ggplot2::geom_line(alpha = 0.6) +
+    ggplot2::theme_classic()+
+    ggplot2::theme(
+      strip.background = element_blank(),
+      axis.text.x = element_text(angle = 90),
+      strip.text.x = element_text(angle = 90, hjust = 0))+
+    ggplot2::scale_color_manual(values = col_mice)+
+    ggplot2::facet_grid(~gene_name)+
+    ggplot2::ggtitle("all Fibro signature genes")
+plot1_paired_c
+```
+
+```{r plot1_paired_top, fig.width = 8, fig.height = 3}
+plot1_paired_top <- ggplot2::ggplot(
+    counts_long_trkb_genes_list[[4]],
+    aes(  
+      x = Condition_ID,
+      y = counts,
+      color = Mouse_ID,
+      group = Mouse_ID))+
+    ggplot2::geom_point()+  
+    ggplot2::geom_line(alpha = 0.6) +
+    ggplot2::theme_classic()+
+    ggplot2::theme(
+      strip.background = element_blank(),
+      axis.text.x = element_text(angle = 90),
+      strip.text.x = element_text(angle = 90, hjust = 0))+
+    ggplot2::scale_color_manual(values = col_mice)+
+    ggplot2::facet_grid(~gene_name)+
+    ggplot2::ggtitle("Top Fibro genes")
+plot1_paired_top
+```
+
+```{r plot1_paired_final, fig.width = 7, fig.height = 3.5}
+plot1_paired_final <- ggplot2::ggplot(
+    counts_long_trkb_genes_list[[5]],
+    aes(  
+      x = Condition_ID,
+      y = counts,
+      color = Mouse_ID,
+      group = Mouse_ID))+
+    ggplot2::geom_point()+  
+    ggplot2::geom_line(alpha = 0.6) +
+    ggplot2::theme_classic()+
+    ggplot2::theme(
+      strip.background = element_blank(),
+      axis.text.x = element_text(angle = 90),
+      strip.text.x = element_text(angle = 90, hjust = 0))+
+    ggplot2::scale_color_manual(values = col_mice)+
+    ggplot2::facet_grid(~gene_name)+
+    ggplot2::ggtitle("Top picks")
+plot1_paired_final
+```
+
+```{r plot1_paired_overlap, fig.width = 25, fig.height = 3.5}
+plot1_paired_overlap <- ggplot2::ggplot(
+    counts_long_trkb_genes_list[[6]],
+    aes(  
+      x = Condition_ID,
+      y = counts,
+      color = Mouse_ID,
+      group = Mouse_ID))+
+    ggplot2::geom_point()+  
+    ggplot2::geom_line(alpha = 0.6) +
+    ggplot2::theme_classic()+
+    ggplot2::theme(
+      strip.background = element_blank(),
+      axis.text.x = element_text(angle = 90),
+      strip.text.x = element_text(angle = 90, hjust = 0))+
+    ggplot2::scale_color_manual(values = col_mice)+
+    ggplot2::facet_grid(~gene_name)+
+    ggplot2::ggtitle("Osteo overlap")
+plot1_paired_overlap
+```
+
+```{r plot1_paired_compare, fig.width = 7, fig.height = 3.5}
+plot1_paired_compare <- ggplot2::ggplot(
+    counts_long_trkb_genes_list[[7]],
+    aes(  
+      x = Condition_ID,
+      y = counts,
+      color = Mouse_ID,
+      group = Mouse_ID))+
+    ggplot2::geom_point()+  
+    ggplot2::geom_line(alpha = 0.6) +
+    ggplot2::theme_classic()+
+    ggplot2::theme(
+      strip.background = element_blank(),
+      axis.text.x = element_text(angle = 90),
+      strip.text.x = element_text(angle = 90, hjust = 0))+
+    ggplot2::scale_color_manual(values = col_mice)+
+    ggplot2::facet_grid(~gene_name)+
+    ggplot2::ggtitle("trkb-Trkb compare")
+plot1_paired_compare
+```
+
+```{r plot1_paired_negative, fig.width = 10, fig.height = 3.5}
+plot1_paired_negative <- ggplot2::ggplot(
+    counts_long_trkb_genes_list[[8]],
+    aes(  
+      x = Condition_ID,
+      y = counts,
+      color = Mouse_ID,
+      group = Mouse_ID))+
+    ggplot2::geom_point()+  
+    ggplot2::geom_line(alpha = 0.6) +
+    ggplot2::theme_classic()+
+    ggplot2::theme(
+      strip.background = element_blank(),
+      axis.text.x = element_text(angle = 90),
+      strip.text.x = element_text(angle = 90, hjust = 0))+
+    ggplot2::scale_color_manual(values = col_mice)+
+    ggplot2::facet_grid(~gene_name)+
+    ggplot2::ggtitle("Negative")
+plot1_paired_negative
+```
+
+#### selected dotplot, all cell types
+
+```{r ct_trkb_df_long_scld}
+
+# make a df that contains scaled counts of all signature genes of each cell
+# type, for each sample
+
+# prepare df for dotplot visualitation
+ct_trkb_df <- signature_gene_df
+
+# prepare counts
+counts_trkb_prep <- counts_trkb %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column("genes")
+
+# add counts to each signature genes
+ct_trkb_df <- left_join(ct_trkb_df, counts_trkb_prep, by = "genes")
+
+ct_trkb_df_long <- ct_trkb_df %>% 
+  tidyr::pivot_longer(
+    names_to = "Object_ID", 
+    values_to = "counts", 
+    cols = c(4:10))
+
+ct_trkb_df_long_scld <- ct_trkb_df_long %>%
+  dplyr::group_by(genes) %>%
+  #dplyr::mutate(averaged_counts = mean(as.numeric(counts), na.rm = TRUE)) %>%
+  dplyr::mutate(scaled = as.numeric(scale(counts))) %>%
+  dplyr::ungroup() %>%
+  as.data.frame()
+
+ct_trkb_df_long_scld <- ct_trkb_df_long_scld %>%
+  dplyr::group_by(celltype, Object_ID) %>%
+  dplyr::mutate(median_scaled_counts = median(as.numeric(scaled), na.rm = TRUE)) %>%
+  dplyr::mutate(mean_scaled_counts = mean(as.numeric(scaled), na.rm = TRUE)) %>%
+  dplyr::ungroup() %>%
+  as.data.frame()
+
+ct_trkb_df_long_scld <- ct_trkb_df_long_scld  %>% 
+    tidyr::separate(
+      Object_ID,
+      into = c(
+        "Species_ID", 
+        "Fraction_ID", 
+        "Target_ID", 
+        "Condition_ID", 
+        "Mouse_ID"),
+      sep = "_",
+      remove = FALSE
+  ) 
+
+ct_trkb_df_long_scld$celltype <- factor(
+  ct_trkb_df_long_scld$celltype,
+  levels = c(
+    "Adipo/CAR",
+    "Osteo",
+    "Fibro/Chondro",
+    "Fibroblast",
+    "Art/Cap EC",
+    "Sinusoid/Ven EC",
+    "Sinusoid EC",
+    "Peri/SMC"
+  ))
+```
+
+```{r ct_trkb_df_long_scld_np}
+
+ct_trkb_df_long <- ct_trkb_df_long  %>% 
+    tidyr::separate(
+      Object_ID,
+      into = c(
+        "Species_ID", 
+        "Fraction_ID", 
+        "Target_ID", 
+        "Condition_ID", 
+        "Mouse_ID"),
+      sep = "_",
+      remove = FALSE
+  ) 
+
+ct_trkb_df_long_scld_np <- ct_trkb_df_long %>%
+  dplyr::group_by(genes) %>%
+  dplyr::mutate(scaled = as.numeric(scale(counts))) %>%
+  dplyr::ungroup() %>%
+  as.data.frame()
+
+ct_trkb_df_long_scld_np <- ct_trkb_df_long_scld_np %>%
+  dplyr::group_by(celltype, Condition_ID) %>%
+  dplyr::mutate(median_scaled_counts = median(as.numeric(scaled), na.rm = TRUE)) %>%
+  dplyr::mutate(mean_scaled_counts = mean(as.numeric(scaled), na.rm = TRUE)) %>%
+  dplyr::ungroup() %>%
+  as.data.frame()
+
+ct_trkb_df_long_scld_np$celltype <- factor(
+  ct_trkb_df_long_scld_np$celltype,
+  levels = c(
+    "Adipo/CAR",
+    "Osteo",
+    "Fibro/Chondro",
+    "Fibroblast",
+    "Art/Cap EC",
+    "Sinusoid/Ven EC",
+    "Sinusoid EC",
+    "Peri/SMC"
+  ))
+
+```
+
+```{r plot_celltype_scaled_mean, fig.width = 9, fig.height = 5}
+plot_celltype_scaled_mean <- ggplot2::ggplot(
+    ct_trkb_df_long_scld,
+    aes(  
+      x = Object_ID,
+      y = scaled,
+      color = Mouse_ID))+
+    ggplot2::geom_violin(fill = "grey90", color = "grey90")+  
+    ggplot2::geom_point(
+      data = ct_trkb_df_long_scld,
+      aes(y = mean_scaled_counts, 
+          color = Mouse_ID),
+      size = 4,
+      position = position_dodge(width = 0.3))+
+    ggplot2::geom_hline(yintercept = 0, color = "blue3") +
+    ggplot2::theme_classic()+
+    ggplot2::theme(
+      strip.background = element_blank(),
+      axis.text.x = element_text(angle = 90),
+      strip.text.x = element_text(angle = 90, hjust = 0))+
+    ggplot2::scale_color_manual(values = col_mice)+
+    ggplot2::facet_grid(~celltype)
+
+plot_celltype_scaled_mean
+```
+
+```{r plot_celltype_scaled_mean_color, fig.width = 9, fig.height = 5}
+plot_celltype_scaled_mean_color <- ggplot2::ggplot(
+    ct_trkb_df_long_scld,
+    aes(  
+      x = Object_ID,
+      y = scaled,
+      color = mean_scaled_counts))+
+    ggplot2::geom_violin(fill = "grey90", color = "grey90")+  
+    ggplot2::geom_point(
+      data = ct_trkb_df_long_scld,
+      aes(y = mean_scaled_counts, 
+          color = mean_scaled_counts),
+      size = 4,
+      position = position_dodge(width = 0.3))+
+    ggplot2::geom_hline(yintercept = 0, color = "blue3") +
+    ggplot2::theme_classic()+
+    ggplot2::theme(
+      strip.background = element_blank(),
+      axis.text.x = element_text(angle = 90),
+      strip.text.x = element_text(angle = 90, hjust = 0))+
+    ggplot2::scale_color_gradient2(
+      low = "blue", 
+      mid = "white", 
+      high = "red",
+      midpoint = 0)+
+    ggplot2::facet_grid(~celltype)
+
+plot_celltype_scaled_mean_color
+```
+
+```{r plot_celltype_scaled_median, fig.width = 9, fig.height = 5}
+plot_celltype_scaled_median <- ggplot2::ggplot(
+    ct_trkb_df_long_scld,
+    aes(  
+      x = Object_ID,
+      y = scaled,
+      color = Mouse_ID))+
+    ggplot2::geom_violin(fill = "grey90", color = "grey90")+  
+    ggplot2::geom_point(
+      data = ct_trkb_df_long_scld,
+      aes(y = median_scaled_counts, 
+          color = Mouse_ID),
+      size = 4,
+      position = position_dodge(width = 0.3))+
+    ggplot2::geom_hline(yintercept = 0, color = "blue3") +
+    ggplot2::theme_classic()+
+    ggplot2::theme(
+      strip.background = element_blank(),
+      axis.text.x = element_text(angle = 90),
+      strip.text.x = element_text(angle = 90, hjust = 0))+
+    ggplot2::scale_color_manual(values = col_mice)+
+    ggplot2::facet_grid(~celltype)
+
+plot_celltype_scaled_median
+```
+
+```{r plot_celltype_scaled_median_color, fig.width = 9, fig.height = 5}
+plot_celltype_scaled_median_color <- ggplot2::ggplot(
+    ct_trkb_df_long_scld,
+    aes(  
+      x = Object_ID,
+      y = scaled,
+      color = median_scaled_counts))+
+    ggplot2::geom_violin(fill = "grey90", color = "grey90")+  
+    ggplot2::geom_point(
+      data = ct_trkb_df_long_scld,
+      aes(y = median_scaled_counts, 
+          color = median_scaled_counts),
+      size = 4,
+      position = position_dodge(width = 0.3))+
+    ggplot2::geom_hline(yintercept = 0, color = "blue3") +
+    ggplot2::theme_classic()+
+    ggplot2::theme(
+      strip.background = element_blank(),
+      axis.text.x = element_text(angle = 90),
+      strip.text.x = element_text(angle = 90, hjust = 0))+
+    ggplot2::scale_color_gradient2(
+      low = "blue", 
+      mid = "white", 
+      high = "red", 
+      midpoint = 0)+
+    ggplot2::facet_grid(~celltype)
+
+plot_celltype_scaled_median_color
+```
+
+now by condition (np = negative positive)
+
+```{r plot_celltype_scaled_mean_color_np, fig.width = 6, fig.height = 5}
+plot_celltype_scaled_mean_color_np <- ggplot2::ggplot(
+    ct_trkb_df_long_scld_np,
+    aes(  
+      x = Condition_ID,
+      y = scaled,
+      color = mean_scaled_counts))+
+    ggplot2::geom_violin(fill = "grey90", color = "grey90")+  
+    ggplot2::geom_point(
+      data = ct_trkb_df_long_scld_np,
+      aes(y = mean_scaled_counts, 
+          color = mean_scaled_counts),
+      size = 4,
+      position = position_dodge(width = 0.3))+
+    ggplot2::geom_hline(yintercept = 0, color = "blue3") +
+    ggplot2::theme_classic()+
+    ggplot2::theme(
+      strip.background = element_blank(),
+      axis.text.x = element_text(angle = 90),
+      strip.text.x = element_text(angle = 90, hjust = 0))+
+    ggplot2::scale_color_gradient2(
+      low = "blue", 
+      mid = "white", 
+      high = "red", 
+      midpoint = 0)+
+    ggplot2::facet_grid(~celltype)
+
+plot_celltype_scaled_mean_color_np
+```
+
+```{r plot_celltype_scaled_median_color_np, fig.width = 6, fig.height = 5}
+plot_celltype_scaled_median_color_np <- ggplot2::ggplot(
+    ct_trkb_df_long_scld_np,
+    aes(  
+      x = Condition_ID,
+      y = scaled,
+      color = median_scaled_counts))+
+    ggplot2::geom_violin(fill = "grey90", color = "grey90")+  
+    ggplot2::geom_point(
+      data = ct_trkb_df_long_scld_np,
+      aes(y = median_scaled_counts, 
+          color = median_scaled_counts),
+      size = 4,
+      position = position_dodge(width = 0.3))+
+    ggplot2::geom_hline(yintercept = 0, color = "blue3") +
+    ggplot2::theme_classic()+
+    ggplot2::theme(
+      strip.background = element_blank(),
+      axis.text.x = element_text(angle = 90),
+      strip.text.x = element_text(angle = 90, hjust = 0))+
+    ggplot2::scale_color_gradient2(
+      low = "blue", 
+      mid = "white", 
+      high = "red", 
+      midpoint = 0)+
+    ggplot2::facet_grid(~celltype)
+
+plot_celltype_scaled_median_color_np
+```
+
+#### try logfc instead of counts
+
+```{r logfc_trkb_df}
+
+# make a df that contains scaled counts of all signature genes of each cell
+# type, for each sample
+
+# prepare df for dotplot visualitation
+logfc_trkb_df <- signature_gene_df
+
+# add 200 random genes
+random_df <- data.frame(
+  "celltype" = rep("Random", 150),
+  "genes" = rownames(results_df_trkb)[sample(1:nrow(results_df_trkb), 150)]
+)
+
+random_df <- random_df %>%
+  mutate(is_significant = genes %in% rownames(results_df_trkb_significant))
+
+logfc_trkb_df <- rbind(logfc_trkb_df, random_df)
+
+# prepare results_df
+results_df_trkb_prep <- results_df_trkb %>%
+  rownames_to_column("genes")
+
+# add counts to each signature genes
+logfc_trkb_df <- dplyr::left_join(logfc_trkb_df, results_df_trkb_prep, by = "genes")
+
+logfc_trkb_df <- logfc_trkb_df %>% 
+  dplyr::mutate(
+    padj_plot = ifelse(is.na(padj), 2, -log10(padj)),
+    padj_missing = is.na(padj),
+    is_significant_plot = ifelse(is.na(padj), "pval adj. = NA", is_significant))
+  
+
+logfc_trkb_df$celltype <- factor(
+  logfc_trkb_df$celltype,
+  levels = c(
+    "Adipo/CAR",
+    "Osteo",
+    "Fibro/Chondro",
+    "Fibroblast",
+    "Art/Cap EC",
+    "Sinusoid/Ven EC",
+    "Sinusoid EC",
+    "Peri/SMC",
+    "Random"
+  ))
+```
+
+```{r plot_logfc, fig.width = 7, fig.height = 5}
+plot_logfc <- ggplot2::ggplot(
+    logfc_trkb_df,
+    aes(  
+      x = is_significant,
+      y = log2FoldChange,
+      color = is_significant_plot,
+      size = padj_plot))+
+    #ggplot2::geom_violin(fill = "grey90", color = "grey90")+  
+    ggbeeswarm::geom_quasirandom(alpha = 0.3)+
+    ggplot2::geom_hline(yintercept = 0, color = "grey50") +
+    ggplot2::theme_classic()+
+    ggplot2::theme(
+      strip.background = element_blank(),
+      axis.text.x = element_text(angle = 90),
+      strip.text.x = element_text(angle = 90, hjust = 0))+
+    ggplot2::scale_color_manual("", values = c(
+      "FALSE" = "grey50",
+      "pval adj. = NA" = "grey80",
+      "TRUE" = "blue"))+
+    ggplot2::facet_grid(~celltype)
+
+plot_logfc
+
+print(length(unique(logfc_trkb_df$genes[
+  logfc_trkb_df$celltype != "Random" & 
+  !is.na(logfc_trkb_df$log2FoldChange)])))
+print(length(unique(signature_gene_df$genes)))
+```
+
+NOTE!! several genes were excluded from this analysis due to lack of detection 
+in the bulkRNAseq dataset. 
+
+```{r barplot_logfc, fog.width = 5, fig.height = 2.5}
+barplot_logfc <- ggplot2::ggplot(
+    logfc_trkb_df,
+    aes(  
+      x = celltype,
+      fill = is_significant))+
+    ggplot2::geom_bar(position = "dodge", alpha = 0.85)+  
+    #ggplot2::geom_hline(yintercept = 0, color = "grey50") +
+    ggplot2::theme_classic()+
+    ggplot2::theme(
+      strip.background = element_blank(),
+      axis.text.x = element_text(angle = 90),
+      strip.text.x = element_text(angle = 90, hjust = 0))+
+    ggplot2::scale_fill_manual("", values = c(
+      "FALSE" = "grey50",
+      #"pval adj. = NA" = "grey50",
+      "TRUE" = "blue"))
+barplot_logfc
+```
+
+### SCE object
+
+```{r prep_sce_str_trkb}
+
+sce_str_msc <- sce_str[,sce_str$celltypes %in% c(
+    "Adipo/CAR",
+    "Osteo",
+    "Fibroblast",
+    #"Chondrocyte", # removed
+    "Fibro/Chondro",
+    "Peri/SMC"
+)]
+
+sce_str_msc$is_Fibro <- FALSE
+sce_str_msc$is_Fibro[sce_str_msc$celltypes == "Fibroblast"] <- TRUE
+```
+
+##### Fibro cells compared to all others
+
+```{r prep_sce_str_trkb_is_Fibro}
+
+vis_df_sce_msc_genes_list_is_Fibro <- lapply(gene_list_trkb, function(gene_list){
+
+  sce_str_msc_genes <- sce_str_msc[rownames(sce_str_msc) %in% gene_list,]
+
+  agg_str_msc_genes <- scuttle::aggregateAcrossCells(
+    sce_str_msc_genes, 
+    id=colData(sce_str_msc_genes)[,c("is_Fibro")], 
+    statistics = "mean",
+    use.assay.type = "logcounts")
+
+  vis_df_sce_msc_genes <- base::as.data.frame(
+    t(SummarizedExperiment::assays(agg_str_msc_genes)$logcounts))
+
+  vis_df_sce_msc_genes <- tibble::rownames_to_column(
+    vis_df_sce_msc_genes, 
+    "is_Fibro")
+  vis_df_sce_msc_genes <- tidyr::pivot_longer(
+    vis_df_sce_msc_genes, 
+    cols = c(2:ncol(vis_df_sce_msc_genes)), 
+    values_to = "expression", 
+    names_to = "gene")
+
+  vis_df_sce_msc_genes <- vis_df_sce_msc_genes %>%
+      dplyr::group_by(gene) %>%
+      dplyr::mutate(scaled = as.numeric(scale(expression))) %>%
+      dplyr::ungroup()
+
+  vis_df_sce_msc_genes$gene <- factor(
+    vis_df_sce_msc_genes$gene,
+    levels = gene_list)
+
+  return(vis_df_sce_msc_genes)
+
+})
+```
+
+```{r plot2a, fig.width = 3, fig.height = 6}
+plot2a <-  ggplot2::ggplot(
+    vis_df_sce_msc_genes_list_is_Fibro[[1]],
+    aes(  
+      x = is_Fibro,
+      y = gene,
+      fill = scaled))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::scale_fill_gradient2(
+      low = "blue", 
+      mid = "white", 
+      high = "red", 
+      midpoint = 0)+
+    ggplot2::ggtitle("hand-picked from literature + DESeq2 list")
+plot2a
+```
+
+```{r plot2b, fig.width = 3, fig.height = 8.8}
+plot2b <-  ggplot2::ggplot(
+    vis_df_sce_msc_genes_list_is_Fibro[[2]],
+    aes(  
+      x = is_Fibro,
+      y = gene,
+      fill = scaled))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::scale_fill_gradient2(
+      low = "blue", 
+      mid = "white", 
+      high = "red", 
+      midpoint = 0)+
+    ggplot2::ggtitle("Fibro signature genes, DE significant")
+plot2b
+```
+
+```{r plot2c, fig.width = 3, fig.height = 13}
+plot2c <-  ggplot2::ggplot(
+    vis_df_sce_msc_genes_list_is_Fibro[[3]],
+    aes(  
+      x = is_Fibro,
+      y = gene,
+      fill = scaled))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::scale_fill_gradient2(
+      low = "blue", 
+      mid = "white", 
+      high = "red", 
+      midpoint = 0)+
+    ggplot2::ggtitle("all Fibro signature genes")
+plot2c
+```
+
+```{r plot2_top, fig.width = 3, fig.height = 4}
+plot2_top <-  ggplot2::ggplot(
+    vis_df_sce_msc_genes_list_is_Fibro[[4]],
+    aes(  
+      x = is_Fibro,
+      y = gene,
+      fill = scaled))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::scale_fill_gradient2(
+      low = "blue", 
+      mid = "white", 
+      high = "red", 
+      midpoint = 0)+
+    ggplot2::ggtitle("Top Fibro genes")
+plot2_top
+```
+
+```{r plot2_final, fig.width = 3, fig.height = 4.5}
+plot2_final <-  ggplot2::ggplot(
+    vis_df_sce_msc_genes_list_is_Fibro[[5]],
+    aes(  
+      x = is_Fibro,
+      y = gene,
+      fill = scaled))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::scale_fill_gradient2(
+      low = "blue", 
+      mid = "white", 
+      high = "red", 
+      midpoint = 0)+
+    ggplot2::ggtitle("Top picks")
+plot2_final
+```
+
+```{r plot2_overlap, fig.width = 3, fig.height = 10}
+plot2_overlap <-  ggplot2::ggplot(
+    vis_df_sce_msc_genes_list_is_Fibro[[6]],
+    aes(  
+      x = is_Fibro,
+      y = gene,
+      fill = scaled))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::scale_fill_gradient2(
+      low = "blue", 
+      mid = "white", 
+      high = "red", 
+      midpoint = 0)+
+    ggplot2::ggtitle("Osteo overlap")
+plot2_overlap
+```
+
+```{r plot2_compare, fig.width = 3, fig.height = 6}
+plot2_compare <-  ggplot2::ggplot(
+    vis_df_sce_msc_genes_list_is_Fibro[[7]],
+    aes(  
+      x = is_Fibro,
+      y = gene,
+      fill = scaled))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::scale_fill_gradient2(
+      low = "blue", 
+      mid = "white", 
+      high = "red", 
+      midpoint = 0)+
+    ggplot2::ggtitle("Osteo compare")
+plot2_compare
+```
+
+##### Per cell type
+
+```{r vis_df_sce_msc_genes_list_celltypes}
+
+vis_df_sce_msc_genes_list_celltypes <- lapply(gene_list_trkb_rev, function(gene_list){
+
+  sce_str_msc_genes <- sce_str_msc[rownames(sce_str_msc) %in% gene_list,]
+
+  agg_str_msc_genes <- scuttle::aggregateAcrossCells(
+    sce_str_msc_genes, 
+    id=colData(sce_str_msc_genes)[,c("celltypes")], 
+    statistics = "mean",
+    use.assay.type = "logcounts")
+
+  vis_df_sce_msc_genes <- base::as.data.frame(
+    t(SummarizedExperiment::assays(agg_str_msc_genes)$logcounts))
+
+  vis_df_sce_msc_genes <- tibble::rownames_to_column(vis_df_sce_msc_genes, "celltypes")
+  vis_df_sce_msc_genes <- tidyr::pivot_longer(
+    vis_df_sce_msc_genes, 
+    cols = c(2:ncol(vis_df_sce_msc_genes)), 
+    values_to = "expression", 
+    names_to = "gene")
+
+  vis_df_sce_msc_genes <- vis_df_sce_msc_genes %>%
+      dplyr::group_by(gene) %>%
+      dplyr::mutate(scaled = as.numeric(scale(expression))) %>%
+      ungroup()
+
+  vis_df_sce_msc_genes$gene <- factor(vis_df_sce_msc_genes$gene,
+  levels = gene_list)
+  vis_df_sce_msc_genes$celltypes <- factor(vis_df_sce_msc_genes$celltypes,
+  levels = c(
+      "Adipo/CAR",
+      "Osteo",
+      #"Chondrocyte", # removed
+      "Fibro/Chondro",
+      "Fibroblast",
+      "Peri/SMC"))
+
+  return(vis_df_sce_msc_genes)
+})
+
+```
+
+```{r plot3a, fig.width = 3, fig.height = 7}
+plot3a <- ggplot2::ggplot(
+    vis_df_sce_msc_genes_list_celltypes[[1]],
+    aes(  
+      x = celltypes,
+      y = gene,
+      fill = scaled))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::scale_fill_gradient2(
+      low = "blue", 
+      mid = "white", 
+      high = "red", 
+      midpoint = 0)+
+    ggplot2::ggtitle("hand-picked from literature + DESeq2 list")
+plot3a
+```
+
+```{r plot3b, fig.width = 3, fig.height = 10}
+plot3b <- ggplot2::ggplot(
+    vis_df_sce_msc_genes_list_celltypes[[2]],
+    aes(  
+      x = celltypes,
+      y = gene,
+      fill = scaled))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::scale_fill_gradient2(
+      low = "blue", 
+      mid = "white", 
+      high = "red", 
+      midpoint = 0)+
+    ggplot2::ggtitle("Fibro signature genes, DE significant")
+plot3b
+```
+
+```{r plot3c, fig.width = 3, fig.height = 14}
+plot3c <- ggplot2::ggplot(
+    vis_df_sce_msc_genes_list_celltypes[[3]],
+    aes(  
+      x = celltypes,
+      y = gene,
+      fill = scaled))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::scale_fill_gradient2(
+      low = "blue", 
+      mid = "white", 
+      high = "red", 
+      midpoint = 0)+
+    ggplot2::ggtitle("all Fibro signature genes")
+plot3c
+```
+
+```{r plot3_top, fig.width = 3, fig.height = 4.5}
+plot3_top <- ggplot2::ggplot(
+    vis_df_sce_msc_genes_list_celltypes[[4]],
+    aes(  
+      x = celltypes,
+      y = gene,
+      fill = scaled))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::scale_fill_gradient2(
+      low = "blue", 
+      mid = "white", 
+      high = "red", 
+      midpoint = 0)+
+    ggplot2::ggtitle("Top Fibro genes")
+plot3_top
+```
+
+```{r plot3_final, fig.width = 3, fig.height = 4}
+plot3_final <- ggplot2::ggplot(
+    vis_df_sce_msc_genes_list_celltypes[[5]],
+    aes(  
+      x = celltypes,
+      y = gene,
+      fill = scaled))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::scale_fill_gradient2(
+      low = "blue", 
+      mid = "white", 
+      high = "red", 
+      midpoint = 0)+
+    ggplot2::ggtitle("Top picks")
+plot3_final
+```
+
+```{r plot3_overlap, fig.width = 3, fig.height = 12}
+plot3_overlap <- ggplot2::ggplot(
+    vis_df_sce_msc_genes_list_celltypes[[6]],
+    aes(  
+      x = celltypes,
+      y = gene,
+      fill = scaled))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::scale_fill_gradient2(
+      low = "blue", 
+      mid = "white", 
+      high = "red", 
+      midpoint = 0)+
+    ggplot2::ggtitle("Osteo Overlap")
+plot3_overlap
+```
+
+```{r plot3_compare, fig.width = 3, fig.height = 5}
+plot3_compare <- ggplot2::ggplot(
+    vis_df_sce_msc_genes_list_celltypes[[7]],
+    aes(  
+      x = celltypes,
+      y = gene,
+      fill = scaled))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::scale_fill_gradient2(
+      low = "blue", 
+      mid = "white", 
+      high = "red", 
+      midpoint = 0)+
+    ggplot2::ggtitle("Trkb-trkb Compare")
+plot3_compare
+```
+
+## UMAPs
+
+```{r umap, fig.width = 4, fig.height = 3}
+
+umap1_gene_list <- gene_list_trkb[[5]] 
+umap1_gene_list <- umap1_gene_list[umap1_gene_list %in% rownames(sce_str)]
+for(gene in umap1_gene_list){
+  print(umap_gene(sce_str, gene)+ # own function
+    ggplot2::ggtitle(gene))
+}
+
+umap_gene(sce_str, "Ntrk2")
+```
+
+```{r umap2, fig.width = 4, fig.height = 3}
+
+umap2_gene_list <- gene_list_trkb[[7]] 
+umap2_gene_list <- umap2_gene_list[umap2_gene_list %in% rownames(sce_str)]
+
+for(gene in umap2_gene_list){
+  print(umap_gene(sce_str, gene)+
+    ggplot2::ggtitle(gene))
+}
+```
+
+```{r umap_trkb, fig.width = 4, fig.height = 3}
+
+df_trkb <- assays(sce_str)[["logcounts"]][
+  rownames(SummarizedExperiment::assays(sce_str)[["logcounts"]]) == "Ntrk2",] %>%
+    as.matrix() %>%
+    as.data.frame()
+
+nrow(df_trkb)
+
+df_trkb$UMAP1 <- SingleCellExperiment::reducedDims(sce_str)[["UMAP"]][,1]
+df_trkb$UMAP2 <- SingleCellExperiment::reducedDims(sce_str)[["UMAP"]][,2]
+nrow(df_trkb)
+
+df_trkb <- df_trkb %>%
+  arrange(V1)
+nrow(df_trkb)
+
+plot <- ggplot2::ggplot(
+    df_trkb,
+    aes(x = UMAP1, 
+        y = UMAP2, 
+        color = V1))+
+    ggplot2::scale_color_gradientn(
+      "TrkB/Ntrk2", 
+      colors = c("grey30", "orange", "gold"))+
+    ggplot2::geom_point(size = 0.01)+
+    ggplot2::theme_classic()+
+    ggplot2::theme(
+      axis.text = element_blank(),
+      axis.ticks = element_blank())+
+    ggplot2::ylab("UMAP 2")+
+    ggplot2::xlab("UMAP 1")
+plot
+```
+
+## TrkB expression profile
+
+```{r prep_trkb_violin}
+
+sce_str_removed <- sce_str[,!sce_str$celltypes %in% c(
+  "Chondrocyte",
+  "Lymphatic EC"
+)]
+sce_str_trkb <- sce_str_removed[rownames(sce_str_removed) == "Ntrk2",]
+
+logcounts_trkb <- logcounts(sce_str_trkb) %>%
+  as.matrix() %>%
+  t() %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = "barcode") %>%
+  tibble::add_column(celltypes = colData(sce_str_trkb)$celltypes)
+```
+
+```{r trkb_violin, fig.width = 4, fig.height = 3}
+trkb_violin <- ggplot2::ggplot(
+  logcounts_trkb, 
+  aes(
+    x = celltypes,
+    y = Ntrk2,
+    fill = celltypes
+  ))+
+  ggplot2::geom_violin(
+    draw_quantiles = c(0.25, 0.5, 0.75), 
+    scale = "width" )+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text.x = element_text(angle = 90, hjust = 1))+
+  ggplot2::scale_fill_manual(values = col_cts_str)
+trkb_violin
+```
+
+```{r session_info}
+sessionInfo()
+```

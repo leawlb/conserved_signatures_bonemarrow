@@ -13,6 +13,7 @@ Minimum required base paths that need to be adjusted:
  - in `code/figures`, base_paths in all .Rmd files and `OUTPUT_PATH` in the run_rmds.py file
  - in `metadata`, any .R scripts used strictly to deal with metadata
  - check `code/08_sce_brain/01_sce_brain/brain_snakefile.py`
+ - check all files in `code/04_rare_celltypes` 
 
 ### Starting from raw files
 
@@ -90,7 +91,7 @@ files are suited for the DKFZ cluster
 structure and must be adjusted to the local conditions before running.
 
 Generally, follow the steps as indicated by numbers, even if some are missing 
-(e.g. 04, 05, 06, and 07 folders).
+(e.g. retired 05, 06, and 07 folders).
 Run all analysis folders before running figure scripts.
 
 
@@ -138,9 +139,9 @@ Some metadata must be downloaded or generated manually.
   - Baccin et al. (2020): https://nicheview.shiny.embl.de
   - Dolgalev et al. (2021): https://osf.io/ne9vj/files/osfstorage 
  
-- Published HSPC or Niche datasets for re-clustering, instructions in `code/03_sce_analysis/04_signatures/00_prepare_datasets_snakefile.py`
+- Published HSPC or Niche datasets for re-clustering, see `code/03_sce_analysis/04_signatures/00_prepare_datasets_snakefile.py` and `code/04_rare_celltypes` 
 
-- The Bakken et al (2021) and Yao et al (2021) motor cortex datasets (`sample.combined_exc_4_species_integration.RDS`) must also be downloaded manually from https://data.nemoarchive.org/publication_release/Lein_2020_M1_study_analysis/Transcriptomics/sncell/10X/human/processed/analysis/analysis/M1/cross_species_integration/
+- The Bakken et al (2021) and Yao et al (2021) motor cortex datasets (`sample.combined_exc_4_species_integration.RDS`) must also be downloaded manually from https://data.nemoarchive.org/publication_release/Lein_2020_M1_study_analysis/Transcriptomics/sncell/10X/human/processed/analysis/analysis/M1/cross_species_integration/ 
 
 
 Other (meta)data may be downloaded automatically by running the code.

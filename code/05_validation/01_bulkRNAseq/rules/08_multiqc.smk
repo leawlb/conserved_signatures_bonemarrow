@@ -6,14 +6,11 @@
 
 #-------------------------------------------------------------------------------
 
-# generate a list of all inputs as they do not all very nicely use the same 
-# wildcards and are not all stored in the same directory
-
-# I want to use one directory as input, but it doesn't exist until the 
-# corresponding rule is exectuted. So I'm generating the directory here
+# I want to use one directory as input, so I'm generating the directory here
 
 # now collect all input for multiqc, including the content to be added 
 # to the directory
+
 for sn in sample_name:
     path = OUTPUT_BASE + "/alignment/" + sn + "/07_umi_tools_dedup"
     print(path)

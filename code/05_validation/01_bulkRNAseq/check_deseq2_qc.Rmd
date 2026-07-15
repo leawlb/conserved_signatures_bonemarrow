@@ -1,0 +1,517 @@
+
+---
+title: "Candidate marker sample DESeq2 QC"
+author: "Lea Wölbert"
+date: '2026-05-11'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Load objects
+
+```{r seed,  message = FALSE}
+set.seed(37)
+```
+
+```{r load,  message = FALSE}
+library(pcaExplorer)
+library(tidyverse)
+library(DESeq2)
+```
+
+```{r load_objects}
+
+vsd <- base::readRDS(snakemake@input[["vsd_path"]])
+dds <- base::readRDS(snakemake@input[["dds_path"]])
+results_df <- base::readRDS(snakemake@input[["results_df_path"]])
+
+ab_target <- snakemake@wildcards[["ab_target"]]
+```
+
+```{r}
+# just need dds for number of reads before norm, so just subset as before
+dds_subset <- dds[,dds$Target_ID == ab_target]
+
+if(ab_target == "trkb"){
+  dds_subset <- dds_subset[,!dds_subset$Object_ID == "mmus_msc_trkb_p_08"]
+}else if(ab_target == "neo1"){
+  print("no change")
+}
+
+dds_subset$Object_ID <- factor(
+  dds_subset$Object_ID,
+  levels = levels(dds_subset$Object_ID)[
+  levels(dds_subset$Object_ID) %in% unique(unfactor(dds_subset$Object_ID))])
+```
+
+```{r col_mice}
+
+pval_cutoff <- 0.05
+lfc_cutoff <- 0.25
+
+col_mice <- c(
+      "05" = "red4",
+      "06" = "orange3",
+      "07" = "goldenrod2",
+      "08" = "yellow3"
+    )
+```
+
+# QC
+
+## Counts/gene
+
+Count/gene per sample. 
+Is there any low quality?
+
+```{r counts_table}
+
+# get the counts from vsd, transformed only for visualisation
+counts <- assays(vsd)[[1]]
+
+counts_long <- counts %>% 
+  as.data.frame() %>%
+  rownames_to_column(var = "gene_name") %>%
+  pivot_longer(names_to = "Object_ID", values_to = "counts", cols = c(1:ncol(counts)+1))
+
+ counts_long <- counts_long  %>% 
+    tidyr::separate(
+      Object_ID,
+      into = c("Species_ID", "Fraction_ID", "Target_ID", "Condition_ID", "Mouse_ID"),
+      sep = "_",
+      remove = FALSE
+  ) 
+```
+
+```{r raw_counts_table}
+# get the raw counts before norm
+raw_counts <- assays(dds_subset)[[1]]
+
+raw_counts_long <- raw_counts %>% 
+  as.data.frame() %>%
+  rownames_to_column(var = "gene_name") %>%
+  pivot_longer(names_to = "Object_ID", values_to = "counts", cols = c(1:ncol(raw_counts)+1))
+
+ raw_counts_long <- raw_counts_long  %>% 
+    tidyr::separate(
+      Object_ID,
+      into = c("Species_ID", "Fraction_ID", "Target_ID", "Condition_ID", "Mouse_ID"),
+      sep = "_",
+      remove = FALSE
+  ) 
+```
+
+```{r counts_plot}
+counts_plot <- ggplot2::ggplot(
+  counts_long,
+  aes(
+    x = Object_ID,
+    y = counts,
+    color = Mouse_ID))+
+  ggplot2::geom_violin(draw_quantiles = c(0.25, 0.5, 0.75))+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle(ab_target)+
+  ggplot2::scale_color_manual(values = col_mice)+
+  ggplot2::ylim(c(0, max(counts_long$counts)))
+counts_plot
+```
+
+```{r raw_counts_plot}
+raw_counts_plot <- ggplot2::ggplot(
+  raw_counts_long,
+  aes(
+    x = Object_ID,
+    y = counts,
+    color = Mouse_ID))+
+  ggplot2::geom_violin(draw_quantiles = c(0.25, 0.5, 0.75))+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))+
+  ggplot2::ggtitle(ab_target)+
+  ggplot2::scale_color_manual(values = col_mice)+
+  ggplot2::ylim(c(0, max(counts_long$counts)))
+raw_counts_plot
+```
+
+```{r reads_cells}
+colData(vsd)[,c(1, 4, 5, 6, 9, 16, 15)]
+
+colData(vsd) %>%
+  as.data.frame() %>%
+  ggplot2::ggplot(aes(
+    x = Cell_number, 
+    y = Read_number, 
+    color = Mouse_ID, 
+    shape = Condition_ID))+
+  ggplot2::geom_point(size = 4)+
+  ggplot2::theme_classic()+
+  ggplot2::scale_color_manual(values = col_mice)+
+  ggplot2::ylim(c(0, max(colData(vsd)$Read_number)))+
+  ggplot2::xlim(c(0, max(colData(vsd)$Cell_number)))
+
+colData(vsd) %>%
+  as.data.frame() %>%
+  ggplot2::ggplot(aes(
+    x = sizeFactor, 
+    y = Read_number, 
+    color = Mouse_ID, 
+    shape = Condition_ID))+
+  ggplot2::geom_point(size = 4)+
+  ggplot2::theme_classic()+
+  ggplot2::scale_color_manual(values = col_mice)+
+  ggplot2::ylim(c(0, max(colData(vsd)$Read_number)))+
+  ggplot2::xlim(c(0, max(colData(vsd)$sizeFactor)))
+
+# these are reads after normalisation
+colSums(assays(vsd)[[1]])
+
+# before normalisation
+colSums(assays(dds_subset)[[1]])
+
+colData(vsd) %>%
+  as.data.frame() %>%
+  add_column(sums = colSums(assays(dds_subset)[[1]])) %>%
+  ggplot2::ggplot(aes(
+    x = sizeFactor, 
+    y = sums, 
+    color = Mouse_ID, 
+    shape = Condition_ID))+
+  ggplot2::geom_point(size = 4)+
+  ggplot2::theme_classic()+
+  ggplot2::scale_color_manual(values = col_mice)+
+  ggplot2::ylim(c(0, max(colSums(assays(dds_subset)[[1]]))))+
+  ggplot2::xlim(c(0, max(colData(vsd)$sizeFactor)))
+```
+
+## Expression of genes of interest
+
+```{r goi}
+goi_niche_adipo_car <- c(
+  # Niche and adipo
+  "Cebpa", # adipo
+  "Pappa",
+  "Lpl",
+  "Lepr",
+  "Ebf3",
+  "Plin1",
+  "Adipoq",
+  "Hp",
+  "Kitl", # niche/CAR
+  "Cxcl12",
+  "Cxcl14",
+  "Vcam1",
+  "Esm1",
+  "Car3", # osteo-car
+  "Limch1",
+  "Wif1",
+  "Angpt4")
+
+goi_msc_fibro <- c(
+  "Pdgfra", # general MSC
+  "Pdgfrb",
+  "Rarres2",
+  "Cspg4",
+  "Nes",
+  "Thy1", # Fibro clusters
+  "Cd34",
+  "Dcn",
+  "Lum",
+  "Ly6a",
+  "Ntrk2",
+  "Col14a1",
+  "Col5a3",
+  "Dpt",
+  "Clec3b"
+)
+
+goi_osteo <- c(
+  "Spp1",
+  "Sp7",
+  "Bglap",
+  "Neo1",
+  "Mmp13",
+  "Omd",
+  "Alpl",
+  "Aspn",
+  "Tnc",
+  "Runx2",
+  "Col1a1",
+  "Col1a2",
+  "Ibsp",
+  "Pth1r",
+  "Postn",
+  "Phex",
+  "Mepe",
+  "Ptprz1",
+  "Sdc3")
+
+goi_chondro_artic <- c(
+  "Mgp",
+  "Tnn",
+  "Comp",
+  "Fmod",
+  "Acan",
+  "Chad",
+  "Sox9",
+  "Htra4", # articular fibro/chondro
+  "Prg4"
+)
+
+goi_other <- c(
+  "Col2a1", # collagens
+  "Col9a1",
+  "Col9a3",
+  "Col1a1",
+  "Col1a2",
+  "Col11a1"
+)
+
+goi_negative_control <- c(
+  "Pf4",
+  "Meis1",
+  "Hba-a1",
+  "Cd79a",
+  "Cd79b",
+  "Cd3e",
+  "Rgs5", # smooth muscle
+  "Acta2",
+  "Syp", # neurons
+  "Map2",
+  "Syn1",
+  "Tubb3"
+)
+
+goi_rand <- sample(rownames(vsd), 50)
+
+goi_list <-  list(
+  goi_niche_adipo_car,
+  goi_msc_fibro,
+  goi_osteo,
+  goi_chondro_artic,
+  goi_other,
+  goi_negative_control,
+  goi_rand
+  )
+
+counts_long_goi_list <- lapply(goi_list, function(goi){
+
+  counts_long_goi <- counts_long %>%
+    dplyr::filter(gene_name %in% goi)
+
+  counts_long_goi$gene_name <- factor(
+    counts_long_goi$gene_name,
+    levels = goi)
+
+  counts_long_goi <- counts_long_goi  %>% 
+    tidyr::separate(
+      Object_ID,
+      into = c("Species_ID", "Fraction_ID", "Target_ID", "Condition_ID", "Mouse_ID"),
+      sep = "_",
+      remove = FALSE
+  ) 
+
+  counts_long_goi <- counts_long_goi %>%
+    dplyr::group_by(gene_name) %>%
+    dplyr::mutate(scaled = as.numeric(scale(counts))) %>%
+    ungroup()
+  
+  return(counts_long_goi)
+})
+
+```
+
+```{r goi_plot1, fig.width = 10, fig.height = 9}
+plot_goi_list <- lapply(counts_long_goi_list, function(counts_long_goi){
+
+  goi_plot1 <- ggplot2::ggplot(
+    counts_long_goi,
+    aes(  
+      x = Object_ID,
+      y = gene_name,
+      fill = counts))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::ggtitle(ab_target)
+
+  goi_plot2 <- ggplot2::ggplot(
+    counts_long_goi,
+    aes(  
+      x = Object_ID,
+      y = gene_name,
+      fill = scaled))+
+    ggplot2::geom_tile()+
+    ggplot2::theme_classic()+
+    ggplot2::theme(axis.text.x = element_text(angle = 90))+
+    ggplot2::ggtitle(ab_target)+
+    scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0)
+
+  goi_plot3 <- ggplot2::ggplot(
+    counts_long_goi,
+    aes(  
+      x = Condition_ID,
+      y = counts,
+      color = Mouse_ID,
+      group = Mouse_ID))+
+    ggplot2::geom_point()+  
+    ggplot2::geom_line(alpha = 0.6) +
+    ggplot2::theme_classic()+
+    ggplot2::theme(
+      axis.text.x = element_text(angle = 90),
+      strip.text.x = element_text(angle = 90))+
+    ggplot2::scale_color_manual(values = col_mice)+
+    ggplot2::facet_grid(~gene_name)+
+    ggplot2::ggtitle(ab_target)
+
+  return(list(goi_plot1, goi_plot2, goi_plot3))
+})
+plot_goi_list
+```
+
+## Print results table
+
+```{r results_df_padj}
+
+# see which of our genes of interest are significantly differentially
+# expressed between + and - populations
+res_df_pval <- results_df %>%
+  dplyr::filter(padj < pval_cutoff)
+
+res_list <- lapply(goi_list, function(goi){
+
+  res_df_pval_return <- res_df_pval %>%
+    rownames_to_column(var = "gene") %>%
+    filter(gene %in% goi)
+  return(res_df_pval_return)
+})
+res_list
+```
+
+```{r results_df_pval}
+
+# see which of our genes of interest are significantly differentially
+# expressed between + and - populations
+res_df_pval <- results_df %>%
+  dplyr::filter(pvalue < pval_cutoff)
+
+res_list <- lapply(goi_list, function(goi){
+
+  res_df_pval_return <- res_df_pval %>%
+    rownames_to_column(var = "gene") %>%
+    filter(gene %in% goi)
+  return(res_df_pval_return)
+})
+res_list
+```
+
+## PCA
+
+Transformed for visualisation only
+
+```{r boxplot}
+pcaExplorer::distro_expr(vsd, plot_type = "boxplot")+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text.x = element_text(angle = 90))+
+  ggplot2::theme(legend.position = "none")+
+  ggplot2::ggtitle(ab_target)
+```
+
+```{r correlations}
+vsd_pca <- stats::prcomp(t(SummarizedExperiment::assay(vsd)))
+vsd_cor <- pcaExplorer::correlatePCs(vsd_pca, colData(vsd)[c("Condition_ID", "Mouse_ID", "Cage_ID", "Cell_number")])
+pcaExplorer::plotPCcorrs(vsd_cor)
+```
+
+```{r make_ggdf}
+ggdf <- base::as.data.frame(vsd_pca$x)
+
+ggdf$Condition_ID <- colData(vsd)$Condition_ID
+ggdf$Mouse_ID <- colData(vsd)$Mouse_ID
+ggdf$Cage_ID <- colData(vsd)$Cage_ID
+ggdf$Cell_number <- colData(vsd)$Cell_number
+
+head(ggdf)
+```
+
+```{r pcas}
+plot1 <- ggplot2::ggplot(ggdf, aes(x = PC1, y = PC2, color = Condition_ID))+
+  ggplot2::geom_point(size = 4)+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text = element_blank(),
+                 axis.ticks = element_blank())
+plot1
+
+plot2 <- ggplot2::ggplot(ggdf, aes(x = PC1, y = PC2, color = Mouse_ID))+
+  ggplot2::geom_point(size = 4)+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text = element_blank(),
+                 axis.ticks = element_blank())+
+  ggplot2::scale_color_manual(values = col_mice)
+plot2
+
+plot3 <- ggplot2::ggplot(ggdf, aes(x = PC1, y = PC2, color = Cage_ID))+
+  ggplot2::geom_point(size = 4)+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text = element_blank(),
+                 axis.ticks = element_blank())
+plot3
+
+plot4 <- ggplot2::ggplot(ggdf, aes(x = PC1, y = PC2, color = Cell_number))+
+  ggplot2::geom_point(size = 4)+
+  ggplot2::theme_classic()+
+  ggplot2::theme(axis.text = element_blank(),
+                 axis.ticks = element_blank())
+plot4
+```
+
+```{r loadings}
+pcaExplorer::pcascree(vsd_pca, type="pev")
+pcaExplorer::hi_loadings(vsd_pca, topN = 20, whichpc = 1)
+pcaExplorer::hi_loadings(vsd_pca, topN = 20, whichpc = 2)
+```
+
+## PVAL volcano plot
+
+```{r pval_volcano}
+
+results_df_volcano <- results_df %>%
+  mutate(pval_adj_type = ifelse(padj < pval_cutoff, T, F))
+
+volcano <- ggplot2::ggplot(
+  results_df_volcano,
+  aes(
+    x = log2FoldChange,
+    y = -log10(padj),
+    color = pval_adj_type))+
+  geom_point()+
+  theme_classic()+
+  geom_hline(yintercept = -log10(pval_cutoff))+
+  geom_vline(xintercept = lfc_cutoff)+
+  geom_vline(xintercept = -lfc_cutoff)+
+  scale_color_manual(values = c("TRUE" = "dodgerblue3", "FALSE" = "grey70"))
+
+volcano <- ggplot2::ggplot(
+  results_df_volcano,
+  aes(
+    x = log2FoldChange,
+    y = -log10(pvalue),
+    color = pval_adj_type))+
+  geom_point()+
+  theme_classic()+
+  geom_hline(yintercept = -log10(pval_cutoff))+
+  geom_vline(xintercept = lfc_cutoff)+
+  geom_vline(xintercept = -lfc_cutoff)+
+  scale_color_manual(values = c("TRUE" = "dodgerblue3", "FALSE" = "grey70"))
+
+volcano
+
+results_df_volcano %>%
+  dplyr::filter(pval_adj_type == TRUE)
+```
+
+```{r session_info}
+sessionInfo()
+```

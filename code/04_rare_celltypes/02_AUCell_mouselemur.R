@@ -4,7 +4,7 @@ library(dplyr)
 library(biomaRt)
 
 base_dir <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/04_rare_celltypes/mouse_lemur_Ezran2025"
-manuscript_dir <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/manuscript1"
+manuscript_dir <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/manuscript1_rev"
 
 mouse_lemur_harmony <- readRDS(file.path(base_dir, "01_mouse_lemur_harmony.rds"))
 hsc_sig <- read.delim(file.path(manuscript_dir, "hsc_signature_table.csv"), sep=";", check.names=FALSE)

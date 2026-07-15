@@ -1,0 +1,4 @@
+snakemake --executor cluster-generic --cluster-generic-submit-cmd "bsub -q {params.queue} -n{threads} -R rusage[mem={resources.mem_mb}]" -p -j45 -c30 --configfile ../../config.yaml --sdm env-modules --use-conda --jobscript jobscript_lsf.sh --latency-wait 60 -n
+
+# needed to install the cluster-generic plugin
+# mamba install -c conda-forge -c bioconda snakemake-executor-plugin-cluster-generic

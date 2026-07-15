@@ -22,7 +22,7 @@ library(tidyverse, quietly = TRUE)
 
 ```{r load_objects}
 score_df_list <- base::readRDS(snakemake@input[["score_df_list"]])
-#score_df_list <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_thresholds/ts_hscs_progenitors_scores_by_t.rds")
+
 dataset_curr <- snakemake@params[["dataset"]]
 
 threshold_used <- snakemake@params[["threshold_used"]]

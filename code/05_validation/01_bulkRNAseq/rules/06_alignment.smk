@@ -39,7 +39,8 @@ rule download_genome:
 
         """
 
-# sjdbOverhang should be number of reads -1, so 50bp -1 = 49
+# sjdbOverhang should be number of reads -1, so 50bp -1 = 49 
+# note: the actual read length was 51 but I'll keep it at 49 now
 rule generate_star_index:
     input:
         fasta = rules.download_genome.output.fasta,
@@ -49,7 +50,8 @@ rule generate_star_index:
     threads:
         12
     params:
-        queue = "medium",
+        queue = "medium"
+    resources:
         mem_mb = 40000
     envmodules:
         "STAR/2.7.11b-GCC-14.1.0"

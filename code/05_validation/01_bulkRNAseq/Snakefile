@@ -9,7 +9,8 @@ import re
 FASTQ_INPUT_DIR = config["fastq_input"]
 
 OUTPUT_BASE = config["base"] + config["bulk_rnaseq_data_paths"]
-OUTPUT_DAT = OUTPUT_BASE + "/bulk_rnaseq_test"
+
+COLORS = config["base"] + config["metadata_paths"]["colors"]
 
 #-------------------------------------------------------------------------------
 
@@ -18,20 +19,18 @@ OUTPUT_DAT = OUTPUT_BASE + "/bulk_rnaseq_test"
 
 # load metadata table filtered for bulk RNAseq samples, only
 metadata_bulk = pd.read_csv(config["table_bulk"], sep = ',', engine = 'python')
-#metadata_bulk = pd.read_csv(config["table_bulk"], sep = ';', engine = 'python')
 
-# extract the required variables
+# function to extract the required variables from metadata
 def get_unique_list(metadata, column):
     return metadata[column].dropna().drop_duplicates().tolist()
 
-# get variables from required function to be used for target definition
+# get variables from function to be used for target definition (sample name)
+# and fastq file path
 sample_name = get_unique_list(metadata = metadata_bulk, column = "SAMPLE_NAME_GPCF")
-fastq_path = get_unique_list(metadata = metadata_bulk, column = "FASTQ_FILE")
+fastq_path = get_unique_list(metadata = metadata_bulk, column = "FastQ Path")
 
-#print(sample_name)
-#print(fastq_path)
-
-# add a column containing sample_name+read for single file processing vs sample-level processing
+# add a column containing sample_name+read for single file processing vs 
+# sample-level processing
 metadata_bulk["SAMPLE_NAME_R"] = metadata_bulk["SAMPLE_NAME_GPCF"] + "_R" + metadata_bulk["READ"].apply(str)
 sample_name_r = get_unique_list(metadata = metadata_bulk, column = "SAMPLE_NAME_R")
 print(sample_name_r)
@@ -42,7 +41,6 @@ print(metadata_bulk.tail())
 #-------------------------------------------------------------------------------
 
 ab_targets = ["neo1", "trkb"]
-#ab_targets = ["neo1"]
 
 #-------------------------------------------------------------------------------
 
@@ -101,15 +99,11 @@ targets = targets + [OUTPUT_BASE + "/counts/09_feature_counts/09_all_counts.feat
 # analysis (DESeq2)
 targets = targets + [OUTPUT_BASE + "/counts/10_dds/10_dds.Rds"]
 
-
 for abt in ab_targets:
     targets = targets + [OUTPUT_BASE + "/counts/11_deseq2/11_vsd_" + abt + ".Rds"]
-    targets = targets + [OUTPUT_BASE + "/counts/11_deseq2/11_rld_" + abt + ".Rds"]
     targets = targets + [OUTPUT_BASE + "/counts/11_deseq2/11_res_df_" + abt + ".Rds"]
     targets = targets + [OUTPUT_BASE + "/counts/11_deseq2/11_check_deseq2_qc_" + abt + ".html"]
     targets = targets + [OUTPUT_BASE + "/counts/11_deseq2/11_figure_ideas_" + abt + ".html"]
-
-#print(targets)
 
 localrules: all, download_genome
 rule all: 

@@ -177,7 +177,8 @@ cutadapt:
 # for featurecounts
 feature_counts:
   extra: >-
-    -O --fracOverlap 0.2
+    -O 
+    --fracOverlap 0.2
     -p 
     --countReadPairs
     -t exon 

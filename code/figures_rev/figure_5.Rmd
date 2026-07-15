@@ -28,7 +28,7 @@ library(Seurat, quietly = TRUE)
 ```
 
 ```{r define_basepath}
-base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/"
 ```
 
 ```{r load_short}

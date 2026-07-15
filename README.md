@@ -2,6 +2,9 @@
 This repository contains all scripts related to scRNAseq analysis of HSPCs
 and niche cells from four distinct mouse species, starting from 
 alignment with Cell Ranger up to figure creation.
+Further, bulk RNAseq data from Neo1 and TrkB stromal cells is pre-processed
+and analysed following experimental validation.
+
 
 ## 1. Configuration and Requirements
 
@@ -15,9 +18,9 @@ Minimum required base paths that need to be adjusted:
  - check `code/08_sce_brain/01_sce_brain/brain_snakefile.py`
  - check all files in `code/04_rare_celltypes` 
 
-### Starting from raw files
+### Starting from raw scRNAseq files
 
-For repeating alignment, required data are (more info below):
+For repeating alignment for scRNAseq data, required data are (more info below):
 
  - raw files (E-MTAB-15073) 
  - the N-masked reference genome (S-BSST2074) 
@@ -28,13 +31,13 @@ Additionally adjust base paths in:
  - `code/00_sce_cellranger/02_cellranger_fourgenomes/config/config-interspecies-bonemarrow.yaml` 
  - All paths in column "FastQ Path" in the `metadata/scRNAseq/00_alignment/metadata.csv` table must be adjusted to the appropriate paths after downloading the raw files.
 
-For alignment of raw data with the N-masked reference genome or 
+For alignment of raw scRNAseq data with the N-masked reference genome or 
 species-specific genomes navigate into
 `code/00_sce_cellranger`, then into the appropriate subdirectories and 
 see `README.txt` files there for set-up. 
 These directories were adjusted from and added by Fritjof Lammers.
 
-### Starting from processed files
+### Starting from processed scRNAseq files
 
 The required data are (more info below):
 
@@ -59,18 +62,36 @@ Additionally adjust base paths in:
  - in `code/00_sce_cellranger/01_cellranger_main/config/config-interspecies-bonemarrow.yaml` also adjust the cellranger_count path to appropriate path after download
  - `code/00_sce_cellranger/02_cellranger_fourgenomes/config/config-interspecies-bonemarrow.yaml` 
 
-### Starting from annotated files
+### Starting from annotated scRNAseq files
 
 For starting from fully annotated objects (S-BSST2079) (more info below),
-transfer the downloaded
-objects into the approriate folder analogous to 
+transfer the downloaded objects into the approriate folder analogous to 
 `base` + `data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns` as 
 determined in `code/config.yaml` and save them once using saveRDS but without 
 ".rds" file extension for downstream compatibility or adjust all affected
 downstream paths as required.
 Downstream analysis starts in folder 03.
 
-## 2. Snakemake set-up and execution
+### bulkRNAseq data
+
+Start from raw bulkRNAseq fastq to repeat pre-processing including umi_tools,
+cutadapt, alignment, featureCounts (`code/05_validation/01_bulkRNAseq`) etc.
+Adjust `05_validation/01_bulkRNAseq/rules/01_link_files.smk` and the 
+required paths in config as required.
+
+Start from counts matrix and read into DESeq2 object for analysis via DESeq2
+starting from `05_validation/01_bulkRNAseq/rules/10_deseq2.smk`.
+Adjust data loading and DEseq2 object creation as required.
+
+
+## 2. Snakemake set-up and execution 
+
+### scRNAseq alignment
+
+Navigate into `code/00_sce_cellranger`, then into the appropriate 
+subdirectories and see `README.txt` files there for set-up. 
+
+### scRNAseq analysis
 
 For all steps starting from 01 install `snakemake_isbm.yml` micromamba:
 
@@ -94,21 +115,40 @@ Generally, follow the steps as indicated by numbers, even if some are missing
 (e.g. retired 05, 06, and 07 folders).
 Run all analysis folders before running figure scripts.
 
+### bulk RNAseq pre-processing and analysis
+
+```bash
+micromamba env create -n snakemake_bulk -f snakemake_bulk.yml
+```
+
+```bash
+micromamba activate snakemake_bulk
+```
+
+Snakemake is set up differently in this directory, with a difference version,
+and relying on a snakemake profile, which has been adjusted to DKFZ cluster
+requirements. 
+Adjust snakemake setup as required.
+
 
 ## 2. Data
 
 Data can be downloaded from BioStudies:
 
  - the N-masked reference genome, generated using this repository: https://github.com/fritjoflammers/snakemake-snpmasked-refgenome.git (https://doi.org/10.5281/zenodo.15516917) (S-BSST2074) 
- - raw data: fastq files (E-MTAB-15073)
+ - raw data: scRNAseq fastq files (E-MTAB-15073)
  - processed data: Cell Ranger output files matrix.mtx, barcodes.tsv, features.tsv after alignment with the N-masked reference (E-MTAB-15073)
  - fully annotated data in .rds format containing cell type labels, normalised log-counts, and batch-corrected PC and UMAP coordinates (S-BSST2079)
+ - raw data: bulkRNAseq fastq files (E-MTAB-17326)
+ - processed data: bulkRNAseq counts matrix (featureCounts output) for all samples (E-MTAB-17326)
 
 Currently, this data is not yet published and therefore not available.
  
- 
+
 ## 3. Metadata
  
+Deposited, public and other metadata is also summarized in Table S5 of the original publication.
+
 Metadata required for running the code is in folder `metadata` or can be 
 generated there:
 
@@ -143,6 +183,7 @@ Some metadata must be downloaded or generated manually.
 
 - The Bakken et al (2021) and Yao et al (2021) motor cortex datasets (`sample.combined_exc_4_species_integration.RDS`) must also be downloaded manually from https://data.nemoarchive.org/publication_release/Lein_2020_M1_study_analysis/Transcriptomics/sncell/10X/human/processed/analysis/analysis/M1/cross_species_integration/ 
 
+- TODO: The mouse lemur dataset is available in figshare: https://figshare.com/projects/Tabula_Microcebus/112227
 
 Other (meta)data may be downloaded automatically by running the code.
 
@@ -150,3 +191,5 @@ Finally, the entire github repository `mcclust` by Fritsch (2022) is
 downloaded as part of running the code so that its vi.dist function can be used.
 See: https://github.com/cran/mcclust and 
 `code/03_sce_analysis/04_signatures/01_reclustering_ow_snakefile.py`
+
+Lastly, we thank Manos Athanasiadis for sending his processed scRNAseq zebrafish HSPC data.

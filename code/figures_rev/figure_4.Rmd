@@ -28,13 +28,11 @@ library(tidyverse, quietly = TRUE)
 
 ```{r base_path}
 base_path <- snakemake@params[["base_path"]]
-#base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
-#setwd("repositories/Interspecies_BM_phd/code/figures_rev")
 ```
 
 ```{r load_other1}
 #-------------------------------------------------------------------------------
-#### OTHER MOUSE DATASET 1 (HSPC)
+#### OTHER HUMAN DATASET 1 (HSPC)
 #### TABULA SAPIENS BONE MARROW
 
 dataset_o1 <- "ts_bone_marrow"
@@ -48,7 +46,7 @@ seu_blind_anno_o1 <- readRDS(base::paste0(
 
 ```{r load_other2}
 #-------------------------------------------------------------------------------
-#### OTHER MOUSE DATASET 2 (HSPC)
+#### OTHER HUMAN DATASET 2 (HSPC)
 #### Tabula sapiens HSCs and Progs (fetal)
 
 dataset_o2 <- "ts_hscs_progenitors"
@@ -81,7 +79,7 @@ output_pdf_legend_plot <-  base::paste0(
 
 # Reclustering and blind annotation heatmaps 
 
-For Figure 5b and Figure 5c.
+For Figure 4b and Figure 4c.
 
 ## Other 1
 
@@ -270,8 +268,6 @@ pdf(output_pdf_legend_plot, width = 6, height = 1)
 heatmap_legend
 dev.off()
 ```
-
-# Utils
 
 ```{r sessioninfo}
 utils::sessionInfo()

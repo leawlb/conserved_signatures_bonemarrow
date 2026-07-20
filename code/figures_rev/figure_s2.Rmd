@@ -10,7 +10,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 This is going to be a very big figure containing many subplots.
 Trying to make it still relatively understandable.
-This figure will contain data too big to run locally (for me).
+This figure's code was split into multiple .Rmds because it was too
+much data.
+This part is concerned with making the schematics and the heatmaps.
 
 ## Load objects
 
@@ -27,7 +29,7 @@ library(scuttle, quietly = TRUE)
 ```
 
 ```{r base_path}
-base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+base_path <- snakemake@params[["base_path"]]
 ```
 
 ```{r source}
@@ -222,7 +224,6 @@ output_pdf_d_combined_str_legend <- base::paste0(
   "/manuscript1_rev/figures2/figures2_d_combined_str_legend.pdf")
 ```
 
-
 ## Prep 
 
 ### Randomize barcodes
@@ -319,13 +320,17 @@ sce_mspr_hsc$custom_label <- unfactor(sce_mspr_hsc$custom_label)
 sce_mcar_hsc$custom_label <- unfactor(sce_mcar_hsc$custom_label)
 
 sce_hsc_all_cells$custom_label[match(
-  colnames(sce_mmus_hsc), colnames(sce_hsc_all_cells))] <- sce_mmus_hsc$custom_label
+  colnames(sce_mmus_hsc), 
+  colnames(sce_hsc_all_cells))] <- sce_mmus_hsc$custom_label
 sce_hsc_all_cells$custom_label[match(
-  colnames(sce_mcas_hsc), colnames(sce_hsc_all_cells))] <- sce_mcas_hsc$custom_label
+  colnames(sce_mcas_hsc), 
+  colnames(sce_hsc_all_cells))] <- sce_mcas_hsc$custom_label
 sce_hsc_all_cells$custom_label[match(
-  colnames(sce_mspr_hsc), colnames(sce_hsc_all_cells))] <- sce_mspr_hsc$custom_label
+  colnames(sce_mspr_hsc), 
+  colnames(sce_hsc_all_cells))] <- sce_mspr_hsc$custom_label
 sce_hsc_all_cells$custom_label[match(
-  colnames(sce_mcar_hsc), colnames(sce_hsc_all_cells))] <- sce_mcar_hsc$custom_label
+  colnames(sce_mcar_hsc), 
+  colnames(sce_hsc_all_cells))] <- sce_mcar_hsc$custom_label
 ```
 
 ```{r add_custom_str}
@@ -338,13 +343,17 @@ sce_mspr_str$custom_label <- unfactor(sce_mspr_str$custom_label)
 sce_mcar_str$custom_label <- unfactor(sce_mcar_str$custom_label)
 
 sce_str_all_cells$custom_label[match(
-  colnames(sce_mmus_str), colnames(sce_str_all_cells))] <- sce_mmus_str$custom_label
+  colnames(sce_mmus_str), 
+  colnames(sce_str_all_cells))] <- sce_mmus_str$custom_label
 sce_str_all_cells$custom_label[match(
-  colnames(sce_mcas_str), colnames(sce_str_all_cells))] <- sce_mcas_str$custom_label
+  colnames(sce_mcas_str), 
+  colnames(sce_str_all_cells))] <- sce_mcas_str$custom_label
 sce_str_all_cells$custom_label[match(
-  colnames(sce_mspr_str), colnames(sce_str_all_cells))] <- sce_mspr_str$custom_label
+  colnames(sce_mspr_str), 
+  colnames(sce_str_all_cells))] <- sce_mspr_str$custom_label
 sce_str_all_cells$custom_label[match(
-  colnames(sce_mcar_str), colnames(sce_str_all_cells))] <- sce_mcar_str$custom_label
+  colnames(sce_mcar_str), 
+  colnames(sce_str_all_cells))] <- sce_mcar_str$custom_label
 ```
 
 ### Factorize
@@ -354,10 +363,14 @@ sce_str_all_cells$custom_label[match(
 ```{r factors_hsc}
 # change species names to currently used abbreviations
 sce_hsc_all_cells$species_pub <- vector(length = ncol(sce_hsc_all_cells))
-sce_hsc_all_cells$species_pub[sce_hsc_all_cells$Species_ID == "mmus"] <- "BL6"
-sce_hsc_all_cells$species_pub[sce_hsc_all_cells$Species_ID == "mcas"] <- "CAST"
-sce_hsc_all_cells$species_pub[sce_hsc_all_cells$Species_ID == "mspr"] <- "SPRET"
-sce_hsc_all_cells$species_pub[sce_hsc_all_cells$Species_ID == "mcar"] <- "CAROLI"
+sce_hsc_all_cells$species_pub[
+  sce_hsc_all_cells$Species_ID == "mmus"] <- "BL6"
+sce_hsc_all_cells$species_pub[
+  sce_hsc_all_cells$Species_ID == "mcas"] <- "CAST"
+sce_hsc_all_cells$species_pub[
+  sce_hsc_all_cells$Species_ID == "mspr"] <- "SPRET"
+sce_hsc_all_cells$species_pub[
+  sce_hsc_all_cells$Species_ID == "mcar"] <- "CAROLI"
 sce_hsc_all_cells$species_pub <- factor(
   sce_hsc_all_cells$species_pub, 
   levels = names(col_spc_pub))
@@ -374,10 +387,14 @@ For the schematic A.
 ```{r factors_mmus_hsc}
 # change species names to currently used abbreviations
 sce_mmus_hsc$species_pub <- vector(length = ncol(sce_mmus_hsc))
-sce_mmus_hsc$species_pub[sce_mmus_hsc$Species_ID == "mmus"] <- "BL6"
-sce_mmus_hsc$species_pub[sce_mmus_hsc$Species_ID == "mcas"] <- "CAST"
-sce_mmus_hsc$species_pub[sce_mmus_hsc$Species_ID == "mspr"] <- "SPRET"
-sce_mmus_hsc$species_pub[sce_mmus_hsc$Species_ID == "mcar"] <- "CAROLI"
+sce_mmus_hsc$species_pub[
+  sce_mmus_hsc$Species_ID == "mmus"] <- "BL6"
+sce_mmus_hsc$species_pub[
+  sce_mmus_hsc$Species_ID == "mcas"] <- "CAST"
+sce_mmus_hsc$species_pub[
+  sce_mmus_hsc$Species_ID == "mspr"] <- "SPRET"
+sce_mmus_hsc$species_pub[
+  sce_mmus_hsc$Species_ID == "mcar"] <- "CAROLI"
 sce_mmus_hsc$species_pub <- factor(
   sce_mmus_hsc$species_pub, 
   levels = names(col_spc_pub))
@@ -389,10 +406,14 @@ For the schematic A.
 ```{r factors_hsc_anno}
 # change species names to currently used abbreviations
 sce_hsc_anno$species_pub <- vector(length = ncol(sce_hsc_anno))
-sce_hsc_anno$species_pub[sce_hsc_anno$Species_ID == "mmus"] <- "BL6"
-sce_hsc_anno$species_pub[sce_hsc_anno$Species_ID == "mcas"] <- "CAST"
-sce_hsc_anno$species_pub[sce_hsc_anno$Species_ID == "mspr"] <- "SPRET"
-sce_hsc_anno$species_pub[sce_hsc_anno$Species_ID == "mcar"] <- "CAROLI"
+sce_hsc_anno$species_pub[
+  sce_hsc_anno$Species_ID == "mmus"] <- "BL6"
+sce_hsc_anno$species_pub[
+  sce_hsc_anno$Species_ID == "mcas"] <- "CAST"
+sce_hsc_anno$species_pub[
+  sce_hsc_anno$Species_ID == "mspr"] <- "SPRET"
+sce_hsc_anno$species_pub[
+  sce_hsc_anno$Species_ID == "mcar"] <- "CAROLI"
 sce_hsc_anno$species_pub <- factor(
   sce_hsc_anno$species_pub, 
   levels = names(col_spc_pub))
@@ -403,10 +424,14 @@ sce_hsc_anno$species_pub <- factor(
 ```{r factors_str}
 # change species names to currently used abbreviations
 sce_str_all_cells$species_pub <- vector(length = ncol(sce_str_all_cells))
-sce_str_all_cells$species_pub[sce_str_all_cells$Species_ID == "mmus"] <- "BL6"
-sce_str_all_cells$species_pub[sce_str_all_cells$Species_ID == "mcas"] <- "CAST"
-sce_str_all_cells$species_pub[sce_str_all_cells$Species_ID == "mspr"] <- "SPRET"
-sce_str_all_cells$species_pub[sce_str_all_cells$Species_ID == "mcar"] <- "CAROLI"
+sce_str_all_cells$species_pub[
+  sce_str_all_cells$Species_ID == "mmus"] <- "BL6"
+sce_str_all_cells$species_pub[
+  sce_str_all_cells$Species_ID == "mcas"] <- "CAST"
+sce_str_all_cells$species_pub[
+  sce_str_all_cells$Species_ID == "mspr"] <- "SPRET"
+sce_str_all_cells$species_pub[
+  sce_str_all_cells$Species_ID == "mcar"] <- "CAROLI"
 sce_str_all_cells$species_pub <- factor(
   sce_str_all_cells$species_pub, 
   levels = names(col_spc_pub))
@@ -644,8 +669,8 @@ legend_plot_mecom <- ggplot2::ggplot(
     y = UMAP2,
     color = expression
   ))+
-  geom_point()+
-  scale_color_gradientn(colours = mycolors_to_max)+
+  ggplot2::geom_point()+
+  ggplot2::scale_color_gradientn(colours = mycolors_to_max)+
   theme_all+
   ggplot2::theme(
     legend.text = element_text(
@@ -658,8 +683,6 @@ legend_plot_mecom <- ggplot2::ggplot(
     ),
     legend.position = "bottom"
   )
-
-legend_plot_mecom
 
 legend_mecom <- ggpubr::get_legend(legend_plot_mecom)
 b_umap_3_legend <- ggpubr::ggarrange(legend_mecom)
@@ -714,7 +737,7 @@ will be treated the same way: averaging gene expression per cell type
 as is, then scaling across all cells ( = all cell types and all species).
 
 I think this is the most simple and best options for the comparison we want
-to make if we very clearly  explain and state it.
+to make if we very clearly explain and state it.
 
 I am using the logcounts based on the merged batch-normalisation for both the
 orig clustering and the custom clusterings by using sce_hsc_all_cells as 
@@ -722,8 +745,11 @@ basis.
 I think that is better comparable.
 So by using the the merged batch-normalized logcounts, then even if a cell has 
 two different labels in both, it has still the same expression levels.
-That seems fair.
-Although the logcounts are averaged and then scaled anyways.
+If I used the species-specific values, the expression level would only be
+normalized within each species, but not across, so we wouldn't really
+be able to compare across species.
+This is simply a way to compare the clustering partitions, so using the same
+expression values for each cells is how I decided to go about this. 
 
 #### HSCs
 
@@ -1344,8 +1370,10 @@ agg_cust_df_genes$zscore_gene <- vector(
 
 ```{r scale_cust_across_str}
 
+# expression is scaled ACROSS ALL SPECIES TOGETHER
 agg_cust_df_genes <- scale_expression(agg_cust_df_genes)
 
+# then that object is split by species
 agg_cust_df_mmus <- agg_cust_df_genes %>% 
   dplyr::filter(species == "BL6")
 agg_cust_df_mcas <- agg_cust_df_genes %>% 
@@ -1534,10 +1562,14 @@ Build the species-specific heatmaps together
 ```{r d_custom_heatmap, fig.height = 6.8, fig.width = 4}
 
 d_custom_heatmap <- ggpubr::ggarrange(
-  d_theme_heatmap_cust_mmus+ggplot2::theme(plot.margin = margin(0.1,0.1,0.3,0.1)),
-  d_theme_heatmap_cust_mcas+ggplot2::theme(plot.margin = margin(0,0.1,0.3,0.1)),
-  d_theme_heatmap_cust_mspr+ggplot2::theme(plot.margin = margin(0,0.1,0.3,0.1)),
-  d_theme_heatmap_cust_mcar+ggplot2::theme(plot.margin = margin(0,0.1,0.1,0.1)),
+  d_theme_heatmap_cust_mmus+ggplot2::theme(
+    plot.margin = margin(0.1,0.1,0.3,0.1)),
+  d_theme_heatmap_cust_mcas+ggplot2::theme(
+    plot.margin = margin(0,0.1,0.3,0.1)),
+  d_theme_heatmap_cust_mspr+ggplot2::theme(
+    plot.margin = margin(0,0.1,0.3,0.1)),
+  d_theme_heatmap_cust_mcar+ggplot2::theme(
+    plot.margin = margin(0,0.1,0.1,0.1)),
   nrow = 1,
   widths = c(9, 5, 6, 5),
   align = c("h")
@@ -1637,4 +1669,8 @@ dev.off()
 pdf(output_pdf_d_combined_str_legend, width = 1.2, height = 4)
 d_combine_str_legend
 dev.off()
+```
+
+```{r session_info}
+utils::sessionInfo()
 ```

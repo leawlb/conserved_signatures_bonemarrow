@@ -1,0 +1,954 @@
+---
+title: "Figure 6 FACS validation"
+author: "Lea Wölbert"
+date: '2026-05-11'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Figure 6: FACS validation/bulkRNAseq
+
+```{r seed, message = FALSE}
+RNGkind("L'Ecuyer-CMRG") 
+set.seed(37)
+```
+
+```{r load,  message = FALSE}
+library(SingleCellExperiment)
+library(ggpubr)
+library(tidyverse)
+library(DESeq2)
+```
+
+```{r base_path}
+base_path <- snakemake@params[["base_path"]]
+```
+
+```{r load_objects}
+
+# normalized bulkRNAseq counts 
+vsd_neo1 <- readRDS(base::paste0(
+  base_path,
+  "/bulk_rnaseq/counts/11_deseq2/11_vsd_neo1.Rds"))
+vsd_trkb <- readRDS(base::paste0(
+  base_path,
+  "/bulk_rnaseq/counts/11_deseq2/11_vsd_trkb.Rds"))
+
+# bulkRNAseq DESeq2 results  
+results_df_neo1 <- readRDS(base::paste0(
+  base_path,
+  "/bulk_rnaseq/counts/11_deseq2/11_res_df_neo1.Rds"))
+results_df_trkb <- readRDS(base::paste0(
+  base_path,
+  "/bulk_rnaseq/counts/11_deseq2/11_res_df_trkb.Rds"))
+
+# Niche scRNAseq dataset
+sce_str <- readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str.rds"))
+
+# signature genes (Niche)
+sign_genes <- readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_str"))
+```
+
+```{r source}
+colors_path <- base::paste0(
+  base_path,
+  "/metadata/colors/colors.txt")
+
+source("../source/colors.R")
+source("../source/plotting.R")
+```
+
+```{r params}
+# global params
+pval_cutoff <- 0.05
+lfc_cutoff <- 0.25
+
+col_mice <- c(
+      "05" = "#71223dff",
+      "06" = "#be3232ff",
+      "07" = "#ff9354ff",
+      "08" = "#c8d300ff"
+    )
+
+color_significant <- rev(c(
+  "significant_up" = "red",
+  "not_significant" = "grey50",
+  "significant_down" = "blue3"))
+
+source("../figures/determine_params.R")
+```
+
+```{r export_paths}
+
+output_neo1_umap <- base::paste0(
+  base_path, "/manuscript1_rev/figure6/figure6_umap_neo1.pdf")
+output_umap_neo1_legend <- base::paste0(
+  base_path, "/manuscript1_rev/figure6/figure6_umap_neo1_legend.pdf")
+
+output_trkb_umap <- base::paste0(
+  base_path, "/manuscript1_rev/figure6/figure6_umap_trkb.pdf")
+output_umap_trkb_legend <- base::paste0(
+  base_path, "/manuscript1_rev/figure6/figure6_umap_trkb_legend.pdf")
+
+output_b_plot_neo1 <- base::paste0(
+  base_path, "/manuscript1_rev/figure6/figure6_logfc_neo1.pdf")
+output_b_plot_trkb <- base::paste0(
+  base_path, "/manuscript1_rev/figure6/figure6_logfc_trkb.pdf")
+output_logfc_legend <- base::paste0(
+  base_path, "/manuscript1_rev/figure6/figure6_logfc_legend.pdf")
+
+output_neo1_paired_dotplot <- base::paste0(
+  base_path, "/manuscript1_rev/figure6/figure6_paired_neo1.pdf")
+output_trkb_paired_dotplot <- base::paste0(
+  base_path, "/manuscript1_rev/figure6/figure6_paired_trkb.pdf")
+output_dotplot_legend <- base::paste0(
+  base_path, "/manuscript1_rev/figure6/figure6_paired_legend.pdf")
+```
+
+# UMAPS
+
+## Neo1
+
+```{r neo1_umap, fig.width = 4, fig.height = 4}
+
+df_umap_neo1 <- assays(sce_str)[["logcounts"]][
+  rownames(SummarizedExperiment::assays(sce_str)[["logcounts"]]) == "Neo1",] %>%
+    as.matrix() %>%
+    as.data.frame()
+
+df_umap_neo1$UMAP1 <- reducedDims(sce_str)[["UMAP"]][,1]
+df_umap_neo1$UMAP2 <- reducedDims(sce_str)[["UMAP"]][,2]
+
+# arrange so that Neo1 high cells are on top
+df_umap_neo1 <- df_umap_neo1 %>%
+  dplyr::arrange(V1)
+
+neo1_umap <- ggplot2::ggplot(
+    df_umap_neo1,
+    aes(x = UMAP1, 
+        y = UMAP2, 
+        color = V1))+
+    ggplot2::scale_color_gradientn(
+      "Neo1 expression", 
+      colors = c(
+        "grey30",
+        "orange4", 
+        "orange3",
+        "gold"))+
+    ggplot2::geom_point(size = 0.5)+
+    theme_all+
+    ggplot2::theme(axis.text = element_blank(),
+                  axis.ticks = element_blank())+
+    ggplot2::xlab("UMAP 1")+
+    ggplot2::ylab("UMAP 2")+
+    theme_void()
+neo1_umap+theme(legend.position = "none")
+```
+
+```{r umap_neo1_legend, fig.height = 2, fig.width = 5}
+umap_neo1_legend <- ggpubr::get_legend(
+  neo1_umap+
+    theme_all+
+    ggplot2::theme(legend.position = "bottom"))
+umap_neo1_legend <- ggpubr::ggarrange(umap_neo1_legend)
+umap_neo1_legend
+```
+
+```{r output_neo1_umap}
+pdf(output_neo1_umap, width = 3.5, height = 3.5)
+neo1_umap+theme(legend.position = "none")
+dev.off()
+```
+
+```{r output_umap_neo1_legend}
+pdf(output_umap_neo1_legend, width = 5, height = 3)
+umap_neo1_legend
+dev.off()
+```
+
+## Ntrk2/Trkb
+
+```{r trkb_umap, fig.width = 4, fig.height = 4}
+
+df_umap_trkb <- assays(sce_str)[["logcounts"]][
+  rownames(SummarizedExperiment::assays(sce_str)[["logcounts"]]) == "Ntrk2",] %>%
+    as.matrix() %>%
+    as.data.frame()
+
+df_umap_trkb$UMAP1 <- reducedDims(sce_str)[["UMAP"]][,1]
+df_umap_trkb$UMAP2 <- reducedDims(sce_str)[["UMAP"]][,2]
+
+df_umap_trkb <- df_umap_trkb %>%
+  arrange(V1)
+
+trkb_umap <- ggplot2::ggplot(
+    df_umap_trkb,
+    aes(x = UMAP1, 
+        y = UMAP2, 
+        color = V1))+
+    ggplot2::scale_color_gradientn(
+      "Ntrk2 expression", 
+      colors = c(
+        "grey30",
+        "orange4", 
+        "orange3",
+        "gold"))+
+    ggplot2::geom_point(size = 0.5)+
+    theme_all+
+    ggplot2::theme(axis.text = element_blank(),
+                  axis.ticks = element_blank())+
+    ggplot2::xlab("UMAP 1")+
+    ggplot2::ylab("UMAP 2")+
+    theme_void()
+trkb_umap+theme(legend.position = "none")
+```
+
+```{r umap_trkb_legend, fig.height = 2, fig.width = 3}
+umap_trkb_legend <- ggpubr::get_legend(
+  trkb_umap+
+    ggplot2::theme(legend.position = "bottom"))
+umap_trkb_legend <- ggpubr::ggarrange(umap_trkb_legend)
+umap_trkb_legend
+```
+
+```{r output_trkb_umap}
+pdf(output_trkb_umap, width = 3.5, height = 3.5)
+trkb_umap+theme(legend.position = "none")
+dev.off()
+```
+
+```{r output_umap_trkb_legend}
+pdf(output_umap_trkb_legend, width = 5, height = 3)
+umap_trkb_legend
+dev.off()
+```
+
+# Log2FC
+
+## Neo1
+
+```{r res_df_neo1_significant}
+# prepare results_df 
+results_df_neo1_prep <- results_df_neo1 %>%
+  rownames_to_column("genes")
+
+# also get the significant results
+# genes are significantly enriched in SOME way if adjusted p value is less 
+# than threshold above and absolute log2FC greater than or equal to 
+# threshold above
+results_df_neo1_significant <- results_df_neo1 %>%
+    dplyr::filter(padj < pval_cutoff) %>%
+    dplyr::filter(abs(log2FoldChange) >= lfc_cutoff)
+```
+
+```{r sign_neo1_df}
+
+sign_neo1_df <- data.frame()
+
+# make a df with all signature genes 
+for(i in names(sign_genes)){
+    print(i)
+
+    sign_df <- data.frame(
+      "celltype" = rep(i, length = length(sign_genes[[i]]$conserved_signature)),
+      "genes" = sign_genes[[i]]$conserved_signature)
+    
+    sign_neo1_df <- rbind(
+      sign_neo1_df,
+      sign_df
+      )
+}  
+
+# indicate whether a gene has been enriched in SOME way
+sign_neo1_df <- sign_neo1_df %>%
+  mutate(is_significant = genes %in% rownames(results_df_neo1_significant))
+table(sign_neo1_df$is_significant)
+```
+
+```{r logfc_neo1_df}
+
+# make a df that contains scaled counts of all signature genes of each cell
+# type, for each sample
+
+# prepare df for dotplot visualitation
+logfc_neo1_df <- sign_neo1_df
+
+# add counts to each signature genes
+logfc_neo1_df <- left_join(logfc_neo1_df, results_df_neo1_prep, by = "genes")
+
+logfc_neo1_df <- logfc_neo1_df %>% 
+  dplyr::mutate(
+  # determining directionailty of log2FC for enrichment in + or - population
+    color_by = case_when(
+      is_significant & log2FoldChange >= lfc_cutoff  ~ "significant_up",
+      is_significant & log2FoldChange <= -lfc_cutoff ~ "significant_down",
+      TRUE ~ "not_significant")
+    )
+
+table(logfc_neo1_df$color_by)
+table(is.na(logfc_neo1_df$color_by))
+# significant with small FC doesn'Tt exist by definition
+  
+logfc_neo1_df$celltype <- factor(
+  logfc_neo1_df$celltype,
+  levels = c(
+    "Adipo/CAR",
+    "Osteo",
+    "Fibro/Chondro",
+    "Fibroblast",
+    "Art/Cap EC",
+    "Sinusoid/Ven EC",
+    "Sinusoid EC",
+    "Peri/SMC"
+  ))
+
+logfc_neo1_df$color_by <- factor(
+  logfc_neo1_df$color_by,
+  levels = names(color_significant))
+```
+
+```{r test_perc_neo1_nas}
+# check NAs
+ #Some signature genes are excluded, they had less than or equal to 20  counts
+
+print(length(unique(logfc_neo1_df$genes[
+  !is.na(logfc_neo1_df$log2FoldChange)])))
+print(length(unique(sign_neo1_df$genes)))
+
+table(
+  is.na(logfc_neo1_df$log2FoldChange),
+  logfc_neo1_df$celltype)
+
+# get these genes which were from ECs 
+
+logfc_neo1_na_ec <- logfc_neo1_df %>%
+  dplyr::filter(grepl("EC", celltype)) %>%
+  dplyr::filter(is.na(log2FoldChange)) %>%
+  dplyr::pull(genes) %>%
+  unique()
+
+logfc_neo1_na_ec
+length(logfc_neo1_na_ec)
+
+# remove those from the data frame, but remember the
+# number as it is important to mention
+logfc_neo1_df <- logfc_neo1_df %>%
+  dplyr::filter(!is.na(log2FoldChange))
+# so X number of genes were excluded from analysis, and Y of
+# those were from ECs (indicating they were not even detectable)
+# but I still think it's better to exclude them from analysis
+# rather than showing them as another bar
+```
+
+```{r test_perc_neo1}
+
+# now get only the cases of up vs. all other cases (down or unsiginificant)
+# for calculating percentages of up vs. all other cases
+logfc_neo1_df_perc <- logfc_neo1_df %>%
+  dplyr::mutate(is_up = ifelse(color_by == "significant_up", TRUE, FALSE))
+
+logfc_neo1_df_perc <- logfc_neo1_df_perc %>%
+  dplyr::group_by(celltype) %>%
+  dplyr::summarise(
+    n_true  = sum(is_up == TRUE),
+    n_false = sum(is_up == FALSE),
+    total_genes = n()) %>%
+  dplyr::mutate(percentage_significant_up = n_true/total_genes) 
+
+logfc_neo1_df_perc$celltype <- factor(
+  logfc_neo1_df_perc$celltype,
+  levels = names(col_cts_str)
+)
+
+logfc_neo1_df_perc
+```
+
+```{r logfc_neo1_plot, fig.height = 4, fig.width = 3.5}
+logfc_neo1_plot <- ggplot2::ggplot(
+    logfc_neo1_df,
+    aes(  
+      y = color_by,
+      x = log2FoldChange,
+      color = color_by))+
+    ggbeeswarm::geom_quasirandom(size = 2, alpha = 0.8)+
+    ggplot2::geom_vline(xintercept = 0, color = "grey70") +
+    theme_all+
+    ggplot2::theme(
+      strip.background = element_blank(),
+      strip.text.y = element_blank(),
+      axis.text.y = element_blank(),
+      axis.title = element_blank(),
+      axis.ticks.y = element_blank())+
+    ggplot2::scale_color_manual("", values = color_significant)+
+    ggplot2::facet_grid(ggplot2::vars(celltype))+
+    ggplot2::scale_x_continuous(
+      limits = c(-5.1, 5.1), 
+      breaks = c(-5, -2.5, 0, 2.5, 5), 
+      position = "top")
+
+logfc_neo1_plot+theme(legend.position = "none")
+```
+
+```{r logfc_neo1_barplot, fig.height = 4, fig.width = 0.9}
+
+logfc_neo1_df_comp <- logfc_neo1_df %>%
+  tidyr::complete(
+    color_by,
+    fill = list(count = 0)
+  )
+
+table(logfc_neo1_df$color_by)
+table(logfc_neo1_df_comp$color_by)
+
+logfc_neo1_df_comp$celltype <- factor(
+  logfc_neo1_df_comp$celltype,
+  levels = rev(c(
+    "Adipo/CAR",
+    "Osteo",
+    "Fibro/Chondro",
+    "Fibroblast",
+    "Art/Cap EC",
+    "Sinusoid/Ven EC",
+    "Sinusoid EC",
+    "Peri/SMC"
+  )))
+
+logfc_neo1_barplot <- ggplot2::ggplot(
+    logfc_neo1_df_comp,
+    aes(  
+      y = celltype,
+      fill = color_by))+
+    ggplot2::geom_bar(
+      position = position_dodge2(preserve = "single"))+  
+    theme_all+
+    ggplot2::theme(
+      axis.text.y = element_blank(),
+      axis.title = element_blank())+
+    ggplot2::scale_fill_manual("", values = color_significant)+
+    ggplot2::scale_x_continuous(
+      limits = c(0, 85), 
+      breaks = c(0, 40, 80), 
+      position = "top")
+
+logfc_neo1_barplot+theme(legend.position = "none")
+```
+
+## Ntrk2/Trkb
+
+```{r res_df_trkb_significant}
+# prepare results_df 
+results_df_trkb_prep <- results_df_trkb %>%
+  rownames_to_column("genes")
+
+# also get the significant results
+results_df_trkb_significant <- results_df_trkb %>%
+    dplyr::filter(padj < pval_cutoff)%>%
+    dplyr::filter(abs(log2FoldChange) >= lfc_cutoff)
+```
+
+```{r sign_trkb_df}
+
+sign_trkb_df <- data.frame()
+
+# make a df with all signature genes per cell type
+for(i in names(sign_genes)){
+    print(i)
+
+    sign_df <- data.frame(
+      "celltype" = rep(i, length = length(sign_genes[[i]]$conserved_signature)),
+      "genes" = sign_genes[[i]]$conserved_signature)
+    
+    sign_trkb_df <- rbind(
+      sign_trkb_df,
+      sign_df
+      )
+}  
+
+sign_trkb_df <- sign_trkb_df %>%
+  dplyr::mutate(
+    is_significant = genes %in% rownames(results_df_trkb_significant))
+```
+
+```{r logfc_trkb_df}
+
+# make a df that contains scaled counts of all signature genes of each cell
+# type, for each sample
+
+# prepare df for dotplot visualitation
+logfc_trkb_df <- sign_trkb_df
+
+# add counts to each signature genes
+logfc_trkb_df <- left_join(logfc_trkb_df, results_df_trkb_prep, by = "genes")
+
+logfc_trkb_df <- logfc_trkb_df %>% 
+  dplyr::mutate(
+    color_by = case_when(
+      is_significant & log2FoldChange >= lfc_cutoff  ~ "significant_up",
+      is_significant & log2FoldChange <= -lfc_cutoff ~ "significant_down",
+      TRUE ~ "not_significant")
+    )
+
+table(logfc_trkb_df$color_by)
+table(is.na(logfc_trkb_df$color_by))
+  
+logfc_trkb_df$celltype <- factor(
+  logfc_trkb_df$celltype,
+  levels = c(
+    "Adipo/CAR",
+    "Osteo",
+    "Fibro/Chondro",
+    "Fibroblast",
+    "Art/Cap EC",
+    "Sinusoid/Ven EC",
+    "Sinusoid EC",
+    "Peri/SMC"
+  ))
+
+logfc_trkb_df$color_by <- factor(
+  logfc_trkb_df$color_by,
+  levels = names(color_significant))
+```
+
+```{r check_trkb_nas}
+
+# same here with genes not included in this analysis
+# due to low counts during qc
+print(length(unique(logfc_trkb_df$genes[
+  !is.na(logfc_trkb_df$log2FoldChange)])))
+print(length(unique(sign_trkb_df$genes)))
+
+table(
+  is.na(logfc_trkb_df$log2FoldChange),
+  logfc_trkb_df$celltype)
+
+# get the genes from ECs 
+logfc_trkb_na_ec <- logfc_trkb_df %>%
+  dplyr::filter(grepl("EC", celltype)) %>%
+  dplyr::filter(is.na(log2FoldChange)) %>%
+  dplyr::pull(genes) %>%
+  unique()
+
+logfc_trkb_na_ec
+length(logfc_neo1_na_ec)
+
+logfc_trkb_df <- logfc_trkb_df %>%
+  dplyr::filter(!is.na(log2FoldChange))
+```
+
+Some signature genes are excluded, they had less than
+20 total counts.
+
+```{r test_perc_trkb}
+
+# up vs. all other cases
+logfc_trkb_df_perc <- logfc_trkb_df %>%
+  mutate(is_up = ifelse(color_by == "significant_up", TRUE, FALSE))
+
+logfc_trkb_df_perc <- logfc_trkb_df_perc %>%
+  dplyr::group_by(celltype) %>%
+  dplyr::summarise(
+    n_true  = sum(is_up == TRUE),
+    n_false = sum(is_up == FALSE),
+    total_genes = n()
+  ) %>%
+  dplyr::mutate(percentage_significant_up = n_true/total_genes) 
+
+logfc_trkb_df_perc$celltype <- factor(
+  logfc_trkb_df_perc$celltype,
+  levels = names(col_cts_str)
+)
+
+logfc_trkb_df_perc
+```
+
+```{r logfc_trkb_plot, fig.height = 4, fig.width = 3.5}
+logfc_trkb_plot <- ggplot2::ggplot(
+    logfc_trkb_df,
+    aes(  
+      y = color_by,
+      x = log2FoldChange,
+      color = color_by))+
+    ggbeeswarm::geom_quasirandom(size = 2, alpha = 0.8)+
+    ggplot2::geom_vline(xintercept = 0, color = "grey70") +
+    theme_all+
+    ggplot2::theme(
+      strip.background = element_blank(),
+      axis.text.y = element_blank(),
+      strip.text.y = element_blank(),
+      axis.title = element_blank(),
+      axis.ticks.y = element_blank())+
+    ggplot2::scale_color_manual("", values = color_significant)+
+    ggplot2::facet_grid(ggplot2::vars(celltype))+
+    ggplot2::scale_x_continuous(
+      limits = c(-5.1, 5.1), 
+      breaks = c(-5, -2.5, 0, 2.5, 5), 
+      position = "top")
+
+logfc_trkb_plot+theme(legend.position = "none")
+```
+
+```{r logfc_trkb_barplot, fig.height = 4, fig.width = 0.9}
+
+logfc_trkb_df_comp <- logfc_trkb_df %>%
+  tidyr::complete(
+    color_by,
+    fill = list(count = 0)
+  )
+
+table(logfc_trkb_df$color_by)
+table(logfc_trkb_df_comp$color_by)
+
+logfc_trkb_df_comp$celltype <- factor(
+  logfc_trkb_df_comp$celltype,
+  levels = rev(c(
+    "Adipo/CAR",
+    "Osteo",
+    "Fibro/Chondro",
+    "Fibroblast",
+    "Art/Cap EC",
+    "Sinusoid/Ven EC",
+    "Sinusoid EC",
+    "Peri/SMC"
+  )))
+
+logfc_trkb_barplot <- ggplot2::ggplot(
+    logfc_trkb_df_comp,
+    aes(  
+      y = celltype,
+      fill = color_by))+
+    ggplot2::geom_bar(
+      position = position_dodge2(preserve = "single"))+  
+    theme_all+
+    ggplot2::theme(
+      axis.text.y = element_blank(),
+      axis.title = element_blank())+
+    ggplot2::scale_fill_manual("", values = color_significant)+
+    ggplot2::scale_x_continuous(
+      limits = c(0, 85), 
+      breaks = c(0, 40, 80), 
+      position = "top")
+
+logfc_trkb_barplot+theme(legend.position = "none")
+```
+
+## Combine
+
+```{r b_plot_neo1, fig.width = 4.34, fig.height = 4}
+b_plot_neo1 <- ggpubr::ggarrange(
+  logfc_neo1_plot+theme(legend.position = "none"),
+  logfc_neo1_barplot+theme(legend.position = "none"),
+  ncol = 2,
+  align = "h",
+  widths = c(4, 1)
+)
+b_plot_neo1
+```
+
+```{r b_plot_trkb, fig.width = 4.34, fig.height = 4}
+b_plot_trkb <- ggpubr::ggarrange(
+  logfc_trkb_plot+theme(legend.position = "none"),
+  logfc_trkb_barplot+theme(legend.position = "none"),
+  ncol = 2,
+  align = "h",
+  widths = c(4, 1)
+)
+b_plot_trkb
+```
+
+have to adjust height of bars manually later. 
+
+```{r logfc_legend, fig.height = 2, fig.width = 3}
+logfc_legend <- ggpubr::get_legend(
+  logfc_trkb_plot+
+    theme_all)
+logfc_legend <- ggpubr::ggarrange(logfc_legend)
+logfc_legend
+```
+
+```{r output_b_plot_neo1}
+pdf(output_b_plot_neo1, width = 4.43, height = 4)
+b_plot_neo1
+dev.off()
+```
+
+```{r output_b_plot_trkb}
+pdf(output_b_plot_trkb, width = 4.43, height = 4)
+b_plot_trkb
+dev.off()
+```
+
+```{r output_logfc_legend}
+pdf(output_logfc_legend, width = 3, height = 3)
+logfc_legend
+dev.off()
+```
+
+# Paired Dotplot 
+
+## Neo
+
+Genes were picked in figure_ideas_neo1.Rmd
+
+```{r final_pick_neo1}
+# final list of genes I want to show, including best Osteo genes
+# these are positive for MSC and osteo lineage
+final_pick_neo1 <- unique(c(
+
+  "Neo1",
+
+  # other literature or signature Osteo genes, DE significant
+  "Wnt16", 
+  "Hoxa10", 
+  "Cdh11",
+  "Postn",
+  "Spp1",
+  "Mmp13",
+  "Alpl",
+  "Sp7"
+))
+
+final_pick_neo1 <- final_pick_neo1[final_pick_neo1 %in% 
+  rownames(results_df_neo1_significant)]
+
+# now add negative controls which SHOULD NOT be in there
+negative_neo1 <- c(
+   # negative
+  "Kitl", # Niche, ECs
+  "Pecam1", # pan EC
+  "Procr" # HSCs
+)
+
+negative_neo1 <- negative_neo1[!negative_neo1 %in% 
+  rownames(results_df_neo1_significant)]
+
+final_pick_neo1 <- c(final_pick_neo1, negative_neo1)
+
+# print for control
+final_pick_neo1[final_pick_neo1 %in% rownames(results_df_neo1_significant)]
+final_pick_neo1[!final_pick_neo1 %in% rownames(results_df_neo1_significant)]
+```
+
+```{r counts_neo1}
+# get the counts from vsd, transformed only for visualisation
+counts_neo1 <- assays(vsd_neo1)[[1]]
+
+counts_long_neo1 <- counts_neo1 %>% 
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = "gene_name") %>%
+  tidyr::pivot_longer(
+    names_to = "Object_ID", 
+    values_to = "counts", cols = c(1:ncol(counts_neo1)+1))
+
+ counts_long_neo1 <- counts_long_neo1  %>% 
+    tidyr::separate(
+      Object_ID,
+      into = c("Species_ID", "Fraction_ID", "Target_ID", "Condition_ID", "Mouse_ID"),
+      sep = "_",
+      remove = FALSE
+  ) 
+```
+
+```{r counts_long_neo1_genes}
+  
+counts_long_neo1_genes <- counts_long_neo1 %>%
+  dplyr::filter(gene_name %in% final_pick_neo1)
+
+counts_long_neo1_genes$gene_name <- factor(
+  counts_long_neo1_genes$gene_name,
+  levels = final_pick_neo1)
+
+counts_long_neo1_genes <- counts_long_neo1_genes %>%
+  dplyr::group_by(gene_name) %>%
+  dplyr::mutate(scaled = as.numeric(scale(counts))) %>%
+  dplyr::ungroup()
+```
+
+```{r neo1_paired_dotplot, fig.width = 7.5, fig.height = 3}
+neo1_paired_dotplot <- ggplot2::ggplot(
+    counts_long_neo1_genes,
+    aes(  
+      x = Condition_ID,
+      y = counts,
+      color = Mouse_ID,
+      group = Mouse_ID))+
+    ggplot2::geom_line(
+      alpha = 0.7,
+      linewidth = 0.9,
+      lineend = "round",
+      linejoin = "round")+
+    ggplot2::geom_point(
+      size = 3,
+      alpha = 0.9
+      )+
+    theme_all+
+    ggplot2::theme(
+      axis.title = element_blank(),
+      axis.text.x = element_blank(),
+      strip.background = ggplot2::element_blank(),
+      strip.placement = "outside",
+      strip.text = ggplot2::element_text(
+        size = axis_text_size_small,
+        face = "plain",
+        angle = 90,
+        hjust = 0,
+        color = "black"
+      )
+      )+
+    ggplot2::scale_color_manual("Mouse", values = col_mice)+
+    ggplot2::facet_wrap(vars(gene_name), nrow = 1)+
+    ggplot2::scale_y_continuous(
+      limits = c(2.8, 12.5), 
+      breaks = c(4, 8, 12))
+neo1_paired_dotplot+theme(legend.position = "none")
+```
+
+```{r output_neo1_paired_dotplot}
+pdf(output_neo1_paired_dotplot, width = 7.5, height = 3.5)
+neo1_paired_dotplot+theme(legend.position = "none")
+dev.off()
+```
+
+## TrkB
+
+```{r final_pick_trkb}
+
+# list of genes I want to show,
+# can include MSCs, fibro, osteo, whatever
+final_pick_trkb <- unique(c(
+
+  # MSC/Fibro identity, DE significant
+  "Nes",
+  "Zeb2",
+  "Dpt",
+  "Col5a1",
+  "Ddr2",
+  "Cd34",
+  "Fbn1"
+))
+
+final_pick_trkb <- final_pick_trkb[final_pick_trkb %in% 
+  rownames(results_df_trkb_significant)]
+
+# now add negative controls which SHOULD NOT be in there
+negative_trkb <- c(
+   # negative
+  "Kitl", # Niche
+  "Pecam1", # EC
+  "Procr" # HSC
+)
+
+negative_trkb <- negative_trkb[!negative_trkb %in% 
+  rownames(results_df_trkb_significant)]
+
+# add negative and Ntrk2
+final_pick_trkb <- c("Ntrk2", final_pick_trkb, negative_trkb)
+
+final_pick_trkb[final_pick_trkb %in% rownames(results_df_trkb_significant)]
+final_pick_trkb[!final_pick_trkb %in% rownames(results_df_trkb_significant)]
+```
+
+```{r counts_trkb}
+# get the counts from vsd, transformed only for visualisation
+counts_trkb <- assays(vsd_trkb)[[1]]
+
+counts_long_trkb <- counts_trkb %>% 
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = "gene_name") %>%
+  tidyr::pivot_longer(
+    names_to = "Object_ID", 
+    values_to = "counts", cols = c(1:ncol(counts_trkb)+1))
+
+ counts_long_trkb <- counts_long_trkb  %>% 
+    tidyr::separate(
+      Object_ID,
+      into = c("Species_ID", "Fraction_ID", "Target_ID", "Condition_ID", "Mouse_ID"),
+      sep = "_",
+      remove = FALSE
+  ) 
+```
+
+```{r counts_long_trkb_genes}
+  
+counts_long_trkb_genes <- counts_long_trkb %>%
+  dplyr::filter(gene_name %in% final_pick_trkb)
+
+counts_long_trkb_genes$gene_name <- factor(
+  counts_long_trkb_genes$gene_name,
+  levels = final_pick_trkb)
+
+counts_long_trkb_genes <- counts_long_trkb_genes %>%
+  dplyr::group_by(gene_name) %>%
+  dplyr::mutate(scaled = as.numeric(scale(counts))) %>%
+  dplyr::ungroup()
+
+head(counts_long_trkb_genes)
+```
+
+```{r trkb_paired_dotplot, fig.width = 7.5, fig.height = 3}
+trkb_paired_dotplot <- ggplot2::ggplot(
+    counts_long_trkb_genes,
+    aes(  
+      x = Condition_ID,
+      y = counts,
+      color = Mouse_ID,
+      group = Mouse_ID))+
+    ggplot2::geom_line(
+      alpha = 0.7,
+      linewidth = 0.9,
+      lineend = "round",
+      linejoin = "round")+
+    ggplot2::geom_point(
+      size = 3,
+      alpha = 0.9
+      )+
+    theme_all+
+    ggplot2::theme(
+      axis.title = element_blank(),
+      axis.text.x = element_blank(),
+      strip.background = ggplot2::element_blank(),
+      strip.placement = "outside",
+      strip.text = ggplot2::element_text(
+        size = axis_text_size_small,
+        face = "plain",
+        angle = 90,
+        hjust = 0,
+        color = "black"
+      )
+      )+
+    ggplot2::scale_color_manual("Mouse", values = col_mice)+
+    ggplot2::facet_wrap(vars(gene_name), nrow = 1)+
+    ggplot2::scale_y_continuous(limits = c(5, 12), breaks = c(6, 9, 12))
+trkb_paired_dotplot+theme(legend.position = "none")
+```
+
+```{r output_trkb_paired_dotplot}
+pdf(output_trkb_paired_dotplot, width = 7.5, height = 3.5)
+trkb_paired_dotplot+theme(legend.position = "none")
+dev.off()
+```
+
+```{r dotplot_legend, fig.height = 1, fig.width = 5}
+dotplot_legend <- ggpubr::get_legend(
+  trkb_paired_dotplot+
+    theme_all+
+    theme(legend.position = "bottom"))
+dotplot_legend <- ggpubr::ggarrange(dotplot_legend)
+dotplot_legend
+```
+
+```{r output_dotplot_legend}
+pdf(output_dotplot_legend, width = 5, height = 1, useDingbats = FALSE)
+dotplot_legend+theme(legend.position = "none")
+dev.off()
+```
+
+```{r session_info}
+utils::sessionInfo()
+```

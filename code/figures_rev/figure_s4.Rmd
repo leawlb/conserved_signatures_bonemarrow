@@ -4,8 +4,10 @@ date: '2024-11-28'
 output: html_document
 ---
 
-For Figure 4.
-Figure S4 = HSPC reclustering basics mouse
+Supplementary figure extended HSPC reclustering (human mostly).
+Related to Figure 4. 
+
+The signature reclaim plot is generating in another file, reclaim_sigs.Rmd
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -26,24 +28,6 @@ library(ggpubr, quietly = TRUE)
 
 ```{r base_path}
 base_path <- snakemake@params[["base_path"]]
-#base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
-#setwd("repositories/Interspecies_BM_phd/code/figures_rev")
-```
-
-For A, the score optimization plots.
-
-```{r load_score_opti_plot_hsc}
-# list of score dfs from hscs for score optimization plot
-score_df_list_hsc <-  base::readRDS(base::paste0(
-  base_path, 
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/04_rcls/score_df_reso_hsc"))
-
-score_df_list_hsc_new <- list()
-for(res in names(score_df_list_hsc)){
-  for(cons_level in names(score_df_list_hsc[[res]])){
-    score_df_list_hsc_new[[cons_level]][[res]] <- score_df_list_hsc[[res]][[cons_level]]
-  }
-}
 ```
 
 For finding the correct other dataset resolutions.
@@ -64,7 +48,8 @@ resolution_df <- utils::read.csv(file = resolution_df_path,
 print(resolution_df)
 ```
 
-Also for the optimization plots, maybe not necessary.
+For the optimization plots, as examples two optimizations from mouse
+HSPC datasets are shown.
 
 ```{r load_score_opti_other1}
 #### OTHER MOUSE DATASET 1 (HSPC)
@@ -74,10 +59,7 @@ dataset_o1 <- "mus_tm_bonemarrow"
 score_df_list_o1 <-base::readRDS(base::paste0(
   base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_mus_tm_bonemarrow_list"))
-
 ```
-
-Also for the optimization plots, maybe not necessary.
 
 ```{r load_score_opti_other2}
 #### OTHER MOUSE DATASET 2 (HSPC)
@@ -121,8 +103,6 @@ res_mus_weinreb_hspc <- resolution_df %>%
 
 seu_mus_weinreb_hspc_sign <- seu_mus_weinreb_hspc_recl_list$seu_sign[[res_mus_weinreb_hspc]]
 ```
-
-source
 
 ```{r source}
 colors_path <- base::paste0(
@@ -231,48 +211,6 @@ vis_clustering_scores <- function(score_df_list, max){
 ```
 
 # A Dotplot different scores and nr of clusters
-
-```{r hscs, fig.width = 16.5, fig.height = 3}
-max_hsc <- 5
-
-plot_list_hsc <- lapply(score_df_list_hsc_new, vis_clustering_scores, max = max_hsc)
-
-plot_hsc <- ggpubr::ggarrange(
-  plot_list_hsc[[1]]+
-    theme_all+
-    ggplot2::theme(
-      legend.position = "none",
-      axis.text.x = element_text(
-        size = supplementary_text_size),
-      axis.title = element_text(
-        size = supplementary_text_size))+
-    ggplot2::geom_vline(xintercept = 0.65, color = "orangered"),
-  plot_list_hsc[[2]]+
-    ggplot2::theme(
-      legend.position = "none",
-      axis.text.x = element_text(
-        size = supplementary_text_size),
-      axis.title = element_text(
-        size = supplementary_text_size))+
-      ggplot2::geom_vline(xintercept = 0.45, color = "orangered"),
-  plot_list_hsc[[3]]+
-    ggplot2::theme(
-      legend.position = "none",
-      axis.text.x = element_text(
-        size = supplementary_text_size),
-      axis.title = element_text(
-        size = supplementary_text_size))+
-      ggplot2::geom_vline(xintercept = 0.65, color = "orangered"),
-  NULL,
-  nrow = 1,
-  align = "h",
-  widths = c(1.05, 1, 1, 1)
-)
-
-plot_hsc
-```
-
-Not sure about these two but let's keep the code for now.
 
 ```{r other1, fig.width = 16, fig.height = 2.5}
 # run the function, get max
@@ -402,7 +340,7 @@ dev.off()
 #### Legend
 
 ```{r, fig.width = 4, fig.height = 2}
-legend_plot <- plot_list_hsc[[1]]
+legend_plot <- plot_list_o2[[1]]
 legend <- ggpubr::get_legend(legend_plot+
   theme(,
     legend.text = element_text(
@@ -730,6 +668,8 @@ heatmap_expr_legend <- ggpubr::ggarrange(heatmap_expr_legend_theme)
 heatmap_expr_legend
 ```
 
+The order may change, but export all of them at once.
+
 ```{r heatmaps_combine, fig.height = 12, fig.width = 9}
 
 heatmaps_combine <- ggarrange(
@@ -756,4 +696,8 @@ dev.off()
 pdf(output_pdf_c_heatmaps_legend, width = 3, height = 3)
 heatmap_expr_legend
 dev.off()
+```
+
+```{r session_info}
+utils::sessionInfo()
 ```

@@ -23,7 +23,7 @@ library(scales, quietly = TRUE)
 ## Paths and object loading
 
 ```{r base_path}
-base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+base_path <- snakemake@params[["base_path"]]
 ```
 
 ```{r load_objects}
@@ -131,8 +131,8 @@ one_gene_heatmap <- function(gene_name, show_y = FALSE, show_x = FALSE) {
       limits = c(-5, 5),
       na.value = NA
     ) +
-    ggplot2::labs(x = NULL, y = NULL, title = gene_name) +
-    ggplot2::theme_classic()
+    ggplot2::labs(x = NULL, y = NULL, title = gene_name) #+
+    #ggplot2::theme_classic()
 
   p <- p + theme_all
 
@@ -217,4 +217,8 @@ dev.off()
 pdf(output_pdf_heatmap_conds_stacked_legend, width = 3, height = 1)
 legend_cond_theme
 dev.off()
+```
+
+```{r session_info}
+utils::sessionInfo()
 ```

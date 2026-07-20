@@ -4,6 +4,9 @@ date: '2025-12-02'
 output: html_document
 ---
 
+Making alluvial plots and umaps comparing the species-specific,
+custom clustering with the merged annotation.
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -24,7 +27,7 @@ library(ggrepel, quietly = TRUE)
 ```
 
 ```{r base_path}
-base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+base_path <- snakemake@params[["base_path"]]
 ```
 
 ```{r source}
@@ -97,13 +100,17 @@ sce_mspr_str$custom_label_unif <- unfactor(sce_mspr_str$custom_label_unif)
 sce_mcar_str$custom_label_unif <- unfactor(sce_mcar_str$custom_label_unif)
 
 sce_str_all_cells$custom_label[match(
-  colnames(sce_mmus_str), colnames(sce_str_all_cells))] <- sce_mmus_str$custom_label_unif
+  colnames(sce_mmus_str), 
+  colnames(sce_str_all_cells))] <- sce_mmus_str$custom_label_unif
 sce_str_all_cells$custom_label[match(
-  colnames(sce_mcas_str), colnames(sce_str_all_cells))] <- sce_mcas_str$custom_label_unif
+  colnames(sce_mcas_str), 
+  colnames(sce_str_all_cells))] <- sce_mcas_str$custom_label_unif
 sce_str_all_cells$custom_label[match(
-  colnames(sce_mspr_str), colnames(sce_str_all_cells))] <- sce_mspr_str$custom_label_unif
+  colnames(sce_mspr_str), 
+  colnames(sce_str_all_cells))] <- sce_mspr_str$custom_label_unif
 sce_str_all_cells$custom_label[match(
-  colnames(sce_mcar_str), colnames(sce_str_all_cells))] <- sce_mcar_str$custom_label_unif
+  colnames(sce_mcar_str), 
+  colnames(sce_str_all_cells))] <- sce_mcar_str$custom_label_unif
 
 gc()
 ```
@@ -113,7 +120,9 @@ gc()
 Final annotation after sub-clustering.
 
 ```{r load_anno_str}
-sce_str_anno <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data_freeze/05_annotated_objects/sce_str.rds")
+sce_str_anno <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10"))
 
 sce_str_all_cells$celltypes <- vector(length = ncol(sce_str_all_cells))
 sce_str_all_cells$celltypes <- sce_str_anno$celltypes[
@@ -143,10 +152,14 @@ print(sort(unique(sce_str_all_cells$custom_label)))
 ```{r prep_str}
 # change species names to currently used abbreviations
 sce_str_all_cells$species_pub <- vector(length = ncol(sce_str_all_cells))
-sce_str_all_cells$species_pub[sce_str_all_cells$Species_ID == "mmus"] <- "BL6"
-sce_str_all_cells$species_pub[sce_str_all_cells$Species_ID == "mcas"] <- "CAST"
-sce_str_all_cells$species_pub[sce_str_all_cells$Species_ID == "mspr"] <- "SPRET"
-sce_str_all_cells$species_pub[sce_str_all_cells$Species_ID == "mcar"] <- "CAROLI"
+sce_str_all_cells$species_pub[
+  sce_str_all_cells$Species_ID == "mmus"] <- "BL6"
+sce_str_all_cells$species_pub[
+  sce_str_all_cells$Species_ID == "mcas"] <- "CAST"
+sce_str_all_cells$species_pub[
+  sce_str_all_cells$Species_ID == "mspr"] <- "SPRET"
+sce_str_all_cells$species_pub[
+  sce_str_all_cells$Species_ID == "mcar"] <- "CAROLI"
 sce_str_all_cells$species_pub <- factor(
   sce_str_all_cells$species_pub, 
   levels = names(col_spc_pub))
@@ -160,7 +173,8 @@ sce_str_all_cells$custom_label <- factor(
 ```{r control_cols}
 # make sure the color vector fits the label names 
 # the factors must be right because they have been controlled in 02/01/custom
-col_custom_str_unif[!names(col_custom_str_unif) %in% c(sce_str_all_cells$custom_label)]
+col_custom_str_unif[
+  !names(col_custom_str_unif) %in% c(sce_str_all_cells$custom_label)]
 unique(sce_str_all_cells$custom_label[!sce_str_all_cells$custom_label %in% 
   names(col_custom_str_unif)])
 
@@ -494,6 +508,11 @@ base_plot_str_celltypes_mcar_3
 
 ## Make Alluvials
 
+The colors of the boxes are actually later manually adjusted;
+here, the boxes are empty.
+A 100% opaque filling of the cell type color will be added 
+manually in Affinity. This was, for me, the easiest option. 
+
 ### MMUS
 
 ```{r pre_plot_prep_mmus}
@@ -502,8 +521,12 @@ mmus_df_str2 <- mmus_df_str %>%
 
 # there are no overlapping names between custom anno and original_anno_space
 # specifically because I added the space
-table(is.na(match(mmus_df_str2$original_anno_space, mmus_df_str2$custom_anno)))
-table(is.na(match(mmus_df_str2$custom_anno, mmus_df_str2$original_anno_space)))
+table(is.na(match(
+  mmus_df_str2$original_anno_space, 
+  mmus_df_str2$custom_anno)))
+table(is.na(match(
+  mmus_df_str2$custom_anno, 
+  mmus_df_str2$original_anno_space)))
 
 table(is.na(mmus_df_str2$custom_anno))
 unique(mmus_df_str2$custom_anno)
@@ -582,8 +605,12 @@ mcas_df_str2 <- mcas_df_str %>%
 
 # there are no overlapping names between custom anno and original_anno_space
 # specifically because I added the space
-table(is.na(match(mcas_df_str2$original_anno_space, mcas_df_str2$custom_anno)))
-table(is.na(match(mcas_df_str2$custom_anno, mcas_df_str2$original_anno_space)))
+table(is.na(match(
+  mcas_df_str2$original_anno_space, 
+  mcas_df_str2$custom_anno)))
+table(is.na(match(
+  mcas_df_str2$custom_anno, 
+  mcas_df_str2$original_anno_space)))
 
 mcas_df_str2$fill_by <- mcas_df_str2$custom_anno
 
@@ -658,8 +685,12 @@ mspr_df_str2 <- mspr_df_str %>%
 
 # there are no overlapping names between custom anno and original_anno_space
 # specifically because I added the space
-table(is.na(match(mspr_df_str2$original_anno_space, mspr_df_str2$custom_anno)))
-table(is.na(match(mspr_df_str2$custom_anno, mspr_df_str2$original_anno_space)))
+table(is.na(match(
+  mspr_df_str2$original_anno_space,
+  mspr_df_str2$custom_anno)))
+table(is.na(match(
+  mspr_df_str2$custom_anno, 
+  mspr_df_str2$original_anno_space)))
 
 mspr_df_str2$fill_by <- mspr_df_str2$custom_anno
 
@@ -734,8 +765,12 @@ mcar_df_str2 <- mcar_df_str %>%
 
 # there are no overlapping names between custom anno and original_anno_space
 # specifically because I added the space
-table(is.na(match(mcar_df_str2$original_anno_space, mcar_df_str2$custom_anno)))
-table(is.na(match(mcar_df_str2$custom_anno, mcar_df_str2$original_anno_space)))
+table(is.na(match(
+  mcar_df_str2$original_anno_space,
+  mcar_df_str2$custom_anno)))
+table(is.na(match(
+  mcar_df_str2$custom_anno, 
+  mcar_df_str2$original_anno_space)))
 
 mcar_df_str2$fill_by <- mcar_df_str2$custom_anno
 
@@ -879,8 +914,10 @@ a_mmus_plot_2
 ```{r arrange_a, fig.width = 12.2, fig.height = 2.2}
 
 plot_a <- ggpubr::ggarrange(
-  a_mmus_plot_4+ggplot2::theme(plot.margin = margin(t = 0, r = 0, b = 20, l = 0, unit = "pt")),
-  a_mmus_plot_3+ggplot2::theme(plot.margin = margin(t = 0, r = 0, b = 20, l = 0, unit = "pt")),
+  a_mmus_plot_4+ggplot2::theme(
+    plot.margin = margin(t = 0, r = 0, b = 20, l = 0, unit = "pt")),
+  a_mmus_plot_3+ggplot2::theme(
+    plot.margin = margin(t = 0, r = 0, b = 20, l = 0, unit = "pt")),
   a_mmus_plot_2,
   celltypes_legend,
   nrow = 1,
@@ -941,8 +978,10 @@ b_mcas_plot_2
 ```{r arrange_b, fig.width = 12.2, fig.height = 2.2}
 
 plot_b <- ggpubr::ggarrange(
-  b_mcas_plot_4+ggplot2::theme(plot.margin = margin(t = 0, r = 0, b = 20, l = 0, unit = "pt")),
-  b_mcas_plot_3+ggplot2::theme(plot.margin = margin(t = 0, r = 0, b = 20, l = 0, unit = "pt")),
+  b_mcas_plot_4+ggplot2::theme(
+    plot.margin = margin(t = 0, r = 0, b = 20, l = 0, unit = "pt")),
+  b_mcas_plot_3+ggplot2::theme(
+    plot.margin = margin(t = 0, r = 0, b = 20, l = 0, unit = "pt")),
   b_mcas_plot_2,
   celltypes_legend,
   nrow = 1,
@@ -1003,8 +1042,10 @@ c_mspr_plot_2
 ```{r arrange_c, fig.width = 12.2, fig.height = 2.2}
 
 plot_c <- ggpubr::ggarrange(
-  c_mspr_plot_4+ggplot2::theme(plot.margin = margin(t = 0, r = 0, b = 20, l = 0, unit = "pt")),
-  c_mspr_plot_3+ggplot2::theme(plot.margin = margin(t = 0, r = 0, b = 20, l = 0, unit = "pt")),
+  c_mspr_plot_4+ggplot2::theme(
+    plot.margin = margin(t = 0, r = 0, b = 20, l = 0, unit = "pt")),
+  c_mspr_plot_3+ggplot2::theme(
+    plot.margin = margin(t = 0, r = 0, b = 20, l = 0, unit = "pt")),
   c_mspr_plot_2,
   celltypes_legend,
   nrow = 1,
@@ -1066,8 +1107,10 @@ d_mcar_plot_4
 ```{r arrange_d, fig.width = 12.2, fig.height = 2.2}
 
 plot_d <- ggpubr::ggarrange(
-  d_mcar_plot_4+ggplot2::theme(plot.margin = margin(t = 0, r = 0, b = 20, l = 0, unit = "pt")),
-  d_mcar_plot_3+ggplot2::theme(plot.margin = margin(t = 0, r = 0, b = 20, l = 0, unit = "pt")),
+  d_mcar_plot_4+ggplot2::theme(
+    plot.margin = margin(t = 0, r = 0, b = 20, l = 0, unit = "pt")),
+  d_mcar_plot_3+ggplot2::theme(
+    plot.margin = margin(t = 0, r = 0, b = 20, l = 0, unit = "pt")),
   d_mcar_plot_2,
   celltypes_legend,
   nrow = 1,
@@ -1081,4 +1124,8 @@ plot_d
 pdf(output_pdf_allu_str_mcar, width = 12.2, height = 2.2)
 plot_d
 dev.off()
+```
+
+```{r session_info}
+utils::sessionInfo()
 ```

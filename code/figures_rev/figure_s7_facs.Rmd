@@ -1,0 +1,599 @@
+---
+title: "Supplementary Figure 7 FACS validation"
+author: "Lea Wölbert"
+date: '2026-05-11'
+output: html_document
+---
+
+Supplementary Figure S7, related to Figure 6.
+FACS and bulkRNAseq additions.
+A lot of plots were FACS plots, made in Flowjo and assembled in
+Affinity with the few plots generated heere.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Figure 6: FACS validation/bulkRNAseq
+
+```{r seed, message = FALSE}
+RNGkind("L'Ecuyer-CMRG") 
+set.seed(37)
+```
+
+```{r load,  message = FALSE}
+library(SingleCellExperiment)
+library(ggpubr)
+library(tidyverse)
+library(DESeq2)
+```
+
+```{r base_path}
+base_path <- snakemake@params[["base_path"]]
+```
+
+```{r load_objects}
+
+# normalized bulkRNAseq counts 
+vsd_neo1 <- readRDS(base::paste0(
+  base_path,
+  "/bulk_rnaseq/counts/11_deseq2/11_vsd_neo1.Rds"))
+vsd_trkb <- readRDS(base::paste0(
+  base_path,
+  "/bulk_rnaseq/counts/11_deseq2/11_vsd_trkb.Rds"))
+
+# bulkRNAseq DESeq2 results  
+results_df_neo1 <- readRDS(base::paste0(
+  base_path,
+  "/bulk_rnaseq/counts/11_deseq2/11_res_df_neo1.Rds"))
+results_df_trkb <- readRDS(base::paste0(
+  base_path,
+  "/bulk_rnaseq/counts/11_deseq2/11_res_df_trkb.Rds"))
+
+# Niche scRNAseq dataset
+sce_str <- readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str.rds"))
+
+# signature genes (Niche)
+sign_genes <- readRDS(base::paste0(
+  base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_str"))
+```
+
+```{r source}
+colors_path <- base::paste0(
+  base_path,
+  "/metadata/colors/colors.txt")
+
+source("../source/colors.R")
+source("../source/plotting.R")
+```
+
+```{r params}
+# global params
+pval_cutoff <- 0.05
+lfc_cutoff <- 0.25
+
+col_mice <- c(
+      "05" = "#71223dff",
+      "06" = "#be3232ff",
+      "07" = "#ff9354ff",
+      "08" = "#c8d300ff"
+    )
+
+color_significant <- rev(c(
+  "significant_up" = "red",
+  "FALSE" = "grey50",
+  "significant_down" = "blue3"))
+
+source("../figures/determine_params.R")
+```
+
+```{r export_paths}
+
+output_neg_controls <- base::paste0(
+  base_path, "/manuscript1_rev/figures7/figures7_neg_control.pdf")
+output_neg_controls_legend <- base::paste0(
+  base_path, "/manuscript1_rev/figures7/figures7_neg_control_legend.pdf")
+
+output_trkb_violin <- base::paste0(
+  base_path, "/manuscript1_rev/figures7/figures7_violin_trkb.pdf")
+output_neo1_violin <- base::paste0(
+  base_path, "/manuscript1_rev/figures7/figures7_violin_neo1.pdf")
+
+output_frequency_plot <- base::paste0(
+  base_path, "/manuscript1_rev/figures7/figures7_frequencyplot.pdf")
+```
+
+# Negative controls
+
+```{r genes_negative}
+
+genes_negative <- unique(c(
+
+    #### shared portion
+
+    # hematopoietic
+    "Meis1",
+    "Procr",
+    "Mllt3",
+    "Hlf",
+    "Mpo",
+    "Zfpm1",
+    "Klf1",
+    "Hba-a1",
+
+    # ECs
+    "Pecam1",
+    "Cdh5",
+    "Plvap",
+    "Rgcc",
+
+    # CAR/Niche
+    "Kitl",
+    "Cxcl12",
+    "Cxcl14",
+    "Lepr",
+    "Adipoq",
+
+    # smooth muscle/peri
+    "Acta2",
+    "Tagln",
+    "Rgs5",
+
+    # fibro positive
+    "Dpt",
+    "Cd34",
+    "Ddr2",
+
+    # osteo positive
+    "Spp1",
+    "Wnt16",
+    "Cdh11"
+))
+```
+
+## Neo1
+
+```{r res_df_neo1_significant}
+# prepare results_df 
+results_df_neo1_prep <- results_df_neo1 %>%
+  tibble::rownames_to_column("genes")
+
+# also get the significant results
+results_df_neo1_significant <- results_df_neo1 %>%
+    dplyr::filter(padj < pval_cutoff )%>%
+    dplyr::filter(abs(log2FoldChange) >= lfc_cutoff)
+```
+
+```{r neg_but_sig_neo1}
+
+neg_but_sig_neo1 <- genes_negative[genes_negative %in% 
+  rownames(results_df_neo1_significant)]
+results_df_neo1_significant[neg_but_sig_neo1,]
+```
+
+```{r counts_neo1}
+# get the counts from vsd, transformed only for visualisation
+counts_neo1 <- assays(vsd_neo1)[[1]]
+
+counts_long_neo1 <- counts_neo1 %>% 
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = "gene_name") %>%
+  tidyr::pivot_longer(
+    names_to = "Object_ID", 
+    values_to = "counts", 
+    cols = c(1:ncol(counts_neo1)+1))
+
+ counts_long_neo1 <- counts_long_neo1  %>% 
+    tidyr::separate(
+      Object_ID,
+      into = c(
+        "Species_ID", 
+        "Fraction_ID", 
+        "Target_ID", 
+        "Condition_ID", 
+        "Mouse_ID"),
+      sep = "_",
+      remove = FALSE
+  ) 
+
+table(!genes_negative %in% counts_long_neo1$gene_name)
+genes_negative[!genes_negative %in% counts_long_neo1$gene_name]
+```
+
+```{r counts_long_neo1_genes}
+  
+counts_long_neo1_genes <- counts_long_neo1 %>%
+  dplyr::filter(gene_name %in% genes_negative)
+
+counts_long_neo1_genes$gene_name <- factor(
+  counts_long_neo1_genes$gene_name,
+  levels = genes_negative)
+
+counts_long_neo1_genes <- counts_long_neo1_genes %>%
+  dplyr::group_by(gene_name) %>%
+  dplyr::mutate(scaled = as.numeric(scale(counts))) %>%
+  dplyr::ungroup()
+```
+
+## TrkB
+
+```{r res_df_trkb_significant}
+# prepare results_df 
+results_df_trkb_prep <- results_df_trkb %>%
+  tibble::rownames_to_column("genes")
+
+summary(abs(results_df_trkb_prep$log2FoldChange))
+
+# also get the significant results
+results_df_trkb_significant <- results_df_trkb %>%
+    dplyr::filter(padj < pval_cutoff) %>%
+    dplyr::filter(abs(log2FoldChange) >= lfc_cutoff)
+
+summary(abs(results_df_trkb_significant$log2FoldChange))
+```
+
+```{r neg_but_sig_trkb}
+
+neg_but_sig_trkb <- genes_negative[genes_negative %in% 
+  rownames(results_df_trkb_significant)]
+results_df_trkb_significant[neg_but_sig_trkb,]
+
+# reverse for nicer tile plot
+genes_negative <- rev(genes_negative)
+```
+
+```{r counts_trkb}
+# get the counts from vsd, transformed only for visualisation
+counts_trkb <- assays(vsd_trkb)[[1]]
+
+counts_long_trkb <- counts_trkb %>% 
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = "gene_name") %>%
+  tidyr::pivot_longer(
+    names_to = "Object_ID", 
+    values_to = "counts", 
+    cols = c(1:ncol(counts_trkb)+1))
+
+ counts_long_trkb <- counts_long_trkb  %>% 
+    tidyr::separate(
+      Object_ID,
+      into = c(
+        "Species_ID", 
+        "Fraction_ID", 
+        "Target_ID", 
+        "Condition_ID", 
+        "Mouse_ID"),
+      sep = "_",
+      remove = FALSE
+  ) 
+
+table(!genes_negative %in% counts_long_trkb$gene_name)
+genes_negative[!genes_negative %in% counts_long_trkb$gene_name]
+```
+
+```{r counts_long_trkb_genes}
+  
+counts_long_trkb_genes <- counts_long_trkb %>%
+  dplyr::filter(gene_name %in% genes_negative)
+
+counts_long_trkb_genes$gene_name <- factor(
+  counts_long_trkb_genes$gene_name,
+  levels = genes_negative)
+
+counts_long_trkb_genes <- counts_long_trkb_genes %>%
+  dplyr::group_by(gene_name) %>%
+  dplyr::mutate(scaled = as.numeric(scale(counts))) %>%
+  dplyr::ungroup()
+```
+
+## Show together
+
+```{r counts_long}
+
+counts_long <- rbind(counts_long_neo1_genes, counts_long_trkb_genes)
+
+counts_long <- counts_long %>%
+    mutate(sample_condition = paste0(Mouse_ID, "_", Condition_ID)) %>%
+    filter(gene_name %in% genes_negative)
+
+counts_long$gene_name <- factor(
+    counts_long$gene_name, 
+    levels = genes_negative)
+counts_long$sample_condition <- factor(
+  counts_long$sample_condition,
+  levels = c(
+    "05_n",
+    "06_n",
+    "07_n",
+    "08_n",
+    "05_p",
+    "06_p",
+    "07_p",
+    "08_p"    
+  ))
+counts_long$Target_ID <- factor(
+    counts_long$Target_ID, 
+    levels = c("trkb", "neo1"))
+```
+
+```{r both_negative_control, fig.width = 5, fig.height = 8}
+
+both_negative_control <- ggplot2::ggplot(
+    counts_long,
+    aes(  
+      x = sample_condition,
+      y = gene_name,
+      fill = scaled))+
+    ggplot2::geom_tile()+
+    theme_all_supp+
+    ggplot2::theme(
+        #axis.text.x = element_blank(),
+        strip.text.x.top = element_blank(),
+        strip.background = element_blank(),
+        axis.text.x = element_text(
+          angle = 90, 
+          size = axis_text_size_small),
+        axis.text.y = element_text(
+          size = axis_text_size_small),
+        axis.title = element_blank())+
+    scale_fill_gradient2(
+      low = "blue", 
+      mid = "white", 
+      high = "red", midpoint = 0, )+
+    ggplot2::facet_grid(cols = ggplot2::vars(Target_ID))
+
+both_negative_control+theme(legend.position = "none")
+```
+
+```{r output_neg_controls}
+pdf(output_neg_controls, width = 4.2, height = 7)
+both_negative_control+theme(legend.position = "none")
+dev.off()
+```
+
+### legend
+
+```{r controls_legend, fig.height = 2, fig.width = 3}
+controls_legend <- ggpubr::get_legend(
+  both_negative_control+
+    ggplot2::theme(legend.position = "bottom"))
+controls_legend <- ggpubr::ggarrange(controls_legend)
+controls_legend
+```
+
+```{r output_neg_controls_legend}
+pdf(output_neg_controls_legend, width = 3, height = 2)
+controls_legend
+dev.off()
+```
+
+# Violins + top 10% of cells
+
+## Neo1 expression profile
+
+```{r prep_neo1_violin}
+
+sce_str_removed <- sce_str[,!sce_str$celltypes %in% c(
+  "Chondrocyte",
+  "Lymphatic EC"
+)]
+sce_str_neo1 <- sce_str_removed[rownames(sce_str_removed) == "Neo1",]
+
+logcounts_neo1 <- logcounts(sce_str_neo1) %>%
+  as.matrix() %>%
+  t() %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = "barcode") %>%
+  tibble::add_column(celltypes = colData(sce_str_neo1)$celltypes)
+
+logcounts_neo1$celltypes <- factor(
+  logcounts_neo1$celltypes,
+  levels = rev(names(col_cts_str)))
+
+quant_90_neo1 <- quantile(logcounts_neo1$Neo1, probs = 0.90)
+```
+
+```{r table_neo1}
+logcounts_neo1_90 <- logcounts_neo1 %>%
+  dplyr::filter(Neo1 > quant_90_neo1)
+
+table(logcounts_neo1_90$celltypes)/nrow(logcounts_neo1_90)*100
+table(sce_str_removed$celltypes)/ncol(sce_str_removed)*100
+
+perc_mat_neo1 <- as.data.frame(
+  table(
+    logcounts_neo1_90$celltypes)/table(logcounts_neo1$celltypes))
+
+perc_mat_neo1 <- perc_mat_neo1 %>% 
+  dplyr::filter(!is.na(Freq)) %>%
+  dplyr::mutate(Freq_new = paste(as.character(round(Freq*100, 1)), "%"))
+```
+
+```{r neo1_violin, fig.width = 4, fig.height = 4}
+neo1_violin <- ggplot2::ggplot(
+  logcounts_neo1, 
+  aes(
+    y = celltypes,
+    x = Neo1,
+    fill = celltypes
+  ))+
+  ggplot2::geom_violin(
+    draw_quantiles = c(0.25, 0.5, 0.75), 
+    scale = "width", 
+    color = "grey30")+
+  ggplot2::geom_text(
+    inherit.aes = FALSE, 
+    data = perc_mat_neo1,
+    aes(x = 0.7, y = Var1, label = Freq_new),
+    nudge_y = 0.25,
+    size = 6,
+    hjust = 0,
+    color = "red1")+   
+  #geom_jitter()+
+  theme_all_supp+
+  ggplot2::geom_vline(
+    xintercept = quant_90_neo1, 
+    color = "red1", 
+    linewidth = 1.2)+
+  ggplot2::xlab("Neo1 expression")+
+  ggplot2::theme(
+    axis.text.x = element_text(angle = 0, hjust = 1),
+    axis.title.y = element_blank(),
+    legend.position = "none")+
+  ggplot2::scale_fill_manual(values = col_cts_str)
+neo1_violin
+```
+
+```{r output_neo1_violin}
+pdf(output_neo1_violin, width = 4, height = 4)
+neo1_violin
+dev.off()
+```
+
+## TrkB expression profile
+
+```{r prep_trkb_violin}
+
+sce_str_trkb <- sce_str_removed[rownames(sce_str_removed) == "Ntrk2",]
+
+logcounts_trkb <- logcounts(sce_str_trkb) %>%
+  as.matrix() %>%
+  t() %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column(var = "barcode") %>%
+  tibble::add_column(celltypes = colData(sce_str_trkb)$celltypes)
+
+logcounts_trkb$celltypes <- factor(
+  logcounts_trkb$celltypes,
+  levels = rev(names(col_cts_str)))
+
+quant_90_trkb <- quantile(logcounts_trkb$Ntrk2, probs = 0.90)
+```
+
+```{r table_trkb}
+logcounts_trkb_90 <- logcounts_trkb %>%
+  dplyr::filter(Ntrk2 > quant_90_trkb)
+
+table(logcounts_trkb_90$celltypes)/nrow(logcounts_trkb_90)*100
+table(sce_str_removed$celltypes)/ncol(sce_str_removed)*100
+
+perc_mat <- as.data.frame(
+  table(
+    logcounts_trkb_90$celltypes)/table(logcounts_trkb$celltypes))
+
+perc_mat <- perc_mat %>% 
+  dplyr::filter(!is.na(Freq)) %>%
+  dplyr::mutate(Freq_new = paste(as.character(round(Freq*100, 1)), "%"))
+```
+
+```{r trkb_violin, fig.width = 4, fig.height = 4}
+trkb_violin <- ggplot2::ggplot(
+  logcounts_trkb, 
+  aes(
+    y = celltypes,
+    x = Ntrk2,
+    fill = celltypes
+  ))+
+  ggplot2::geom_violin(
+    draw_quantiles = c(0.25, 0.5, 0.75), 
+    scale = "width", 
+    color = "grey30")+
+  ggplot2::geom_text(
+    inherit.aes = FALSE, 
+    data = perc_mat,
+    aes(x = 0.7, y = Var1, label = Freq_new),
+    nudge_y = 0.25,
+    size = 6,
+    hjust = 0,
+    color = "red1")+   
+  #geom_jitter()+
+  theme_all_supp+
+  ggplot2::geom_vline(
+    xintercept = quant_90_trkb, 
+    color = "red1", 
+    linewidth = 1.2)+
+  ggplot2::xlab("Ntrk2 expression")+
+  ggplot2::theme(
+    axis.text.x = element_text(angle = 0, hjust = 1),
+    axis.title.y = element_blank(),
+    legend.position = "none")+
+  ggplot2::scale_fill_manual(values = col_cts_str)
+trkb_violin
+```
+
+```{r output_trkb_violin}
+pdf(output_trkb_violin, width = 4, height = 4)
+trkb_violin
+dev.off()
+```
+
+# Frequencies
+
+```{r frequency_plot_df}
+# these values were taken from FlowJo 
+neo1_human_perc <- c(40.3, 29.7, 27.5)
+trkb_human_perc <- c(14.3, 10.6, 7.37)
+
+# these values were taken from FlowJo 
+neo1_mouse_perc <- c(7.3, 36.4, 19.4, 11.9)
+trkb_mouse_perc <- c(NA, 7.8, 9.59, 11.6)
+
+plot_df <- data.frame(
+  "type" = c(
+    rep("Human Neo1-stained", 3),
+    rep("Human TrkB-stained", 3),
+    rep("BL6 Neo1-stained", 4),
+    rep("BL6 TrkB-stained", 4)),
+  "value" = c(
+    neo1_human_perc,
+    trkb_human_perc,
+    neo1_mouse_perc,
+    trkb_mouse_perc
+  )    
+)
+
+plot_df$type <- factor(plot_df$type,
+  levels = c(
+    "BL6 TrkB-stained",
+    "BL6 Neo1-stained",
+    "Human TrkB-stained",
+    "Human Neo1-stained"
+  )) 
+```
+
+```{r frequency_plot, fig.width = 5, fig.height = 3}
+frequency_plot <- ggplot2::ggplot(plot_df,
+    aes(
+      y = type,
+      x = value))+
+  ggplot2::geom_point(color = "black")+
+  theme_all_supp+
+  ggplot2::theme(
+    panel.grid.major = element_line(
+      color = "grey90",
+      linewidth.width = 0.5,
+      linetype = 1),
+    axis.text.y = element_text(
+      angle = 0,
+      hjust = 1, 
+      vjust = 0.5,
+      axis_text_size = 16),
+    axis.title.y = element_blank())+
+  ggplot2::xlab("% of positive cells")+
+  ggplot2::scale_x_continuous(limits = c(0, 45))
+
+frequency_plot
+```
+
+```{r output_frequency_plot}
+pdf(output_frequency_plot, width = 5, height = 3)
+frequency_plot
+dev.off()
+```
+
+```{r session_info}
+utils::sessionInfo()
+```

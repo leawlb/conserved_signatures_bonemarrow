@@ -24,7 +24,7 @@ suppressPackageStartupMessages({
 
 ```{r paths}
 base_path    <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
-project_path <- "/omics/groups/OE0433/internal/veronica/github/Interspecies_BM_phd"
+#project_path <- "/omics/groups/OE0433/internal/veronica/github/Interspecies_BM_phd"
 ```
 
 ## Load Ensembl annotations and build ortholog table

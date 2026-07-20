@@ -4,6 +4,9 @@ date: '2025-12-02'
 output: html_document
 ---
 
+Making alluvial plots and umaps comparing the species-specific,
+custom clustering with the merged annotation.
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -24,7 +27,7 @@ library(ggrepel, quietly = TRUE)
 ```
 
 ```{r base_path}
-base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+base_path <- snakemake@params[["base_path"]]
 ```
 
 ```{r source}
@@ -97,13 +100,17 @@ sce_mspr_hsc$custom_label_unif <- unfactor(sce_mspr_hsc$custom_label_unif)
 sce_mcar_hsc$custom_label_unif <- unfactor(sce_mcar_hsc$custom_label_unif)
 
 sce_hsc_all_cells$custom_label[match(
-  colnames(sce_mmus_hsc), colnames(sce_hsc_all_cells))] <- sce_mmus_hsc$custom_label_unif
+  colnames(sce_mmus_hsc), 
+  colnames(sce_hsc_all_cells))] <- sce_mmus_hsc$custom_label_unif
 sce_hsc_all_cells$custom_label[match(
-  colnames(sce_mcas_hsc), colnames(sce_hsc_all_cells))] <- sce_mcas_hsc$custom_label_unif
+  colnames(sce_mcas_hsc), 
+  colnames(sce_hsc_all_cells))] <- sce_mcas_hsc$custom_label_unif
 sce_hsc_all_cells$custom_label[match(
-  colnames(sce_mspr_hsc), colnames(sce_hsc_all_cells))] <- sce_mspr_hsc$custom_label_unif
+  colnames(sce_mspr_hsc), 
+  colnames(sce_hsc_all_cells))] <- sce_mspr_hsc$custom_label_unif
 sce_hsc_all_cells$custom_label[match(
-  colnames(sce_mcar_hsc), colnames(sce_hsc_all_cells))] <- sce_mcar_hsc$custom_label_unif
+  colnames(sce_mcar_hsc), 
+  colnames(sce_hsc_all_cells))] <- sce_mcar_hsc$custom_label_unif
 
 gc()
 ```
@@ -113,7 +120,10 @@ gc()
 Final annotation after sub-clustering.
 
 ```{r load_anno_hsc}
-sce_hsc_anno <- readRDS("/omics/odcf/analysis/OE0538_projects/DO-0008/data_freeze/05_annotated_objects/sce_hsc.rds")
+
+sce_hsc_anno <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10"))
 
 sce_hsc_all_cells$celltypes <- vector(length = ncol(sce_hsc_all_cells))
 sce_hsc_all_cells$celltypes <- sce_hsc_anno$celltypes[
@@ -127,7 +137,8 @@ gc()
 levels(sce_hsc_all_cells$celltypes) <- c(
   levels(sce_hsc_all_cells$celltypes), 
   "removed")
-sce_hsc_all_cells$celltypes[is.na(sce_hsc_all_cells$celltypes)] <- "removed"
+sce_hsc_all_cells$celltypes[
+  is.na(sce_hsc_all_cells$celltypes)] <- "removed"
 
 # randomize the barcodes for nicer visualisation
 sce_hsc_all_cells <- sce_hsc_all_cells[,base::sample(
@@ -143,10 +154,14 @@ print(sort(unique(sce_hsc_all_cells$custom_label)))
 ```{r prep_hsc}
 # change species names to currently used abbreviations
 sce_hsc_all_cells$species_pub <- vector(length = ncol(sce_hsc_all_cells))
-sce_hsc_all_cells$species_pub[sce_hsc_all_cells$Species_ID == "mmus"] <- "BL6"
-sce_hsc_all_cells$species_pub[sce_hsc_all_cells$Species_ID == "mcas"] <- "CAST"
-sce_hsc_all_cells$species_pub[sce_hsc_all_cells$Species_ID == "mspr"] <- "SPRET"
-sce_hsc_all_cells$species_pub[sce_hsc_all_cells$Species_ID == "mcar"] <- "CAROLI"
+sce_hsc_all_cells$species_pub[
+  sce_hsc_all_cells$Species_ID == "mmus"] <- "BL6"
+sce_hsc_all_cells$species_pub[
+  sce_hsc_all_cells$Species_ID == "mcas"] <- "CAST"
+sce_hsc_all_cells$species_pub[
+  sce_hsc_all_cells$Species_ID == "mspr"] <- "SPRET"
+sce_hsc_all_cells$species_pub[
+  sce_hsc_all_cells$Species_ID == "mcar"] <- "CAROLI"
 sce_hsc_all_cells$species_pub <- factor(
   sce_hsc_all_cells$species_pub, 
   levels = names(col_spc_pub))
@@ -160,7 +175,8 @@ sce_hsc_all_cells$custom_label <- factor(
 ```{r control_cols}
 # make sure the color vector fits the label names 
 # the factors must be right because they have been controlled in 02/01/custom
-col_custom_hsc_unif[!names(col_custom_hsc_unif) %in% c(sce_hsc_all_cells$custom_label)]
+col_custom_hsc_unif[
+  !names(col_custom_hsc_unif) %in% c(sce_hsc_all_cells$custom_label)]
 unique(sce_hsc_all_cells$custom_label[!sce_hsc_all_cells$custom_label %in% 
   names(col_custom_hsc_unif)])
 
@@ -491,6 +507,12 @@ base_plot_hsc_celltypes_mcar_3
 ```
 
 ## Make Alluvials
+
+The colors of the boxes are actually later manually adjusted;
+here, there is a 20% opaque black filling added on top of the
+alluvial, however, a 100% opaque filling of the cell type 
+color will be added manually in Affinity. 
+This was, for me, the easiest option. 
 
 ### MMUS
 
@@ -885,8 +907,10 @@ a_mmus_plot_2
 ```{r arrange_a, fig.width = 9.5, fig.height = 2.5}
 
 plot_a <- ggpubr::ggarrange(
-  a_mmus_plot_4+ggplot2::theme(plot.margin = margin(t = 0, r = 0, b = 40, l = 0, unit = "pt")),
-  a_mmus_plot_3+ggplot2::theme(plot.margin = margin(t = 0, r = 0, b = 40, l = 0, unit = "pt")),
+  a_mmus_plot_4+ggplot2::theme(
+    plot.margin = margin(t = 0, r = 0, b = 40, l = 0, unit = "pt")),
+  a_mmus_plot_3+ggplot2::theme(
+    plot.margin = margin(t = 0, r = 0, b = 40, l = 0, unit = "pt")),
   a_mmus_plot_2,
   celltypes_legend,
   nrow = 1,
@@ -947,8 +971,10 @@ b_mcas_plot_2
 ```{r arrange_b, fig.width = 9.5, fig.height = 2.5}
 
 plot_b <- ggpubr::ggarrange(
-  b_mcas_plot_4+ggplot2::theme(plot.margin = margin(t = 0, r = 0, b = 40, l = 0, unit = "pt")),
-  b_mcas_plot_3+ggplot2::theme(plot.margin = margin(t = 0, r = 0, b = 40, l = 0, unit = "pt")),
+  b_mcas_plot_4+ggplot2::theme(
+    plot.margin = margin(t = 0, r = 0, b = 40, l = 0, unit = "pt")),
+  b_mcas_plot_3+ggplot2::theme(
+    plot.margin = margin(t = 0, r = 0, b = 40, l = 0, unit = "pt")),
   b_mcas_plot_2,
   celltypes_legend,
   nrow = 1,
@@ -1009,8 +1035,10 @@ c_mspr_plot_2
 ```{r arrange_c, fig.width = 9.5, fig.height = 2.5}
 
 plot_c <- ggpubr::ggarrange(
-  c_mspr_plot_4+ggplot2::theme(plot.margin = margin(t = 0, r = 0, b = 40, l = 0, unit = "pt")),
-  c_mspr_plot_3+ggplot2::theme(plot.margin = margin(t = 0, r = 0, b = 40, l = 0, unit = "pt")),
+  c_mspr_plot_4+ggplot2::theme(
+    plot.margin = margin(t = 0, r = 0, b = 40, l = 0, unit = "pt")),
+  c_mspr_plot_3+ggplot2::theme(
+    plot.margin = margin(t = 0, r = 0, b = 40, l = 0, unit = "pt")),
   c_mspr_plot_2,
   celltypes_legend,
   nrow = 1,
@@ -1072,8 +1100,10 @@ d_mcar_plot_4
 ```{r arrange_d, fig.width = 9.5, fig.height = 2.5}
 
 plot_d <- ggpubr::ggarrange(
-  d_mcar_plot_4+ggplot2::theme(plot.margin = margin(t = 0, r = 0, b = 40, l = 0, unit = "pt")),
-  d_mcar_plot_3+ggplot2::theme(plot.margin = margin(t = 0, r = 0, b = 40, l = 0, unit = "pt")),
+  d_mcar_plot_4+ggplot2::theme(
+    plot.margin = margin(t = 0, r = 0, b = 40, l = 0, unit = "pt")),
+  d_mcar_plot_3+ggplot2::theme(
+    plot.margin = margin(t = 0, r = 0, b = 40, l = 0, unit = "pt")),
   d_mcar_plot_2,
   celltypes_legend,
   nrow = 1,
@@ -1087,4 +1117,8 @@ plot_d
 pdf(output_pdf_allu_hsc_mcar, width = 9.5, height = 2.5)
 plot_d
 dev.off()
+```
+
+```{r session_info}
+utils::sessionInfo()
 ```

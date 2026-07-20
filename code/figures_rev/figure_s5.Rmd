@@ -7,18 +7,16 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Generate Supplemental Figure 5, corresponding for Figure 5: HSPC 
+Generate Supplemental Figure 5, related to Figure 4: HSPC 
 human datasets supplementary.
 
-This is a big supplementary figure supporting the blidn re-annotation of
+This is a big supplementary figure supporting the blind re-annotation of
 human HSPC datasets and also contains info on the batch correction. 
-Need to think carefully how to structure the text here so let's not do 
-the figure toooo perfectly at first.
 
 Instead of ordering by alphabet I will order by type of plot as ABC plot
 part order may change later.
 
-The corr_pval plot has instead been added to figure S4. 
+The signature reclaim plot is generated in another file, reclaiming_sigs.Rmd
 
 #### Load objects
 
@@ -35,8 +33,6 @@ library(tidyverse, quietly = TRUE)
 
 ```{r base_path}
 base_path <- snakemake@params[["base_path"]]
-#base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
-#setwd("repositories/Interspecies_BM_phd/code/figures_rev")
 ```
 
 ```{r load_for_umaps_batches_o1}
@@ -114,8 +110,8 @@ col_scores <- c(
   col_cl_per_ct,
   "nr_celltypes" = "grey50")
 
-threshold_used_p <- "0.05"
-threshold_used_t <- "0.25"
+threshold_used_p <- 0.05
+threshold_used_t <- 0.25
 ```
 
 ```{r export_path}
@@ -231,7 +227,9 @@ head(seu_all_o1$cell_type)
 
 seu_all_o1$assay_factored  <- unfactor(seu_all_o1$assay)
 
-seu_all_o1$assay_factored[which(seu_all_o1$assay_factored == "10x 5' transcription profiling")] <- "10x 5'"
+seu_all_o1$assay_factored[
+  which(
+    seu_all_o1$assay_factored == "10x 5' transcription profiling")] <- "10x 5'"
 
 seu_all_o1$assay_factored <- factor(
   seu_all_o1$assay_factored,
@@ -1161,8 +1159,8 @@ dev.off()
 
 # Threshold sliding
 
-Now including reclustering of datasets using signature genes obtained from sliding
-thresholds on nDGE and marker gene analysis.
+Now including reclustering of datasets using signature genes obtained from 
+sliding thresholds on nDGE and marker gene analysis.
 
 From the report in 03/04/05
 
@@ -1181,7 +1179,8 @@ score_df_all_by_p_o1$threshold_used <- -log10(as.numeric(
 threshold_by_p_plot <- -log10(as.numeric(threshold_used_p))
 xtitle_by_p <- "-log10 (padj) nDEG"
 
-score_df_all_by_p_o1[score_df_all_by_p_o1$threshold_used == threshold_by_p_plot,]
+score_df_all_by_p_o1[
+  score_df_all_by_p_o1$threshold_used == threshold_by_p_plot,]
 ```
 
 ```{r threshold_by_p_base_o1}
@@ -1241,7 +1240,8 @@ head(score_df_all_by_t_o1)
 
 print(threshold_used_t)
 
-score_df_all_by_t_o1$threshold_used <- as.numeric(score_df_all_by_t_o1$threshold_used)
+score_df_all_by_t_o1$threshold_used <- as.numeric(
+  score_df_all_by_t_o1$threshold_used)
 threshold_by_t_plot <- as.numeric(threshold_used_t)
 xtitle_by_t <- "log2FC FindMarkers"
 
@@ -1372,7 +1372,8 @@ head(score_df_all_by_t)
 
 print(threshold_used_t)
 
-score_df_all_by_t$threshold_used <- as.numeric(score_df_all_by_t$threshold_used)
+score_df_all_by_t$threshold_used <- as.numeric(
+  score_df_all_by_t$threshold_used)
 threshold_by_t_plot <- as.numeric(threshold_used_t)
 xtitle_by_t <- "log2FC FindMarkers"
 
@@ -1458,4 +1459,8 @@ dev.off()
 pdf(output_pdf_threshold_legend, width = 4, height = 3)
 threshold_legend
 dev.off()
+```
+
+```{r session_info}
+utils::sessionInfo()
 ```

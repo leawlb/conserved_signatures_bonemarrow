@@ -23,8 +23,8 @@ suppressPackageStartupMessages({
 ```
 
 ```{r paths}
-base_path    <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
-project_path <- "/omics/groups/OE0433/internal/veronica/github/Interspecies_BM_phd"
+base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/"
+#project_path <- "/omics/groups/OE0433/internal/veronica/github/Interspecies_BM_phd"
 ```
 
 #### Load colors and plotting helpers
@@ -35,9 +35,13 @@ colors_path <- file.path(
   "metadata/colors/colors.txt"
 )
 
-source(file.path(project_path, "code/source/colors.R"))
-source(file.path(project_path, "code/source/plotting.R"))
-source(file.path(project_path, "code/figures/determine_params.R"))
+source("../source/colors.R")
+source("../source/plotting.R")
+source("../figures/determine_params.R")
+
+#source(file.path(project_path, "code/source/colors.R"))
+#source(file.path(project_path, "code/source/plotting.R"))
+#source(file.path(project_path, "code/figures/determine_params.R"))
 ```
 
 ```{r load_mouse_lemur}
@@ -293,4 +297,8 @@ for (feat in celltypes_stromal) {
 }
 
 dev.off()
+```
+
+```{r session_info}
+utils::sessionInfo()
 ```

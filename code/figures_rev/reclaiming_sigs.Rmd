@@ -25,7 +25,7 @@ library(Seurat)
 
 ```{r paths}
 base_path    <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
-project_path <- "/omics/groups/OE0433/internal/veronica/github/Interspecies_BM_phd"
+#project_path <- "/omics/groups/OE0433/internal/veronica/github/Interspecies_BM_phd"
 ```
 
 ```{r source}
@@ -34,9 +34,13 @@ colors_path <- base::paste0(
   "/metadata/colors/colors.txt"
 )
 
-source(file.path(project_path, "code/source/colors.R"))
-source(file.path(project_path, "code/source/plotting.R"))
-source(file.path(project_path, "code/figures/determine_params.R"))
+source("../source/colors.R")
+source("../source/plotting.R")
+source("../figures/determine_params.R")
+
+#source(file.path(project_path, "code/source/colors.R"))
+#source(file.path(project_path, "code/source/plotting.R"))
+#source(file.path(project_path, "code/figures/determine_params.R"))
 ```
 
 ---

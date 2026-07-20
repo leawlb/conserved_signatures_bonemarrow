@@ -7,8 +7,8 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Generate Supplemental Figure 6, corresponding for Figure 6:
-Niche cell supplementary.
+Generate Supplemental Figure 6, related to Figure 5:
+Niche cell extended reclustering.
 
 #### Load objects
 
@@ -25,8 +25,6 @@ library(tidyverse, quietly = TRUE)
 
 ```{r base_path}
 base_path <- snakemake@params[["base_path"]]
-#base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
-#setwd("repositories/Interspecies_BM_phd/code/figures_rev")
 ```
 
 ```{r load_res}
@@ -48,7 +46,7 @@ print(resolution_df)
 ```{r load_mus_o1}
 #-------------------------------------------------------------------------------
 #### OTHER MOUSE DATASET 2 (Niche) baryawno et al stromal cells
-# the numbering is purely related to this script
+# the numbering of o1 related to prior scripts
 
 dataset_o1 <- "mus_bar_stromal"
 
@@ -120,7 +118,7 @@ gc()
 ```{r load_mus_o3}
 #-------------------------------------------------------------------------------
 #### OTHER MOUSE DATASET 2 (Niche) tikhonova et al stromal cells
-# the numbering is purely related to this script
+# the numbering of o3/o2 is related to prior scripts
 
 dataset_o3 <- "mus_tik_stromal"
 
@@ -188,10 +186,10 @@ color_significance <- c("pval adj. >= 0.05" = "grey70",
 
 ```{r export_paths}
 
-output_pdf_combine_heatmap_o1 <- base::paste0(
-   base_path, "/manuscript1_rev/figures6/combined_sign_heatmap_o1.pdf")
-output_pdf_combine_heatmap_o2 <- base::paste0(
-   base_path, "/manuscript1_rev/figures6/combined_sign_heatmap_o2.pdf")
+output_pdf_heatmap_o1 <- base::paste0(
+   base_path, "/manuscript1_rev/figures6/heatmap_o1.pdf")
+output_pdf_heatmap_o2 <- base::paste0(
+   base_path, "/manuscript1_rev/figures6/heatmap_o2.pdf")
 
 output_pval_plot <- base::paste0(
    base_path, "/manuscript1_rev/figures6/pval_plot.pdf")
@@ -253,7 +251,7 @@ make_heatmaps <- function(colname1, colname2, seu){
 }
 ```
 
-# Heatmaps of signature genes and BL6-only
+# Heatmaps of signature genes
 
 ## Dataset Others 1
 
@@ -267,10 +265,9 @@ sce_sign_o1$seurat_clusters <- factor(
   levels = c(2, 11, 7, 6, 4, 3, 8, 0, 9, 5, 1, 10))
 
 sign_heatmap_base_o1 <- make_heatmaps("cell_type", "seurat_clusters", sce_sign_o1)
-sign_heatmap_base_o1
 ```
 
-```{r sign_heatmap_theme_o1}
+```{r sign_heatmap_theme_o1, fig.width = 3, fig.height = 7}
 sign_heatmap_theme_o1 <- sign_heatmap_base_o1+
   theme_all+
   ggplot2::theme(
@@ -285,48 +282,13 @@ sign_heatmap_theme_o1 <- sign_heatmap_base_o1+
     axis.ticks.y = element_blank(),
     axis.title = element_blank()
   )
-sign_heatmap_theme_o1
+plot_o1 <- sign_heatmap_theme_o1+ggplot2::theme(legend.position = "none")
+plot_o1
 ```
 
-```{r mmms_heatmap_base_o1}
-sce_mmms_o1 <- selected_seu_list_o1$seu_mmms
-
-# manually factor clusters for nicer visualisation
-sce_mmms_o1$seurat_clusters <- factor(
-  sce_mmms_o1$seurat_clusters,
-  levels = c(3, 12, 6, 7, 4, 2, 8, 11, 0, 9, 5, 1, 13, 10))
-
-mmms_heatmap_base_o1 <- make_heatmaps("cell_type", "seurat_clusters", sce_mmms_o1)
-mmms_heatmap_base_o1
-```
-
-```{r mmms_heatmap_theme_o1}
-mmms_heatmap_theme_o1 <- mmms_heatmap_base_o1+
-  theme_all+
-  ggplot2::theme(
-    axis.text = element_blank(),
-    axis.ticks.y = element_blank(),
-    axis.title = element_blank()
-  )
-mmms_heatmap_theme_o1
-```
-
-```{r combine_heatmap_o1, fig.height = 6, fig.width = 3}
-
-combine_heatmap_o1 <- ggpubr::ggarrange(
-  mmms_heatmap_theme_o1+ggplot2::theme(legend.position = "none"),
-  sign_heatmap_theme_o1+ggplot2::theme(legend.position = "none"),
-  align = "v",
-  ncol = 1,
-  heights = c(1, 4)
-)
-
-combine_heatmap_o1
-```
-
-```{r output_pdf_combine_heatmap_o1}
-pdf(output_pdf_combine_heatmap_o1, width = 3, height = 6)
-combine_heatmap_o1
+```{r output_pdf_heatmap_o1}
+pdf(output_pdf_heatmap_o1, width = 3, height = 4)
+plot_o1
 dev.off()
 ```
 
@@ -341,11 +303,13 @@ sce_sign_o2$seurat_clusters <- factor(
   sce_sign_o2$seurat_clusters,
   levels = c(10, 8, 6, 3, 2, 0, 7, 11, 9, 12, 5, 4, 1))
 
-sign_heatmap_base_o2 <- make_heatmaps("cell_type", "seurat_clusters", sce_sign_o2)
-sign_heatmap_base_o2
+sign_heatmap_base_o2 <- make_heatmaps(
+  "cell_type", 
+  "seurat_clusters", 
+  sce_sign_o2)
 ```
 
-```{r sign_heatmap_theme_o2}
+```{r sign_heatmap_theme_o2, fig.width = 2.3, fig.height = 7}
 sign_heatmap_theme_o2 <- sign_heatmap_base_o2+
   theme_all+
   ggplot2::theme(
@@ -360,48 +324,13 @@ sign_heatmap_theme_o2 <- sign_heatmap_base_o2+
     axis.ticks.y = element_blank(),
     axis.title = element_blank()
   )
-sign_heatmap_theme_o2
+plot_o2 <- sign_heatmap_theme_o2+ggplot2::theme(legend.position = "none")
+plot_o2
 ```
 
-```{r mmms_heatmap_base_o2}
-sce_mmms_o2 <- selected_seu_list_o2$seu_mmms
-
-# manually factor clusters for nicer visualisation
-sce_mmms_o2$seurat_clusters <- factor(
-  sce_mmms_o2$seurat_clusters,
-  levels = c(0, 2, 3, 4, 7, 8, 9, 10, 12, 11, 13, 6 ,5, 1))
-
-mmms_heatmap_base_o2 <- make_heatmaps("cell_type", "seurat_clusters", sce_mmms_o2)
-mmms_heatmap_base_o2
-```
-
-```{r mmms_heatmap_theme_o2}
-mmms_heatmap_theme_o2 <- mmms_heatmap_base_o2+
-  theme_all+
-  ggplot2::theme(
-    axis.text = element_blank(),
-    axis.ticks.y = element_blank(),
-    axis.title = element_blank()
-  )
-mmms_heatmap_theme_o2
-```
-
-```{r combine_heatmap_o2, fig.height = 6, fig.width = 2}
-
-combine_heatmap_o2 <- ggpubr::ggarrange(
-  mmms_heatmap_theme_o2+ggplot2::theme(legend.position = "none"),
-  sign_heatmap_theme_o2+ggplot2::theme(legend.position = "none"),
-  align = "v",
-  ncol = 1,
-  heights = c(1, 4)
-)
-
-combine_heatmap_o2
-```
-
-```{r output_pdf_combine_heatmap_o2}
-pdf(output_pdf_combine_heatmap_o2, width = 1.7, height = 6)
-combine_heatmap_o2
+```{r output_pdf_heatmap_o2}
+pdf(output_pdf_heatmap_o2, width = 2, height = 4)
+plot_o2
 dev.off()
 ```
 
@@ -528,12 +457,10 @@ dev.off()
 # Manual clustering comparison 
 
 ```{r custom_heatmap_base_o2}
-
 custom_heatmap_base_o2 <- make_heatmaps("cell_type", "custom_label", seu_cust_o2)
-custom_heatmap_base_o2
 ```
 
-```{r custom_heatmap_theme_o2}
+```{r custom_heatmap_theme_o2, fig.width = 8, fig.height = 8}
 custom_heatmap_theme_o2 <- custom_heatmap_base_o2+
   theme_all+
   ggplot2::theme(
@@ -642,7 +569,7 @@ umap_batch_o3_cell_type
 
 With blind anno after signature-based clustering.
 
-```{r umap_batch_o3_blind_anno}
+```{r umap_batch_o3_blind_anno, fig.width = 7, fig.height = 2.5}
 umap_batch_o3_blind_anno <- Seurat::DimPlot(
   seu_blind_anno_o3, 
   dims = c(1,2), 
@@ -654,7 +581,7 @@ umap_batch_o3_blind_anno <- Seurat::DimPlot(
 umap_batch_o3_blind_anno
 ```
 
-```{r, batch_umaps_o3, fig.width = 12, fig.height = 5}
+```{r, batch_umaps_o3, fig.width = 12, fig.height = 2.5}
 
 umap_cell_type <- umap_batch_o3_cell_type+
   ggplot2::scale_color_manual(
@@ -679,7 +606,7 @@ chosen_batch_umap_o3 <- ggpubr::ggarrange(
 chosen_batch_umap_o3
 ```
 
-```{r umap_batch_o3_all, fig.width = 3, fig.height = 3}
+```{r umap_batch_o3_all, fig.width = 3, fig.height = 2.5}
 # helping with making a border for the figure
 umap_batch_o3_all <- Seurat::DimPlot(
   seu_blind_anno_o3, 
@@ -690,7 +617,7 @@ umap_batch_o3_all <- Seurat::DimPlot(
 umap_batch_o3_all
 ```
 
-```{r umap_cell_type_o3_legend_theme, fig.width = 3, fig.height = 3}
+```{r umap_cell_type_o3_legend_theme, fig.width = 2.5, fig.height = 2.5}
 
 umap_cell_type_o3_legend_theme <- ggpubr::get_legend(umap_cell_type)
 umap_cell_type_o3_legend <- ggpubr::ggarrange(umap_cell_type_o3_legend_theme)
@@ -720,4 +647,8 @@ dev.off()
 pdf(output_pdf_umap_blind_anno_o3_legend, width = 3, height = 3)
 umap_blind_anno_o3_legend
 dev.off()
+```
+
+```{r session_info}
+utils::sessionInfo()
 ```

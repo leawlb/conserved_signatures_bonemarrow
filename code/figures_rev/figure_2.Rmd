@@ -43,8 +43,6 @@ library(ggpattern, quietly = TRUE)
 
 ```{r base_path}
 base_path <- snakemake@params[["base_path"]]
-#base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
-#setwd("repositories/Interspecies_BM_phd/code/figures_rev")
 ```
 
 ```{r load_manual}

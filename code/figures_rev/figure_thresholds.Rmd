@@ -4,6 +4,8 @@ date: '2025-12-11'
 output: html_document
 ---
 
+This script generates plots regarding thresholds for Figure S3.
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo       = TRUE,
@@ -19,12 +21,14 @@ library(ggpubr, quietly = TRUE)
 ```
 
 ```{r paths}
-base_path    <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
-project_path <- "/omics/groups/OE0433/internal/veronica/github/Interspecies_BM_phd"
+base_path <- snakemake@params[["base_path"]]
+#base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/"
+#project_path <- "/omics/groups/OE0433/internal/veronica/github/Interspecies_BM_phd"
 
+# this is the output of threshold analysis, data is loaded from there
 out_dir <- file.path(
   base_path,
-  "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_thresholds"
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/05_thresholds"
 )
 ```
 
@@ -34,9 +38,13 @@ colors_path <- base::paste0(
   "/metadata/colors/colors.txt"
 )
 
-source(file.path(project_path, "code/source/colors.R"))
-source(file.path(project_path, "code/source/plotting.R"))
-source(file.path(project_path, "code/figures/determine_params.R"))
+source("../source/colors.R")
+source("../source/plotting.R")
+source("../figures/determine_params.R")
+
+#source(file.path(project_path, "code/source/colors.R"))
+#source(file.path(project_path, "code/source/plotting.R"))
+#source(file.path(project_path, "code/figures/determine_params.R"))
 ```
 
 # Load precomputed results
@@ -81,7 +89,7 @@ plot_nDEG
 
 # Plot: common markers vs signature genes over log2FC threshold
 
-```{r plot_markers, fig.width=6, fig.height=5}
+```{r plot_markers, fig.width=7, fig.height=5}
 plot_markers <- ggplot(
   common_marker_stats_df,
   aes(x = logfc_threshold, color = celltype)
@@ -122,10 +130,14 @@ thresholds_plot <- ggpubr::ggarrange(
 )
 
 pdf(
-  file = file.path(base_path, "manuscript1_rev/pdfs/threshold.pdf"),
+  file = file.path(base_path, "/manuscript1_rev/pdfs/threshold.pdf"),
   height = 5,
   width = 10
 )
 thresholds_plot
 dev.off()
+```
+
+```{r session_info}
+utils::sessionInfo()
 ```

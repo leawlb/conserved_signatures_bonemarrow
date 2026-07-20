@@ -301,6 +301,8 @@ rule run_mnncorrect_species:
 # the basic species-specific clustering is kept because these were used for 
 # an older supplementary figure originally, but now the custom clustering are 
 # taking its place.
+
+Keep for now but can delete when original figures are eventually deleted. 
 """
 
 rule louvain_clustering_species:

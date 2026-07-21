@@ -109,13 +109,14 @@ resolution_df_path <- base::paste0(
   base_path,
   "/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt")
 
-resolution_df <- utils::read.csv(file = resolution_df_path, 
-                               header = TRUE, 
-                               sep = ";", 
-                               check.names=FALSE, 
-                               stringsAsFactors=FALSE, 
-                               as.is=TRUE, 
-                               colClasses = "character")
+resolution_df <- utils::read.csv(
+  file = resolution_df_path, 
+  header = TRUE, 
+  sep = ";", 
+  check.names=FALSE, 
+  stringsAsFactors=FALSE, 
+  as.is=TRUE, 
+  colClasses = "character")
 
 # corrected p values (can only load after all p values have been calculated and corrected)
 corr_pval_df <-  readRDS(base::paste0(
@@ -159,7 +160,7 @@ make_pattern_density_plot <- function(
   p_temp <- ggplot2::ggplot(
     perm_score_df,
     aes(x = value))+
-    geom_density_pattern()
+    ggplot2::geom_density_pattern()
   
   # calculate the maximum y value (density at its peak)
   density_data <- ggplot2::ggplot_build(p_temp)$data[[1]]
@@ -180,16 +181,16 @@ make_pattern_density_plot <- function(
   p_return <- ggplot2::ggplot(
     perm_score_df,
     aes(x = value))+
-    geom_density(
+    ggplot2::geom_density(
        fill = col_cons_long[["random genes"]],
        color = col_cons_long[["random genes"]]
     )+
-    geom_vline(
+    ggplot2::geom_vline(
       color = "grey60",
       xintercept = score_df$value,
       linetype = "dashed"
     )+
-    geom_point(
+    ggplot2::geom_point(
       inherit.aes = FALSE, 
       shape = 23,
       fill = color_cons,
@@ -197,7 +198,7 @@ make_pattern_density_plot <- function(
       aes(x = value, y = y_value),
       size = point_plot_size,
       color = color_cons)+
-    scale_y_continuous(
+    ggplot2::scale_y_continuous(
       limits = c(y_lim_low, y_lim_high),
       breaks = y_lim_break, 
       labels = ylabel)
@@ -238,48 +239,19 @@ BL6_genes <- vector()
 signature_genes <- vector()
 for(ct in names(geneset_list_hsc)){
   BL6_genes <- unique(
-    c(BL6_genes,
-      geneset_list_hsc[[ct]]$conserved_df$gene[!is.na(geneset_list_hsc[[ct]]$conserved_df$mmus)]))
-  signature_genes <- unique(c(signature_genes, geneset_list_hsc[[ct]]$conserved_signature))
+    c(
+      BL6_genes,
+      geneset_list_hsc[[ct]]$conserved_df$gene[
+        !is.na(geneset_list_hsc[[ct]]$conserved_df$mmus)]))
+  signature_genes <- unique(
+    c(
+      signature_genes, 
+      geneset_list_hsc[[ct]]$conserved_signature))
 }
 
-perc <- (length(BL6_genes)-length(signature_genes[signature_genes %in% BL6_genes]))/length(BL6_genes)
+perc <- (length(BL6_genes)-
+  length(signature_genes[signature_genes %in% BL6_genes]))/length(BL6_genes)
 print(perc)
-```
-
-# Export Table 
-
-Exporting a useful table containing all signature genes, their cell type(s) of
-origin, and whether they were originally sub-clustering genes.
-
-```{r export_table}
-
-for(ct in names(geneset_list_hsc)){
-  geneset_list_hsc[[ct]]$ct <- ct
-}
-
-make_export_df <- function(gene_set_list){
-  
-  genes_sub <- gene_set_list$genes_subclustering
-  genes_sign <- gene_set_list$conserved_signature
-  
-  temp_df <- data.frame(
-    "signature_gene" = genes_sign,
-    "celltype" =  base::rep(gene_set_list$ct, length(genes_sign)),
-    "subclustering_gene_for_ct" = vector(length = length(genes_sign))
-  )
-  
-  # add info on whether a gene was a sub-clustering gene for the cell type
-  temp_df$subclustering_gene_for_ct[which(temp_df$signature_gene %in% genes_sub)] <- TRUE
-  return(temp_df)
-}
-
-export_df_list <- lapply(geneset_list_hsc, make_export_df)
-export_df <- bind_rows(export_df_list)
-export_df <- export_df[order(export_df$signature_gene, decreasing = FALSE),]
-head(export_df)
-
-readr::write_delim(export_df, export_signature_table_path, delim = ";", append = FALSE)
 ```
 
 # PREP: Permutation Plots 
@@ -846,7 +818,7 @@ base_plot_bp1_own <- ggplot2::ggplot(
       color = type_fill,
       pattern = type_fill,
       pattern_alpha = type_fill))+
-  geom_col()+
+  ggplot2::geom_col()+
   ggplot2::scale_fill_manual(values = col_cons_long)+
   ggplot2::scale_color_manual(values = col_cons_long)+
   ggpattern::scale_pattern_alpha_manual(
@@ -871,7 +843,7 @@ theme_plot_bp1_own<- base_plot_bp1_own+
       size = axis_title_size),
     axis.title.y = element_blank(),
     axis.text.y = element_blank())+
-  xlab(nr_genes_title)
+  ggplot2::xlab(nr_genes_title)
 ```
 
 ```{r base_plot_bp2_own}
@@ -883,7 +855,7 @@ base_plot_bp2_own <- ggplot2::ggplot(
       color = type_fill,
       pattern = type_fill,
       pattern_alpha = type_fill))+
-  geom_col()+
+  ggplot2::geom_col()+
   ggplot2::scale_fill_manual(values = col_cons_long)+
   ggplot2::scale_color_manual(values = col_cons_long)+
   ggpattern::scale_pattern_alpha_manual(
@@ -919,7 +891,7 @@ base_plot_bp3_own <- ggplot2::ggplot(
       color = type_fill,
       pattern = type_fill,
       pattern_alpha = type_fill))+
-  geom_col()+
+  ggplot2::geom_col()+
   ggplot2::scale_fill_manual(values = col_cons_long)+
   ggplot2::scale_color_manual(values = col_cons_long)+
   ggpattern::scale_pattern_alpha_manual(
@@ -971,7 +943,7 @@ theme_plot_ai1_own <- base_plot_ai1_own+
     breaks=c(0, 0.5, 1),
     position = "top", 
     limits = c(score1_min, score1_max))+
-  xlab(score1_long)
+  ggplot2::xlab(score1_long)
 ```
 
 ```{r base_plot_ai2_own}
@@ -1053,7 +1025,7 @@ theme_plot_vi1_own <- base_plot_vi1_own+
     breaks=c(-5, -2.5, 0),
     position = "top", 
     limits = c(score2_min, score2_max))+
-  xlab(score2_long)
+  ggplot2::xlab(score2_long)
 ```
 
 ```{r base_plot_vi2_own}
@@ -1133,7 +1105,7 @@ theme_plot_mp1_own <- base_plot_mp1_own+
     breaks=c(0, 0.2, 0.4),
     position = "top", 
     limits = c(score3_min, score3_max))+
-  xlab(score3_long)
+  ggplot2::xlab(score3_long)
 ```
 
 ```{r base_plot_mp2_own}
@@ -1273,7 +1245,7 @@ base_plot_bp1_o1 <- ggplot2::ggplot(
       color = type_fill,
       pattern = type_fill,
       pattern_alpha = type_fill))+
-  geom_col()+
+  ggplot2::geom_col()+
   ggplot2::scale_fill_manual(values = col_cons_long)+
   ggplot2::scale_color_manual(values = col_cons_long)+
   ggpattern::scale_pattern_alpha_manual(
@@ -1308,7 +1280,7 @@ base_plot_bp3_o1 <- ggplot2::ggplot(
       color = type_fill,
       pattern = type_fill,
       pattern_alpha = type_fill))+
-  geom_col()+
+  ggplot2::geom_col()+
   ggplot2::scale_fill_manual(values = col_cons_long)+
   ggplot2::scale_color_manual(values = col_cons_long)+
   ggpattern::scale_pattern_alpha_manual(
@@ -1570,7 +1542,7 @@ base_plot_bp1_o1_signrand <- ggplot2::ggplot(
       color = type_fill,
       pattern = type_fill,
       pattern_alpha = type_fill))+
-  geom_col()+
+  ggplot2::geom_col()+
   # ggpattern::geom_col_pattern(
   #   #color = NA, 
   #   pattern_angle = 110,
@@ -2085,7 +2057,7 @@ d_theme_plot
 dev.off()
 ```
 
-```{r}
+```{r pval_print}
 # pval print
 colnames(corr_pval_df)
 corr_pval_df[corr_pval_df$condition %in% c("hsc", "mus_tm_bonemarrow"),c(1, 6, 7, 14)]

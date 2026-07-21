@@ -4,6 +4,8 @@ date: '2024-09-23'
 output: html_document
 ---
 
+Niche cell reclustering (ours, mouse, human).
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -26,36 +28,13 @@ library(Seurat, quietly = TRUE)
 
 ```{r define_basepath}
 base_path <- snakemake@params[["base_path"]]
-#base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data/"
-#setwd("repositories/Interspecies_BM_phd/code/figures_rev")
 ```
 
-```{r load_short}
-#-------------------------------------------------------------------------------
-#### REMAINING
-
+```{r load}
 # list of gene sets for niche (conserved signature, conserved markers, etc.)
 geneset_list_str <-base::readRDS(base::paste0(
   base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_str"))
-
-# data frame containing the correct resolutions for other datasets as visually determined
-#resolution_df_path <- base::paste0(
-#  base_path,
-#  "/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt")
-
-#resolution_df <- utils::read.csv(
-#  file = resolution_df_path, 
-#  header = TRUE, 
-#  sep = ";", 
-#  check.names=FALSE, 
-#  stringsAsFactors=FALSE, 
-#  as.is=TRUE, 
-#  colClasses = "character")
-
-#ensembl_sign <- readRDS(base::paste0(
-#  base_path,
-#  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/02_endf/ensembl_sign_str"))
 
 colors_path <- base::paste0(
   base_path,
@@ -78,24 +57,6 @@ sce_str <- base::readRDS(base::paste0(
 sce_str_recl <- base::readRDS(base::paste0(
   base_path,
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/03_recl/sce_str"))
-
-# dataframe of re-clustering scores for each gene set
-#score_df_str <- base::readRDS(base::paste0(
-#  base_path,
-#  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/04_rcls/#score_df_str"))
-
-# dataframes of re-clustering scores after permutation comparing gene sets
-#psdf_str_mark_signrand <- base::readRDS(base::paste0(
-#  base_path,
-#  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/06_perg/#perm_score_df_mark_str"))
-#psdf_str_mmms_signrand <- base::readRDS(base::paste0(
-#  base_path,
-#  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/06_perg/perm_score_df_mmms_str"))
-
-# dataframes of re-clustering scores after background permutation
-#psdf_str_sign_rand <- base::readRDS(base::paste0(
-#  base_path,
-#  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/05_psig/perm_score_df_str"))
 ```
 
 ```{r load_other2}
@@ -105,11 +66,6 @@ sce_str_recl <- base::readRDS(base::paste0(
 # number o2 is remnant from previous installment
 
 dataset_o2 <- "mus_tik_stromal"
-
-# list of seurat objects with reclustering vectors for each gene set and resolution
-#seu_str_recl_list_o2 <- base::readRDS(base::paste0(
-#  base_path,
-#  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_mus_tik_stromal_list"))
 
 mus_tik_str_blind_anno <- base::readRDS(base::paste0(
   base_path,
@@ -150,13 +106,6 @@ output_pdf_b_plot <- base::paste0(
   base_path, "/manuscript1_rev/figure5/figure5_b.pdf")
 output_pdf_cd_plot <- base::paste0(
   base_path, "/manuscript1_rev/figure5/figure5_cd.pdf")
-#output_pdf_e_plot <- base::paste0(
-#  base_path, "/manuscript1_rev/figure5/figure5_e.pdf")
-#output_pdf_e_legend <- base::paste0(
-#  base_path, "/manuscript1_rev/figure5/figure5_e_legend.pdf")
-
-export_signature_table_path <- base::paste0(
-   base_path, "/manuscript1_rev/str_signature_table.csv")
 ```
 
 ## Obtain data
@@ -213,87 +162,49 @@ sce_str_recl$cluster_consm_genes_used[1]
 sce_str_recl$cluster_mmusm_genes_used[1]
 ```
 
-## Export Table 
-
-Exporting a useful table containing all signature genes, their cell type(s) of
-origin, and whether they were originally sub-clustering genes.
-
-```{r export_table}
-
-for(ct in names(geneset_list_str)){
-  geneset_list_str[[ct]]$ct <- ct
-}
-
-make_export_df <- function(gene_set_list){
-  
-  genes_sub <- gene_set_list$genes_subclustering
-  genes_sign <- gene_set_list$conserved_signature
-  
-  temp_df <- data.frame(
-    "signature_gene" = genes_sign,
-    "celltype" =  base::rep(gene_set_list$ct, length(genes_sign)),
-    "subclustering_gene_for_ct" = vector(length = length(genes_sign))
-  )
-  
-  # add info on whether a gene was a sub-clustering gene for the cell type
-  temp_df$subclustering_gene_for_ct[
-    which(temp_df$signature_gene %in% genes_sub)] <- TRUE
-  return(temp_df)
-}
-
-export_df_list <- lapply(geneset_list_str, make_export_df)
-export_df <- dplyr::bind_rows(export_df_list)
-export_df <- export_df[order(export_df$signature_gene, decreasing = FALSE),]
-head(export_df)
-
-readr::write_delim(export_df, 
-                   export_signature_table_path, 
-                   delim = ";",
-                   append = FALSE)
-```
-
-TODO: What was the purpose of this?
+Find the genes in each cell type that are BL6 specific, for interest.
+Nothing really jumps out though, at least to me. 
 
 ```{r print_ct_bl6specific}
-hsc_cons_df_ct <- geneset_list_str$Osteo$conserved_df
-hsc_mmus_specific <- hsc_cons_df_ct$gene[which(
-  !is.na(hsc_cons_df_ct$mmus) &
-    is.na(hsc_cons_df_ct$mcas) &
-    is.na(hsc_cons_df_ct$mspr) &
-    is.na(hsc_cons_df_ct$mcar))]
-hsc_mmus_specific
+str_cons_df_ct <- geneset_list_str$Osteo$conserved_df
+str_mmus_specific <- str_cons_df_ct$gene[which(
+  !is.na(str_cons_df_ct$mmus) &
+    is.na(str_cons_df_ct$mcas) &
+    is.na(str_cons_df_ct$mspr) &
+    is.na(str_cons_df_ct$mcar))]
+str_mmus_specific
 
-hsc_cons_df_ct <- geneset_list_str$`Adipo/CAR`$conserved_df
-hsc_mmus_specific <- hsc_cons_df_ct$gene[which(
-  !is.na(hsc_cons_df_ct$mmus) &
-    is.na(hsc_cons_df_ct$mcas) &
-    is.na(hsc_cons_df_ct$mspr) &
-    is.na(hsc_cons_df_ct$mcar))]
-hsc_mmus_specific
+str_cons_df_ct <- geneset_list_str$`Adipo/CAR`$conserved_df
+str_mmus_specific <- str_cons_df_ct$gene[which(
+  !is.na(str_cons_df_ct$mmus) &
+    is.na(str_cons_df_ct$mcas) &
+    is.na(str_cons_df_ct$mspr) &
+    is.na(str_cons_df_ct$mcar))]
+str_mmus_specific
 
-hsc_cons_df_ct <- geneset_list_str$`Fibro/Chondro`$conserved_df
-hsc_mmus_specific <- hsc_cons_df_ct$gene[which(
-  !is.na(hsc_cons_df_ct$mmus) &
-    is.na(hsc_cons_df_ct$mcas) &
-    is.na(hsc_cons_df_ct$mspr) &
-    is.na(hsc_cons_df_ct$mcar))]
-hsc_mmus_specific
+str_cons_df_ct <- geneset_list_str$`Fibro/Chondro`$conserved_df
+str_mmus_specific <- str_cons_df_ct$gene[which(
+  !is.na(str_cons_df_ct$mmus) &
+    is.na(str_cons_df_ct$mcas) &
+    is.na(str_cons_df_ct$mspr) &
+    is.na(str_cons_df_ct$mcar))]
+str_mmus_specific
 
-hsc_cons_df_ct <- geneset_list_str$Fibroblast$conserved_df
-hsc_mmus_specific <- hsc_cons_df_ct$gene[which(
-  !is.na(hsc_cons_df_ct$mmus) &
-    is.na(hsc_cons_df_ct$mcas) &
-    is.na(hsc_cons_df_ct$mspr) &
-    is.na(hsc_cons_df_ct$mcar))]
-hsc_mmus_specific
+str_cons_df_ct <- geneset_list_str$Fibroblast$conserved_df
+str_mmus_specific <- str_cons_df_ct$gene[which(
+  !is.na(str_cons_df_ct$mmus) &
+    is.na(str_cons_df_ct$mcas) &
+    is.na(str_cons_df_ct$mspr) &
+    is.na(str_cons_df_ct$mcar))]
+str_mmus_specific
 
-hsc_cons_df_ct <- geneset_list_str$`Peri/SMC`$conserved_df
-hsc_mmus_specific <- hsc_cons_df_ct$gene[which(
-  !is.na(hsc_cons_df_ct$mmus) &
-    is.na(hsc_cons_df_ct$mcas) &
-    is.na(hsc_cons_df_ct$mspr) &
-    is.na(hsc_cons_df_ct$mcar))]
-hsc_mmus_specific
+str_cons_df_ct <- geneset_list_str$`Peri/SMC`$conserved_df
+str_mmus_specific <- str_cons_df_ct$gene[which(
+  !is.na(str_cons_df_ct$mmus) &
+    is.na(str_cons_df_ct$mcas) &
+    is.na(str_cons_df_ct$mspr) &
+    is.na(str_cons_df_ct$mcar))]
+str_mmus_specific
 ```
 
 ## Expression heat map
@@ -360,7 +271,6 @@ expr_df_list_str <- lapply(agg_str_list, function(agg_str){
   
   sign_genes_ct <- geneset_list_str[[
     which(names(geneset_list_str) == ct_curr)]]$conserved_signature
-  print(head(sign_genes_ct))
   
   # get a df from average logcounts per ct and species
   vis_df <- base::as.data.frame(
@@ -514,18 +424,13 @@ heatmap_expr_legend
 dev.off()
 ```
 
-## Re-clusterung Heatmaps 
+## Re-clustering Heatmaps 
 
 Figure 5c, Figure 5d, Figure 5e.
 
-Heatmaps of own or published niche data using signature genes.
+Heatmaps of own or published niche data, reclusterted using signature genes.
 
-For other datasets, this includes blind re-annotation following
-custom, manual clustering.
-
-mus_tik_str has been blindly annotated in 03_sce_analysis/04_signatures/04_blind_annotation.
-li_all_str has been blindly annotated in 03_sce_analysis/04_signatures/04_blind_annotation 
-as well. 
+For other datasets, this includes blind re-annotation, see 03_sce_analysis/04_signatures/04_blind_annotation.
 
 ### Plots
 
@@ -600,7 +505,7 @@ sign_df_o2$Var2 <- factor(
   sign_df_o2$Var2,
   levels = base::rev(c(
     "Adipo/CAR1, pbs",
-    "Adipo/CAR2",
+    "Adipo/CAR2, pbs",
     "Adipo/CAR3, non-pbs",
     "Osteo/CAR",
     "Osteo-Chondro",
@@ -677,8 +582,6 @@ sign_theme_plot_o2
 ### Other 3
 
 Figure 5c.
-
-TODO: check source of NAs
 
 ```{r mat_sign_o3}
 mat_sign_o3 <- base::table(li_all_str_blind_anno$cell_type, 
@@ -773,6 +676,7 @@ cd_plots <- ggpubr::ggarrange(
   sign_theme_plot_o3,
   widths = c(1.3, 1.4))
 
+cd_plots
 ```
 
 ### Export

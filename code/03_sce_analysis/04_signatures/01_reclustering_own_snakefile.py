@@ -60,6 +60,8 @@ for f in fractions:
   targets = targets + [OUTPUT_DAT + "/04_rcls/score_df_reso_" + f]
   targets = targets + [OUTPUT_REP + "/reclustering_own_report_" + f + ".html"]
 
+  targets = targets + [OUTPUT_DAT + "/09_tabl/" + f + "_signature_table.csv"]
+
   if RUN_SIGN_RAND_OWN_PERM:
     targets = targets + [OUTPUT_DAT + "/05_psig/perm_score_df_" + f]
     targets = targets + [OUTPUT_DAT + "/08_expp/sign-vs-rand_" + f]
@@ -611,3 +613,22 @@ if RUN_GNST_SIGN_OWN_PERM:
 - any mmms vs markrand
 
 """
+
+
+#-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+
+# lastly, export a handy signature table as .csv for download and for use
+# as manuscript supplementary table
+
+rule export_table:
+    input:
+        geneset_list = rules.export_genesets.output
+    output:
+        signature_table = OUTPUT_DAT + "/09_tabl/{fraction}_signature_table.csv"
+    resources:
+          mem_mb=4000,
+          queue = "short"
+    threads: 1
+    script:
+        "01_scripts_own/09_export_table.R"

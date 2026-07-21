@@ -107,7 +107,7 @@ ts_bone_marrow <- ts_bone_marrow |>
 
 ```{r load_hsc_signature}
 hsc_sig <- read.delim(
-  file.path(base_path, "manuscript1/hsc_signature_table.csv"),
+  file.path(base_path, "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/09_tabl/hsc_signature_table.csv"),
   sep = ";"
 )
 gene_sets_mouse_hsc <- split(hsc_sig$signature_gene, hsc_sig$celltype)
@@ -188,7 +188,7 @@ ts_stromal <- ts_stromal |>
 
 ```{r load_stromal_signature}
 str_sig <- read.delim(
-  file.path(base_path, "manuscript1/str_signature_table.csv"),
+  file.path(base_path, "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/09_tabl/str_signature_table.csv"),
   sep = ";"
 )
 gene_sets_mouse_str <- split(str_sig$signature_gene, str_sig$celltype)

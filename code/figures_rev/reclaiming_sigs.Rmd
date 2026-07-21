@@ -31,7 +31,7 @@ base_path    <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
 ```{r source}
 colors_path <- base::paste0(
   base_path,
-  "/metadata/colors/colors.txt"
+  "metadata/colors/colors.txt"
 )
 
 source("../source/colors.R")
@@ -51,7 +51,7 @@ source("../figures/determine_params.R")
 hsc_sig <- read.delim(
   file.path(
     base_path,
-    "manuscript1/hsc_signature_table.csv"
+    "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/09_tabl/hsc_signature_table.csv"
   ),
   sep = ";"
 )
@@ -59,18 +59,22 @@ hsc_sig <- read.delim(
 str_sig <- read.delim(
   file.path(
     base_path,
-    "manuscript1/str_signature_table.csv"
+    "scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/09_tabl/str_signature_table.csv"
   ),
   sep = ";"
 )
 
 ensembl_hum <- readRDS(
-  "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_hum"
-)
+  file.path(
+    base_path, 
+    "metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_hum"
+))
 
 ensembl_mus <- readRDS(
-  "/omics/odcf/analysis/OE0538_projects/DO-0008/data/metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_mus"
-)
+  file.path(
+    base_path, 
+    "metadata/scRNAseq/03_sce_analysis/ensembl/ensembl_mus"
+))
 
 tm_hspc <- readRDS(file.path(
   base_path,
@@ -697,8 +701,8 @@ print(ts_str_dot)
 dev.off()
 ```
 
-
 # Additional analysis: Weinreb with original annotation
+
 ```{r}
 weinreb_hspc$custom_label_unif <- weinreb_hspc$cell_type
 

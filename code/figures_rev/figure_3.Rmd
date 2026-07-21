@@ -223,9 +223,6 @@ output_pdf_mmms_sign_plot <-  base::paste0(
 
 output_pdf_heatmaps_others_plot <- base::paste0(
    base_path, "/manuscript1_rev/figure3/figure3_heatmaps_others.pdf")
-
-export_signature_table_path <- base::paste0(
-   base_path, "/manuscript1_rev/hsc_signature_table.csv")
 ```
 
 # Obtain data for text

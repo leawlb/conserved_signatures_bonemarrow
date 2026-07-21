@@ -504,14 +504,14 @@ sign_df_o2$Var2 <- factor(
     "Adipo/CAR3, non-pbs",
     "Osteo/CAR",
     "Osteo-Chondro",
-    "Fibro-Chondro",
+    "Fibro-Chondro, pbs",
     "Chondro",
     "Osteo1",
     "Osteo2",
     "Osteo3",
     "Art/Cap-EC",
     "Ven EC1, non-pbs",
-    "Ven EC2, pbs",
+    "Ven EC2",
     "Ven EC3, non-pbs"
 )))
 

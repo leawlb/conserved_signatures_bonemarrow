@@ -31,7 +31,6 @@ base_path <- snakemake@params[["base_path"]]
 ```
 
 ```{r load_other1}
-#-------------------------------------------------------------------------------
 #### OTHER HUMAN DATASET 1 (HSPC)
 #### TABULA SAPIENS BONE MARROW
 
@@ -45,7 +44,6 @@ seu_blind_anno_o1 <- readRDS(base::paste0(
 ```
 
 ```{r load_other2}
-#-------------------------------------------------------------------------------
 #### OTHER HUMAN DATASET 2 (HSPC)
 #### Tabula sapiens HSCs and Progs (fetal)
 

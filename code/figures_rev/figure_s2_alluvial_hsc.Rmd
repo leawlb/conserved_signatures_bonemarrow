@@ -289,9 +289,10 @@ mmus_df_hsc$custom_anno <- factor(
   mmus_df_hsc$custom_anno, 
   levels = factors_custom_hsc_unif)
 
+# reorder factirs
 mmus_df_hsc <- mmus_df_hsc %>%
   dplyr::mutate(
-    original_anno_space = fct_inorder(paste0(" ", original_anno)))
+    original_anno_space = forcats::fct_inorder(paste0(" ", original_anno)))
 
 # the  " " is added to avoid confusing ggalluvium with "HSC" in one
 # alluvium side and "HSC" also in the other alluvium side
@@ -317,7 +318,7 @@ mcas_df_hsc$custom_anno <- factor(
 
 mcas_df_hsc <- mcas_df_hsc %>%
   dplyr::mutate(
-    original_anno_space = fct_inorder(paste0(" ", original_anno)))
+    original_anno_space = forcats::fct_inorder(paste0(" ", original_anno)))
 ```
 
 ### MSPR
@@ -339,7 +340,7 @@ mspr_df_hsc$custom_anno <- factor(
 
 mspr_df_hsc <- mspr_df_hsc %>%
   dplyr::mutate(
-    original_anno_space = fct_inorder(paste0(" ", original_anno)))
+    original_anno_space = forcats::fct_inorder(paste0(" ", original_anno)))
 ```
 
 #### MCAR
@@ -361,7 +362,7 @@ mcar_df_hsc$custom_anno <- factor(
 
 mcar_df_hsc <- mcar_df_hsc %>%
   dplyr::mutate(
-    original_anno_space = fct_inorder(paste0(" ", original_anno)))
+    original_anno_space = forcats::fct_inorder(paste0(" ", original_anno)))
 ```
 
 ## Make UMAPs
@@ -544,7 +545,8 @@ mmus_lodes <- ggalluvial::to_lodes_form(
 # so each cell type
 # alluvium = indexing scheme that links rows, in this case the flow ID
 
-is_lodes_form(mmus_lodes, key = x, value = stratum, id = flow_id)
+# check
+ggalluvial::is_lodes_form(mmus_lodes, key = x, value = stratum, id = flow_id)
 
 # manually set numeric x positions to bring the axes close together
 mmus_lodes <- mmus_lodes %>%
@@ -622,7 +624,7 @@ mcas_lodes <- ggalluvial::to_lodes_form(
 # so each cell type
 # alluvium = indexing scheme that links rows, in this case the flow ID
 
-is_lodes_form(mcas_lodes, key = x, value = stratum, id = flow_id)
+ggalluvial::is_lodes_form(mcas_lodes, key = x, value = stratum, id = flow_id)
 
 # manually set numeric x positions to bring the axes close together
 mcas_lodes <- mcas_lodes %>%
@@ -700,7 +702,7 @@ mspr_lodes <- ggalluvial::to_lodes_form(
 # so each cell type
 # alluvium = indexing scheme that links rows, in this case the flow ID
 
-is_lodes_form(mspr_lodes, key = x, value = stratum, id = flow_id)
+ggalluvial::is_lodes_form(mspr_lodes, key = x, value = stratum, id = flow_id)
 
 # manually set numeric x positions to bring the axes close together
 mspr_lodes <- mspr_lodes %>%
@@ -778,7 +780,7 @@ mcar_lodes <- ggalluvial::to_lodes_form(
 # so each cell type
 # alluvium = indexing scheme that links rows, in this case the flow ID
 
-is_lodes_form(mcar_lodes, key = x, value = stratum, id = flow_id)
+ggalluvial::is_lodes_form(mcar_lodes, key = x, value = stratum, id = flow_id)
 
 # manually set numeric x positions to bring the axes close together
 mcar_lodes <- mcar_lodes %>%

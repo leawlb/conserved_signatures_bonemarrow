@@ -45,7 +45,6 @@ source("../source/plotting.R")
 ```
 
 ```{r load_own}
-#-------------------------------------------------------------------------------
 #### OWN DATASET (Niche)
 
 # annotated SCE
@@ -60,7 +59,6 @@ sce_str_recl <- base::readRDS(base::paste0(
 ```
 
 ```{r load_other2}
-#-------------------------------------------------------------------------------
 #### OTHER MOUSE DATASET 2 (Niche)
 #### MUS_TIK_STROMAL
 # number o2 is remnant from previous installment
@@ -74,7 +72,6 @@ mus_tik_str_blind_anno <- base::readRDS(base::paste0(
 ```
 
 ```{r load_other3}
-#-------------------------------------------------------------------------------
 #### OTHER HUMAN DATASET 3 (Niche)
 #### li_all_stromal
 # number o3 is remnant from previous installments
@@ -92,7 +89,6 @@ li_all_str_blind_anno <- base::readRDS(base::paste0(
 source("../figures/determine_params.R")
 
 colors_z_score_ct <- c("steelblue3", "white", "red3")
-
 cts_exclude <- c("Lymphoid EC", "Chondrocyte")
 print(cts_exclude)
 ```
@@ -267,7 +263,6 @@ expr_df_list_str <- lapply(agg_str_list, function(agg_str){
   
   # get current cell type and relevant signature genes
   ct_curr <- agg_str$celltypes[1]
-  print(ct_curr)
   
   sign_genes_ct <- geneset_list_str[[
     which(names(geneset_list_str) == ct_curr)]]$conserved_signature

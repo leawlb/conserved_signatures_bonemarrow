@@ -133,7 +133,6 @@ umap_point_size <- 0.4
 heatmap_text_size <- 14
 colors_z_score_ct <- c("steelblue3", "white", "red3")
 
-
 # cell types to be depicted in the heatmaps
 # keeping the stem compartment for comparisons
 cts_keep_hsc <- c(

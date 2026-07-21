@@ -70,9 +70,7 @@ subclustering_df <- utils::read.csv(gene_list_subclustering,
 colors_path <- base::paste0(
   base_path,
   "/metadata/colors/colors.txt")
-print(colors_path)
 source("../source/colors.R")
-print(col_spc_pub)
 ```
 
 ```{r prep_sces}
@@ -96,15 +94,16 @@ sce_hsc$species_pub[sce_hsc$Species_ID == "mspr"] <- "SPRET"
 sce_hsc$species_pub[sce_hsc$Species_ID == "mcar"] <- "CAROLI"
 sce_hsc$species_pub <- factor(sce_hsc$species_pub, 
                               levels = names(col_spc_pub))
-print(col_spc_pub)
 
 sce_str$species_pub <- vector(length = ncol(sce_str))
 sce_str$species_pub[sce_str$Species_ID == "mmus"] <- "BL6"
 sce_str$species_pub[sce_str$Species_ID == "mcas"] <- "CAST"
 sce_str$species_pub[sce_str$Species_ID == "mspr"] <- "SPRET"
 sce_str$species_pub[sce_str$Species_ID == "mcar"] <- "CAROLI"
-sce_str$species_pub <- factor(sce_str$species_pub, 
-                              levels = names(col_spc_pub))
+
+sce_str$species_pub <- factor(
+  sce_str$species_pub, 
+  levels = names(col_spc_pub))
 ```
 
 ```{r pdf_output}
@@ -223,6 +222,7 @@ str_umap_species <- str_umap_species[base::sample(
 
 ```{r species_base_plot_left}
 stopifnot(unique(hsc_umap_species$color_by) %in% names(col_spc_pub))
+
 species_base_plot_left <- ggplot2::ggplot(
   hsc_umap_species, 
   aes(x = X1,
@@ -344,7 +344,7 @@ ctspc_base_plot_left <- ggplot2::ggplot(
   ggplot2::xlim(c(base::min(hsc_umap$X1)-1), (base::max(hsc_umap$X1)+1))+
   ggplot2::ylim(c(base::min(hsc_umap$X2)-1), (base::max(hsc_umap$X2)+1))+
   ggplot2::scale_color_manual(values = col_cts_hsc)+
-  facet_grid(rows = vars(hsc_umap$species))
+  ggplot2::facet_grid(rows = vars(hsc_umap$species))
 ```
 
 ```{r ctspc_theme_plot_left, fig.height = 9, fig.width = 3}
@@ -365,7 +365,7 @@ ctspc_base_plot_right <- ggplot2::ggplot(
   ggplot2::xlim(c(base::min(str_umap$X1)-1), (base::max(str_umap$X1)+1))+
   ggplot2::ylim(c(base::min(str_umap$X2)-1), (base::max(str_umap$X2)+1))+
   ggplot2::scale_color_manual(values = col_cts_str)+
-  facet_grid(rows = vars(str_umap$species))
+  ggplot2::facet_grid(rows = vars(str_umap$species))
 ```
 
 ```{r d_theme_plot_right, fig.height = 10, fig.width = 4}
@@ -374,7 +374,7 @@ ctspc_theme_plot_right <- ctspc_base_plot_right+
 ctspc_theme_plot_right
 ```
 
-#### Legend
+#### Legends
 
 ```{r ct_legend_plot_left}
 ct_legend_plot_left <- ggplot2::ggplot(
@@ -508,12 +508,18 @@ This is for all cell types together.
 ```{r dp_prepare}
 # get genes
 gene_df_hsc <- dotplot_order_df[dotplot_order_df$fraction == "hsc",]
-gene_df_hsc$gene <- factor(gene_df_hsc$gene, levels = gene_df_hsc$gene)
+gene_df_hsc$gene <- factor(
+  gene_df_hsc$gene, 
+  levels = gene_df_hsc$gene)
+
 genes_hsc <- gene_df_hsc$gene
 genes_hsc
 
 gene_df_str <- dotplot_order_df[dotplot_order_df$fraction == "str",]
-gene_df_str$gene <- factor(gene_df_str$gene, levels = gene_df_str$gene)
+gene_df_str$gene <- factor(
+  gene_df_str$gene, 
+  levels = gene_df_str$gene)
+
 genes_str <- gene_df_str$gene
 genes_str
 
@@ -575,9 +581,6 @@ vis_df_str$gene <- factor(
 
 ```{r dp_function}
 get_perc_expressed <- function(vis_df, sce){
-  
-  vis_df <- vis_df
-  sce <- sce
   
   vis_df$percent_expressed <- vector(length = nrow(vis_df))
   
@@ -671,6 +674,9 @@ vis_df_ct_str <- get_perc_expressed(vis_df_ct_str, sce_str)
 
 ```{r background_hsc}
 # make background grid
+# each section of genes per group has a different length, so determine
+# by the "starting" and "ending" gene manually
+
 background_hsc <- data.frame(
   xmin = c( # start of each segment 
     "Mllt3", # HSC
@@ -1053,7 +1059,7 @@ x_hsc_base_plot <- ggplot2::ggplot(
   ggplot2::geom_bar()
 ```
 
-Except for mcar lymph, there are at least 97 cells per species and cell types.
+There are at least 97 cells per species and cell types.
 
 ```{r x_hsc_theme_plot}
 x_hsc_theme_plot <- x_hsc_base_plot+
@@ -1155,20 +1161,26 @@ x_legend
 
 ```{r dp_theme_plot2, fig.width = 16.5, fig.height = 6}
 dp_theme_plot2 <- ggpubr::ggarrange(
-  dp_theme_plot_top_left + theme(
-    plot.margin = margin(t = 10, r = 0, b = 20, l = 62, unit = "pt")), 
+  dp_theme_plot_top_left+ 
+    ggplot2::theme(
+      plot.margin = margin(t = 10, r = 0, b = 20, l = 62, unit = "pt")), 
+  NULL, # this space will be "empty"
+  dp_theme_plot_top_right+ 
+    ggplot2::theme(
+      plot.margin = margin(t = 14, r = 0, b = 20, l = 157, unit = "pt")),
   NULL,
-  dp_theme_plot_top_right + theme(
-    plot.margin = margin(t = 14, r = 0, b = 20, l = 157, unit = "pt")),
-  NULL,
-  dp_theme_plot_bottom_left + theme(
-    plot.margin = margin(t = 5, r = 0, b = 47, l = 5, unit = "pt")),
-  x_hsc_theme_plot+ theme(
-    plot.margin = margin(t = 3, r = 3, b = 4, l = 2, unit = "pt")),
-  dp_theme_plot_bottom_right + theme(
-    plot.margin = margin(t = 5, r = 0, b = 47, l = 5, unit = "pt")),
-  x_str_theme_plot+ theme(
-    plot.margin = margin(t = 3, r = 3, b = 4, l = 2, unit = "pt")),
+  dp_theme_plot_bottom_left+ 
+    ggplot2::theme(
+      plot.margin = margin(t = 5, r = 0, b = 47, l = 5, unit = "pt")),
+  x_hsc_theme_plot+ 
+    ggplot2::theme(
+      plot.margin = margin(t = 3, r = 3, b = 4, l = 2, unit = "pt")),
+  dp_theme_plot_bottom_right+ 
+    ggplot2::theme(
+      plot.margin = margin(t = 5, r = 0, b = 47, l = 5, unit = "pt")),
+  x_str_theme_plot+ 
+    ggplot2::theme(
+      plot.margin = margin(t = 3, r = 3, b = 4, l = 2, unit = "pt")),
   heights = c(1.1,1.8),
   widths = c(1, 0.16, 1.09, 0.16),
   nrow = 2,
@@ -1203,8 +1215,6 @@ pdf(output_pdf_dotplot_legend, width = 6, height = 6)
 dp_theme_legends
 dev.off()
 ```
-
-# UTILS
 
 ```{r sessioninfo}
 utils::sessionInfo()

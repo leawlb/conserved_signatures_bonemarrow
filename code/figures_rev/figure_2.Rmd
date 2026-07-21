@@ -73,12 +73,9 @@ source("../source/colors.R")
 source("../figures/determine_params.R")
 
 # specific params
-
 pattern_density_val <- 0.015
 pattern_spacing_val <- 0.03
-
 celltype <- "HSC"
-
 colors_z_score_ct <- c("steelblue3", "white", "red3")
 ```
 
@@ -168,8 +165,10 @@ sce_hsc$species_pub[sce_hsc$Species_ID == "mmus"] <- "BL6"
 sce_hsc$species_pub[sce_hsc$Species_ID == "mcas"] <- "CAST"
 sce_hsc$species_pub[sce_hsc$Species_ID == "mspr"] <- "SPRET"
 sce_hsc$species_pub[sce_hsc$Species_ID == "mcar"] <- "CAROLI"
-sce_hsc$species_pub <- factor(sce_hsc$species_pub, 
-                              levels = names(col_spc_pub))
+
+sce_hsc$species_pub <- factor(
+  sce_hsc$species_pub, 
+  levels = names(col_spc_pub))
 ```
 
 ```{r sign_heatmap1}
@@ -265,10 +264,12 @@ all_sign_genes_for_factor <- base::unique(agg_hsc_df$gene[
   agg_hsc_df$is_sign_gene == TRUE])
 
 # factorize
-agg_hsc_df$gene <- factor(agg_hsc_df$gene,
-                          levels = all_sign_genes_for_factor)
-agg_hsc_df$species <- factor(agg_hsc_df$species,
-                             levels = base::rev(names(col_spc_pub)))
+agg_hsc_df$gene <- factor(
+  agg_hsc_df$gene,
+  levels = all_sign_genes_for_factor)
+agg_hsc_df$species <- factor(
+  agg_hsc_df$species,
+  levels = base::rev(names(col_spc_pub)))
 ```
 
 ```{r sign_heatmap6}
@@ -357,7 +358,8 @@ sign_heatmap_legend_theme <- ggpubr::get_legend(sign_heatmap_theme_plot)
 
 ```{r sign_heatmap_assemble, fig.width = 6.5, fig.height = 8}
 sign_heatmap_plot <- ggpubr::ggarrange(
-  sign_heatmap_theme_plot + ggplot2::theme(legend.position = "none")
+  sign_heatmap_theme_plot+ 
+    ggplot2::theme(legend.position = "none")
 )
 sign_heatmap_plot
 ```
@@ -399,12 +401,14 @@ For Figure 2c.
 # get ct specific data
 hsc_cons_df_ct <- geneset_list_hsc$HSC$conserved_df
 
+# print genes that are BL6-specific in HSCs
 hsc_mmus_specific <- hsc_cons_df_ct$gene[which(
   !is.na(hsc_cons_df_ct$mmus) &
     is.na(hsc_cons_df_ct$mcas) &
     is.na(hsc_cons_df_ct$mspr) &
     is.na(hsc_cons_df_ct$mcar))]
 
+# same for the other species
 hsc_mcas_specific <- hsc_cons_df_ct$gene[which(
   is.na(hsc_cons_df_ct$mmus) &
     !is.na(hsc_cons_df_ct$mcas) &
@@ -431,7 +435,7 @@ hsc_genes <- c(hsc_mmus_specific,
 stopifnot(!duplicated(hsc_genes))
 ```
 
-```{r}
+```{r print_specific
 hsc_mmus_specific
 hsc_mcas_specific
 hsc_mspr_specific
@@ -439,6 +443,7 @@ hsc_mcar_specific
 ```
 
 ```{r print_ct_bl6specific}
+# do the same but for other cell types and BL6-specificity, only
 hsc_cons_df_ct <- geneset_list_hsc$`Early MPP`$conserved_df
 hsc_mmus_specific <- hsc_cons_df_ct$gene[which(
   !is.na(hsc_cons_df_ct$mmus) &
@@ -544,7 +549,6 @@ for(g in base::unique(vis_df_hsc$gene)){
   vis_df_hsc$zscore_gene[vis_df_hsc$gene == g] <- z_score_g
   
 }
-levels(vis_df_hsc$gene)
 ```
 
 ```{r heatmap_spec3}

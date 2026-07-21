@@ -160,7 +160,7 @@ make_pattern_density_plot <- function(
   p_temp <- ggplot2::ggplot(
     perm_score_df,
     aes(x = value))+
-    ggplot2::geom_density_pattern()
+    ggpattern::geom_density_pattern()
   
   # calculate the maximum y value (density at its peak)
   density_data <- ggplot2::ggplot_build(p_temp)$data[[1]]

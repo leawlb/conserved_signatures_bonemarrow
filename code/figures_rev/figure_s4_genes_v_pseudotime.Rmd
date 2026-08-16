@@ -1,13 +1,14 @@
 ---
-title: "Supp_for_Fig3"
+title: "Supp_for_Fig2"
 author: "Veronica Busa"
 date: "2024-11-20"
 output: html_document
 ---
 
-Figure_S3: nr of genes vs nr of cells, condition plot, pseudotime UMAPs 
-Figure_S3_silhouette: silhouette score calculation
-Figure_S3_genes_v_pseudotime: genes along pseudotime trajectory 
+Figure_S4: nr of genes vs nr of cells, condition plot, pseudotime UMAPs 
+Figure_S4_silhouette: silhouette score calculation
+Figure_S4_genes_v_pseudotime: genes along pseudotime trajectory 
+Figure_S4_genes: aging genes
 
 #### Load objects
 
@@ -26,11 +27,11 @@ library(SeuratObject, quietly = TRUE)
 
 ```{r load_manual}
 # load data for manual use here
-base_path <- "/omics/odcf/analysis/OE0538_projects/DO-0008/data"
+base_path <- snakemake@params[["base_path"]]
 
 output_pdf <- base::paste0(
   base_path,
-  "/manuscript1/supp_figure3/figures3_genes_v_pseudotime.pdf")
+  "/manuscript1_rev/figures4/genes_v_pseudotime.pdf")
 
 colors_path <- base::paste0(
   base_path, 
@@ -63,7 +64,6 @@ neu_pseudo <- base::readRDS(base::paste0(
   base_path, 
   "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/05_bsce/sce_neu"))
 ```
-
 
 ```{r prep1, message = FALSE, warning= FALSE}
 ery_pseudo_seurat <- CreateSeuratObject(counts = ery_pseudo@assays@data@listData[["logcounts"]],
@@ -215,4 +215,8 @@ for(n in 1:length(geneset_list_hsc)){
 }
 
 dev.off()
+```
+
+```{r}
+sessionInfo()
 ```

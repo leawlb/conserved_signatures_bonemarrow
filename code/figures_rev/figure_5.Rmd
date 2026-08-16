@@ -86,7 +86,7 @@ li_all_str_blind_anno <- base::readRDS(base::paste0(
 
 ```{r params}
 # global params
-source("../figures/determine_params.R")
+source("determine_params.R")
 
 colors_z_score_ct <- c("steelblue3", "white", "red3")
 cts_exclude <- c("Lymphoid EC", "Chondrocyte")

@@ -1,14 +1,16 @@
 ---
-title: "Supp_for_Fig3c"
+title: "Supp_for_Fig4c"
 author: "Veronica Busa"
 date: "2024-11-20"
 output: html_document
 ---
 
-Figure_S3: nr of genes vs nr of cells, condition plot, pseudotime UMAPs 
-Figure_S3_silhouette: silhouette score calculation
-Figure_S3_genes_v_pseudotime: genes along pseudotime trajectory 
-Figure_S3_genes: aging genes
+Figure_S4: nr of genes vs nr of cells, condition plot, pseudotime UMAPs 
+Figure_S4_silhouette: silhouette score calculation
+Figure_S4_genes_v_pseudotime: genes along pseudotime trajectory 
+Figure_S4_genes: aging genes
+
+The assignments to panels, a, b, c, etc is probably deprecated. 
 
 #### Load objects
 
@@ -30,7 +32,7 @@ base_path <- snakemake@params[["base_path"]]
 
 output_pdf <- base::paste0(
   base_path,
-  "/manuscript1_rev/figures3/figures3_c_supp_silhouette.pdf")
+  "/manuscript1_rev/figures4/c_supp_silhouette.pdf")
 ```
 
 
@@ -47,7 +49,7 @@ data_sce <- base::readRDS(base::paste0(
 
 ```{r params}
 # global params
-source("../figures/determine_params.R")
+source("determine_params.R")
 
 colors_path <- base::paste0(
   base_path, 

@@ -2,8 +2,8 @@
 This repository contains all scripts related to scRNAseq analysis of HSPCs
 and niche cells from four distinct mouse species, starting from 
 alignment with Cell Ranger up to figure creation.
-Further, bulk RNAseq data from Neo1 and TrkB stromal cells is pre-processed
-and analysed following experimental validation.
+Further, bulk RNAseq data from Neo1- and TrkB-stained stromal cells is 
+pre-processed and analysed following experimental validation.
 
 
 ## 1. Configuration and Requirements
@@ -13,8 +13,8 @@ The general configuration is stored in `code/config.yaml`.
 
 Minimum required base paths that need to be adjusted:
  - `code/config.yaml`
- - in `code/figures`, base_paths in all .Rmd files and `OUTPUT_PATH` in the run_rmds.py file
- - in `metadata`, any .R scripts used strictly to deal with metadata
+ - in `code/figures_rev`, check base_paths in all .Rmd files not run by the snakefile, and `OUTPUT_PATH` in the run_rmds.py file
+ - in `metadata`, any .R scripts used strictly to deal with metadata (see below)
  - check `code/08_sce_brain/01_sce_brain/brain_snakefile.py`
  - check all files in `code/04_rare_celltypes` 
 
@@ -64,12 +64,15 @@ Additionally adjust base paths in:
 
 ### Starting from annotated scRNAseq files
 
+This is by far the easiest option for getting started. 
+
 For starting from fully annotated objects (S-BSST2079) (more info below),
 transfer the downloaded objects into the approriate folder analogous to 
 `base` + `data/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns` as 
 determined in `code/config.yaml` and save them once using saveRDS but without 
 ".rds" file extension for downstream compatibility or adjust all affected
 downstream paths as required.
+This is because I mistakenly didn't use .rds extensions for a while.
 Downstream analysis starts in folder 03.
 
 ### bulkRNAseq data
@@ -105,6 +108,8 @@ Activate the environment:
 micromamba activate snakemake_isbm
 ```
 
+Any other environments in `/env` will be automatically installed. 
+
 Navigate to the appropriate folder (starting in 01_01) and run the snakemake
 pipeline from that folder using the snakemake command specified 
 in the `..._snakemake` txt files. Snakemake commands in the `..._snakemake` 
@@ -125,7 +130,7 @@ micromamba env create -n snakemake_bulk -f snakemake_bulk.yml
 micromamba activate snakemake_bulk
 ```
 
-Snakemake is set up differently in this directory, with a difference version,
+Snakemake is set up differently in this directory, with a different version,
 and relying on a snakemake profile, which has been adjusted to DKFZ cluster
 requirements. 
 Adjust snakemake setup as required.
@@ -141,18 +146,19 @@ Data can be downloaded from BioStudies:
  - fully annotated data in .rds format containing cell type labels, normalised log-counts, and batch-corrected PC and UMAP coordinates (S-BSST2079)
  - raw data: bulkRNAseq fastq files (E-MTAB-17326)
  - processed data: bulkRNAseq counts matrix (featureCounts output) for all samples (E-MTAB-17326)
-
-Currently, this data is not yet published and therefore not available.
  
 
 ## 3. Metadata
  
-Deposited, public and other metadata is also summarized in Table S5 of the original publication.
+Deposited public data used is also summarized in the Key resources table
+of the associated publication.
 
-Metadata required for running the code is in folder `metadata` or can be 
-generated there:
+Metadata required for running the code is either found in folder `metadata` 
+(if they are relatively small, like assignment csvs) or can be generated there.
+For big metadata files, .R scripts in the folder `metadata` that are required to obtain
+this public data used for analysis.
 
- - `metadata/scRNAseq/00_alignment/metadata.csv` contains at least the same required information as the metadata table from E-MTAB-15073 but is formatted correctly for alignment and downstream analysis
+ - `metadata/scRNAseq/00_alignment/metadata.csv`, which contains at least the same required information as the metadata table from E-MTAB-15073 but is formatted correctly for alignment and downstream analysis
  - cell type assignment lists
  - ensembl lists
  - gene lists
@@ -160,15 +166,11 @@ generated there:
 
 The `metadata` folder should be copied in its entirety into the directory 
 analogous to `base` + `data/` as determined in `code/config.yaml`. 
-Some .R scripts used strictly to deal with metadata are also located there in
-the related folders.
-These scripts must be run in order to generate metadata that are required for
-running the code.
- 
 
-Some metadata must be downloaded or generated manually.
+
+In addition, there is also some metadata that must be downloaded or generated manually.
  
-- Four Cell Ranger reference genomes for species-specific alignment, generated from downloaded fasta and gtf files (http://ftp.ensembl.org/pub/release-94/) using Cell Ranger v3.1.0 mkref function. These can also be made available upon request to l.woelbert[at]dkfz-heidelberg.de:
+- Four Cell Ranger reference genomes for species-specific alignment, generated from downloaded fasta and gtf files (http://ftp.ensembl.org/pub/release-94/) using Cell Ranger v3.1.0 mkref function. These can also be made available upon request, see associated publication:
   - GRCm38 (Ensembl release 94)
   - CAST_EiJ_v1 (Ensembl release 94)
   - SPRET_EiJ_v1 (Ensembl release 94)
@@ -179,17 +181,20 @@ Some metadata must be downloaded or generated manually.
   - Baccin et al. (2020): https://nicheview.shiny.embl.de
   - Dolgalev et al. (2021): https://osf.io/ne9vj/files/osfstorage 
  
-- Published HSPC or Niche datasets for re-clustering, see `code/03_sce_analysis/04_signatures/00_prepare_datasets_snakefile.py` and `code/04_rare_celltypes` 
+- Published HSPC or Niche datasets for re-clustering, see `code/03_sce_analysis/04_signatures/00_prepare_datasets_snakefile.py` and `code/04_rare_celltypes` for more info. 
 
 - The Bakken et al (2021) and Yao et al (2021) motor cortex datasets (`sample.combined_exc_4_species_integration.RDS`) must also be downloaded manually from https://data.nemoarchive.org/publication_release/Lein_2020_M1_study_analysis/Transcriptomics/sncell/10X/human/processed/analysis/analysis/M1/cross_species_integration/ 
 
-- TODO: The mouse lemur dataset is available in figshare: https://figshare.com/projects/Tabula_Microcebus/112227
+- The mouse lemur dataset is available in figshare: https://figshare.com/projects/Tabula_Microcebus/112227
 
-Other (meta)data may be downloaded automatically by running the code.
+Third, even more other (meta)data may be downloaded automatically by running the code.
 
-The entire github repository `mcclust` by Fritsch (2022) is 
+For example the entire github repository `mcclust` by Fritsch (2022) is 
 downloaded as part of running the code so that its vi.dist function can be used.
 See: https://github.com/cran/mcclust and 
 `code/03_sce_analysis/04_signatures/01_reclustering_ow_snakefile.py`
 
-Lastly, we thank Manos Athanasiadis for sending his processed scRNAseq zebrafish HSPC data.
+Lastly, we thank Emmanouil Athanasiadis for sending his processed scRNAseq zebrafish HSPC data.
+
+If you have any questions, please contact us (see corresponding information in the associated
+publication).

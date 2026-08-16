@@ -1,19 +1,21 @@
-
+# run figured for the associated manuscript
 
 # base path to data repository
+# change as required
 BASE_PATH = config["base"] + "/data"
 
 # output directory for htmls
 OUTPUT_PATH = BASE_PATH + "/manuscript1_rev/htmls"
 
-# input paths for data and 
-# output paths of figure pdfs 
-# are separarely define in each .Rmd script for better overview of
+# input paths for data and output paths for figure pdfs 
+# are separarely defined in each .Rmd script for better overview of
 # where the data came from, and where it goes.
 
-# all plots generated using this script are parts of figures.
+# plots generated using this script are parts of figures.
 # Figures are manually assembled using Affinity (placement, orientation, text).
 # Of course, actual data is not changed in Affinity.
+
+# the assignemts to plot panels a, b, c may have been subject to change.
 
 #-------------------------------------------------------------------------------
 
@@ -28,21 +30,22 @@ targets = targets + [OUTPUT_PATH + "/figure_6.html"]
 # fig 7 is assembled from different other Rmds, see below
 
 # fig s1 is exclusively made from FlowJo and Affinity
-targets = targets + [OUTPUT_PATH + "/figure_s2.html"]
+targets = targets + [OUTPUT_PATH + "/figure_s2_s3.html"]
 targets = targets + [OUTPUT_PATH + "/figure_s2_alluvial_hsc.html"]
 targets = targets + [OUTPUT_PATH + "/figure_s2_alluvial_str.html"]
-targets = targets + [OUTPUT_PATH + "/figure_s3.html"]
-targets = targets + [OUTPUT_PATH + "/figure_s3_genes.html"]
-targets = targets + [OUTPUT_PATH + "/figure_s3_silhouette.html"]
-targets = targets + [OUTPUT_PATH + "/figure_s3_genes_v_pseudotime.html"]
 targets = targets + [OUTPUT_PATH + "/figure_s4.html"]
+targets = targets + [OUTPUT_PATH + "/figure_s4_genes.html"]
+targets = targets + [OUTPUT_PATH + "/figure_s4_silhouette.html"]
+targets = targets + [OUTPUT_PATH + "/figure_s4_genes_v_pseudotime.html"]
 targets = targets + [OUTPUT_PATH + "/figure_s5.html"]
 targets = targets + [OUTPUT_PATH + "/figure_s6.html"]
-targets = targets + [OUTPUT_PATH + "/figure_s7_facs.html"]
+targets = targets + [OUTPUT_PATH + "/figure_s7.html"]
+targets = targets + [OUTPUT_PATH + "/figure_s8_facs.html"]
+# fig s9 is also made from different other Rmds, see below
 
 # other figure parts (thematic)
 targets = targets + [OUTPUT_PATH + "/figure_thresholds.html"]
-# the rest is run manually for now
+# the rest must be run manually 
 
 #-------------------------------------------------------------------------------
 
@@ -136,18 +139,23 @@ rule run_fig_6:
 #-------------------------------------------------------------------------------
 # supplementary figures
 
-rule run_fig_s2:
+# related to figure 1
+# this also contains parts of fig s3 because s2 and s3 are extremely 
+# closely related
+# figure s2 was also split up into several .Rmds
+rule run_fig_s2_s3:
     resources:
         mem_mb=120000,
         queues="medium"
     output:
-        OUTPUT_PATH + "/figure_s2.html"
+        OUTPUT_PATH + "/figure_s2_s3.html"
     params:
         base_path = BASE_PATH
     threads: 4
     script:
-        "figure_s2.Rmd"
+        "figure_s2_s3.Rmd"
 
+# related to figure 1
 rule run_fig_s2_alluvial_hsc:
     resources:
         mem_mb=80000,
@@ -162,6 +170,7 @@ rule run_fig_s2_alluvial_hsc:
     script:
         "figure_s2_alluvial_hsc.Rmd"
 
+# related to figure 1
 rule run_fig_s2_alluvial_str:
     resources:
         mem_mb=80000,
@@ -176,66 +185,10 @@ rule run_fig_s2_alluvial_str:
     script:
         "figure_s2_alluvial_str.Rmd"
 
-rule run_fig_s3:
-    resources:
-        mem_mb=80000,
-        queues="medium"
-    output:
-        OUTPUT_PATH + "/figure_s3.html"
-    params:
-        base_path = BASE_PATH
-    threads: 4
-    script:
-        "figure_s3.Rmd"
-
-rule run_fig_s3_genes:
-    resources:
-        mem_mb=80000,
-        queues="medium"
-    output:
-        OUTPUT_PATH + "/figure_s3_genes.html"
-    params:
-        base_path = BASE_PATH
-    threads: 4
-    conda:
-        "../envs/ggalluvial.yml" 
-        # ggalluvial not required but other tidyverse versions threw errors
-    script:
-        "figure_s3_genes.Rmd"
-
-rule run_fig_s3_silhouette:
-    resources:
-        mem_mb=80000,
-        queues="medium"
-    output:
-        OUTPUT_PATH + "/figure_s3_silhouette.html"
-    params:
-        base_path = BASE_PATH
-    threads: 4
-    conda:
-        "../envs/ggpattern.yml" 
-        # ggpatterns not required with these versions seurat conversion works
-    script:
-        "figure_s3_silhouette.Rmd"
-
-rule run_fig_s3_genes_v_pseudotime:
-    resources:
-        mem_mb=80000,
-        queues="medium"
-    output:
-        OUTPUT_PATH + "/figure_s3_genes_v_pseudotime.html"
-    params:
-        base_path = BASE_PATH
-    threads: 4
-    conda:
-        "../envs/ggpattern.yml" 
-        # ggpatterns not required with these versions seurat conversion works
-    script:
-        "figure_s3_genes_v_pseudotime.Rmd"
-
+# related to figure 2
 rule run_fig_s4:
     resources:
-        mem_mb=120000,
+        mem_mb=80000,
         queues="medium"
     output:
         OUTPUT_PATH + "/figure_s4.html"
@@ -245,9 +198,58 @@ rule run_fig_s4:
     script:
         "figure_s4.Rmd"
 
+# related to figure 2
+rule run_fig_s4_genes:
+    resources:
+        mem_mb=80000,
+        queues="medium"
+    output:
+        OUTPUT_PATH + "/figure_s4_genes.html"
+    params:
+        base_path = BASE_PATH
+    threads: 4
+    conda:
+        "../envs/ggalluvial.yml" 
+        # ggalluvial not required but other tidyverse versions threw errors
+    script:
+        "figure_s4_genes.Rmd"
+
+# related to figure 2
+rule run_fig_s4_silhouette:
+    resources:
+        mem_mb=80000,
+        queues="medium"
+    output:
+        OUTPUT_PATH + "/figure_s4_silhouette.html"
+    params:
+        base_path = BASE_PATH
+    threads: 4
+    conda:
+        "../envs/ggpattern.yml" 
+        # ggpatterns not required with these versions seurat conversion works
+    script:
+        "figure_s4_silhouette.Rmd"
+
+# related to figure 2
+rule run_fig_s4_genes_v_pseudotime:
+    resources:
+        mem_mb=80000,
+        queues="medium"
+    output:
+        OUTPUT_PATH + "/figure_s4_genes_v_pseudotime.html"
+    params:
+        base_path = BASE_PATH
+    threads: 4
+    conda:
+        "../envs/ggpattern.yml" 
+        # ggpatterns not required with these versions seurat conversion works
+    script:
+        "figure_s4_genes_v_pseudotime.Rmd"
+
+# related to figure 3
 rule run_fig_s5:
     resources:
-        mem_mb=50000,
+        mem_mb=120000,
         queues="medium"
     output:
         OUTPUT_PATH + "/figure_s5.html"
@@ -257,9 +259,10 @@ rule run_fig_s5:
     script:
         "figure_s5.Rmd"
 
+# related to figure 4
 rule run_fig_s6:
     resources:
-        mem_mb=80000,
+        mem_mb=50000,
         queues="medium"
     output:
         OUTPUT_PATH + "/figure_s6.html"
@@ -269,19 +272,33 @@ rule run_fig_s6:
     script:
         "figure_s6.Rmd"
 
+# related to figure 5
 rule run_fig_s7:
+    resources:
+        mem_mb=80000,
+        queues="medium"
+    output:
+        OUTPUT_PATH + "/figure_s7.html"
+    params:
+        base_path = BASE_PATH
+    threads: 4
+    script:
+        "figure_s7.Rmd"
+
+# related to figure 6 (FACS)
+rule run_fig_s8:
     resources:
         mem_mb=40000,
         queues="short"
     output:
-        OUTPUT_PATH + "/figure_s7_facs.html"
+        OUTPUT_PATH + "/figure_s8_facs.html"
     params:
         base_path = BASE_PATH
     threads: 1
     conda:
         "../envs/bulk_figures5.yaml"
     script:
-        "figure_s7_facs.Rmd"
+        "figure_s8_facs.Rmd"
 
 #-------------------------------------------------------------------------------
 # there are additional files not sorted by figure, but by topic:
@@ -306,12 +323,12 @@ rule run_thresholds:
 # data to visualise has been generated in directory 08_sce_brain
 
 # mouse_lemur_AUCell.Rmd
-# it was not immediately clear where it would go, but is part of Figure 7 and S8 now.
+# it was not immediately clear where it would go, but is part of Figure 7 and S9 now.
 # run manually 
 # AND INSERT CORRECT BASE PATH
 
 # reclaiming_sigs.Rmd
-# these plots are part of several figures (figure S4, S5 and S6)
+# these plots are part of several figures (figure S5, S6 and S7)
 # not all plots were ultimately used
 # run manually
 # AND INSERT CORRECT BASE PATH
@@ -323,6 +340,6 @@ rule run_thresholds:
 # AND INSERT CORRECT BASE PATH
 
 # zebrafish_AUCell
-# it was not immediately clear where it would go, but is part of Figure S8 now.
+# it was not immediately clear where it would go, but is part of Figure S9 now.
 # run manually 
 # AND INSERT CORRECT BASE PATH

@@ -193,21 +193,21 @@ stopifnot(c(sce_hsc_all_cells$custom_label) %in% names(col_custom_hsc_unif))
 
 output_pdf_allu_hsc_mmus <- base::paste0(
   base_path,
-  "/manuscript1_rev/figures2/figures2_allu_hsc_mmus.pdf")
+  "/manuscript1_rev/figures2_s3/allu_hsc_mmus.pdf")
 output_pdf_allu_hsc_mcas <- base::paste0(
   base_path,
-  "/manuscript1_rev/figures2/figures2_allu_hsc_mcas.pdf")
+  "/manuscript1_rev/figures2_s3/allu_hsc_mcas.pdf")
 output_pdf_allu_hsc_mspr <- base::paste0(
   base_path,
-  "/manuscript1_rev/figures2/figures2_allu_hsc_mspr.pdf")
+  "/manuscript1_rev/figures2_s3/allu_hsc_mspr.pdf")
 output_pdf_allu_hsc_mcar <- base::paste0(
   base_path,
-  "/manuscript1_rev/figures2/figures2_allu_hsc_mcar.pdf")
+  "/manuscript1_rev/figures2_s3/allu_hsc_mcar.pdf")
 ```
 
 ```{r params}
 # global params
-source("../figures/determine_params.R")
+source("determine_params.R")
 
 # local params
 legend_text_size_allu <- 14 # seems closest to 6pt font size at the end

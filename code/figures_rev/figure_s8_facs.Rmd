@@ -1,14 +1,14 @@
 ---
-title: "Supplementary Figure 7 FACS validation"
+title: "Supplementary Figure 8 FACS validation"
 author: "Lea Wölbert"
 date: '2026-05-11'
 output: html_document
 ---
 
-Supplementary Figure S7, related to Figure 6.
+Supplementary Figure S8, related to Figure 6.
 FACS and bulkRNAseq additions.
 A lot of plots were FACS plots, made in Flowjo and assembled in
-Affinity with the few plots generated heere.
+Affinity with the few plots generated here.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -75,6 +75,7 @@ source("../source/plotting.R")
 pval_cutoff <- 0.05
 lfc_cutoff <- 0.25
 
+# technically, samples (three mice were pooled per sample)
 col_mice <- c(
       "05" = "#71223dff",
       "06" = "#be3232ff",
@@ -87,23 +88,23 @@ color_significant <- rev(c(
   "FALSE" = "grey50",
   "significant_down" = "blue3"))
 
-source("../figures/determine_params.R")
+source("determine_params.R")
 ```
 
 ```{r export_paths}
 
 output_neg_controls <- base::paste0(
-  base_path, "/manuscript1_rev/figures7/figures7_neg_control.pdf")
+  base_path, "/manuscript1_rev/figures8/neg_control.pdf")
 output_neg_controls_legend <- base::paste0(
-  base_path, "/manuscript1_rev/figures7/figures7_neg_control_legend.pdf")
+  base_path, "/manuscript1_rev/figures8/neg_control_legend.pdf")
 
 output_trkb_violin <- base::paste0(
-  base_path, "/manuscript1_rev/figures7/figures7_violin_trkb.pdf")
+  base_path, "/manuscript1_rev/figures8/violin_trkb.pdf")
 output_neo1_violin <- base::paste0(
-  base_path, "/manuscript1_rev/figures7/figures7_violin_neo1.pdf")
+  base_path, "/manuscript1_rev/figures8/violin_neo1.pdf")
 
 output_frequency_plot <- base::paste0(
-  base_path, "/manuscript1_rev/figures7/figures7_frequencyplot.pdf")
+  base_path, "/manuscript1_rev/figures8/frequencyplot.pdf")
 ```
 
 # Negative controls
@@ -538,6 +539,7 @@ neo1_human_perc <- c(40.3, 29.7, 27.5)
 trkb_human_perc <- c(14.3, 10.6, 7.37)
 
 # these values were taken from FlowJo 
+# for one trkb sample the gate was not measured, hence NA
 neo1_mouse_perc <- c(7.3, 36.4, 19.4, 11.9)
 trkb_mouse_perc <- c(NA, 7.8, 9.59, 11.6)
 

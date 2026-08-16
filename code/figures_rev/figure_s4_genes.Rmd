@@ -1,5 +1,5 @@
 ---
-title: "Figure S3 known age-associated gene heatmaps"
+title: "Figure S4 known age-associated gene heatmaps"
 output: html_document
 ---
 
@@ -40,8 +40,7 @@ colors_path <- base::paste0(
   "/metadata/colors/colors.txt")
 
 source("../source/colors.R")
-
-source("../figures/determine_params.R")
+source("determine_params.R")
 
 colors_z_score_ct <- c("steelblue3", "white", "red3")
 ```
@@ -204,9 +203,9 @@ legend_cond_theme
 
 ```{r export_paths}
 output_pdf_heatmap_conds_stacked_plot <- base::paste0(
-  base_path, "/manuscript1_rev/pdfs/figure_s3_known_age.pdf")
+  base_path, "/manuscript1_rev/pdfs/figure_s4_known_age.pdf")
 output_pdf_heatmap_conds_stacked_legend <- base::paste0(
-  base_path, "/manuscript1_rev/pdfs/figure_s3_known_age_legend.pdf")
+  base_path, "/manuscript1_rev/pdfs/figure_s4_known_age_legend.pdf")
 ```
 
 ```{r export_pdf}

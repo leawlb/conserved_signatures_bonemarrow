@@ -1,13 +1,13 @@
 ---
 title: "Supplementary Figure 4"
-date: '2024-11-28'
+date: '2024-11-27'
 output: html_document
 ---
 
-Supplementary figure extended HSPC reclustering (human mostly).
-Related to Figure 4. 
-
-The signature reclaim plot is generating in another file, reclaim_sigs.Rmd
+Figure_S4: nr of genes vs nr of cells, condition plot, pseudotime UMAPs 
+Figure_S4_silhouette: silhouette score calculation
+Figure_S4_genes_v_pseudotime: genes along pseudotime trajectory 
+Figure_S4_genes: aging genes
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -24,84 +24,33 @@ set.seed(37)
 library(tidyverse, quietly = TRUE)
 library(SingleCellExperiment, quietly = TRUE)
 library(ggpubr, quietly = TRUE)
+library(Seurat)
+library(SeuratObject)
 ```
 
 ```{r base_path}
 base_path <- snakemake@params[["base_path"]]
 ```
 
-For finding the correct other dataset resolutions.
+```{r load_manual}
+# fully annotated SCE object (HSPCs)
+sce_hsc <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_hsc-10"))
+sce_str <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/02_sce_anno/10_anns/sce_str-10"))
 
-```{r load_manual_res}
-# data frame containing the correct resolutions for other datasets as visually determined
-resolution_df_path <- base::paste0(
-  base_path,
-  "/metadata/scRNAseq/03_sce_analysis/reclustering_bm/reclustering_other_resolution.txt")
+# list of gene sets for HSPCs (conserved signature, conserved markers, etc.)
+geneset_list_hsc <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_hsc"))
 
-resolution_df <- utils::read.csv(file = resolution_df_path, 
-                               header = TRUE, 
-                               sep = ";", 
-                               check.names=FALSE, 
-                               stringsAsFactors=FALSE, 
-                               as.is=TRUE, 
-                               colClasses = "character")
-print(resolution_df)
-```
+# list of gene sets for Niche (conserved signature, conserved markers, etc.)
+geneset_list_str <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/01_reclustering_own/01_gens/geneset_list_str"))
 
-For the optimization plots, as examples two optimizations from mouse
-HSPC datasets are shown.
-
-```{r load_score_opti_other1}
-#### OTHER MOUSE DATASET 1 (HSPC)
-
-dataset_o1 <- "mus_tm_bonemarrow"
-
-score_df_list_o1 <-base::readRDS(base::paste0(
-  base_path,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_mus_tm_bonemarrow_list"))
-```
-
-```{r load_score_opti_other2}
-#### OTHER MOUSE DATASET 2 (HSPC)
-
-dataset_o2 <- "mus_weinreb_hspc"
-
-score_df_list_o2 <-base::readRDS(base::paste0(
-  base_path,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/04_rcls/score_df_mus_weinreb_hspc_list"))
-
-```
-
-For the pval plot.
-
-```{r load_corr_pval_df}
-# corrected p values (can only load after all p values have been calculated and corrected)
-
-# for plot of all corrected HSPC p values
-corr_pval_df <-  readRDS(base::paste0(
-  base_path,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/09_crpv/all_corrected_pval"))
-```
-
-For the heatmap comparison.
-
-```{r load_heatmaps}
-# after manual custom clustering
-mus_weinreb_hspc_custom <- readRDS(base::paste0(
-  base_path,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/03_custom_clustering/mus_weinreb_hspc.Rds"))
-
-# after signature reclustering
-seu_mus_weinreb_hspc_recl_list <- base::readRDS(base::paste0(
-  base_path,
-  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/04_signatures/02_reclustering_other/03_recl/reclustered_mus_weinreb_hspc_list"))
-
-res_mus_weinreb_hspc <- resolution_df %>%
-  dplyr::filter(dataset == "mus_weinreb_hspc") %>%
-  dplyr::filter(conservation_level == "conserved_signature") %>%
-  dplyr::pull()
-
-seu_mus_weinreb_hspc_sign <- seu_mus_weinreb_hspc_recl_list$seu_sign[[res_mus_weinreb_hspc]]
 ```
 
 ```{r source}
@@ -115,586 +64,666 @@ source("../source/plotting.R")
 
 ```{r pdf_output}
 # define output paths for pdf export
-output_pdf_a_plot <- base::paste0(
+output_pdf_b <- base::paste0(
   base_path,
-  "/manuscript1_rev/figures4/a_scores_plot.pdf")
+  "/manuscript1_rev/figures4/plot_b.pdf")
 
-output_pdf_a_legend <- base::paste0(
+output_pdf_umap_neu <- base::paste0(
   base_path,
-  "/manuscript1_rev/figures4/a_scores_plot_legend.pdf")
+  "/manuscript1_rev/figures4/umap_n.pdf")
 
-output_pdf_b_pval <- base::paste0(
+output_pdf_umap_lym <- base::paste0(
   base_path,
-  "/manuscript1_rev/figures4/b_pval_plot.pdf")
+  "/manuscript1_rev/figures4/umap_l.pdf")
 
-output_pdf_c_heatmaps <- base::paste0(
+output_pdf_umap_legend <- base::paste0(
   base_path,
-  "/manuscript1_rev/figures4/c_heatmaps.pdf")
+  "/manuscript1_rev/figures4/umap_legend.pdf")
 
-output_pdf_c_heatmaps_legend <- base::paste0(
+output_pdf_condplot <- base::paste0(
   base_path,
-  "/manuscript1_rev/figures4/c_heatmaps_legend.pdf")
+  "/manuscript1_rev/figures4/cond_plot.pdf")
+  
+output_pdf_condlegend <- base::paste0(
+  base_path,
+  "/manuscript1_rev/figures4/cond_legend.pdf")
 ```
 
 ```{r params}
 # global params
-source("../figures/determine_params.R")
+source("determine_params.R")
 
-col_vec1 <- col_score1
-col_vec2 <- col_score2
+colors_z_score <- c("steelblue3", "white", "red3")
 
-point_plot_size <- 4
-
-supplementary_text_size = 14
-
-color_significance <- c("pval adj. >= 0.05" = "grey70",
-                        "pval adj. < 0.05" = "black",
-                        "pval adj. = 0" = "#FF6347")
+celltypes_exclude <- c("Chondrocyte", "Lymphatic EC")
 ```
 
-Functions
+# Dotplot Nr of cells
 
-```{r score_vis_function}
-vis_clustering_scores <- function(score_df_list, max){
-  
-  max <- max
-  score_df <- dplyr::bind_rows(score_df_list)
+```{r prep_hsc_nrcell}
 
-  vis_df_1 <- score_df[score_df$type %in% c("mean_prop_cells_cluster",
-                                            "mean_cluster_purity",
-                                            "adjusted_rand_index",
-                                            "variation_information"),]
-  
-  name1 <- "NULL"
-  if(score_df$conservation_level[1] == "conserved_signature"){
-    name1 <- "signature genes"
-  }else if(score_df$conservation_level[1] == "conserved_markers"){
-    name1 <- "conserved markers"
-  }else if(score_df$conservation_level[1] == "mmusall_markers"){
-    name1 <- "BL6-only markers"
-  }else if(score_df$conservation_level[1] == "random_features"){
-    name1 <- "random genes"
-  }
-  
-  title <- paste(score_df$nr_genes_used, name1)
-  
-  vis_df_1$resolution <- as.numeric(vis_df_1$resolution)
-  
-  plot1 <- ggplot2::ggplot(vis_df_1, 
-                           aes(x = resolution, y = value, color = type))+
-    ggplot2::geom_hline(yintercept = 0.5,
-                        color = "grey85")+
-    ggplot2::geom_hline(yintercept = 1,
-                        color = "grey85")+
-    ggplot2::geom_hline(yintercept = 2,
-                        color = "grey85")+
-    ggplot2::geom_vline(xintercept = 0.25,
-                        color = "grey85")+
-    ggplot2::geom_vline(xintercept = 0.5,
-                        color = "grey85")+
-    ggplot2::geom_vline(xintercept = 0.75,
-                        color = "grey85")+
-    ggplot2::geom_vline(xintercept = 1,
-                        color = "grey85")+
-    ggplot2::geom_vline(xintercept = 1.25,
-                        color = "grey85")+
-    ggplot2::geom_point()+
-    theme_all_supp+
-    ggplot2::ylim(c(0, max))+
-    ggplot2::scale_color_manual("score", values = c(col_vec1, col_vec2))#+
-    #ggplot2::ggtitle(title)
+hsc_nrcells_df <- base::as.data.frame(
+  base::table(sce_hsc$celltypes, sce_hsc$Species_ID))
+hsc_nrcells_df$nr_signature_genes <- vector(length =nrow(hsc_nrcells_df))
 
-  return(plot1)
-  
+for(i in 1:nrow(hsc_nrcells_df)){
+  ct <- hsc_nrcells_df$Var1[i]
+  nr_genes <- length(geneset_list_hsc[[
+    which(names(geneset_list_hsc) == ct)]]$conserved_signature)
+  hsc_nrcells_df$nr_signature_genes[i] <- as.numeric(nr_genes)
 }
-
 ```
 
-# A Dotplot different scores and nr of clusters
+```{r prep_str_nrcell}
 
-```{r other1, fig.width = 16, fig.height = 2.5}
-# run the function, get max
-max_o1 <- 3
-plot_list_o1 <- lapply(score_df_list_o1, vis_clustering_scores, max = max_o1)
-resolution_df[resolution_df$dataset == dataset_o1,]
+# remove unwanted cell types first
+sce_str <- sce_str[,!sce_str$celltypes %in% celltypes_exclude]
+str_nrcells_df <- base::as.data.frame(
+  base::table(unfactor(sce_str$celltypes), sce_str$Species_ID))
+str_nrcells_df$nr_signature_genes <- vector(length =nrow(str_nrcells_df))
 
-plot_o1 <- ggpubr::ggarrange(
-  plot_list_o1[[1]]+
-    theme_all+
-    ggplot2::theme(
-      legend.position = "none",
-      axis.text.x = element_blank(),
-      axis.title.x = element_blank(),
-      axis.text.y = element_text(
-        size = supplementary_text_size),
-      axis.title.y = element_text(
-        size = supplementary_text_size))+
-    ggplot2::geom_vline(xintercept = 0.65, color = "orangered"),
-  plot_list_o1[[2]]+
-    theme_all+
-    ggplot2::theme(
-      legend.position = "none",
-      axis.text = element_blank(),
-      axis.title = element_blank())+
-    ggplot2::geom_vline(xintercept = 0.5, color = "orangered"),
-  plot_list_o1[[3]]+
-    theme_all+
-    ggplot2::theme(
-      legend.position = "none",
-      axis.text = element_blank(),
-      axis.title = element_blank())+
-    ggplot2::geom_vline(xintercept = 0.4, color = "orangered"),
-  plot_list_o1[[4]]+
-    theme_all+
-    ggplot2::theme(
-      legend.position = "none",
-      axis.text = element_blank(),
-      axis.title = element_blank())+
-    ggplot2::geom_vline(xintercept = 0.65, color = "orangered"),
-  nrow = 1,
-  align = "hv",
-  widths = c(1, 1, 1, 1)
-)
-
-dataset_o1
-plot_o1
+for(i in 1:nrow(str_nrcells_df)){
+  ct <- str_nrcells_df$Var1[i]
+  nr_genes <- length(geneset_list_str[[
+    which(names(geneset_list_str) == ct)]]$conserved_signature)
+  str_nrcells_df$nr_signature_genes[i] <- nr_genes
+}
 ```
 
-```{r other2, fig.width = 12, fig.height = 2.5}
-# run the function, get max
-max_o2 <- 5
-plot_list_o2 <- lapply(score_df_list_o2, vis_clustering_scores, max = max_o2)
-resolution_df[resolution_df$dataset == dataset_o2,]
+```{r fig.width = 8, fig.height = 6}
+hsc_nrcells_df$fraction <- "HSPCs"
+str_nrcells_df$fraction <- "Niche"
 
-plot_o2 <- ggpubr::ggarrange(
-  plot_list_o2[[1]]+
-    theme_all+
-    ggplot2::theme(
-      legend.position = "none",
-      axis.text = element_text(
-        size = supplementary_text_size),
-      axis.title = element_text(
-        size = supplementary_text_size))+
-    ggplot2::geom_vline(xintercept = 0.55, color = "orangered"),
-  plot_list_o2[[2]]+
-    theme_all+
-    ggplot2::theme(
-      legend.position = "none",
-      axis.text.y = element_blank(),
-      axis.title.y = element_blank(),
-      axis.text.x = element_text(
-        size = supplementary_text_size),
-      axis.title.x = element_text(
-        size = supplementary_text_size))+
-    ggplot2::geom_vline(xintercept = 0.5, color = "orangered"),
-  plot_list_o2[[3]]+
-    theme_all+
-    ggplot2::theme(
-      legend.position = "none",
-      axis.text.y = element_blank(),
-      axis.title.y = element_blank(),
-      axis.text.x = element_text(
-        size = supplementary_text_size),
-      axis.title = element_text(
-        size = supplementary_text_size))+
-    ggplot2::geom_vline(xintercept = 0.6, color = "orangered"),
-  plot_list_o2[[4]]+
-    theme_all+
-    ggplot2::theme(
-      legend.position = "none",
-      axis.text.y = element_blank(),
-      axis.title.y = element_blank(),
-      axis.text.x = element_text(
-        size = supplementary_text_size),
-      axis.title = element_text(
-        size = supplementary_text_size))+
-    ggplot2::geom_vline(xintercept = 0.55, color = "orangered"),
-  nrow = 1,
-  align = "hv",
-  widths = c(1, 1, 1, 1)
-)
-
-dataset_o2
-plot_o2
+nr_cells_df <- rbind(hsc_nrcells_df ,str_nrcells_df)
+nr_cells_df$Var2 <- factor(nr_cells_df$Var2, levels = names(col_spc))
 ```
 
-```{r datasets_others_plot, fig.width = 13.5, fig.height = 3}
-datasets_others_plot <- ggpubr::ggarrange(
-  plot_o1,
-  plot_o2,
-  nrow = 2,
-  ncol = 1,
-  align = "hv",
-  heights = c(1, 1.34)
-)
+```{r b_base_plot}
+# using spearman because pearson tests for LINEAR vs spearman testing for MONOTONIC?
+# also less influenced by extreme values
 
-datasets_others_plot
+b_base_plot <- ggpubr::ggscatter(
+    nr_cells_df,
+    color = "Var1",
+    x = "Freq",
+    size = 4,
+    y = "nr_signature_genes")+
+  ggpubr::stat_cor(method = "spearman")+
+  ggplot2::facet_grid(rows = vars(nr_cells_df$Var2),
+                      cols= vars(nr_cells_df$fraction))+
+  ggplot2::scale_color_manual("Cell types", 
+                              values = c(col_cts_hsc, col_cts_str))
 ```
 
-```{r a_plot_export}
-pdf(output_pdf_a_plot, width = 13.5, height = 3)
-datasets_others_plot
+```{r, b_theme_plot, fig.width = 8, fig.height = 7}
+b_theme_plot <- b_base_plot+
+  ggplot2::ylab("# signature genes per cell type")+
+  ggplot2::xlab("# cells per cell type")+
+  ggplot2::scale_y_continuous(limits = c(0, 230), breaks = c(0, 100, 200))+
+  ggplot2::scale_x_continuous(limits = c(0, 12000), breaks = c(0, 5000, 10000))+
+  theme_all_supp+
+  ggplot2::theme(
+    strip.background = element_blank(),
+    strip.text = element_text(
+      size = 16,
+      face = axis_text_face,
+      color = axis_text_color))
+
+b_theme_plot
+```
+
+```{r export_b}
+pdf(output_pdf_b, width = 8, height = 7)
+b_theme_plot
 dev.off()
 ```
 
-#### Legend
+# UMAPs of branches
 
-```{r, fig.width = 4, fig.height = 2}
-legend_plot <- plot_list_o2[[1]]
-legend <- ggpubr::get_legend(legend_plot+
-  theme(,
-    legend.text = element_text(
-      size = supplementary_text_size,
-      color = axis_text_color
-    ),
-    legend.title = element_text(
-      size = supplementary_text_size,
-      color = axis_text_color
-    )))
+```{r load_large}
+# fully annotated SCE object (HSPCs) with diffusion pseudotime
+sce_hsc_all_pseudotime <- base::readRDS(base::paste0(
+ base_path,
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/04_psce/sce_hsc_pseudotime"))
+assays(sce_hsc_all_pseudotime) <- list()
+
+# fully annotated SCE object (HSPCs), lym branch cells only, with 
+# pseudotime and lym differentiation probability
+lym_pseudo <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/05_bsce/sce_lym"))
+assays(lym_pseudo) <- list()
+
+# fully annotated SCE object (HSPCs), neu branch cells only, with 
+# pseudotime and neu differentiation probability
+neu_pseudo <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/05_bsce/sce_neu"))
+assays(neu_pseudo) <- list()
+
+# fully annotated SCE object (HSPCs), lymphoid branch cells only, with 
+# pseudotime and lymphoid differentiation probability
+ery_pseudo <- base::readRDS(base::paste0(
+  base_path, 
+  "/scRNAseq/main_analysis/sce_objects/03_sce_analysis/05_cellrank/05_bsce/sce_ery"))
+assays(ery_pseudo) <- list()
+```
+
+```{r pt_umaps1}
+# transfer pseudotime info, then remove pseudotime SCE object
+sce_hsc$pseudotime <- sce_hsc_all_pseudotime$dpt_pseudotime
+rm(sce_hsc_all_pseudotime)
+gc()
+
+# add lym and neu info
+sce_hsc$lymph <- vector(length = ncol(sce_hsc))
+sce_hsc$lymph[base::match(colnames(lym_pseudo),
+                          colnames(sce_hsc))] <- lym_pseudo$Lymphoid
+
+sce_hsc$neu <- vector(length = ncol(sce_hsc))
+sce_hsc$neu[base::match(colnames(neu_pseudo),
+                          colnames(sce_hsc))] <- neu_pseudo$Neutrophil
+
+# add ery info
+# ery object is still needed later
+sce_hsc$ery <- vector(length = ncol(sce_hsc))
+sce_hsc$ery[base::match(colnames(ery_pseudo),
+                        colnames(sce_hsc))] <- ery_pseudo$Erythroid
+
+```
+
+#### Branch and PT
+
+But I think it doesn't look good
+
+```{r cutoff}
+# make it so that pseudotime values are only kept for cells that are in the
+# lymph and neutro branch
+
+lymph_cut_off <- min(lym_pseudo$Lymphoid)
+neu_cut_off <- min(neu_pseudo$Neutrophil)
+
+sce_hsc$pt_lym <- sce_hsc$pseudotime
+sce_hsc$pt_lym[sce_hsc$lymph < lymph_cut_off] <- NA
+
+sce_hsc$pt_neu <- sce_hsc$pseudotime
+sce_hsc$pt_neu[sce_hsc$neu < neu_cut_off] <- NA
+```
+
+
+```{r pt_umaps3}
+hsc_umap_comb_lym <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_hsc, type = "UMAP"))
+hsc_umap_comb_lym$color_by <- sce_hsc$pt_lym 
+hsc_umap_comb_lym <- hsc_umap_comb_lym[base::sample(
+  1:nrow(hsc_umap_comb_lym),
+  nrow(hsc_umap_comb_lym),
+  replace = FALSE),]
+
+hsc_umap_comb_neu <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_hsc, type = "UMAP"))
+hsc_umap_comb_neu$color_by <- sce_hsc$pt_neu
+hsc_umap_comb_neu <- hsc_umap_comb_neu[base::sample(
+  1:nrow(hsc_umap_comb_neu),
+  nrow(hsc_umap_comb_neu),
+  replace = FALSE),]
+
+```
+
+```{r pt_umaps_base_plot_lym}
+pt_umaps_base_plot_lym <- ggplot2::ggplot(
+  hsc_umap_comb_lym, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(hsc_umap_comb_lym$X1)-1,
+                  base::max(hsc_umap_comb_lym$X1))+1)+
+  ggplot2::ylim(c(base::min(hsc_umap_comb_lym$X2)-1, 
+                  base::max(hsc_umap_comb_lym$X2))+1)+
+  ggplot2::scale_color_gradientn(
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1),
+    na.value = "grey90",
+    "Pseudotime within\nLymhpoid branch",
+    colours = c("#061F42", "#8FBEFF"))
+
+```
+
+```{r pt_umaps_base_plot_neu}
+pt_umaps_base_plot_neu <- ggplot2::ggplot(
+  hsc_umap_comb_neu,
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(hsc_umap_comb_neu$X1)-1,
+                  base::max(hsc_umap_comb_neu$X1))+1)+
+  ggplot2::ylim(c(base::min(hsc_umap_comb_neu$X2)-1, 
+                  base::max(hsc_umap_comb_neu$X2))+1)+
+  ggplot2::scale_color_gradientn(
+    limits = c(0, 1),
+    breaks = c(0, 0.5, 1),
+    na.value = "grey90",
+    "Pseudotime within\nNeutrophil branch",
+    colours = c("#061F42", "#8FBEFF"))
+
+
+```
+
+```{r pt_umaps_theme_plot_lym, fig.width = 3, fig.height = 3}
+pt_umaps_theme_plot_lym <- pt_umaps_base_plot_lym+
+  cowplot::theme_nothing()
+pt_umaps_theme_plot_lym
+```
+
+```{r pt_umaps_theme_plot_neu, fig.width = 3, fig.height = 3}
+pt_umaps_theme_plot_neu <- pt_umaps_base_plot_neu+
+  cowplot::theme_nothing()
+pt_umaps_theme_plot_neu
+```
+
+#### PT for legend
+
+```{r}
+hsc_umap_pt <- base::as.data.frame(
+  SingleCellExperiment::reducedDim(
+    sce_hsc, type = "UMAP"))
+hsc_umap_pt$color_by <- sce_hsc$pseudotime 
+hsc_umap_pt <- hsc_umap_pt[base::sample(
+  1:nrow(hsc_umap_pt),
+  nrow(hsc_umap_pt),
+  replace = FALSE),]
+```
+
+```{r pt_umaps_base_plot_1}
+pt_umaps_base_plot_1 <- ggplot2::ggplot(
+  hsc_umap_pt, 
+  aes(x = X1,
+      y = X2,
+      color = color_by))+
+  ggplot2::geom_point(
+    size = umap_point_size,
+    alpha = umap_point_alpha)+
+  ggplot2::xlim(c(base::min(hsc_umap_pt$X1)-1, base::max(hsc_umap_pt$X1))+1)+
+  ggplot2::ylim(c(base::min(hsc_umap_pt$X2)-1, base::max(hsc_umap_pt$X2))+1)+
+  ggplot2::scale_color_gradientn(
+    "Diffusion pseudotime",
+    colours = c("#061F42", "#8FBEFF"))
+
+legend <- ggpubr::get_legend(pt_umaps_base_plot_1 + theme_all_supp)
 legend <- ggpubr::ggarrange(legend)
-legend # change in affinity
+legend
+```
+
+```{r export_umap_neu}
+pdf(output_pdf_umap_neu, width = 3, height = 3)
+pt_umaps_theme_plot_neu
+dev.off()
+```
+
+```{r export_plot_lym}
+pdf(output_pdf_umap_lym, width = 3, height = 3)
+pt_umaps_theme_plot_lym
+dev.off()
 ```
 
 ```{r export_legend}
-pdf(output_pdf_a_legend, width = 4, height = 2)
+pdf(output_pdf_umap_legend, width = 3, height = 3)
 legend
 dev.off()
 ```
 
-# B Permutation dotplot
+#### Age- and Species-separated expression of Ly6a, Cited2 and Pbx1
 
-From previous Fig S6.
+```{r heatmap_conds, eval = FALSE, include = FALSE}
+# converting to Seurat doesn't really work for some reason, but it's also
+# not really required in this case
+metadata <- sce_hsc@colData@listData
 
-## Prep
-
-construct a data frame containing p values
-
-```{r pval_df}
-# subset to required datasets
-corr_pval_df_hsc <- corr_pval_df[corr_pval_df$condition %in% c(
-  "hsc",
-  "mus_weinreb_hspc",
-  "mus_tm_bonemarrow",
-  "ts_hscs_progenitors",
-  "ts_bone_marrow"
-),]
-
-# make it pretty
-corr_pval_df_hsc$condition_long <- vector(length = nrow(corr_pval_df_hsc))
-corr_pval_df_hsc$condition_long[
-  corr_pval_df_hsc$condition == "hsc"] <- "our HSPCs"
-corr_pval_df_hsc$condition_long[
-  corr_pval_df_hsc$condition == "mus_weinreb_hspc"] <- "Weinreb et al."
-corr_pval_df_hsc$condition_long[
-  corr_pval_df_hsc$condition == "mus_tm_bonemarrow"] <- "tabula muris"
-corr_pval_df_hsc$condition_long[
-  corr_pval_df_hsc$condition == "ts_hscs_progenitors"] <- "tabula sapiens fetal"
-corr_pval_df_hsc$condition_long[
-  corr_pval_df_hsc$condition == "ts_bone_marrow"] <- "tabula sapiens adult"
-
-corr_pval_df_hsc$condition_long <- factor(
-  corr_pval_df_hsc$condition_long, levels = rev(c(
-    "our HSPCs",
-    "tabula muris",
-    "Weinreb et al.",
-    "tabula sapiens fetal",
-    "tabula sapiens adult")))
-
-corr_pval_df_hsc$score_long <- vector(length = nrow(corr_pval_df_hsc))
-corr_pval_df_hsc$score_long[
-  corr_pval_df_hsc$type == "adjusted_rand_index"] <- "Adjusted\nRand index"
-corr_pval_df_hsc$score_long[
-  corr_pval_df_hsc$type == "variation_information"] <- "Variation\nof Information"
-corr_pval_df_hsc$score_long[
-  corr_pval_df_hsc$type == "mean_prop_cells_cluster"] <- "Mean\nProportion"
-
-corr_pval_df_hsc$score_long <- factor(
-  corr_pval_df_hsc$score_long, levels = c(
-    "Adjusted\nRand index",
-    "Variation\nof Information",
-    "Mean\nProportion"))
-
-corr_pval_df_hsc$color_id <- vector(length = nrow(corr_pval_df_hsc))
-corr_pval_df_hsc$color_id[corr_pval_df_hsc$pval_corrected < 0.05] <- "pval adj. < 0.05"
-corr_pval_df_hsc$color_id[corr_pval_df_hsc$pval_corrected == 0] <- "pval adj. = 0"
-corr_pval_df_hsc$color_id[corr_pval_df_hsc$pval_corrected >= 0.05] <- "pval adj. >= 0.05"
-
-corr_pval_df_hsc$comparison_long <- vector(length = nrow(corr_pval_df_hsc))
-corr_pval_df_hsc$comparison_long[
-  corr_pval_df_hsc$comparison == "sign-vs-rand"] <- "signature vs.\nrandom genes"
-corr_pval_df_hsc$comparison_long[
-  corr_pval_df_hsc$comparison == "mark-vs-rand"] <- "conserved markers vs.\nrandom genes"
-corr_pval_df_hsc$comparison_long[
-  corr_pval_df_hsc$comparison == "mmms-vs-rand"] <- "BL6-only markers vs.\nrandom genes"
-corr_pval_df_hsc$comparison_long[
-  corr_pval_df_hsc$comparison == "mark-vs-signrand"] <- "conserved markers vs.\nsignature + random genes"
-corr_pval_df_hsc$comparison_long[
-  corr_pval_df_hsc$comparison == "mmms-vs-signrand"] <- "BL6-only markers vs.\nsignature + random genes"
-
-corr_pval_df_hsc$comparison_long <- factor(
-  corr_pval_df_hsc$comparison_long, levels = c(
-    "signature vs.\nrandom genes",
-    "conserved markers vs.\nrandom genes",
-    "BL6-only markers vs.\nrandom genes",
-    "conserved markers vs.\nsignature + random genes",
-    "BL6-only markers vs.\nsignature + random genes"))
-
-corr_pval_df_hsc$color_id <- factor(
-  corr_pval_df_hsc$color_id, levels = rev(c(
-    "pval adj. >= 0.05",
-    "pval adj. < 0.05",
-    "pval adj. = 0")))
-
-head(corr_pval_df_hsc)
+sce_hsc_seurat <- SeuratObject::CreateSeuratObject(
+  counts = sce_hsc@assays@data@listData[["logcounts"]],
+  meta.data = metadata)
 ```
 
-```{r b_pval_plot, fig.width = 12, fig.height = 10}
-b_pval_plot <- ggplot2::ggplot(
-  corr_pval_df_hsc,
-  ggplot2::aes(y = condition_long,
-               x = score_long,
-               fill = color_id,
-               size = 10^-pval_corrected))+
-  ggplot2::geom_point(alpha = 1, colour="black", pch=21)+
-  ggplot2::facet_grid(
-    rows = vars(corr_pval_df_hsc$comparison_long), switch = "y")+
+```{r heatmap_conds1}
+g <- c(
+  "Ly6a",
+  "Procr",
+  "Pbx1",
+  "Cited2"
+)
+
+metadata <- sce_hsc@colData@listData
+
+expression <- as.data.frame(t(as.matrix(logcounts(sce_hsc)[
+  rownames(logcounts(sce_hsc)) %in% g,])))
+metadata$expression <- expression
+
+metadata$celltypes <- as.character(metadata$celltypes)
+gene_expression <- metadata$expression %>%
+  cbind(do.call(cbind, metadata[c("Species_ID", "Age_ID", "celltypes")]))
+
+```
+
+```{r heatmap_conds2}
+plot_1 <- gene_expression[,c(g[1], "Species_ID", "Age_ID", "celltypes")] 
+colnames(plot_1)[1] <- "gene"
+plot_1 <- plot_1 %>%
+  group_by(Species_ID, Age_ID, celltypes) %>%
+  summarize(mean = mean(gene))
+plot_1$signature <- lapply(plot_1$celltypes, function(x){
+  g[1] %in% geneset_list_hsc[[x]][["conserved_signature"]]
+}) %>% unlist()
+
+
+plot_2 <- gene_expression[,c(g[2], "Species_ID", "Age_ID", "celltypes")] 
+colnames(plot_2)[1] <- "gene"
+plot_2 <- plot_2 %>%
+  group_by(Species_ID, Age_ID, celltypes) %>%
+  summarize(mean = mean(gene))
+plot_2$signature <- lapply(plot_2$celltypes, function(x){
+  g[2] %in% geneset_list_hsc[[x]][["conserved_signature"]]
+}) %>% unlist()
+
+
+plot_3 <- gene_expression[,c(g[3], "Species_ID", "Age_ID", "celltypes")] 
+colnames(plot_3)[1] <- "gene"
+plot_3 <- plot_3 %>%
+  group_by(Species_ID, Age_ID, celltypes) %>%
+  summarize(mean = mean(gene))
+plot_3$signature <- lapply(plot_3$celltypes, function(x){
+  g[3] %in% geneset_list_hsc[[x]][["conserved_signature"]]
+}) %>% unlist()
+
+plot_4 <- gene_expression[,c(g[4], "Species_ID", "Age_ID", "celltypes")] 
+colnames(plot_4)[1] <- "gene"
+plot_4 <- plot_4 %>%
+  group_by(Species_ID, Age_ID, celltypes) %>%
+  summarize(mean = mean(gene))
+plot_4$signature <- lapply(plot_4$celltypes, function(x){
+  g[4] %in% geneset_list_hsc[[x]][["conserved_signature"]]
+}) %>% unlist()
+```
+
+```{r heatmap_conds3}
+order_condition <- c(
+ "mmus yng",
+ "mmus old",
+ "mcas yng",
+ "mcas old",
+ "mspr yng",
+ "mspr old",
+ "mcar yng",
+ "mcar old"
+)
+plot_1$condition <- base::paste(plot_1$Species_ID, plot_1$Age_ID)
+plot_1$condition_rev <- plot_1$condition
+plot_1$condition <- factor(plot_1$condition, levels = order_condition)
+plot_1$conditionrev <- factor(plot_1$condition, levels = rev(order_condition))
+
+plot_2$condition <- base::paste(plot_2$Species_ID, plot_2$Age_ID)
+plot_2$condition_rev <- plot_2$condition
+plot_2$condition <- factor(plot_2$condition, levels = order_condition)
+plot_2$conditionrev <- factor(plot_2$condition, levels = rev(order_condition))
+
+plot_3$condition <- base::paste(plot_3$Species_ID, plot_3$Age_ID)
+plot_3$condition_rev <- plot_3$condition
+plot_3$condition <- factor(plot_3$condition, levels = order_condition)
+plot_3$conditionrev <- factor(plot_3$condition, levels = rev(order_condition))
+
+plot_4$condition <- base::paste(plot_4$Species_ID, plot_4$Age_ID)
+plot_4$condition_rev <- plot_4$condition
+plot_4$condition <- factor(plot_4$condition, levels = order_condition)
+plot_4$conditionrev <- factor(plot_4$condition, levels = rev(order_condition))
+```
+
+```{r heatmap_conds3_5}
+# scale the expression levels now for better comparability/only one legend
+
+plot_1$z_score <- (plot_1$mean - base::mean(plot_1$mean))/
+    stats::sd(plot_1$mean)
+
+plot_2$z_score <- (plot_2$mean - base::mean(plot_2$mean))/
+    stats::sd(plot_2$mean)
+
+plot_3$z_score <- (plot_3$mean - base::mean(plot_3$mean))/
+    stats::sd(plot_3$mean)
+
+plot_4$z_score <- (plot_4$mean - base::mean(plot_4$mean))/
+    stats::sd(plot_4$mean)
+
+max_zs <- base::max(plot_1$z_score,
+                    plot_2$z_score,
+                    plot_3$z_score,
+                    plot_4$z_score)
+min_zs <- base::min(plot_1$z_score,
+                    plot_2$z_score, 
+                    plot_3$z_score,
+                    plot_4$z_score)
+midpoint <- (max_zs+min_zs)/2
+```
+
+```{r heatmap_conds4}
+marker_1_wide <- ggplot(plot_1,
+       aes(x = factor(celltypes, levels = names(geneset_list_hsc)),
+           y = conditionrev,
+           fill = z_score,
+           color = signature,
+           size = signature)) +
+  ggplot2::geom_tile(width = 0.95, 
+            height = 0.95) +
+  theme_classic() +
+  ggplot2::theme(axis.text.x = element_text(angle = 90, h = 1)) +
+  ggplot2::scale_color_manual(guide = "none", values = c(alpha("black", 0), "grey50")) +
+  ggplot2::scale_size_manual(guide = "none", values = c(0, 0.4)) +
+  ggplot2::labs(x = NULL, y = NULL, title = g[1]) +
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene", 
+    colours = colors_z_score,
+    breaks = c(-8, -4, 0, 4, 8),
+    limits = c(-8,8)
+    # breaks = c(-6, -3, 0, 3, 6),
+    # limits = c(-6,6)
+    )+
+  ggplot2::theme(legend.position = "none")
+```
+
+```{r heatmap_conds5}
+marker_2_wide <- ggplot(plot_2,
+       aes(x = factor(celltypes, levels = names(geneset_list_hsc)),
+           y = conditionrev,
+           fill = z_score,
+           color = signature,
+           size = signature)) +
+  ggplot2::geom_tile(width = 0.95, 
+            height = 0.95) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(axis.text.x = element_text(angle = 90, h = 1)) +
+  ggplot2::scale_color_manual(guide = "none", values = c(alpha("black", 0), "grey50")) +
+  ggplot2::scale_size_manual(guide = "none", values = c(0, 0.4)) +
+  ggplot2::labs(x = NULL, y = NULL, title = g[2]) +
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene", 
+    colours = colors_z_score,
+    breaks = c(-8, -4, 0, 4, 8),
+    limits = c(-8,8)
+    )+
+  ggplot2::theme(legend.position = "none")
+```
+
+```{r heatmap_conds6}
+marker_3_wide <- ggplot(plot_3,
+       aes(x = factor(celltypes, levels = names(geneset_list_hsc)),
+           y = conditionrev,
+           fill = z_score,
+           color = signature,
+           size = signature)) +
+  ggplot2::geom_tile(
+    width = 0.95, 
+    height = 0.95) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(axis.text.x = element_text(angle = 90, h = 1)) +
+  ggplot2::scale_color_manual(guide = "none", values = c(alpha("black", 0), "grey50")) +
+  ggplot2::scale_size_manual(guide = "none", values = c(0, 0.4)) +
+  ggplot2::labs(x = NULL, y = NULL, title = g[3]) +
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene", 
+    colours = colors_z_score,
+    breaks = c(-8, -4, 0, 4, 8),
+    limits = c(-8,8)
+    # breaks = c(-5, -2.5, 0, 2.5, 5), 
+    # limits = c(-5.5,5.5)
+    )+
+  ggplot2::theme(legend.position = "none")
+
+# still need to get colors, legend, etc all correct
+```
+
+```{r heatmap_conds7}
+marker_4_wide <- ggplot(plot_4,
+       aes(x = factor(celltypes, levels = names(geneset_list_hsc)),
+           y = conditionrev,
+           fill = z_score,
+           color = signature,
+           size = signature)) +
+  ggplot2::geom_tile(
+    width = 0.95, 
+    height = 0.95) +
+  ggplot2::theme_classic() +
+  ggplot2::theme(axis.text.x = element_text(angle = 90, h = 1)) +
+  ggplot2::scale_color_manual(guide = "none", values = c(alpha("black", 0), "grey50")) +
+  ggplot2::scale_size_manual(guide = "none", values = c(0, 0.4)) +
+  ggplot2::labs(x = NULL, y = NULL, title = g[4]) +
+  ggplot2::scale_fill_gradientn(
+    "z-score per gene", 
+    colours = colors_z_score,
+    breaks = c(-8, -4, 0, 4, 8),
+    limits = c(-8,8)
+    # breaks = c(-3, -1.5, 0, 1.5, 3),
+    # limits = c(-3,3)
+    )+
+  ggplot2::theme(legend.position = "none")
+
+# still need to get colors, legend, etc all correct
+```
+
+```{r marker_1_theme}
+marker_1_theme_stacked <- marker_1_wide+
   theme_all_supp+
   ggplot2::theme(
-    strip.placement = "outside",
-    strip.background.y = element_blank(),
-    panel.spacing = unit(2, "cm"),
-    axis.text = element_text(
-      size = supplementary_text_size,
-      color = axis_text_color
-    ),
-    legend.text = element_text(
-      size = supplementary_text_size,
-      color = axis_text_color
-    ),
-    legend.title = element_text(
-      size = supplementary_text_size,
-      color = axis_text_color
-    ),
-    strip.text.y.left = element_text(
-      angle = 0,
-      face= "bold",
-      color = "black",
-      size = supplementary_text_size,
-      hjust = 0,
-      vjust = 0.5
-    ),
-    strip.text.x.top = element_text(
-      size = supplementary_text_size,
-      color = axis_text_color
-    ),
-    axis.title = element_blank()
-  )+
-  ggplot2::scale_x_discrete(position = "top")+
-  scale_fill_manual("Significance", values = color_significance)
-b_pval_plot
-```
-
-```{r pval_b_plot_export}
-pdf(output_pdf_b_pval, width = 12, height = 10)
-b_pval_plot
-dev.off()
-```
-
-# C Heatmaps 
-
-Custom clustering and annotation using 2000 hvgs of Weinreb et al.
-compared to orig and signature based clusterings.
-
-```{r make_heatmaps_function}
-
-# function for plotting
-make_heatmaps <- function(colname1, colname2, seu){
-
-  mat <- base::table(
-    seu@meta.data[,which(colnames(seu@meta.data) == colname1)], 
-    seu@meta.data[,which(colnames(seu@meta.data) == colname2)])
-
-  for(i in 1:ncol(mat)){
-    mat[,i] <- mat[,i]/base::sum(mat[,i])
-  }
-
-  plot_df <- base::as.data.frame(mat)
-
-  plot_df$Var1 <- factor(
-    plot_df$Var1,
-    levels = levels(seu@meta.data[,which(colnames(seu@meta.data) == colname1)]))
-  
-  plot_df$Var2 <- factor(
-    plot_df$Var2,
-    levels = rev(levels(seu@meta.data[,which(colnames(seu@meta.data) == colname2)])))
-
-  base_heatmap_return <- ggplot2::ggplot(
-    plot_df, 
-    aes(x = Var1, 
-      y = Var2,
-      fill = Freq))+
-    ggplot2::geom_tile()+
-    theme_all+
-    ggplot2::theme(
-      axis.text.x = element_text(
-        angle = 90
-      ),
-      axis.ticks.y = element_blank())+
-    ggplot2::scale_fill_gradientn(
-      colors = mycolors_to1,
-      limits = c(0, 1),
-      breaks = c(0, 0.5, 1))+
-    xlab(colname1)+
-    ylab(colname2)
-  
-
-  return(base_heatmap_return)
-}
-```
-
-```{r prep_mus_weinreb_hspc_custom}
-
-mus_weinreb_hspc_custom$sign_clusters <- seu_mus_weinreb_hspc_sign$seurat_clusters
-
-# order the unnames seurat_clusters for nicer visualisation
-mus_weinreb_hspc_custom$sign_clusters <- factor(
-  mus_weinreb_hspc_custom$sign_clusters,
-  levels = c(
-    3, 4, 8, 6, 9, 7, 2, 5, 11, 0, 1, 10
-  )
-)
-```
-
-custom_label = cell types after custom manual annotation.
-cell_type = original annotation from publication.
-seurat_clusters/sign_clusters = clusters, not annotated. Name changed for clarity
-
-## sign vs orig
-
-```{r sign_vs_orig_plot, fig.widht = 4, fig.height = 5}
-sign_vs_orig_plot <- make_heatmaps(
-  mus_weinreb_hspc_custom, 
-  colname1 = "cell_type",
-  colname2 = "sign_clusters")+
-  ggplot2::xlab("Original annotation")+
-  ggplot2::ylab("Reclustered with signature genes")+
-  ggplot2::theme(
-    axis.text = element_text(
-      color = axis_text_color,
-      size = supplementary_text_size,
-      hjust = 1,
-      vjust = 0.5
-    ),
-    axis.title = element_text(
-      color = axis_text_color,
-      size = supplementary_text_size
-    )
-  )
-
-sign_vs_orig_plot
-```
-
-## cust vs orig
-
-```{r cust_vs_orig_plot, fig.widht = 5, fig.height = 5}
-cust_vs_orig_plot <- make_heatmaps(
-  mus_weinreb_hspc_custom, 
-  colname1 = "cell_type",
-  colname2 = "custom_label")+
-  ggplot2::xlab("Original annotation")+
-  ggplot2::ylab("Manual reclustering and annotation")+
-  ggplot2::theme(
-    axis.text = element_text(
-      color = axis_text_color,
-      size = supplementary_text_size,
-      hjust = 1,
-      vjust = 0.5
-    ),
-    axis.title = element_text(
-      color = axis_text_color,
-      size = supplementary_text_size
-    )
-  )
-
-cust_vs_orig_plot
-```
-
-## cust vs sign
-
-```{r cust_vs_sign_plot, fig.width = 5, fig.height = 5}
-
-cust_vs_sign_plot <- make_heatmaps(
-  mus_weinreb_hspc_custom, 
-  colname1 = "sign_clusters",
-  colname2 = "custom_label")+
-  ggplot2::ylab("Manual reclustering and annotation")+
-  ggplot2::xlab("Original annotation")+
-  ggplot2::theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
     axis.text.y = element_text(
-      color = axis_text_color,
-      size = supplementary_text_size,
-      hjust = 1,
-      vjust = 0.5
-    ),
+      vjust = 0.5,
+      hjust = 0),
+    plot.title = element_text(
+      face = "italic",
+      hjust = 0.5),
+    legend.title = element_blank(),
+    legend.position = "none")+
+  ggplot2::scale_y_discrete(expand = c(0, 0))+
+  ggplot2::scale_x_discrete(expand = c(0, 0))
+```
+
+```{r marker_2_theme}
+marker_2_theme_stacked <- marker_2_wide+
+  theme_all_supp+
+  ggplot2::theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_text(
+      vjust = 0.5,
+      hjust = 0),
+    plot.title = element_text(
+      face = "italic",
+      hjust = 0.5),
+    legend.title = element_blank(),
+    legend.position = "none")+
+  ggplot2::scale_y_discrete(expand = c(0, 0))+
+  ggplot2::scale_x_discrete(expand = c(0, 0))
+```
+
+```{r marker_3_theme}
+marker_3_theme_stacked <- marker_3_wide+
+  theme_all_supp+
+  ggplot2::theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_text(
+      vjust = 0.5,
+      hjust = 0),
+    plot.title = element_text(
+      face = "italic",
+      hjust = 0.5),
+    legend.title = element_blank(),
+    legend.position = "none")+
+  ggplot2::scale_y_discrete(expand = c(0, 0))+
+  ggplot2::scale_x_discrete(expand = c(0, 0))
+```
+
+```{r marker_4_theme}
+marker_4_theme_stacked <- marker_4_wide+
+  theme_all_supp+
+  ggplot2::theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
     axis.text.x = element_text(
-      color = axis_text_color,
-      size = supplementary_text_size,
       hjust = 1,
       vjust = 0.5,
-      angle = 0
-    ),
-    axis.title = element_text(
-      color = axis_text_color,
-      size = supplementary_text_size
-    )
+      angle = 90),
+    axis.text.y = element_text(
+      vjust = 0.5,
+      hjust = 0),
+    plot.title = element_text(
+      face = "italic",
+      hjust = 0.5),
+    legend.title = element_blank(),
+    legend.position = "none")+
+  ggplot2::scale_y_discrete(expand = c(0, 0))+
+  ggplot2::scale_x_discrete(expand = c(0, 0))
+```
+
+```{r heatmap_conds_assemble_stacked, fig.width = 5, fig.height = 11}
+heatmap_conds_stacked_plot <- ggpubr::ggarrange(
+    marker_1_theme_stacked,
+    marker_2_theme_stacked,
+    marker_3_theme_stacked,
+    marker_4_theme_stacked,
+    ncol = 1,
+    heights = c(1, 1, 1, 1.8)
   )
-
-cust_vs_sign_plot
+heatmap_conds_stacked_plot
 ```
 
-```{r heatmap_expr_legend}
-heatmap_expr_legend_theme <- ggpubr::get_legend(cust_vs_sign_plot + 
-  theme_all + 
-  ggplot2::theme(
-    legend.text = element_text(
-      size = supplementary_text_size,
-      color = axis_text_color
-    ),
-    legend.title = element_text(
-      size = supplementary_text_size,
-      color = axis_text_color
-    )))
-heatmap_expr_legend <- ggpubr::ggarrange(heatmap_expr_legend_theme)
-heatmap_expr_legend
+```{r legend, fig.width = 4, fig.height = 1}
+legend_plot <- marker_4_wide+
+  theme_all_supp+
+  theme(legend.position = "bottom")
+
+legend <- ggpubr::get_legend(legend_plot)
+legend <- ggpubr::ggarrange(legend)
+legend
 ```
 
-The order may change, but export all of them at once.
-
-```{r heatmaps_combine, fig.height = 12, fig.width = 9}
-
-heatmaps_combine <- ggarrange(
-  cust_vs_orig_plot + ggplot2::theme(legend.position = "none"),
-  cust_vs_sign_plot + ggplot2::theme(legend.position = "none"),
-  sign_vs_orig_plot + ggplot2::theme(legend.position = "none"),
-  nrow = 2,
-  ncol = 2,
-  align = "hv",
-  widths = c(1, 1.3),
-  heights = c(1, 1)
-)
-
-heatmaps_combine
-```
-
-```{r export_pdf_c_heatmaps}
-pdf(output_pdf_c_heatmaps, width = 10.5, height = 9)
-heatmaps_combine
+```{r output_pdf_condplot}
+pdf(output_pdf_condplot, width = 5, height = 11)
+heatmap_conds_stacked_plot
 dev.off()
 ```
 
-```{r export_pdf_c_heatmaps_legend}
-pdf(output_pdf_c_heatmaps_legend, width = 3, height = 3)
-heatmap_expr_legend
+```{r output_pdf_condlegend}
+pdf(output_pdf_condlegend, width = 4, height = 1)
+legend
 dev.off()
 ```
 

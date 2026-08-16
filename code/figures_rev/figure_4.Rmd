@@ -65,7 +65,7 @@ source("../source/plotting.R")
 
 ```{r params}
 # global params
-source("../figures/determine_params.R")
+source("determine_params.R")
 ```
 
 ```{r export_paths}

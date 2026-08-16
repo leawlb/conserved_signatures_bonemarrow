@@ -140,7 +140,7 @@ sce_str$species_pub <- factor(
 
 ```{r params}
 # global params
-source("../figures/determine_params.R")
+source("determine_params.R")
 
 # specific params
 ct_hsc <- "HSC"

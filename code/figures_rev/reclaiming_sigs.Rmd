@@ -36,7 +36,7 @@ colors_path <- base::paste0(
 
 source("../source/colors.R")
 source("../source/plotting.R")
-source("../figures/determine_params.R")
+source("determine_params.R")
 
 #source(file.path(project_path, "code/source/colors.R"))
 #source(file.path(project_path, "code/source/plotting.R"))

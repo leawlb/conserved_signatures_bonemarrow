@@ -82,7 +82,7 @@ color_significant <- rev(c(
   "not_significant" = "grey50",
   "significant_down" = "blue3"))
 
-source("../figures/determine_params.R")
+source("determine_params.R")
 ```
 
 ```{r export_paths}

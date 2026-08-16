@@ -70,7 +70,7 @@ source("../source/colors.R")
 
 ```{r params}
 # global params
-source("../figures/determine_params.R")
+source("determine_params.R")
 
 # specific params
 pattern_density_val <- 0.015

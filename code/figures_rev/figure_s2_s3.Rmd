@@ -1,5 +1,5 @@
 ---
-title: "Supplementary Figure 2"
+title: "Supplementary Figure 2 and 3"
 date: '2026-02-19'
 output: html_document
 ---
@@ -13,6 +13,9 @@ Trying to make it still relatively understandable.
 This figure's code was split into multiple .Rmds because it was too
 much data.
 This part is concerned with making the schematics and the heatmaps.
+It will end up in closely related Figure S2 and S3.
+
+Assignments to panels a, b, c, etc. are very much deprecated. 
 
 ## Load objects
 
@@ -125,7 +128,7 @@ sce_mcar_str <- base::readRDS(base::paste0(
 ```{r params}
 # global params for figures specifically
 # this is a supp figure so text size can be smaller (6-8 pts)
-source("../figures/determine_params.R")
+source("determine_params.R")
 
 # local params
 #legend_text_size_allu <- 13
@@ -183,44 +186,44 @@ cts_keep_str[!cts_keep_str %in% names(col_cts_str)]
 
 output_pdf_a_umap_1 <- base::paste0(
   base_path,
-  "/manuscript1_rev/figures2/figures2_a_umap_1.pdf")
+  "/manuscript1_rev/figures2_s3/a_umap_1.pdf")
 output_pdf_a_umap_2 <- base::paste0(
   base_path,
-  "/manuscript1_rev/figures2/figures2_a_umap_2.pdf")
+  "/manuscript1_rev/figures2_s3/a_umap_2.pdf")
 output_pdf_a_umap_3 <- base::paste0(
   base_path,
-  "/manuscript1_rev/figures2/figures2_a_umap_3.pdf")
+  "/manuscript1_rev/figures2_s3/a_umap_3.pdf")
 
 output_pdf_b_umap_1 <- base::paste0(
   base_path,
-  "/manuscript1_rev/figures2/figures2_b_umap_1.pdf")
+  "/manuscript1_rev/figures2_s3/b_umap_1.pdf")
 output_pdf_b_umap_2 <- base::paste0(
   base_path,
-  "/manuscript1_rev/figures2/figures2_b_umap_2.pdf")
+  "/manuscript1_rev/figures2_s3/b_umap_2.pdf")
 output_pdf_b_umap_3 <- base::paste0(
   base_path,
-  "/manuscript1_rev/figures2/figures2_b_umap_3.pdf")
+  "/manuscript1_rev/figures2_s3/b_umap_3.pdf")
 output_pdf_b_umap_4 <- base::paste0(
   base_path,
-  "/manuscript1_rev/figures2/figures2_b_umap_4.pdf")
+  "/manuscript1_rev/figures2_s3/b_umap_4.pdf")
 
 output_pdf_b_umap_3_legend<- base::paste0(
   base_path,
-  "/manuscript1_rev/figures2/figures2_b_umap_3_legend.pdf")
+  "/manuscript1_rev/figures2_s3/b_umap_3_legend.pdf")
 
 output_pdf_c_combined_hsc <- base::paste0(
   base_path,
-  "/manuscript1_rev/figures2/figures2_c_combined_hsc.pdf")
+  "/manuscript1_rev/figures2_s3/c_combined_hsc.pdf")
 output_pdf_c_combined_hsc_legend <- base::paste0(
   base_path,
-  "/manuscript1_rev/figures2/figures2_c_combined_hsc_legend.pdf")
+  "/manuscript1_rev/figures2_s3/c_combined_hsc_legend.pdf")
 
 output_pdf_d_combined_str <- base::paste0(
   base_path,
-  "/manuscript1_rev/figures2/figures2_d_combined_str.pdf")
+  "/manuscript1_rev/figures2_s3/d_combined_str.pdf")
 output_pdf_d_combined_str_legend <- base::paste0(
   base_path,
-  "/manuscript1_rev/figures2/figures2_d_combined_str_legend.pdf")
+  "/manuscript1_rev/figures2_s3/d_combined_str_legend.pdf")
 ```
 
 ## Prep 
